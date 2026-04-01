@@ -1,0 +1,6 @@
+@ThinkOnErp.API_HostAddress = http://localhost:5160
+
+GET {{ThinkOnErp.API_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

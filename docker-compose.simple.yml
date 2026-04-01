@@ -1,0 +1,34 @@
+version: '3.8'
+
+# Simple deployment - API only (external Oracle database)
+services:
+  thinkonerp-api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: thinkonerp-api
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ASPNETCORE_URLS=http://+:8080
+      - ConnectionStrings__OracleDb=${ORACLE_CONNECTION_STRING}
+      - JwtSettings__SecretKey=${JWT_SECRET_KEY}
+      - JwtSettings__Issuer=${JWT_ISSUER:-ThinkOnErpAPI}
+      - JwtSettings__Audience=${JWT_AUDIENCE:-ThinkOnErpClient}
+      - JwtSettings__ExpiryInMinutes=${JWT_EXPIRY_MINUTES:-60}
+      - Serilog__MinimumLevel__Default=${LOG_LEVEL:-Information}
+    ports:
+      - "${API_PORT:-5000}:8080"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 10s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    volumes:
+      - ./logs:/app/logs
