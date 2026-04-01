@@ -38,7 +38,7 @@ public class DeleteIsSoftDeletePropertyTests : IClassFixture<TestWebApplicationF
                 // Create a role first
                 var createCommand = new CreateRoleCommand
                 {
-                    RowDesc = roleDesc,
+                    RoleNameAr = roleDesc,
                     RoleNameEn = roleDescE,
                     Note = "To be deleted"
                 };
@@ -58,7 +58,7 @@ public class DeleteIsSoftDeletePropertyTests : IClassFixture<TestWebApplicationF
 
                 // Verify role is not in GetAll results
                 var allRoles = mediator.Send(new GetAllRolesQuery()).GetAwaiter().GetResult();
-                var notInGetAllResults = !allRoles.Any(r => r.RowId == roleId);
+                var notInGetAllResults = !allRoles.Any(r => r.RoleId == roleId);
 
                 return (existsBeforeDelete && deleteSucceeded && notInGetAllResults).ToProperty();
             });

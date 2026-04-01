@@ -47,8 +47,8 @@ public class ValidationErrorResponsePropertyTests : IClassFixture<TestWebApplica
                 // Create a role with multiple validation errors
                 var createDto = new CreateRoleDto
                 {
-                    RowDesc = "", // Invalid - empty
-                    RowDescE = "", // Invalid - empty
+                    RoleNameAr = "", // Invalid - empty
+                    RoleNameEn = "", // Invalid - empty
                     Note = "Test note"
                 };
 

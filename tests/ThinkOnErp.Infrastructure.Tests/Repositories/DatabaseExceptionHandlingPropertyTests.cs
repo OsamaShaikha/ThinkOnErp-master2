@@ -19,7 +19,7 @@ public class DatabaseExceptionHandlingPropertyTests
     public Property DatabaseException_IsLoggedAndRethrownAsDomainException()
     {
         return Prop.ForAll(
-            Arb.From(Gen.Choose(-1000, -1).Select(i => (decimal)i)), // Negative IDs should not exist
+            Arb.From(Gen.Choose(-1000, -1).Select(i => (Int64)i)), // Negative IDs should not exist
             (invalidId) =>
             {
                 // Setup configuration with connection string

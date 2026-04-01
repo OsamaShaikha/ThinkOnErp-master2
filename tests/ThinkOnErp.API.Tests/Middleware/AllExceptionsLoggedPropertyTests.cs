@@ -49,8 +49,8 @@ public class AllExceptionsLoggedPropertyTests : IClassFixture<TestWebApplication
                 // Trigger a validation exception
                 var createDto = new CreateRoleDto
                 {
-                    RowDesc = "", // Invalid - triggers ValidationException
-                    RowDescE = "",
+                    RoleNameAr = "", // Invalid - triggers ValidationException
+                    RoleNameEn = "",
                     Note = "Test"
                 };
 

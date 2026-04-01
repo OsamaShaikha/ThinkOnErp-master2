@@ -49,8 +49,8 @@ public class NoDomainEntitiesInResponsesPropertyTests : IClassFixture<TestWebApp
                 // Create a role
                 var createDto = new CreateRoleDto
                 {
-                    RowDesc = roleDesc,
-                    RowDescE = roleDescE,
+                    RoleNameAr = roleDesc,
+                    RoleNameEn = roleDescE,
                     Note = "Test DTO"
                 };
 

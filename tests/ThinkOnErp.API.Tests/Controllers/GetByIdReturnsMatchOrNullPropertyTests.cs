@@ -28,7 +28,7 @@ public class GetByIdReturnsMatchOrNullPropertyTests
     /// 4. The property holds across all entity types
     /// </summary>
     [Property(MaxTest = MinIterations, Arbitrary = new[] { typeof(Generators) })]
-    public Property GetRoleById_ReturnsMatchOrNull(List<SysRole> roles, decimal searchId)
+    public Property GetRoleById_ReturnsMatchOrNull(List<SysRole> roles, Int64 searchId)
     {
         // Arrange
         var mockRepository = new Mock<IRoleRepository>();
@@ -82,7 +82,7 @@ public class GetByIdReturnsMatchOrNullPropertyTests
     }
 
     [Property(MaxTest = MinIterations, Arbitrary = new[] { typeof(Generators) })]
-    public Property GetCurrencyById_ReturnsMatchOrNull(List<SysCurrency> currencies, decimal searchId)
+    public Property GetCurrencyById_ReturnsMatchOrNull(List<SysCurrency> currencies, Int64 searchId)
     {
         // Arrange
         var mockRepository = new Mock<ICurrencyRepository>();
@@ -136,7 +136,7 @@ public class GetByIdReturnsMatchOrNullPropertyTests
     }
 
     [Property(MaxTest = MinIterations, Arbitrary = new[] { typeof(Generators) })]
-    public Property GetCompanyById_ReturnsMatchOrNull(List<SysCompany> companies, decimal searchId)
+    public Property GetCompanyById_ReturnsMatchOrNull(List<SysCompany> companies, Int64 searchId)
     {
         // Arrange
         var mockRepository = new Mock<ICompanyRepository>();
@@ -190,7 +190,7 @@ public class GetByIdReturnsMatchOrNullPropertyTests
     }
 
     [Property(MaxTest = MinIterations, Arbitrary = new[] { typeof(Generators) })]
-    public Property GetBranchById_ReturnsMatchOrNull(List<SysBranch> branches, decimal searchId)
+    public Property GetBranchById_ReturnsMatchOrNull(List<SysBranch> branches, Int64 searchId)
     {
         // Arrange
         var mockRepository = new Mock<IBranchRepository>();
@@ -244,7 +244,7 @@ public class GetByIdReturnsMatchOrNullPropertyTests
     }
 
     [Property(MaxTest = MinIterations, Arbitrary = new[] { typeof(Generators) })]
-    public Property GetUserById_ReturnsMatchOrNull(List<SysUser> users, decimal searchId)
+    public Property GetUserById_ReturnsMatchOrNull(List<SysUser> users, Int64 searchId)
     {
         // Arrange
         var mockRepository = new Mock<IUserRepository>();
@@ -316,7 +316,7 @@ public class GetByIdReturnsMatchOrNullPropertyTests
 
         private static Gen<SysRole> GenerateSysRole()
         {
-            return from rowId in Gen.Choose(1, 1000000).Select(i => (decimal)i)
+            return from rowId in Gen.Choose(1, 1000000).Select(i => (Int64)i)
                    from rowDesc in Gen.Elements("دور", "مدير", "موظف", "مستخدم")
                    from rowDescE in Gen.Elements("Role", "Manager", "Employee", "User")
                    from note in Gen.Elements("Note 1", "Note 2", null)
@@ -348,7 +348,7 @@ public class GetByIdReturnsMatchOrNullPropertyTests
 
         private static Gen<SysCurrency> GenerateSysCurrency()
         {
-            return from rowId in Gen.Choose(1, 1000000).Select(i => (decimal)i)
+            return from rowId in Gen.Choose(1, 1000000).Select(i => (Int64)i)
                    from rowDesc in Gen.Elements("دولار", "يورو", "جنيه")
                    from rowDescE in Gen.Elements("Dollar", "Euro", "Pound")
                    from shortDesc in Gen.Elements("$", "€", "£")
@@ -389,7 +389,7 @@ public class GetByIdReturnsMatchOrNullPropertyTests
 
         private static Gen<SysCompany> GenerateSysCompany()
         {
-            return from rowId in Gen.Choose(1, 1000000).Select(i => (decimal)i)
+            return from rowId in Gen.Choose(1, 1000000).Select(i => (Int64)i)
                    from rowDesc in Gen.Elements("شركة", "مؤسسة", "منظمة")
                    from rowDescE in Gen.Elements("Company", "Corporation", "Organization")
                    from isActive in Arb.Generate<bool>()
@@ -419,7 +419,7 @@ public class GetByIdReturnsMatchOrNullPropertyTests
 
         private static Gen<SysBranch> GenerateSysBranch()
         {
-            return from rowId in Gen.Choose(1, 1000000).Select(i => (decimal)i)
+            return from rowId in Gen.Choose(1, 1000000).Select(i => (Int64)i)
                    from rowDesc in Gen.Elements("فرع", "مكتب", "قسم")
                    from rowDescE in Gen.Elements("Branch", "Office", "Department")
                    from isActive in Arb.Generate<bool>()
@@ -451,7 +451,7 @@ public class GetByIdReturnsMatchOrNullPropertyTests
 
         private static Gen<SysUser> GenerateSysUser()
         {
-            return from rowId in Gen.Choose(1, 1000000).Select(i => (decimal)i)
+            return from rowId in Gen.Choose(1, 1000000).Select(i => (Int64)i)
                    from userName in Gen.Elements("user1", "admin", "testuser", "john.doe")
                    from rowDesc in Gen.Elements("مستخدم", "مدير", "موظف")
                    from rowDescE in Gen.Elements("User", "Admin", "Employee")

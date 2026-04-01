@@ -42,8 +42,8 @@ public class EndToEndFlowsIntegrationTests : IClassFixture<TestWebApplicationFac
         // Create
         var createDto = new CreateRoleDto
         {
-            RowDesc = "Integration Test Role",
-            RowDescE = "Integration Test Role E",
+            RoleNameAr = "Integration Test Role",
+            RoleNameEn = "Integration Test Role E",
             Note = "Created for integration test"
         };
 
@@ -59,20 +59,20 @@ public class EndToEndFlowsIntegrationTests : IClassFixture<TestWebApplicationFac
         var getByIdResult = await getByIdResponse.Content.ReadFromJsonAsync<ApiResponse<RoleDto>>();
         Assert.True(getByIdResponse.IsSuccessStatusCode);
         Assert.NotNull(getByIdResult?.Data);
-        Assert.Equal("Integration Test Role", getByIdResult.Data.RowDesc);
+        Assert.Equal("Integration Test Role", getByIdResult.Data.RoleNameEn);
 
         // Read (GetAll)
         var getAllResponse = await _client.GetAsync("/api/roles");
         var getAllResult = await getAllResponse.Content.ReadFromJsonAsync<ApiResponse<List<RoleDto>>>();
         Assert.True(getAllResponse.IsSuccessStatusCode);
         Assert.NotNull(getAllResult?.Data);
-        Assert.Contains(getAllResult.Data, r => r.RowId == roleId);
+        Assert.Contains(getAllResult.Data, r => r.RoleId == roleId);
 
         // Update
         var updateDto = new UpdateRoleDto
         {
-            RowDesc = "Updated Role",
-            RowDescE = "Updated Role E",
+            RoleNameAr = "Updated Role",
+            RoleNameEn = "Updated Role E",
             Note = "Updated note"
         };
 
@@ -82,7 +82,7 @@ public class EndToEndFlowsIntegrationTests : IClassFixture<TestWebApplicationFac
         // Verify update
         var verifyResponse = await _client.GetAsync($"/api/roles/{roleId}");
         var verifyResult = await verifyResponse.Content.ReadFromJsonAsync<ApiResponse<RoleDto>>();
-        Assert.Equal("Updated Role", verifyResult?.Data?.RowDesc);
+        Assert.Equal("Updated Role", verifyResult?.Data?.RoleNameEn);
 
         // Delete
         var deleteResponse = await _client.DeleteAsync($"/api/roles/{roleId}");
@@ -91,7 +91,7 @@ public class EndToEndFlowsIntegrationTests : IClassFixture<TestWebApplicationFac
         // Verify deletion (should not appear in GetAll)
         var afterDeleteResponse = await _client.GetAsync("/api/roles");
         var afterDeleteResult = await afterDeleteResponse.Content.ReadFromJsonAsync<ApiResponse<List<RoleDto>>>();
-        Assert.DoesNotContain(afterDeleteResult?.Data ?? new List<RoleDto>(), r => r.RowId == roleId);
+        Assert.DoesNotContain(afterDeleteResult?.Data ?? new List<RoleDto>(), r => r.RoleId == roleId);
     }
 
     [Fact]
@@ -100,8 +100,8 @@ public class EndToEndFlowsIntegrationTests : IClassFixture<TestWebApplicationFac
         // Create
         var createDto = new CreateCurrencyDto
         {
-            RowDesc = "Test Currency",
-            RowDescE = "Test Currency E",
+            CurrencyNameAr = "Test Currency",
+            CurrencyNameEn = "Test Currency E",
             ShortDesc = "TC",
             ShortDescE = "TC",
             SingulerDesc = "Test",
@@ -128,8 +128,8 @@ public class EndToEndFlowsIntegrationTests : IClassFixture<TestWebApplicationFac
         // Update
         var updateDto = new UpdateCurrencyDto
         {
-            RowDesc = "Updated Currency",
-            RowDescE = "Updated Currency E",
+            CurrencyNameAr = "Updated Currency",
+            CurrencyNameEn = "Updated Currency E",
             ShortDesc = "UC",
             ShortDescE = "UC",
             SingulerDesc = "Updated",
@@ -158,8 +158,8 @@ public class EndToEndFlowsIntegrationTests : IClassFixture<TestWebApplicationFac
         // Create
         var createDto = new CreateCompanyDto
         {
-            RowDesc = "Test Company",
-            RowDescE = "Test Company E",
+            CompanyNameAr = "Test Company",
+            CompanyNameEn = "Test Company E",
             CountryId = 1,
             CurrId = 1
         };
@@ -176,8 +176,8 @@ public class EndToEndFlowsIntegrationTests : IClassFixture<TestWebApplicationFac
         // Update
         var updateDto = new UpdateCompanyDto
         {
-            RowDesc = "Updated Company",
-            RowDescE = "Updated Company E",
+            CompanyNameAr = "Updated Company",
+            CompanyNameEn = "Updated Company E",
             CountryId = 1,
             CurrId = 1
         };
@@ -196,9 +196,9 @@ public class EndToEndFlowsIntegrationTests : IClassFixture<TestWebApplicationFac
         // Create
         var createDto = new CreateBranchDto
         {
-            ParRowId = 1,
-            RowDesc = "Test Branch",
-            RowDescE = "Test Branch E",
+            CompanyId = 1,
+            BranchNameAr = "Test Branch",
+            BranchNameEn = "Test Branch E",
             Phone = "123456789",
             Mobile = "987654321",
             Email = "test@branch.com",
@@ -217,9 +217,9 @@ public class EndToEndFlowsIntegrationTests : IClassFixture<TestWebApplicationFac
         // Update
         var updateDto = new UpdateBranchDto
         {
-            ParRowId = 1,
-            RowDesc = "Updated Branch",
-            RowDescE = "Updated Branch E",
+            CompanyId = 1,
+            BranchNameAr = "Updated Branch",
+            BranchNameEn = "Updated Branch E",
             Phone = "111111111",
             Mobile = "222222222",
             Email = "updated@branch.com",
@@ -240,8 +240,8 @@ public class EndToEndFlowsIntegrationTests : IClassFixture<TestWebApplicationFac
         // Create
         var createDto = new CreateUserDto
         {
-            RowDesc = "Test User",
-            RowDescE = "Test User E",
+            NameAr = "Test User",
+            NameEn = "Test User E",
             UserName = $"testuser{Guid.NewGuid()}",
             Password = "TestPassword123!",
             IsAdmin = false
@@ -259,8 +259,8 @@ public class EndToEndFlowsIntegrationTests : IClassFixture<TestWebApplicationFac
         // Update
         var updateDto = new UpdateUserDto
         {
-            RowDesc = "Updated User",
-            RowDescE = "Updated User E",
+            NameAr = "Updated User",
+            NameEn = "Updated User E",
             UserName = createDto.UserName,
             IsAdmin = false
         };
@@ -290,8 +290,8 @@ public class EndToEndFlowsIntegrationTests : IClassFixture<TestWebApplicationFac
         // Create role
         var createDto = new CreateRoleDto
         {
-            RowDesc = "Flow Test Role",
-            RowDescE = "Flow Test Role E",
+            RoleNameAr = "Flow Test Role",
+            RoleNameEn = "Flow Test Role E",
             Note = "Test"
         };
 
@@ -303,8 +303,8 @@ public class EndToEndFlowsIntegrationTests : IClassFixture<TestWebApplicationFac
         // Update role
         var updateDto = new UpdateRoleDto
         {
-            RowDesc = "Updated Flow Role",
-            RowDescE = "Updated Flow Role E",
+            RoleNameAr = "Updated Flow Role",
+            RoleNameEn = "Updated Flow Role E",
             Note = "Updated"
         };
 
@@ -351,8 +351,8 @@ public class EndToEndFlowsIntegrationTests : IClassFixture<TestWebApplicationFac
         // Try to create a role (admin-only endpoint)
         var createDto = new CreateRoleDto
         {
-            RowDesc = "Test",
-            RowDescE = "Test E",
+            RoleNameAr = "Test",
+            RoleNameEn = "Test E",
             Note = "Test"
         };
 

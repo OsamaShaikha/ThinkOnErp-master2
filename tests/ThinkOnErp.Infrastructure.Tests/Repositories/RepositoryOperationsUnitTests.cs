@@ -33,7 +33,7 @@ public class RepositoryOperationsUnitTests : IClassFixture<TestWebApplicationFac
         // Create a role first
         var createCommand = new CreateRoleCommand
         {
-            RowDesc = "Test Role",
+            RoleNameAr = "Test Role",
             RoleNameEn = "Test Role E",
             Note = "Test Note"
         };
@@ -55,7 +55,7 @@ public class RepositoryOperationsUnitTests : IClassFixture<TestWebApplicationFac
         // Arrange
         using var scope = _factory.Services.CreateScope();
         var roleRepository = scope.ServiceProvider.GetRequiredService<IRoleRepository>();
-        var nonExistentId = 999999m;
+        var nonExistentId = 999999;
 
         // Act
         var role = await roleRepository.GetByIdAsync(nonExistentId);
@@ -89,7 +89,7 @@ public class RepositoryOperationsUnitTests : IClassFixture<TestWebApplicationFac
 
         var createCommand = new CreateRoleCommand
         {
-            RowDesc = "New Role",
+            RoleNameAr = "New Role",
             RoleNameEn = "New Role E",
             Note = "New Note"
         };
@@ -111,7 +111,7 @@ public class RepositoryOperationsUnitTests : IClassFixture<TestWebApplicationFac
         // Create a role
         var createCommand = new CreateRoleCommand
         {
-            RowDesc = "Original Role",
+            RoleNameAr = "Original Role",
             RoleNameEn = "Original Role E",
             Note = "Original Note"
         };
@@ -136,8 +136,8 @@ public class RepositoryOperationsUnitTests : IClassFixture<TestWebApplicationFac
         // Assert
         Assert.True(updateResult > 0);
         Assert.NotNull(updatedRole);
-        Assert.Equal("Updated Role", updatedRole.RowDesc);
-        Assert.Equal("Updated Role E", updatedRole.RowDescE);
+        Assert.Equal("Updated Role", updatedRole.RoleNameAr);
+        Assert.Equal("Updated Role E", updatedRole.RoleNameEn);
         Assert.Equal("Updated Note", updatedRole.Note);
     }
 
@@ -151,7 +151,7 @@ public class RepositoryOperationsUnitTests : IClassFixture<TestWebApplicationFac
         // Create a role
         var createCommand = new CreateRoleCommand
         {
-            RowDesc = "Role To Delete",
+            RoleNameAr = "Role To Delete",
             RoleNameEn = "Role To Delete E",
             Note = "Will be deleted"
         };
@@ -175,7 +175,7 @@ public class RepositoryOperationsUnitTests : IClassFixture<TestWebApplicationFac
         // Create a role
         var createCommand = new CreateRoleCommand
         {
-            RowDesc = "Role To Delete",
+            RoleNameAr = "Role To Delete",
             RoleNameEn = "Role To Delete E",
             Note = "Will be deleted"
         };
@@ -189,6 +189,6 @@ public class RepositoryOperationsUnitTests : IClassFixture<TestWebApplicationFac
         var allRoles = await mediator.Send(new GetAllRolesQuery());
 
         // Assert
-        Assert.DoesNotContain(allRoles, r => r.RowId == roleId);
+        Assert.DoesNotContain(allRoles, r => r.RoleId == roleId);
     }
 }

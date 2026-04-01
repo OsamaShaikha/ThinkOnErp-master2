@@ -34,7 +34,7 @@ public class CreateReturnsValidIdPropertyTests
         var mockRepository = new Mock<IRoleRepository>();
         
         // Generate a valid positive ID (simulating Oracle sequence behavior)
-        var generatedId = Math.Abs(role.RowId) > 0 ? Math.Abs(role.RowId) : 1m;
+        var generatedId = role.RowId;
         
         mockRepository
             .Setup(x => x.CreateAsync(It.IsAny<SysRole>()))
@@ -74,7 +74,7 @@ public class CreateReturnsValidIdPropertyTests
         var mockRepository = new Mock<ICurrencyRepository>();
         
         // Generate a valid positive ID (simulating Oracle sequence behavior)
-        var generatedId = Math.Abs(currency.RowId) > 0 ? Math.Abs(currency.RowId) : 1m;
+        var generatedId = currency.RowId;
         
         mockRepository
             .Setup(x => x.CreateAsync(It.IsAny<SysCurrency>()))
@@ -114,7 +114,7 @@ public class CreateReturnsValidIdPropertyTests
         var mockRepository = new Mock<ICompanyRepository>();
         
         // Generate a valid positive ID (simulating Oracle sequence behavior)
-        var generatedId = Math.Abs(company.RowId) > 0 ? Math.Abs(company.RowId) : 1m;
+        var generatedId =company.RowId;
         
         mockRepository
             .Setup(x => x.CreateAsync(It.IsAny<SysCompany>()))
@@ -154,7 +154,7 @@ public class CreateReturnsValidIdPropertyTests
         var mockRepository = new Mock<IBranchRepository>();
         
         // Generate a valid positive ID (simulating Oracle sequence behavior)
-        var generatedId = Math.Abs(branch.RowId) > 0 ? Math.Abs(branch.RowId) : 1m;
+        var generatedId = branch.RowId;
         
         mockRepository
             .Setup(x => x.CreateAsync(It.IsAny<SysBranch>()))
@@ -194,7 +194,7 @@ public class CreateReturnsValidIdPropertyTests
         var mockRepository = new Mock<IUserRepository>();
         
         // Generate a valid positive ID (simulating Oracle sequence behavior)
-        var generatedId = Math.Abs(user.RowId) > 0 ? Math.Abs(user.RowId) : 1m;
+        var generatedId = user.RowId;
         
         mockRepository
             .Setup(x => x.CreateAsync(It.IsAny<SysUser>()))
@@ -242,7 +242,7 @@ public class CreateReturnsValidIdPropertyTests
 
         private static Gen<SysRole> GenerateSysRole()
         {
-            return from rowId in Gen.Choose(1, 1000000).Select(i => (decimal)i)
+            return from rowId in Gen.Choose(1, 1000000).Select(i => (Int64)i)
                    from rowDesc in Gen.Elements("دور", "مدير", "موظف", "مستخدم", "محاسب", "مراجع")
                    from rowDescE in Gen.Elements("Role", "Manager", "Employee", "User", "Accountant", "Auditor")
                    from note in Gen.Elements("Note 1", "Note 2", "Important role", null)
@@ -269,7 +269,7 @@ public class CreateReturnsValidIdPropertyTests
 
         private static Gen<SysCurrency> GenerateSysCurrency()
         {
-            return from rowId in Gen.Choose(1, 1000000).Select(i => (decimal)i)
+            return from rowId in Gen.Choose(1, 1000000).Select(i => (Int64)i)
                    from rowDesc in Gen.Elements("دولار أمريكي", "يورو", "جنيه إسترليني", "ريال سعودي")
                    from rowDescE in Gen.Elements("US Dollar", "Euro", "British Pound", "Saudi Riyal")
                    from shortDesc in Gen.Elements("$", "€", "£", "ر.س")
@@ -308,11 +308,11 @@ public class CreateReturnsValidIdPropertyTests
 
         private static Gen<SysCompany> GenerateSysCompany()
         {
-            return from rowId in Gen.Choose(1, 1000000).Select(i => (decimal)i)
+            return from rowId in Gen.Choose(1, 1000000).Select(i => (Int64)i)
                    from rowDesc in Gen.Elements("شركة التقنية", "مؤسسة التجارة", "منظمة الخدمات")
                    from rowDescE in Gen.Elements("Tech Company", "Trade Corporation", "Services Organization")
-                   from countryId in Gen.Choose(1, 100).Select(i => (decimal?)i)
-                   from currId in Gen.Choose(1, 50).Select(i => (decimal?)i)
+                   from countryId in Gen.Choose(1, 100).Select(i => (Int64?)i)
+                   from currId in Gen.Choose(1, 50).Select(i => (Int64?)i)
                    from creationUser in Gen.Elements("admin", "system", "root", "superuser")
                    select new SysCompany
                    {
@@ -337,8 +337,8 @@ public class CreateReturnsValidIdPropertyTests
 
         private static Gen<SysBranch> GenerateSysBranch()
         {
-            return from rowId in Gen.Choose(1, 1000000).Select(i => (decimal)i)
-                   from parRowId in Gen.Choose(1, 100).Select(i => (decimal?)i)
+            return from rowId in Gen.Choose(1, 1000000).Select(i => (Int64)i)
+                   from parRowId in Gen.Choose(1, 100).Select(i => (Int64?)i)
                    from rowDesc in Gen.Elements("فرع الرياض", "مكتب جدة", "قسم الدمام")
                    from rowDescE in Gen.Elements("Riyadh Branch", "Jeddah Office", "Dammam Department")
                    from phone in Gen.Elements("+966112345678", "+966123456789", null)
@@ -372,15 +372,15 @@ public class CreateReturnsValidIdPropertyTests
 
         private static Gen<SysUser> GenerateSysUser()
         {
-            return from rowId in Gen.Choose(1, 1000000).Select(i => (decimal)i)
+            return from rowId in Gen.Choose(1, 1000000).Select(i => (Int64)i)
                    from userName in Gen.Elements("user1", "admin", "testuser", "john.doe", "jane.smith", "manager1")
                    from rowDesc in Gen.Elements("مستخدم النظام", "مدير", "موظف")
                    from rowDescE in Gen.Elements("System User", "Manager", "Employee")
                    from password in Gen.Elements("hash1", "hash2", "hash3", "hashedPassword123")
                    from phone in Gen.Elements("+966112345678", "+966123456789", null)
                    from email in Gen.Elements("user@company.com", "admin@company.com", null)
-                   from role in Gen.Choose(1, 10).Select(i => (decimal?)i)
-                   from branchId in Gen.Choose(1, 50).Select(i => (decimal?)i)
+                   from role in Gen.Choose(1, 10).Select(i => (Int64?)i)
+                   from branchId in Gen.Choose(1, 50).Select(i => (Int64?)i)
                    from isAdmin in Arb.Generate<bool>()
                    from creationUser in Gen.Elements("admin", "system", "root", "superuser")
                    select new SysUser

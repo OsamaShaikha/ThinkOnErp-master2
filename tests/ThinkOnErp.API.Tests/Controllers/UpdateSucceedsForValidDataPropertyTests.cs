@@ -42,7 +42,7 @@ public class UpdateSucceedsForValidDataPropertyTests : IClassFixture<TestWebAppl
                 // Create a role first
                 var createCommand = new CreateRoleCommand
                 {
-                    RowDesc = originalDesc,
+                    RoleNameAr = originalDesc,
                     RoleNameEn = originalDescE,
                     Note = "Original note"
                 };
@@ -69,8 +69,8 @@ public class UpdateSucceedsForValidDataPropertyTests : IClassFixture<TestWebAppl
 
                 // Verify values were persisted
                 var valuesPersisted = updatedRole != null &&
-                                     updatedRole.RowDesc == updatedDesc &&
-                                     updatedRole.RowDescE == updatedDescE &&
+                                     updatedRole.RoleNameAr == updatedDesc &&
+                                     updatedRole.RoleNameEn == updatedDescE &&
                                      updatedRole.Note == "Updated note";
 
                 return (updateSucceeded && valuesPersisted).ToProperty();
