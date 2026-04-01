@@ -5,5 +5,5 @@ namespace ThinkOnErp.Application.Features.Companies.Queries.GetCompanyById;
 
 public class GetCompanyByIdQuery : IRequest<CompanyDto?>
 {
-    public decimal RowId { get; set; }
+    public Int64 CompanyId { get; set; }
 }

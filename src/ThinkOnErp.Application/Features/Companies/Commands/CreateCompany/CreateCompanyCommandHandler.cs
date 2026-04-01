@@ -4,7 +4,7 @@ using ThinkOnErp.Domain.Interfaces;
 
 namespace ThinkOnErp.Application.Features.Companies.Commands.CreateCompany;
 
-public class CreateCompanyCommandHandler : IRequestHandler<CreateCompanyCommand, decimal>
+public class CreateCompanyCommandHandler : IRequestHandler<CreateCompanyCommand, Int64>
 {
     private readonly ICompanyRepository _companyRepository;
 
@@ -13,12 +13,12 @@ public class CreateCompanyCommandHandler : IRequestHandler<CreateCompanyCommand,
         _companyRepository = companyRepository;
     }
 
-    public async Task<decimal> Handle(CreateCompanyCommand request, CancellationToken cancellationToken)
+    public async Task<Int64> Handle(CreateCompanyCommand request, CancellationToken cancellationToken)
     {
         var company = new SysCompany
         {
-            RowDesc = request.RowDesc,
-            RowDescE = request.RowDescE,
+            RowDesc = request.CompanyNameAr,
+            RowDescE = request.CompanyNameEn,
             CountryId = request.CountryId,
             CurrId = request.CurrId,
             IsActive = true,

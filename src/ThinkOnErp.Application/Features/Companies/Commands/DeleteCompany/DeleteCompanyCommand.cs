@@ -2,7 +2,7 @@ using MediatR;
 
 namespace ThinkOnErp.Application.Features.Companies.Commands.DeleteCompany;
 
-public class DeleteCompanyCommand : IRequest<int>
+public class DeleteCompanyCommand : IRequest<Int64>
 {
-    public decimal RowId { get; set; }
+    public Int64 CompanyId { get; set; }
 }

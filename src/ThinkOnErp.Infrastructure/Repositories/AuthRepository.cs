@@ -34,50 +34,44 @@ public class AuthRepository : IAuthRepository
     /// <returns>The SysUser entity if credentials are valid and user is active, null otherwise</returns>
     public async Task<SysUser?> AuthenticateAsync(string userName, string passwordHash)
     {
-        using (var connection = _dbContext.CreateConnection())
+        using OracleConnection connection = _dbContext.CreateConnection();
+        await connection.OpenAsync();
+
+        using OracleCommand command = connection.CreateCommand();
+        command.CommandType = CommandType.StoredProcedure;
+        command.CommandText = "SP_SYS_USERS_LOGIN";
+
+        // Add input parameter for username
+        _ = command.Parameters.Add(new OracleParameter
         {
-            await connection.OpenAsync();
+            ParameterName = "P_USER_NAME",
+            OracleDbType = OracleDbType.Varchar2,
+            Direction = ParameterDirection.Input,
+            Value = userName
+        });
 
-            using (var command = connection.CreateCommand())
-            {
-                command.CommandType = CommandType.StoredProcedure;
-                command.CommandText = "SP_SYS_USERS_LOGIN";
+        // Add input parameter for password hash
+        _ = command.Parameters.Add(new OracleParameter
+        {
+            ParameterName = "P_PASSWORD",
+            OracleDbType = OracleDbType.Varchar2,
+            Direction = ParameterDirection.Input,
+            Value = passwordHash
+        });
 
-                // Add input parameter for username
-                command.Parameters.Add(new OracleParameter
-                {
-                    ParameterName = "P_USER_NAME",
-                    OracleDbType = OracleDbType.Varchar2,
-                    Direction = ParameterDirection.Input,
-                    Value = userName
-                });
+        // Add output parameter for SYS_REFCURSOR
+        var cursorParam = new OracleParameter
+        {
+            ParameterName = "P_RESULT_CURSOR",
+            OracleDbType = OracleDbType.RefCursor,
+            Direction = ParameterDirection.Output
+        };
+        _ = command.Parameters.Add(cursorParam);
 
-                // Add input parameter for password hash
-                command.Parameters.Add(new OracleParameter
-                {
-                    ParameterName = "P_PASSWORD",
-                    OracleDbType = OracleDbType.Varchar2,
-                    Direction = ParameterDirection.Input,
-                    Value = passwordHash
-                });
-
-                // Add output parameter for SYS_REFCURSOR
-                var cursorParam = new OracleParameter
-                {
-                    ParameterName = "P_RESULT_CURSOR",
-                    OracleDbType = OracleDbType.RefCursor,
-                    Direction = ParameterDirection.Output
-                };
-                command.Parameters.Add(cursorParam);
-
-                using (var reader = await command.ExecuteReaderAsync())
-                {
-                    if (await reader.ReadAsync())
-                    {
-                        return MapToEntity(reader);
-                    }
-                }
-            }
+        using OracleDataReader reader = await command.ExecuteReaderAsync();
+        if (await reader.ReadAsync())
+        {
+            return MapToEntity(reader);
         }
 
         return null;
@@ -93,15 +87,15 @@ public class AuthRepository : IAuthRepository
     {
         return new SysUser
         {
-            RowId = reader.GetDecimal(reader.GetOrdinal("ROW_ID")),
+            RowId = reader.GetOrdinal("ROW_ID"),
             RowDesc = reader.GetString(reader.GetOrdinal("ROW_DESC")),
             RowDescE = reader.GetString(reader.GetOrdinal("ROW_DESC_E")),
             UserName = reader.GetString(reader.GetOrdinal("USER_NAME")),
             Password = reader.GetString(reader.GetOrdinal("PASSWORD")),
             Phone = reader.IsDBNull(reader.GetOrdinal("PHONE")) ? null : reader.GetString(reader.GetOrdinal("PHONE")),
             Phone2 = reader.IsDBNull(reader.GetOrdinal("PHONE2")) ? null : reader.GetString(reader.GetOrdinal("PHONE2")),
-            Role = reader.IsDBNull(reader.GetOrdinal("ROLE")) ? null : reader.GetDecimal(reader.GetOrdinal("ROLE")),
-            BranchId = reader.IsDBNull(reader.GetOrdinal("BRANCH_ID")) ? null : reader.GetDecimal(reader.GetOrdinal("BRANCH_ID")),
+            Role = reader.IsDBNull(reader.GetOrdinal("ROLE")) ? null : reader.GetOrdinal("ROLE"),
+            BranchId = reader.IsDBNull(reader.GetOrdinal("BRANCH_ID")) ? null : reader.GetOrdinal("BRANCH_ID"),
             Email = reader.IsDBNull(reader.GetOrdinal("EMAIL")) ? null : reader.GetString(reader.GetOrdinal("EMAIL")),
             LastLoginDate = reader.IsDBNull(reader.GetOrdinal("LAST_LOGIN_DATE")) ? null : reader.GetDateTime(reader.GetOrdinal("LAST_LOGIN_DATE")),
             IsActive = MapIsActiveToBoolean(reader.GetString(reader.GetOrdinal("IS_ACTIVE"))),

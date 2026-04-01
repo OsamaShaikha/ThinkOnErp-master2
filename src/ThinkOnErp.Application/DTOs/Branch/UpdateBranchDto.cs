@@ -9,17 +9,17 @@ public class UpdateBranchDto
     /// <summary>
     /// Foreign key to SYS_COMPANY table - the parent company (optional)
     /// </summary>
-    public decimal? ParRowId { get; set; }
+    public Int64? CompanyId { get; set; }
 
     /// <summary>
     /// Arabic description of the branch (required)
     /// </summary>
-    public string RowDesc { get; set; } = string.Empty;
+    public string BranchNameAr { get; set; } = string.Empty;
 
     /// <summary>
     /// English description of the branch (required)
     /// </summary>
-    public string RowDescE { get; set; } = string.Empty;
+    public string BranchNameEn { get; set; } = string.Empty;
 
     /// <summary>
     /// Branch phone number (optional)

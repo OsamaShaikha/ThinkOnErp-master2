@@ -9,17 +9,17 @@ public class RoleDto
     /// <summary>
     /// Unique identifier for the role
     /// </summary>
-    public decimal RowId { get; set; }
+    public Int64 RoleId { get; set; }
 
     /// <summary>
     /// Arabic description of the role
     /// </summary>
-    public string RowDesc { get; set; } = string.Empty;
+    public string RoleNameAr { get; set; } = string.Empty;
 
     /// <summary>
     /// English description of the role
     /// </summary>
-    public string RowDescE { get; set; } = string.Empty;
+    public string RoleNameEn { get; set; } = string.Empty;
 
     /// <summary>
     /// Optional notes about the role

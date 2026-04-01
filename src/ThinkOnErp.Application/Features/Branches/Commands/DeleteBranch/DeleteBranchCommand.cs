@@ -2,7 +2,7 @@ using MediatR;
 
 namespace ThinkOnErp.Application.Features.Branches.Commands.DeleteBranch;
 
-public class DeleteBranchCommand : IRequest<int>
+public class DeleteBranchCommand : IRequest<Int64>
 {
-    public decimal RowId { get; set; }
+    public Int64 BranchId { get; set; }
 }

@@ -23,9 +23,9 @@ public class GetAllRolesQueryHandler : IRequestHandler<GetAllRolesQuery, List<Ro
 
         var roleDtos = roles.Select(role => new RoleDto
         {
-            RowId = role.RowId,
-            RowDesc = role.RowDesc,
-            RowDescE = role.RowDescE,
+            RoleId = role.RowId,
+            RoleNameAr = role.RowDesc,
+            RoleNameEn = role.RowDescE,
             Note = role.Note,
             IsActive = role.IsActive,
             CreationUser = role.CreationUser,

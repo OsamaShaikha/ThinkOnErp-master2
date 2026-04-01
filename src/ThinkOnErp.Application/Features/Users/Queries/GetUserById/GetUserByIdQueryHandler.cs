@@ -22,13 +22,13 @@ public class GetUserByIdQueryHandler : IRequestHandler<GetUserByIdQuery, UserDto
 
         return new UserDto
         {
-            RowId = user.RowId,
-            RowDesc = user.RowDesc,
-            RowDescE = user.RowDescE,
+            UserId = user.RowId,
+            NameAr = user.RowDesc,
+            NameEn = user.RowDescE,
             UserName = user.UserName,
             Phone = user.Phone,
             Phone2 = user.Phone2,
-            Role = user.Role,
+            RoleId = user.Role,
             BranchId = user.BranchId,
             Email = user.Email,
             LastLoginDate = user.LastLoginDate,

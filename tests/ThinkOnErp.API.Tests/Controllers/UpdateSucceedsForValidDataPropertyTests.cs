@@ -43,7 +43,7 @@ public class UpdateSucceedsForValidDataPropertyTests : IClassFixture<TestWebAppl
                 var createCommand = new CreateRoleCommand
                 {
                     RowDesc = originalDesc,
-                    RowDescE = originalDescE,
+                    RoleNameEn = originalDescE,
                     Note = "Original note"
                 };
 
@@ -52,9 +52,9 @@ public class UpdateSucceedsForValidDataPropertyTests : IClassFixture<TestWebAppl
                 // Update the role
                 var updateCommand = new UpdateRoleCommand
                 {
-                    RowId = roleId,
-                    RowDesc = updatedDesc,
-                    RowDescE = updatedDescE,
+                    RoleId = roleId,
+                    RoleNameAr = updatedDesc,
+                    RoleNameEn = updatedDescE,
                     Note = "Updated note"
                 };
 
@@ -64,7 +64,7 @@ public class UpdateSucceedsForValidDataPropertyTests : IClassFixture<TestWebAppl
                 var updateSucceeded = updateResult > 0;
 
                 // Retrieve the updated role
-                var query = new GetRoleByIdQuery { RowId = roleId };
+                var query = new GetRoleByIdQuery { RoleId = roleId };
                 var updatedRole = mediator.Send(query).GetAwaiter().GetResult();
 
                 // Verify values were persisted

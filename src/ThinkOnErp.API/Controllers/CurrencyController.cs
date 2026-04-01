@@ -80,13 +80,13 @@ public class CurrencyController : ControllerBase
     [ProducesResponseType(typeof(ApiResponse<CurrencyDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiResponse<CurrencyDto>), StatusCodes.Status404NotFound)]
     [ProducesResponseType(typeof(ApiResponse<CurrencyDto>), StatusCodes.Status401Unauthorized)]
-    public async Task<ActionResult<ApiResponse<CurrencyDto>>> GetCurrencyById(decimal id)
+    public async Task<ActionResult<ApiResponse<CurrencyDto>>> GetCurrencyById(Int64 id)
     {
         try
         {
             _logger.LogInformation("Retrieving currency with ID: {CurrencyId}", id);
 
-            var query = new GetCurrencyByIdQuery { RowId = id };
+            var query = new GetCurrencyByIdQuery { CurrencyId = id };
             var currency = await _mediator.Send(query);
 
             if (currency == null)
@@ -123,15 +123,15 @@ public class CurrencyController : ControllerBase
     /// <response code="403">User does not have admin privileges</response>
     [HttpPost]
     [Authorize(Policy = "AdminOnly")]
-    [ProducesResponseType(typeof(ApiResponse<decimal>), StatusCodes.Status201Created)]
-    [ProducesResponseType(typeof(ApiResponse<decimal>), StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(typeof(ApiResponse<decimal>), StatusCodes.Status401Unauthorized)]
-    [ProducesResponseType(typeof(ApiResponse<decimal>), StatusCodes.Status403Forbidden)]
-    public async Task<ActionResult<ApiResponse<decimal>>> CreateCurrency([FromBody] CreateCurrencyCommand command)
+    [ProducesResponseType(typeof(ApiResponse<Int64>), StatusCodes.Status201Created)]
+    [ProducesResponseType(typeof(ApiResponse<Int64>), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ApiResponse<Int64>), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ApiResponse<Int64>), StatusCodes.Status403Forbidden)]
+    public async Task<ActionResult<ApiResponse<Int64>>> CreateCurrency([FromBody] CreateCurrencyCommand command)
     {
         try
         {
-            _logger.LogInformation("Creating new currency: {CurrencyDesc}", command.RowDesc);
+            _logger.LogInformation("Creating new currency: {CurrencyDesc}", command.CurrencyNameAr);
 
             var currencyId = await _mediator.Send(command);
 
@@ -140,14 +140,14 @@ public class CurrencyController : ControllerBase
             return CreatedAtAction(
                 nameof(GetCurrencyById),
                 new { id = currencyId },
-                ApiResponse<decimal>.CreateSuccess(
+                ApiResponse<Int64>.CreateSuccess(
                     currencyId,
                     "Currency created successfully",
                     201));
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error creating currency: {CurrencyDesc}", command.RowDesc);
+            _logger.LogError(ex, "Error creating currency: {CurrencyDesc}", command.CurrencyNameAr);
             throw;
         }
     }
@@ -166,19 +166,19 @@ public class CurrencyController : ControllerBase
     /// <response code="403">User does not have admin privileges</response>
     [HttpPut("{id}")]
     [Authorize(Policy = "AdminOnly")]
-    [ProducesResponseType(typeof(ApiResponse<int>), StatusCodes.Status200OK)]
-    [ProducesResponseType(typeof(ApiResponse<int>), StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(typeof(ApiResponse<int>), StatusCodes.Status404NotFound)]
-    [ProducesResponseType(typeof(ApiResponse<int>), StatusCodes.Status401Unauthorized)]
-    [ProducesResponseType(typeof(ApiResponse<int>), StatusCodes.Status403Forbidden)]
-    public async Task<ActionResult<ApiResponse<int>>> UpdateCurrency(decimal id, [FromBody] UpdateCurrencyCommand command)
+    [ProducesResponseType(typeof(ApiResponse<Int64>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<Int64>), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ApiResponse<Int64>), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ApiResponse<Int64>), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ApiResponse<Int64>), StatusCodes.Status403Forbidden)]
+    public async Task<ActionResult<ApiResponse<Int64>>> UpdateCurrency(Int64 id, [FromBody] UpdateCurrencyCommand command)
     {
         try
         {
-            if (id != command.RowId)
+            if (id != command.CurrencyId)
             {
-                _logger.LogWarning("Currency ID mismatch: URL ID {UrlId} vs Command ID {CommandId}", id, command.RowId);
-                return BadRequest(ApiResponse<int>.CreateFailure(
+                _logger.LogWarning("Currency ID mismatch: URL ID {UrlId} vs Command ID {CommandId}", id, command.CurrencyId);
+                return BadRequest(ApiResponse<Int64>.CreateFailure(
                     "Currency ID in URL does not match the ID in the request body",
                     statusCode: 400));
             }
@@ -190,14 +190,14 @@ public class CurrencyController : ControllerBase
             if (rowsAffected == 0)
             {
                 _logger.LogWarning("Currency not found for update with ID: {CurrencyId}", id);
-                return NotFound(ApiResponse<int>.CreateFailure(
+                return NotFound(ApiResponse<Int64>.CreateFailure(
                     "No currency found with the specified identifier",
                     statusCode: 404));
             }
 
             _logger.LogInformation("Currency updated successfully with ID: {CurrencyId}", id);
 
-            return Ok(ApiResponse<int>.CreateSuccess(
+            return Ok(ApiResponse<Int64>.CreateSuccess(
                 rowsAffected,
                 "Currency updated successfully",
                 200));
@@ -225,26 +225,26 @@ public class CurrencyController : ControllerBase
     [ProducesResponseType(typeof(ApiResponse<int>), StatusCodes.Status404NotFound)]
     [ProducesResponseType(typeof(ApiResponse<int>), StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(typeof(ApiResponse<int>), StatusCodes.Status403Forbidden)]
-    public async Task<ActionResult<ApiResponse<int>>> DeleteCurrency(decimal id)
+    public async Task<ActionResult<ApiResponse<int>>> DeleteCurrency(Int64 id)
     {
         try
         {
             _logger.LogInformation("Deleting currency with ID: {CurrencyId}", id);
 
-            var command = new DeleteCurrencyCommand { RowId = id };
+            var command = new DeleteCurrencyCommand { CurrencyId = id };
             var rowsAffected = await _mediator.Send(command);
 
             if (rowsAffected == 0)
             {
                 _logger.LogWarning("Currency not found for deletion with ID: {CurrencyId}", id);
-                return NotFound(ApiResponse<int>.CreateFailure(
+                return NotFound(ApiResponse<Int64>.CreateFailure(
                     "No currency found with the specified identifier",
                     statusCode: 404));
             }
 
             _logger.LogInformation("Currency deleted successfully with ID: {CurrencyId}", id);
 
-            return Ok(ApiResponse<int>.CreateSuccess(
+            return Ok(ApiResponse<Int64>.CreateSuccess(
                 rowsAffected,
                 "Currency deleted successfully",
                 200));

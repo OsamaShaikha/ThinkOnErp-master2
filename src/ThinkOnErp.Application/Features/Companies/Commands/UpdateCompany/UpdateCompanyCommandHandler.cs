@@ -4,7 +4,7 @@ using ThinkOnErp.Domain.Interfaces;
 
 namespace ThinkOnErp.Application.Features.Companies.Commands.UpdateCompany;
 
-public class UpdateCompanyCommandHandler : IRequestHandler<UpdateCompanyCommand, int>
+public class UpdateCompanyCommandHandler : IRequestHandler<UpdateCompanyCommand, Int64>
 {
     private readonly ICompanyRepository _companyRepository;
 
@@ -13,13 +13,13 @@ public class UpdateCompanyCommandHandler : IRequestHandler<UpdateCompanyCommand,
         _companyRepository = companyRepository;
     }
 
-    public async Task<int> Handle(UpdateCompanyCommand request, CancellationToken cancellationToken)
+    public async Task<Int64> Handle(UpdateCompanyCommand request, CancellationToken cancellationToken)
     {
         var company = new SysCompany
         {
-            RowId = request.RowId,
-            RowDesc = request.RowDesc,
-            RowDescE = request.RowDescE,
+            RowId = request.CompanyId,
+            RowDesc = request.CompanyNameAr,
+            RowDescE = request.CompanyNameEn,
             CountryId = request.CountryId,
             CurrId = request.CurrId,
             UpdateUser = request.UpdateUser,

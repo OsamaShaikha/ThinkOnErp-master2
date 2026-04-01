@@ -21,7 +21,7 @@ public interface IUserRepository
     /// </summary>
     /// <param name="rowId">The unique identifier of the user</param>
     /// <returns>The SysUser entity if found, null otherwise</returns>
-    Task<SysUser?> GetByIdAsync(decimal rowId);
+    Task<SysUser?> GetByIdAsync(Int64 rowId);
 
     /// <summary>
     /// Creates a new user in the database.
@@ -29,7 +29,7 @@ public interface IUserRepository
     /// </summary>
     /// <param name="user">The user entity to create</param>
     /// <returns>The generated RowId from SEQ_SYS_USERS sequence</returns>
-    Task<decimal> CreateAsync(SysUser user);
+    Task<Int64> CreateAsync(SysUser user);
 
     /// <summary>
     /// Updates an existing user in the database.
@@ -37,7 +37,7 @@ public interface IUserRepository
     /// </summary>
     /// <param name="user">The user entity with updated values</param>
     /// <returns>The number of rows affected</returns>
-    Task<int> UpdateAsync(SysUser user);
+    Task<Int64> UpdateAsync(SysUser user);
 
     /// <summary>
     /// Performs a soft delete on a user by setting IS_ACTIVE to false.
@@ -45,5 +45,5 @@ public interface IUserRepository
     /// </summary>
     /// <param name="rowId">The unique identifier of the user to delete</param>
     /// <returns>The number of rows affected</returns>
-    Task<int> DeleteAsync(decimal rowId);
+    Task<Int64> DeleteAsync(Int64 rowId);
 }

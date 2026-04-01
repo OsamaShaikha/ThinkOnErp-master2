@@ -6,9 +6,9 @@ public class UpdateCurrencyCommandValidator : AbstractValidator<UpdateCurrencyCo
 {
     public UpdateCurrencyCommandValidator()
     {
-        RuleFor(x => x.RowId).GreaterThan(0);
-        RuleFor(x => x.RowDesc).NotEmpty().MaximumLength(100);
-        RuleFor(x => x.RowDescE).NotEmpty().MaximumLength(100);
+        RuleFor(x => x.CurrencyId).GreaterThan(0);
+        RuleFor(x => x.CurrencyNameAr).NotEmpty().MaximumLength(100);
+        RuleFor(x => x.CurrencyNameEn).NotEmpty().MaximumLength(100);
         RuleFor(x => x.ShortDesc).NotEmpty().MaximumLength(50);
         RuleFor(x => x.ShortDescE).NotEmpty().MaximumLength(50);
         RuleFor(x => x.SingulerDesc).NotEmpty().MaximumLength(50);

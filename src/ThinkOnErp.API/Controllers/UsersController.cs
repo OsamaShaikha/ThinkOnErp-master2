@@ -87,7 +87,7 @@ public class UsersController : ControllerBase
     [ProducesResponseType(typeof(ApiResponse<UserDto>), StatusCodes.Status404NotFound)]
     [ProducesResponseType(typeof(ApiResponse<UserDto>), StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(typeof(ApiResponse<UserDto>), StatusCodes.Status403Forbidden)]
-    public async Task<ActionResult<ApiResponse<UserDto>>> GetUserById(decimal id)
+    public async Task<ActionResult<ApiResponse<UserDto>>> GetUserById(Int64 id)
     {
         try
         {
@@ -130,11 +130,11 @@ public class UsersController : ControllerBase
     /// <response code="403">User does not have admin privileges</response>
     [HttpPost]
     [Authorize(Policy = "AdminOnly")]
-    [ProducesResponseType(typeof(ApiResponse<decimal>), StatusCodes.Status201Created)]
-    [ProducesResponseType(typeof(ApiResponse<decimal>), StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(typeof(ApiResponse<decimal>), StatusCodes.Status401Unauthorized)]
-    [ProducesResponseType(typeof(ApiResponse<decimal>), StatusCodes.Status403Forbidden)]
-    public async Task<ActionResult<ApiResponse<decimal>>> CreateUser([FromBody] CreateUserCommand command)
+    [ProducesResponseType(typeof(ApiResponse<Int64>), StatusCodes.Status201Created)]
+    [ProducesResponseType(typeof(ApiResponse<Int64>), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ApiResponse<Int64>), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ApiResponse<Int64>), StatusCodes.Status403Forbidden)]
+    public async Task<ActionResult<ApiResponse<Int64>>> CreateUser([FromBody] CreateUserCommand command)
     {
         try
         {
@@ -173,19 +173,19 @@ public class UsersController : ControllerBase
     /// <response code="403">User does not have admin privileges</response>
     [HttpPut("{id}")]
     [Authorize(Policy = "AdminOnly")]
-    [ProducesResponseType(typeof(ApiResponse<int>), StatusCodes.Status200OK)]
-    [ProducesResponseType(typeof(ApiResponse<int>), StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(typeof(ApiResponse<int>), StatusCodes.Status404NotFound)]
-    [ProducesResponseType(typeof(ApiResponse<int>), StatusCodes.Status401Unauthorized)]
-    [ProducesResponseType(typeof(ApiResponse<int>), StatusCodes.Status403Forbidden)]
-    public async Task<ActionResult<ApiResponse<int>>> UpdateUser(decimal id, [FromBody] UpdateUserCommand command)
+    [ProducesResponseType(typeof(ApiResponse<Int64>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<Int64>), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ApiResponse<Int64>), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ApiResponse<Int64>), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ApiResponse<Int64>), StatusCodes.Status403Forbidden)]
+    public async Task<ActionResult<ApiResponse<Int64>>> UpdateUser(Int64 id, [FromBody] UpdateUserCommand command)
     {
         try
         {
-            if (id != command.RowId)
+            if (id != command.UserId)
             {
-                _logger.LogWarning("User ID mismatch: URL ID {UrlId} vs Command ID {CommandId}", id, command.RowId);
-                return BadRequest(ApiResponse<int>.CreateFailure(
+                _logger.LogWarning("User ID mismatch: URL ID {UrlId} vs Command ID {CommandId}", id, command.UserId);
+                return BadRequest(ApiResponse<Int64>.CreateFailure(
                     "User ID in URL does not match the ID in the request body",
                     statusCode: 400));
             }
@@ -197,14 +197,14 @@ public class UsersController : ControllerBase
             if (rowsAffected == 0)
             {
                 _logger.LogWarning("User not found for update with ID: {UserId}", id);
-                return NotFound(ApiResponse<int>.CreateFailure(
+                return NotFound(ApiResponse<Int64>.CreateFailure(
                     "No user found with the specified identifier",
                     statusCode: 404));
             }
 
             _logger.LogInformation("User updated successfully with ID: {UserId}", id);
 
-            return Ok(ApiResponse<int>.CreateSuccess(
+            return Ok(ApiResponse<Int64>.CreateSuccess(
                 rowsAffected,
                 "User updated successfully",
                 200));
@@ -228,30 +228,30 @@ public class UsersController : ControllerBase
     /// <response code="403">User does not have admin privileges</response>
     [HttpDelete("{id}")]
     [Authorize(Policy = "AdminOnly")]
-    [ProducesResponseType(typeof(ApiResponse<int>), StatusCodes.Status200OK)]
-    [ProducesResponseType(typeof(ApiResponse<int>), StatusCodes.Status404NotFound)]
-    [ProducesResponseType(typeof(ApiResponse<int>), StatusCodes.Status401Unauthorized)]
-    [ProducesResponseType(typeof(ApiResponse<int>), StatusCodes.Status403Forbidden)]
-    public async Task<ActionResult<ApiResponse<int>>> DeleteUser(decimal id)
+    [ProducesResponseType(typeof(ApiResponse<Int64>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<Int64>), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ApiResponse<Int64>), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ApiResponse<Int64>), StatusCodes.Status403Forbidden)]
+    public async Task<ActionResult<ApiResponse<Int64>>> DeleteUser(Int64 id)
     {
         try
         {
             _logger.LogInformation("Deleting user with ID: {UserId}", id);
 
-            var command = new DeleteUserCommand { RowId = id };
+            var command = new DeleteUserCommand { UserId = id };
             var rowsAffected = await _mediator.Send(command);
 
             if (rowsAffected == 0)
             {
                 _logger.LogWarning("User not found for deletion with ID: {UserId}", id);
-                return NotFound(ApiResponse<int>.CreateFailure(
+                return NotFound(ApiResponse<Int64>.CreateFailure(
                     "No user found with the specified identifier",
                     statusCode: 404));
             }
 
             _logger.LogInformation("User deleted successfully with ID: {UserId}", id);
 
-            return Ok(ApiResponse<int>.CreateSuccess(
+            return Ok(ApiResponse<Int64>.CreateSuccess(
                 rowsAffected,
                 "User deleted successfully",
                 200));
@@ -277,7 +277,7 @@ public class UsersController : ControllerBase
     [ProducesResponseType(typeof(ApiResponse<bool>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiResponse<bool>), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ApiResponse<bool>), StatusCodes.Status401Unauthorized)]
-    public async Task<ActionResult<ApiResponse<bool>>> ChangePassword(decimal id, [FromBody] ChangePasswordCommand command)
+    public async Task<ActionResult<ApiResponse<bool>>> ChangePassword(Int64 id, [FromBody] ChangePasswordCommand command)
     {
         try
         {

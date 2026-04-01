@@ -10,17 +10,17 @@ public class UserDto
     /// <summary>
     /// Unique identifier for the user
     /// </summary>
-    public decimal RowId { get; set; }
+    public Int64 UserId { get; set; }
 
     /// <summary>
     /// Arabic description of the user
     /// </summary>
-    public string RowDesc { get; set; } = string.Empty;
+    public string NameAr { get; set; } = string.Empty;
 
     /// <summary>
     /// English description of the user
     /// </summary>
-    public string RowDescE { get; set; } = string.Empty;
+    public string NameEn { get; set; } = string.Empty;
 
     /// <summary>
     /// Unique username for authentication
@@ -40,12 +40,12 @@ public class UserDto
     /// <summary>
     /// Foreign key to SYS_ROLE table
     /// </summary>
-    public decimal? Role { get; set; }
+    public Int64? RoleId { get; set; }
 
     /// <summary>
     /// Foreign key to SYS_BRANCH table
     /// </summary>
-    public decimal? BranchId { get; set; }
+    public Int64? BranchId { get; set; }
 
     /// <summary>
     /// Email address

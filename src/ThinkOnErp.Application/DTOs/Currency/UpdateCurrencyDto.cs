@@ -9,12 +9,12 @@ public class UpdateCurrencyDto
     /// <summary>
     /// Arabic description of the currency (required)
     /// </summary>
-    public string RowDesc { get; set; } = string.Empty;
+    public string CurrencyNameAr { get; set; } = string.Empty;
 
     /// <summary>
     /// English description of the currency (required)
     /// </summary>
-    public string RowDescE { get; set; } = string.Empty;
+    public string CurrencyNameEn { get; set; } = string.Empty;
 
     /// <summary>
     /// Arabic short description (required)

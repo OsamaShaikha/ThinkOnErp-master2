@@ -6,10 +6,10 @@ namespace ThinkOnErp.Application.Features.Currencies.Commands.CreateCurrency;
 /// Command to create a new currency in the system.
 /// Returns the newly created currency's ID.
 /// </summary>
-public class CreateCurrencyCommand : IRequest<decimal>
+public class CreateCurrencyCommand : IRequest<Int64>
 {
-    public string RowDesc { get; set; } = string.Empty;
-    public string RowDescE { get; set; } = string.Empty;
+    public string CurrencyNameAr { get; set; } = string.Empty;
+    public string CurrencyNameEn { get; set; } = string.Empty;
     public string ShortDesc { get; set; } = string.Empty;
     public string ShortDescE { get; set; } = string.Empty;
     public string SingulerDesc { get; set; } = string.Empty;

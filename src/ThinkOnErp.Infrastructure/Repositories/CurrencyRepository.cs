@@ -1,5 +1,4 @@
 using Oracle.ManagedDataAccess.Client;
-using Oracle.ManagedDataAccess.Types;
 using System.Data;
 using ThinkOnErp.Domain.Entities;
 using ThinkOnErp.Domain.Interfaces;
@@ -33,33 +32,29 @@ public class CurrencyRepository : ICurrencyRepository
     /// <returns>A list of all active SysCurrency entities</returns>
     public async Task<List<SysCurrency>> GetAllAsync()
     {
-        var currencies = new List<SysCurrency>();
+        List<SysCurrency> currencies = new();
 
         using (var connection = _dbContext.CreateConnection())
         {
             await connection.OpenAsync();
 
-            using (var command = connection.CreateCommand())
+            using var command = connection.CreateCommand();
+            command.CommandType = CommandType.StoredProcedure;
+            command.CommandText = "SP_SYS_CURRENCY_SELECT_ALL";
+
+            // Add output parameter for SYS_REFCURSOR
+            OracleParameter cursorParam = new()
             {
-                command.CommandType = CommandType.StoredProcedure;
-                command.CommandText = "SP_SYS_CURRENCY_SELECT_ALL";
+                ParameterName = "P_RESULT_CURSOR",
+                OracleDbType = OracleDbType.RefCursor,
+                Direction = ParameterDirection.Output
+            };
+            _ = command.Parameters.Add(cursorParam);
 
-                // Add output parameter for SYS_REFCURSOR
-                var cursorParam = new OracleParameter
-                {
-                    ParameterName = "P_RESULT_CURSOR",
-                    OracleDbType = OracleDbType.RefCursor,
-                    Direction = ParameterDirection.Output
-                };
-                command.Parameters.Add(cursorParam);
-
-                using (var reader = await command.ExecuteReaderAsync())
-                {
-                    while (await reader.ReadAsync())
-                    {
-                        currencies.Add(MapToEntity(reader));
-                    }
-                }
+            using var reader = await command.ExecuteReaderAsync();
+            while (await reader.ReadAsync())
+            {
+                currencies.Add(MapToEntity(reader));
             }
         }
 
@@ -72,44 +67,38 @@ public class CurrencyRepository : ICurrencyRepository
     /// </summary>
     /// <param name="rowId">The unique identifier of the currency</param>
     /// <returns>The SysCurrency entity if found, null otherwise</returns>
-    public async Task<SysCurrency?> GetByIdAsync(decimal rowId)
+    public async Task<SysCurrency?> GetByIdAsync(long rowId)
     {
-        using (var connection = _dbContext.CreateConnection())
+        using var connection = _dbContext.CreateConnection();
+        await connection.OpenAsync();
+
+        using var command = connection.CreateCommand();
+        command.CommandType = CommandType.StoredProcedure;
+        command.CommandText = "SP_SYS_CURRENCY_SELECT_BY_ID";
+
+        // Add input parameter for ROW_ID
+        OracleParameter idParam = new()
         {
-            await connection.OpenAsync();
+            ParameterName = "P_ROW_ID",
+            OracleDbType = OracleDbType.Decimal,
+            Direction = ParameterDirection.Input,
+            Value = rowId
+        };
+        _ = command.Parameters.Add(idParam);
 
-            using (var command = connection.CreateCommand())
-            {
-                command.CommandType = CommandType.StoredProcedure;
-                command.CommandText = "SP_SYS_CURRENCY_SELECT_BY_ID";
+        // Add output parameter for SYS_REFCURSOR
+        OracleParameter cursorParam = new()
+        {
+            ParameterName = "P_RESULT_CURSOR",
+            OracleDbType = OracleDbType.RefCursor,
+            Direction = ParameterDirection.Output
+        };
+        _ = command.Parameters.Add(cursorParam);
 
-                // Add input parameter for ROW_ID
-                var idParam = new OracleParameter
-                {
-                    ParameterName = "P_ROW_ID",
-                    OracleDbType = OracleDbType.Decimal,
-                    Direction = ParameterDirection.Input,
-                    Value = rowId
-                };
-                command.Parameters.Add(idParam);
-
-                // Add output parameter for SYS_REFCURSOR
-                var cursorParam = new OracleParameter
-                {
-                    ParameterName = "P_RESULT_CURSOR",
-                    OracleDbType = OracleDbType.RefCursor,
-                    Direction = ParameterDirection.Output
-                };
-                command.Parameters.Add(cursorParam);
-
-                using (var reader = await command.ExecuteReaderAsync())
-                {
-                    if (await reader.ReadAsync())
-                    {
-                        return MapToEntity(reader);
-                    }
-                }
-            }
+        using var reader = await command.ExecuteReaderAsync();
+        if (await reader.ReadAsync())
+        {
+            return MapToEntity(reader);
         }
 
         return null;
@@ -121,153 +110,149 @@ public class CurrencyRepository : ICurrencyRepository
     /// </summary>
     /// <param name="currency">The currency entity to create</param>
     /// <returns>The generated RowId from SEQ_SYS_CURRENCY sequence</returns>
-    public async Task<decimal> CreateAsync(SysCurrency currency)
+    public async Task<long> CreateAsync(SysCurrency currency)
     {
-        using (var connection = _dbContext.CreateConnection())
+        using var connection = _dbContext.CreateConnection();
+        await connection.OpenAsync();
+
+        using var command = connection.CreateCommand();
+        command.CommandType = CommandType.StoredProcedure;
+        command.CommandText = "SP_SYS_CURRENCY_INSERT";
+
+        // Add input parameters
+        _ = command.Parameters.Add(new OracleParameter
         {
-            await connection.OpenAsync();
+            ParameterName = "P_ROW_DESC",
+            OracleDbType = OracleDbType.Varchar2,
+            Direction = ParameterDirection.Input,
+            Value = currency.RowDesc
+        });
 
-            using (var command = connection.CreateCommand())
-            {
-                command.CommandType = CommandType.StoredProcedure;
-                command.CommandText = "SP_SYS_CURRENCY_INSERT";
+        _ = command.Parameters.Add(new OracleParameter
+        {
+            ParameterName = "P_ROW_DESC_E",
+            OracleDbType = OracleDbType.Varchar2,
+            Direction = ParameterDirection.Input,
+            Value = currency.RowDescE
+        });
 
-                // Add input parameters
-                command.Parameters.Add(new OracleParameter
-                {
-                    ParameterName = "P_ROW_DESC",
-                    OracleDbType = OracleDbType.Varchar2,
-                    Direction = ParameterDirection.Input,
-                    Value = currency.RowDesc
-                });
+        _ = command.Parameters.Add(new OracleParameter
+        {
+            ParameterName = "P_SHORT_DESC",
+            OracleDbType = OracleDbType.Varchar2,
+            Direction = ParameterDirection.Input,
+            Value = currency.ShortDesc
+        });
 
-                command.Parameters.Add(new OracleParameter
-                {
-                    ParameterName = "P_ROW_DESC_E",
-                    OracleDbType = OracleDbType.Varchar2,
-                    Direction = ParameterDirection.Input,
-                    Value = currency.RowDescE
-                });
+        _ = command.Parameters.Add(new OracleParameter
+        {
+            ParameterName = "P_SHORT_DESC_E",
+            OracleDbType = OracleDbType.Varchar2,
+            Direction = ParameterDirection.Input,
+            Value = currency.ShortDescE
+        });
 
-                command.Parameters.Add(new OracleParameter
-                {
-                    ParameterName = "P_SHORT_DESC",
-                    OracleDbType = OracleDbType.Varchar2,
-                    Direction = ParameterDirection.Input,
-                    Value = currency.ShortDesc
-                });
+        _ = command.Parameters.Add(new OracleParameter
+        {
+            ParameterName = "P_SINGULER_DESC",
+            OracleDbType = OracleDbType.Varchar2,
+            Direction = ParameterDirection.Input,
+            Value = currency.SingulerDesc
+        });
 
-                command.Parameters.Add(new OracleParameter
-                {
-                    ParameterName = "P_SHORT_DESC_E",
-                    OracleDbType = OracleDbType.Varchar2,
-                    Direction = ParameterDirection.Input,
-                    Value = currency.ShortDescE
-                });
+        _ = command.Parameters.Add(new OracleParameter
+        {
+            ParameterName = "P_SINGULER_DESC_E",
+            OracleDbType = OracleDbType.Varchar2,
+            Direction = ParameterDirection.Input,
+            Value = currency.SingulerDescE
+        });
 
-                command.Parameters.Add(new OracleParameter
-                {
-                    ParameterName = "P_SINGULER_DESC",
-                    OracleDbType = OracleDbType.Varchar2,
-                    Direction = ParameterDirection.Input,
-                    Value = currency.SingulerDesc
-                });
+        _ = command.Parameters.Add(new OracleParameter
+        {
+            ParameterName = "P_DUAL_DESC",
+            OracleDbType = OracleDbType.Varchar2,
+            Direction = ParameterDirection.Input,
+            Value = currency.DualDesc
+        });
 
-                command.Parameters.Add(new OracleParameter
-                {
-                    ParameterName = "P_SINGULER_DESC_E",
-                    OracleDbType = OracleDbType.Varchar2,
-                    Direction = ParameterDirection.Input,
-                    Value = currency.SingulerDescE
-                });
+        _ = command.Parameters.Add(new OracleParameter
+        {
+            ParameterName = "P_DUAL_DESC_E",
+            OracleDbType = OracleDbType.Varchar2,
+            Direction = ParameterDirection.Input,
+            Value = currency.DualDescE
+        });
 
-                command.Parameters.Add(new OracleParameter
-                {
-                    ParameterName = "P_DUAL_DESC",
-                    OracleDbType = OracleDbType.Varchar2,
-                    Direction = ParameterDirection.Input,
-                    Value = currency.DualDesc
-                });
+        _ = command.Parameters.Add(new OracleParameter
+        {
+            ParameterName = "P_SUM_DESC",
+            OracleDbType = OracleDbType.Varchar2,
+            Direction = ParameterDirection.Input,
+            Value = currency.SumDesc
+        });
 
-                command.Parameters.Add(new OracleParameter
-                {
-                    ParameterName = "P_DUAL_DESC_E",
-                    OracleDbType = OracleDbType.Varchar2,
-                    Direction = ParameterDirection.Input,
-                    Value = currency.DualDescE
-                });
+        _ = command.Parameters.Add(new OracleParameter
+        {
+            ParameterName = "P_SUM_DESC_E",
+            OracleDbType = OracleDbType.Varchar2,
+            Direction = ParameterDirection.Input,
+            Value = currency.SumDescE
+        });
 
-                command.Parameters.Add(new OracleParameter
-                {
-                    ParameterName = "P_SUM_DESC",
-                    OracleDbType = OracleDbType.Varchar2,
-                    Direction = ParameterDirection.Input,
-                    Value = currency.SumDesc
-                });
+        _ = command.Parameters.Add(new OracleParameter
+        {
+            ParameterName = "P_FRAC_DESC",
+            OracleDbType = OracleDbType.Varchar2,
+            Direction = ParameterDirection.Input,
+            Value = currency.FracDesc
+        });
 
-                command.Parameters.Add(new OracleParameter
-                {
-                    ParameterName = "P_SUM_DESC_E",
-                    OracleDbType = OracleDbType.Varchar2,
-                    Direction = ParameterDirection.Input,
-                    Value = currency.SumDescE
-                });
+        _ = command.Parameters.Add(new OracleParameter
+        {
+            ParameterName = "P_FRAC_DESC_E",
+            OracleDbType = OracleDbType.Varchar2,
+            Direction = ParameterDirection.Input,
+            Value = currency.FracDescE
+        });
 
-                command.Parameters.Add(new OracleParameter
-                {
-                    ParameterName = "P_FRAC_DESC",
-                    OracleDbType = OracleDbType.Varchar2,
-                    Direction = ParameterDirection.Input,
-                    Value = currency.FracDesc
-                });
+        _ = command.Parameters.Add(new OracleParameter
+        {
+            ParameterName = "P_CURR_RATE",
+            OracleDbType = OracleDbType.Decimal,
+            Direction = ParameterDirection.Input,
+            Value = (object?)currency.CurrRate ?? DBNull.Value
+        });
 
-                command.Parameters.Add(new OracleParameter
-                {
-                    ParameterName = "P_FRAC_DESC_E",
-                    OracleDbType = OracleDbType.Varchar2,
-                    Direction = ParameterDirection.Input,
-                    Value = currency.FracDescE
-                });
+        _ = command.Parameters.Add(new OracleParameter
+        {
+            ParameterName = "P_CURR_RATE_DATE",
+            OracleDbType = OracleDbType.Date,
+            Direction = ParameterDirection.Input,
+            Value = (object?)currency.CurrRateDate ?? DBNull.Value
+        });
 
-                command.Parameters.Add(new OracleParameter
-                {
-                    ParameterName = "P_CURR_RATE",
-                    OracleDbType = OracleDbType.Decimal,
-                    Direction = ParameterDirection.Input,
-                    Value = (object?)currency.CurrRate ?? DBNull.Value
-                });
+        _ = command.Parameters.Add(new OracleParameter
+        {
+            ParameterName = "P_CREATION_USER",
+            OracleDbType = OracleDbType.Varchar2,
+            Direction = ParameterDirection.Input,
+            Value = currency.CreationUser
+        });
 
-                command.Parameters.Add(new OracleParameter
-                {
-                    ParameterName = "P_CURR_RATE_DATE",
-                    OracleDbType = OracleDbType.Date,
-                    Direction = ParameterDirection.Input,
-                    Value = (object?)currency.CurrRateDate ?? DBNull.Value
-                });
+        // Add output parameter for new ID
+        OracleParameter newIdParam = new()
+        {
+            ParameterName = "P_NEW_ID",
+            OracleDbType = OracleDbType.Decimal,
+            Direction = ParameterDirection.Output
+        };
+        _ = command.Parameters.Add(newIdParam);
 
-                command.Parameters.Add(new OracleParameter
-                {
-                    ParameterName = "P_CREATION_USER",
-                    OracleDbType = OracleDbType.Varchar2,
-                    Direction = ParameterDirection.Input,
-                    Value = currency.CreationUser
-                });
+        _ = await command.ExecuteNonQueryAsync();
 
-                // Add output parameter for new ID
-                var newIdParam = new OracleParameter
-                {
-                    ParameterName = "P_NEW_ID",
-                    OracleDbType = OracleDbType.Decimal,
-                    Direction = ParameterDirection.Output
-                };
-                command.Parameters.Add(newIdParam);
-
-                await command.ExecuteNonQueryAsync();
-
-                // Return the generated ID
-                return Convert.ToDecimal(newIdParam.Value.ToString());
-            }
-        }
+        // Return the generated ID
+        return long.Parse(newIdParam.Value.ToString());
     }
 
     /// <summary>
@@ -276,149 +261,145 @@ public class CurrencyRepository : ICurrencyRepository
     /// </summary>
     /// <param name="currency">The currency entity with updated values</param>
     /// <returns>The number of rows affected</returns>
-    public async Task<int> UpdateAsync(SysCurrency currency)
+    public async Task<long> UpdateAsync(SysCurrency currency)
     {
-        using (var connection = _dbContext.CreateConnection())
+        using var connection = _dbContext.CreateConnection();
+        await connection.OpenAsync();
+
+        using var command = connection.CreateCommand();
+        command.CommandType = CommandType.StoredProcedure;
+        command.CommandText = "SP_SYS_CURRENCY_UPDATE";
+
+        // Add input parameters
+        _ = command.Parameters.Add(new OracleParameter
         {
-            await connection.OpenAsync();
+            ParameterName = "P_ROW_ID",
+            OracleDbType = OracleDbType.Decimal,
+            Direction = ParameterDirection.Input,
+            Value = currency.RowId
+        });
 
-            using (var command = connection.CreateCommand())
-            {
-                command.CommandType = CommandType.StoredProcedure;
-                command.CommandText = "SP_SYS_CURRENCY_UPDATE";
+        _ = command.Parameters.Add(new OracleParameter
+        {
+            ParameterName = "P_ROW_DESC",
+            OracleDbType = OracleDbType.Varchar2,
+            Direction = ParameterDirection.Input,
+            Value = currency.RowDesc
+        });
 
-                // Add input parameters
-                command.Parameters.Add(new OracleParameter
-                {
-                    ParameterName = "P_ROW_ID",
-                    OracleDbType = OracleDbType.Decimal,
-                    Direction = ParameterDirection.Input,
-                    Value = currency.RowId
-                });
+        _ = command.Parameters.Add(new OracleParameter
+        {
+            ParameterName = "P_ROW_DESC_E",
+            OracleDbType = OracleDbType.Varchar2,
+            Direction = ParameterDirection.Input,
+            Value = currency.RowDescE
+        });
 
-                command.Parameters.Add(new OracleParameter
-                {
-                    ParameterName = "P_ROW_DESC",
-                    OracleDbType = OracleDbType.Varchar2,
-                    Direction = ParameterDirection.Input,
-                    Value = currency.RowDesc
-                });
+        _ = command.Parameters.Add(new OracleParameter
+        {
+            ParameterName = "P_SHORT_DESC",
+            OracleDbType = OracleDbType.Varchar2,
+            Direction = ParameterDirection.Input,
+            Value = currency.ShortDesc
+        });
 
-                command.Parameters.Add(new OracleParameter
-                {
-                    ParameterName = "P_ROW_DESC_E",
-                    OracleDbType = OracleDbType.Varchar2,
-                    Direction = ParameterDirection.Input,
-                    Value = currency.RowDescE
-                });
+        _ = command.Parameters.Add(new OracleParameter
+        {
+            ParameterName = "P_SHORT_DESC_E",
+            OracleDbType = OracleDbType.Varchar2,
+            Direction = ParameterDirection.Input,
+            Value = currency.ShortDescE
+        });
 
-                command.Parameters.Add(new OracleParameter
-                {
-                    ParameterName = "P_SHORT_DESC",
-                    OracleDbType = OracleDbType.Varchar2,
-                    Direction = ParameterDirection.Input,
-                    Value = currency.ShortDesc
-                });
+        _ = command.Parameters.Add(new OracleParameter
+        {
+            ParameterName = "P_SINGULER_DESC",
+            OracleDbType = OracleDbType.Varchar2,
+            Direction = ParameterDirection.Input,
+            Value = currency.SingulerDesc
+        });
 
-                command.Parameters.Add(new OracleParameter
-                {
-                    ParameterName = "P_SHORT_DESC_E",
-                    OracleDbType = OracleDbType.Varchar2,
-                    Direction = ParameterDirection.Input,
-                    Value = currency.ShortDescE
-                });
+        _ = command.Parameters.Add(new OracleParameter
+        {
+            ParameterName = "P_SINGULER_DESC_E",
+            OracleDbType = OracleDbType.Varchar2,
+            Direction = ParameterDirection.Input,
+            Value = currency.SingulerDescE
+        });
 
-                command.Parameters.Add(new OracleParameter
-                {
-                    ParameterName = "P_SINGULER_DESC",
-                    OracleDbType = OracleDbType.Varchar2,
-                    Direction = ParameterDirection.Input,
-                    Value = currency.SingulerDesc
-                });
+        _ = command.Parameters.Add(new OracleParameter
+        {
+            ParameterName = "P_DUAL_DESC",
+            OracleDbType = OracleDbType.Varchar2,
+            Direction = ParameterDirection.Input,
+            Value = currency.DualDesc
+        });
 
-                command.Parameters.Add(new OracleParameter
-                {
-                    ParameterName = "P_SINGULER_DESC_E",
-                    OracleDbType = OracleDbType.Varchar2,
-                    Direction = ParameterDirection.Input,
-                    Value = currency.SingulerDescE
-                });
+        _ = command.Parameters.Add(new OracleParameter
+        {
+            ParameterName = "P_DUAL_DESC_E",
+            OracleDbType = OracleDbType.Varchar2,
+            Direction = ParameterDirection.Input,
+            Value = currency.DualDescE
+        });
 
-                command.Parameters.Add(new OracleParameter
-                {
-                    ParameterName = "P_DUAL_DESC",
-                    OracleDbType = OracleDbType.Varchar2,
-                    Direction = ParameterDirection.Input,
-                    Value = currency.DualDesc
-                });
+        _ = command.Parameters.Add(new OracleParameter
+        {
+            ParameterName = "P_SUM_DESC",
+            OracleDbType = OracleDbType.Varchar2,
+            Direction = ParameterDirection.Input,
+            Value = currency.SumDesc
+        });
 
-                command.Parameters.Add(new OracleParameter
-                {
-                    ParameterName = "P_DUAL_DESC_E",
-                    OracleDbType = OracleDbType.Varchar2,
-                    Direction = ParameterDirection.Input,
-                    Value = currency.DualDescE
-                });
+        _ = command.Parameters.Add(new OracleParameter
+        {
+            ParameterName = "P_SUM_DESC_E",
+            OracleDbType = OracleDbType.Varchar2,
+            Direction = ParameterDirection.Input,
+            Value = currency.SumDescE
+        });
 
-                command.Parameters.Add(new OracleParameter
-                {
-                    ParameterName = "P_SUM_DESC",
-                    OracleDbType = OracleDbType.Varchar2,
-                    Direction = ParameterDirection.Input,
-                    Value = currency.SumDesc
-                });
+        _ = command.Parameters.Add(new OracleParameter
+        {
+            ParameterName = "P_FRAC_DESC",
+            OracleDbType = OracleDbType.Varchar2,
+            Direction = ParameterDirection.Input,
+            Value = currency.FracDesc
+        });
 
-                command.Parameters.Add(new OracleParameter
-                {
-                    ParameterName = "P_SUM_DESC_E",
-                    OracleDbType = OracleDbType.Varchar2,
-                    Direction = ParameterDirection.Input,
-                    Value = currency.SumDescE
-                });
+        _ = command.Parameters.Add(new OracleParameter
+        {
+            ParameterName = "P_FRAC_DESC_E",
+            OracleDbType = OracleDbType.Varchar2,
+            Direction = ParameterDirection.Input,
+            Value = currency.FracDescE
+        });
 
-                command.Parameters.Add(new OracleParameter
-                {
-                    ParameterName = "P_FRAC_DESC",
-                    OracleDbType = OracleDbType.Varchar2,
-                    Direction = ParameterDirection.Input,
-                    Value = currency.FracDesc
-                });
+        _ = command.Parameters.Add(new OracleParameter
+        {
+            ParameterName = "P_CURR_RATE",
+            OracleDbType = OracleDbType.Decimal,
+            Direction = ParameterDirection.Input,
+            Value = (object?)currency.CurrRate ?? DBNull.Value
+        });
 
-                command.Parameters.Add(new OracleParameter
-                {
-                    ParameterName = "P_FRAC_DESC_E",
-                    OracleDbType = OracleDbType.Varchar2,
-                    Direction = ParameterDirection.Input,
-                    Value = currency.FracDescE
-                });
+        _ = command.Parameters.Add(new OracleParameter
+        {
+            ParameterName = "P_CURR_RATE_DATE",
+            OracleDbType = OracleDbType.Date,
+            Direction = ParameterDirection.Input,
+            Value = (object?)currency.CurrRateDate ?? DBNull.Value
+        });
 
-                command.Parameters.Add(new OracleParameter
-                {
-                    ParameterName = "P_CURR_RATE",
-                    OracleDbType = OracleDbType.Decimal,
-                    Direction = ParameterDirection.Input,
-                    Value = (object?)currency.CurrRate ?? DBNull.Value
-                });
+        _ = command.Parameters.Add(new OracleParameter
+        {
+            ParameterName = "P_UPDATE_USER",
+            OracleDbType = OracleDbType.Varchar2,
+            Direction = ParameterDirection.Input,
+            Value = currency.UpdateUser ?? string.Empty
+        });
 
-                command.Parameters.Add(new OracleParameter
-                {
-                    ParameterName = "P_CURR_RATE_DATE",
-                    OracleDbType = OracleDbType.Date,
-                    Direction = ParameterDirection.Input,
-                    Value = (object?)currency.CurrRateDate ?? DBNull.Value
-                });
-
-                command.Parameters.Add(new OracleParameter
-                {
-                    ParameterName = "P_UPDATE_USER",
-                    OracleDbType = OracleDbType.Varchar2,
-                    Direction = ParameterDirection.Input,
-                    Value = currency.UpdateUser ?? string.Empty
-                });
-
-                return await command.ExecuteNonQueryAsync();
-            }
-        }
+        return await command.ExecuteNonQueryAsync();
     }
 
     /// <summary>
@@ -427,29 +408,25 @@ public class CurrencyRepository : ICurrencyRepository
     /// </summary>
     /// <param name="rowId">The unique identifier of the currency to delete</param>
     /// <returns>The number of rows affected</returns>
-    public async Task<int> DeleteAsync(decimal rowId)
+    public async Task<long> DeleteAsync(long rowId)
     {
-        using (var connection = _dbContext.CreateConnection())
+        using var connection = _dbContext.CreateConnection();
+        await connection.OpenAsync();
+
+        using var command = connection.CreateCommand();
+        command.CommandType = CommandType.StoredProcedure;
+        command.CommandText = "SP_SYS_CURRENCY_DELETE";
+
+        // Add input parameter for ROW_ID
+        _ = command.Parameters.Add(new OracleParameter
         {
-            await connection.OpenAsync();
+            ParameterName = "P_ROW_ID",
+            OracleDbType = OracleDbType.Decimal,
+            Direction = ParameterDirection.Input,
+            Value = rowId
+        });
 
-            using (var command = connection.CreateCommand())
-            {
-                command.CommandType = CommandType.StoredProcedure;
-                command.CommandText = "SP_SYS_CURRENCY_DELETE";
-
-                // Add input parameter for ROW_ID
-                command.Parameters.Add(new OracleParameter
-                {
-                    ParameterName = "P_ROW_ID",
-                    OracleDbType = OracleDbType.Decimal,
-                    Direction = ParameterDirection.Input,
-                    Value = rowId
-                });
-
-                return await command.ExecuteNonQueryAsync();
-            }
-        }
+        return await command.ExecuteNonQueryAsync();
     }
 
     /// <summary>
@@ -462,7 +439,7 @@ public class CurrencyRepository : ICurrencyRepository
     {
         return new SysCurrency
         {
-            RowId = reader.GetDecimal(reader.GetOrdinal("ROW_ID")),
+            RowId = reader.GetOrdinal("ROW_ID"),
             RowDesc = reader.GetString(reader.GetOrdinal("ROW_DESC")),
             RowDescE = reader.GetString(reader.GetOrdinal("ROW_DESC_E")),
             ShortDesc = reader.GetString(reader.GetOrdinal("SHORT_DESC")),

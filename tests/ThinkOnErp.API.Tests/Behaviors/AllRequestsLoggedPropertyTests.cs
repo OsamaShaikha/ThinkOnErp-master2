@@ -39,7 +39,7 @@ public class AllRequestsLoggedPropertyTests : IClassFixture<TestWebApplicationFa
                 var createCommand = new CreateRoleCommand
                 {
                     RowDesc = roleDesc,
-                    RowDescE = roleDescE,
+                    RoleNameEn = roleDescE,
                     Note = "Test logging"
                 };
 

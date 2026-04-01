@@ -21,7 +21,7 @@ public interface IBranchRepository
     /// </summary>
     /// <param name="rowId">The unique identifier of the branch</param>
     /// <returns>The SysBranch entity if found, null otherwise</returns>
-    Task<SysBranch?> GetByIdAsync(decimal rowId);
+    Task<SysBranch?> GetByIdAsync(Int64 rowId);
 
     /// <summary>
     /// Creates a new branch in the database.
@@ -29,7 +29,7 @@ public interface IBranchRepository
     /// </summary>
     /// <param name="branch">The branch entity to create</param>
     /// <returns>The generated RowId from SEQ_SYS_BRANCH sequence</returns>
-    Task<decimal> CreateAsync(SysBranch branch);
+    Task<Int64> CreateAsync(SysBranch branch);
 
     /// <summary>
     /// Updates an existing branch in the database.
@@ -37,7 +37,7 @@ public interface IBranchRepository
     /// </summary>
     /// <param name="branch">The branch entity with updated values</param>
     /// <returns>The number of rows affected</returns>
-    Task<int> UpdateAsync(SysBranch branch);
+    Task<Int64> UpdateAsync(SysBranch branch);
 
     /// <summary>
     /// Performs a soft delete on a branch by setting IS_ACTIVE to false.
@@ -45,5 +45,5 @@ public interface IBranchRepository
     /// </summary>
     /// <param name="rowId">The unique identifier of the branch to delete</param>
     /// <returns>The number of rows affected</returns>
-    Task<int> DeleteAsync(decimal rowId);
+    Task<Int64> DeleteAsync(Int64 rowId);
 }

@@ -40,7 +40,7 @@ public class IsActiveMappingPropertyTests : IClassFixture<TestWebApplicationFact
                 var createCommand = new CreateRoleCommand
                 {
                     RowDesc = roleDesc,
-                    RowDescE = roleDescE,
+                    RoleNameEn = roleDescE,
                     Note = "Test active mapping"
                 };
 
@@ -76,14 +76,14 @@ public class IsActiveMappingPropertyTests : IClassFixture<TestWebApplicationFact
                 var createCommand = new CreateRoleCommand
                 {
                     RowDesc = roleDesc,
-                    RowDescE = roleDescE,
+                    RoleNameEn = roleDescE,
                     Note = "Test inactive mapping"
                 };
 
                 var roleId = mediator.Send(createCommand).GetAwaiter().GetResult();
 
                 // Delete the role (soft delete - sets IS_ACTIVE to false)
-                var deleteCommand = new DeleteRoleCommand { RowId = roleId };
+                var deleteCommand = new DeleteRoleCommand { RoleId = roleId };
                 mediator.Send(deleteCommand).GetAwaiter().GetResult();
 
                 // Get the role directly from repository (bypassing GetAll filter)

@@ -2,11 +2,11 @@ using MediatR;
 
 namespace ThinkOnErp.Application.Features.Branches.Commands.CreateBranch;
 
-public class CreateBranchCommand : IRequest<decimal>
+public class CreateBranchCommand : IRequest<Int64>
 {
-    public decimal? ParRowId { get; set; }
-    public string RowDesc { get; set; } = string.Empty;
-    public string RowDescE { get; set; } = string.Empty;
+    public Int64? CompanyId { get; set; }
+    public string BranchNameAr { get; set; } = string.Empty;
+    public string BranchNameEn { get; set; } = string.Empty;
     public string? Phone { get; set; }
     public string? Mobile { get; set; }
     public string? Fax { get; set; }

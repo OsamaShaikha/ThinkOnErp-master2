@@ -34,7 +34,7 @@ public class RepositoryOperationsUnitTests : IClassFixture<TestWebApplicationFac
         var createCommand = new CreateRoleCommand
         {
             RowDesc = "Test Role",
-            RowDescE = "Test Role E",
+            RoleNameEn = "Test Role E",
             Note = "Test Note"
         };
         var roleId = await mediator.Send(createCommand);
@@ -90,7 +90,7 @@ public class RepositoryOperationsUnitTests : IClassFixture<TestWebApplicationFac
         var createCommand = new CreateRoleCommand
         {
             RowDesc = "New Role",
-            RowDescE = "New Role E",
+            RoleNameEn = "New Role E",
             Note = "New Note"
         };
 
@@ -112,7 +112,7 @@ public class RepositoryOperationsUnitTests : IClassFixture<TestWebApplicationFac
         var createCommand = new CreateRoleCommand
         {
             RowDesc = "Original Role",
-            RowDescE = "Original Role E",
+            RoleNameEn = "Original Role E",
             Note = "Original Note"
         };
         var roleId = await mediator.Send(createCommand);
@@ -120,9 +120,9 @@ public class RepositoryOperationsUnitTests : IClassFixture<TestWebApplicationFac
         // Update the role
         var updateCommand = new UpdateRoleCommand
         {
-            RowId = roleId,
-            RowDesc = "Updated Role",
-            RowDescE = "Updated Role E",
+            RoleId = roleId,
+            RoleNameAr = "Updated Role",
+            RoleNameEn = "Updated Role E",
             Note = "Updated Note"
         };
 
@@ -130,7 +130,7 @@ public class RepositoryOperationsUnitTests : IClassFixture<TestWebApplicationFac
         var updateResult = await mediator.Send(updateCommand);
 
         // Verify changes persisted
-        var query = new GetRoleByIdQuery { RowId = roleId };
+        var query = new GetRoleByIdQuery { RoleId = roleId };
         var updatedRole = await mediator.Send(query);
 
         // Assert
@@ -152,13 +152,13 @@ public class RepositoryOperationsUnitTests : IClassFixture<TestWebApplicationFac
         var createCommand = new CreateRoleCommand
         {
             RowDesc = "Role To Delete",
-            RowDescE = "Role To Delete E",
+            RoleNameEn = "Role To Delete E",
             Note = "Will be deleted"
         };
         var roleId = await mediator.Send(createCommand);
 
         // Act
-        var deleteCommand = new DeleteRoleCommand { RowId = roleId };
+        var deleteCommand = new DeleteRoleCommand { RoleId = roleId };
         var deleteResult = await mediator.Send(deleteCommand);
 
         // Assert
@@ -176,13 +176,13 @@ public class RepositoryOperationsUnitTests : IClassFixture<TestWebApplicationFac
         var createCommand = new CreateRoleCommand
         {
             RowDesc = "Role To Delete",
-            RowDescE = "Role To Delete E",
+            RoleNameEn = "Role To Delete E",
             Note = "Will be deleted"
         };
         var roleId = await mediator.Send(createCommand);
 
         // Delete the role
-        var deleteCommand = new DeleteRoleCommand { RowId = roleId };
+        var deleteCommand = new DeleteRoleCommand { RoleId = roleId };
         await mediator.Send(deleteCommand);
 
         // Act

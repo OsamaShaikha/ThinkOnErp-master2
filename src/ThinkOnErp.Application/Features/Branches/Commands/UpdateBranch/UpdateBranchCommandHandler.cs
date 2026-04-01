@@ -4,7 +4,7 @@ using ThinkOnErp.Domain.Interfaces;
 
 namespace ThinkOnErp.Application.Features.Branches.Commands.UpdateBranch;
 
-public class UpdateBranchCommandHandler : IRequestHandler<UpdateBranchCommand, int>
+public class UpdateBranchCommandHandler : IRequestHandler<UpdateBranchCommand, Int64>
 {
     private readonly IBranchRepository _branchRepository;
 
@@ -13,14 +13,14 @@ public class UpdateBranchCommandHandler : IRequestHandler<UpdateBranchCommand, i
         _branchRepository = branchRepository;
     }
 
-    public async Task<int> Handle(UpdateBranchCommand request, CancellationToken cancellationToken)
+    public async Task<Int64> Handle(UpdateBranchCommand request, CancellationToken cancellationToken)
     {
         var branch = new SysBranch
         {
-            RowId = request.RowId,
-            ParRowId = request.ParRowId,
-            RowDesc = request.RowDesc,
-            RowDescE = request.RowDescE,
+            RowId = request.BranchId,
+            ParRowId = request.CompanyId,
+            RowDesc = request.BranchNameAr,
+            RowDescE = request.BranchNameEn,
             Phone = request.Phone,
             Mobile = request.Mobile,
             Fax = request.Fax,

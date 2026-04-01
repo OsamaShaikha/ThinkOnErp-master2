@@ -15,17 +15,17 @@ public class GetBranchByIdQueryHandler : IRequestHandler<GetBranchByIdQuery, Bra
 
     public async Task<BranchDto?> Handle(GetBranchByIdQuery request, CancellationToken cancellationToken)
     {
-        var branch = await _branchRepository.GetByIdAsync(request.RowId);
+        var branch = await _branchRepository.GetByIdAsync(request.BranchId);
 
         if (branch == null)
             return null;
 
         return new BranchDto
         {
-            RowId = branch.RowId,
-            ParRowId = branch.ParRowId,
-            RowDesc = branch.RowDesc,
-            RowDescE = branch.RowDescE,
+            BranchId = branch.RowId,
+            CompanyId = branch.ParRowId,
+            BranchNameAr = branch.RowDesc,
+            BranchNameEn = branch.RowDescE,
             Phone = branch.Phone,
             Mobile = branch.Mobile,
             Fax = branch.Fax,

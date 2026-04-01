@@ -10,7 +10,7 @@ public class SysCompany
     /// <summary>
     /// Primary key - generated from SEQ_SYS_COMPANY sequence
     /// </summary>
-    public decimal RowId { get; set; }
+    public Int64 RowId { get; set; }
 
     /// <summary>
     /// Arabic description of the company
@@ -25,12 +25,12 @@ public class SysCompany
     /// <summary>
     /// Foreign key to Country table
     /// </summary>
-    public decimal? CountryId { get; set; }
+    public Int64? CountryId { get; set; }
 
     /// <summary>
     /// Foreign key to SYS_CURRENCY table
     /// </summary>
-    public decimal? CurrId { get; set; }
+    public Int64? CurrId { get; set; }
 
     /// <summary>
     /// Soft delete flag - true for active, false for deleted

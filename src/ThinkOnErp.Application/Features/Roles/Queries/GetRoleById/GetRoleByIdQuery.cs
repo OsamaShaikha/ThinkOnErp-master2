@@ -12,5 +12,5 @@ public class GetRoleByIdQuery : IRequest<RoleDto?>
     /// <summary>
     /// Unique identifier of the role to retrieve
     /// </summary>
-    public decimal RowId { get; set; }
+    public Int64 RoleId { get; set; }
 }

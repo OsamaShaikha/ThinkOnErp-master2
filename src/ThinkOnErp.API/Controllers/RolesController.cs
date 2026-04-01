@@ -80,13 +80,13 @@ public class RolesController : ControllerBase
     [ProducesResponseType(typeof(ApiResponse<RoleDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiResponse<RoleDto>), StatusCodes.Status404NotFound)]
     [ProducesResponseType(typeof(ApiResponse<RoleDto>), StatusCodes.Status401Unauthorized)]
-    public async Task<ActionResult<ApiResponse<RoleDto>>> GetRoleById(decimal id)
+    public async Task<ActionResult<ApiResponse<RoleDto>>> GetRoleById(Int64 id)
     {
         try
         {
             _logger.LogInformation("Retrieving role with ID: {RoleId}", id);
 
-            var query = new GetRoleByIdQuery { RowId = id };
+            var query = new GetRoleByIdQuery { RoleId = id };
             var role = await _mediator.Send(query);
 
             if (role == null)
@@ -123,15 +123,15 @@ public class RolesController : ControllerBase
     /// <response code="403">User does not have admin privileges</response>
     [HttpPost]
     [Authorize(Policy = "AdminOnly")]
-    [ProducesResponseType(typeof(ApiResponse<decimal>), StatusCodes.Status201Created)]
-    [ProducesResponseType(typeof(ApiResponse<decimal>), StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(typeof(ApiResponse<decimal>), StatusCodes.Status401Unauthorized)]
-    [ProducesResponseType(typeof(ApiResponse<decimal>), StatusCodes.Status403Forbidden)]
-    public async Task<ActionResult<ApiResponse<decimal>>> CreateRole([FromBody] CreateRoleCommand command)
+    [ProducesResponseType(typeof(ApiResponse<Int64>), StatusCodes.Status201Created)]
+    [ProducesResponseType(typeof(ApiResponse<Int64>), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ApiResponse<Int64>), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ApiResponse<Int64>), StatusCodes.Status403Forbidden)]
+    public async Task<ActionResult<ApiResponse<Int64>>> CreateRole([FromBody] CreateRoleCommand command)
     {
         try
         {
-            _logger.LogInformation("Creating new role: {RoleDesc}", command.RowDesc);
+            _logger.LogInformation("Creating new role: {RoleDesc}", command.RoleNameEn);
 
             var roleId = await _mediator.Send(command);
 
@@ -140,14 +140,14 @@ public class RolesController : ControllerBase
             return CreatedAtAction(
                 nameof(GetRoleById),
                 new { id = roleId },
-                ApiResponse<decimal>.CreateSuccess(
+                ApiResponse<Int64>.CreateSuccess(
                     roleId,
                     "Role created successfully",
                     201));
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error creating role: {RoleDesc}", command.RowDesc);
+            _logger.LogError(ex, "Error creating role: {RoleDesc}", command.RoleNameEn);
             throw;
         }
     }
@@ -166,19 +166,19 @@ public class RolesController : ControllerBase
     /// <response code="403">User does not have admin privileges</response>
     [HttpPut("{id}")]
     [Authorize(Policy = "AdminOnly")]
-    [ProducesResponseType(typeof(ApiResponse<int>), StatusCodes.Status200OK)]
-    [ProducesResponseType(typeof(ApiResponse<int>), StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(typeof(ApiResponse<int>), StatusCodes.Status404NotFound)]
-    [ProducesResponseType(typeof(ApiResponse<int>), StatusCodes.Status401Unauthorized)]
-    [ProducesResponseType(typeof(ApiResponse<int>), StatusCodes.Status403Forbidden)]
-    public async Task<ActionResult<ApiResponse<int>>> UpdateRole(decimal id, [FromBody] UpdateRoleCommand command)
+    [ProducesResponseType(typeof(ApiResponse<Int64>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<Int64>), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ApiResponse<Int64>), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ApiResponse<Int64>), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ApiResponse<Int64>), StatusCodes.Status403Forbidden)]
+    public async Task<ActionResult<ApiResponse<Int64>>> UpdateRole(Int64 id, [FromBody] UpdateRoleCommand command)
     {
         try
         {
-            if (id != command.RowId)
+            if (id != command.RoleId)
             {
-                _logger.LogWarning("Role ID mismatch: URL ID {UrlId} vs Command ID {CommandId}", id, command.RowId);
-                return BadRequest(ApiResponse<int>.CreateFailure(
+                _logger.LogWarning("Role ID mismatch: URL ID {UrlId} vs Command ID {CommandId}", id, command.RoleId);
+                return BadRequest(ApiResponse<Int64>.CreateFailure(
                     "Role ID in URL does not match the ID in the request body",
                     statusCode: 400));
             }
@@ -190,14 +190,14 @@ public class RolesController : ControllerBase
             if (rowsAffected == 0)
             {
                 _logger.LogWarning("Role not found for update with ID: {RoleId}", id);
-                return NotFound(ApiResponse<int>.CreateFailure(
+                return NotFound(ApiResponse<Int64>.CreateFailure(
                     "No role found with the specified identifier",
                     statusCode: 404));
             }
 
             _logger.LogInformation("Role updated successfully with ID: {RoleId}", id);
 
-            return Ok(ApiResponse<int>.CreateSuccess(
+            return Ok(ApiResponse<Int64>.CreateSuccess(
                 rowsAffected,
                 "Role updated successfully",
                 200));
@@ -221,30 +221,30 @@ public class RolesController : ControllerBase
     /// <response code="403">User does not have admin privileges</response>
     [HttpDelete("{id}")]
     [Authorize(Policy = "AdminOnly")]
-    [ProducesResponseType(typeof(ApiResponse<int>), StatusCodes.Status200OK)]
-    [ProducesResponseType(typeof(ApiResponse<int>), StatusCodes.Status404NotFound)]
-    [ProducesResponseType(typeof(ApiResponse<int>), StatusCodes.Status401Unauthorized)]
-    [ProducesResponseType(typeof(ApiResponse<int>), StatusCodes.Status403Forbidden)]
-    public async Task<ActionResult<ApiResponse<int>>> DeleteRole(decimal id)
+    [ProducesResponseType(typeof(ApiResponse<Int64>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<Int64>), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ApiResponse<Int64>), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ApiResponse<Int64>), StatusCodes.Status403Forbidden)]
+    public async Task<ActionResult<ApiResponse<Int64>>> DeleteRole(Int64 id)
     {
         try
         {
             _logger.LogInformation("Deleting role with ID: {RoleId}", id);
 
-            var command = new DeleteRoleCommand { RowId = id };
+            var command = new DeleteRoleCommand { RoleId = id };
             var rowsAffected = await _mediator.Send(command);
 
             if (rowsAffected == 0)
             {
                 _logger.LogWarning("Role not found for deletion with ID: {RoleId}", id);
-                return NotFound(ApiResponse<int>.CreateFailure(
+                return NotFound(ApiResponse<Int64>.CreateFailure(
                     "No role found with the specified identifier",
                     statusCode: 404));
             }
 
             _logger.LogInformation("Role deleted successfully with ID: {RoleId}", id);
 
-            return Ok(ApiResponse<int>.CreateSuccess(
+            return Ok(ApiResponse<Int64>.CreateSuccess(
                 rowsAffected,
                 "Role deleted successfully",
                 200));

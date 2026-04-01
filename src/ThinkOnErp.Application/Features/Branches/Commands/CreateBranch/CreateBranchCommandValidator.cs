@@ -6,8 +6,8 @@ public class CreateBranchCommandValidator : AbstractValidator<CreateBranchComman
 {
     public CreateBranchCommandValidator()
     {
-        RuleFor(x => x.RowDesc).NotEmpty().MaximumLength(100);
-        RuleFor(x => x.RowDescE).NotEmpty().MaximumLength(100);
+        RuleFor(x => x.BranchNameAr).NotEmpty().MaximumLength(100);
+        RuleFor(x => x.BranchNameEn).NotEmpty().MaximumLength(100);
         RuleFor(x => x.Email).EmailAddress().When(x => !string.IsNullOrEmpty(x.Email));
         RuleFor(x => x.CreationUser).NotEmpty();
     }

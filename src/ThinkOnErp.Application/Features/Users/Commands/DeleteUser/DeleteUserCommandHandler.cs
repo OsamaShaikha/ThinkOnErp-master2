@@ -3,7 +3,7 @@ using ThinkOnErp.Domain.Interfaces;
 
 namespace ThinkOnErp.Application.Features.Users.Commands.DeleteUser;
 
-public class DeleteUserCommandHandler : IRequestHandler<DeleteUserCommand, int>
+public class DeleteUserCommandHandler : IRequestHandler<DeleteUserCommand, Int64>
 {
     private readonly IUserRepository _userRepository;
 
@@ -12,8 +12,8 @@ public class DeleteUserCommandHandler : IRequestHandler<DeleteUserCommand, int>
         _userRepository = userRepository;
     }
 
-    public async Task<int> Handle(DeleteUserCommand request, CancellationToken cancellationToken)
+    public async Task<Int64> Handle(DeleteUserCommand request, CancellationToken cancellationToken)
     {
-        return await _userRepository.DeleteAsync(request.RowId);
+        return await _userRepository.DeleteAsync(request.UserId);
     }
 }

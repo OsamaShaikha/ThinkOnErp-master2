@@ -2,11 +2,11 @@ using MediatR;
 
 namespace ThinkOnErp.Application.Features.Currencies.Commands.UpdateCurrency;
 
-public class UpdateCurrencyCommand : IRequest<int>
+public class UpdateCurrencyCommand : IRequest<Int64>
 {
-    public decimal RowId { get; set; }
-    public string RowDesc { get; set; } = string.Empty;
-    public string RowDescE { get; set; } = string.Empty;
+    public Int64 CurrencyId { get; set; }
+    public string CurrencyNameAr { get; set; } = string.Empty;
+    public string CurrencyNameEn { get; set; } = string.Empty;
     public string ShortDesc { get; set; } = string.Empty;
     public string ShortDescE { get; set; } = string.Empty;
     public string SingulerDesc { get; set; } = string.Empty;

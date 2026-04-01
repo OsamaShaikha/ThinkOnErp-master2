@@ -6,17 +6,17 @@ namespace ThinkOnErp.Application.Features.Roles.Commands.CreateRole;
 /// Command to create a new role in the system.
 /// Returns the newly created role's ID.
 /// </summary>
-public class CreateRoleCommand : IRequest<decimal>
+public class CreateRoleCommand : IRequest<Int64>
 {
     /// <summary>
     /// Arabic description of the role (required)
     /// </summary>
-    public string RowDesc { get; set; } = string.Empty;
+    public string RoleNameAr { get; set; } = string.Empty;
 
     /// <summary>
     /// English description of the role (required)
     /// </summary>
-    public string RowDescE { get; set; } = string.Empty;
+    public string RoleNameEn { get; set; } = string.Empty;
 
     /// <summary>
     /// Optional notes about the role

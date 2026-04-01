@@ -5,5 +5,5 @@ namespace ThinkOnErp.Application.Features.Branches.Queries.GetBranchById;
 
 public class GetBranchByIdQuery : IRequest<BranchDto?>
 {
-    public decimal RowId { get; set; }
+    public Int64 BranchId { get; set; }
 }

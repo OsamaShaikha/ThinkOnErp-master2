@@ -9,17 +9,17 @@ public class CurrencyDto
     /// <summary>
     /// Unique identifier for the currency
     /// </summary>
-    public decimal RowId { get; set; }
+    public Int64 CurrencyId { get; set; }
 
     /// <summary>
     /// Arabic description of the currency
     /// </summary>
-    public string RowDesc { get; set; } = string.Empty;
+    public string CurrencyNameAr { get; set; } = string.Empty;
 
     /// <summary>
     /// English description of the currency
     /// </summary>
-    public string RowDescE { get; set; } = string.Empty;
+    public string CurrencyNameEn { get; set; } = string.Empty;
 
     /// <summary>
     /// Arabic short description

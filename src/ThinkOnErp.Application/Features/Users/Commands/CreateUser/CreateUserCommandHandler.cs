@@ -4,7 +4,7 @@ using ThinkOnErp.Domain.Interfaces;
 
 namespace ThinkOnErp.Application.Features.Users.Commands.CreateUser;
 
-public class CreateUserCommandHandler : IRequestHandler<CreateUserCommand, decimal>
+public class CreateUserCommandHandler : IRequestHandler<CreateUserCommand, Int64>
 {
     private readonly IUserRepository _userRepository;
 
@@ -13,17 +13,17 @@ public class CreateUserCommandHandler : IRequestHandler<CreateUserCommand, decim
         _userRepository = userRepository;
     }
 
-    public async Task<decimal> Handle(CreateUserCommand request, CancellationToken cancellationToken)
+    public async Task<Int64> Handle(CreateUserCommand request, CancellationToken cancellationToken)
     {
         var user = new SysUser
         {
-            RowDesc = request.RowDesc,
-            RowDescE = request.RowDescE,
+            RowDesc = request.NameAr,
+            RowDescE = request.NameEn,
             UserName = request.UserName,
             Password = request.Password, // Will be hashed in Infrastructure layer
             Phone = request.Phone,
             Phone2 = request.Phone2,
-            Role = request.Role,
+            Role = request.RoleId,
             BranchId = request.BranchId,
             Email = request.Email,
             IsAdmin = request.IsAdmin,

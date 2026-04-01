@@ -10,11 +10,11 @@ public class CreateRoleCommandValidator : AbstractValidator<CreateRoleCommand>
 {
     public CreateRoleCommandValidator()
     {
-        RuleFor(x => x.RowDesc)
+        RuleFor(x => x.RoleNameAr)
             .NotEmpty().WithMessage("Arabic description is required.")
             .MaximumLength(100).WithMessage("Arabic description must not exceed 100 characters.");
 
-        RuleFor(x => x.RowDescE)
+        RuleFor(x => x.RoleNameEn)
             .NotEmpty().WithMessage("English description is required.")
             .MaximumLength(100).WithMessage("English description must not exceed 100 characters.");
 

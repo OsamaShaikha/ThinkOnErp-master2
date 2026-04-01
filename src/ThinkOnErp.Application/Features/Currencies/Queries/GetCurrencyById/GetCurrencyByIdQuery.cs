@@ -5,5 +5,5 @@ namespace ThinkOnErp.Application.Features.Currencies.Queries.GetCurrencyById;
 
 public class GetCurrencyByIdQuery : IRequest<CurrencyDto?>
 {
-    public decimal RowId { get; set; }
+    public Int64 CurrencyId { get; set; }
 }

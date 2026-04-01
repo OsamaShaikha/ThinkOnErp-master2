@@ -6,8 +6,8 @@ public class CreateCurrencyCommandValidator : AbstractValidator<CreateCurrencyCo
 {
     public CreateCurrencyCommandValidator()
     {
-        RuleFor(x => x.RowDesc).NotEmpty().MaximumLength(100);
-        RuleFor(x => x.RowDescE).NotEmpty().MaximumLength(100);
+        RuleFor(x => x.CurrencyNameAr).NotEmpty().MaximumLength(100);
+        RuleFor(x => x.CurrencyNameEn).NotEmpty().MaximumLength(100);
         RuleFor(x => x.ShortDesc).NotEmpty().MaximumLength(50);
         RuleFor(x => x.ShortDescE).NotEmpty().MaximumLength(50);
         RuleFor(x => x.SingulerDesc).NotEmpty().MaximumLength(50);

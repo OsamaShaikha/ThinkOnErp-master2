@@ -7,7 +7,7 @@ namespace ThinkOnErp.Application.Features.Roles.Commands.DeleteRole;
 /// Handler for DeleteRoleCommand.
 /// Performs soft delete by setting IS_ACTIVE to false.
 /// </summary>
-public class DeleteRoleCommandHandler : IRequestHandler<DeleteRoleCommand, int>
+public class DeleteRoleCommandHandler : IRequestHandler<DeleteRoleCommand, Int64>
 {
     private readonly IRoleRepository _roleRepository;
 
@@ -16,9 +16,9 @@ public class DeleteRoleCommandHandler : IRequestHandler<DeleteRoleCommand, int>
         _roleRepository = roleRepository;
     }
 
-    public async Task<int> Handle(DeleteRoleCommand request, CancellationToken cancellationToken)
+    public async Task<Int64> Handle(DeleteRoleCommand request, CancellationToken cancellationToken)
     {
-        var rowsAffected = await _roleRepository.DeleteAsync(request.RowId);
+        var rowsAffected = await _roleRepository.DeleteAsync(request.RoleId);
         return rowsAffected;
     }
 }

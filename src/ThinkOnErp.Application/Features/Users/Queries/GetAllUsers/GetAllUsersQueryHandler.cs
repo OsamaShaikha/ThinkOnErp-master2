@@ -19,13 +19,13 @@ public class GetAllUsersQueryHandler : IRequestHandler<GetAllUsersQuery, List<Us
 
         return users.Select(u => new UserDto
         {
-            RowId = u.RowId,
-            RowDesc = u.RowDesc,
-            RowDescE = u.RowDescE,
+            UserId = u.RowId,
+            NameAr = u.RowDesc,
+            NameEn = u.RowDescE,
             UserName = u.UserName,
             Phone = u.Phone,
             Phone2 = u.Phone2,
-            Role = u.Role,
+            RoleId = u.Role,
             BranchId = u.BranchId,
             Email = u.Email,
             LastLoginDate = u.LastLoginDate,

@@ -15,16 +15,16 @@ public class GetCompanyByIdQueryHandler : IRequestHandler<GetCompanyByIdQuery, C
 
     public async Task<CompanyDto?> Handle(GetCompanyByIdQuery request, CancellationToken cancellationToken)
     {
-        var company = await _companyRepository.GetByIdAsync(request.RowId);
+        var company = await _companyRepository.GetByIdAsync(request.CompanyId);
 
         if (company == null)
             return null;
 
         return new CompanyDto
         {
-            RowId = company.RowId,
-            RowDesc = company.RowDesc,
-            RowDescE = company.RowDescE,
+            CompanyId = company.RowId,
+            CompanyNameAr = company.RowDesc,
+            CompanyNameEn = company.RowDescE,
             CountryId = company.CountryId,
             CurrId = company.CurrId,
             IsActive = company.IsActive,

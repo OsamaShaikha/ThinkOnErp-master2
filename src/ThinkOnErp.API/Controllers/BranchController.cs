@@ -80,13 +80,13 @@ public class BranchController : ControllerBase
     [ProducesResponseType(typeof(ApiResponse<BranchDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiResponse<BranchDto>), StatusCodes.Status404NotFound)]
     [ProducesResponseType(typeof(ApiResponse<BranchDto>), StatusCodes.Status401Unauthorized)]
-    public async Task<ActionResult<ApiResponse<BranchDto>>> GetBranchById(decimal id)
+    public async Task<ActionResult<ApiResponse<BranchDto>>> GetBranchById(Int64 id)
     {
         try
         {
             _logger.LogInformation("Retrieving branch with ID: {BranchId}", id);
 
-            var query = new GetBranchByIdQuery { RowId = id };
+            var query = new GetBranchByIdQuery { BranchId = id };
             var branch = await _mediator.Send(query);
 
             if (branch == null)
@@ -123,15 +123,15 @@ public class BranchController : ControllerBase
     /// <response code="403">User does not have admin privileges</response>
     [HttpPost]
     [Authorize(Policy = "AdminOnly")]
-    [ProducesResponseType(typeof(ApiResponse<decimal>), StatusCodes.Status201Created)]
-    [ProducesResponseType(typeof(ApiResponse<decimal>), StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(typeof(ApiResponse<decimal>), StatusCodes.Status401Unauthorized)]
-    [ProducesResponseType(typeof(ApiResponse<decimal>), StatusCodes.Status403Forbidden)]
-    public async Task<ActionResult<ApiResponse<decimal>>> CreateBranch([FromBody] CreateBranchCommand command)
+    [ProducesResponseType(typeof(ApiResponse<Int64>), StatusCodes.Status201Created)]
+    [ProducesResponseType(typeof(ApiResponse<Int64>), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ApiResponse<Int64>), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ApiResponse<Int64>), StatusCodes.Status403Forbidden)]
+    public async Task<ActionResult<ApiResponse<Int64>>> CreateBranch([FromBody] CreateBranchCommand command)
     {
         try
         {
-            _logger.LogInformation("Creating new branch: {BranchDesc}", command.RowDesc);
+            _logger.LogInformation("Creating new branch: {BranchDesc}", command.BranchNameEn);
 
             var branchId = await _mediator.Send(command);
 
@@ -140,14 +140,14 @@ public class BranchController : ControllerBase
             return CreatedAtAction(
                 nameof(GetBranchById),
                 new { id = branchId },
-                ApiResponse<decimal>.CreateSuccess(
+                ApiResponse<Int64>.CreateSuccess(
                     branchId,
                     "Branch created successfully",
                     201));
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error creating branch: {BranchDesc}", command.RowDesc);
+            _logger.LogError(ex, "Error creating branch: {BranchDesc}", command.BranchNameEn);
             throw;
         }
     }
@@ -166,19 +166,19 @@ public class BranchController : ControllerBase
     /// <response code="403">User does not have admin privileges</response>
     [HttpPut("{id}")]
     [Authorize(Policy = "AdminOnly")]
-    [ProducesResponseType(typeof(ApiResponse<int>), StatusCodes.Status200OK)]
-    [ProducesResponseType(typeof(ApiResponse<int>), StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(typeof(ApiResponse<int>), StatusCodes.Status404NotFound)]
-    [ProducesResponseType(typeof(ApiResponse<int>), StatusCodes.Status401Unauthorized)]
-    [ProducesResponseType(typeof(ApiResponse<int>), StatusCodes.Status403Forbidden)]
-    public async Task<ActionResult<ApiResponse<int>>> UpdateBranch(decimal id, [FromBody] UpdateBranchCommand command)
+    [ProducesResponseType(typeof(ApiResponse<Int64>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<Int64>), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ApiResponse<Int64>), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ApiResponse<Int64>), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ApiResponse<Int64>), StatusCodes.Status403Forbidden)]
+    public async Task<ActionResult<ApiResponse<Int64>>> UpdateBranch(Int64 id, [FromBody] UpdateBranchCommand command)
     {
         try
         {
-            if (id != command.RowId)
+            if (id != command.BranchId)
             {
-                _logger.LogWarning("Branch ID mismatch: URL ID {UrlId} vs Command ID {CommandId}", id, command.RowId);
-                return BadRequest(ApiResponse<int>.CreateFailure(
+                _logger.LogWarning("Branch ID mismatch: URL ID {UrlId} vs Command ID {CommandId}", id, command.BranchId);
+                return BadRequest(ApiResponse<Int64>.CreateFailure(
                     "Branch ID in URL does not match the ID in the request body",
                     statusCode: 400));
             }
@@ -190,14 +190,14 @@ public class BranchController : ControllerBase
             if (rowsAffected == 0)
             {
                 _logger.LogWarning("Branch not found for update with ID: {BranchId}", id);
-                return NotFound(ApiResponse<int>.CreateFailure(
+                return NotFound(ApiResponse<Int64>.CreateFailure(
                     "No branch found with the specified identifier",
                     statusCode: 404));
             }
 
             _logger.LogInformation("Branch updated successfully with ID: {BranchId}", id);
 
-            return Ok(ApiResponse<int>.CreateSuccess(
+            return Ok(ApiResponse<Int64>.CreateSuccess(
                 rowsAffected,
                 "Branch updated successfully",
                 200));
@@ -221,30 +221,30 @@ public class BranchController : ControllerBase
     /// <response code="403">User does not have admin privileges</response>
     [HttpDelete("{id}")]
     [Authorize(Policy = "AdminOnly")]
-    [ProducesResponseType(typeof(ApiResponse<int>), StatusCodes.Status200OK)]
-    [ProducesResponseType(typeof(ApiResponse<int>), StatusCodes.Status404NotFound)]
-    [ProducesResponseType(typeof(ApiResponse<int>), StatusCodes.Status401Unauthorized)]
-    [ProducesResponseType(typeof(ApiResponse<int>), StatusCodes.Status403Forbidden)]
-    public async Task<ActionResult<ApiResponse<int>>> DeleteBranch(decimal id)
+    [ProducesResponseType(typeof(ApiResponse<Int64>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<Int64>), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ApiResponse<Int64>), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ApiResponse<Int64>), StatusCodes.Status403Forbidden)]
+    public async Task<ActionResult<ApiResponse<Int64>>> DeleteBranch(Int64 id)
     {
         try
         {
             _logger.LogInformation("Deleting branch with ID: {BranchId}", id);
 
-            var command = new DeleteBranchCommand { RowId = id };
+            var command = new DeleteBranchCommand { BranchId = id };
             var rowsAffected = await _mediator.Send(command);
 
             if (rowsAffected == 0)
             {
                 _logger.LogWarning("Branch not found for deletion with ID: {BranchId}", id);
-                return NotFound(ApiResponse<int>.CreateFailure(
+                return NotFound(ApiResponse<Int64>.CreateFailure(
                     "No branch found with the specified identifier",
                     statusCode: 404));
             }
 
             _logger.LogInformation("Branch deleted successfully with ID: {BranchId}", id);
 
-            return Ok(ApiResponse<int>.CreateSuccess(
+            return Ok(ApiResponse<Int64>.CreateSuccess(
                 rowsAffected,
                 "Branch deleted successfully",
                 200));

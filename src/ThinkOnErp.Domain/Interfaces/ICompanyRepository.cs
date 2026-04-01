@@ -21,7 +21,7 @@ public interface ICompanyRepository
     /// </summary>
     /// <param name="rowId">The unique identifier of the company</param>
     /// <returns>The SysCompany entity if found, null otherwise</returns>
-    Task<SysCompany?> GetByIdAsync(decimal rowId);
+    Task<SysCompany?> GetByIdAsync(Int64 rowId);
 
     /// <summary>
     /// Creates a new company in the database.
@@ -29,7 +29,7 @@ public interface ICompanyRepository
     /// </summary>
     /// <param name="company">The company entity to create</param>
     /// <returns>The generated RowId from SEQ_SYS_COMPANY sequence</returns>
-    Task<decimal> CreateAsync(SysCompany company);
+    Task<Int64> CreateAsync(SysCompany company);
 
     /// <summary>
     /// Updates an existing company in the database.
@@ -37,7 +37,7 @@ public interface ICompanyRepository
     /// </summary>
     /// <param name="company">The company entity with updated values</param>
     /// <returns>The number of rows affected</returns>
-    Task<int> UpdateAsync(SysCompany company);
+    Task<Int64> UpdateAsync(SysCompany company);
 
     /// <summary>
     /// Performs a soft delete on a company by setting IS_ACTIVE to false.
@@ -45,5 +45,5 @@ public interface ICompanyRepository
     /// </summary>
     /// <param name="rowId">The unique identifier of the company to delete</param>
     /// <returns>The number of rows affected</returns>
-    Task<int> DeleteAsync(decimal rowId);
+    Task<Int64> DeleteAsync(Int64 rowId);
 }

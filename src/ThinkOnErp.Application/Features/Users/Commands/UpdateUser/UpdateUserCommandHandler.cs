@@ -4,7 +4,7 @@ using ThinkOnErp.Domain.Interfaces;
 
 namespace ThinkOnErp.Application.Features.Users.Commands.UpdateUser;
 
-public class UpdateUserCommandHandler : IRequestHandler<UpdateUserCommand, int>
+public class UpdateUserCommandHandler : IRequestHandler<UpdateUserCommand, Int64>
 {
     private readonly IUserRepository _userRepository;
 
@@ -13,17 +13,17 @@ public class UpdateUserCommandHandler : IRequestHandler<UpdateUserCommand, int>
         _userRepository = userRepository;
     }
 
-    public async Task<int> Handle(UpdateUserCommand request, CancellationToken cancellationToken)
+    public async Task<Int64> Handle(UpdateUserCommand request, CancellationToken cancellationToken)
     {
         var user = new SysUser
         {
-            RowId = request.RowId,
-            RowDesc = request.RowDesc,
-            RowDescE = request.RowDescE,
+            RowId = request.UserId,
+            RowDesc = request.NameAr,
+            RowDescE = request.NameEn,
             UserName = request.UserName,
             Phone = request.Phone,
             Phone2 = request.Phone2,
-            Role = request.Role,
+            Role = request.RoleId,
             BranchId = request.BranchId,
             Email = request.Email,
             IsAdmin = request.IsAdmin,

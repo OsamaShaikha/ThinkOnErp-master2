@@ -9,27 +9,27 @@ public class CompanyDto
     /// <summary>
     /// Unique identifier for the company
     /// </summary>
-    public decimal RowId { get; set; }
+    public Int64 CompanyId { get; set; }
 
     /// <summary>
     /// Arabic description of the company
     /// </summary>
-    public string RowDesc { get; set; } = string.Empty;
+    public string CompanyNameAr { get; set; } = string.Empty;
 
     /// <summary>
     /// English description of the company
     /// </summary>
-    public string RowDescE { get; set; } = string.Empty;
+    public string CompanyNameEn { get; set; } = string.Empty;
 
     /// <summary>
     /// Foreign key to Country table
     /// </summary>
-    public decimal? CountryId { get; set; }
+    public Int64? CountryId { get; set; }
 
     /// <summary>
     /// Foreign key to SYS_CURRENCY table
     /// </summary>
-    public decimal? CurrId { get; set; }
+    public Int64? CurrId { get; set; }
 
     /// <summary>
     /// Indicates if the company is active

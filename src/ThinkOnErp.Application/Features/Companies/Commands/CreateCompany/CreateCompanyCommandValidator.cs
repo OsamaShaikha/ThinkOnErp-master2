@@ -6,8 +6,8 @@ public class CreateCompanyCommandValidator : AbstractValidator<CreateCompanyComm
 {
     public CreateCompanyCommandValidator()
     {
-        RuleFor(x => x.RowDesc).NotEmpty().MaximumLength(100);
-        RuleFor(x => x.RowDescE).NotEmpty().MaximumLength(100);
+        RuleFor(x => x.CompanyNameAr).NotEmpty().MaximumLength(100);
+        RuleFor(x => x.CompanyNameEn).NotEmpty().MaximumLength(100);
         RuleFor(x => x.CreationUser).NotEmpty();
     }
 }

@@ -80,13 +80,13 @@ public class CompanyController : ControllerBase
     [ProducesResponseType(typeof(ApiResponse<CompanyDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiResponse<CompanyDto>), StatusCodes.Status404NotFound)]
     [ProducesResponseType(typeof(ApiResponse<CompanyDto>), StatusCodes.Status401Unauthorized)]
-    public async Task<ActionResult<ApiResponse<CompanyDto>>> GetCompanyById(decimal id)
+    public async Task<ActionResult<ApiResponse<CompanyDto>>> GetCompanyById(Int64 id)
     {
         try
         {
             _logger.LogInformation("Retrieving company with ID: {CompanyId}", id);
 
-            var query = new GetCompanyByIdQuery { RowId = id };
+            var query = new GetCompanyByIdQuery { CompanyId = id };
             var company = await _mediator.Send(query);
 
             if (company == null)
@@ -123,15 +123,15 @@ public class CompanyController : ControllerBase
     /// <response code="403">User does not have admin privileges</response>
     [HttpPost]
     [Authorize(Policy = "AdminOnly")]
-    [ProducesResponseType(typeof(ApiResponse<decimal>), StatusCodes.Status201Created)]
-    [ProducesResponseType(typeof(ApiResponse<decimal>), StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(typeof(ApiResponse<decimal>), StatusCodes.Status401Unauthorized)]
-    [ProducesResponseType(typeof(ApiResponse<decimal>), StatusCodes.Status403Forbidden)]
-    public async Task<ActionResult<ApiResponse<decimal>>> CreateCompany([FromBody] CreateCompanyCommand command)
+    [ProducesResponseType(typeof(ApiResponse<Int64>), StatusCodes.Status201Created)]
+    [ProducesResponseType(typeof(ApiResponse<Int64>), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ApiResponse<Int64>), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ApiResponse<Int64>), StatusCodes.Status403Forbidden)]
+    public async Task<ActionResult<ApiResponse<Int64>>> CreateCompany([FromBody] CreateCompanyCommand command)
     {
         try
         {
-            _logger.LogInformation("Creating new company: {CompanyDesc}", command.RowDesc);
+            _logger.LogInformation("Creating new company: {CompanyDesc}", command.CompanyNameEn);
 
             var companyId = await _mediator.Send(command);
 
@@ -140,14 +140,14 @@ public class CompanyController : ControllerBase
             return CreatedAtAction(
                 nameof(GetCompanyById),
                 new { id = companyId },
-                ApiResponse<decimal>.CreateSuccess(
+                ApiResponse<Int64>.CreateSuccess(
                     companyId,
                     "Company created successfully",
                     201));
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error creating company: {CompanyDesc}", command.RowDesc);
+            _logger.LogError(ex, "Error creating company: {CompanyDesc}", command.CompanyNameEn);
             throw;
         }
     }
@@ -166,19 +166,19 @@ public class CompanyController : ControllerBase
     /// <response code="403">User does not have admin privileges</response>
     [HttpPut("{id}")]
     [Authorize(Policy = "AdminOnly")]
-    [ProducesResponseType(typeof(ApiResponse<int>), StatusCodes.Status200OK)]
-    [ProducesResponseType(typeof(ApiResponse<int>), StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(typeof(ApiResponse<int>), StatusCodes.Status404NotFound)]
-    [ProducesResponseType(typeof(ApiResponse<int>), StatusCodes.Status401Unauthorized)]
-    [ProducesResponseType(typeof(ApiResponse<int>), StatusCodes.Status403Forbidden)]
-    public async Task<ActionResult<ApiResponse<int>>> UpdateCompany(decimal id, [FromBody] UpdateCompanyCommand command)
+    [ProducesResponseType(typeof(ApiResponse<Int64>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<Int64>), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ApiResponse<Int64>), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ApiResponse<Int64>), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ApiResponse<Int64>), StatusCodes.Status403Forbidden)]
+    public async Task<ActionResult<ApiResponse<Int64>>> UpdateCompany(Int64 id, [FromBody] UpdateCompanyCommand command)
     {
         try
         {
-            if (id != command.RowId)
+            if (id != command.CompanyId)
             {
-                _logger.LogWarning("Company ID mismatch: URL ID {UrlId} vs Command ID {CommandId}", id, command.RowId);
-                return BadRequest(ApiResponse<int>.CreateFailure(
+                _logger.LogWarning("Company ID mismatch: URL ID {UrlId} vs Command ID {CommandId}", id, command.CompanyId);
+                return BadRequest(ApiResponse<Int64>.CreateFailure(
                     "Company ID in URL does not match the ID in the request body",
                     statusCode: 400));
             }
@@ -190,14 +190,14 @@ public class CompanyController : ControllerBase
             if (rowsAffected == 0)
             {
                 _logger.LogWarning("Company not found for update with ID: {CompanyId}", id);
-                return NotFound(ApiResponse<int>.CreateFailure(
+                return NotFound(ApiResponse<Int64>.CreateFailure(
                     "No company found with the specified identifier",
                     statusCode: 404));
             }
 
             _logger.LogInformation("Company updated successfully with ID: {CompanyId}", id);
 
-            return Ok(ApiResponse<int>.CreateSuccess(
+            return Ok(ApiResponse<Int64>.CreateSuccess(
                 rowsAffected,
                 "Company updated successfully",
                 200));
@@ -221,30 +221,30 @@ public class CompanyController : ControllerBase
     /// <response code="403">User does not have admin privileges</response>
     [HttpDelete("{id}")]
     [Authorize(Policy = "AdminOnly")]
-    [ProducesResponseType(typeof(ApiResponse<int>), StatusCodes.Status200OK)]
-    [ProducesResponseType(typeof(ApiResponse<int>), StatusCodes.Status404NotFound)]
-    [ProducesResponseType(typeof(ApiResponse<int>), StatusCodes.Status401Unauthorized)]
-    [ProducesResponseType(typeof(ApiResponse<int>), StatusCodes.Status403Forbidden)]
-    public async Task<ActionResult<ApiResponse<int>>> DeleteCompany(decimal id)
+    [ProducesResponseType(typeof(ApiResponse<Int64>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<Int64>), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ApiResponse<Int64>), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ApiResponse<Int64>), StatusCodes.Status403Forbidden)]
+    public async Task<ActionResult<ApiResponse<Int64>>> DeleteCompany(Int64 id)
     {
         try
         {
             _logger.LogInformation("Deleting company with ID: {CompanyId}", id);
 
-            var command = new DeleteCompanyCommand { RowId = id };
+            var command = new DeleteCompanyCommand { CompanyId = id };
             var rowsAffected = await _mediator.Send(command);
 
             if (rowsAffected == 0)
             {
                 _logger.LogWarning("Company not found for deletion with ID: {CompanyId}", id);
-                return NotFound(ApiResponse<int>.CreateFailure(
+                return NotFound(ApiResponse<Int64>.CreateFailure(
                     "No company found with the specified identifier",
                     statusCode: 404));
             }
 
             _logger.LogInformation("Company deleted successfully with ID: {CompanyId}", id);
 
-            return Ok(ApiResponse<int>.CreateSuccess(
+            return Ok(ApiResponse<Int64>.CreateSuccess(
                 rowsAffected,
                 "Company deleted successfully",
                 200));

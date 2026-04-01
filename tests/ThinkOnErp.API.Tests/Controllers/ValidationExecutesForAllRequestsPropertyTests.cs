@@ -38,7 +38,7 @@ public class ValidationExecutesForAllRequestsPropertyTests : IClassFixture<TestW
                 var createCommand = new CreateRoleCommand
                 {
                     RowDesc = "", // Invalid - should trigger validation
-                    RowDescE = "Valid English",
+                    RoleNameEn = "Valid English",
                     Note = "Test"
                 };
 
@@ -61,9 +61,9 @@ public class ValidationExecutesForAllRequestsPropertyTests : IClassFixture<TestW
                 // Test with UpdateRoleCommand
                 var updateCommand = new UpdateRoleCommand
                 {
-                    RowId = 1,
-                    RowDesc = "", // Invalid
-                    RowDescE = "",  // Invalid
+                    RoleId = 1,
+                    RoleNameAr = "", // Invalid
+                    RoleNameEn = "",  // Invalid
                     Note = "Test"
                 };
 

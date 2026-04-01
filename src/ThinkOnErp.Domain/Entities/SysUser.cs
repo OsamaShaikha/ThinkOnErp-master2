@@ -9,7 +9,7 @@ public class SysUser
     /// <summary>
     /// Primary key - generated from SEQ_SYS_USERS sequence
     /// </summary>
-    public decimal RowId { get; set; }
+    public Int64 RowId { get; set; }
 
     /// <summary>
     /// Arabic description of the user
@@ -44,12 +44,12 @@ public class SysUser
     /// <summary>
     /// Foreign key to SYS_ROLE table
     /// </summary>
-    public decimal? Role { get; set; }
+    public Int64? Role { get; set; }
 
     /// <summary>
     /// Foreign key to SYS_BRANCH table
     /// </summary>
-    public decimal? BranchId { get; set; }
+    public Int64? BranchId { get; set; }
 
     /// <summary>
     /// Email address

@@ -19,9 +19,9 @@ public class GetAllCurrenciesQueryHandler : IRequestHandler<GetAllCurrenciesQuer
 
         return currencies.Select(c => new CurrencyDto
         {
-            RowId = c.RowId,
-            RowDesc = c.RowDesc,
-            RowDescE = c.RowDescE,
+            CurrencyId = c.RowId,
+            CurrencyNameAr = c.RowDesc,
+            CurrencyNameEn = c.RowDescE,
             ShortDesc = c.ShortDesc,
             ShortDescE = c.ShortDescE,
             SingulerDesc = c.SingulerDesc,

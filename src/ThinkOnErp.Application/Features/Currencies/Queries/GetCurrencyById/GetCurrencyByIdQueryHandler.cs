@@ -15,16 +15,16 @@ public class GetCurrencyByIdQueryHandler : IRequestHandler<GetCurrencyByIdQuery,
 
     public async Task<CurrencyDto?> Handle(GetCurrencyByIdQuery request, CancellationToken cancellationToken)
     {
-        var currency = await _currencyRepository.GetByIdAsync(request.RowId);
+        var currency = await _currencyRepository.GetByIdAsync(request.CurrencyId);
 
         if (currency == null)
             return null;
 
         return new CurrencyDto
         {
-            RowId = currency.RowId,
-            RowDesc = currency.RowDesc,
-            RowDescE = currency.RowDescE,
+            CurrencyId = currency.RowId,
+            CurrencyNameAr = currency.RowDesc,
+            CurrencyNameEn = currency.RowDescE,
             ShortDesc = currency.ShortDesc,
             ShortDescE = currency.ShortDescE,
             SingulerDesc = currency.SingulerDesc,

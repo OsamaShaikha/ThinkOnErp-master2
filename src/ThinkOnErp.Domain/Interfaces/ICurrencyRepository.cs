@@ -21,7 +21,7 @@ public interface ICurrencyRepository
     /// </summary>
     /// <param name="rowId">The unique identifier of the currency</param>
     /// <returns>The SysCurrency entity if found, null otherwise</returns>
-    Task<SysCurrency?> GetByIdAsync(decimal rowId);
+    Task<SysCurrency?> GetByIdAsync(Int64 rowId);
 
     /// <summary>
     /// Creates a new currency in the database.
@@ -29,7 +29,7 @@ public interface ICurrencyRepository
     /// </summary>
     /// <param name="currency">The currency entity to create</param>
     /// <returns>The generated RowId from SEQ_SYS_CURRENCY sequence</returns>
-    Task<decimal> CreateAsync(SysCurrency currency);
+    Task<Int64> CreateAsync(SysCurrency currency);
 
     /// <summary>
     /// Updates an existing currency in the database.
@@ -37,7 +37,7 @@ public interface ICurrencyRepository
     /// </summary>
     /// <param name="currency">The currency entity with updated values</param>
     /// <returns>The number of rows affected</returns>
-    Task<int> UpdateAsync(SysCurrency currency);
+    Task<Int64> UpdateAsync(SysCurrency currency);
 
     /// <summary>
     /// Performs a soft delete on a currency by setting IS_ACTIVE to false.
@@ -45,5 +45,5 @@ public interface ICurrencyRepository
     /// </summary>
     /// <param name="rowId">The unique identifier of the currency to delete</param>
     /// <returns>The number of rows affected</returns>
-    Task<int> DeleteAsync(decimal rowId);
+    Task<Int64> DeleteAsync(Int64 rowId);
 }

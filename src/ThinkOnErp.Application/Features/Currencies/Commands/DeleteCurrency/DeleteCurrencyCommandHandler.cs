@@ -3,7 +3,7 @@ using ThinkOnErp.Domain.Interfaces;
 
 namespace ThinkOnErp.Application.Features.Currencies.Commands.DeleteCurrency;
 
-public class DeleteCurrencyCommandHandler : IRequestHandler<DeleteCurrencyCommand, int>
+public class DeleteCurrencyCommandHandler : IRequestHandler<DeleteCurrencyCommand, Int64>
 {
     private readonly ICurrencyRepository _currencyRepository;
 
@@ -12,8 +12,8 @@ public class DeleteCurrencyCommandHandler : IRequestHandler<DeleteCurrencyComman
         _currencyRepository = currencyRepository;
     }
 
-    public async Task<int> Handle(DeleteCurrencyCommand request, CancellationToken cancellationToken)
+    public async Task<Int64> Handle(DeleteCurrencyCommand request, CancellationToken cancellationToken)
     {
-        return await _currencyRepository.DeleteAsync(request.RowId);
+        return await _currencyRepository.DeleteAsync(request.CurrencyId);
     }
 }

@@ -47,7 +47,7 @@ public class MediatRPipelineBehaviorsUnitTests : IClassFixture<TestWebApplicatio
         var command = new CreateRoleCommand
         {
             RowDesc = "", // Invalid - empty
-            RowDescE = "Valid",
+            RoleNameEn = "Valid",
             Note = "Test"
         };
 
@@ -70,7 +70,7 @@ public class MediatRPipelineBehaviorsUnitTests : IClassFixture<TestWebApplicatio
         var command = new CreateRoleCommand
         {
             RowDesc = "", // Invalid - empty
-            RowDescE = "", // Invalid - empty
+            RoleNameEn = "", // Invalid - empty
             Note = "Test"
         };
 
@@ -102,7 +102,7 @@ public class MediatRPipelineBehaviorsUnitTests : IClassFixture<TestWebApplicatio
         var command = new CreateRoleCommand
         {
             RowDesc = "Test Role",
-            RowDescE = "Test Role E",
+            RoleNameEn = "Test Role E",
             Note = "Test"
         };
 
@@ -128,7 +128,7 @@ public class MediatRPipelineBehaviorsUnitTests : IClassFixture<TestWebApplicatio
         var command = new CreateRoleCommand
         {
             RowDesc = "Valid Role",
-            RowDescE = "Valid Role E",
+            RoleNameEn = "Valid Role E",
             Note = "Valid Note"
         };
 
@@ -167,14 +167,14 @@ public class MediatRPipelineBehaviorsUnitTests : IClassFixture<TestWebApplicatio
         var command1 = new CreateRoleCommand
         {
             RowDesc = "Role 1",
-            RowDescE = "Role 1 E",
+            RoleNameEn = "Role 1 E",
             Note = "Test 1"
         };
 
         var command2 = new CreateRoleCommand
         {
             RowDesc = "Role 2",
-            RowDescE = "Role 2 E",
+            RoleNameEn = "Role 2 E",
             Note = "Test 2"
         };
 

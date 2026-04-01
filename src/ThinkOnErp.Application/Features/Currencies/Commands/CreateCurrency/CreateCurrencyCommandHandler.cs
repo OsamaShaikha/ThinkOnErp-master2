@@ -4,7 +4,7 @@ using ThinkOnErp.Domain.Interfaces;
 
 namespace ThinkOnErp.Application.Features.Currencies.Commands.CreateCurrency;
 
-public class CreateCurrencyCommandHandler : IRequestHandler<CreateCurrencyCommand, decimal>
+public class CreateCurrencyCommandHandler : IRequestHandler<CreateCurrencyCommand, Int64>
 {
     private readonly ICurrencyRepository _currencyRepository;
 
@@ -13,12 +13,12 @@ public class CreateCurrencyCommandHandler : IRequestHandler<CreateCurrencyComman
         _currencyRepository = currencyRepository;
     }
 
-    public async Task<decimal> Handle(CreateCurrencyCommand request, CancellationToken cancellationToken)
+    public async Task<Int64> Handle(CreateCurrencyCommand request, CancellationToken cancellationToken)
     {
         var currency = new SysCurrency
         {
-            RowDesc = request.RowDesc,
-            RowDescE = request.RowDescE,
+            RowDesc = request.CurrencyNameAr,
+            RowDescE = request.CurrencyNameEn,
             ShortDesc = request.ShortDesc,
             ShortDescE = request.ShortDescE,
             SingulerDesc = request.SingulerDesc,

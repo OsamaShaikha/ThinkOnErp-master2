@@ -21,7 +21,7 @@ public interface IRoleRepository
     /// </summary>
     /// <param name="rowId">The unique identifier of the role</param>
     /// <returns>The SysRole entity if found, null otherwise</returns>
-    Task<SysRole?> GetByIdAsync(decimal rowId);
+    Task<SysRole?> GetByIdAsync(Int64 rowId);
 
     /// <summary>
     /// Creates a new role in the database.
@@ -29,7 +29,7 @@ public interface IRoleRepository
     /// </summary>
     /// <param name="role">The role entity to create</param>
     /// <returns>The generated RowId from SEQ_SYS_ROLE sequence</returns>
-    Task<decimal> CreateAsync(SysRole role);
+    Task<Int64> CreateAsync(SysRole role);
 
     /// <summary>
     /// Updates an existing role in the database.
@@ -37,7 +37,7 @@ public interface IRoleRepository
     /// </summary>
     /// <param name="role">The role entity with updated values</param>
     /// <returns>The number of rows affected</returns>
-    Task<int> UpdateAsync(SysRole role);
+    Task<Int64> UpdateAsync(SysRole role);
 
     /// <summary>
     /// Performs a soft delete on a role by setting IS_ACTIVE to false.
@@ -45,5 +45,5 @@ public interface IRoleRepository
     /// </summary>
     /// <param name="rowId">The unique identifier of the role to delete</param>
     /// <returns>The number of rows affected</returns>
-    Task<int> DeleteAsync(decimal rowId);
+    Task<Int64> DeleteAsync(Int64 rowId);
 }

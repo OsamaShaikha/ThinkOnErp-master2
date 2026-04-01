@@ -10,12 +10,12 @@ public class SysBranch
     /// <summary>
     /// Primary key - generated from SEQ_SYS_BRANCH sequence
     /// </summary>
-    public decimal RowId { get; set; }
+    public Int64 RowId { get; set; }
 
     /// <summary>
     /// Foreign key to SYS_COMPANY table - the parent company
     /// </summary>
-    public decimal? ParRowId { get; set; }
+    public Int64? ParRowId { get; set; }
 
     /// <summary>
     /// Arabic description of the branch

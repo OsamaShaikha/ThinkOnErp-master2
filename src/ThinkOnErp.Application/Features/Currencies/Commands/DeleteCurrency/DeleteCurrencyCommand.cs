@@ -2,7 +2,7 @@ using MediatR;
 
 namespace ThinkOnErp.Application.Features.Currencies.Commands.DeleteCurrency;
 
-public class DeleteCurrencyCommand : IRequest<int>
+public class DeleteCurrencyCommand : IRequest<Int64>
 {
-    public decimal RowId { get; set; }
+    public Int64 CurrencyId { get; set; }
 }

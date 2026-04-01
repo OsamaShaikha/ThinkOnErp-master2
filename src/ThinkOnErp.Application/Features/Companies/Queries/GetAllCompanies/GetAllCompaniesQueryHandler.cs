@@ -19,9 +19,9 @@ public class GetAllCompaniesQueryHandler : IRequestHandler<GetAllCompaniesQuery,
 
         return companies.Select(c => new CompanyDto
         {
-            RowId = c.RowId,
-            RowDesc = c.RowDesc,
-            RowDescE = c.RowDescE,
+            CompanyId = c.RowId,
+            CompanyNameAr = c.RowDesc,
+            CompanyNameEn = c.RowDescE,
             CountryId = c.CountryId,
             CurrId = c.CurrId,
             IsActive = c.IsActive,

@@ -9,7 +9,7 @@ public class SysRole
     /// <summary>
     /// Primary key - generated from SEQ_SYS_ROLE sequence
     /// </summary>
-    public decimal RowId { get; set; }
+    public Int64 RowId { get; set; }
 
     /// <summary>
     /// Arabic description of the role

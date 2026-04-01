@@ -39,18 +39,18 @@ public class DeleteIsSoftDeletePropertyTests : IClassFixture<TestWebApplicationF
                 var createCommand = new CreateRoleCommand
                 {
                     RowDesc = roleDesc,
-                    RowDescE = roleDescE,
+                    RoleNameEn = roleDescE,
                     Note = "To be deleted"
                 };
 
                 var roleId = mediator.Send(createCommand).GetAwaiter().GetResult();
 
                 // Verify role exists before deletion
-                var roleBeforeDelete = mediator.Send(new GetRoleByIdQuery { RowId = roleId }).GetAwaiter().GetResult();
+                var roleBeforeDelete = mediator.Send(new GetRoleByIdQuery { RoleId = roleId }).GetAwaiter().GetResult();
                 var existsBeforeDelete = roleBeforeDelete != null;
 
                 // Delete the role
-                var deleteCommand = new DeleteRoleCommand { RowId = roleId };
+                var deleteCommand = new DeleteRoleCommand { RoleId = roleId };
                 var deleteResult = mediator.Send(deleteCommand).GetAwaiter().GetResult();
 
                 // Verify delete succeeded

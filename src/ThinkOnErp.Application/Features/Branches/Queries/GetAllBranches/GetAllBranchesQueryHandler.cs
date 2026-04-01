@@ -19,10 +19,10 @@ public class GetAllBranchesQueryHandler : IRequestHandler<GetAllBranchesQuery, L
 
         return branches.Select(b => new BranchDto
         {
-            RowId = b.RowId,
-            ParRowId = b.ParRowId,
-            RowDesc = b.RowDesc,
-            RowDescE = b.RowDescE,
+            BranchId = b.RowId,
+            CompanyId = b.ParRowId,
+            BranchNameAr = b.RowDesc,
+            BranchNameEn = b.RowDescE,
             Phone = b.Phone,
             Mobile = b.Mobile,
             Fax = b.Fax,

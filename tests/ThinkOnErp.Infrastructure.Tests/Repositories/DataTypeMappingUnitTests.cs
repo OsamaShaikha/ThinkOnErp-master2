@@ -31,7 +31,7 @@ public class DataTypeMappingUnitTests : IClassFixture<TestWebApplicationFactory>
         var command = new CreateRoleCommand
         {
             RowDesc = "Test Role",
-            RowDescE = "Test Role E",
+            RoleNameEn = "Test Role E",
             Note = "Test"
         };
 
@@ -57,7 +57,7 @@ public class DataTypeMappingUnitTests : IClassFixture<TestWebApplicationFactory>
         var command = new CreateRoleCommand
         {
             RowDesc = "Arabic Description",
-            RowDescE = "English Description",
+            RoleNameEn = "English Description",
             Note = "Test Note"
         };
 
@@ -85,7 +85,7 @@ public class DataTypeMappingUnitTests : IClassFixture<TestWebApplicationFactory>
         var command = new CreateRoleCommand
         {
             RowDesc = "Test Role",
-            RowDescE = "Test Role E",
+            RoleNameEn = "Test Role E",
             Note = "Test"
         };
 
@@ -113,7 +113,7 @@ public class DataTypeMappingUnitTests : IClassFixture<TestWebApplicationFactory>
         var command = new CreateRoleCommand
         {
             RowDesc = "Active Role",
-            RowDescE = "Active Role E",
+            RoleNameEn = "Active Role E",
             Note = "Test"
         };
 
@@ -139,14 +139,14 @@ public class DataTypeMappingUnitTests : IClassFixture<TestWebApplicationFactory>
         var command = new CreateRoleCommand
         {
             RowDesc = "Role To Deactivate",
-            RowDescE = "Role To Deactivate E",
+            RoleNameEn = "Role To Deactivate E",
             Note = "Test"
         };
 
         var roleId = await mediator.Send(command);
 
         // Delete (soft delete - sets IS_ACTIVE to 'N' or '0')
-        var deleteCommand = new DeleteRoleCommand { RowId = roleId };
+        var deleteCommand = new DeleteRoleCommand { RoleId = roleId };
         await mediator.Send(deleteCommand);
 
         // Act
@@ -174,7 +174,7 @@ public class DataTypeMappingUnitTests : IClassFixture<TestWebApplicationFactory>
         var command = new CreateRoleCommand
         {
             RowDesc = "Active Role",
-            RowDescE = "Active Role E",
+            RoleNameEn = "Active Role E",
             Note = "Test"
         };
 
@@ -199,12 +199,12 @@ public class DataTypeMappingUnitTests : IClassFixture<TestWebApplicationFactory>
         var command = new CreateRoleCommand
         {
             RowDesc = "Role To Deactivate",
-            RowDescE = "Role To Deactivate E",
+            RoleNameEn = "Role To Deactivate E",
             Note = "Test"
         };
 
         var roleId = await mediator.Send(command);
-        var deleteCommand = new DeleteRoleCommand { RowId = roleId };
+        var deleteCommand = new DeleteRoleCommand { RoleId = roleId };
         await mediator.Send(deleteCommand);
 
         // Act
@@ -230,7 +230,7 @@ public class DataTypeMappingUnitTests : IClassFixture<TestWebApplicationFactory>
         var command = new CreateRoleCommand
         {
             RowDesc = "Test Role",
-            RowDescE = "Test Role E",
+            RoleNameEn = "Test Role E",
             Note = null // Nullable field
         };
 

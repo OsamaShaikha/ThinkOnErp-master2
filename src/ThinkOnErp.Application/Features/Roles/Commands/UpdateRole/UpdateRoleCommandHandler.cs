@@ -8,7 +8,7 @@ namespace ThinkOnErp.Application.Features.Roles.Commands.UpdateRole;
 /// Handler for UpdateRoleCommand.
 /// Updates an existing role in the database.
 /// </summary>
-public class UpdateRoleCommandHandler : IRequestHandler<UpdateRoleCommand, int>
+public class UpdateRoleCommandHandler : IRequestHandler<UpdateRoleCommand, Int64>
 {
     private readonly IRoleRepository _roleRepository;
 
@@ -17,13 +17,13 @@ public class UpdateRoleCommandHandler : IRequestHandler<UpdateRoleCommand, int>
         _roleRepository = roleRepository;
     }
 
-    public async Task<int> Handle(UpdateRoleCommand request, CancellationToken cancellationToken)
+    public async Task<Int64> Handle(UpdateRoleCommand request, CancellationToken cancellationToken)
     {
         var role = new SysRole
         {
-            RowId = request.RowId,
-            RowDesc = request.RowDesc,
-            RowDescE = request.RowDescE,
+            RowId = request.RoleId,
+            RowDesc = request.RoleNameAr,
+            RowDescE = request.RoleNameEn,
             Note = request.Note,
             UpdateUser = request.UpdateUser,
             UpdateDate = DateTime.UtcNow
