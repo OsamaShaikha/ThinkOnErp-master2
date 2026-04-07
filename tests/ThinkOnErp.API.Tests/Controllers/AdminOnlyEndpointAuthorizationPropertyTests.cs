@@ -177,10 +177,10 @@ public class AdminOnlyEndpointAuthorizationPropertyTests : IClassFixture<WebAppl
             };
 
             var requestGenerator = from endpointMethod in Gen.Elements(adminOnlyEndpoints)
-                                  from userId in Gen.Choose(1, 1000000).Select(i => (decimal)i)
+                                  from userId in Gen.Choose(1, 1000000).Select(i => (Int64)i)
                                   from userName in Gen.Elements("user1", "testuser", "john.doe", "jane.smith", "employee")
-                                  from roleId in Gen.Choose(1, 100).Select(i => (decimal?)i)
-                                  from branchId in Gen.Choose(1, 100).Select(i => (decimal?)i)
+                                  from roleId in Gen.Choose(1, 100).Select(i => (Int64?)i)
+                                  from branchId in Gen.Choose(1, 100).Select(i => (Int64?)i)
                                   select new AdminOnlyEndpointRequest
                                   {
                                       Endpoint = endpointMethod.Item1,
@@ -202,9 +202,9 @@ public class AdminOnlyEndpointAuthorizationPropertyTests : IClassFixture<WebAppl
     {
         public string Endpoint { get; set; } = string.Empty;
         public string HttpMethod { get; set; } = string.Empty;
-        public decimal UserId { get; set; }
+        public Int64 UserId { get; set; }
         public string UserName { get; set; } = string.Empty;
-        public decimal? RoleId { get; set; }
-        public decimal? BranchId { get; set; }
+        public Int64? RoleId { get; set; }
+        public Int64? BranchId { get; set; }
     }
 }

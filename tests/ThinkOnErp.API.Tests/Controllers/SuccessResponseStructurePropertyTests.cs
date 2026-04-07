@@ -49,8 +49,8 @@ public class SuccessResponseStructurePropertyTests : IClassFixture<TestWebApplic
                 // Create a role (successful operation)
                 var createDto = new CreateRoleDto
                 {
-                    RowDesc = roleDesc,
-                    RowDescE = roleDescE,
+                    RoleNameAr = roleDesc,
+                    RoleNameEn = roleDescE,
                     Note = "Test note"
                 };
 

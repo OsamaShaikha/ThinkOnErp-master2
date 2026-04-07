@@ -37,7 +37,7 @@ public class ValidationExecutesForAllRequestsPropertyTests : IClassFixture<TestW
                 // Test with CreateRoleCommand which has a validator
                 var createCommand = new CreateRoleCommand
                 {
-                    RowDesc = "", // Invalid - should trigger validation
+                    RoleNameAr = "", // Invalid - should trigger validation
                     RoleNameEn = "Valid English",
                     Note = "Test"
                 };

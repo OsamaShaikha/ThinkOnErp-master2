@@ -38,7 +38,7 @@ public class AllRequestsLoggedPropertyTests : IClassFixture<TestWebApplicationFa
                 // Test command execution (CreateRoleCommand)
                 var createCommand = new CreateRoleCommand
                 {
-                    RowDesc = roleDesc,
+                    RoleNameAr = roleDesc,
                     RoleNameEn = roleDescE,
                     Note = "Test logging"
                 };

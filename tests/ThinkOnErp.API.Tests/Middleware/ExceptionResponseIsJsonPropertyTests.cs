@@ -47,8 +47,8 @@ public class ExceptionResponseIsJsonPropertyTests : IClassFixture<TestWebApplica
                 // Trigger a validation exception
                 var createDto = new CreateRoleDto
                 {
-                    RowDesc = "", // Invalid
-                    RowDescE = "",
+                    RoleNameAr = "", // Invalid
+                    RoleNameEn = "",
                     Note = "Test"
                 };
 

@@ -39,7 +39,7 @@ public class IsActiveMappingPropertyTests : IClassFixture<TestWebApplicationFact
                 // Create a role (should be active by default)
                 var createCommand = new CreateRoleCommand
                 {
-                    RowDesc = roleDesc,
+                    RoleNameAr = roleDesc,
                     RoleNameEn = roleDescE,
                     Note = "Test active mapping"
                 };
@@ -54,7 +54,7 @@ public class IsActiveMappingPropertyTests : IClassFixture<TestWebApplicationFact
 
                 // Verify role appears in GetAll (which filters by IS_ACTIVE = true)
                 var allRoles = mediator.Send(new GetAllRolesQuery()).GetAwaiter().GetResult();
-                var appearsInGetAll = allRoles.Any(r => r.RowId == roleId);
+                var appearsInGetAll = allRoles.Any(r => r.RoleId == roleId);
 
                 return (isActiveIsTrue && appearsInGetAll).ToProperty();
             });
@@ -75,7 +75,7 @@ public class IsActiveMappingPropertyTests : IClassFixture<TestWebApplicationFact
                 // Create a role
                 var createCommand = new CreateRoleCommand
                 {
-                    RowDesc = roleDesc,
+                    RoleNameAr = roleDesc,
                     RoleNameEn = roleDescE,
                     Note = "Test inactive mapping"
                 };
@@ -92,7 +92,7 @@ public class IsActiveMappingPropertyTests : IClassFixture<TestWebApplicationFact
                 // Note: After soft delete, GetByIdAsync might return null or the inactive record
                 // depending on implementation. We verify it doesn't appear in GetAll.
                 var allRoles = mediator.Send(new GetAllRolesQuery()).GetAwaiter().GetResult();
-                var doesNotAppearInGetAll = !allRoles.Any(r => r.RowId == roleId);
+                var doesNotAppearInGetAll = !allRoles.Any(r => r.RoleId == roleId);
 
                 // The key property: inactive records don't appear in GetAll
                 return doesNotAppearInGetAll.ToProperty();

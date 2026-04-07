@@ -40,8 +40,8 @@ public class ValidationEdgeCasesUnitTests : IClassFixture<TestWebApplicationFact
         // Arrange
         var createDto = new CreateRoleDto
         {
-            RowDesc = "", // Invalid - empty
-            RowDescE = "Valid English",
+            RoleNameAr = "", // Invalid - empty
+            RoleNameEn = "Valid English",
             Note = "Test"
         };
 
@@ -65,8 +65,8 @@ public class ValidationEdgeCasesUnitTests : IClassFixture<TestWebApplicationFact
         var longString = new string('A', 101); // 101 characters
         var createDto = new CreateRoleDto
         {
-            RowDesc = longString,
-            RowDescE = "Valid English",
+            RoleNameAr = longString,
+            RoleNameEn = "Valid English",
             Note = "Test"
         };
 
@@ -87,8 +87,8 @@ public class ValidationEdgeCasesUnitTests : IClassFixture<TestWebApplicationFact
         // Arrange
         var createDto = new CreateRoleDto
         {
-            RowDesc = "Valid Role",
-            RowDescE = "Valid Role E",
+            RoleNameAr = "Valid Role",
+            RoleNameEn = "Valid Role E",
             Note = null // Null note should be allowed
         };
 
@@ -109,8 +109,8 @@ public class ValidationEdgeCasesUnitTests : IClassFixture<TestWebApplicationFact
         // Arrange
         var createDto = new CreateCurrencyDto
         {
-            RowDesc = "Test Currency",
-            RowDescE = "Test Currency E",
+            CurrencyNameAr = "Test Currency",
+            CurrencyNameEn = "Test Currency E",
             ShortDesc = "TC",
             ShortDescE = "TC",
             SingulerDesc = "Test",
@@ -142,8 +142,8 @@ public class ValidationEdgeCasesUnitTests : IClassFixture<TestWebApplicationFact
         // Arrange
         var createDto1 = new CreateUserDto
         {
-            RowDesc = "User 1",
-            RowDescE = "User 1 E",
+            NameAr = "User 1",
+            NameEn = "User 1 E",
             UserName = $"uniqueuser{Guid.NewGuid()}",
             Password = "Password123!",
             IsAdmin = false
@@ -156,8 +156,8 @@ public class ValidationEdgeCasesUnitTests : IClassFixture<TestWebApplicationFact
         // Try to create second user with same username
         var createDto2 = new CreateUserDto
         {
-            RowDesc = "User 2",
-            RowDescE = "User 2 E",
+            NameAr = "User 2",
+            NameEn = "User 2 E",
             UserName = createDto1.UserName, // Duplicate username
             Password = "Password456!",
             IsAdmin = false

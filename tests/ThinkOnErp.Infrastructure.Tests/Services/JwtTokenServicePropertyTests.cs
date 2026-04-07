@@ -159,13 +159,13 @@ public class JwtTokenServicePropertyTests
         /// </summary>
         public static Arbitrary<SysUser> SysUser()
         {
-            var userGenerator = from rowId in Gen.Choose(1, 1000000).Select(i => (decimal)i)
+            var userGenerator = from rowId in Gen.Choose(1, 1000000).Select(i => (Int64)i)
                                from userName in Gen.Elements("user1", "admin", "testuser", "john.doe", "jane.smith")
                                from rowDesc in Gen.Elements("مستخدم", "مدير", "موظف")
                                from rowDescE in Gen.Elements("User", "Admin", "Employee")
                                from password in Gen.Elements("hash1", "hash2", "hash3")
-                               from role in Gen.Choose(0, 100).Select(i => (decimal?)i)
-                               from branchId in Gen.Choose(0, 100).Select(i => (decimal?)i)
+                               from role in Gen.Choose(0, 100).Select(i => (Int64?)i)
+                               from branchId in Gen.Choose(0, 100).Select(i => (Int64?)i)
                                from isAdmin in Arb.Generate<bool>()
                                from creationUser in Gen.Elements("admin", "system", "root")
                                select new Domain.Entities.SysUser

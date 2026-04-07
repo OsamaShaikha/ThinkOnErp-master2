@@ -254,7 +254,7 @@ public class GetAllReturnsOnlyActiveRecordsPropertyTests
 
         private static Gen<SysRole> GenerateSysRole()
         {
-            return from rowId in Gen.Choose(1, 1000000).Select(i => (decimal)i)
+            return from rowId in Gen.Choose(1, 1000000).Select(i => (Int64)i)
                    from rowDesc in Gen.Elements("دور", "مدير", "موظف", "مستخدم")
                    from rowDescE in Gen.Elements("Role", "Manager", "Employee", "User")
                    from note in Gen.Elements("Note 1", "Note 2", null)
@@ -287,7 +287,7 @@ public class GetAllReturnsOnlyActiveRecordsPropertyTests
 
         private static Gen<SysCurrency> GenerateSysCurrency()
         {
-            return from rowId in Gen.Choose(1, 1000000).Select(i => (decimal)i)
+            return from rowId in Gen.Choose(1, 1000000).Select(i => (Int64)i)
                    from rowDesc in Gen.Elements("دولار", "يورو", "جنيه")
                    from rowDescE in Gen.Elements("Dollar", "Euro", "Pound")
                    from shortDesc in Gen.Elements("$", "€", "£")
@@ -328,7 +328,7 @@ public class GetAllReturnsOnlyActiveRecordsPropertyTests
 
         private static Gen<SysCompany> GenerateSysCompany()
         {
-            return from rowId in Gen.Choose(1, 1000000).Select(i => (decimal)i)
+            return from rowId in Gen.Choose(1, 1000000).Select(i => (Int64)i)
                    from rowDesc in Gen.Elements("شركة", "مؤسسة", "منظمة")
                    from rowDescE in Gen.Elements("Company", "Corporation", "Organization")
                    from isActive in Arb.Generate<bool>()
@@ -358,7 +358,7 @@ public class GetAllReturnsOnlyActiveRecordsPropertyTests
 
         private static Gen<SysBranch> GenerateSysBranch()
         {
-            return from rowId in Gen.Choose(1, 1000000).Select(i => (decimal)i)
+            return from rowId in Gen.Choose(1, 1000000).Select(i => (Int64)i)
                    from rowDesc in Gen.Elements("فرع", "مكتب", "قسم")
                    from rowDescE in Gen.Elements("Branch", "Office", "Department")
                    from isActive in Arb.Generate<bool>()
@@ -390,7 +390,7 @@ public class GetAllReturnsOnlyActiveRecordsPropertyTests
 
         private static Gen<SysUser> GenerateSysUser()
         {
-            return from rowId in Gen.Choose(1, 1000000).Select(i => (decimal)i)
+            return from rowId in Gen.Choose(1, 1000000).Select(i => (Int64)i)
                    from userName in Gen.Elements("user1", "admin", "testuser", "john.doe")
                    from rowDesc in Gen.Elements("مستخدم", "مدير", "موظف")
                    from rowDescE in Gen.Elements("User", "Admin", "Employee")

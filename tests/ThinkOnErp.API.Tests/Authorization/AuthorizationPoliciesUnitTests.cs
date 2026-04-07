@@ -38,8 +38,8 @@ public class AuthorizationPoliciesUnitTests : IClassFixture<TestWebApplicationFa
         // Act - Try to create a role (admin-only endpoint)
         var createDto = new CreateRoleDto
         {
-            RowDesc = "Test Role",
-            RowDescE = "Test Role E",
+            RoleNameAr = "Test Role",
+            RoleNameEn = "Test Role E",
             Note = "Test"
         };
         var response = await _client.PostAsJsonAsync("/api/roles", createDto);
@@ -71,8 +71,8 @@ public class AuthorizationPoliciesUnitTests : IClassFixture<TestWebApplicationFa
         // Act - Try to create a role (admin-only endpoint)
         var createDto = new CreateRoleDto
         {
-            RowDesc = "Test Role",
-            RowDescE = "Test Role E",
+            RoleNameAr = "Test Role",
+            RoleNameEn = "Test Role E",
             Note = "Test"
         };
         var response = await _client.PostAsJsonAsync("/api/roles", createDto);
