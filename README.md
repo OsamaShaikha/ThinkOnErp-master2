@@ -51,6 +51,8 @@ sqlplus THINKONERP/oracle123@localhost:1521/XEPDB1
 @Database/Scripts/03_Create_SYS_CURRENCY_Procedures.sql
 @Database/Scripts/04_Create_SYS_BRANCH_Procedures.sql
 @Database/Scripts/05_Create_SYS_USERS_Procedures.sql
+@Database/Scripts/06_Insert_Test_Data.sql
+@Database/Scripts/07_Add_RefreshToken_To_Users.sql
 ```
 
 ### 2. Configuration
@@ -66,7 +68,8 @@ Update `appsettings.json` with your Oracle connection string and JWT settings:
     "SecretKey": "YourSecretKeyHere-MustBe32CharactersOrMore",
     "Issuer": "ThinkOnErpAPI",
     "Audience": "ThinkOnErpClient",
-    "ExpiryInMinutes": 60
+    "ExpiryInMinutes": 60,
+    "RefreshTokenExpiryInDays": 7
   },
   "Serilog": {
     "MinimumLevel": {
@@ -99,6 +102,9 @@ dotnet run --project src/ThinkOnErp.API
 ### Authentication
 
 - `POST /api/auth/login` - Authenticate and receive JWT token (no authorization required)
+- `POST /api/auth/refresh` - Refresh access token using refresh token (no authorization required)
+
+For detailed refresh token documentation, see [docs/REFRESH_TOKEN_API.md](docs/REFRESH_TOKEN_API.md).
 
 ### Roles (Admin-only for CUD operations)
 

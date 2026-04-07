@@ -20,4 +20,14 @@ public class TokenDto
     /// Token type (always "Bearer" for JWT tokens)
     /// </summary>
     public string TokenType { get; set; } = "Bearer";
+
+    /// <summary>
+    /// Refresh token for obtaining new access tokens
+    /// </summary>
+    public string RefreshToken { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Refresh token expiration timestamp (UTC)
+    /// </summary>
+    public DateTime RefreshTokenExpiresAt { get; set; }
 }

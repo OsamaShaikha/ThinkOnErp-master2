@@ -4,3 +4,25 @@ GET {{ThinkOnErp.API_HostAddress}}/weatherforecast/
 Accept: application/json
 
 ###
+
+# Login to get access token and refresh token
+POST {{ThinkOnErp.API_HostAddress}}/api/auth/login
+Content-Type: application/json
+
+{
+  "userName": "admin",
+  "password": "admin123"
+}
+
+###
+
+# Refresh access token using refresh token
+# Note: Only the refreshToken is needed
+POST {{ThinkOnErp.API_HostAddress}}/api/auth/refresh
+Content-Type: application/json
+
+{
+  "refreshToken": "YOUR_REFRESH_TOKEN_HERE"
+}
+
+###

@@ -1,5 +1,6 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
+using System.Security.Cryptography;
 using System.Text;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
@@ -77,7 +78,73 @@ public class JwtTokenService
         {
             AccessToken = tokenString,
             ExpiresAt = expiresAt,
-            TokenType = "Bearer"
+            TokenType = "Bearer",
+            RefreshToken = GenerateRefreshToken(),
+            RefreshTokenExpiresAt = DateTime.UtcNow.AddDays(
+                int.Parse(_configuration["JwtSettings:RefreshTokenExpiryInDays"] ?? "7"))
         };
+    }
+
+    /// <summary>
+    /// Generates a cryptographically secure random refresh token.
+    /// </summary>
+    /// <returns>Base64 encoded refresh token string</returns>
+    public virtual string GenerateRefreshToken()
+    {
+        var randomNumber = new byte[64];
+        using var rng = RandomNumberGenerator.Create();
+        rng.GetBytes(randomNumber);
+        return Convert.ToBase64String(randomNumber);
+    }
+
+    /// <summary>
+    /// Validates a JWT token and extracts the user ID claim.
+    /// </summary>
+    /// <param name="token">The JWT token to validate</param>
+    /// <returns>User ID if token is valid, null otherwise</returns>
+    public virtual long? ValidateToken(string token)
+    {
+        if (string.IsNullOrWhiteSpace(token))
+        {
+            return null;
+        }
+
+        try
+        {
+            var secretKey = _configuration["JwtSettings:SecretKey"];
+            if (string.IsNullOrEmpty(secretKey))
+            {
+                return null;
+            }
+
+            var tokenHandler = new JwtSecurityTokenHandler();
+            var key = Encoding.UTF8.GetBytes(secretKey);
+
+            tokenHandler.ValidateToken(token, new TokenValidationParameters
+            {
+                ValidateIssuerSigningKey = true,
+                IssuerSigningKey = new SymmetricSecurityKey(key),
+                ValidateIssuer = true,
+                ValidIssuer = _configuration["JwtSettings:Issuer"],
+                ValidateAudience = true,
+                ValidAudience = _configuration["JwtSettings:Audience"],
+                ValidateLifetime = false, // Don't validate expiry for refresh token scenario
+                ClockSkew = TimeSpan.Zero
+            }, out SecurityToken validatedToken);
+
+            var jwtToken = (JwtSecurityToken)validatedToken;
+            var userIdClaim = jwtToken.Claims.FirstOrDefault(x => x.Type == "userId");
+
+            if (userIdClaim != null && long.TryParse(userIdClaim.Value, out long userId))
+            {
+                return userId;
+            }
+
+            return null;
+        }
+        catch
+        {
+            return null;
+        }
     }
 }

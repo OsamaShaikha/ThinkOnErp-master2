@@ -90,4 +90,14 @@ public class SysUser
     /// Timestamp when the record was last updated
     /// </summary>
     public DateTime? UpdateDate { get; set; }
+
+    /// <summary>
+    /// Refresh token for JWT authentication
+    /// </summary>
+    public string? RefreshToken { get; set; }
+
+    /// <summary>
+    /// Expiration date for the refresh token
+    /// </summary>
+    public DateTime? RefreshTokenExpiry { get; set; }
 }

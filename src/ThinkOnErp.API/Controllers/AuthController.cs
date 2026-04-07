@@ -75,6 +75,12 @@ public class AuthController : ControllerBase
             // Generate JWT token
             var tokenDto = _jwtTokenService.GenerateToken(user);
 
+            // Save refresh token to database
+            await _authRepository.SaveRefreshTokenAsync(
+                user.RowId, 
+                tokenDto.RefreshToken, 
+                tokenDto.RefreshTokenExpiresAt);
+
             _logger.LogInformation("User {UserName} authenticated successfully", command.UserName);
 
             return Ok(ApiResponse<TokenDto>.CreateSuccess(
@@ -85,6 +91,67 @@ public class AuthController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error during login for user: {UserName}", command.UserName);
+            throw; // Let the global exception middleware handle it
+        }
+    }
+
+    /// <summary>
+    /// Refreshes an expired access token using a valid refresh token.
+    /// This endpoint does not require authorization.
+    /// </summary>
+    /// <param name="request">Refresh token request containing the refresh token</param>
+    /// <returns>ApiResponse containing new TokenDto with fresh JWT tokens on success, 401 on failure</returns>
+    /// <response code="200">Returns new access token and refresh token</response>
+    /// <response code="401">Invalid or expired refresh token</response>
+    /// <response code="400">Validation errors in the request</response>
+    [HttpPost("refresh")]
+    [ProducesResponseType(typeof(ApiResponse<TokenDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<TokenDto>), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ApiResponse<TokenDto>), StatusCodes.Status400BadRequest)]
+    public async Task<ActionResult<ApiResponse<TokenDto>>> RefreshToken([FromBody] RefreshTokenDto request)
+    {
+        try
+        {
+            _logger.LogInformation("Refresh token request received");
+
+            if (string.IsNullOrWhiteSpace(request.RefreshToken))
+            {
+                _logger.LogWarning("Refresh token is empty");
+                return BadRequest(ApiResponse<TokenDto>.CreateFailure(
+                    "Refresh token is required",
+                    statusCode: 400));
+            }
+
+            // Validate refresh token against database and get the user
+            var user = await _authRepository.ValidateRefreshTokenAsync(request.RefreshToken);
+
+            if (user == null)
+            {
+                _logger.LogWarning("Invalid or expired refresh token");
+                return Unauthorized(ApiResponse<TokenDto>.CreateFailure(
+                    "Invalid or expired refresh token",
+                    statusCode: 401));
+            }
+
+            // Generate new tokens
+            var tokenDto = _jwtTokenService.GenerateToken(user);
+
+            // Save new refresh token to database
+            await _authRepository.SaveRefreshTokenAsync(
+                user.RowId,
+                tokenDto.RefreshToken,
+                tokenDto.RefreshTokenExpiresAt);
+
+            _logger.LogInformation("Tokens refreshed successfully for user: {UserName}", user.UserName);
+
+            return Ok(ApiResponse<TokenDto>.CreateSuccess(
+                tokenDto,
+                "Tokens refreshed successfully",
+                200));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error during token refresh");
             throw; // Let the global exception middleware handle it
         }
     }
