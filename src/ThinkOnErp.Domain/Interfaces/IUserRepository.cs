@@ -46,4 +46,18 @@ public interface IUserRepository
     /// <param name="rowId">The unique identifier of the user to delete</param>
     /// <returns>The number of rows affected</returns>
     Task<Int64> DeleteAsync(Int64 rowId);
+
+    /// <summary>
+    /// Retrieves all active users for a specific branch.
+    /// </summary>
+    /// <param name="branchId">The unique identifier of the branch</param>
+    /// <returns>A list of SysUser entities belonging to the specified branch</returns>
+    Task<List<SysUser>> GetByBranchIdAsync(Int64 branchId);
+
+    /// <summary>
+    /// Retrieves all active users for a specific company (through branches).
+    /// </summary>
+    /// <param name="companyId">The unique identifier of the company</param>
+    /// <returns>A list of SysUser entities belonging to branches of the specified company</returns>
+    Task<List<SysUser>> GetByCompanyIdAsync(Int64 companyId);
 }

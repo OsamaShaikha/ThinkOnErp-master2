@@ -9,6 +9,8 @@ using ThinkOnErp.Application.Features.Users.Commands.DeleteUser;
 using ThinkOnErp.Application.Features.Users.Commands.ChangePassword;
 using ThinkOnErp.Application.Features.Users.Queries.GetAllUsers;
 using ThinkOnErp.Application.Features.Users.Queries.GetUserById;
+using ThinkOnErp.Application.Features.Users.Queries.GetUsersByBranchId;
+using ThinkOnErp.Application.Features.Users.Queries.GetUsersByCompanyId;
 
 namespace ThinkOnErp.API.Controllers;
 
@@ -311,6 +313,80 @@ public class UsersController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error changing password for user with ID: {UserId}", id);
+            throw;
+        }
+    }
+
+    /// <summary>
+    /// Retrieves all active users for a specific branch.
+    /// Requires AdminOnly authorization.
+    /// </summary>
+    /// <param name="branchId">Unique identifier of the branch</param>
+    /// <returns>ApiResponse containing list of UserDto objects for the specified branch</returns>
+    /// <response code="200">Returns the list of users for the branch</response>
+    /// <response code="401">User is not authenticated</response>
+    /// <response code="403">User does not have admin privileges</response>
+    [HttpGet("branch/{branchId}")]
+    [Authorize(Policy = "AdminOnly")]
+    [ProducesResponseType(typeof(ApiResponse<List<UserDto>>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<List<UserDto>>), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ApiResponse<List<UserDto>>), StatusCodes.Status403Forbidden)]
+    public async Task<ActionResult<ApiResponse<List<UserDto>>>> GetUsersByBranchId(Int64 branchId)
+    {
+        try
+        {
+            _logger.LogInformation("Retrieving users for branch ID: {BranchId}", branchId);
+
+            var query = new GetUsersByBranchIdQuery { BranchId = branchId };
+            var users = await _mediator.Send(query);
+
+            _logger.LogInformation("Retrieved {Count} users for branch ID: {BranchId}", users.Count, branchId);
+
+            return Ok(ApiResponse<List<UserDto>>.CreateSuccess(
+                users,
+                "Users retrieved successfully",
+                200));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error retrieving users for branch ID: {BranchId}", branchId);
+            throw;
+        }
+    }
+
+    /// <summary>
+    /// Retrieves all active users for a specific company (through branches).
+    /// Requires AdminOnly authorization.
+    /// </summary>
+    /// <param name="companyId">Unique identifier of the company</param>
+    /// <returns>ApiResponse containing list of UserDto objects for the specified company</returns>
+    /// <response code="200">Returns the list of users for the company</response>
+    /// <response code="401">User is not authenticated</response>
+    /// <response code="403">User does not have admin privileges</response>
+    [HttpGet("company/{companyId}")]
+    [Authorize(Policy = "AdminOnly")]
+    [ProducesResponseType(typeof(ApiResponse<List<UserDto>>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<List<UserDto>>), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ApiResponse<List<UserDto>>), StatusCodes.Status403Forbidden)]
+    public async Task<ActionResult<ApiResponse<List<UserDto>>>> GetUsersByCompanyId(Int64 companyId)
+    {
+        try
+        {
+            _logger.LogInformation("Retrieving users for company ID: {CompanyId}", companyId);
+
+            var query = new GetUsersByCompanyIdQuery { CompanyId = companyId };
+            var users = await _mediator.Send(query);
+
+            _logger.LogInformation("Retrieved {Count} users for company ID: {CompanyId}", users.Count, companyId);
+
+            return Ok(ApiResponse<List<UserDto>>.CreateSuccess(
+                users,
+                "Users retrieved successfully",
+                200));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error retrieving users for company ID: {CompanyId}", companyId);
             throw;
         }
     }

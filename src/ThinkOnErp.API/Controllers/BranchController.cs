@@ -8,6 +8,7 @@ using ThinkOnErp.Application.Features.Branches.Commands.UpdateBranch;
 using ThinkOnErp.Application.Features.Branches.Commands.DeleteBranch;
 using ThinkOnErp.Application.Features.Branches.Queries.GetAllBranches;
 using ThinkOnErp.Application.Features.Branches.Queries.GetBranchById;
+using ThinkOnErp.Application.Features.Branches.Queries.GetBranchesByCompanyId;
 
 namespace ThinkOnErp.API.Controllers;
 
@@ -252,6 +253,40 @@ public class BranchController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error deleting branch with ID: {BranchId}", id);
+            throw;
+        }
+    }
+
+    /// <summary>
+    /// Retrieves all active branches for a specific company.
+    /// Requires authentication.
+    /// </summary>
+    /// <param name="companyId">Unique identifier of the company</param>
+    /// <returns>ApiResponse containing list of BranchDto objects for the specified company</returns>
+    /// <response code="200">Returns the list of branches for the company</response>
+    /// <response code="401">User is not authenticated</response>
+    [HttpGet("company/{companyId}")]
+    [ProducesResponseType(typeof(ApiResponse<List<BranchDto>>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<List<BranchDto>>), StatusCodes.Status401Unauthorized)]
+    public async Task<ActionResult<ApiResponse<List<BranchDto>>>> GetBranchesByCompanyId(Int64 companyId)
+    {
+        try
+        {
+            _logger.LogInformation("Retrieving branches for company ID: {CompanyId}", companyId);
+
+            var query = new GetBranchesByCompanyIdQuery { CompanyId = companyId };
+            var branches = await _mediator.Send(query);
+
+            _logger.LogInformation("Retrieved {Count} branches for company ID: {CompanyId}", branches.Count, companyId);
+
+            return Ok(ApiResponse<List<BranchDto>>.CreateSuccess(
+                branches,
+                "Branches retrieved successfully",
+                200));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error retrieving branches for company ID: {CompanyId}", companyId);
             throw;
         }
     }

@@ -334,6 +334,44 @@ public class BranchRepository : IBranchRepository
     }
 
     /// <summary>
+    /// Retrieves all active branches for a specific company.
+    /// </summary>
+    /// <param name="companyId">The unique identifier of the company</param>
+    /// <returns>A list of SysBranch entities belonging to the specified company</returns>
+    public async Task<List<SysBranch>> GetByCompanyIdAsync(long companyId)
+    {
+        List<SysBranch> branches = new();
+
+        using var connection = _dbContext.CreateConnection();
+        await connection.OpenAsync();
+
+        using var command = connection.CreateCommand();
+        command.CommandType = CommandType.Text;
+        command.CommandText = @"
+            SELECT ROW_ID, PAR_ROW_ID, ROW_DESC, ROW_DESC_E, PHONE, MOBILE, FAX, EMAIL,
+                   IS_HEAD_BRANCH, IS_ACTIVE, CREATION_USER, CREATION_DATE, UPDATE_USER, UPDATE_DATE
+            FROM SYS_BRANCH
+            WHERE PAR_ROW_ID = :companyId AND IS_ACTIVE = '1'
+            ORDER BY ROW_DESC";
+
+        _ = command.Parameters.Add(new OracleParameter
+        {
+            ParameterName = "companyId",
+            OracleDbType = OracleDbType.Decimal,
+            Direction = ParameterDirection.Input,
+            Value = companyId
+        });
+
+        using var reader = await command.ExecuteReaderAsync();
+        while (await reader.ReadAsync())
+        {
+            branches.Add(MapToEntity(reader));
+        }
+
+        return branches;
+    }
+
+    /// <summary>
     /// Maps an OracleDataReader row to a SysBranch entity.
     /// Handles Oracle data type conversions to C# types.
     /// </summary>
@@ -343,8 +381,8 @@ public class BranchRepository : IBranchRepository
     {
         return new SysBranch
         {
-            RowId = reader.GetOrdinal("ROW_ID"),
-            ParRowId = reader.IsDBNull(reader.GetOrdinal("PAR_ROW_ID")) ? null : reader.GetOrdinal("PAR_ROW_ID"),
+            RowId = reader.GetInt64(reader.GetOrdinal("ROW_ID")),
+            ParRowId = reader.IsDBNull(reader.GetOrdinal("PAR_ROW_ID")) ? null : reader.GetInt64(reader.GetOrdinal("PAR_ROW_ID")),
             RowDesc = reader.GetString(reader.GetOrdinal("ROW_DESC")),
             RowDescE = reader.GetString(reader.GetOrdinal("ROW_DESC_E")),
             Phone = reader.IsDBNull(reader.GetOrdinal("PHONE")) ? null : reader.GetString(reader.GetOrdinal("PHONE")),

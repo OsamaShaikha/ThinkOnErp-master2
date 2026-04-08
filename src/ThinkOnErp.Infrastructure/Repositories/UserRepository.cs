@@ -366,6 +366,85 @@ public class UserRepository : IUserRepository
     }
 
     /// <summary>
+    /// Retrieves all active users for a specific branch.
+    /// </summary>
+    /// <param name="branchId">The unique identifier of the branch</param>
+    /// <returns>A list of SysUser entities belonging to the specified branch</returns>
+    public async Task<List<SysUser>> GetByBranchIdAsync(long branchId)
+    {
+        List<SysUser> users = new();
+
+        using var connection = _dbContext.CreateConnection();
+        await connection.OpenAsync();
+
+        using var command = connection.CreateCommand();
+        command.CommandType = CommandType.Text;
+        command.CommandText = @"
+            SELECT ROW_ID, ROW_DESC, ROW_DESC_E, USER_NAME, PASSWORD, PHONE, PHONE2,
+                   ROLE, BRANCH_ID, EMAIL, LAST_LOGIN_DATE, IS_ACTIVE, IS_ADMIN,
+                   CREATION_USER, CREATION_DATE, UPDATE_USER, UPDATE_DATE
+            FROM SYS_USERS
+            WHERE BRANCH_ID = :branchId AND IS_ACTIVE = '1'
+            ORDER BY USER_NAME";
+
+        _ = command.Parameters.Add(new OracleParameter
+        {
+            ParameterName = "branchId",
+            OracleDbType = OracleDbType.Decimal,
+            Direction = ParameterDirection.Input,
+            Value = branchId
+        });
+
+        using var reader = await command.ExecuteReaderAsync();
+        while (await reader.ReadAsync())
+        {
+            users.Add(MapToEntity(reader));
+        }
+
+        return users;
+    }
+
+    /// <summary>
+    /// Retrieves all active users for a specific company (through branches).
+    /// </summary>
+    /// <param name="companyId">The unique identifier of the company</param>
+    /// <returns>A list of SysUser entities belonging to branches of the specified company</returns>
+    public async Task<List<SysUser>> GetByCompanyIdAsync(long companyId)
+    {
+        List<SysUser> users = new();
+
+        using var connection = _dbContext.CreateConnection();
+        await connection.OpenAsync();
+
+        using var command = connection.CreateCommand();
+        command.CommandType = CommandType.Text;
+        command.CommandText = @"
+            SELECT u.ROW_ID, u.ROW_DESC, u.ROW_DESC_E, u.USER_NAME, u.PASSWORD, u.PHONE, u.PHONE2,
+                   u.ROLE, u.BRANCH_ID, u.EMAIL, u.LAST_LOGIN_DATE, u.IS_ACTIVE, u.IS_ADMIN,
+                   u.CREATION_USER, u.CREATION_DATE, u.UPDATE_USER, u.UPDATE_DATE
+            FROM SYS_USERS u
+            INNER JOIN SYS_BRANCH b ON u.BRANCH_ID = b.ROW_ID
+            WHERE b.PAR_ROW_ID = :companyId AND u.IS_ACTIVE = '1' AND b.IS_ACTIVE = '1'
+            ORDER BY u.USER_NAME";
+
+        _ = command.Parameters.Add(new OracleParameter
+        {
+            ParameterName = "companyId",
+            OracleDbType = OracleDbType.Decimal,
+            Direction = ParameterDirection.Input,
+            Value = companyId
+        });
+
+        using var reader = await command.ExecuteReaderAsync();
+        while (await reader.ReadAsync())
+        {
+            users.Add(MapToEntity(reader));
+        }
+
+        return users;
+    }
+
+    /// <summary>
     /// Maps an OracleDataReader row to a SysUser entity.
     /// Handles Oracle data type conversions to C# types.
     /// </summary>
@@ -375,15 +454,15 @@ public class UserRepository : IUserRepository
     {
         return new SysUser
         {
-            RowId = reader.GetOrdinal("ROW_ID"),
+            RowId = reader.GetInt64(reader.GetOrdinal("ROW_ID")),
             RowDesc = reader.GetString(reader.GetOrdinal("ROW_DESC")),
             RowDescE = reader.GetString(reader.GetOrdinal("ROW_DESC_E")),
             UserName = reader.GetString(reader.GetOrdinal("USER_NAME")),
             Password = reader.GetString(reader.GetOrdinal("PASSWORD")),
             Phone = reader.IsDBNull(reader.GetOrdinal("PHONE")) ? null : reader.GetString(reader.GetOrdinal("PHONE")),
             Phone2 = reader.IsDBNull(reader.GetOrdinal("PHONE2")) ? null : reader.GetString(reader.GetOrdinal("PHONE2")),
-            Role = reader.IsDBNull(reader.GetOrdinal("ROLE")) ? null : reader.GetOrdinal("ROLE"),
-            BranchId = reader.IsDBNull(reader.GetOrdinal("BRANCH_ID")) ? null : reader.GetOrdinal("BRANCH_ID"),
+            Role = reader.IsDBNull(reader.GetOrdinal("ROLE")) ? null : reader.GetInt64(reader.GetOrdinal("ROLE")),
+            BranchId = reader.IsDBNull(reader.GetOrdinal("BRANCH_ID")) ? null : reader.GetInt64(reader.GetOrdinal("BRANCH_ID")),
             Email = reader.IsDBNull(reader.GetOrdinal("EMAIL")) ? null : reader.GetString(reader.GetOrdinal("EMAIL")),
             LastLoginDate = reader.IsDBNull(reader.GetOrdinal("LAST_LOGIN_DATE")) ? null : reader.GetDateTime(reader.GetOrdinal("LAST_LOGIN_DATE")),
             IsActive = MapIsActiveToBoolean(reader.GetString(reader.GetOrdinal("IS_ACTIVE"))),

@@ -46,4 +46,11 @@ public interface IBranchRepository
     /// <param name="rowId">The unique identifier of the branch to delete</param>
     /// <returns>The number of rows affected</returns>
     Task<Int64> DeleteAsync(Int64 rowId);
+
+    /// <summary>
+    /// Retrieves all active branches for a specific company.
+    /// </summary>
+    /// <param name="companyId">The unique identifier of the company</param>
+    /// <returns>A list of SysBranch entities belonging to the specified company</returns>
+    Task<List<SysBranch>> GetByCompanyIdAsync(Int64 companyId);
 }
