@@ -10,15 +10,23 @@ Database/
 │   ├── 01_Create_Sequences.sql           # Creates sequences for primary key generation
 │   ├── 02_Create_SYS_ROLE_Procedures.sql # CRUD stored procedures for SYS_ROLE table
 │   ├── 03_Create_SYS_CURRENCY_Procedures.sql # CRUD stored procedures for SYS_CURRENCY table
+│   ├── 04_Create_SYS_COMPANY_Procedures.sql # CRUD stored procedures for SYS_COMPANY table
 │   ├── 04_Create_SYS_BRANCH_Procedures.sql # CRUD stored procedures for SYS_BRANCH table
 │   ├── 05_Create_SYS_USERS_Procedures.sql # CRUD stored procedures for SYS_USERS table
-│   └── (future scripts)
+│   ├── 06_Insert_Test_Data.sql           # Test data for development
+│   ├── 07_Add_RefreshToken_To_Users.sql  # Adds refresh token support
+│   ├── 08_Create_Permissions_Tables.sql  # Multi-tenant permissions tables
+│   ├── 09_Create_Permissions_Sequences.sql # Sequences for permissions tables
+│   ├── 10_Create_Permissions_Procedures.sql # CRUD procedures for permissions
+│   └── 11_Insert_Permissions_Seed_Data.sql # Demo systems and screens
 └── README.md
 ```
 
 ## Execution Order
 
 Execute the scripts in numerical order:
+
+### Core System Setup (Required)
 
 1. **01_Create_Sequences.sql** - Creates sequences for all 5 core entities
    - SEQ_SYS_ROLE
@@ -28,33 +36,49 @@ Execute the scripts in numerical order:
    - SEQ_SYS_USERS
 
 2. **02_Create_SYS_ROLE_Procedures.sql** - Creates CRUD stored procedures for SYS_ROLE table
-   - SP_SYS_ROLE_SELECT_ALL
-   - SP_SYS_ROLE_SELECT_BY_ID
-   - SP_SYS_ROLE_INSERT
-   - SP_SYS_ROLE_UPDATE
-   - SP_SYS_ROLE_DELETE
-
 3. **03_Create_SYS_CURRENCY_Procedures.sql** - Creates CRUD stored procedures for SYS_CURRENCY table
-   - SP_SYS_CURRENCY_SELECT_ALL
-   - SP_SYS_CURRENCY_SELECT_BY_ID
-   - SP_SYS_CURRENCY_INSERT
-   - SP_SYS_CURRENCY_UPDATE
-   - SP_SYS_CURRENCY_DELETE
+4. **04_Create_SYS_COMPANY_Procedures.sql** - Creates CRUD stored procedures for SYS_COMPANY table
+5. **04_Create_SYS_BRANCH_Procedures.sql** - Creates CRUD stored procedures for SYS_BRANCH table
+6. **05_Create_SYS_USERS_Procedures.sql** - Creates CRUD stored procedures for SYS_USERS table
+7. **06_Insert_Test_Data.sql** - Inserts test data for development (optional but recommended)
+8. **07_Add_RefreshToken_To_Users.sql** - Adds refresh token columns to SYS_USERS table
 
-4. **04_Create_SYS_BRANCH_Procedures.sql** - Creates CRUD stored procedures for SYS_BRANCH table
-   - SP_SYS_BRANCH_SELECT_ALL
-   - SP_SYS_BRANCH_SELECT_BY_ID
-   - SP_SYS_BRANCH_INSERT
-   - SP_SYS_BRANCH_UPDATE
-   - SP_SYS_BRANCH_DELETE
+### Permissions System Setup (Optional - for multi-tenant permissions)
 
-5. **05_Create_SYS_USERS_Procedures.sql** - Creates CRUD stored procedures for SYS_USERS table
-   - SP_SYS_USERS_SELECT_ALL
-   - SP_SYS_USERS_SELECT_BY_ID
-   - SP_SYS_USERS_INSERT
-   - SP_SYS_USERS_UPDATE
-   - SP_SYS_USERS_DELETE
-   - SP_SYS_USERS_LOGIN (special authentication procedure)
+9. **08_Create_Permissions_Tables.sql** - Creates permission tables
+   - SYS_SUPER_ADMIN
+   - SYS_SYSTEM
+   - SYS_SCREEN
+   - SYS_COMPANY_SYSTEM
+   - SYS_ROLE_SCREEN_PERMISSION
+   - SYS_USER_ROLE
+   - SYS_USER_SCREEN_PERMISSION
+   - SYS_AUDIT_LOG
+
+10. **09_Create_Permissions_Sequences.sql** - Creates sequences for permission tables
+    - SEQ_SYS_SUPER_ADMIN
+    - SEQ_SYS_SYSTEM
+    - SEQ_SYS_SCREEN
+    - SEQ_SYS_COMPANY_SYSTEM
+    - SEQ_SYS_ROLE_SCREEN_PERM
+    - SEQ_SYS_USER_ROLE
+    - SEQ_SYS_USER_SCREEN_PERM
+    - SEQ_SYS_AUDIT_LOG
+
+11. **10_Create_Permissions_Procedures.sql** - Creates CRUD procedures for permissions
+    - System management procedures
+    - Screen management procedures
+    - Company system assignment procedures
+    - Role screen permission procedures
+    - User role assignment procedures
+    - User screen permission override procedures
+    - FN_CHECK_USER_PERMISSION function
+
+12. **11_Insert_Permissions_Seed_Data.sql** - Inserts demo data
+    - 5 Systems (Accounting, Inventory, HR, CRM, POS)
+    - 24 Screens across all systems
+    - Demo company system assignments
+    - Demo role screen permissions
 
 ## How to Execute
 

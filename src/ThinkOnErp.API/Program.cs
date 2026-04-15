@@ -153,6 +153,10 @@ try
 
     // Add authentication and authorization middleware
     app.UseAuthentication();
+    
+    // Add force logout check middleware (after authentication, before authorization)
+    app.UseMiddleware<ThinkOnErp.API.Middleware.ForceLogoutMiddleware>();
+    
     app.UseAuthorization();
 
     app.MapControllers();

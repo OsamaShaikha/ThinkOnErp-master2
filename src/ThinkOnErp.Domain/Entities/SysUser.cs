@@ -100,4 +100,9 @@ public class SysUser
     /// Expiration date for the refresh token
     /// </summary>
     public DateTime? RefreshTokenExpiry { get; set; }
+
+    /// <summary>
+    /// Date when user was force logged out. Tokens issued before this date are invalid.
+    /// </summary>
+    public DateTime? ForceLogoutDate { get; set; }
 }

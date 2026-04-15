@@ -7,6 +7,7 @@ using ThinkOnErp.Application.Features.Users.Commands.CreateUser;
 using ThinkOnErp.Application.Features.Users.Commands.UpdateUser;
 using ThinkOnErp.Application.Features.Users.Commands.DeleteUser;
 using ThinkOnErp.Application.Features.Users.Commands.ChangePassword;
+using ThinkOnErp.Application.Features.Users.Commands.ForceLogout;
 using ThinkOnErp.Application.Features.Users.Queries.GetAllUsers;
 using ThinkOnErp.Application.Features.Users.Queries.GetUserById;
 using ThinkOnErp.Application.Features.Users.Queries.GetUsersByBranchId;
@@ -387,6 +388,61 @@ public class UsersController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error retrieving users for company ID: {CompanyId}", companyId);
+            throw;
+        }
+    }
+
+    /// <summary>
+    /// Forces logout of a user by invalidating all their tokens.
+    /// Requires AdminOnly authorization.
+    /// </summary>
+    /// <param name="id">Unique identifier of the user to force logout</param>
+    /// <returns>ApiResponse containing success status</returns>
+    /// <response code="200">User forced logout successfully</response>
+    /// <response code="404">User not found with the specified ID</response>
+    /// <response code="401">User is not authenticated</response>
+    /// <response code="403">User does not have admin privileges</response>
+    [HttpPost("{id}/force-logout")]
+    [Authorize(Policy = "AdminOnly")]
+    [ProducesResponseType(typeof(ApiResponse<int>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<int>), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ApiResponse<int>), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ApiResponse<int>), StatusCodes.Status403Forbidden)]
+    public async Task<ActionResult<ApiResponse<int>>> ForceLogout(Int64 id)
+    {
+        try
+        {
+            // Get the admin username from claims
+            var adminUserName = User.Claims.FirstOrDefault(c => c.Type == "userName")?.Value ?? "Unknown";
+
+            _logger.LogInformation("Admin {AdminUser} forcing logout for user ID: {UserId}", adminUserName, id);
+
+            var command = new ForceLogoutCommand
+            {
+                UserId = id,
+                AdminUser = adminUserName
+            };
+
+            var rowsAffected = await _mediator.Send(command);
+
+            if (rowsAffected == 0)
+            {
+                _logger.LogWarning("User not found for force logout with ID: {UserId}", id);
+                return NotFound(ApiResponse<int>.CreateFailure(
+                    "No user found with the specified identifier",
+                    statusCode: 404));
+            }
+
+            _logger.LogInformation("User forced logout successfully with ID: {UserId}", id);
+
+            return Ok(ApiResponse<int>.CreateSuccess(
+                rowsAffected,
+                "User forced logout successfully. All active sessions have been terminated.",
+                200));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error forcing logout for user with ID: {UserId}", id);
             throw;
         }
     }

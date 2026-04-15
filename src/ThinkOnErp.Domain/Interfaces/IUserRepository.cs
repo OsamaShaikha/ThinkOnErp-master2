@@ -60,4 +60,13 @@ public interface IUserRepository
     /// <param name="companyId">The unique identifier of the company</param>
     /// <returns>A list of SysUser entities belonging to branches of the specified company</returns>
     Task<List<SysUser>> GetByCompanyIdAsync(Int64 companyId);
+
+    /// <summary>
+    /// Forces logout of a user by setting FORCE_LOGOUT_DATE and clearing refresh tokens.
+    /// Calls SP_SYS_USERS_FORCE_LOGOUT stored procedure.
+    /// </summary>
+    /// <param name="userId">The unique identifier of the user to force logout</param>
+    /// <param name="adminUser">The username of the admin performing the force logout</param>
+    /// <returns>The number of rows affected</returns>
+    Task<int> ForceLogoutAsync(long userId, string adminUser);
 }

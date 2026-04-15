@@ -495,4 +495,52 @@ public class UserRepository : IUserRepository
     {
         return value == "1";
     }
+
+    /// <summary>
+    /// Forces logout of a user by setting FORCE_LOGOUT_DATE and clearing refresh tokens.
+    /// Calls SP_SYS_USERS_FORCE_LOGOUT stored procedure.
+    /// </summary>
+    /// <param name="userId">The unique identifier of the user to force logout</param>
+    /// <param name="adminUser">The username of the admin performing the force logout</param>
+    /// <returns>The number of rows affected</returns>
+    public async Task<int> ForceLogoutAsync(long userId, string adminUser)
+    {
+        using var connection = _dbContext.CreateConnection();
+        await connection.OpenAsync();
+
+        using var command = connection.CreateCommand();
+        command.CommandType = CommandType.StoredProcedure;
+        command.CommandText = "SP_SYS_USERS_FORCE_LOGOUT";
+
+        // Add input parameter for user ID
+        _ = command.Parameters.Add(new OracleParameter
+        {
+            ParameterName = "P_USER_ID",
+            OracleDbType = OracleDbType.Decimal,
+            Direction = ParameterDirection.Input,
+            Value = userId
+        });
+
+        // Add input parameter for admin user
+        _ = command.Parameters.Add(new OracleParameter
+        {
+            ParameterName = "P_ADMIN_USER",
+            OracleDbType = OracleDbType.Varchar2,
+            Direction = ParameterDirection.Input,
+            Value = adminUser
+        });
+
+        // Add output parameter for rows affected
+        OracleParameter rowsAffectedParam = new()
+        {
+            ParameterName = "P_ROWS_AFFECTED",
+            OracleDbType = OracleDbType.Decimal,
+            Direction = ParameterDirection.Output
+        };
+        _ = command.Parameters.Add(rowsAffectedParam);
+
+        await command.ExecuteNonQueryAsync();
+
+        return Convert.ToInt32(rowsAffectedParam.Value.ToString());
+    }
 }
