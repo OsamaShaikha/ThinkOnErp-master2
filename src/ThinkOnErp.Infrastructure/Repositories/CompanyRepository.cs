@@ -119,7 +119,7 @@ public class CompanyRepository : ICompanyRepository
         command.CommandType = CommandType.StoredProcedure;
         command.CommandText = "SP_SYS_COMPANY_INSERT";
 
-        // Add input parameters
+        // Add input parameters - original fields
         _ = command.Parameters.Add(new OracleParameter
         {
             ParameterName = "P_ROW_DESC",
@@ -136,6 +136,80 @@ public class CompanyRepository : ICompanyRepository
             Value = company.RowDescE
         });
 
+        // Add input parameters - new fields
+        _ = command.Parameters.Add(new OracleParameter
+        {
+            ParameterName = "P_LEGAL_NAME",
+            OracleDbType = OracleDbType.Varchar2,
+            Direction = ParameterDirection.Input,
+            Value = (object?)company.LegalName ?? DBNull.Value
+        });
+
+        _ = command.Parameters.Add(new OracleParameter
+        {
+            ParameterName = "P_LEGAL_NAME_E",
+            OracleDbType = OracleDbType.Varchar2,
+            Direction = ParameterDirection.Input,
+            Value = (object?)company.LegalNameE ?? DBNull.Value
+        });
+
+        _ = command.Parameters.Add(new OracleParameter
+        {
+            ParameterName = "P_COMPANY_CODE",
+            OracleDbType = OracleDbType.Varchar2,
+            Direction = ParameterDirection.Input,
+            Value = (object?)company.CompanyCode ?? DBNull.Value
+        });
+
+        _ = command.Parameters.Add(new OracleParameter
+        {
+            ParameterName = "P_DEFAULT_LANG",
+            OracleDbType = OracleDbType.Varchar2,
+            Direction = ParameterDirection.Input,
+            Value = (object?)company.DefaultLang ?? DBNull.Value
+        });
+
+        _ = command.Parameters.Add(new OracleParameter
+        {
+            ParameterName = "P_TAX_NUMBER",
+            OracleDbType = OracleDbType.Varchar2,
+            Direction = ParameterDirection.Input,
+            Value = (object?)company.TaxNumber ?? DBNull.Value
+        });
+
+        _ = command.Parameters.Add(new OracleParameter
+        {
+            ParameterName = "P_FISCAL_YEAR_ID",
+            OracleDbType = OracleDbType.Decimal,
+            Direction = ParameterDirection.Input,
+            Value = (object?)company.FiscalYearId ?? DBNull.Value
+        });
+
+        _ = command.Parameters.Add(new OracleParameter
+        {
+            ParameterName = "P_BASE_CURRENCY_ID",
+            OracleDbType = OracleDbType.Decimal,
+            Direction = ParameterDirection.Input,
+            Value = (object?)company.BaseCurrencyId ?? DBNull.Value
+        });
+
+        _ = command.Parameters.Add(new OracleParameter
+        {
+            ParameterName = "P_SYSTEM_LANGUAGE",
+            OracleDbType = OracleDbType.Varchar2,
+            Direction = ParameterDirection.Input,
+            Value = (object?)company.SystemLanguage ?? DBNull.Value
+        });
+
+        _ = command.Parameters.Add(new OracleParameter
+        {
+            ParameterName = "P_ROUNDING_RULES",
+            OracleDbType = OracleDbType.Varchar2,
+            Direction = ParameterDirection.Input,
+            Value = (object?)company.RoundingRules ?? DBNull.Value
+        });
+
+        // Original fields
         _ = command.Parameters.Add(new OracleParameter
         {
             ParameterName = "P_COUNTRY_ID",
@@ -172,7 +246,7 @@ public class CompanyRepository : ICompanyRepository
         _ = await command.ExecuteNonQueryAsync();
 
         // Return the generated ID
-        return long.Parse(newIdParam.Value.ToString());
+        return long.Parse(newIdParam.Value.ToString()!);
     }
 
     /// <summary>
@@ -215,6 +289,80 @@ public class CompanyRepository : ICompanyRepository
             Value = company.RowDescE
         });
 
+        // New fields
+        _ = command.Parameters.Add(new OracleParameter
+        {
+            ParameterName = "P_LEGAL_NAME",
+            OracleDbType = OracleDbType.Varchar2,
+            Direction = ParameterDirection.Input,
+            Value = (object?)company.LegalName ?? DBNull.Value
+        });
+
+        _ = command.Parameters.Add(new OracleParameter
+        {
+            ParameterName = "P_LEGAL_NAME_E",
+            OracleDbType = OracleDbType.Varchar2,
+            Direction = ParameterDirection.Input,
+            Value = (object?)company.LegalNameE ?? DBNull.Value
+        });
+
+        _ = command.Parameters.Add(new OracleParameter
+        {
+            ParameterName = "P_COMPANY_CODE",
+            OracleDbType = OracleDbType.Varchar2,
+            Direction = ParameterDirection.Input,
+            Value = (object?)company.CompanyCode ?? DBNull.Value
+        });
+
+        _ = command.Parameters.Add(new OracleParameter
+        {
+            ParameterName = "P_DEFAULT_LANG",
+            OracleDbType = OracleDbType.Varchar2,
+            Direction = ParameterDirection.Input,
+            Value = (object?)company.DefaultLang ?? DBNull.Value
+        });
+
+        _ = command.Parameters.Add(new OracleParameter
+        {
+            ParameterName = "P_TAX_NUMBER",
+            OracleDbType = OracleDbType.Varchar2,
+            Direction = ParameterDirection.Input,
+            Value = (object?)company.TaxNumber ?? DBNull.Value
+        });
+
+        _ = command.Parameters.Add(new OracleParameter
+        {
+            ParameterName = "P_FISCAL_YEAR_ID",
+            OracleDbType = OracleDbType.Decimal,
+            Direction = ParameterDirection.Input,
+            Value = (object?)company.FiscalYearId ?? DBNull.Value
+        });
+
+        _ = command.Parameters.Add(new OracleParameter
+        {
+            ParameterName = "P_BASE_CURRENCY_ID",
+            OracleDbType = OracleDbType.Decimal,
+            Direction = ParameterDirection.Input,
+            Value = (object?)company.BaseCurrencyId ?? DBNull.Value
+        });
+
+        _ = command.Parameters.Add(new OracleParameter
+        {
+            ParameterName = "P_SYSTEM_LANGUAGE",
+            OracleDbType = OracleDbType.Varchar2,
+            Direction = ParameterDirection.Input,
+            Value = (object?)company.SystemLanguage ?? DBNull.Value
+        });
+
+        _ = command.Parameters.Add(new OracleParameter
+        {
+            ParameterName = "P_ROUNDING_RULES",
+            OracleDbType = OracleDbType.Varchar2,
+            Direction = ParameterDirection.Input,
+            Value = (object?)company.RoundingRules ?? DBNull.Value
+        });
+
+        // Original fields
         _ = command.Parameters.Add(new OracleParameter
         {
             ParameterName = "P_COUNTRY_ID",
@@ -270,6 +418,98 @@ public class CompanyRepository : ICompanyRepository
     }
 
     /// <summary>
+    /// Updates the company logo.
+    /// Calls SP_SYS_COMPANY_UPDATE_LOGO stored procedure.
+    /// </summary>
+    /// <param name="rowId">The unique identifier of the company</param>
+    /// <param name="logo">The logo image as byte array</param>
+    /// <param name="userName">The username of the user updating the logo</param>
+    /// <returns>The number of rows affected</returns>
+    public async Task<long> UpdateLogoAsync(long rowId, byte[] logo, string userName)
+    {
+        using var connection = _dbContext.CreateConnection();
+        await connection.OpenAsync();
+
+        using var command = connection.CreateCommand();
+        command.CommandType = CommandType.StoredProcedure;
+        command.CommandText = "SP_SYS_COMPANY_UPDATE_LOGO";
+
+        // Add input parameters
+        _ = command.Parameters.Add(new OracleParameter
+        {
+            ParameterName = "P_ROW_ID",
+            OracleDbType = OracleDbType.Decimal,
+            Direction = ParameterDirection.Input,
+            Value = rowId
+        });
+
+        _ = command.Parameters.Add(new OracleParameter
+        {
+            ParameterName = "P_COMPANY_LOGO",
+            OracleDbType = OracleDbType.Blob,
+            Direction = ParameterDirection.Input,
+            Value = logo
+        });
+
+        _ = command.Parameters.Add(new OracleParameter
+        {
+            ParameterName = "P_UPDATE_USER",
+            OracleDbType = OracleDbType.Varchar2,
+            Direction = ParameterDirection.Input,
+            Value = userName
+        });
+
+        return await command.ExecuteNonQueryAsync();
+    }
+
+    /// <summary>
+    /// Retrieves the company logo.
+    /// Calls SP_SYS_COMPANY_GET_LOGO stored procedure.
+    /// </summary>
+    /// <param name="rowId">The unique identifier of the company</param>
+    /// <returns>The logo image as byte array, null if not found</returns>
+    public async Task<byte[]?> GetLogoAsync(long rowId)
+    {
+        using var connection = _dbContext.CreateConnection();
+        await connection.OpenAsync();
+
+        using var command = connection.CreateCommand();
+        command.CommandType = CommandType.StoredProcedure;
+        command.CommandText = "SP_SYS_COMPANY_GET_LOGO";
+
+        // Add input parameter for ROW_ID
+        OracleParameter idParam = new()
+        {
+            ParameterName = "P_ROW_ID",
+            OracleDbType = OracleDbType.Decimal,
+            Direction = ParameterDirection.Input,
+            Value = rowId
+        };
+        _ = command.Parameters.Add(idParam);
+
+        // Add output parameter for SYS_REFCURSOR
+        OracleParameter cursorParam = new()
+        {
+            ParameterName = "P_RESULT_CURSOR",
+            OracleDbType = OracleDbType.RefCursor,
+            Direction = ParameterDirection.Output
+        };
+        _ = command.Parameters.Add(cursorParam);
+
+        using var reader = await command.ExecuteReaderAsync();
+        if (await reader.ReadAsync())
+        {
+            int logoOrdinal = reader.GetOrdinal("COMPANY_LOGO");
+            if (!reader.IsDBNull(logoOrdinal))
+            {
+                return (byte[])reader.GetValue(logoOrdinal);
+            }
+        }
+
+        return null;
+    }
+
+    /// <summary>
     /// Maps an OracleDataReader row to a SysCompany entity.
     /// Handles Oracle data type conversions to C# types.
     /// </summary>
@@ -279,11 +519,20 @@ public class CompanyRepository : ICompanyRepository
     {
         return new SysCompany
         {
-            RowId = reader.GetOrdinal("ROW_ID"),
+            RowId = reader.GetInt64(reader.GetOrdinal("ROW_ID")),
             RowDesc = reader.GetString(reader.GetOrdinal("ROW_DESC")),
             RowDescE = reader.GetString(reader.GetOrdinal("ROW_DESC_E")),
-            CountryId = reader.IsDBNull(reader.GetOrdinal("COUNTRY_ID")) ? null : reader.GetOrdinal("COUNTRY_ID"),
-            CurrId = reader.IsDBNull(reader.GetOrdinal("CURR_ID")) ? null : reader.GetOrdinal("CURR_ID"),
+            LegalName = reader.IsDBNull(reader.GetOrdinal("LEGAL_NAME")) ? null : reader.GetString(reader.GetOrdinal("LEGAL_NAME")),
+            LegalNameE = reader.IsDBNull(reader.GetOrdinal("LEGAL_NAME_E")) ? null : reader.GetString(reader.GetOrdinal("LEGAL_NAME_E")),
+            CompanyCode = reader.IsDBNull(reader.GetOrdinal("COMPANY_CODE")) ? null : reader.GetString(reader.GetOrdinal("COMPANY_CODE")),
+            DefaultLang = reader.IsDBNull(reader.GetOrdinal("DEFAULT_LANG")) ? null : reader.GetString(reader.GetOrdinal("DEFAULT_LANG")),
+            TaxNumber = reader.IsDBNull(reader.GetOrdinal("TAX_NUMBER")) ? null : reader.GetString(reader.GetOrdinal("TAX_NUMBER")),
+            FiscalYearId = reader.IsDBNull(reader.GetOrdinal("FISCAL_YEAR_ID")) ? null : reader.GetInt64(reader.GetOrdinal("FISCAL_YEAR_ID")),
+            BaseCurrencyId = reader.IsDBNull(reader.GetOrdinal("BASE_CURRENCY_ID")) ? null : reader.GetInt64(reader.GetOrdinal("BASE_CURRENCY_ID")),
+            SystemLanguage = reader.IsDBNull(reader.GetOrdinal("SYSTEM_LANGUAGE")) ? null : reader.GetString(reader.GetOrdinal("SYSTEM_LANGUAGE")),
+            RoundingRules = reader.IsDBNull(reader.GetOrdinal("ROUNDING_RULES")) ? null : reader.GetString(reader.GetOrdinal("ROUNDING_RULES")),
+            CountryId = reader.IsDBNull(reader.GetOrdinal("COUNTRY_ID")) ? null : reader.GetInt64(reader.GetOrdinal("COUNTRY_ID")),
+            CurrId = reader.IsDBNull(reader.GetOrdinal("CURR_ID")) ? null : reader.GetInt64(reader.GetOrdinal("CURR_ID")),
             IsActive = MapIsActiveToBoolean(reader.GetString(reader.GetOrdinal("IS_ACTIVE"))),
             CreationUser = reader.GetString(reader.GetOrdinal("CREATION_USER")),
             CreationDate = reader.IsDBNull(reader.GetOrdinal("CREATION_DATE")) ? null : reader.GetDateTime(reader.GetOrdinal("CREATION_DATE")),

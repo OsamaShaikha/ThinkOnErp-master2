@@ -33,6 +33,56 @@ public class SysCompany
     public Int64? CurrId { get; set; }
 
     /// <summary>
+    /// Legal name of the company in Arabic
+    /// </summary>
+    public string? LegalName { get; set; }
+
+    /// <summary>
+    /// Legal name of the company in English
+    /// </summary>
+    public string? LegalNameE { get; set; }
+
+    /// <summary>
+    /// Unique company code for identification
+    /// </summary>
+    public string? CompanyCode { get; set; }
+
+    /// <summary>
+    /// Default language for the company (ar/en)
+    /// </summary>
+    public string? DefaultLang { get; set; }
+
+    /// <summary>
+    /// Tax registration number
+    /// </summary>
+    public string? TaxNumber { get; set; }
+
+    /// <summary>
+    /// Foreign key to SYS_FISCAL_YEAR table - current active fiscal year
+    /// </summary>
+    public Int64? FiscalYearId { get; set; }
+
+    /// <summary>
+    /// Foreign key to SYS_CURRENCY table - base currency for the company
+    /// </summary>
+    public Int64? BaseCurrencyId { get; set; }
+
+    /// <summary>
+    /// System language preference (ar/en)
+    /// </summary>
+    public string? SystemLanguage { get; set; }
+
+    /// <summary>
+    /// Rounding rules for calculations (HALF_UP, HALF_DOWN, UP, DOWN, CEILING, FLOOR)
+    /// </summary>
+    public string? RoundingRules { get; set; }
+
+    /// <summary>
+    /// Company logo image stored as byte array
+    /// </summary>
+    public byte[]? CompanyLogo { get; set; }
+
+    /// <summary>
     /// Soft delete flag - true for active, false for deleted
     /// </summary>
     public bool IsActive { get; set; }
@@ -56,4 +106,20 @@ public class SysCompany
     /// Timestamp when the record was last updated
     /// </summary>
     public DateTime? UpdateDate { get; set; }
+
+    // Navigation properties
+    /// <summary>
+    /// Navigation property to the current fiscal year
+    /// </summary>
+    public SysFiscalYear? FiscalYear { get; set; }
+
+    /// <summary>
+    /// Navigation property to the base currency
+    /// </summary>
+    public SysCurrency? BaseCurrency { get; set; }
+
+    /// <summary>
+    /// Navigation property to the default currency
+    /// </summary>
+    public SysCurrency? Currency { get; set; }
 }

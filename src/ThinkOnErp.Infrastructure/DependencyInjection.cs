@@ -31,6 +31,7 @@ public static class DependencyInjection
         services.AddScoped<IBranchRepository, BranchRepository>();
         services.AddScoped<IUserRepository, UserRepository>();
         services.AddScoped<IAuthRepository, AuthRepository>();
+        services.AddScoped<IFiscalYearRepository, FiscalYearRepository>();
         
         // Register permission system repositories
         services.AddScoped<ISystemRepository, SystemRepository>();

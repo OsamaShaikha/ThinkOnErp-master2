@@ -1,0 +1,65 @@
+-- Create security monitoring tables for threat detection and tracking
+
+-- Security threats and alerts table
+CREATE TABLE SYS_SECURITY_THREATS (
+    ROW_ID NUMBER(19) PRIMARY KEY,
+    THREAT_TYPE NVARCHAR2(100) NOT NULL,
+    SEVERITY NVARCHAR2(20) NOT NULL,
+    IP_ADDRESS NVARCHAR2(50),
+    USER_ID NUMBER(19),
+    COMPANY_ID NUMBER(19),
+    DESCRIPTION NVARCHAR2(4000),
+    DETECTION_DATE DATE DEFAULT SYSDATE,
+    STATUS NVARCHAR2(20) DEFAULT 'Active',
+    ACKNOWLEDGED_BY NUMBER(19),
+    ACKNOWLEDGED_DATE DATE,
+    RESOLVED_DATE DATE,
+    METADATA CLOB
+);
+
+-- Create sequence for security threats
+CREATE SEQUENCE SEQ_SYS_SECURITY_THREATS
+    START WITH 1
+    INCREMENT BY 1
+    NOCACHE
+    NOCYCLE;
+
+-- Create indexes for security threats
+CREATE INDEX IDX_THREAT_STATUS ON SYS_SECURITY_THREATS(STATUS, DETECTION_DATE);
+CREATE INDEX IDX_THREAT_IP ON SYS_SECURITY_THREATS(IP_ADDRESS);
+CREATE INDEX IDX_THREAT_USER ON SYS_SECURITY_THREATS(USER_ID);
+CREATE INDEX IDX_THREAT_TYPE ON SYS_SECURITY_THREATS(THREAT_TYPE);
+
+-- Add comments
+COMMENT ON TABLE SYS_SECURITY_THREATS IS 'Detected security threats and suspicious activities';
+COMMENT ON COLUMN SYS_SECURITY_THREATS.THREAT_TYPE IS 'Type of threat: FailedLogin, UnauthorizedAccess, SqlInjection, AnomalousActivity';
+COMMENT ON COLUMN SYS_SECURITY_THREATS.SEVERITY IS 'Severity: Critical, High, Medium, Low';
+COMMENT ON COLUMN SYS_SECURITY_THREATS.STATUS IS 'Status: Active, Acknowledged, Resolved, FalsePositive';
+
+-- Failed login tracking table (for rate limiting)
+CREATE TABLE SYS_FAILED_LOGINS (
+    ROW_ID NUMBER(19) PRIMARY KEY,
+    IP_ADDRESS NVARCHAR2(50) NOT NULL,
+    USERNAME NVARCHAR2(100),
+    FAILURE_REASON NVARCHAR2(200),
+    ATTEMPT_DATE DATE DEFAULT SYSDATE
+);
+
+-- Create sequence for failed logins
+CREATE SEQUENCE SEQ_SYS_FAILED_LOGINS
+    START WITH 1
+    INCREMENT BY 1
+    NOCACHE
+    NOCYCLE;
+
+-- Create indexes for failed logins
+CREATE INDEX IDX_FAILED_LOGIN_IP_DATE ON SYS_FAILED_LOGINS(IP_ADDRESS, ATTEMPT_DATE);
+CREATE INDEX IDX_FAILED_LOGIN_DATE ON SYS_FAILED_LOGINS(ATTEMPT_DATE);
+
+-- Add comments
+COMMENT ON TABLE SYS_FAILED_LOGINS IS 'Failed login attempts for rate limiting and threat detection';
+COMMENT ON COLUMN SYS_FAILED_LOGINS.FAILURE_REASON IS 'Reason for login failure: InvalidPassword, UserNotFound, AccountLocked';
+
+-- Note: Old failed login records should be cleaned up by a scheduled job (keep only last 24 hours)
+
+COMMIT;

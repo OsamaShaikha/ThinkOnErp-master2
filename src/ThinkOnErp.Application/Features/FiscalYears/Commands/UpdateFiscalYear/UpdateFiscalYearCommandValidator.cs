@@ -1,0 +1,37 @@
+using FluentValidation;
+
+namespace ThinkOnErp.Application.Features.FiscalYears.Commands.UpdateFiscalYear;
+
+public class UpdateFiscalYearCommandValidator : AbstractValidator<UpdateFiscalYearCommand>
+{
+    public UpdateFiscalYearCommandValidator()
+    {
+        RuleFor(x => x.FiscalYearId)
+            .GreaterThan(0)
+            .WithMessage("Fiscal year ID is required");
+
+        RuleFor(x => x.CompanyId)
+            .GreaterThan(0)
+            .WithMessage("Company ID is required");
+
+        RuleFor(x => x.FiscalYearCode)
+            .NotEmpty()
+            .WithMessage("Fiscal year code is required")
+            .MaximumLength(20)
+            .WithMessage("Fiscal year code cannot exceed 20 characters");
+
+        RuleFor(x => x.StartDate)
+            .NotEmpty()
+            .WithMessage("Start date is required");
+
+        RuleFor(x => x.EndDate)
+            .NotEmpty()
+            .WithMessage("End date is required")
+            .GreaterThan(x => x.StartDate)
+            .WithMessage("End date must be after start date");
+
+        RuleFor(x => x.UpdateUser)
+            .NotEmpty()
+            .WithMessage("Update user is required");
+    }
+}

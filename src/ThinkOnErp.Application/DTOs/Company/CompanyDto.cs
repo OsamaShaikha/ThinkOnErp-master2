@@ -32,6 +32,56 @@ public class CompanyDto
     public Int64? CurrId { get; set; }
 
     /// <summary>
+    /// Legal name of the company in Arabic
+    /// </summary>
+    public string? LegalNameAr { get; set; }
+
+    /// <summary>
+    /// Legal name of the company in English
+    /// </summary>
+    public string? LegalNameEn { get; set; }
+
+    /// <summary>
+    /// Unique company code
+    /// </summary>
+    public string? CompanyCode { get; set; }
+
+    /// <summary>
+    /// Default language (ar/en)
+    /// </summary>
+    public string? DefaultLang { get; set; }
+
+    /// <summary>
+    /// Tax registration number
+    /// </summary>
+    public string? TaxNumber { get; set; }
+
+    /// <summary>
+    /// Current active fiscal year ID
+    /// </summary>
+    public Int64? FiscalYearId { get; set; }
+
+    /// <summary>
+    /// Fiscal year code for display
+    /// </summary>
+    public string? FiscalYearCode { get; set; }
+
+    /// <summary>
+    /// Base currency ID
+    /// </summary>
+    public Int64? BaseCurrencyId { get; set; }
+
+    /// <summary>
+    /// System language preference (ar/en)
+    /// </summary>
+    public string? SystemLanguage { get; set; }
+
+    /// <summary>
+    /// Rounding rules for calculations
+    /// </summary>
+    public string? RoundingRules { get; set; }
+
+    /// <summary>
     /// Indicates if the company is active
     /// </summary>
     public bool IsActive { get; set; }
