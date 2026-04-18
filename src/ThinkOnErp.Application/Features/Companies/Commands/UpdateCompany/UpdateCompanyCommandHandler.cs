@@ -35,6 +35,22 @@ public class UpdateCompanyCommandHandler : IRequestHandler<UpdateCompanyCommand,
             UpdateDate = DateTime.UtcNow
         };
 
-        return await _companyRepository.UpdateAsync(company);
+        var result = await _companyRepository.UpdateAsync(company);
+
+        // If company logo was provided, update it separately
+        if (!string.IsNullOrEmpty(request.CompanyLogoBase64))
+        {
+            try
+            {
+                var companyLogo = Convert.FromBase64String(request.CompanyLogoBase64);
+                await _companyRepository.UpdateLogoAsync(request.CompanyId, companyLogo, request.UpdateUser);
+            }
+            catch (FormatException)
+            {
+                throw new ArgumentException("Invalid Base64 format for company logo");
+            }
+        }
+
+        return result;
     }
 }

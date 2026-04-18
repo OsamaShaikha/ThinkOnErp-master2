@@ -28,11 +28,21 @@ public class GetAllBranchesQueryHandler : IRequestHandler<GetAllBranchesQuery, L
             Fax = b.Fax,
             Email = b.Email,
             IsHeadBranch = b.IsHeadBranch,
+            HasLogo = b.HasLogo,
+            BranchLogoBase64 = ConvertBytesToBase64(b.BranchLogo),
             IsActive = b.IsActive,
             CreationUser = b.CreationUser,
             CreationDate = b.CreationDate,
             UpdateUser = b.UpdateUser,
             UpdateDate = b.UpdateDate
         }).ToList();
+    }
+
+    private static string? ConvertBytesToBase64(byte[]? logoBytes)
+    {
+        if (logoBytes == null || logoBytes.Length == 0)
+            return null;
+
+        return $"data:image/jpeg;base64,{Convert.ToBase64String(logoBytes)}";
     }
 }

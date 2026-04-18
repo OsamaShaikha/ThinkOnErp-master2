@@ -17,28 +17,58 @@ public class GetAllCompaniesQueryHandler : IRequestHandler<GetAllCompaniesQuery,
     {
         var companies = await _companyRepository.GetAllAsync();
 
-        return companies.Select(c => new CompanyDto
+        var result = new List<CompanyDto>();
+
+        foreach (var c in companies)
         {
-            CompanyId = c.RowId,
-            CompanyNameAr = c.RowDesc,
-            CompanyNameEn = c.RowDescE,
-            CountryId = c.CountryId,
-            CurrId = c.CurrId,
-            LegalNameAr = c.LegalName,
-            LegalNameEn = c.LegalNameE,
-            CompanyCode = c.CompanyCode,
-            DefaultLang = c.DefaultLang,
-            TaxNumber = c.TaxNumber,
-            FiscalYearId = c.FiscalYearId,
-            FiscalYearCode = c.FiscalYear?.FiscalYearCode,
-            BaseCurrencyId = c.BaseCurrencyId,
-            SystemLanguage = c.SystemLanguage,
-            RoundingRules = c.RoundingRules,
-            IsActive = c.IsActive,
-            CreationUser = c.CreationUser,
-            CreationDate = c.CreationDate,
-            UpdateUser = c.UpdateUser,
-            UpdateDate = c.UpdateDate
-        }).ToList();
+            var dto = new CompanyDto
+            {
+                CompanyId = c.RowId,
+                CompanyNameAr = c.RowDesc,
+                CompanyNameEn = c.RowDescE,
+                CountryId = c.CountryId,
+                CurrId = c.CurrId,
+                LegalNameAr = c.LegalName,
+                LegalNameEn = c.LegalNameE,
+                CompanyCode = c.CompanyCode,
+                DefaultLang = c.DefaultLang,
+                TaxNumber = c.TaxNumber,
+                FiscalYearId = c.FiscalYearId,
+                FiscalYearCode = c.FiscalYear?.FiscalYearCode,
+                BaseCurrencyId = c.BaseCurrencyId,
+                SystemLanguage = c.SystemLanguage,
+                RoundingRules = c.RoundingRules,
+                DefaultBranchId = c.DefaultBranchId,
+                DefaultBranchName = c.DefaultBranch?.RowDescE,
+                HasLogo = c.HasLogo,
+                IsActive = c.IsActive,
+                CreationUser = c.CreationUser,
+                CreationDate = c.CreationDate,
+                UpdateUser = c.UpdateUser,
+                UpdateDate = c.UpdateDate
+            };
+
+            // Load company logo if it exists
+            if (c.HasLogo)
+            {
+                var companyLogo = await _companyRepository.GetLogoAsync(c.RowId);
+                if (companyLogo != null)
+                {
+                    dto.CompanyLogoBase64 = Convert.ToBase64String(companyLogo);
+                }
+            }
+
+            // Load default branch logo if it exists
+            if (c.DefaultBranchId.HasValue && c.DefaultBranch?.HasLogo == true)
+            {
+                // Note: We would need IBranchRepository here to get branch logo
+                // For now, we'll leave this as null and implement it when needed
+                dto.DefaultBranchLogoBase64 = null;
+            }
+
+            result.Add(dto);
+        }
+
+        return result;
     }
 }

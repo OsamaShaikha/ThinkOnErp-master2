@@ -32,7 +32,17 @@ public class GetBranchesByCompanyIdQueryHandler : IRequestHandler<GetBranchesByC
             CreationUser = b.CreationUser,
             CreationDate = b.CreationDate,
             UpdateUser = b.UpdateUser,
-            UpdateDate = b.UpdateDate
+            UpdateDate = b.UpdateDate,
+            HasLogo = b.HasLogo,
+            BranchLogoBase64 = ConvertBytesToBase64(b.BranchLogo)
         }).ToList();
+    }
+
+    private static string? ConvertBytesToBase64(byte[]? logoBytes)
+    {
+        if (logoBytes == null || logoBytes.Length == 0)
+            return null;
+
+        return $"data:image/jpeg;base64,{Convert.ToBase64String(logoBytes)}";
     }
 }

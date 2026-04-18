@@ -71,4 +71,9 @@ public class UpdateCompanyDto
     /// Valid values: HALF_UP, HALF_DOWN, UP, DOWN, CEILING, FLOOR
     /// </summary>
     public string? RoundingRules { get; set; }
+
+    /// <summary>
+    /// Company logo as Base64 string (optional)
+    /// </summary>
+    public string? CompanyLogoBase64 { get; set; }
 }

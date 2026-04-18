@@ -30,6 +30,24 @@ public class UpdateBranchCommandHandler : IRequestHandler<UpdateBranchCommand, I
             UpdateDate = DateTime.UtcNow
         };
 
+        // Convert Base64 logo to byte array if provided
+        if (!string.IsNullOrEmpty(request.BranchLogoBase64))
+        {
+            branch.BranchLogo = ConvertBase64ToBytes(request.BranchLogoBase64);
+        }
+
         return await _branchRepository.UpdateAsync(branch);
+    }
+
+    private static byte[] ConvertBase64ToBytes(string base64String)
+    {
+        // Remove data URL prefix if present (e.g., "data:image/jpeg;base64,")
+        var base64Data = base64String;
+        if (base64String.Contains(','))
+        {
+            base64Data = base64String.Split(',')[1];
+        }
+
+        return Convert.FromBase64String(base64Data);
     }
 }

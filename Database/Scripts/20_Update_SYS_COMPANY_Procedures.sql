@@ -32,7 +32,11 @@ BEGIN
         CREATION_USER,
         CREATION_DATE,
         UPDATE_USER,
-        UPDATE_DATE
+        UPDATE_DATE,
+        CASE 
+            WHEN COMPANY_LOGO IS NOT NULL THEN 'Y'
+            ELSE 'N'
+        END AS HAS_LOGO
     FROM SYS_COMPANY
     WHERE IS_ACTIVE = '1'
     ORDER BY ROW_ID;
@@ -72,7 +76,11 @@ BEGIN
         CREATION_USER,
         CREATION_DATE,
         UPDATE_USER,
-        UPDATE_DATE
+        UPDATE_DATE,
+        CASE 
+            WHEN COMPANY_LOGO IS NOT NULL THEN 'Y'
+            ELSE 'N'
+        END AS HAS_LOGO
     FROM SYS_COMPANY
     WHERE ROW_ID = P_ROW_ID;
 EXCEPTION

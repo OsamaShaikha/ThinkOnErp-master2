@@ -1,4 +1,5 @@
 using Oracle.ManagedDataAccess.Client;
+using Oracle.ManagedDataAccess.Types;
 using System.Data;
 using ThinkOnErp.Domain.Entities;
 using ThinkOnErp.Domain.Interfaces;
@@ -510,6 +511,297 @@ public class CompanyRepository : ICompanyRepository
     }
 
     /// <summary>
+    /// Creates a new company with an automatic default branch in a single transaction.
+    /// Calls SP_SYS_COMPANY_INSERT_WITH_BRANCH stored procedure.
+    /// </summary>
+    public async Task<(long CompanyId, long BranchId)> CreateWithBranchAsync(
+        string? companyNameAr,
+        string companyNameEn,
+        string? legalNameAr,
+        string legalNameEn,
+        string companyCode,
+        string? defaultLang,
+        string? taxNumber,
+        long? fiscalYearId,
+        long? baseCurrencyId,
+        string? systemLanguage,
+        string? roundingRules,
+        long? countryId,
+        long? currId,
+        string? branchNameAr,
+        string? branchNameEn,
+        string? branchPhone,
+        string? branchMobile,
+        string? branchFax,
+        string? branchEmail,
+        byte[]? branchLogo,
+        string creationUser)
+    {
+        using var connection = _dbContext.CreateConnection();
+        await connection.OpenAsync();
+
+        using var command = connection.CreateCommand();
+        command.CommandType = CommandType.StoredProcedure;
+        command.CommandText = "SP_SYS_COMPANY_INSERT_WITH_BRANCH";
+
+        // Company Parameters
+        _ = command.Parameters.Add(new OracleParameter
+        {
+            ParameterName = "P_ROW_DESC",
+            OracleDbType = OracleDbType.Varchar2,
+            Direction = ParameterDirection.Input,
+            Value = companyNameAr ?? (object)DBNull.Value
+        });
+
+        _ = command.Parameters.Add(new OracleParameter
+        {
+            ParameterName = "P_ROW_DESC_E",
+            OracleDbType = OracleDbType.Varchar2,
+            Direction = ParameterDirection.Input,
+            Value = companyNameEn
+        });
+
+        _ = command.Parameters.Add(new OracleParameter
+        {
+            ParameterName = "P_LEGAL_NAME",
+            OracleDbType = OracleDbType.Varchar2,
+            Direction = ParameterDirection.Input,
+            Value = legalNameAr ?? (object)DBNull.Value
+        });
+
+        _ = command.Parameters.Add(new OracleParameter
+        {
+            ParameterName = "P_LEGAL_NAME_E",
+            OracleDbType = OracleDbType.Varchar2,
+            Direction = ParameterDirection.Input,
+            Value = legalNameEn
+        });
+
+        _ = command.Parameters.Add(new OracleParameter
+        {
+            ParameterName = "P_COMPANY_CODE",
+            OracleDbType = OracleDbType.Varchar2,
+            Direction = ParameterDirection.Input,
+            Value = companyCode
+        });
+
+        _ = command.Parameters.Add(new OracleParameter
+        {
+            ParameterName = "P_DEFAULT_LANG",
+            OracleDbType = OracleDbType.Varchar2,
+            Direction = ParameterDirection.Input,
+            Value = defaultLang ?? "ar"
+        });
+
+        _ = command.Parameters.Add(new OracleParameter
+        {
+            ParameterName = "P_TAX_NUMBER",
+            OracleDbType = OracleDbType.Varchar2,
+            Direction = ParameterDirection.Input,
+            Value = taxNumber ?? (object)DBNull.Value
+        });
+
+        _ = command.Parameters.Add(new OracleParameter
+        {
+            ParameterName = "P_FISCAL_YEAR_ID",
+            OracleDbType = OracleDbType.Decimal,
+            Direction = ParameterDirection.Input,
+            Value = fiscalYearId ?? (object)DBNull.Value
+        });
+
+        _ = command.Parameters.Add(new OracleParameter
+        {
+            ParameterName = "P_BASE_CURRENCY_ID",
+            OracleDbType = OracleDbType.Decimal,
+            Direction = ParameterDirection.Input,
+            Value = baseCurrencyId ?? (object)DBNull.Value
+        });
+
+        _ = command.Parameters.Add(new OracleParameter
+        {
+            ParameterName = "P_SYSTEM_LANGUAGE",
+            OracleDbType = OracleDbType.Varchar2,
+            Direction = ParameterDirection.Input,
+            Value = systemLanguage ?? "ar"
+        });
+
+        _ = command.Parameters.Add(new OracleParameter
+        {
+            ParameterName = "P_ROUNDING_RULES",
+            OracleDbType = OracleDbType.Varchar2,
+            Direction = ParameterDirection.Input,
+            Value = roundingRules ?? "HALF_UP"
+        });
+
+        _ = command.Parameters.Add(new OracleParameter
+        {
+            ParameterName = "P_COUNTRY_ID",
+            OracleDbType = OracleDbType.Decimal,
+            Direction = ParameterDirection.Input,
+            Value = countryId ?? (object)DBNull.Value
+        });
+
+        _ = command.Parameters.Add(new OracleParameter
+        {
+            ParameterName = "P_CURR_ID",
+            OracleDbType = OracleDbType.Decimal,
+            Direction = ParameterDirection.Input,
+            Value = currId ?? (object)DBNull.Value
+        });
+
+        // Branch Parameters
+        _ = command.Parameters.Add(new OracleParameter
+        {
+            ParameterName = "P_BRANCH_DESC",
+            OracleDbType = OracleDbType.Varchar2,
+            Direction = ParameterDirection.Input,
+            Value = branchNameAr ?? (object)DBNull.Value
+        });
+
+        _ = command.Parameters.Add(new OracleParameter
+        {
+            ParameterName = "P_BRANCH_DESC_E",
+            OracleDbType = OracleDbType.Varchar2,
+            Direction = ParameterDirection.Input,
+            Value = branchNameEn ?? (object)DBNull.Value
+        });
+
+        _ = command.Parameters.Add(new OracleParameter
+        {
+            ParameterName = "P_BRANCH_PHONE",
+            OracleDbType = OracleDbType.Varchar2,
+            Direction = ParameterDirection.Input,
+            Value = branchPhone ?? (object)DBNull.Value
+        });
+
+        _ = command.Parameters.Add(new OracleParameter
+        {
+            ParameterName = "P_BRANCH_MOBILE",
+            OracleDbType = OracleDbType.Varchar2,
+            Direction = ParameterDirection.Input,
+            Value = branchMobile ?? (object)DBNull.Value
+        });
+
+        _ = command.Parameters.Add(new OracleParameter
+        {
+            ParameterName = "P_BRANCH_FAX",
+            OracleDbType = OracleDbType.Varchar2,
+            Direction = ParameterDirection.Input,
+            Value = branchFax ?? (object)DBNull.Value
+        });
+
+        _ = command.Parameters.Add(new OracleParameter
+        {
+            ParameterName = "P_BRANCH_EMAIL",
+            OracleDbType = OracleDbType.Varchar2,
+            Direction = ParameterDirection.Input,
+            Value = branchEmail ?? (object)DBNull.Value
+        });
+
+        _ = command.Parameters.Add(new OracleParameter
+        {
+            ParameterName = "P_BRANCH_LOGO",
+            OracleDbType = OracleDbType.Blob,
+            Direction = ParameterDirection.Input,
+            Value = branchLogo ?? (object)DBNull.Value
+        });
+
+        // Common Parameters
+        _ = command.Parameters.Add(new OracleParameter
+        {
+            ParameterName = "P_CREATION_USER",
+            OracleDbType = OracleDbType.Varchar2,
+            Direction = ParameterDirection.Input,
+            Value = creationUser
+        });
+
+        // Output Parameters
+        OracleParameter companyIdParam = new()
+        {
+            ParameterName = "P_NEW_COMPANY_ID",
+            OracleDbType = OracleDbType.Decimal,
+            Direction = ParameterDirection.Output
+        };
+        _ = command.Parameters.Add(companyIdParam);
+
+        OracleParameter branchIdParam = new()
+        {
+            ParameterName = "P_NEW_BRANCH_ID",
+            OracleDbType = OracleDbType.Decimal,
+            Direction = ParameterDirection.Output
+        };
+        _ = command.Parameters.Add(branchIdParam);
+
+        try
+        {
+            await command.ExecuteNonQueryAsync();
+
+            // Extract the output values
+            var companyId = Convert.ToInt64(((OracleDecimal)companyIdParam.Value).Value);
+            var branchId = Convert.ToInt64(((OracleDecimal)branchIdParam.Value).Value);
+
+            return (companyId, branchId);
+        }
+        catch (OracleException ex) when (ex.Number == 20308)
+        {
+            throw new InvalidOperationException($"Company code '{companyCode}' already exists.");
+        }
+        catch (OracleException ex) when (ex.Number >= 20301 && ex.Number <= 20313)
+        {
+            throw new ArgumentException(ex.Message.Substring(ex.Message.IndexOf(':') + 1).Trim());
+        }
+        catch (Exception ex)
+        {
+            throw new InvalidOperationException($"Failed to create company with branch: {ex.Message}", ex);
+        }
+    }
+
+    /// <summary>
+    /// Sets the default branch for a company.
+    /// Calls SP_SYS_COMPANY_SET_DEFAULT_BRANCH stored procedure.
+    /// </summary>
+    /// <param name="companyId">The unique identifier of the company</param>
+    /// <param name="branchId">The unique identifier of the branch to set as default</param>
+    /// <param name="userName">The username of the user making the change</param>
+    /// <returns>The number of rows affected</returns>
+    public async Task<long> SetDefaultBranchAsync(long companyId, long branchId, string userName)
+    {
+        using var connection = _dbContext.CreateConnection();
+        await connection.OpenAsync();
+
+        using var command = connection.CreateCommand();
+        command.CommandType = CommandType.StoredProcedure;
+        command.CommandText = "SP_SYS_COMPANY_SET_DEFAULT_BRANCH";
+
+        // Add input parameters
+        _ = command.Parameters.Add(new OracleParameter
+        {
+            ParameterName = "P_COMPANY_ID",
+            OracleDbType = OracleDbType.Decimal,
+            Direction = ParameterDirection.Input,
+            Value = companyId
+        });
+
+        _ = command.Parameters.Add(new OracleParameter
+        {
+            ParameterName = "P_BRANCH_ID",
+            OracleDbType = OracleDbType.Decimal,
+            Direction = ParameterDirection.Input,
+            Value = branchId
+        });
+
+        _ = command.Parameters.Add(new OracleParameter
+        {
+            ParameterName = "P_UPDATE_USER",
+            OracleDbType = OracleDbType.Varchar2,
+            Direction = ParameterDirection.Input,
+            Value = userName
+        });
+
+        return await command.ExecuteNonQueryAsync();
+    }
+
+    /// <summary>
     /// Maps an OracleDataReader row to a SysCompany entity.
     /// Handles Oracle data type conversions to C# types.
     /// </summary>
@@ -517,7 +809,7 @@ public class CompanyRepository : ICompanyRepository
     /// <returns>A SysCompany entity populated with data from the reader</returns>
     private SysCompany MapToEntity(OracleDataReader reader)
     {
-        return new SysCompany
+        var company = new SysCompany
         {
             RowId = reader.GetInt64(reader.GetOrdinal("ROW_ID")),
             RowDesc = reader.GetString(reader.GetOrdinal("ROW_DESC")),
@@ -533,12 +825,34 @@ public class CompanyRepository : ICompanyRepository
             RoundingRules = reader.IsDBNull(reader.GetOrdinal("ROUNDING_RULES")) ? null : reader.GetString(reader.GetOrdinal("ROUNDING_RULES")),
             CountryId = reader.IsDBNull(reader.GetOrdinal("COUNTRY_ID")) ? null : reader.GetInt64(reader.GetOrdinal("COUNTRY_ID")),
             CurrId = reader.IsDBNull(reader.GetOrdinal("CURR_ID")) ? null : reader.GetInt64(reader.GetOrdinal("CURR_ID")),
+            DefaultBranchId = reader.IsDBNull(reader.GetOrdinal("DEFAULT_BRANCH_ID")) ? null : reader.GetInt64(reader.GetOrdinal("DEFAULT_BRANCH_ID")),
             IsActive = MapIsActiveToBoolean(reader.GetString(reader.GetOrdinal("IS_ACTIVE"))),
             CreationUser = reader.GetString(reader.GetOrdinal("CREATION_USER")),
             CreationDate = reader.IsDBNull(reader.GetOrdinal("CREATION_DATE")) ? null : reader.GetDateTime(reader.GetOrdinal("CREATION_DATE")),
             UpdateUser = reader.IsDBNull(reader.GetOrdinal("UPDATE_USER")) ? null : reader.GetString(reader.GetOrdinal("UPDATE_USER")),
             UpdateDate = reader.IsDBNull(reader.GetOrdinal("UPDATE_DATE")) ? null : reader.GetDateTime(reader.GetOrdinal("UPDATE_DATE"))
         };
+
+        // Set CompanyLogo to null but indicate if logo exists via HAS_LOGO field (for performance)
+        // The actual logo bytes are not loaded in list queries for performance reasons
+        try
+        {
+            var hasLogoOrdinal = reader.GetOrdinal("HAS_LOGO");
+            if (!reader.IsDBNull(hasLogoOrdinal))
+            {
+                var hasLogo = reader.GetString(hasLogoOrdinal) == "Y";
+                // We don't load the actual logo bytes here for performance
+                // The HasLogo property will be calculated from this information
+                company.CompanyLogo = hasLogo ? new byte[1] : null; // Placeholder to indicate logo exists
+            }
+        }
+        catch (IndexOutOfRangeException)
+        {
+            // HAS_LOGO field not present in this query (e.g., older stored procedures)
+            // Leave CompanyLogo as null
+        }
+
+        return company;
     }
 
     /// <summary>

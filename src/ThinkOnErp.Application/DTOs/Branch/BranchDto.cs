@@ -54,6 +54,16 @@ public class BranchDto
     public bool IsHeadBranch { get; set; }
 
     /// <summary>
+    /// Indicates if the branch has a logo
+    /// </summary>
+    public bool HasLogo { get; set; }
+
+    /// <summary>
+    /// Branch logo as Base64 string (optional, included in responses)
+    /// </summary>
+    public string? BranchLogoBase64 { get; set; }
+
+    /// <summary>
     /// Indicates if the branch is active
     /// </summary>
     public bool IsActive { get; set; }

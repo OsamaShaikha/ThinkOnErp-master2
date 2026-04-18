@@ -1,4 +1,5 @@
 using Oracle.ManagedDataAccess.Client;
+using Oracle.ManagedDataAccess.Types;
 using System.Data;
 using ThinkOnErp.Domain.Entities;
 using ThinkOnErp.Domain.Interfaces;
@@ -346,21 +347,26 @@ public class BranchRepository : IBranchRepository
         await connection.OpenAsync();
 
         using var command = connection.CreateCommand();
-        command.CommandType = CommandType.Text;
-        command.CommandText = @"
-            SELECT ROW_ID, PAR_ROW_ID, ROW_DESC, ROW_DESC_E, PHONE, MOBILE, FAX, EMAIL,
-                   IS_HEAD_BRANCH, IS_ACTIVE, CREATION_USER, CREATION_DATE, UPDATE_USER, UPDATE_DATE
-            FROM SYS_BRANCH
-            WHERE PAR_ROW_ID = :companyId AND IS_ACTIVE = '1'
-            ORDER BY ROW_DESC";
+        command.CommandType = CommandType.StoredProcedure;
+        command.CommandText = "SP_SYS_BRANCH_SELECT_BY_COMPANY";
 
+        // Add input parameter for company ID
         _ = command.Parameters.Add(new OracleParameter
         {
-            ParameterName = "companyId",
+            ParameterName = "P_COMPANY_ID",
             OracleDbType = OracleDbType.Decimal,
             Direction = ParameterDirection.Input,
             Value = companyId
         });
+
+        // Add output parameter for SYS_REFCURSOR
+        OracleParameter cursorParam = new()
+        {
+            ParameterName = "P_RESULT_CURSOR",
+            OracleDbType = OracleDbType.RefCursor,
+            Direction = ParameterDirection.Output
+        };
+        _ = command.Parameters.Add(cursorParam);
 
         using var reader = await command.ExecuteReaderAsync();
         while (await reader.ReadAsync())
@@ -372,6 +378,98 @@ public class BranchRepository : IBranchRepository
     }
 
     /// <summary>
+    /// Updates the branch logo.
+    /// Calls SP_SYS_BRANCH_UPDATE_LOGO stored procedure.
+    /// </summary>
+    /// <param name="rowId">The unique identifier of the branch</param>
+    /// <param name="logo">The logo image as byte array</param>
+    /// <param name="userName">The username of the user updating the logo</param>
+    /// <returns>The number of rows affected</returns>
+    public async Task<long> UpdateLogoAsync(long rowId, byte[] logo, string userName)
+    {
+        using var connection = _dbContext.CreateConnection();
+        await connection.OpenAsync();
+
+        using var command = connection.CreateCommand();
+        command.CommandType = CommandType.StoredProcedure;
+        command.CommandText = "SP_SYS_BRANCH_UPDATE_LOGO";
+
+        // Add input parameters
+        _ = command.Parameters.Add(new OracleParameter
+        {
+            ParameterName = "P_ROW_ID",
+            OracleDbType = OracleDbType.Decimal,
+            Direction = ParameterDirection.Input,
+            Value = rowId
+        });
+
+        _ = command.Parameters.Add(new OracleParameter
+        {
+            ParameterName = "P_BRANCH_LOGO",
+            OracleDbType = OracleDbType.Blob,
+            Direction = ParameterDirection.Input,
+            Value = logo
+        });
+
+        _ = command.Parameters.Add(new OracleParameter
+        {
+            ParameterName = "P_UPDATE_USER",
+            OracleDbType = OracleDbType.Varchar2,
+            Direction = ParameterDirection.Input,
+            Value = userName
+        });
+
+        return await command.ExecuteNonQueryAsync();
+    }
+
+    /// <summary>
+    /// Retrieves the branch logo.
+    /// Calls SP_SYS_BRANCH_GET_LOGO stored procedure.
+    /// </summary>
+    /// <param name="rowId">The unique identifier of the branch</param>
+    /// <returns>The logo image as byte array, null if not found</returns>
+    public async Task<byte[]?> GetLogoAsync(long rowId)
+    {
+        using var connection = _dbContext.CreateConnection();
+        await connection.OpenAsync();
+
+        using var command = connection.CreateCommand();
+        command.CommandType = CommandType.StoredProcedure;
+        command.CommandText = "SP_SYS_BRANCH_GET_LOGO";
+
+        // Add input parameter for ROW_ID
+        OracleParameter idParam = new()
+        {
+            ParameterName = "P_ROW_ID",
+            OracleDbType = OracleDbType.Decimal,
+            Direction = ParameterDirection.Input,
+            Value = rowId
+        };
+        _ = command.Parameters.Add(idParam);
+
+        // Add output parameter for SYS_REFCURSOR
+        OracleParameter cursorParam = new()
+        {
+            ParameterName = "P_RESULT_CURSOR",
+            OracleDbType = OracleDbType.RefCursor,
+            Direction = ParameterDirection.Output
+        };
+        _ = command.Parameters.Add(cursorParam);
+
+        using var reader = await command.ExecuteReaderAsync();
+        if (await reader.ReadAsync())
+        {
+            int logoOrdinal = reader.GetOrdinal("BRANCH_LOGO");
+            if (!reader.IsDBNull(logoOrdinal))
+            {
+                return (byte[])reader.GetValue(logoOrdinal);
+            }
+        }
+
+        return null;
+    }
+
+    /// <summary>
     /// Maps an OracleDataReader row to a SysBranch entity.
     /// Handles Oracle data type conversions to C# types.
     /// </summary>
@@ -379,7 +477,7 @@ public class BranchRepository : IBranchRepository
     /// <returns>A SysBranch entity populated with data from the reader</returns>
     private SysBranch MapToEntity(OracleDataReader reader)
     {
-        return new SysBranch
+        var branch = new SysBranch
         {
             RowId = reader.GetInt64(reader.GetOrdinal("ROW_ID")),
             ParRowId = reader.IsDBNull(reader.GetOrdinal("PAR_ROW_ID")) ? null : reader.GetInt64(reader.GetOrdinal("PAR_ROW_ID")),
@@ -396,6 +494,27 @@ public class BranchRepository : IBranchRepository
             UpdateUser = reader.IsDBNull(reader.GetOrdinal("UPDATE_USER")) ? null : reader.GetString(reader.GetOrdinal("UPDATE_USER")),
             UpdateDate = reader.IsDBNull(reader.GetOrdinal("UPDATE_DATE")) ? null : reader.GetDateTime(reader.GetOrdinal("UPDATE_DATE"))
         };
+
+        // Set BranchLogo to null but indicate if logo exists via HAS_LOGO field (for performance)
+        // The actual logo bytes are not loaded in list queries for performance reasons
+        try
+        {
+            var hasLogoOrdinal = reader.GetOrdinal("HAS_LOGO");
+            if (!reader.IsDBNull(hasLogoOrdinal))
+            {
+                var hasLogo = reader.GetString(hasLogoOrdinal) == "Y";
+                // We don't load the actual logo bytes here for performance
+                // The HasLogo property will be calculated from this information
+                branch.BranchLogo = hasLogo ? new byte[1] : null; // Placeholder to indicate logo exists
+            }
+        }
+        catch (IndexOutOfRangeException)
+        {
+            // HAS_LOGO field not present in this query (e.g., older stored procedures)
+            // Leave BranchLogo as null
+        }
+
+        return branch;
     }
 
     /// <summary>

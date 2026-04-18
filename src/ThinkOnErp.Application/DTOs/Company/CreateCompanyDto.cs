@@ -71,4 +71,45 @@ public class CreateCompanyDto
     /// Valid values: HALF_UP, HALF_DOWN, UP, DOWN, CEILING, FLOOR
     /// </summary>
     public string? RoundingRules { get; set; }
+
+    /// <summary>
+    /// Company logo as Base64 string (optional)
+    /// </summary>
+    public string? CompanyLogoBase64 { get; set; }
+
+    /// <summary>
+    /// Branch logo as Base64 string (optional)
+    /// </summary>
+    public string? BranchLogoBase64 { get; set; }
+
+    // Branch fields for single API creation
+    /// <summary>
+    /// Arabic name of the default branch (optional, defaults to company name)
+    /// </summary>
+    public string? BranchNameAr { get; set; }
+
+    /// <summary>
+    /// English name of the default branch (optional, defaults to company name)
+    /// </summary>
+    public string? BranchNameEn { get; set; }
+
+    /// <summary>
+    /// Branch phone number (optional)
+    /// </summary>
+    public string? BranchPhone { get; set; }
+
+    /// <summary>
+    /// Branch mobile number (optional)
+    /// </summary>
+    public string? BranchMobile { get; set; }
+
+    /// <summary>
+    /// Branch fax number (optional)
+    /// </summary>
+    public string? BranchFax { get; set; }
+
+    /// <summary>
+    /// Branch email address (optional)
+    /// </summary>
+    public string? BranchEmail { get; set; }
 }

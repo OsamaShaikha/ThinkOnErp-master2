@@ -45,4 +45,9 @@ public class UpdateBranchDto
     /// Indicates if this is the head/main branch of the company
     /// </summary>
     public bool IsHeadBranch { get; set; }
+
+    /// <summary>
+    /// Branch logo as Base64 string (optional)
+    /// </summary>
+    public string? BranchLogoBase64 { get; set; }
 }

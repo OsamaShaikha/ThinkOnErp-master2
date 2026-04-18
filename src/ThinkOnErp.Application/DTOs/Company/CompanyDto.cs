@@ -82,6 +82,31 @@ public class CompanyDto
     public string? RoundingRules { get; set; }
 
     /// <summary>
+    /// Default branch ID for this company
+    /// </summary>
+    public Int64? DefaultBranchId { get; set; }
+
+    /// <summary>
+    /// Default branch name (English) for display
+    /// </summary>
+    public string? DefaultBranchName { get; set; }
+
+    /// <summary>
+    /// Indicates if the company has a logo
+    /// </summary>
+    public bool HasLogo { get; set; }
+
+    /// <summary>
+    /// Company logo as Base64 string (for API responses)
+    /// </summary>
+    public string? CompanyLogoBase64 { get; set; }
+
+    /// <summary>
+    /// Default branch logo as Base64 string (for API responses)
+    /// </summary>
+    public string? DefaultBranchLogoBase64 { get; set; }
+
+    /// <summary>
     /// Indicates if the company is active
     /// </summary>
     public bool IsActive { get; set; }

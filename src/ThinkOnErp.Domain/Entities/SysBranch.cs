@@ -53,6 +53,16 @@ public class SysBranch
     public bool IsHeadBranch { get; set; }
 
     /// <summary>
+    /// Branch logo image stored as byte array (BLOB in database)
+    /// </summary>
+    public byte[]? BranchLogo { get; set; }
+
+    /// <summary>
+    /// Indicates if the branch has a logo (derived property)
+    /// </summary>
+    public bool HasLogo => BranchLogo != null && BranchLogo.Length > 0;
+
+    /// <summary>
     /// Soft delete flag - true for active, false for deleted
     /// </summary>
     public bool IsActive { get; set; }

@@ -78,9 +78,19 @@ public class SysCompany
     public string? RoundingRules { get; set; }
 
     /// <summary>
+    /// Foreign key to SYS_BRANCH table - references the default/head branch for this company
+    /// </summary>
+    public Int64? DefaultBranchId { get; set; }
+
+    /// <summary>
     /// Company logo image stored as byte array
     /// </summary>
     public byte[]? CompanyLogo { get; set; }
+
+    /// <summary>
+    /// Indicates if the company has a logo (derived property)
+    /// </summary>
+    public bool HasLogo => CompanyLogo != null && CompanyLogo.Length > 0;
 
     /// <summary>
     /// Soft delete flag - true for active, false for deleted
@@ -122,4 +132,9 @@ public class SysCompany
     /// Navigation property to the default currency
     /// </summary>
     public SysCurrency? Currency { get; set; }
+
+    /// <summary>
+    /// Navigation property to the default branch
+    /// </summary>
+    public SysBranch? DefaultBranch { get; set; }
 }

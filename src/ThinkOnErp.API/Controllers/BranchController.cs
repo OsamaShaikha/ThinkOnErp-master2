@@ -13,8 +13,8 @@ using ThinkOnErp.Application.Features.Branches.Queries.GetBranchesByCompanyId;
 namespace ThinkOnErp.API.Controllers;
 
 /// <summary>
-/// Controller for branch management operations.
-/// Handles CRUD operations for system branches with appropriate authorization.
+/// Simplified controller for branch management operations with Base64 logo support.
+/// Handles CRUD operations with logos integrated directly in JSON requests/responses.
 /// </summary>
 [ApiController]
 [Route("api/branches")]
@@ -36,11 +36,11 @@ public class BranchController : ControllerBase
     }
 
     /// <summary>
-    /// Retrieves all active branches from the system.
+    /// Retrieves all active branches from the system with Base64 logos included.
     /// Requires authentication.
     /// </summary>
-    /// <returns>ApiResponse containing list of BranchDto objects</returns>
-    /// <response code="200">Returns the list of all active branches</response>
+    /// <returns>ApiResponse containing list of BranchDto objects with Base64 logos</returns>
+    /// <response code="200">Returns the list of all active branches with logos</response>
     /// <response code="401">User is not authenticated</response>
     [HttpGet]
     [ProducesResponseType(typeof(ApiResponse<List<BranchDto>>), StatusCodes.Status200OK)]
@@ -49,16 +49,16 @@ public class BranchController : ControllerBase
     {
         try
         {
-            _logger.LogInformation("Retrieving all branches");
+            _logger.LogInformation("Retrieving all branches with Base64 logos");
 
             var query = new GetAllBranchesQuery();
             var branches = await _mediator.Send(query);
 
-            _logger.LogInformation("Retrieved {Count} branches", branches.Count);
+            _logger.LogInformation("Retrieved {Count} branches with logos", branches.Count);
 
             return Ok(ApiResponse<List<BranchDto>>.CreateSuccess(
                 branches,
-                "Branches retrieved successfully",
+                "Branches retrieved successfully with logos",
                 200));
         }
         catch (Exception ex)
@@ -69,12 +69,12 @@ public class BranchController : ControllerBase
     }
 
     /// <summary>
-    /// Retrieves a specific branch by its ID.
+    /// Retrieves a specific branch by its ID with Base64 logo included.
     /// Requires authentication.
     /// </summary>
     /// <param name="id">Unique identifier of the branch</param>
-    /// <returns>ApiResponse containing BranchDto object</returns>
-    /// <response code="200">Returns the requested branch</response>
+    /// <returns>ApiResponse containing BranchDto object with Base64 logo</returns>
+    /// <response code="200">Returns the requested branch with logo</response>
     /// <response code="404">Branch not found with the specified ID</response>
     /// <response code="401">User is not authenticated</response>
     [HttpGet("{id}")]
@@ -85,7 +85,7 @@ public class BranchController : ControllerBase
     {
         try
         {
-            _logger.LogInformation("Retrieving branch with ID: {BranchId}", id);
+            _logger.LogInformation("Retrieving branch with ID: {BranchId} including Base64 logo", id);
 
             var query = new GetBranchByIdQuery { BranchId = id };
             var branch = await _mediator.Send(query);
@@ -98,11 +98,11 @@ public class BranchController : ControllerBase
                     statusCode: 404));
             }
 
-            _logger.LogInformation("Retrieved branch with ID: {BranchId}", id);
+            _logger.LogInformation("Retrieved branch with ID: {BranchId} with logo", id);
 
             return Ok(ApiResponse<BranchDto>.CreateSuccess(
                 branch,
-                "Branch retrieved successfully",
+                "Branch retrieved successfully with logo",
                 200));
         }
         catch (Exception ex)
@@ -113,12 +113,12 @@ public class BranchController : ControllerBase
     }
 
     /// <summary>
-    /// Creates a new branch in the system.
+    /// Creates a new branch in the system with optional Base64 logo.
     /// Requires AdminOnly authorization.
     /// </summary>
-    /// <param name="command">Command containing branch creation data</param>
+    /// <param name="dto">DTO containing branch creation data and optional Base64 logo</param>
     /// <returns>ApiResponse containing the newly created branch's ID</returns>
-    /// <response code="201">Branch created successfully</response>
+    /// <response code="201">Branch created successfully with logo</response>
     /// <response code="400">Validation errors in the request</response>
     /// <response code="401">User is not authenticated</response>
     /// <response code="403">User does not have admin privileges</response>
@@ -128,39 +128,53 @@ public class BranchController : ControllerBase
     [ProducesResponseType(typeof(ApiResponse<Int64>), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ApiResponse<Int64>), StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(typeof(ApiResponse<Int64>), StatusCodes.Status403Forbidden)]
-    public async Task<ActionResult<ApiResponse<Int64>>> CreateBranch([FromBody] CreateBranchCommand command)
+    public async Task<ActionResult<ApiResponse<Int64>>> CreateBranch([FromBody] CreateBranchDto dto)
     {
         try
         {
-            _logger.LogInformation("Creating new branch: {BranchDesc}", command.BranchNameEn);
+            _logger.LogInformation("Creating new branch with Base64 logo: {BranchDesc}", dto.BranchNameEn);
+
+            var command = new CreateBranchCommand
+            {
+                CompanyId = dto.CompanyId,
+                BranchNameAr = dto.BranchNameAr,
+                BranchNameEn = dto.BranchNameEn,
+                Phone = dto.Phone,
+                Mobile = dto.Mobile,
+                Fax = dto.Fax,
+                Email = dto.Email,
+                IsHeadBranch = dto.IsHeadBranch,
+                BranchLogoBase64 = dto.BranchLogoBase64,
+                CreationUser = User.Identity?.Name ?? "system"
+            };
 
             var branchId = await _mediator.Send(command);
 
-            _logger.LogInformation("Branch created successfully with ID: {BranchId}", branchId);
+            _logger.LogInformation("Branch created successfully with ID: {BranchId} including logo", branchId);
 
             return CreatedAtAction(
                 nameof(GetBranchById),
                 new { id = branchId },
                 ApiResponse<Int64>.CreateSuccess(
                     branchId,
-                    "Branch created successfully",
+                    "Branch created successfully with logo",
                     201));
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error creating branch: {BranchDesc}", command.BranchNameEn);
+            _logger.LogError(ex, "Error creating branch: {BranchDesc}", dto.BranchNameEn);
             throw;
         }
     }
 
     /// <summary>
-    /// Updates an existing branch in the system.
+    /// Updates an existing branch in the system with optional Base64 logo.
     /// Requires AdminOnly authorization.
     /// </summary>
     /// <param name="id">Unique identifier of the branch to update</param>
-    /// <param name="command">Command containing updated branch data</param>
+    /// <param name="dto">DTO containing updated branch data and optional Base64 logo</param>
     /// <returns>ApiResponse containing the number of rows affected</returns>
-    /// <response code="200">Branch updated successfully</response>
+    /// <response code="200">Branch updated successfully with logo</response>
     /// <response code="400">Validation errors or ID mismatch</response>
     /// <response code="404">Branch not found with the specified ID</response>
     /// <response code="401">User is not authenticated</response>
@@ -172,19 +186,26 @@ public class BranchController : ControllerBase
     [ProducesResponseType(typeof(ApiResponse<Int64>), StatusCodes.Status404NotFound)]
     [ProducesResponseType(typeof(ApiResponse<Int64>), StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(typeof(ApiResponse<Int64>), StatusCodes.Status403Forbidden)]
-    public async Task<ActionResult<ApiResponse<Int64>>> UpdateBranch(Int64 id, [FromBody] UpdateBranchCommand command)
+    public async Task<ActionResult<ApiResponse<Int64>>> UpdateBranch(Int64 id, [FromBody] UpdateBranchDto dto)
     {
         try
         {
-            if (id != command.BranchId)
-            {
-                _logger.LogWarning("Branch ID mismatch: URL ID {UrlId} vs Command ID {CommandId}", id, command.BranchId);
-                return BadRequest(ApiResponse<Int64>.CreateFailure(
-                    "Branch ID in URL does not match the ID in the request body",
-                    statusCode: 400));
-            }
+            _logger.LogInformation("Updating branch with ID: {BranchId} including Base64 logo", id);
 
-            _logger.LogInformation("Updating branch with ID: {BranchId}", id);
+            var command = new UpdateBranchCommand
+            {
+                BranchId = id,
+                CompanyId = dto.CompanyId,
+                BranchNameAr = dto.BranchNameAr,
+                BranchNameEn = dto.BranchNameEn,
+                Phone = dto.Phone,
+                Mobile = dto.Mobile,
+                Fax = dto.Fax,
+                Email = dto.Email,
+                IsHeadBranch = dto.IsHeadBranch,
+                BranchLogoBase64 = dto.BranchLogoBase64,
+                UpdateUser = User.Identity?.Name ?? "system"
+            };
 
             var rowsAffected = await _mediator.Send(command);
 
@@ -196,11 +217,11 @@ public class BranchController : ControllerBase
                     statusCode: 404));
             }
 
-            _logger.LogInformation("Branch updated successfully with ID: {BranchId}", id);
+            _logger.LogInformation("Branch updated successfully with ID: {BranchId} including logo", id);
 
             return Ok(ApiResponse<Int64>.CreateSuccess(
                 rowsAffected,
-                "Branch updated successfully",
+                "Branch updated successfully with logo",
                 200));
         }
         catch (Exception ex)
@@ -258,12 +279,12 @@ public class BranchController : ControllerBase
     }
 
     /// <summary>
-    /// Retrieves all active branches for a specific company.
+    /// Retrieves all active branches for a specific company with Base64 logos included.
     /// Requires authentication.
     /// </summary>
     /// <param name="companyId">Unique identifier of the company</param>
-    /// <returns>ApiResponse containing list of BranchDto objects for the specified company</returns>
-    /// <response code="200">Returns the list of branches for the company</response>
+    /// <returns>ApiResponse containing list of BranchDto objects for the specified company with logos</returns>
+    /// <response code="200">Returns the list of branches for the company with logos</response>
     /// <response code="401">User is not authenticated</response>
     [HttpGet("company/{companyId}")]
     [ProducesResponseType(typeof(ApiResponse<List<BranchDto>>), StatusCodes.Status200OK)]
@@ -272,16 +293,16 @@ public class BranchController : ControllerBase
     {
         try
         {
-            _logger.LogInformation("Retrieving branches for company ID: {CompanyId}", companyId);
+            _logger.LogInformation("Retrieving branches for company ID: {CompanyId} with Base64 logos", companyId);
 
             var query = new GetBranchesByCompanyIdQuery { CompanyId = companyId };
             var branches = await _mediator.Send(query);
 
-            _logger.LogInformation("Retrieved {Count} branches for company ID: {CompanyId}", branches.Count, companyId);
+            _logger.LogInformation("Retrieved {Count} branches for company ID: {CompanyId} with logos", branches.Count, companyId);
 
             return Ok(ApiResponse<List<BranchDto>>.CreateSuccess(
                 branches,
-                "Branches retrieved successfully",
+                "Branches retrieved successfully with logos",
                 200));
         }
         catch (Exception ex)

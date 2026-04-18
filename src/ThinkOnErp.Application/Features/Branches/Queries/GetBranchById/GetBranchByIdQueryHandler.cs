@@ -31,11 +31,21 @@ public class GetBranchByIdQueryHandler : IRequestHandler<GetBranchByIdQuery, Bra
             Fax = branch.Fax,
             Email = branch.Email,
             IsHeadBranch = branch.IsHeadBranch,
+            HasLogo = branch.HasLogo,
+            BranchLogoBase64 = ConvertBytesToBase64(branch.BranchLogo),
             IsActive = branch.IsActive,
             CreationUser = branch.CreationUser,
             CreationDate = branch.CreationDate,
             UpdateUser = branch.UpdateUser,
             UpdateDate = branch.UpdateDate
         };
+    }
+
+    private static string? ConvertBytesToBase64(byte[]? logoBytes)
+    {
+        if (logoBytes == null || logoBytes.Length == 0)
+            return null;
+
+        return $"data:image/jpeg;base64,{Convert.ToBase64String(logoBytes)}";
     }
 }

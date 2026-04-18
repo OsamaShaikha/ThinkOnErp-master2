@@ -13,5 +13,6 @@ public class UpdateBranchCommand : IRequest<Int64>
     public string? Fax { get; set; }
     public string? Email { get; set; }
     public bool IsHeadBranch { get; set; }
+    public string? BranchLogoBase64 { get; set; }
     public string UpdateUser { get; set; } = string.Empty;
 }

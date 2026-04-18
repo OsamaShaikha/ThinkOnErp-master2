@@ -38,5 +38,66 @@ public class UpdateCompanyCommandValidator : AbstractValidator<UpdateCompanyComm
 
         RuleFor(x => x.FiscalYearId).GreaterThan(0).When(x => x.FiscalYearId.HasValue);
         RuleFor(x => x.BaseCurrencyId).GreaterThan(0).When(x => x.BaseCurrencyId.HasValue);
+
+        // Base64 Logo Validation
+        RuleFor(x => x.CompanyLogoBase64)
+            .Must(BeValidBase64)
+            .WithMessage("Company logo must be a valid Base64 string")
+            .Must(BeValidBase64Size)
+            .WithMessage("Company logo size cannot exceed 5MB when decoded")
+            .When(x => !string.IsNullOrEmpty(x.CompanyLogoBase64));
+    }
+
+    /// <summary>
+    /// Validates if a string is a valid Base64 format
+    /// </summary>
+    private static bool BeValidBase64(string? base64String)
+    {
+        if (string.IsNullOrEmpty(base64String))
+            return true;
+
+        try
+        {
+            // Remove data URL prefix if present (e.g., "data:image/jpeg;base64,")
+            var base64Data = base64String;
+            if (base64String.Contains(','))
+            {
+                base64Data = base64String.Split(',')[1];
+            }
+
+            Convert.FromBase64String(base64Data);
+            return true;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    /// <summary>
+    /// Validates if Base64 decoded size is within 5MB limit
+    /// </summary>
+    private static bool BeValidBase64Size(string? base64String)
+    {
+        if (string.IsNullOrEmpty(base64String))
+            return true;
+
+        try
+        {
+            // Remove data URL prefix if present
+            var base64Data = base64String;
+            if (base64String.Contains(','))
+            {
+                base64Data = base64String.Split(',')[1];
+            }
+
+            var bytes = Convert.FromBase64String(base64Data);
+            const int maxSize = 5 * 1024 * 1024; // 5MB
+            return bytes.Length <= maxSize;
+        }
+        catch
+        {
+            return false;
+        }
     }
 }
