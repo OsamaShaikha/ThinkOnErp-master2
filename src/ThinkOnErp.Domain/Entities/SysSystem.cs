@@ -1,18 +1,17 @@
 namespace ThinkOnErp.Domain.Entities;
 
 /// <summary>
-/// Represents a system/module in the ERP platform (e.g., Accounting, Inventory, HR).
-/// Maps to the SYS_SYSTEM table in Oracle database.
+/// Represents a system/module in the platform (e.g., Accounting, Inventory, HR)
 /// </summary>
 public class SysSystem
 {
     /// <summary>
-    /// Primary key - generated from SEQ_SYS_SYSTEM sequence
+    /// Unique identifier for the system
     /// </summary>
     public Int64 RowId { get; set; }
 
     /// <summary>
-    /// Unique code identifier for the system (e.g., 'accounting', 'inventory')
+    /// Unique code identifier (e.g., accounting, inventory)
     /// </summary>
     public string SystemCode { get; set; } = string.Empty;
 
@@ -42,12 +41,12 @@ public class SysSystem
     public string? Icon { get; set; }
 
     /// <summary>
-    /// Display order for sorting in UI
+    /// Display order for UI sorting
     /// </summary>
     public int DisplayOrder { get; set; }
 
     /// <summary>
-    /// Soft delete flag - true for active, false for deleted
+    /// Indicates if the system is active
     /// </summary>
     public bool IsActive { get; set; }
 

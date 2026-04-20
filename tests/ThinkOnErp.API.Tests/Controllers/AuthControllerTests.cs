@@ -19,6 +19,7 @@ namespace ThinkOnErp.API.Tests.Controllers;
 public class AuthControllerTests
 {
     private readonly Mock<IAuthRepository> _mockAuthRepository;
+    private readonly Mock<ISuperAdminRepository> _mockSuperAdminRepository;
     private readonly Mock<PasswordHashingService> _mockPasswordHashingService;
     private readonly Mock<JwtTokenService> _mockJwtTokenService;
     private readonly Mock<ILogger<AuthController>> _mockLogger;
@@ -27,12 +28,14 @@ public class AuthControllerTests
     public AuthControllerTests()
     {
         _mockAuthRepository = new Mock<IAuthRepository>();
+        _mockSuperAdminRepository = new Mock<ISuperAdminRepository>();
         _mockPasswordHashingService = new Mock<PasswordHashingService>();
         _mockJwtTokenService = new Mock<JwtTokenService>(Mock.Of<Microsoft.Extensions.Configuration.IConfiguration>());
         _mockLogger = new Mock<ILogger<AuthController>>();
 
         _controller = new AuthController(
             _mockAuthRepository.Object,
+            _mockSuperAdminRepository.Object,
             _mockPasswordHashingService.Object,
             _mockJwtTokenService.Object,
             _mockLogger.Object);

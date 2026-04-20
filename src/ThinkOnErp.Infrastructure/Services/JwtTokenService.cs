@@ -86,6 +86,69 @@ public class JwtTokenService
     }
 
     /// <summary>
+    /// Generates a JWT token for an authenticated super admin with all required claims.
+    /// </summary>
+    /// <param name="superAdmin">The authenticated super admin</param>
+    /// <returns>TokenDto containing the JWT token and expiration time</returns>
+    public virtual TokenDto GenerateToken(SysSuperAdmin superAdmin)
+    {
+        if (superAdmin == null)
+        {
+            throw new ArgumentNullException(nameof(superAdmin));
+        }
+
+        // Read JWT settings from configuration
+        var secretKey = _configuration["JwtSettings:SecretKey"] 
+            ?? throw new InvalidOperationException("JWT SecretKey is not configured");
+        var issuer = _configuration["JwtSettings:Issuer"] 
+            ?? throw new InvalidOperationException("JWT Issuer is not configured");
+        var audience = _configuration["JwtSettings:Audience"] 
+            ?? throw new InvalidOperationException("JWT Audience is not configured");
+        var expiryInMinutes = int.Parse(_configuration["JwtSettings:ExpiryInMinutes"] 
+            ?? throw new InvalidOperationException("JWT ExpiryInMinutes is not configured"));
+
+        // Create security key from secret
+        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey));
+        var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+
+        // Calculate expiration time
+        var expiresAt = DateTime.UtcNow.AddMinutes(expiryInMinutes);
+
+        // Create claims with super admin information
+        var claims = new[]
+        {
+            new Claim("userId", superAdmin.RowId.ToString()),
+            new Claim("userName", superAdmin.UserName),
+            new Claim("userType", "SuperAdmin"), // Distinguish from regular users
+            new Claim("isAdmin", "true"), // Super admins are always admins
+            new Claim("isSuperAdmin", "true") // Special claim for super admin
+        };
+
+        // Create JWT token
+        var token = new JwtSecurityToken(
+            issuer: issuer,
+            audience: audience,
+            claims: claims,
+            expires: expiresAt,
+            signingCredentials: credentials
+        );
+
+        // Generate token string
+        var tokenHandler = new JwtSecurityTokenHandler();
+        var tokenString = tokenHandler.WriteToken(token);
+
+        return new TokenDto
+        {
+            AccessToken = tokenString,
+            ExpiresAt = expiresAt,
+            TokenType = "Bearer",
+            RefreshToken = GenerateRefreshToken(),
+            RefreshTokenExpiresAt = DateTime.UtcNow.AddDays(
+                int.Parse(_configuration["JwtSettings:RefreshTokenExpiryInDays"] ?? "7"))
+        };
+    }
+
+    /// <summary>
     /// Generates a cryptographically secure random refresh token.
     /// </summary>
     /// <returns>Base64 encoded refresh token string</returns>

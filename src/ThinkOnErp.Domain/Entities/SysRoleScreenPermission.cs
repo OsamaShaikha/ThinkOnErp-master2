@@ -1,13 +1,12 @@
 namespace ThinkOnErp.Domain.Entities;
 
 /// <summary>
-/// Represents granular screen-level permissions for a role (View/Insert/Update/Delete).
-/// Maps to the SYS_ROLE_SCREEN_PERMISSION table in Oracle database.
+/// Represents screen-level permissions for a role (View/Insert/Update/Delete)
 /// </summary>
 public class SysRoleScreenPermission
 {
     /// <summary>
-    /// Primary key - generated from SEQ_SYS_ROLE_SCREEN_PERM sequence
+    /// Unique identifier for the permission record
     /// </summary>
     public Int64 RowId { get; set; }
 
@@ -22,22 +21,22 @@ public class SysRoleScreenPermission
     public Int64 ScreenId { get; set; }
 
     /// <summary>
-    /// Permission to view/read the screen
+    /// Can view/read the screen
     /// </summary>
     public bool CanView { get; set; }
 
     /// <summary>
-    /// Permission to create new records
+    /// Can create new records
     /// </summary>
     public bool CanInsert { get; set; }
 
     /// <summary>
-    /// Permission to edit existing records
+    /// Can edit existing records
     /// </summary>
     public bool CanUpdate { get; set; }
 
     /// <summary>
-    /// Permission to delete records
+    /// Can delete records
     /// </summary>
     public bool CanDelete { get; set; }
 
@@ -60,4 +59,8 @@ public class SysRoleScreenPermission
     /// Timestamp when the record was last updated
     /// </summary>
     public DateTime? UpdateDate { get; set; }
+
+    // Navigation properties
+    public SysRole? Role { get; set; }
+    public SysScreen? Screen { get; set; }
 }

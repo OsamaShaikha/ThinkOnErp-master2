@@ -1,13 +1,12 @@
 namespace ThinkOnErp.Domain.Entities;
 
 /// <summary>
-/// Represents direct user-level permission overrides (takes precedence over role permissions).
-/// Maps to the SYS_USER_SCREEN_PERMISSION table in Oracle database.
+/// Represents direct user-level permission overrides (highest priority)
 /// </summary>
 public class SysUserScreenPermission
 {
     /// <summary>
-    /// Primary key - generated from SEQ_SYS_USER_SCREEN_PERM sequence
+    /// Unique identifier for the permission record
     /// </summary>
     public Int64 RowId { get; set; }
 
@@ -22,37 +21,37 @@ public class SysUserScreenPermission
     public Int64 ScreenId { get; set; }
 
     /// <summary>
-    /// Permission to view/read the screen
+    /// Can view/read the screen
     /// </summary>
     public bool CanView { get; set; }
 
     /// <summary>
-    /// Permission to create new records
+    /// Can create new records
     /// </summary>
     public bool CanInsert { get; set; }
 
     /// <summary>
-    /// Permission to edit existing records
+    /// Can edit existing records
     /// </summary>
     public bool CanUpdate { get; set; }
 
     /// <summary>
-    /// Permission to delete records
+    /// Can delete records
     /// </summary>
     public bool CanDelete { get; set; }
 
     /// <summary>
-    /// Super Admin or Company Admin who set this override (nullable)
+    /// Super Admin or Company Admin who set this override
     /// </summary>
     public Int64? AssignedBy { get; set; }
 
     /// <summary>
-    /// Timestamp when the override was assigned
+    /// Date when the permission was assigned
     /// </summary>
     public DateTime? AssignedDate { get; set; }
 
     /// <summary>
-    /// Optional notes about the permission override
+    /// Notes about why this override was set
     /// </summary>
     public string? Notes { get; set; }
 
@@ -75,4 +74,8 @@ public class SysUserScreenPermission
     /// Timestamp when the record was last updated
     /// </summary>
     public DateTime? UpdateDate { get; set; }
+
+    // Navigation properties
+    public SysUser? User { get; set; }
+    public SysScreen? Screen { get; set; }
 }

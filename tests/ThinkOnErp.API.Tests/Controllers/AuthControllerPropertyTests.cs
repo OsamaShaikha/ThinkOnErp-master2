@@ -34,12 +34,14 @@ public class AuthControllerPropertyTests
     {
         // Arrange
         var mockAuthRepository = new Mock<IAuthRepository>();
+        var mockSuperAdminRepository = new Mock<ISuperAdminRepository>();
         var mockPasswordHashingService = new Mock<PasswordHashingService>();
         var mockJwtTokenService = new Mock<JwtTokenService>(Mock.Of<Microsoft.Extensions.Configuration.IConfiguration>());
         var mockLogger = new Mock<ILogger<AuthController>>();
 
         var controller = new AuthController(
             mockAuthRepository.Object,
+            mockSuperAdminRepository.Object,
             mockPasswordHashingService.Object,
             mockJwtTokenService.Object,
             mockLogger.Object);

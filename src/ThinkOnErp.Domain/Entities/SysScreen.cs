@@ -1,13 +1,12 @@
 namespace ThinkOnErp.Domain.Entities;
 
 /// <summary>
-/// Represents a screen/page within a system in the ERP platform.
-/// Maps to the SYS_SCREEN table in Oracle database.
+/// Represents a screen/page within a system
 /// </summary>
 public class SysScreen
 {
     /// <summary>
-    /// Primary key - generated from SEQ_SYS_SCREEN sequence
+    /// Unique identifier for the screen
     /// </summary>
     public Int64 RowId { get; set; }
 
@@ -17,12 +16,12 @@ public class SysScreen
     public Int64 SystemId { get; set; }
 
     /// <summary>
-    /// Foreign key to parent screen for hierarchical screens (nullable)
+    /// Parent screen ID for hierarchical screens (nullable)
     /// </summary>
     public Int64? ParentScreenId { get; set; }
 
     /// <summary>
-    /// Unique code identifier for the screen (e.g., 'invoices_list', 'products')
+    /// Unique code identifier (e.g., invoices_list)
     /// </summary>
     public string ScreenCode { get; set; } = string.Empty;
 
@@ -37,7 +36,7 @@ public class SysScreen
     public string ScreenNameE { get; set; } = string.Empty;
 
     /// <summary>
-    /// Frontend route path for the screen
+    /// Frontend route path
     /// </summary>
     public string? Route { get; set; }
 
@@ -57,12 +56,12 @@ public class SysScreen
     public string? Icon { get; set; }
 
     /// <summary>
-    /// Display order for sorting in UI
+    /// Display order for UI sorting
     /// </summary>
     public int DisplayOrder { get; set; }
 
     /// <summary>
-    /// Soft delete flag - true for active, false for deleted
+    /// Indicates if the screen is active
     /// </summary>
     public bool IsActive { get; set; }
 
@@ -85,4 +84,8 @@ public class SysScreen
     /// Timestamp when the record was last updated
     /// </summary>
     public DateTime? UpdateDate { get; set; }
+
+    // Navigation properties
+    public SysSystem? System { get; set; }
+    public SysScreen? ParentScreen { get; set; }
 }

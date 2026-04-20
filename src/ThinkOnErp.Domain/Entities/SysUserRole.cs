@@ -1,13 +1,12 @@
 namespace ThinkOnErp.Domain.Entities;
 
 /// <summary>
-/// Represents user to role assignments (many-to-many relationship).
-/// Maps to the SYS_USER_ROLE table in Oracle database.
+/// Represents the many-to-many relationship between users and roles
 /// </summary>
 public class SysUserRole
 {
     /// <summary>
-    /// Primary key - generated from SEQ_SYS_USER_ROLE sequence
+    /// Unique identifier for the user-role assignment
     /// </summary>
     public Int64 RowId { get; set; }
 
@@ -22,12 +21,12 @@ public class SysUserRole
     public Int64 RoleId { get; set; }
 
     /// <summary>
-    /// User ID who assigned this role (nullable)
+    /// User ID who assigned this role
     /// </summary>
     public Int64? AssignedBy { get; set; }
 
     /// <summary>
-    /// Timestamp when the role was assigned
+    /// Date when the role was assigned
     /// </summary>
     public DateTime? AssignedDate { get; set; }
 
@@ -40,4 +39,8 @@ public class SysUserRole
     /// Timestamp when the record was created
     /// </summary>
     public DateTime? CreationDate { get; set; }
+
+    // Navigation properties
+    public SysUser? User { get; set; }
+    public SysRole? Role { get; set; }
 }

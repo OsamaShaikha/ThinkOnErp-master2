@@ -34,6 +34,7 @@ public static class DependencyInjection
         services.AddScoped<IFiscalYearRepository, FiscalYearRepository>();
         
         // Register permission system repositories
+        services.AddScoped<ISuperAdminRepository, SuperAdminRepository>();
         services.AddScoped<ISystemRepository, SystemRepository>();
         services.AddScoped<IScreenRepository, ScreenRepository>();
         services.AddScoped<IPermissionRepository, PermissionRepository>();
