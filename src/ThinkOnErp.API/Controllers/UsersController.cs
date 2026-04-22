@@ -13,6 +13,8 @@ using ThinkOnErp.Application.Features.Users.Queries.GetAllUsers;
 using ThinkOnErp.Application.Features.Users.Queries.GetUserById;
 using ThinkOnErp.Application.Features.Users.Queries.GetUsersByBranchId;
 using ThinkOnErp.Application.Features.Users.Queries.GetUsersByCompanyId;
+using ThinkOnErp.Infrastructure.Services;
+using ThinkOnErp.Domain.Interfaces;
 
 namespace ThinkOnErp.API.Controllers;
 
@@ -27,16 +29,26 @@ public class UsersController : ControllerBase
 {
     private readonly IMediator _mediator;
     private readonly ILogger<UsersController> _logger;
+    private readonly PasswordHashingService _passwordHashingService;
+    private readonly IUserRepository _userRepository;
 
     /// <summary>
     /// Initializes a new instance of the UsersController class.
     /// </summary>
     /// <param name="mediator">MediatR instance for sending commands and queries</param>
     /// <param name="logger">Logger for controller operations</param>
-    public UsersController(IMediator mediator, ILogger<UsersController> logger)
+    /// <param name="passwordHashingService">Service for password hashing</param>
+    /// <param name="userRepository">Repository for user operations</param>
+    public UsersController(
+        IMediator mediator, 
+        ILogger<UsersController> logger,
+        PasswordHashingService passwordHashingService,
+        IUserRepository userRepository)
     {
         _mediator = mediator ?? throw new ArgumentNullException(nameof(mediator));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        _passwordHashingService = passwordHashingService ?? throw new ArgumentNullException(nameof(passwordHashingService));
+        _userRepository = userRepository ?? throw new ArgumentNullException(nameof(userRepository));
     }
 
     /// <summary>
@@ -143,6 +155,9 @@ public class UsersController : ControllerBase
         try
         {
             _logger.LogInformation("Creating new user: {UserName}", command.UserName);
+
+            // Hash the password before creating the user
+            command.Password = _passwordHashingService.HashPassword(command.Password);
 
             var userId = await _mediator.Send(command);
 
@@ -272,7 +287,7 @@ public class UsersController : ControllerBase
     /// Requires authentication (not AdminOnly - users can change their own password).
     /// </summary>
     /// <param name="id">Unique identifier of the user</param>
-    /// <param name="command">Command containing password change data</param>
+    /// <param name="dto">DTO containing password change data</param>
     /// <returns>ApiResponse containing success status</returns>
     /// <response code="200">Password changed successfully</response>
     /// <response code="400">Validation errors or ID mismatch</response>
@@ -281,34 +296,64 @@ public class UsersController : ControllerBase
     [ProducesResponseType(typeof(ApiResponse<bool>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiResponse<bool>), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ApiResponse<bool>), StatusCodes.Status401Unauthorized)]
-    public async Task<ActionResult<ApiResponse<bool>>> ChangePassword(Int64 id, [FromBody] ChangePasswordCommand command)
+    public async Task<ActionResult<ApiResponse<bool>>> ChangePassword(Int64 id, [FromBody] UserChangePasswordDto dto)
     {
         try
         {
-            if (id != command.UserId)
+            _logger.LogInformation("Changing password for user with ID: {UserId}", id);
+
+            // Get user to verify current password
+            var user = await _userRepository.GetByIdAsync(id);
+            
+            if (user == null)
             {
-                _logger.LogWarning("User ID mismatch: URL ID {UrlId} vs Command ID {CommandId}", id, command.UserId);
+                _logger.LogWarning("User not found with ID: {UserId}", id);
+                return NotFound(ApiResponse<bool>.CreateFailure(
+                    "User not found",
+                    statusCode: 404));
+            }
+
+            // Hash current password and verify it matches
+            var currentPasswordHash = _passwordHashingService.HashPassword(dto.CurrentPassword);
+            
+            if (currentPasswordHash != user.Password)
+            {
+                _logger.LogWarning("Current password verification failed for user ID: {UserId}", id);
                 return BadRequest(ApiResponse<bool>.CreateFailure(
-                    "User ID in URL does not match the ID in the request body",
+                    "Current password is incorrect",
                     statusCode: 400));
             }
 
-            _logger.LogInformation("Changing password for user with ID: {UserId}", id);
+            // Verify new password and confirm password match
+            if (dto.NewPassword != dto.ConfirmPassword)
+            {
+                _logger.LogWarning("New password and confirm password do not match for user ID: {UserId}", id);
+                return BadRequest(ApiResponse<bool>.CreateFailure(
+                    "New password and confirm password do not match",
+                    statusCode: 400));
+            }
 
-            var result = await _mediator.Send(command);
+            // Hash the new password
+            var newPasswordHash = _passwordHashingService.HashPassword(dto.NewPassword);
 
-            if (!result)
+            // Update password in database using the new ChangePasswordAsync method
+            var rowsAffected = await _userRepository.ChangePasswordAsync(
+                id,
+                newPasswordHash,
+                User.Identity?.Name ?? "system");
+
+            if (rowsAffected == 0)
             {
                 _logger.LogWarning("Password change failed for user with ID: {UserId}", id);
                 return BadRequest(ApiResponse<bool>.CreateFailure(
-                    "Password change failed. Please verify your current password.",
+                    "Password change failed",
                     statusCode: 400));
             }
 
             _logger.LogInformation("Password changed successfully for user with ID: {UserId}", id);
 
             return Ok(ApiResponse<bool>.CreateSuccess(
-                result,
+                true,
                 "Password changed successfully",
                 200));
         }
@@ -444,6 +489,96 @@ public class UsersController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error forcing logout for user with ID: {UserId}", id);
+            throw;
+        }
+    }
+
+    /// <summary>
+    /// Resets the password for a specific user (admin-initiated)
+    /// Generates a secure temporary password
+    /// Requires AdminOnly authorization.
+    /// </summary>
+    /// <param name="id">Unique identifier of the user</param>
+    /// <returns>ApiResponse containing the temporary password</returns>
+    /// <response code="200">Password reset successfully with temporary password</response>
+    /// <response code="404">User not found</response>
+    /// <response code="401">User is not authenticated</response>
+    /// <response code="403">User does not have admin privileges</response>
+    [HttpPost("{id}/reset-password")]
+    [Authorize(Policy = "AdminOnly")]
+    [ProducesResponseType(typeof(ApiResponse<UserResetPasswordDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<UserResetPasswordDto>), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ApiResponse<UserResetPasswordDto>), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ApiResponse<UserResetPasswordDto>), StatusCodes.Status403Forbidden)]
+    public async Task<ActionResult<ApiResponse<UserResetPasswordDto>>> ResetPassword(Int64 id)
+    {
+        try
+        {
+            // Get the admin username from claims
+            var adminUserName = User.Claims.FirstOrDefault(c => c.Type == "userName")?.Value ?? "system";
+
+            _logger.LogInformation("Admin {AdminUser} resetting password for user ID: {UserId}", adminUserName, id);
+
+            // Verify user exists
+            var user = await _userRepository.GetByIdAsync(id);
+            
+            if (user == null)
+            {
+                _logger.LogWarning("User not found with ID: {UserId}", id);
+                return NotFound(ApiResponse<UserResetPasswordDto>.CreateFailure(
+                    "User not found",
+                    statusCode: 404));
+            }
+
+            // Generate temporary password using the command handler
+            var command = new ResetUserPasswordCommand
+            {
+                UserId = id,
+                UpdateUser = adminUserName
+            };
+
+            var temporaryPassword = await _mediator.Send(command);
+
+            // Hash the temporary password
+            var temporaryPasswordHash = _passwordHashingService.HashPassword(temporaryPassword);
+
+            // Update password in database
+            var rowsAffected = await _userRepository.ChangePasswordAsync(
+                id,
+                temporaryPasswordHash,
+                adminUserName);
+
+            if (rowsAffected == 0)
+            {
+                _logger.LogWarning("Password reset failed for user with ID: {UserId}", id);
+                return BadRequest(ApiResponse<UserResetPasswordDto>.CreateFailure(
+                    "Password reset failed",
+                    statusCode: 400));
+            }
+
+            _logger.LogInformation("Password reset successfully for user with ID: {UserId}", id);
+
+            var result = new UserResetPasswordDto
+            {
+                TemporaryPassword = temporaryPassword,
+                Message = "Password has been reset successfully. Please provide this temporary password to the user and ask them to change it immediately."
+            };
+
+            return Ok(ApiResponse<UserResetPasswordDto>.CreateSuccess(
+                result,
+                "Password reset successfully",
+                200));
+        }
+        catch (InvalidOperationException ex)
+        {
+            _logger.LogWarning("User not found: {ErrorMessage}", ex.Message);
+            return NotFound(ApiResponse<UserResetPasswordDto>.CreateFailure(
+                ex.Message,
+                statusCode: 404));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error resetting password for user with ID: {UserId}", id);
             throw;
         }
     }

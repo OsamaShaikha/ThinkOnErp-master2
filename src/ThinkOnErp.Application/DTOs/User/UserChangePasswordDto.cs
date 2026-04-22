@@ -4,7 +4,7 @@ namespace ThinkOnErp.Application.DTOs.User;
 /// Data transfer object for changing a user's password.
 /// Used for PUT requests to /api/users/{id}/change-password endpoint.
 /// </summary>
-public class ChangePasswordDto
+public class UserChangePasswordDto
 {
     /// <summary>
     /// Current password for verification (required)

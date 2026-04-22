@@ -543,4 +543,62 @@ public class UserRepository : IUserRepository
 
         return Convert.ToInt32(rowsAffectedParam.Value.ToString());
     }
+
+    /// <summary>
+    /// Changes the password for a user.
+    /// Calls SP_SYS_USERS_CHANGE_PASSWORD stored procedure.
+    /// </summary>
+    /// <param name="userId">The unique identifier of the user</param>
+    /// <param name="newPasswordHash">The new SHA-256 hashed password</param>
+    /// <param name="updateUser">The username of the user performing the change</param>
+    /// <returns>The number of rows affected</returns>
+    public async Task<int> ChangePasswordAsync(long userId, string newPasswordHash, string updateUser)
+    {
+        using var connection = _dbContext.CreateConnection();
+        await connection.OpenAsync();
+
+        using var command = connection.CreateCommand();
+        command.CommandType = CommandType.StoredProcedure;
+        command.CommandText = "SP_SYS_USERS_CHANGE_PASSWORD";
+
+        // Add input parameter for user ID
+        _ = command.Parameters.Add(new OracleParameter
+        {
+            ParameterName = "P_ROW_ID",
+            OracleDbType = OracleDbType.Decimal,
+            Direction = ParameterDirection.Input,
+            Value = userId
+        });
+
+        // Add input parameter for new password
+        _ = command.Parameters.Add(new OracleParameter
+        {
+            ParameterName = "P_NEW_PASSWORD",
+            OracleDbType = OracleDbType.NVarchar2,
+            Direction = ParameterDirection.Input,
+            Value = newPasswordHash
+        });
+
+        // Add input parameter for update user
+        _ = command.Parameters.Add(new OracleParameter
+        {
+            ParameterName = "P_UPDATE_USER",
+            OracleDbType = OracleDbType.NVarchar2,
+            Direction = ParameterDirection.Input,
+            Value = updateUser
+        });
+
+        // Add output parameter for rows affected
+        OracleParameter rowsAffectedParam = new()
+        {
+            ParameterName = "P_ROWS_AFFECTED",
+            OracleDbType = OracleDbType.Decimal,
+            Direction = ParameterDirection.Output
+        };
+        _ = command.Parameters.Add(rowsAffectedParam);
+
+        await command.ExecuteNonQueryAsync();
+
+        return Convert.ToInt32(rowsAffectedParam.Value.ToString());
+    }
 }

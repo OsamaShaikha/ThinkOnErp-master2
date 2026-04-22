@@ -175,7 +175,7 @@ public class ValidationEdgeCasesUnitTests : IClassFixture<TestWebApplicationFact
     public async Task ChangePassword_WithShortPassword_FailsValidation()
     {
         // Arrange
-        var changePasswordDto = new ChangePasswordDto
+        var changePasswordDto = new UserChangePasswordDto
         {
             CurrentPassword = "OldPassword123!",
             NewPassword = "123", // Too short

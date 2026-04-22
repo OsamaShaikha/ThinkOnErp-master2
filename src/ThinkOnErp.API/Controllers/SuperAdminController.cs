@@ -7,10 +7,12 @@ using ThinkOnErp.Application.Features.SuperAdmins.Commands.CreateSuperAdmin;
 using ThinkOnErp.Application.Features.SuperAdmins.Commands.UpdateSuperAdmin;
 using ThinkOnErp.Application.Features.SuperAdmins.Commands.DeleteSuperAdmin;
 using ThinkOnErp.Application.Features.SuperAdmins.Commands.ChangeSuperAdminPassword;
+using ThinkOnErp.Application.Features.SuperAdmins.Commands.ResetSuperAdminPassword;
 using ThinkOnErp.Application.Features.SuperAdmins.Queries.GetAllSuperAdmins;
 using ThinkOnErp.Application.Features.SuperAdmins.Queries.GetSuperAdminById;
 using ThinkOnErp.Infrastructure.Services;
 using ThinkOnErp.Domain.Interfaces;
+using FluentValidation;
 
 namespace ThinkOnErp.API.Controllers;
 
@@ -26,17 +28,23 @@ public class SuperAdminController : ControllerBase
     private readonly ILogger<SuperAdminController> _logger;
     private readonly PasswordHashingService _passwordHashingService;
     private readonly ISuperAdminRepository _superAdminRepository;
+    private readonly IValidator<CreateSuperAdminDto> _createValidator;
+    private readonly IValidator<SuperAdminChangePasswordDto> _changePasswordValidator;
 
     public SuperAdminController(
         IMediator mediator, 
         ILogger<SuperAdminController> logger,
         PasswordHashingService passwordHashingService,
-        ISuperAdminRepository superAdminRepository)
+        ISuperAdminRepository superAdminRepository,
+        IValidator<CreateSuperAdminDto> createValidator,
+        IValidator<SuperAdminChangePasswordDto> changePasswordValidator)
     {
         _mediator = mediator ?? throw new ArgumentNullException(nameof(mediator));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _passwordHashingService = passwordHashingService ?? throw new ArgumentNullException(nameof(passwordHashingService));
         _superAdminRepository = superAdminRepository ?? throw new ArgumentNullException(nameof(superAdminRepository));
+        _createValidator = createValidator ?? throw new ArgumentNullException(nameof(createValidator));
+        _changePasswordValidator = changePasswordValidator ?? throw new ArgumentNullException(nameof(changePasswordValidator));
     }
 
     /// <summary>
@@ -116,7 +124,19 @@ public class SuperAdminController : ControllerBase
         {
             _logger.LogInformation("Creating new super admin: {UserName}", dto.UserName);
 
-            // Hash the password using SHA-256
+            // Validate DTO before hashing password
+            var validationResult = await _createValidator.ValidateAsync(dto);
+            if (!validationResult.IsValid)
+            {
+                var errors = validationResult.Errors.Select(e => e.ErrorMessage).ToList();
+                _logger.LogWarning("Validation failed for super admin creation: {Errors}", string.Join(", ", errors));
+                return BadRequest(ApiResponse<Int64>.CreateFailure(
+                    "One or more validation errors occurred",
+                    errors,
+                    400));
+            }
+
+            // Hash the password using SHA-256 AFTER validation
             var passwordHash = _passwordHashingService.HashPassword(dto.Password);
 
             var command = new CreateSuperAdminCommand
@@ -250,11 +270,23 @@ public class SuperAdminController : ControllerBase
     [ProducesResponseType(typeof(ApiResponse<bool>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiResponse<bool>), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ApiResponse<bool>), StatusCodes.Status404NotFound)]
-    public async Task<ActionResult<ApiResponse<bool>>> ChangePassword(Int64 id, [FromBody] ChangePasswordDto dto)
+    public async Task<ActionResult<ApiResponse<bool>>> ChangePassword(Int64 id, [FromBody] SuperAdminChangePasswordDto dto)
     {
         try
         {
             _logger.LogInformation("Changing password for super admin with ID: {SuperAdminId}", id);
+
+            // Validate DTO before hashing passwords
+            var validationResult = await _changePasswordValidator.ValidateAsync(dto);
+            if (!validationResult.IsValid)
+            {
+                var errors = validationResult.Errors.Select(e => e.ErrorMessage).ToList();
+                _logger.LogWarning("Validation failed for password change: {Errors}", string.Join(", ", errors));
+                return BadRequest(ApiResponse<bool>.CreateFailure(
+                    "One or more validation errors occurred",
+                    errors,
+                    400));
+            }
 
             // Get super admin to verify current password
             var superAdmin = await _superAdminRepository.GetByIdAsync(id);
@@ -278,7 +310,7 @@ public class SuperAdminController : ControllerBase
                     statusCode: 400));
             }
 
-            // Hash the new password
+            // Hash the new password AFTER validation
             var newPasswordHash = _passwordHashingService.HashPassword(dto.NewPassword);
 
             // Create command with hashed password
@@ -320,5 +352,112 @@ public class SuperAdminController : ControllerBase
             _logger.LogError(ex, "Error changing password for super admin with ID: {SuperAdminId}", id);
             throw;
         }
+    }
+
+    /// <summary>
+    /// Resets the password for a specific super admin (admin-initiated)
+    /// Generates a secure temporary password
+    /// </summary>
+    /// <param name="id">Unique identifier of the super admin</param>
+    /// <returns>ApiResponse containing the temporary password</returns>
+    /// <response code="200">Password reset successfully with temporary password</response>
+    /// <response code="404">Super admin not found</response>
+    [HttpPost("{id}/reset-password")]
+    [ProducesResponseType(typeof(ApiResponse<ResetPasswordDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<ResetPasswordDto>), StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<ApiResponse<ResetPasswordDto>>> ResetPassword(Int64 id)
+    {
+        try
+        {
+            _logger.LogInformation("Resetting password for super admin with ID: {SuperAdminId}", id);
+
+            // Verify super admin exists
+            var superAdmin = await _superAdminRepository.GetByIdAsync(id);
+            
+            if (superAdmin == null)
+            {
+                _logger.LogWarning("Super admin not found with ID: {SuperAdminId}", id);
+                return NotFound(ApiResponse<ResetPasswordDto>.CreateFailure(
+                    "Super admin not found",
+                    statusCode: 404));
+            }
+
+            // Generate temporary password
+            var temporaryPassword = GenerateTemporaryPassword();
+
+            // Hash the temporary password
+            var temporaryPasswordHash = _passwordHashingService.HashPassword(temporaryPassword);
+
+            // Update password in database
+            var rowsAffected = await _superAdminRepository.ChangePasswordAsync(
+                id,
+                temporaryPasswordHash,
+                User.Identity?.Name ?? "system");
+
+            if (rowsAffected == 0)
+            {
+                _logger.LogWarning("Password reset failed for super admin with ID: {SuperAdminId}", id);
+                return BadRequest(ApiResponse<ResetPasswordDto>.CreateFailure(
+                    "Password reset failed",
+                    statusCode: 400));
+            }
+
+            _logger.LogInformation("Password reset successfully for super admin with ID: {SuperAdminId}", id);
+
+            var result = new ResetPasswordDto
+            {
+                TemporaryPassword = temporaryPassword,
+                Message = "Password has been reset successfully. Please provide this temporary password to the user and ask them to change it immediately."
+            };
+
+            return Ok(ApiResponse<ResetPasswordDto>.CreateSuccess(
+                result,
+                "Password reset successfully",
+                200));
+        }
+        catch (InvalidOperationException ex)
+        {
+            _logger.LogWarning("Super admin not found: {ErrorMessage}", ex.Message);
+            return NotFound(ApiResponse<ResetPasswordDto>.CreateFailure(
+                ex.Message,
+                statusCode: 404));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error resetting password for super admin with ID: {SuperAdminId}", id);
+            throw;
+        }
+    }
+
+    /// <summary>
+    /// Generates a secure temporary password
+    /// Format: Uppercase + Lowercase + Numbers + Special chars
+    /// Length: 12 characters
+    /// </summary>
+    private string GenerateTemporaryPassword()
+    {
+        const string uppercase = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+        const string lowercase = "abcdefghijklmnopqrstuvwxyz";
+        const string numbers = "0123456789";
+        const string special = "!@#$%^&*";
+        
+        var random = new Random();
+        var password = new char[12];
+        
+        // Ensure at least one of each type
+        password[0] = uppercase[random.Next(uppercase.Length)];
+        password[1] = lowercase[random.Next(lowercase.Length)];
+        password[2] = numbers[random.Next(numbers.Length)];
+        password[3] = special[random.Next(special.Length)];
+        
+        // Fill the rest randomly
+        var allChars = uppercase + lowercase + numbers + special;
+        for (int i = 4; i < 12; i++)
+        {
+            password[i] = allChars[random.Next(allChars.Length)];
+        }
+        
+        // Shuffle the password
+        return new string(password.OrderBy(x => random.Next()).ToArray());
     }
 }

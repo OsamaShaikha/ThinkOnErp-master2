@@ -3,7 +3,7 @@ namespace ThinkOnErp.Application.DTOs.User;
 /// <summary>
 /// Data transfer object for updating an existing user.
 /// Used for PUT requests to update user records.
-/// Note: Password is not included - use ChangePasswordDto for password changes.
+/// Note: Password is not included - use UserChangePasswordDto for password changes.
 /// </summary>
 public class UpdateUserDto
 {

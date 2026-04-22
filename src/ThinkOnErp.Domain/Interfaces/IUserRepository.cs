@@ -69,4 +69,14 @@ public interface IUserRepository
     /// <param name="adminUser">The username of the admin performing the force logout</param>
     /// <returns>The number of rows affected</returns>
     Task<int> ForceLogoutAsync(long userId, string adminUser);
+
+    /// <summary>
+    /// Changes the password for a user.
+    /// Calls SP_SYS_USERS_CHANGE_PASSWORD stored procedure.
+    /// </summary>
+    /// <param name="userId">The unique identifier of the user</param>
+    /// <param name="newPasswordHash">The new SHA-256 hashed password</param>
+    /// <param name="updateUser">The username of the user performing the change</param>
+    /// <returns>The number of rows affected</returns>
+    Task<int> ChangePasswordAsync(long userId, string newPasswordHash, string updateUser);
 }
