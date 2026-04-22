@@ -8,6 +8,7 @@ using ThinkOnErp.Application.Features.Users.Commands.UpdateUser;
 using ThinkOnErp.Application.Features.Users.Commands.DeleteUser;
 using ThinkOnErp.Application.Features.Users.Commands.ChangePassword;
 using ThinkOnErp.Application.Features.Users.Commands.ForceLogout;
+using ThinkOnErp.Application.Features.Users.Commands.ResetUserPassword;
 using ThinkOnErp.Application.Features.Users.Queries.GetAllUsers;
 using ThinkOnErp.Application.Features.Users.Queries.GetUserById;
 using ThinkOnErp.Application.Features.Users.Queries.GetUsersByBranchId;
