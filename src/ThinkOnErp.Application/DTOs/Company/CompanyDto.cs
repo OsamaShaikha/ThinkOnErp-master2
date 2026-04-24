@@ -47,11 +47,6 @@ public class CompanyDto
     public string? CompanyCode { get; set; }
 
     /// <summary>
-    /// Default language (ar/en)
-    /// </summary>
-    public string? DefaultLang { get; set; }
-
-    /// <summary>
     /// Tax registration number
     /// </summary>
     public string? TaxNumber { get; set; }
@@ -65,21 +60,6 @@ public class CompanyDto
     /// Fiscal year code for display
     /// </summary>
     public string? FiscalYearCode { get; set; }
-
-    /// <summary>
-    /// Base currency ID
-    /// </summary>
-    public Int64? BaseCurrencyId { get; set; }
-
-    /// <summary>
-    /// System language preference (ar/en)
-    /// </summary>
-    public string? SystemLanguage { get; set; }
-
-    /// <summary>
-    /// Rounding rules for calculations
-    /// </summary>
-    public string? RoundingRules { get; set; }
 
     /// <summary>
     /// Default branch ID for this company

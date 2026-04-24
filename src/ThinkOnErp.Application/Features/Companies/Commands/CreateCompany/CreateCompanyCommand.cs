@@ -12,9 +12,6 @@ public class CreateCompanyCommand : IRequest<Int64>
     public string? DefaultLang { get; set; }
     public string? TaxNumber { get; set; }
     public Int64? FiscalYearId { get; set; }
-    public Int64? BaseCurrencyId { get; set; }
-    public string? SystemLanguage { get; set; }
-    public string? RoundingRules { get; set; }
     public Int64? CountryId { get; set; }
     public Int64? CurrId { get; set; }
     public string CreationUser { get; set; } = string.Empty;

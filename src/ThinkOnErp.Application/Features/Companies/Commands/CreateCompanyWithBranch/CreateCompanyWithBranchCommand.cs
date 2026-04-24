@@ -50,21 +50,6 @@ public class CreateCompanyWithBranchCommand : IRequest<CreateCompanyWithBranchRe
     public Int64? FiscalYearId { get; set; }
 
     /// <summary>
-    /// Base currency ID for the company
-    /// </summary>
-    public Int64? BaseCurrencyId { get; set; }
-
-    /// <summary>
-    /// System language preference (ar/en)
-    /// </summary>
-    public string SystemLanguage { get; set; } = "ar";
-
-    /// <summary>
-    /// Rounding rules for calculations
-    /// </summary>
-    public string RoundingRules { get; set; } = "HALF_UP";
-
-    /// <summary>
     /// Country ID
     /// </summary>
     public Int64? CountryId { get; set; }

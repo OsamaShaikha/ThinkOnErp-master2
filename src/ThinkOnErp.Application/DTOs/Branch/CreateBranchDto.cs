@@ -47,6 +47,21 @@ public class CreateBranchDto
     public bool IsHeadBranch { get; set; }
 
     /// <summary>
+    /// Default language for the branch (ar/en)
+    /// </summary>
+    public string? DefaultLang { get; set; } = "ar";
+
+    /// <summary>
+    /// Foreign key to SYS_CURRENCY table - base currency for branch operations
+    /// </summary>
+    public Int64? BaseCurrencyId { get; set; }
+
+    /// <summary>
+    /// Rounding rules for calculations (1=HALF_UP, 2=HALF_DOWN, 3=UP, 4=DOWN, 5=CEILING, 6=FLOOR)
+    /// </summary>
+    public int? RoundingRules { get; set; }
+
+    /// <summary>
     /// Branch logo as Base64 string (optional)
     /// </summary>
     public string? BranchLogoBase64 { get; set; }

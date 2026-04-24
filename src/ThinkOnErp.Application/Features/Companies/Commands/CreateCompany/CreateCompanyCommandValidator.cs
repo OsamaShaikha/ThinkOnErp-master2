@@ -23,19 +23,8 @@ public class CreateCompanyCommandValidator : AbstractValidator<CreateCompanyComm
             .WithMessage("Default language must be 'ar' or 'en'")
             .When(x => !string.IsNullOrEmpty(x.DefaultLang));
 
-        RuleFor(x => x.SystemLanguage)
-            .Must(lang => lang == "ar" || lang == "en")
-            .WithMessage("System language must be 'ar' or 'en'")
-            .When(x => !string.IsNullOrEmpty(x.SystemLanguage));
-
         RuleFor(x => x.TaxNumber).MaximumLength(50).When(x => !string.IsNullOrEmpty(x.TaxNumber));
 
-        RuleFor(x => x.RoundingRules)
-            .Must(rule => new[] { "HALF_UP", "HALF_DOWN", "UP", "DOWN", "CEILING", "FLOOR" }.Contains(rule))
-            .WithMessage("Rounding rules must be one of: HALF_UP, HALF_DOWN, UP, DOWN, CEILING, FLOOR")
-            .When(x => !string.IsNullOrEmpty(x.RoundingRules));
-
         RuleFor(x => x.FiscalYearId).GreaterThan(0).When(x => x.FiscalYearId.HasValue);
-        RuleFor(x => x.BaseCurrencyId).GreaterThan(0).When(x => x.BaseCurrencyId.HasValue);
     }
 }

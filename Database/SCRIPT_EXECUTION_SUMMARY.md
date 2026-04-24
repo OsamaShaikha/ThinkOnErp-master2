@@ -35,6 +35,13 @@ Execute the scripts in the following order for a fresh database setup:
 22. **`21_Insert_Fiscal_Year_Test_Data.sql`** - Fiscal year test data
 23. **`22_Update_Company_Test_Data.sql`** - Update company test data with new fields
 
+### **Company & Branch Field Migration**
+24. **`23_Create_Company_With_Default_Branch.sql`** - Company with default branch creation
+25. **`32_Move_Fields_From_Company_To_Branch.sql`** - Move fields from company to branch level
+
+### **SystemLanguage Removal**
+26. **`33_Remove_SystemLanguage_Column.sql`** - Remove SYSTEM_LANGUAGE column from SYS_COMPANY
+
 ## Quick Execution Commands
 
 ### Execute All New Scripts (Oracle SQL*Plus)
@@ -45,6 +52,9 @@ sqlplus username/password@database <<EOF
 @Database/Scripts/20_Update_SYS_COMPANY_Procedures.sql
 @Database/Scripts/21_Insert_Fiscal_Year_Test_Data.sql
 @Database/Scripts/22_Update_Company_Test_Data.sql
+@Database/Scripts/23_Create_Company_With_Default_Branch.sql
+@Database/Scripts/32_Move_Fields_From_Company_To_Branch.sql
+@Database/Scripts/33_Remove_SystemLanguage_Column.sql
 EXIT;
 EOF
 ```
@@ -65,6 +75,15 @@ sqlplus username/password@database @Database/Scripts/21_Insert_Fiscal_Year_Test_
 
 # Update company test data
 sqlplus username/password@database @Database/Scripts/22_Update_Company_Test_Data.sql
+
+# Create company with branch procedure
+sqlplus username/password@database @Database/Scripts/23_Create_Company_With_Default_Branch.sql
+
+# Move fields from company to branch
+sqlplus username/password@database @Database/Scripts/32_Move_Fields_From_Company_To_Branch.sql
+
+# Remove SystemLanguage column
+sqlplus username/password@database @Database/Scripts/33_Remove_SystemLanguage_Column.sql
 ```
 
 ## Verification Queries

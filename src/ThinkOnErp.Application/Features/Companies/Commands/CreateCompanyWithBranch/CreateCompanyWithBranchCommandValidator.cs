@@ -49,17 +49,6 @@ public class CreateCompanyWithBranchCommandValidator : AbstractValidator<CreateC
             .WithMessage("Default language must be 'ar' or 'en'")
             .When(x => !string.IsNullOrEmpty(x.DefaultLang));
 
-        RuleFor(x => x.SystemLanguage)
-            .Must(lang => lang == "ar" || lang == "en")
-            .WithMessage("System language must be 'ar' or 'en'")
-            .When(x => !string.IsNullOrEmpty(x.SystemLanguage));
-
-        // Rounding Rules Validation
-        RuleFor(x => x.RoundingRules)
-            .Must(rules => new[] { "HALF_UP", "HALF_DOWN", "UP", "DOWN", "CEILING", "FLOOR" }.Contains(rules))
-            .WithMessage("Rounding rules must be one of: HALF_UP, HALF_DOWN, UP, DOWN, CEILING, FLOOR")
-            .When(x => !string.IsNullOrEmpty(x.RoundingRules));
-
         // Tax Number Validation
         RuleFor(x => x.TaxNumber)
             .MaximumLength(50)
@@ -112,11 +101,6 @@ public class CreateCompanyWithBranchCommandValidator : AbstractValidator<CreateC
             .GreaterThan(0)
             .WithMessage("Fiscal year ID must be greater than 0")
             .When(x => x.FiscalYearId.HasValue);
-
-        RuleFor(x => x.BaseCurrencyId)
-            .GreaterThan(0)
-            .WithMessage("Base currency ID must be greater than 0")
-            .When(x => x.BaseCurrencyId.HasValue);
 
         RuleFor(x => x.CountryId)
             .GreaterThan(0)

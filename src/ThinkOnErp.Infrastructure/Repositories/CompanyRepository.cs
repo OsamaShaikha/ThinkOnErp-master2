@@ -164,14 +164,6 @@ public class CompanyRepository : ICompanyRepository
 
         _ = command.Parameters.Add(new OracleParameter
         {
-            ParameterName = "P_DEFAULT_LANG",
-            OracleDbType = OracleDbType.Varchar2,
-            Direction = ParameterDirection.Input,
-            Value = (object?)company.DefaultLang ?? DBNull.Value
-        });
-
-        _ = command.Parameters.Add(new OracleParameter
-        {
             ParameterName = "P_TAX_NUMBER",
             OracleDbType = OracleDbType.Varchar2,
             Direction = ParameterDirection.Input,
@@ -184,30 +176,6 @@ public class CompanyRepository : ICompanyRepository
             OracleDbType = OracleDbType.Decimal,
             Direction = ParameterDirection.Input,
             Value = (object?)company.FiscalYearId ?? DBNull.Value
-        });
-
-        _ = command.Parameters.Add(new OracleParameter
-        {
-            ParameterName = "P_BASE_CURRENCY_ID",
-            OracleDbType = OracleDbType.Decimal,
-            Direction = ParameterDirection.Input,
-            Value = (object?)company.BaseCurrencyId ?? DBNull.Value
-        });
-
-        _ = command.Parameters.Add(new OracleParameter
-        {
-            ParameterName = "P_SYSTEM_LANGUAGE",
-            OracleDbType = OracleDbType.Varchar2,
-            Direction = ParameterDirection.Input,
-            Value = (object?)company.SystemLanguage ?? DBNull.Value
-        });
-
-        _ = command.Parameters.Add(new OracleParameter
-        {
-            ParameterName = "P_ROUNDING_RULES",
-            OracleDbType = OracleDbType.Varchar2,
-            Direction = ParameterDirection.Input,
-            Value = (object?)company.RoundingRules ?? DBNull.Value
         });
 
         // Original fields
@@ -317,14 +285,6 @@ public class CompanyRepository : ICompanyRepository
 
         _ = command.Parameters.Add(new OracleParameter
         {
-            ParameterName = "P_DEFAULT_LANG",
-            OracleDbType = OracleDbType.Varchar2,
-            Direction = ParameterDirection.Input,
-            Value = (object?)company.DefaultLang ?? DBNull.Value
-        });
-
-        _ = command.Parameters.Add(new OracleParameter
-        {
             ParameterName = "P_TAX_NUMBER",
             OracleDbType = OracleDbType.Varchar2,
             Direction = ParameterDirection.Input,
@@ -337,30 +297,6 @@ public class CompanyRepository : ICompanyRepository
             OracleDbType = OracleDbType.Decimal,
             Direction = ParameterDirection.Input,
             Value = (object?)company.FiscalYearId ?? DBNull.Value
-        });
-
-        _ = command.Parameters.Add(new OracleParameter
-        {
-            ParameterName = "P_BASE_CURRENCY_ID",
-            OracleDbType = OracleDbType.Decimal,
-            Direction = ParameterDirection.Input,
-            Value = (object?)company.BaseCurrencyId ?? DBNull.Value
-        });
-
-        _ = command.Parameters.Add(new OracleParameter
-        {
-            ParameterName = "P_SYSTEM_LANGUAGE",
-            OracleDbType = OracleDbType.Varchar2,
-            Direction = ParameterDirection.Input,
-            Value = (object?)company.SystemLanguage ?? DBNull.Value
-        });
-
-        _ = command.Parameters.Add(new OracleParameter
-        {
-            ParameterName = "P_ROUNDING_RULES",
-            OracleDbType = OracleDbType.Varchar2,
-            Direction = ParameterDirection.Input,
-            Value = (object?)company.RoundingRules ?? DBNull.Value
         });
 
         // Original fields
@@ -520,12 +456,8 @@ public class CompanyRepository : ICompanyRepository
         string? legalNameAr,
         string legalNameEn,
         string companyCode,
-        string? defaultLang,
         string? taxNumber,
         long? fiscalYearId,
-        long? baseCurrencyId,
-        string? systemLanguage,
-        string? roundingRules,
         long? countryId,
         long? currId,
         string? branchNameAr,
@@ -535,6 +467,9 @@ public class CompanyRepository : ICompanyRepository
         string? branchFax,
         string? branchEmail,
         byte[]? branchLogo,
+        string? defaultLang,
+        long? baseCurrencyId,
+        int? roundingRules,
         string creationUser)
     {
         using var connection = _dbContext.CreateConnection();
@@ -587,14 +522,6 @@ public class CompanyRepository : ICompanyRepository
 
         _ = command.Parameters.Add(new OracleParameter
         {
-            ParameterName = "P_DEFAULT_LANG",
-            OracleDbType = OracleDbType.Varchar2,
-            Direction = ParameterDirection.Input,
-            Value = defaultLang ?? "ar"
-        });
-
-        _ = command.Parameters.Add(new OracleParameter
-        {
             ParameterName = "P_TAX_NUMBER",
             OracleDbType = OracleDbType.Varchar2,
             Direction = ParameterDirection.Input,
@@ -607,30 +534,6 @@ public class CompanyRepository : ICompanyRepository
             OracleDbType = OracleDbType.Decimal,
             Direction = ParameterDirection.Input,
             Value = fiscalYearId ?? (object)DBNull.Value
-        });
-
-        _ = command.Parameters.Add(new OracleParameter
-        {
-            ParameterName = "P_BASE_CURRENCY_ID",
-            OracleDbType = OracleDbType.Decimal,
-            Direction = ParameterDirection.Input,
-            Value = baseCurrencyId ?? (object)DBNull.Value
-        });
-
-        _ = command.Parameters.Add(new OracleParameter
-        {
-            ParameterName = "P_SYSTEM_LANGUAGE",
-            OracleDbType = OracleDbType.Varchar2,
-            Direction = ParameterDirection.Input,
-            Value = systemLanguage ?? "ar"
-        });
-
-        _ = command.Parameters.Add(new OracleParameter
-        {
-            ParameterName = "P_ROUNDING_RULES",
-            OracleDbType = OracleDbType.Varchar2,
-            Direction = ParameterDirection.Input,
-            Value = roundingRules ?? "HALF_UP"
         });
 
         _ = command.Parameters.Add(new OracleParameter
@@ -649,7 +552,7 @@ public class CompanyRepository : ICompanyRepository
             Value = currId ?? (object)DBNull.Value
         });
 
-        // Branch Parameters
+        // Branch Parameters (including migrated fields)
         _ = command.Parameters.Add(new OracleParameter
         {
             ParameterName = "P_BRANCH_DESC",
@@ -704,6 +607,30 @@ public class CompanyRepository : ICompanyRepository
             OracleDbType = OracleDbType.Blob,
             Direction = ParameterDirection.Input,
             Value = branchLogo ?? (object)DBNull.Value
+        });
+
+        _ = command.Parameters.Add(new OracleParameter
+        {
+            ParameterName = "P_DEFAULT_LANG",
+            OracleDbType = OracleDbType.Varchar2,
+            Direction = ParameterDirection.Input,
+            Value = defaultLang ?? "ar"
+        });
+
+        _ = command.Parameters.Add(new OracleParameter
+        {
+            ParameterName = "P_BASE_CURRENCY_ID",
+            OracleDbType = OracleDbType.Decimal,
+            Direction = ParameterDirection.Input,
+            Value = baseCurrencyId ?? (object)DBNull.Value
+        });
+
+        _ = command.Parameters.Add(new OracleParameter
+        {
+            ParameterName = "P_ROUNDING_RULES",
+            OracleDbType = OracleDbType.Decimal,
+            Direction = ParameterDirection.Input,
+            Value = (object?)roundingRules ?? 1
         });
 
         // Common Parameters
@@ -817,12 +744,8 @@ public class CompanyRepository : ICompanyRepository
             LegalName = reader.IsDBNull(reader.GetOrdinal("LEGAL_NAME")) ? null : reader.GetString(reader.GetOrdinal("LEGAL_NAME")),
             LegalNameE = reader.IsDBNull(reader.GetOrdinal("LEGAL_NAME_E")) ? null : reader.GetString(reader.GetOrdinal("LEGAL_NAME_E")),
             CompanyCode = reader.IsDBNull(reader.GetOrdinal("COMPANY_CODE")) ? null : reader.GetString(reader.GetOrdinal("COMPANY_CODE")),
-            DefaultLang = reader.IsDBNull(reader.GetOrdinal("DEFAULT_LANG")) ? null : reader.GetString(reader.GetOrdinal("DEFAULT_LANG")),
             TaxNumber = reader.IsDBNull(reader.GetOrdinal("TAX_NUMBER")) ? null : reader.GetString(reader.GetOrdinal("TAX_NUMBER")),
             FiscalYearId = reader.IsDBNull(reader.GetOrdinal("FISCAL_YEAR_ID")) ? null : reader.GetInt64(reader.GetOrdinal("FISCAL_YEAR_ID")),
-            BaseCurrencyId = reader.IsDBNull(reader.GetOrdinal("BASE_CURRENCY_ID")) ? null : reader.GetInt64(reader.GetOrdinal("BASE_CURRENCY_ID")),
-            SystemLanguage = reader.IsDBNull(reader.GetOrdinal("SYSTEM_LANGUAGE")) ? null : reader.GetString(reader.GetOrdinal("SYSTEM_LANGUAGE")),
-            RoundingRules = reader.IsDBNull(reader.GetOrdinal("ROUNDING_RULES")) ? null : reader.GetString(reader.GetOrdinal("ROUNDING_RULES")),
             CountryId = reader.IsDBNull(reader.GetOrdinal("COUNTRY_ID")) ? null : reader.GetInt64(reader.GetOrdinal("COUNTRY_ID")),
             CurrId = reader.IsDBNull(reader.GetOrdinal("CURR_ID")) ? null : reader.GetInt64(reader.GetOrdinal("CURR_ID")),
             DefaultBranchId = reader.IsDBNull(reader.GetOrdinal("DEFAULT_BRANCH_ID")) ? null : reader.GetInt64(reader.GetOrdinal("DEFAULT_BRANCH_ID")),

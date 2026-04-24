@@ -2,7 +2,7 @@ namespace ThinkOnErp.Domain.Entities;
 
 /// <summary>
 /// Represents a branch location within a company in the ERP system.
-/// Includes contact information and head branch designation.
+/// Includes contact information, head branch designation, and operational settings.
 /// Maps to the SYS_BRANCH table in Oracle database.
 /// </summary>
 public class SysBranch
@@ -53,6 +53,21 @@ public class SysBranch
     public bool IsHeadBranch { get; set; }
 
     /// <summary>
+    /// Default language for the branch (ar/en)
+    /// </summary>
+    public string? DefaultLang { get; set; }
+
+    /// <summary>
+    /// Foreign key to SYS_CURRENCY table - base currency for branch operations
+    /// </summary>
+    public Int64? BaseCurrencyId { get; set; }
+
+    /// <summary>
+    /// Rounding rules for calculations (1=HALF_UP, 2=HALF_DOWN, 3=UP, 4=DOWN, 5=CEILING, 6=FLOOR)
+    /// </summary>
+    public int? RoundingRules { get; set; }
+
+    /// <summary>
     /// Branch logo image stored as byte array (BLOB in database)
     /// </summary>
     public byte[]? BranchLogo { get; set; }
@@ -86,4 +101,10 @@ public class SysBranch
     /// Timestamp when the record was last updated
     /// </summary>
     public DateTime? UpdateDate { get; set; }
+
+    // Navigation properties
+    /// <summary>
+    /// Navigation property to the base currency
+    /// </summary>
+    public SysCurrency? BaseCurrency { get; set; }
 }

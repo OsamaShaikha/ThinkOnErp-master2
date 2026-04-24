@@ -42,11 +42,6 @@ public class CreateCompanyDto
     public string? CompanyCode { get; set; }
 
     /// <summary>
-    /// Default language (ar/en) (optional, defaults to 'ar')
-    /// </summary>
-    public string? DefaultLang { get; set; }
-
-    /// <summary>
     /// Tax registration number (optional)
     /// </summary>
     public string? TaxNumber { get; set; }
@@ -55,22 +50,6 @@ public class CreateCompanyDto
     /// Current active fiscal year ID (optional)
     /// </summary>
     public Int64? FiscalYearId { get; set; }
-
-    /// <summary>
-    /// Base currency ID (optional)
-    /// </summary>
-    public Int64? BaseCurrencyId { get; set; }
-
-    /// <summary>
-    /// System language preference (ar/en) (optional, defaults to 'ar')
-    /// </summary>
-    public string? SystemLanguage { get; set; }
-
-    /// <summary>
-    /// Rounding rules for calculations (optional, defaults to 'HALF_UP')
-    /// Valid values: HALF_UP, HALF_DOWN, UP, DOWN, CEILING, FLOOR
-    /// </summary>
-    public string? RoundingRules { get; set; }
 
     /// <summary>
     /// Company logo as Base64 string (optional)
@@ -112,4 +91,19 @@ public class CreateCompanyDto
     /// Branch email address (optional)
     /// </summary>
     public string? BranchEmail { get; set; }
+
+    /// <summary>
+    /// Default language for the branch (ar/en) (optional, defaults to 'ar')
+    /// </summary>
+    public string? BranchDefaultLang { get; set; }
+
+    /// <summary>
+    /// Base currency ID for the branch (optional)
+    /// </summary>
+    public Int64? BranchBaseCurrencyId { get; set; }
+
+    /// <summary>
+    /// Rounding rules for branch calculations (1=HALF_UP, 2=HALF_DOWN, 3=UP, 4=DOWN, 5=CEILING, 6=FLOOR)
+    /// </summary>
+    public int? BranchRoundingRules { get; set; }
 }

@@ -187,6 +187,30 @@ public class BranchRepository : IBranchRepository
 
         _ = command.Parameters.Add(new OracleParameter
         {
+            ParameterName = "P_DEFAULT_LANG",
+            OracleDbType = OracleDbType.Varchar2,
+            Direction = ParameterDirection.Input,
+            Value = branch.DefaultLang ?? "ar"
+        });
+
+        _ = command.Parameters.Add(new OracleParameter
+        {
+            ParameterName = "P_BASE_CURRENCY_ID",
+            OracleDbType = OracleDbType.Decimal,
+            Direction = ParameterDirection.Input,
+            Value = (object?)branch.BaseCurrencyId ?? DBNull.Value
+        });
+
+        _ = command.Parameters.Add(new OracleParameter
+        {
+            ParameterName = "P_ROUNDING_RULES",
+            OracleDbType = OracleDbType.Decimal,
+            Direction = ParameterDirection.Input,
+            Value = (object?)branch.RoundingRules ?? 1
+        });
+
+        _ = command.Parameters.Add(new OracleParameter
+        {
             ParameterName = "P_CREATION_USER",
             OracleDbType = OracleDbType.Varchar2,
             Direction = ParameterDirection.Input,
@@ -294,6 +318,30 @@ public class BranchRepository : IBranchRepository
             OracleDbType = OracleDbType.Char,
             Direction = ParameterDirection.Input,
             Value = branch.IsHeadBranch ? "1" : "0"
+        });
+
+        _ = command.Parameters.Add(new OracleParameter
+        {
+            ParameterName = "P_DEFAULT_LANG",
+            OracleDbType = OracleDbType.Varchar2,
+            Direction = ParameterDirection.Input,
+            Value = branch.DefaultLang ?? "ar"
+        });
+
+        _ = command.Parameters.Add(new OracleParameter
+        {
+            ParameterName = "P_BASE_CURRENCY_ID",
+            OracleDbType = OracleDbType.Decimal,
+            Direction = ParameterDirection.Input,
+            Value = (object?)branch.BaseCurrencyId ?? DBNull.Value
+        });
+
+        _ = command.Parameters.Add(new OracleParameter
+        {
+            ParameterName = "P_ROUNDING_RULES",
+            OracleDbType = OracleDbType.Decimal,
+            Direction = ParameterDirection.Input,
+            Value = (object?)branch.RoundingRules ?? 1
         });
 
         _ = command.Parameters.Add(new OracleParameter
@@ -494,6 +542,40 @@ public class BranchRepository : IBranchRepository
             UpdateUser = reader.IsDBNull(reader.GetOrdinal("UPDATE_USER")) ? null : reader.GetString(reader.GetOrdinal("UPDATE_USER")),
             UpdateDate = reader.IsDBNull(reader.GetOrdinal("UPDATE_DATE")) ? null : reader.GetDateTime(reader.GetOrdinal("UPDATE_DATE"))
         };
+
+        // Map the new fields (with fallback for older stored procedures)
+        try
+        {
+            var defaultLangOrdinal = reader.GetOrdinal("DEFAULT_LANG");
+            branch.DefaultLang = reader.IsDBNull(defaultLangOrdinal) ? null : reader.GetString(defaultLangOrdinal);
+        }
+        catch (IndexOutOfRangeException)
+        {
+            // DEFAULT_LANG field not present in this query
+            branch.DefaultLang = null;
+        }
+
+        try
+        {
+            var baseCurrencyIdOrdinal = reader.GetOrdinal("BASE_CURRENCY_ID");
+            branch.BaseCurrencyId = reader.IsDBNull(baseCurrencyIdOrdinal) ? null : reader.GetInt64(baseCurrencyIdOrdinal);
+        }
+        catch (IndexOutOfRangeException)
+        {
+            // BASE_CURRENCY_ID field not present in this query
+            branch.BaseCurrencyId = null;
+        }
+
+        try
+        {
+            var roundingRulesOrdinal = reader.GetOrdinal("ROUNDING_RULES");
+            branch.RoundingRules = reader.IsDBNull(roundingRulesOrdinal) ? null : reader.GetInt32(roundingRulesOrdinal);
+        }
+        catch (IndexOutOfRangeException)
+        {
+            // ROUNDING_RULES field not present in this query
+            branch.RoundingRules = null;
+        }
 
         // Set BranchLogo to null but indicate if logo exists via HAS_LOGO field (for performance)
         // The actual logo bytes are not loaded in list queries for performance reasons

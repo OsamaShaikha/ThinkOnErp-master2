@@ -48,11 +48,6 @@ public class SysCompany
     public string? CompanyCode { get; set; }
 
     /// <summary>
-    /// Default language for the company (ar/en)
-    /// </summary>
-    public string? DefaultLang { get; set; }
-
-    /// <summary>
     /// Tax registration number
     /// </summary>
     public string? TaxNumber { get; set; }
@@ -61,21 +56,6 @@ public class SysCompany
     /// Foreign key to SYS_FISCAL_YEAR table - current active fiscal year
     /// </summary>
     public Int64? FiscalYearId { get; set; }
-
-    /// <summary>
-    /// Foreign key to SYS_CURRENCY table - base currency for the company
-    /// </summary>
-    public Int64? BaseCurrencyId { get; set; }
-
-    /// <summary>
-    /// System language preference (ar/en)
-    /// </summary>
-    public string? SystemLanguage { get; set; }
-
-    /// <summary>
-    /// Rounding rules for calculations (HALF_UP, HALF_DOWN, UP, DOWN, CEILING, FLOOR)
-    /// </summary>
-    public string? RoundingRules { get; set; }
 
     /// <summary>
     /// Foreign key to SYS_BRANCH table - references the default/head branch for this company
@@ -122,11 +102,6 @@ public class SysCompany
     /// Navigation property to the current fiscal year
     /// </summary>
     public SysFiscalYear? FiscalYear { get; set; }
-
-    /// <summary>
-    /// Navigation property to the base currency
-    /// </summary>
-    public SysCurrency? BaseCurrency { get; set; }
 
     /// <summary>
     /// Navigation property to the default currency

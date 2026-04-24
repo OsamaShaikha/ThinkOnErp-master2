@@ -42,11 +42,6 @@ public class UpdateCompanyDto
     public string? CompanyCode { get; set; }
 
     /// <summary>
-    /// Default language (ar/en) (optional)
-    /// </summary>
-    public string? DefaultLang { get; set; }
-
-    /// <summary>
     /// Tax registration number (optional)
     /// </summary>
     public string? TaxNumber { get; set; }
@@ -55,22 +50,6 @@ public class UpdateCompanyDto
     /// Current active fiscal year ID (optional)
     /// </summary>
     public Int64? FiscalYearId { get; set; }
-
-    /// <summary>
-    /// Base currency ID (optional)
-    /// </summary>
-    public Int64? BaseCurrencyId { get; set; }
-
-    /// <summary>
-    /// System language preference (ar/en) (optional)
-    /// </summary>
-    public string? SystemLanguage { get; set; }
-
-    /// <summary>
-    /// Rounding rules for calculations (optional)
-    /// Valid values: HALF_UP, HALF_DOWN, UP, DOWN, CEILING, FLOOR
-    /// </summary>
-    public string? RoundingRules { get; set; }
 
     /// <summary>
     /// Company logo as Base64 string (optional)

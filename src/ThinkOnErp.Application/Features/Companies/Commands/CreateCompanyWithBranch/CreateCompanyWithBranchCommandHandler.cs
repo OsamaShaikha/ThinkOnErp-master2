@@ -64,12 +64,8 @@ public class CreateCompanyWithBranchCommandHandler : IRequestHandler<CreateCompa
                 legalNameAr: request.LegalNameAr,
                 legalNameEn: request.LegalNameEn,
                 companyCode: request.CompanyCode,
-                defaultLang: request.DefaultLang,
                 taxNumber: request.TaxNumber,
                 fiscalYearId: request.FiscalYearId,
-                baseCurrencyId: request.BaseCurrencyId,
-                systemLanguage: request.SystemLanguage,
-                roundingRules: request.RoundingRules,
                 countryId: request.CountryId,
                 currId: request.CurrId,
                 branchNameAr: request.BranchNameAr,
@@ -79,6 +75,9 @@ public class CreateCompanyWithBranchCommandHandler : IRequestHandler<CreateCompa
                 branchFax: request.BranchFax,
                 branchEmail: request.BranchEmail,
                 branchLogo: branchLogo, // Use converted byte array
+                defaultLang: request.DefaultLang,
+                baseCurrencyId: null, // Will be set at branch level if needed
+                roundingRules: 1, // Default rounding rules for branch
                 creationUser: request.CreationUser);
 
             // If company logo was provided, update it separately
