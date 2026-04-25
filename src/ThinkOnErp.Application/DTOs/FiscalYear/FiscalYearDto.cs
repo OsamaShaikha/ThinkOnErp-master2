@@ -22,6 +22,16 @@ public class FiscalYearDto
     public string? CompanyName { get; set; }
 
     /// <summary>
+    /// Branch ID this fiscal year belongs to
+    /// </summary>
+    public Int64 BranchId { get; set; }
+
+    /// <summary>
+    /// Branch name (English) for display purposes
+    /// </summary>
+    public string? BranchName { get; set; }
+
+    /// <summary>
     /// Fiscal year code (e.g., 'FY2024', 'FY2025')
     /// </summary>
     public string FiscalYearCode { get; set; } = string.Empty;

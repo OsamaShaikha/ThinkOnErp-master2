@@ -45,11 +45,6 @@ public class CreateCompanyWithBranchCommand : IRequest<CreateCompanyWithBranchRe
     public string? TaxNumber { get; set; }
 
     /// <summary>
-    /// Current active fiscal year ID
-    /// </summary>
-    public Int64? FiscalYearId { get; set; }
-
-    /// <summary>
     /// Country ID
     /// </summary>
     public Int64? CountryId { get; set; }
@@ -105,6 +100,21 @@ public class CreateCompanyWithBranchCommand : IRequest<CreateCompanyWithBranchRe
     /// </summary>
     public string? BranchLogoBase64 { get; set; }
 
+    /// <summary>
+    /// Base currency ID for the branch (optional)
+    /// </summary>
+    public Int64? BranchBaseCurrencyId { get; set; }
+
+    /// <summary>
+    /// Rounding rules for branch calculations (1=HALF_UP, 2=HALF_DOWN, 3=UP, 4=DOWN, 5=CEILING, 6=FLOOR)
+    /// </summary>
+    public int? BranchRoundingRules { get; set; }
+
+    /// <summary>
+    /// Fiscal year ID for the branch (optional)
+    /// </summary>
+    public Int64? BranchFiscalYearId { get; set; }
+
     // Audit Information
     /// <summary>
     /// Username of the user creating the company and branch
@@ -126,6 +136,11 @@ public class CreateCompanyWithBranchResult
     /// ID of the newly created default branch
     /// </summary>
     public Int64 BranchId { get; set; }
+
+    /// <summary>
+    /// ID of the newly created default fiscal year
+    /// </summary>
+    public Int64 FiscalYearId { get; set; }
 
     /// <summary>
     /// Company code of the created company

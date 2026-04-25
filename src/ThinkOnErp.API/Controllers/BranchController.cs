@@ -144,6 +144,9 @@ public class BranchController : ControllerBase
                 Fax = dto.Fax,
                 Email = dto.Email,
                 IsHeadBranch = dto.IsHeadBranch,
+                DefaultLang = dto.DefaultLang,
+                BaseCurrencyId = dto.BaseCurrencyId,
+                RoundingRules = dto.RoundingRules,
                 BranchLogoBase64 = dto.BranchLogoBase64,
                 CreationUser = User.Identity?.Name ?? "system"
             };
@@ -203,6 +206,9 @@ public class BranchController : ControllerBase
                 Fax = dto.Fax,
                 Email = dto.Email,
                 IsHeadBranch = dto.IsHeadBranch,
+                DefaultLang = dto.DefaultLang,
+                BaseCurrencyId = dto.BaseCurrencyId,
+                RoundingRules = dto.RoundingRules,
                 BranchLogoBase64 = dto.BranchLogoBase64,
                 UpdateUser = User.Identity?.Name ?? "system"
             };

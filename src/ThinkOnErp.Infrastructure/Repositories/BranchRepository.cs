@@ -540,43 +540,13 @@ public class BranchRepository : IBranchRepository
             CreationUser = reader.GetString(reader.GetOrdinal("CREATION_USER")),
             CreationDate = reader.IsDBNull(reader.GetOrdinal("CREATION_DATE")) ? null : reader.GetDateTime(reader.GetOrdinal("CREATION_DATE")),
             UpdateUser = reader.IsDBNull(reader.GetOrdinal("UPDATE_USER")) ? null : reader.GetString(reader.GetOrdinal("UPDATE_USER")),
-            UpdateDate = reader.IsDBNull(reader.GetOrdinal("UPDATE_DATE")) ? null : reader.GetDateTime(reader.GetOrdinal("UPDATE_DATE"))
+            UpdateDate = reader.IsDBNull(reader.GetOrdinal("UPDATE_DATE")) ? null : reader.GetDateTime(reader.GetOrdinal("UPDATE_DATE")),
+            DefaultLang = reader.IsDBNull(reader.GetOrdinal("DEFAULT_LANG")) ? null : reader.GetString(reader.GetOrdinal("DEFAULT_LANG")),
+            BaseCurrencyId = reader.IsDBNull(reader.GetOrdinal("BASE_CURRENCY_ID")) ? null : reader.GetInt64(reader.GetOrdinal("BASE_CURRENCY_ID")),
+            RoundingRules = reader.IsDBNull(reader.GetOrdinal("ROUNDING_RULES")) ? null : reader.GetInt32(reader.GetOrdinal("ROUNDING_RULES"))
         };
 
-        // Map the new fields (with fallback for older stored procedures)
-        try
-        {
-            var defaultLangOrdinal = reader.GetOrdinal("DEFAULT_LANG");
-            branch.DefaultLang = reader.IsDBNull(defaultLangOrdinal) ? null : reader.GetString(defaultLangOrdinal);
-        }
-        catch (IndexOutOfRangeException)
-        {
-            // DEFAULT_LANG field not present in this query
-            branch.DefaultLang = null;
-        }
-
-        try
-        {
-            var baseCurrencyIdOrdinal = reader.GetOrdinal("BASE_CURRENCY_ID");
-            branch.BaseCurrencyId = reader.IsDBNull(baseCurrencyIdOrdinal) ? null : reader.GetInt64(baseCurrencyIdOrdinal);
-        }
-        catch (IndexOutOfRangeException)
-        {
-            // BASE_CURRENCY_ID field not present in this query
-            branch.BaseCurrencyId = null;
-        }
-
-        try
-        {
-            var roundingRulesOrdinal = reader.GetOrdinal("ROUNDING_RULES");
-            branch.RoundingRules = reader.IsDBNull(roundingRulesOrdinal) ? null : reader.GetInt32(roundingRulesOrdinal);
-        }
-        catch (IndexOutOfRangeException)
-        {
-            // ROUNDING_RULES field not present in this query
-            branch.RoundingRules = null;
-        }
-
+        
         // Set BranchLogo to null but indicate if logo exists via HAS_LOGO field (for performance)
         // The actual logo bytes are not loaded in list queries for performance reasons
         try

@@ -12,6 +12,10 @@ public class CreateBranchCommand : IRequest<Int64>
     public string? Fax { get; set; }
     public string? Email { get; set; }
     public bool IsHeadBranch { get; set; }
+    public string? DefaultLang { get; set; }
+    public Int64? BaseCurrencyId { get; set; }
+    public int? RoundingRules { get; set; }
+    public Int64? FiscalYearId { get; set; }
     public string? BranchLogoBase64 { get; set; }
     public string CreationUser { get; set; } = string.Empty;
 }

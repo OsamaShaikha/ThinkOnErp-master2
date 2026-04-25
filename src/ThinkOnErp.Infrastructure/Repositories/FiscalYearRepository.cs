@@ -152,6 +152,53 @@ public class FiscalYearRepository : IFiscalYearRepository
     }
 
     /// <summary>
+    /// Retrieves all fiscal years for a specific branch.
+    /// Calls SP_SYS_FISCAL_YEAR_SELECT_BY_BRANCH stored procedure.
+    /// </summary>
+    /// <param name="branchId">The branch ID to retrieve fiscal years for</param>
+    /// <returns>A list of SysFiscalYear entities for the specified branch</returns>
+    public async Task<List<SysFiscalYear>> GetByBranchIdAsync(long branchId)
+    {
+        List<SysFiscalYear> fiscalYears = new();
+
+        using (var connection = _dbContext.CreateConnection())
+        {
+            await connection.OpenAsync();
+
+            using var command = connection.CreateCommand();
+            command.CommandType = CommandType.StoredProcedure;
+            command.CommandText = "SP_SYS_FISCAL_YEAR_SELECT_BY_BRANCH";
+
+            // Add input parameter for BRANCH_ID
+            OracleParameter branchIdParam = new()
+            {
+                ParameterName = "P_BRANCH_ID",
+                OracleDbType = OracleDbType.Decimal,
+                Direction = ParameterDirection.Input,
+                Value = branchId
+            };
+            _ = command.Parameters.Add(branchIdParam);
+
+            // Add output parameter for SYS_REFCURSOR
+            OracleParameter cursorParam = new()
+            {
+                ParameterName = "P_RESULT_CURSOR",
+                OracleDbType = OracleDbType.RefCursor,
+                Direction = ParameterDirection.Output
+            };
+            _ = command.Parameters.Add(cursorParam);
+
+            using var reader = await command.ExecuteReaderAsync();
+            while (await reader.ReadAsync())
+            {
+                fiscalYears.Add(MapToEntity(reader));
+            }
+        }
+
+        return fiscalYears;
+    }
+
+    /// <summary>
     /// Creates a new fiscal year in the database.
     /// Calls SP_SYS_FISCAL_YEAR_INSERT stored procedure.
     /// </summary>
@@ -173,6 +220,14 @@ public class FiscalYearRepository : IFiscalYearRepository
             OracleDbType = OracleDbType.Decimal,
             Direction = ParameterDirection.Input,
             Value = fiscalYear.CompanyId
+        });
+
+        _ = command.Parameters.Add(new OracleParameter
+        {
+            ParameterName = "P_BRANCH_ID",
+            OracleDbType = OracleDbType.Decimal,
+            Direction = ParameterDirection.Input,
+            Value = fiscalYear.BranchId
         });
 
         _ = command.Parameters.Add(new OracleParameter
@@ -276,6 +331,14 @@ public class FiscalYearRepository : IFiscalYearRepository
             OracleDbType = OracleDbType.Decimal,
             Direction = ParameterDirection.Input,
             Value = fiscalYear.CompanyId
+        });
+
+        _ = command.Parameters.Add(new OracleParameter
+        {
+            ParameterName = "P_BRANCH_ID",
+            OracleDbType = OracleDbType.Decimal,
+            Direction = ParameterDirection.Input,
+            Value = fiscalYear.BranchId
         });
 
         _ = command.Parameters.Add(new OracleParameter
@@ -412,6 +475,7 @@ public class FiscalYearRepository : IFiscalYearRepository
         {
             RowId = reader.GetInt64(reader.GetOrdinal("ROW_ID")),
             CompanyId = reader.GetInt64(reader.GetOrdinal("COMPANY_ID")),
+            BranchId = reader.GetInt64(reader.GetOrdinal("BRANCH_ID")),
             FiscalYearCode = reader.GetString(reader.GetOrdinal("FISCAL_YEAR_CODE")),
             RowDesc = reader.IsDBNull(reader.GetOrdinal("ROW_DESC")) ? null : reader.GetString(reader.GetOrdinal("ROW_DESC")),
             RowDescE = reader.IsDBNull(reader.GetOrdinal("ROW_DESC_E")) ? null : reader.GetString(reader.GetOrdinal("ROW_DESC_E")),

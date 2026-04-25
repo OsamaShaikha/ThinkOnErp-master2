@@ -79,4 +79,11 @@ public interface IUserRepository
     /// <param name="updateUser">The username of the user performing the change</param>
     /// <returns>The number of rows affected</returns>
     Task<int> ChangePasswordAsync(long userId, string newPasswordHash, string updateUser);
+
+    /// <summary>
+    /// Retrieves all active admin users from the database.
+    /// Gets users with IS_ADMIN flag set to true.
+    /// </summary>
+    /// <returns>A list of active admin SysUser entities</returns>
+    Task<List<SysUser>> GetAdminUsersAsync();
 }

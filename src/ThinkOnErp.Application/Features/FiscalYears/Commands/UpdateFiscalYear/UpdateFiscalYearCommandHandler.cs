@@ -19,6 +19,7 @@ public class UpdateFiscalYearCommandHandler : IRequestHandler<UpdateFiscalYearCo
         {
             RowId = request.FiscalYearId,
             CompanyId = request.CompanyId,
+            BranchId = request.BranchId,
             FiscalYearCode = request.FiscalYearCode,
             RowDesc = request.FiscalYearNameAr,
             RowDescE = request.FiscalYearNameEn,

@@ -57,7 +57,7 @@ public class CreateCompanyWithBranchCommandHandler : IRequestHandler<CreateCompa
                 }
             }
 
-            // Use the repository method to create company with branch
+            // Use the repository method to create company with branch and fiscal year
             var result = await _companyRepository.CreateWithBranchAsync(
                 companyNameAr: request.CompanyNameAr,
                 companyNameEn: request.CompanyNameEn,
@@ -65,9 +65,9 @@ public class CreateCompanyWithBranchCommandHandler : IRequestHandler<CreateCompa
                 legalNameEn: request.LegalNameEn,
                 companyCode: request.CompanyCode,
                 taxNumber: request.TaxNumber,
-                fiscalYearId: request.FiscalYearId,
                 countryId: request.CountryId,
                 currId: request.CurrId,
+                companyLogo: companyLogo, // Pass company logo directly
                 branchNameAr: request.BranchNameAr,
                 branchNameEn: request.BranchNameEn,
                 branchPhone: request.BranchPhone,
@@ -76,20 +76,13 @@ public class CreateCompanyWithBranchCommandHandler : IRequestHandler<CreateCompa
                 branchEmail: request.BranchEmail,
                 branchLogo: branchLogo, // Use converted byte array
                 defaultLang: request.DefaultLang,
-                baseCurrencyId: null, // Will be set at branch level if needed
-                roundingRules: 1, // Default rounding rules for branch
+                baseCurrencyId: request.BranchBaseCurrencyId,
+                roundingRules: request.BranchRoundingRules ?? 1,
                 creationUser: request.CreationUser);
 
-            // If company logo was provided, update it separately
-            if (companyLogo != null)
-            {
-                await _companyRepository.UpdateLogoAsync(result.CompanyId, companyLogo, request.CreationUser);
-                _logger.LogInformation("Company logo updated for company ID: {CompanyId}", result.CompanyId);
-            }
-
             _logger.LogInformation(
-                "Company created successfully with ID: {CompanyId}, Default branch created with ID: {BranchId}",
-                result.CompanyId, result.BranchId);
+                "Company created successfully with ID: {CompanyId}, Default branch created with ID: {BranchId}, Default fiscal year created with ID: {FiscalYearId}",
+                result.CompanyId, result.BranchId, result.FiscalYearId);
 
             // Generate branch name for response (if not provided)
             var branchName = request.BranchNameEn ?? $"{request.CompanyNameEn} - Head Office";
@@ -98,6 +91,7 @@ public class CreateCompanyWithBranchCommandHandler : IRequestHandler<CreateCompa
             {
                 CompanyId = result.CompanyId,
                 BranchId = result.BranchId,
+                FiscalYearId = result.FiscalYearId,
                 CompanyCode = request.CompanyCode,
                 CompanyName = request.CompanyNameEn,
                 BranchName = branchName

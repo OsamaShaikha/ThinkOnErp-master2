@@ -24,6 +24,7 @@ public class GetFiscalYearByIdQueryHandler : IRequestHandler<GetFiscalYearByIdQu
         {
             FiscalYearId = fiscalYear.RowId,
             CompanyId = fiscalYear.CompanyId,
+            BranchId = fiscalYear.BranchId,
             FiscalYearCode = fiscalYear.FiscalYearCode,
             FiscalYearNameAr = fiscalYear.RowDesc,
             FiscalYearNameEn = fiscalYear.RowDescE,

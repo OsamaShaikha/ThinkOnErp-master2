@@ -12,6 +12,11 @@ public class CreateFiscalYearDto
     public Int64 CompanyId { get; set; }
 
     /// <summary>
+    /// Branch ID this fiscal year belongs to (required)
+    /// </summary>
+    public Int64 BranchId { get; set; }
+
+    /// <summary>
     /// Fiscal year code (e.g., 'FY2024', 'FY2025') (required)
     /// Must be unique per company
     /// </summary>

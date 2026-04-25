@@ -47,11 +47,6 @@ public class UpdateCompanyDto
     public string? TaxNumber { get; set; }
 
     /// <summary>
-    /// Current active fiscal year ID (optional)
-    /// </summary>
-    public Int64? FiscalYearId { get; set; }
-
-    /// <summary>
     /// Company logo as Base64 string (optional)
     /// </summary>
     public string? CompanyLogoBase64 { get; set; }

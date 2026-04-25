@@ -315,3 +315,42 @@ WHERE object_name IN (
     'SP_SYS_USERS_LOGIN'
 )
 ORDER BY object_name;
+-- =============================================
+-- Procedure: SP_SYS_USERS_SELECT_ADMINS
+-- Description: Retrieves all active admin users
+-- Returns: SYS_REFCURSOR with all admin users where IS_ACTIVE = 'Y' and IS_ADMIN = 'Y'
+-- =============================================
+CREATE OR REPLACE PROCEDURE SP_SYS_USERS_SELECT_ADMINS (
+    P_CURSOR OUT SYS_REFCURSOR
+)
+AS
+BEGIN
+    OPEN P_CURSOR FOR
+    SELECT 
+        ROW_ID,
+        ROW_DESC,
+        ROW_DESC_E,
+        USER_NAME,
+        PASSWORD,
+        PHONE,
+        EMAIL,
+        IS_ADMIN,
+        ROLE,
+        BRANCH_ID,
+        IS_ACTIVE,
+        CREATION_USER,
+        CREATION_DATE,
+        UPDATE_USER,
+        UPDATE_DATE,
+        REFRESH_TOKEN,
+        REFRESH_TOKEN_EXPIRY,
+        FORCE_LOGOUT_DATE
+    FROM SYS_USERS
+    WHERE IS_ACTIVE = 'Y' 
+      AND IS_ADMIN = 'Y'
+    ORDER BY ROW_ID;
+EXCEPTION
+    WHEN OTHERS THEN
+        RAISE_APPLICATION_ERROR(-20309, 'Error retrieving admin users: ' || SQLERRM);
+END SP_SYS_USERS_SELECT_ADMINS;
+/

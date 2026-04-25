@@ -24,7 +24,5 @@ public class CreateCompanyCommandValidator : AbstractValidator<CreateCompanyComm
             .When(x => !string.IsNullOrEmpty(x.DefaultLang));
 
         RuleFor(x => x.TaxNumber).MaximumLength(50).When(x => !string.IsNullOrEmpty(x.TaxNumber));
-
-        RuleFor(x => x.FiscalYearId).GreaterThan(0).When(x => x.FiscalYearId.HasValue);
     }
 }

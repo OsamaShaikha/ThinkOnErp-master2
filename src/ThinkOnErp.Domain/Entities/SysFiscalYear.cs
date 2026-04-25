@@ -1,7 +1,7 @@
 namespace ThinkOnErp.Domain.Entities;
 
 /// <summary>
-/// Represents a fiscal year period for a company in the ERP system.
+/// Represents a fiscal year period for a company branch in the ERP system.
 /// Tracks financial periods with start/end dates and closure status.
 /// Maps to the SYS_FISCAL_YEAR table in Oracle database.
 /// </summary>
@@ -18,8 +18,13 @@ public class SysFiscalYear
     public Int64 CompanyId { get; set; }
 
     /// <summary>
+    /// Foreign key to SYS_BRANCH table - the branch this fiscal year belongs to
+    /// </summary>
+    public Int64 BranchId { get; set; }
+
+    /// <summary>
     /// Unique fiscal year code (e.g., 'FY2024', 'FY2025')
-    /// Must be unique per company
+    /// Must be unique per branch
     /// </summary>
     public string FiscalYearCode { get; set; } = string.Empty;
 
@@ -80,4 +85,9 @@ public class SysFiscalYear
     /// Navigation property to the parent company
     /// </summary>
     public SysCompany? Company { get; set; }
+
+    /// <summary>
+    /// Navigation property to the parent branch
+    /// </summary>
+    public SysBranch? Branch { get; set; }
 }

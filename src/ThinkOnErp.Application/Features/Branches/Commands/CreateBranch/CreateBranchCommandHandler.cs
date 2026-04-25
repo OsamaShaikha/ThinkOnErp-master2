@@ -25,6 +25,9 @@ public class CreateBranchCommandHandler : IRequestHandler<CreateBranchCommand, I
             Fax = request.Fax,
             Email = request.Email,
             IsHeadBranch = request.IsHeadBranch,
+            DefaultLang = request.DefaultLang,
+            BaseCurrencyId = request.BaseCurrencyId,
+            RoundingRules = request.RoundingRules,
             IsActive = true,
             CreationUser = request.CreationUser,
             CreationDate = DateTime.UtcNow

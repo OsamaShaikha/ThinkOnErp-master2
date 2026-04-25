@@ -10,6 +10,10 @@ public class CreateFiscalYearCommandValidator : AbstractValidator<CreateFiscalYe
             .GreaterThan(0)
             .WithMessage("Company ID is required");
 
+        RuleFor(x => x.BranchId)
+            .GreaterThan(0)
+            .WithMessage("Branch ID is required");
+
         RuleFor(x => x.FiscalYearCode)
             .NotEmpty()
             .WithMessage("Fiscal year code is required")

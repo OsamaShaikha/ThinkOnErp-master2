@@ -53,11 +53,6 @@ public class SysCompany
     public string? TaxNumber { get; set; }
 
     /// <summary>
-    /// Foreign key to SYS_FISCAL_YEAR table - current active fiscal year
-    /// </summary>
-    public Int64? FiscalYearId { get; set; }
-
-    /// <summary>
     /// Foreign key to SYS_BRANCH table - references the default/head branch for this company
     /// </summary>
     public Int64? DefaultBranchId { get; set; }
@@ -98,11 +93,6 @@ public class SysCompany
     public DateTime? UpdateDate { get; set; }
 
     // Navigation properties
-    /// <summary>
-    /// Navigation property to the current fiscal year
-    /// </summary>
-    public SysFiscalYear? FiscalYear { get; set; }
-
     /// <summary>
     /// Navigation property to the default currency
     /// </summary>

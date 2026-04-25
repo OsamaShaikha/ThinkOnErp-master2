@@ -1,4 +1,5 @@
 using Oracle.ManagedDataAccess.Client;
+using Oracle.ManagedDataAccess.Types;
 using System.Data;
 using ThinkOnErp.Domain.Entities;
 using ThinkOnErp.Domain.Interfaces;
@@ -600,5 +601,56 @@ public class UserRepository : IUserRepository
         await command.ExecuteNonQueryAsync();
 
         return Convert.ToInt32(rowsAffectedParam.Value.ToString());
+    }
+
+    public async Task<List<SysUser>> GetAdminUsersAsync()
+    {
+        using var connection = _dbContext.CreateConnection();
+        await connection.OpenAsync();
+
+        using var command = connection.CreateCommand();
+        command.CommandType = CommandType.StoredProcedure;
+        command.CommandText = "SP_SYS_USERS_SELECT_ADMINS";
+
+        // Add output parameter for cursor
+        OracleParameter cursorParam = new()
+        {
+            ParameterName = "P_CURSOR",
+            OracleDbType = OracleDbType.RefCursor,
+            Direction = ParameterDirection.Output
+        };
+        _ = command.Parameters.Add(cursorParam);
+
+        await command.ExecuteNonQueryAsync();
+
+        var users = new List<SysUser>();
+
+        using var reader = ((OracleRefCursor)cursorParam.Value).GetDataReader();
+        while (await reader.ReadAsync())
+        {
+            users.Add(new SysUser
+            {
+                RowId = reader.GetInt64("ROW_ID"),
+                RowDesc = reader.IsDBNull("ROW_DESC") ? null : reader.GetString("ROW_DESC"),
+                RowDescE = reader.IsDBNull("ROW_DESC_E") ? null : reader.GetString("ROW_DESC_E"),
+                UserName = reader.IsDBNull("USER_NAME") ? null : reader.GetString("USER_NAME"),
+                Password = reader.IsDBNull("PASSWORD") ? null : reader.GetString("PASSWORD"),
+                Phone = reader.IsDBNull("PHONE") ? null : reader.GetString("PHONE"),
+                Email = reader.IsDBNull("EMAIL") ? null : reader.GetString("EMAIL"),
+                IsAdmin = reader.IsDBNull("IS_ADMIN") ? false : reader.GetString("IS_ADMIN") == "Y",
+                Role = reader.IsDBNull("ROLE") ? null : reader.GetInt64("ROLE"),
+                BranchId = reader.IsDBNull("BRANCH_ID") ? null : reader.GetInt64("BRANCH_ID"),
+                IsActive = reader.IsDBNull("IS_ACTIVE") ? false : reader.GetString("IS_ACTIVE") == "Y",
+                CreationUser = reader.IsDBNull("CREATION_USER") ? null : reader.GetString("CREATION_USER"),
+                CreationDate = reader.IsDBNull("CREATION_DATE") ? null : reader.GetDateTime("CREATION_DATE"),
+                UpdateUser = reader.IsDBNull("UPDATE_USER") ? null : reader.GetString("UPDATE_USER"),
+                UpdateDate = reader.IsDBNull("UPDATE_DATE") ? null : reader.GetDateTime("UPDATE_DATE"),
+                RefreshToken = reader.IsDBNull("REFRESH_TOKEN") ? null : reader.GetString("REFRESH_TOKEN"),
+                RefreshTokenExpiry = reader.IsDBNull("REFRESH_TOKEN_EXPIRY") ? null : reader.GetDateTime("REFRESH_TOKEN_EXPIRY"),
+                ForceLogoutDate = reader.IsDBNull("FORCE_LOGOUT_DATE") ? null : reader.GetDateTime("FORCE_LOGOUT_DATE")
+            });
+        }
+
+        return users;
     }
 }

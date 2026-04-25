@@ -31,8 +31,6 @@ public class GetCompanyByIdQueryHandler : IRequestHandler<GetCompanyByIdQuery, C
             LegalNameEn = company.LegalNameE,
             CompanyCode = company.CompanyCode,
             TaxNumber = company.TaxNumber,
-            FiscalYearId = company.FiscalYearId,
-            FiscalYearCode = company.FiscalYear?.FiscalYearCode,
             DefaultBranchId = company.DefaultBranchId,
             DefaultBranchName = company.DefaultBranch?.RowDescE,
             HasLogo = company.HasLogo,

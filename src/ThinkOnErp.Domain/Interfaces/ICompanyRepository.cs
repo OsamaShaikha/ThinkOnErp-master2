@@ -75,9 +75,9 @@ public interface ICompanyRepository
     /// <param name="legalNameEn">Legal name in English (required)</param>
     /// <param name="companyCode">Unique company code (required)</param>
     /// <param name="taxNumber">Tax registration number</param>
-    /// <param name="fiscalYearId">Current fiscal year ID</param>
     /// <param name="countryId">Country ID</param>
     /// <param name="currId">Currency ID (legacy)</param>
+    /// <param name="companyLogo">Company logo as byte array</param>
     /// <param name="branchNameAr">Arabic name for the default branch</param>
     /// <param name="branchNameEn">English name for the default branch</param>
     /// <param name="branchPhone">Branch phone number</param>
@@ -89,17 +89,17 @@ public interface ICompanyRepository
     /// <param name="baseCurrencyId">Base currency ID for the branch</param>
     /// <param name="roundingRules">Rounding rules for the branch</param>
     /// <param name="creationUser">Username of the user creating the records</param>
-    /// <returns>A tuple containing the new company ID and branch ID</returns>
-    Task<(Int64 CompanyId, Int64 BranchId)> CreateWithBranchAsync(
+    /// <returns>A tuple containing the new company ID, branch ID, and fiscal year ID</returns>
+    Task<(Int64 CompanyId, Int64 BranchId, Int64 FiscalYearId)> CreateWithBranchAsync(
         string? companyNameAr,
         string companyNameEn,
         string? legalNameAr,
         string legalNameEn,
         string companyCode,
         string? taxNumber,
-        Int64? fiscalYearId,
         Int64? countryId,
         Int64? currId,
+        byte[]? companyLogo,
         string? branchNameAr,
         string? branchNameEn,
         string? branchPhone,

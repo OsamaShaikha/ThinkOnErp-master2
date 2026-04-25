@@ -32,6 +32,14 @@ public interface IFiscalYearRepository
     Task<List<SysFiscalYear>> GetByCompanyIdAsync(Int64 companyId);
 
     /// <summary>
+    /// Retrieves all fiscal years for a specific branch.
+    /// Calls SP_SYS_FISCAL_YEAR_SELECT_BY_BRANCH stored procedure.
+    /// </summary>
+    /// <param name="branchId">The branch ID to retrieve fiscal years for</param>
+    /// <returns>A list of SysFiscalYear entities for the specified branch</returns>
+    Task<List<SysFiscalYear>> GetByBranchIdAsync(Int64 branchId);
+
+    /// <summary>
     /// Creates a new fiscal year in the database.
     /// Calls SP_SYS_FISCAL_YEAR_INSERT stored procedure.
     /// </summary>

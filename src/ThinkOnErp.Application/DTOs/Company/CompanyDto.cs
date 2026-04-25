@@ -52,16 +52,6 @@ public class CompanyDto
     public string? TaxNumber { get; set; }
 
     /// <summary>
-    /// Current active fiscal year ID
-    /// </summary>
-    public Int64? FiscalYearId { get; set; }
-
-    /// <summary>
-    /// Fiscal year code for display
-    /// </summary>
-    public string? FiscalYearCode { get; set; }
-
-    /// <summary>
     /// Default branch ID for this company
     /// </summary>
     public Int64? DefaultBranchId { get; set; }

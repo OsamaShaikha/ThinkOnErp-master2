@@ -11,7 +11,6 @@ public class CreateCompanyCommand : IRequest<Int64>
     public string? CompanyCode { get; set; }
     public string? DefaultLang { get; set; }
     public string? TaxNumber { get; set; }
-    public Int64? FiscalYearId { get; set; }
     public Int64? CountryId { get; set; }
     public Int64? CurrId { get; set; }
     public string CreationUser { get; set; } = string.Empty;

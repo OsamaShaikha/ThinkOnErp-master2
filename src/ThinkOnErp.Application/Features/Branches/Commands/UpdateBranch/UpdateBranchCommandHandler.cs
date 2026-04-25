@@ -26,6 +26,9 @@ public class UpdateBranchCommandHandler : IRequestHandler<UpdateBranchCommand, I
             Fax = request.Fax,
             Email = request.Email,
             IsHeadBranch = request.IsHeadBranch,
+            DefaultLang = request.DefaultLang,
+            BaseCurrencyId = request.BaseCurrencyId,
+            RoundingRules = request.RoundingRules,
             UpdateUser = request.UpdateUser,
             UpdateDate = DateTime.UtcNow
         };

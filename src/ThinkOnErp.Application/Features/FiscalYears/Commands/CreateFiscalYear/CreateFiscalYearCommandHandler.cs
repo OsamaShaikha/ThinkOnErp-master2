@@ -18,6 +18,7 @@ public class CreateFiscalYearCommandHandler : IRequestHandler<CreateFiscalYearCo
         var fiscalYear = new SysFiscalYear
         {
             CompanyId = request.CompanyId,
+            BranchId = request.BranchId,
             FiscalYearCode = request.FiscalYearCode,
             RowDesc = request.FiscalYearNameAr,
             RowDescE = request.FiscalYearNameEn,

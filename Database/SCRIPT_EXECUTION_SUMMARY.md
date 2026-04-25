@@ -42,6 +42,9 @@ Execute the scripts in the following order for a fresh database setup:
 ### **SystemLanguage Removal**
 26. **`33_Remove_SystemLanguage_Column.sql`** - Remove SYSTEM_LANGUAGE column from SYS_COMPANY
 
+### **Final Procedure Updates**
+27. **`34_Recreate_Company_Procedures_Final.sql`** - Recreate all company procedures after field migration
+
 ## Quick Execution Commands
 
 ### Execute All New Scripts (Oracle SQL*Plus)
@@ -55,6 +58,7 @@ sqlplus username/password@database <<EOF
 @Database/Scripts/23_Create_Company_With_Default_Branch.sql
 @Database/Scripts/32_Move_Fields_From_Company_To_Branch.sql
 @Database/Scripts/33_Remove_SystemLanguage_Column.sql
+@Database/Scripts/34_Recreate_Company_Procedures_Final.sql
 EXIT;
 EOF
 ```
@@ -84,6 +88,9 @@ sqlplus username/password@database @Database/Scripts/32_Move_Fields_From_Company
 
 # Remove SystemLanguage column
 sqlplus username/password@database @Database/Scripts/33_Remove_SystemLanguage_Column.sql
+
+# Recreate company procedures (final version)
+sqlplus username/password@database @Database/Scripts/34_Recreate_Company_Procedures_Final.sql
 ```
 
 ## Verification Queries

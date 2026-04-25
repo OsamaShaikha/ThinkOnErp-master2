@@ -170,14 +170,6 @@ public class CompanyRepository : ICompanyRepository
             Value = (object?)company.TaxNumber ?? DBNull.Value
         });
 
-        _ = command.Parameters.Add(new OracleParameter
-        {
-            ParameterName = "P_FISCAL_YEAR_ID",
-            OracleDbType = OracleDbType.Decimal,
-            Direction = ParameterDirection.Input,
-            Value = (object?)company.FiscalYearId ?? DBNull.Value
-        });
-
         // Original fields
         _ = command.Parameters.Add(new OracleParameter
         {
@@ -289,14 +281,6 @@ public class CompanyRepository : ICompanyRepository
             OracleDbType = OracleDbType.Varchar2,
             Direction = ParameterDirection.Input,
             Value = (object?)company.TaxNumber ?? DBNull.Value
-        });
-
-        _ = command.Parameters.Add(new OracleParameter
-        {
-            ParameterName = "P_FISCAL_YEAR_ID",
-            OracleDbType = OracleDbType.Decimal,
-            Direction = ParameterDirection.Input,
-            Value = (object?)company.FiscalYearId ?? DBNull.Value
         });
 
         // Original fields
@@ -447,19 +431,19 @@ public class CompanyRepository : ICompanyRepository
     }
 
     /// <summary>
-    /// Creates a new company with an automatic default branch in a single transaction.
+    /// Creates a new company with an automatic default branch and fiscal year in a single transaction.
     /// Calls SP_SYS_COMPANY_INSERT_WITH_BRANCH stored procedure.
     /// </summary>
-    public async Task<(long CompanyId, long BranchId)> CreateWithBranchAsync(
+    public async Task<(long CompanyId, long BranchId, long FiscalYearId)> CreateWithBranchAsync(
         string? companyNameAr,
         string companyNameEn,
         string? legalNameAr,
         string legalNameEn,
         string companyCode,
         string? taxNumber,
-        long? fiscalYearId,
         long? countryId,
         long? currId,
+        byte[]? companyLogo,
         string? branchNameAr,
         string? branchNameEn,
         string? branchPhone,
@@ -530,14 +514,6 @@ public class CompanyRepository : ICompanyRepository
 
         _ = command.Parameters.Add(new OracleParameter
         {
-            ParameterName = "P_FISCAL_YEAR_ID",
-            OracleDbType = OracleDbType.Decimal,
-            Direction = ParameterDirection.Input,
-            Value = fiscalYearId ?? (object)DBNull.Value
-        });
-
-        _ = command.Parameters.Add(new OracleParameter
-        {
             ParameterName = "P_COUNTRY_ID",
             OracleDbType = OracleDbType.Decimal,
             Direction = ParameterDirection.Input,
@@ -550,6 +526,14 @@ public class CompanyRepository : ICompanyRepository
             OracleDbType = OracleDbType.Decimal,
             Direction = ParameterDirection.Input,
             Value = currId ?? (object)DBNull.Value
+        });
+
+        _ = command.Parameters.Add(new OracleParameter
+        {
+            ParameterName = "P_COMPANY_LOGO",
+            OracleDbType = OracleDbType.Blob,
+            Direction = ParameterDirection.Input,
+            Value = companyLogo ?? (object)DBNull.Value
         });
 
         // Branch Parameters (including migrated fields)
@@ -659,6 +643,14 @@ public class CompanyRepository : ICompanyRepository
         };
         _ = command.Parameters.Add(branchIdParam);
 
+        OracleParameter fiscalYearIdParam = new()
+        {
+            ParameterName = "P_NEW_FISCAL_YEAR_ID",
+            OracleDbType = OracleDbType.Decimal,
+            Direction = ParameterDirection.Output
+        };
+        _ = command.Parameters.Add(fiscalYearIdParam);
+
         try
         {
             await command.ExecuteNonQueryAsync();
@@ -666,20 +658,21 @@ public class CompanyRepository : ICompanyRepository
             // Extract the output values
             var companyId = Convert.ToInt64(((OracleDecimal)companyIdParam.Value).Value);
             var branchId = Convert.ToInt64(((OracleDecimal)branchIdParam.Value).Value);
+            var fiscalYearId = Convert.ToInt64(((OracleDecimal)fiscalYearIdParam.Value).Value);
 
-            return (companyId, branchId);
+            return (companyId, branchId, fiscalYearId);
         }
         catch (OracleException ex) when (ex.Number == 20308)
         {
             throw new InvalidOperationException($"Company code '{companyCode}' already exists.");
         }
-        catch (OracleException ex) when (ex.Number >= 20301 && ex.Number <= 20313)
+        catch (OracleException ex) when (ex.Number >= 20301 && ex.Number <= 20315)
         {
             throw new ArgumentException(ex.Message.Substring(ex.Message.IndexOf(':') + 1).Trim());
         }
         catch (Exception ex)
         {
-            throw new InvalidOperationException($"Failed to create company with branch: {ex.Message}", ex);
+            throw new InvalidOperationException($"Failed to create company with branch and fiscal year: {ex.Message}", ex);
         }
     }
 
@@ -745,7 +738,6 @@ public class CompanyRepository : ICompanyRepository
             LegalNameE = reader.IsDBNull(reader.GetOrdinal("LEGAL_NAME_E")) ? null : reader.GetString(reader.GetOrdinal("LEGAL_NAME_E")),
             CompanyCode = reader.IsDBNull(reader.GetOrdinal("COMPANY_CODE")) ? null : reader.GetString(reader.GetOrdinal("COMPANY_CODE")),
             TaxNumber = reader.IsDBNull(reader.GetOrdinal("TAX_NUMBER")) ? null : reader.GetString(reader.GetOrdinal("TAX_NUMBER")),
-            FiscalYearId = reader.IsDBNull(reader.GetOrdinal("FISCAL_YEAR_ID")) ? null : reader.GetInt64(reader.GetOrdinal("FISCAL_YEAR_ID")),
             CountryId = reader.IsDBNull(reader.GetOrdinal("COUNTRY_ID")) ? null : reader.GetInt64(reader.GetOrdinal("COUNTRY_ID")),
             CurrId = reader.IsDBNull(reader.GetOrdinal("CURR_ID")) ? null : reader.GetInt64(reader.GetOrdinal("CURR_ID")),
             DefaultBranchId = reader.IsDBNull(reader.GetOrdinal("DEFAULT_BRANCH_ID")) ? null : reader.GetInt64(reader.GetOrdinal("DEFAULT_BRANCH_ID")),

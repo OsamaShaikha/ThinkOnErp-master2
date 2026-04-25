@@ -38,10 +38,21 @@ public static class DependencyInjection
         services.AddScoped<ISystemRepository, SystemRepository>();
         services.AddScoped<IScreenRepository, ScreenRepository>();
         services.AddScoped<IPermissionRepository, PermissionRepository>();
+        
+        // Register ticket system repositories
+        services.AddScoped<ITicketRepository, TicketRepository>();
+        services.AddScoped<ITicketTypeRepository, TicketTypeRepository>();
+        services.AddScoped<ITicketPriorityRepository, TicketPriorityRepository>();
+        services.AddScoped<ITicketStatusRepository, TicketStatusRepository>();
+        services.AddScoped<ITicketCommentRepository, TicketCommentRepository>();
+        services.AddScoped<ITicketAttachmentRepository, TicketAttachmentRepository>();
 
         // Register infrastructure services as Scoped
         services.AddScoped<PasswordHashingService>();
         services.AddScoped<JwtTokenService>();
+        services.AddScoped<ITicketNotificationService, TicketNotificationService>();
+        services.AddScoped<IAttachmentService, AttachmentService>();
+        services.AddScoped<ISlaEscalationService, SlaEscalationService>();
 
         return services;
     }

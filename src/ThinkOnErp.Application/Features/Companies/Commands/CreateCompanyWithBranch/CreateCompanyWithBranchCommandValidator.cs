@@ -97,10 +97,10 @@ public class CreateCompanyWithBranchCommandValidator : AbstractValidator<CreateC
             .WithMessage("Creation user cannot exceed 50 characters");
 
         // ID Validation (must be positive if provided)
-        RuleFor(x => x.FiscalYearId)
+        RuleFor(x => x.BranchFiscalYearId)
             .GreaterThan(0)
-            .WithMessage("Fiscal year ID must be greater than 0")
-            .When(x => x.FiscalYearId.HasValue);
+            .WithMessage("Branch fiscal year ID must be greater than 0")
+            .When(x => x.BranchFiscalYearId.HasValue);
 
         RuleFor(x => x.CountryId)
             .GreaterThan(0)
@@ -111,6 +111,16 @@ public class CreateCompanyWithBranchCommandValidator : AbstractValidator<CreateC
             .GreaterThan(0)
             .WithMessage("Currency ID must be greater than 0")
             .When(x => x.CurrId.HasValue);
+
+        RuleFor(x => x.BranchBaseCurrencyId)
+            .GreaterThan(0)
+            .WithMessage("Branch base currency ID must be greater than 0")
+            .When(x => x.BranchBaseCurrencyId.HasValue);
+
+        RuleFor(x => x.BranchRoundingRules)
+            .InclusiveBetween(1, 6)
+            .WithMessage("Branch rounding rules must be between 1 and 6")
+            .When(x => x.BranchRoundingRules.HasValue);
 
         // Base64 Logo Validation
         RuleFor(x => x.CompanyLogoBase64)
