@@ -435,61 +435,6 @@ public class SuperAdminController : ControllerBase
     /// </summary>
     /// <remarks>
     /// This endpoint provides comprehensive system-wide metrics and activity summaries for SuperAdmin users.
-    /// 
-    /// **Features:**
-    /// - System metrics (companies, branches, admins)
-    /// - Recent company activity (top 4)
-    /// - Recent branch activity (top 4)
-    /// - System alerts for conditions requiring attention
-    /// 
-    /// **Performance:**
-    /// - Single optimized request
-    /// - Target response time: &lt;500ms
-    /// - Parallel data retrieval
-    /// 
-    /// **Example Response:**
-    /// ```json
-    /// {
-    ///   "stats": {
-    ///     "totalCompanies": 150,
-    ///     "activeCompanies": 142,
-    ///     "inactiveCompanies": 8,
-    ///     "totalBranches": 487,
-    ///     "activeBranches": 465,
-    ///     "totalSystemAdmins": 12
-    ///   },
-    ///   "recentCompanies": [
-    ///     {
-    ///       "nameAr": "شركة المثال",
-    ///       "nameEn": "Example Company",
-    ///       "country": "Saudi Arabia",
-    ///       "branchCount": 5,
-    ///       "status": "Active",
-    ///       "createdDate": "2024-01-15T10:30:00Z"
-    ///     }
-    ///   ],
-    ///   "recentBranches": [
-    ///     {
-    ///       "branchNameAr": "الفرع الرئيسي",
-    ///       "branchNameEn": "Main Branch",
-    ///       "companyNameAr": "شركة المثال",
-    ///       "companyNameEn": "Example Company",
-    ///       "activityType": "New",
-    ///       "activityDate": "2024-01-15T14:20:00Z"
-    ///     }
-    ///   ],
-    ///   "pendingRequests": [],
-    ///   "alerts": [
-    ///     "8 companies are currently inactive"
-    ///   ]
-    /// }
-    /// ```
-    /// </remarks>
-    /// <returns>Dashboard data including metrics, recent activity, and alerts</returns>
-    /// <response code="200">Dashboard data retrieved successfully</response>
-    /// <response code="401">Unauthorized - Missing or invalid JWT token</response>
-    /// <response code="403">Forbidden - User is not a SuperAdmin</response>
-    /// <response code="500">Internal Server Error - An error occurred while retrieving dashboard data</response>
     [HttpGet("dashboard")]
     [ProducesResponseType(typeof(SuperAdminDashboardDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
