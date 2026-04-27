@@ -1,163 +1,101 @@
 using Microsoft.AspNetCore.Mvc;
-using ThinkOnErp.Domain.Interfaces;
+using ThinkOnErp.Application.Common;
+using ThinkOnErp.Infrastructure.Resilience;
 
 namespace ThinkOnErp.API.Controllers;
 
 /// <summary>
-/// Health check controller for monitoring API status.
-/// Provides endpoints to check if the API and database are operational.
+/// Health check controller for monitoring system status and circuit breaker states.
+/// Implements Requirement 18.9
 /// </summary>
 [ApiController]
-[Route("api/[controller]")]
+[Route("api/health")]
 public class HealthController : ControllerBase
 {
+    private readonly CircuitBreakerRegistry _circuitBreakerRegistry;
     private readonly ILogger<HealthController> _logger;
-    private readonly IConfiguration _configuration;
 
     public HealthController(
-        ILogger<HealthController> logger,
-        IConfiguration configuration)
+        CircuitBreakerRegistry circuitBreakerRegistry,
+        ILogger<HealthController> logger)
     {
-        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-        _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
+        _circuitBreakerRegistry = circuitBreakerRegistry;
+        _logger = logger;
     }
 
     /// <summary>
     /// Basic health check endpoint.
-    /// Returns 200 OK if the API is running.
     /// </summary>
-    /// <returns>Health status</returns>
-    /// <response code="200">API is healthy</response>
     [HttpGet]
-    [ProducesResponseType(StatusCodes.Status200OK)]
-    public IActionResult Get()
+    public ActionResult<ApiResponse<HealthStatus>> GetHealth()
     {
-        return Ok(new
+        var circuitStates = _circuitBreakerRegistry.GetAllStates();
+        var hasOpenCircuits = circuitStates.Any(kvp => kvp.Value == CircuitState.Open);
+
+        var status = new HealthStatus
         {
-            status = "Healthy",
-            timestamp = DateTime.UtcNow,
-            service = "ThinkOnErp API",
-            version = "1.0.0"
-        });
+            Status = hasOpenCircuits ? "Degraded" : "Healthy",
+            Timestamp = DateTime.UtcNow,
+            CircuitBreakers = circuitStates.ToDictionary(
+                kvp => kvp.Key,
+                kvp => kvp.Value.ToString())
+        };
+
+        _logger.LogInformation("Health check performed. Status: {Status}", status.Status);
+
+        return Ok(ApiResponse<HealthStatus>.CreateSuccess(status, "Health check completed successfully"));
     }
 
     /// <summary>
-    /// Detailed health check with component status.
-    /// Checks API and configuration availability.
+    /// Detailed health check with circuit breaker information.
     /// </summary>
-    /// <returns>Detailed health status</returns>
-    /// <response code="200">All components are healthy</response>
-    /// <response code="503">One or more components are unhealthy</response>
     [HttpGet("detailed")]
-    [ProducesResponseType(StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status503ServiceUnavailable)]
-    public IActionResult GetDetailed()
+    public ActionResult<ApiResponse<DetailedHealthStatus>> GetDetailedHealth()
     {
-        var checks = new Dictionary<string, object>();
-        var isHealthy = true;
+        var circuitStates = _circuitBreakerRegistry.GetAllStates();
 
-        // Check API
-        checks["api"] = new
+        var status = new DetailedHealthStatus
         {
-            status = "Healthy",
-            timestamp = DateTime.UtcNow
+            Status = circuitStates.Any(kvp => kvp.Value == CircuitState.Open) ? "Degraded" : "Healthy",
+            Timestamp = DateTime.UtcNow,
+            Services = circuitStates.Select(kvp => new ServiceHealth
+            {
+                ServiceName = kvp.Key,
+                CircuitState = kvp.Value.ToString(),
+                IsHealthy = kvp.Value != CircuitState.Open
+            }).ToList()
         };
 
-        // Check configuration
-        try
-        {
-            var connectionString = _configuration.GetConnectionString("OracleDb");
-            var jwtSecret = _configuration["JwtSettings:SecretKey"];
-
-            checks["configuration"] = new
-            {
-                status = !string.IsNullOrEmpty(connectionString) && !string.IsNullOrEmpty(jwtSecret) 
-                    ? "Healthy" 
-                    : "Unhealthy",
-                hasConnectionString = !string.IsNullOrEmpty(connectionString),
-                hasJwtSettings = !string.IsNullOrEmpty(jwtSecret)
-            };
-
-            if (string.IsNullOrEmpty(connectionString) || string.IsNullOrEmpty(jwtSecret))
-            {
-                isHealthy = false;
-            }
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error checking configuration health");
-            checks["configuration"] = new
-            {
-                status = "Unhealthy",
-                error = ex.Message
-            };
-            isHealthy = false;
-        }
-
-        var response = new
-        {
-            status = isHealthy ? "Healthy" : "Unhealthy",
-            timestamp = DateTime.UtcNow,
-            service = "ThinkOnErp API",
-            version = "1.0.0",
-            checks
-        };
-
-        return isHealthy 
-            ? Ok(response) 
-            : StatusCode(StatusCodes.Status503ServiceUnavailable, response);
+        return Ok(ApiResponse<DetailedHealthStatus>.CreateSuccess(status, "Detailed health check completed successfully"));
     }
+}
 
-    /// <summary>
-    /// Liveness probe endpoint.
-    /// Used by container orchestrators to check if the application is alive.
-    /// </summary>
-    /// <returns>200 OK if alive</returns>
-    /// <response code="200">Application is alive</response>
-    [HttpGet("live")]
-    [ProducesResponseType(StatusCodes.Status200OK)]
-    public IActionResult Live()
-    {
-        return Ok(new { status = "Alive" });
-    }
+/// <summary>
+/// Basic health status response.
+/// </summary>
+public class HealthStatus
+{
+    public string Status { get; set; } = string.Empty;
+    public DateTime Timestamp { get; set; }
+    public Dictionary<string, string> CircuitBreakers { get; set; } = new();
+}
 
-    /// <summary>
-    /// Readiness probe endpoint.
-    /// Used by container orchestrators to check if the application is ready to serve traffic.
-    /// </summary>
-    /// <returns>200 OK if ready</returns>
-    /// <response code="200">Application is ready</response>
-    /// <response code="503">Application is not ready</response>
-    [HttpGet("ready")]
-    [ProducesResponseType(StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status503ServiceUnavailable)]
-    public IActionResult Ready()
-    {
-        try
-        {
-            // Check if essential configuration is available
-            var connectionString = _configuration.GetConnectionString("OracleDb");
-            var jwtSecret = _configuration["JwtSettings:SecretKey"];
+/// <summary>
+/// Detailed health status response.
+/// </summary>
+public class DetailedHealthStatus
+{
+    public string Status { get; set; } = string.Empty;
+    public DateTime Timestamp { get; set; }
+    public List<ServiceHealth> Services { get; set; } = new();
+}
 
-            if (string.IsNullOrEmpty(connectionString) || string.IsNullOrEmpty(jwtSecret))
-            {
-                return StatusCode(StatusCodes.Status503ServiceUnavailable, new
-                {
-                    status = "Not Ready",
-                    reason = "Missing configuration"
-                });
-            }
-
-            return Ok(new { status = "Ready" });
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Readiness check failed");
-            return StatusCode(StatusCodes.Status503ServiceUnavailable, new
-            {
-                status = "Not Ready",
-                reason = ex.Message
-            });
-        }
-    }
+/// <summary>
+/// Individual service health information.
+/// </summary>
+public class ServiceHealth
+{
+    public string ServiceName { get; set; } = string.Empty;
+    public string CircuitState { get; set; } = string.Empty;
+    public bool IsHealthy { get; set; }
 }

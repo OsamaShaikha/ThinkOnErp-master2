@@ -1,0 +1,758 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ThinkOn ERP — Project Overview</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #333;
+            line-height: 1.6;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+            color: white;
+            padding: 40px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 3em;
+            margin-bottom: 10px;
+            font-weight: 300;
+        }
+
+        .header p {
+            font-size: 1.3em;
+            opacity: 0.9;
+        }
+
+        .content {
+            padding: 40px;
+        }
+
+        .section {
+            margin-bottom: 60px;
+        }
+
+        .section-title {
+            font-size: 2em;
+            color: #2c3e50;
+            margin-bottom: 30px;
+            padding-bottom: 15px;
+            border-bottom: 4px solid #3498db;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .architecture-overview {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            margin: 40px 0;
+        }
+
+        .layer-card {
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            color: white;
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 15px 40px rgba(52, 152, 219, 0.3);
+            transition: transform 0.3s ease;
+        }
+
+        .layer-card:hover {
+            transform: translateY(-10px);
+        }
+
+        .layer-card.api {
+            background: linear-gradient(135deg, #e74c3c, #c0392b);
+        }
+
+        .layer-card.application {
+            background: linear-gradient(135deg, #f39c12, #e67e22);
+        }
+
+        .layer-card.infrastructure {
+            background: linear-gradient(135deg, #27ae60, #229954);
+        }
+
+        .layer-card.domain {
+            background: linear-gradient(135deg, #9b59b6, #8e44ad);
+        }
+
+        .layer-card .icon {
+            font-size: 3em;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .layer-card .title {
+            font-size: 1.5em;
+            font-weight: bold;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .layer-card .description {
+            font-size: 1em;
+            opacity: 0.9;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .layer-components {
+            list-style: none;
+        }
+
+        .layer-components li {
+            background: rgba(255,255,255,0.2);
+            padding: 8px 15px;
+            margin: 8px 0;
+            border-radius: 10px;
+            font-size: 0.9em;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 25px;
+            margin: 40px 0;
+        }
+
+        .feature-card {
+            background: #f8f9fa;
+            border: 2px solid #e9ecef;
+            border-radius: 15px;
+            padding: 30px;
+            transition: all 0.3s ease;
+        }
+
+        .feature-card:hover {
+            border-color: #3498db;
+            box-shadow: 0 15px 40px rgba(52, 152, 219, 0.2);
+        }
+
+        .feature-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .feature-icon {
+            font-size: 2.5em;
+            color: #3498db;
+        }
+
+        .feature-title {
+            font-size: 1.4em;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+
+        .feature-description {
+            color: #7f8c8d;
+            margin-bottom: 20px;
+            line-height: 1.8;
+        }
+
+        .feature-items {
+            list-style: none;
+        }
+
+        .feature-items li {
+            background: white;
+            padding: 10px 15px;
+            margin: 8px 0;
+            border-radius: 8px;
+            border-left: 4px solid #3498db;
+            font-size: 0.9em;
+        }
+
+        .tech-stack {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin: 40px 0;
+        }
+
+        .tech-item {
+            background: linear-gradient(135deg, #34495e, #2c3e50);
+            color: white;
+            padding: 25px;
+            border-radius: 15px;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(52, 73, 94, 0.3);
+        }
+
+        .tech-item .icon {
+            font-size: 2.5em;
+            margin-bottom: 15px;
+        }
+
+        .tech-item .name {
+            font-size: 1.2em;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .tech-item .version {
+            font-size: 0.9em;
+            opacity: 0.8;
+        }
+
+        .database-schema {
+            background: #ecf0f1;
+            padding: 30px;
+            border-radius: 20px;
+            margin: 40px 0;
+        }
+
+        .tables-overview {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin: 30px 0;
+        }
+
+        .table-group {
+            background: white;
+            border: 2px solid #bdc3c7;
+            border-radius: 15px;
+            padding: 20px;
+        }
+
+        .table-group.core {
+            border-color: #e74c3c;
+        }
+
+        .table-group.permissions {
+            border-color: #f39c12;
+        }
+
+        .table-group.tickets {
+            border-color: #27ae60;
+        }
+
+        .table-group.audit {
+            border-color: #9b59b6;
+        }
+
+        .table-group-title {
+            font-size: 1.2em;
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: #2c3e50;
+        }
+
+        .table-list {
+            list-style: none;
+        }
+
+        .table-list li {
+            background: #f8f9fa;
+            padding: 8px 12px;
+            margin: 5px 0;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.85em;
+        }
+
+        .deployment-flow {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 20px;
+            margin: 40px 0;
+        }
+
+        .deployment-step {
+            background: linear-gradient(135deg, #16a085, #1abc9c);
+            color: white;
+            padding: 25px;
+            border-radius: 15px;
+            text-align: center;
+            flex: 1;
+            min-width: 200px;
+            box-shadow: 0 10px 30px rgba(22, 160, 133, 0.3);
+        }
+
+        .deployment-step .icon {
+            font-size: 2.5em;
+            margin-bottom: 15px;
+        }
+
+        .deployment-step .title {
+            font-size: 1.1em;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .deployment-step .desc {
+            font-size: 0.9em;
+            opacity: 0.9;
+        }
+
+        .arrow {
+            font-size: 2em;
+            color: #16a085;
+            margin: 0 10px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 25px;
+            margin: 40px 0;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #8e44ad, #9b59b6);
+            color: white;
+            padding: 30px;
+            border-radius: 15px;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(142, 68, 173, 0.3);
+        }
+
+        .stat-number {
+            font-size: 3em;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .stat-label {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .highlight-box {
+            background: linear-gradient(135deg, #f1c40f, #f39c12);
+            color: white;
+            padding: 30px;
+            border-radius: 20px;
+            text-align: center;
+            margin: 40px 0;
+            box-shadow: 0 15px 40px rgba(241, 196, 15, 0.3);
+        }
+
+        .highlight-box .icon {
+            font-size: 3em;
+            margin-bottom: 20px;
+        }
+
+        .highlight-box .text {
+            font-size: 1.3em;
+            font-weight: bold;
+            line-height: 1.8;
+        }
+
+        @media (max-width: 768px) {
+            .deployment-flow {
+                flex-direction: column;
+            }
+            
+            .arrow {
+                transform: rotate(90deg);
+            }
+            
+            .architecture-overview {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>ThinkOn ERP</h1>
+            <p>نظام تخطيط موارد المؤسسات الشامل - نظرة عامة على المشروع</p>
+        </div>
+
+        <div class="content">
+            <!-- 01 - معمارية النظام -->
+            <div class="section">
+                <div class="section-title">
+                    <span>🏗️</span>
+                    01 — معمارية النظام (Clean Architecture)
+                </div>
+                
+                <div class="architecture-overview">
+                    <div class="layer-card api">
+                        <div class="icon">🌐</div>
+                        <div class="title">API Layer</div>
+                        <div class="description">طبقة واجهة برمجة التطبيقات والتحكم</div>
+                        <ul class="layer-components">
+                            <li>Controllers (13 controllers)</li>
+                            <li>Middleware (Exception, Auth, Force Logout)</li>
+                            <li>JWT Authentication</li>
+                            <li>Swagger Documentation</li>
+                            <li>CORS & Security</li>
+                        </ul>
+                    </div>
+
+                    <div class="layer-card application">
+                        <div class="icon">⚙️</div>
+                        <div class="title">Application Layer</div>
+                        <div class="description">منطق الأعمال والتطبيق</div>
+                        <ul class="layer-components">
+                            <li>CQRS Pattern (Commands & Queries)</li>
+                            <li>MediatR Pipeline</li>
+                            <li>DTOs & Mapping</li>
+                            <li>Validation (FluentValidation)</li>
+                            <li>Business Logic</li>
+                        </ul>
+                    </div>
+
+                    <div class="layer-card infrastructure">
+                        <div class="icon">🔧</div>
+                        <div class="title">Infrastructure Layer</div>
+                        <div class="description">البنية التحتية وقاعدة البيانات</div>
+                        <ul class="layer-components">
+                            <li>Oracle Database Integration</li>
+                            <li>Repository Pattern (15+ repositories)</li>
+                            <li>Services (JWT, Password, Email)</li>
+                            <li>Background Services</li>
+                            <li>Resilience Patterns</li>
+                        </ul>
+                    </div>
+
+                    <div class="layer-card domain">
+                        <div class="icon">💎</div>
+                        <div class="title">Domain Layer</div>
+                        <div class="description">النماذج الأساسية والقواعد</div>
+                        <ul class="layer-components">
+                            <li>Entities (25+ domain entities)</li>
+                            <li>Interfaces & Contracts</li>
+                            <li>Domain Rules</li>
+                            <li>Value Objects</li>
+                            <li>Business Invariants</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 02 - الميزات الرئيسية -->
+            <div class="section">
+                <div class="section-title">
+                    <span>⭐</span>
+                    02 — الميزات الرئيسية للنظام
+                </div>
+                
+                <div class="features-grid">
+                    <div class="feature-card">
+                        <div class="feature-header">
+                            <div class="feature-icon">🔐</div>
+                            <div class="feature-title">نظام الصلاحيات المتقدم</div>
+                        </div>
+                        <div class="feature-description">
+                            نظام RBAC متطور مع تحكم دقيق في الصلاحيات على مستوى الشاشات
+                        </div>
+                        <ul class="feature-items">
+                            <li>صلاحيات CRUD لكل شاشة</li>
+                            <li>أدوار هرمية (شركة/فرع)</li>
+                            <li>تجاوزات على مستوى المستخدم</li>
+                            <li>تحكم في الأنظمة لكل شركة</li>
+                        </ul>
+                    </div>
+
+                    <div class="feature-card">
+                        <div class="feature-header">
+                            <div class="feature-icon">🎫</div>
+                            <div class="feature-title">نظام التذاكر الشامل</div>
+                        </div>
+                        <div class="feature-description">
+                            نظام إدارة التذاكر مع SLA وتصعيد تلقائي ومرفقات
+                        </div>
+                        <ul class="feature-items">
+                            <li>إنشاء وتتبع التذاكر</li>
+                            <li>نظام SLA مع تصعيد تلقائي</li>
+                            <li>مرفقات وتعليقات</li>
+                            <li>إشعارات بالبريد الإلكتروني</li>
+                        </ul>
+                    </div>
+
+                    <div class="feature-card">
+                        <div class="feature-header">
+                            <div class="feature-icon">👑</div>
+                            <div class="feature-title">لوحة السوبر أدمن</div>
+                        </div>
+                        <div class="feature-description">
+                            لوحة تحكم شاملة لإدارة النظام والشركات
+                        </div>
+                        <ul class="feature-items">
+                            <li>إدارة الشركات والفروع</li>
+                            <li>إحصائيات وتقارير</li>
+                            <li>مراقبة النشاط</li>
+                            <li>تحكم في الأنظمة</li>
+                        </ul>
+                    </div>
+
+                    <div class="feature-card">
+                        <div class="feature-header">
+                            <div class="feature-icon">📊</div>
+                            <div class="feature-title">سجل المراجعة الشامل</div>
+                        </div>
+                        <div class="feature-description">
+                            تسجيل كامل لجميع العمليات مع إمكانيات بحث وتصدير
+                        </div>
+                        <ul class="feature-items">
+                            <li>تسجيل جميع العمليات</li>
+                            <li>بحث متقدم مع فلاتر</li>
+                            <li>تصدير CSV/JSON</li>
+                            <li>إحصائيات المراجعة</li>
+                        </ul>
+                    </div>
+
+                    <div class="feature-card">
+                        <div class="feature-header">
+                            <div class="feature-icon">🔍</div>
+                            <div class="feature-title">البحث المحفوظ</div>
+                        </div>
+                        <div class="feature-description">
+                            حفظ ومشاركة عمليات البحث مع تحليلات الاستخدام
+                        </div>
+                        <ul class="feature-items">
+                            <li>حفظ معايير البحث</li>
+                            <li>مشاركة البحثات</li>
+                            <li>بحثات افتراضية</li>
+                            <li>تحليلات الاستخدام</li>
+                        </ul>
+                    </div>
+
+                    <div class="feature-card">
+                        <div class="feature-header">
+                            <div class="feature-icon">⚙️</div>
+                            <div class="feature-title">إعدادات التذاكر</div>
+                        </div>
+                        <div class="feature-description">
+                            نظام إعدادات مرن قابل للتخصيص لإدارة التذاكر
+                        </div>
+                        <ul class="feature-items">
+                            <li>إعدادات SLA</li>
+                            <li>قواعد المرفقات</li>
+                            <li>إعدادات الإشعارات</li>
+                            <li>تخصيص سير العمل</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 03 - التقنيات المستخدمة -->
+            <div class="section">
+                <div class="section-title">
+                    <span>💻</span>
+                    03 — التقنيات والأدوات المستخدمة
+                </div>
+                
+                <div class="tech-stack">
+                    <div class="tech-item">
+                        <div class="icon">🔷</div>
+                        <div class="name">.NET</div>
+                        <div class="version">8.0</div>
+                    </div>
+                    <div class="tech-item">
+                        <div class="icon">🌐</div>
+                        <div class="name">ASP.NET Core</div>
+                        <div class="version">Web API</div>
+                    </div>
+                    <div class="tech-item">
+                        <div class="icon">🗄️</div>
+                        <div class="name">Oracle Database</div>
+                        <div class="version">19c+</div>
+                    </div>
+                    <div class="tech-item">
+                        <div class="icon">🔑</div>
+                        <div class="name">JWT</div>
+                        <div class="version">Authentication</div>
+                    </div>
+                    <div class="tech-item">
+                        <div class="icon">📋</div>
+                        <div class="name">Swagger</div>
+                        <div class="version">OpenAPI 3.0</div>
+                    </div>
+                    <div class="tech-item">
+                        <div class="icon">🐳</div>
+                        <div class="name">Docker</div>
+                        <div class="version">Containerization</div>
+                    </div>
+                    <div class="tech-item">
+                        <div class="icon">📧</div>
+                        <div class="name">MailKit</div>
+                        <div class="version">Email Service</div>
+                    </div>
+                    <div class="tech-item">
+                        <div class="icon">📝</div>
+                        <div class="name">Serilog</div>
+                        <div class="version">Logging</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 04 - قاعدة البيانات -->
+            <div class="section">
+                <div class="section-title">
+                    <span>🗄️</span>
+                    04 — هيكل قاعدة البيانات
+                </div>
+                
+                <div class="database-schema">
+                    <div class="tables-overview">
+                        <div class="table-group core">
+                            <div class="table-group-title">🏢 الجداول الأساسية</div>
+                            <ul class="table-list">
+                                <li>SYS_COMPANY</li>
+                                <li>SYS_BRANCH</li>
+                                <li>SYS_USERS</li>
+                                <li>SYS_ROLE</li>
+                                <li>SYS_CURRENCY</li>
+                                <li>SYS_FISCAL_YEAR</li>
+                            </ul>
+                        </div>
+
+                        <div class="table-group permissions">
+                            <div class="table-group-title">🔐 نظام الصلاحيات</div>
+                            <ul class="table-list">
+                                <li>SYS_SUPER_ADMIN</li>
+                                <li>SYS_SYSTEM</li>
+                                <li>SYS_SCREEN</li>
+                                <li>SYS_COMPANY_SYSTEM</li>
+                                <li>SYS_ROLE_SCREEN_PERMISSION</li>
+                                <li>SYS_USER_ROLE</li>
+                                <li>SYS_USER_SCREEN_PERMISSION</li>
+                            </ul>
+                        </div>
+
+                        <div class="table-group tickets">
+                            <div class="table-group-title">🎫 نظام التذاكر</div>
+                            <ul class="table-list">
+                                <li>SYS_TICKET</li>
+                                <li>SYS_TICKET_TYPE</li>
+                                <li>SYS_TICKET_PRIORITY</li>
+                                <li>SYS_TICKET_STATUS</li>
+                                <li>SYS_TICKET_COMMENT</li>
+                                <li>SYS_TICKET_ATTACHMENT</li>
+                                <li>SYS_TICKET_CONFIG</li>
+                                <li>SYS_SAVED_SEARCH</li>
+                            </ul>
+                        </div>
+
+                        <div class="table-group audit">
+                            <div class="table-group-title">📊 المراجعة والتحليل</div>
+                            <ul class="table-list">
+                                <li>SYS_AUDIT_LOG</li>
+                                <li>SYS_SEARCH_ANALYTICS</li>
+                                <li>SYS_AUDIT_ARCHIVE</li>
+                                <li>SYS_PERFORMANCE_METRICS</li>
+                                <li>SYS_SECURITY_MONITORING</li>
+                                <li>SYS_RETENTION_POLICY</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 05 - إحصائيات المشروع -->
+            <div class="section">
+                <div class="section-title">
+                    <span>📈</span>
+                    05 — إحصائيات المشروع
+                </div>
+                
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-number">25+</div>
+                        <div class="stat-label">جداول قاعدة البيانات</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number">58</div>
+                        <div class="stat-label">سكريبت قاعدة البيانات</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number">13</div>
+                        <div class="stat-label">API Controllers</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number">15+</div>
+                        <div class="stat-label">Repositories</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number">50+</div>
+                        <div class="stat-label">Domain Entities</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number">100+</div>
+                        <div class="stat-label">Unit Tests</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 06 - النشر والتطوير -->
+            <div class="section">
+                <div class="section-title">
+                    <span>🚀</span>
+                    06 — النشر والتطوير
+                </div>
+                
+                <div class="deployment-flow">
+                    <div class="deployment-step">
+                        <div class="icon">💻</div>
+                        <div class="title">Development</div>
+                        <div class="desc">Visual Studio<br>Local Oracle DB</div>
+                    </div>
+                    <div class="arrow">→</div>
+                    <div class="deployment-step">
+                        <div class="icon">🧪</div>
+                        <div class="title">Testing</div>
+                        <div class="desc">Unit Tests<br>Integration Tests</div>
+                    </div>
+                    <div class="arrow">→</div>
+                    <div class="deployment-step">
+                        <div class="icon">🐳</div>
+                        <div class="title">Containerization</div>
+                        <div class="desc">Docker<br>Docker Compose</div>
+                    </div>
+                    <div class="arrow">→</div>
+                    <div class="deployment-step">
+                        <div class="icon">☁️</div>
+                        <div class="title">Production</div>
+                        <div class="desc">Cloud Deployment<br>Load Balancing</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- الخلاصة -->
+            <div class="highlight-box">
+                <div class="icon">🎯</div>
+                <div class="text">
+                    ThinkOn ERP هو نظام تخطيط موارد مؤسسات شامل مبني بأحدث التقنيات<br>
+                    يوفر إدارة متقدمة للصلاحيات، نظام تذاكر متطور، ومراجعة شاملة للعمليات<br>
+                    مصمم للشركات متعددة الفروع مع دعم كامل للغة العربية والإنجليزية
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

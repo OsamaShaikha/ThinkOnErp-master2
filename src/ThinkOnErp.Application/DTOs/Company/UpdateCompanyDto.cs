@@ -47,6 +47,11 @@ public class UpdateCompanyDto
     public string? TaxNumber { get; set; }
 
     /// <summary>
+    /// Foreign key to SYS_BRANCH table - references the default/head branch for this company (optional)
+    /// </summary>
+    public Int64? DefaultBranchId { get; set; }
+
+    /// <summary>
     /// Company logo as Base64 string (optional)
     /// </summary>
     public string? CompanyLogoBase64 { get; set; }

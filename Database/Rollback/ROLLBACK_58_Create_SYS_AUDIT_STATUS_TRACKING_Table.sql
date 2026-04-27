@@ -1,0 +1,210 @@
+-- =============================================
+-- Rollback Script: ROLLBACK_58_Create_SYS_AUDIT_STATUS_TRACKING_Table.sql
+-- Description: Rollback script for 58_Create_SYS_AUDIT_STATUS_TRACKING_Table.sql
+-- Purpose: Drops audit status tracking table, sequence, and indexes
+-- Author: System
+-- Date: 2024
+-- =============================================
+
+-- WARNING: This script will permanently delete the audit status tracking table
+-- All status tracking data for audit entries will be lost
+-- Ensure you have a backup before executing this rollback
+
+SET SERVEROUTPUT ON;
+
+BEGIN
+    DBMS_OUTPUT.PUT_LINE('Starting rollback of SYS_AUDIT_STATUS_TRACKING table...');
+END;
+/
+
+-- Drop composite indexes
+BEGIN
+    EXECUTE IMMEDIATE 'DROP INDEX IDX_STATUS_TRACKING_ASSIGNED_STATUS';
+    DBMS_OUTPUT.PUT_LINE('Dropped index: IDX_STATUS_TRACKING_ASSIGNED_STATUS');
+EXCEPTION
+    WHEN OTHERS THEN
+        IF SQLCODE = -1418 THEN
+            DBMS_OUTPUT.PUT_LINE('Index IDX_STATUS_TRACKING_ASSIGNED_STATUS does not exist');
+        ELSE
+            RAISE;
+        END IF;
+END;
+/
+
+BEGIN
+    EXECUTE IMMEDIATE 'DROP INDEX IDX_STATUS_TRACKING_STATUS_DATE';
+    DBMS_OUTPUT.PUT_LINE('Dropped index: IDX_STATUS_TRACKING_STATUS_DATE');
+EXCEPTION
+    WHEN OTHERS THEN
+        IF SQLCODE = -1418 THEN
+            DBMS_OUTPUT.PUT_LINE('Index IDX_STATUS_TRACKING_STATUS_DATE does not exist');
+        ELSE
+            RAISE;
+        END IF;
+END;
+/
+
+-- Drop single-column indexes
+BEGIN
+    EXECUTE IMMEDIATE 'DROP INDEX IDX_STATUS_TRACKING_DATE';
+    DBMS_OUTPUT.PUT_LINE('Dropped index: IDX_STATUS_TRACKING_DATE');
+EXCEPTION
+    WHEN OTHERS THEN
+        IF SQLCODE = -1418 THEN
+            DBMS_OUTPUT.PUT_LINE('Index IDX_STATUS_TRACKING_DATE does not exist');
+        ELSE
+            RAISE;
+        END IF;
+END;
+/
+
+BEGIN
+    EXECUTE IMMEDIATE 'DROP INDEX IDX_STATUS_TRACKING_CHANGED_BY';
+    DBMS_OUTPUT.PUT_LINE('Dropped index: IDX_STATUS_TRACKING_CHANGED_BY');
+EXCEPTION
+    WHEN OTHERS THEN
+        IF SQLCODE = -1418 THEN
+            DBMS_OUTPUT.PUT_LINE('Index IDX_STATUS_TRACKING_CHANGED_BY does not exist');
+        ELSE
+            RAISE;
+        END IF;
+END;
+/
+
+BEGIN
+    EXECUTE IMMEDIATE 'DROP INDEX IDX_STATUS_TRACKING_ASSIGNED';
+    DBMS_OUTPUT.PUT_LINE('Dropped index: IDX_STATUS_TRACKING_ASSIGNED');
+EXCEPTION
+    WHEN OTHERS THEN
+        IF SQLCODE = -1418 THEN
+            DBMS_OUTPUT.PUT_LINE('Index IDX_STATUS_TRACKING_ASSIGNED does not exist');
+        ELSE
+            RAISE;
+        END IF;
+END;
+/
+
+BEGIN
+    EXECUTE IMMEDIATE 'DROP INDEX IDX_STATUS_TRACKING_STATUS';
+    DBMS_OUTPUT.PUT_LINE('Dropped index: IDX_STATUS_TRACKING_STATUS');
+EXCEPTION
+    WHEN OTHERS THEN
+        IF SQLCODE = -1418 THEN
+            DBMS_OUTPUT.PUT_LINE('Index IDX_STATUS_TRACKING_STATUS does not exist');
+        ELSE
+            RAISE;
+        END IF;
+END;
+/
+
+BEGIN
+    EXECUTE IMMEDIATE 'DROP INDEX IDX_STATUS_TRACKING_AUDIT';
+    DBMS_OUTPUT.PUT_LINE('Dropped index: IDX_STATUS_TRACKING_AUDIT');
+EXCEPTION
+    WHEN OTHERS THEN
+        IF SQLCODE = -1418 THEN
+            DBMS_OUTPUT.PUT_LINE('Index IDX_STATUS_TRACKING_AUDIT does not exist');
+        ELSE
+            RAISE;
+        END IF;
+END;
+/
+
+-- Drop foreign key constraints
+BEGIN
+    EXECUTE IMMEDIATE 'ALTER TABLE SYS_AUDIT_STATUS_TRACKING DROP CONSTRAINT FK_STATUS_CHANGED_BY';
+    DBMS_OUTPUT.PUT_LINE('Dropped foreign key constraint: FK_STATUS_CHANGED_BY');
+EXCEPTION
+    WHEN OTHERS THEN
+        IF SQLCODE = -2443 THEN
+            DBMS_OUTPUT.PUT_LINE('Constraint FK_STATUS_CHANGED_BY does not exist');
+        ELSE
+            RAISE;
+        END IF;
+END;
+/
+
+BEGIN
+    EXECUTE IMMEDIATE 'ALTER TABLE SYS_AUDIT_STATUS_TRACKING DROP CONSTRAINT FK_STATUS_ASSIGNED_USER';
+    DBMS_OUTPUT.PUT_LINE('Dropped foreign key constraint: FK_STATUS_ASSIGNED_USER');
+EXCEPTION
+    WHEN OTHERS THEN
+        IF SQLCODE = -2443 THEN
+            DBMS_OUTPUT.PUT_LINE('Constraint FK_STATUS_ASSIGNED_USER does not exist');
+        ELSE
+            RAISE;
+        END IF;
+END;
+/
+
+BEGIN
+    EXECUTE IMMEDIATE 'ALTER TABLE SYS_AUDIT_STATUS_TRACKING DROP CONSTRAINT FK_STATUS_AUDIT_LOG';
+    DBMS_OUTPUT.PUT_LINE('Dropped foreign key constraint: FK_STATUS_AUDIT_LOG');
+EXCEPTION
+    WHEN OTHERS THEN
+        IF SQLCODE = -2443 THEN
+            DBMS_OUTPUT.PUT_LINE('Constraint FK_STATUS_AUDIT_LOG does not exist');
+        ELSE
+            RAISE;
+        END IF;
+END;
+/
+
+-- Drop check constraint
+BEGIN
+    EXECUTE IMMEDIATE 'ALTER TABLE SYS_AUDIT_STATUS_TRACKING DROP CONSTRAINT CHK_STATUS_VALUES';
+    DBMS_OUTPUT.PUT_LINE('Dropped check constraint: CHK_STATUS_VALUES');
+EXCEPTION
+    WHEN OTHERS THEN
+        IF SQLCODE = -2443 THEN
+            DBMS_OUTPUT.PUT_LINE('Constraint CHK_STATUS_VALUES does not exist');
+        ELSE
+            RAISE;
+        END IF;
+END;
+/
+
+-- Drop SYS_AUDIT_STATUS_TRACKING table
+BEGIN
+    EXECUTE IMMEDIATE 'DROP TABLE SYS_AUDIT_STATUS_TRACKING CASCADE CONSTRAINTS';
+    DBMS_OUTPUT.PUT_LINE('Dropped table: SYS_AUDIT_STATUS_TRACKING');
+EXCEPTION
+    WHEN OTHERS THEN
+        IF SQLCODE = -942 THEN
+            DBMS_OUTPUT.PUT_LINE('Table SYS_AUDIT_STATUS_TRACKING does not exist');
+        ELSE
+            RAISE;
+        END IF;
+END;
+/
+
+-- Drop sequence
+BEGIN
+    EXECUTE IMMEDIATE 'DROP SEQUENCE SEQ_SYS_AUDIT_STATUS_TRACKING';
+    DBMS_OUTPUT.PUT_LINE('Dropped sequence: SEQ_SYS_AUDIT_STATUS_TRACKING');
+EXCEPTION
+    WHEN OTHERS THEN
+        IF SQLCODE = -2289 THEN
+            DBMS_OUTPUT.PUT_LINE('Sequence SEQ_SYS_AUDIT_STATUS_TRACKING does not exist');
+        ELSE
+            RAISE;
+        END IF;
+END;
+/
+
+COMMIT;
+
+BEGIN
+    DBMS_OUTPUT.PUT_LINE('Rollback completed successfully!');
+    DBMS_OUTPUT.PUT_LINE('SYS_AUDIT_STATUS_TRACKING table has been removed.');
+END;
+/
+
+-- Verification query
+SELECT TABLE_NAME 
+FROM USER_TABLES 
+WHERE TABLE_NAME = 'SYS_AUDIT_STATUS_TRACKING';
+
+SELECT SEQUENCE_NAME 
+FROM USER_SEQUENCES 
+WHERE SEQUENCE_NAME = 'SEQ_SYS_AUDIT_STATUS_TRACKING';

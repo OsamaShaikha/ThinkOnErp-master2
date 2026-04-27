@@ -107,4 +107,34 @@ public class GetTicketsQuery : IRequest<PagedResult<TicketDto>>
     /// Include inactive tickets (default false)
     /// </summary>
     public bool IncludeInactive { get; set; } = false;
+
+    /// <summary>
+    /// Multiple status IDs (comma-separated for advanced filtering)
+    /// </summary>
+    public string? StatusIds { get; set; }
+
+    /// <summary>
+    /// Multiple priority IDs (comma-separated for advanced filtering)
+    /// </summary>
+    public string? PriorityIds { get; set; }
+
+    /// <summary>
+    /// Multiple type IDs (comma-separated for advanced filtering)
+    /// </summary>
+    public string? TypeIds { get; set; }
+
+    /// <summary>
+    /// Multiple category IDs (comma-separated for advanced filtering)
+    /// </summary>
+    public string? CategoryIds { get; set; }
+
+    /// <summary>
+    /// Filter logic for combining criteria (AND or OR)
+    /// </summary>
+    public string FilterLogic { get; set; } = "AND";
+
+    /// <summary>
+    /// Use advanced search with relevance scoring
+    /// </summary>
+    public bool UseAdvancedSearch { get; set; } = false;
 }

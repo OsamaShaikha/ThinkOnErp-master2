@@ -1,0 +1,2525 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ThinkOnERP - Complete API Documentation</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: #f5f5f5;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px 20px;
+            text-align: center;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        header p {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+
+        .nav-container {
+            background: white;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            sticky: top;
+            top: 0;
+            z-index: 100;
+        }
+
+        .nav-container h2 {
+            margin-bottom: 15px;
+            color: #667eea;
+        }
+
+        .nav-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 10px;
+        }
+
+        .nav-item {
+            padding: 10px 15px;
+            background: #f8f9fa;
+            border-left: 4px solid #667eea;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .nav-item:hover {
+            background: #e9ecef;
+            transform: translateX(5px);
+        }
+
+        .nav-item a {
+            text-decoration: none;
+            color: #333;
+            font-weight: 500;
+        }
+
+        .api-section {
+            background: white;
+            margin: 20px 0;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .api-section h2 {
+            color: #667eea;
+            font-size: 2em;
+            margin-bottom: 10px;
+            padding-bottom: 10px;
+            border-bottom: 3px solid #667eea;
+        }
+
+        .api-section h3 {
+            color: #764ba2;
+            font-size: 1.5em;
+            margin-top: 30px;
+            margin-bottom: 15px;
+        }
+
+        .api-section h4 {
+            color: #555;
+            font-size: 1.2em;
+            margin-top: 20px;
+            margin-bottom: 10px;
+        }
+
+        .endpoint {
+            background: #f8f9fa;
+            padding: 20px;
+            margin: 15px 0;
+            border-radius: 6px;
+            border-left: 4px solid #28a745;
+        }
+
+        .endpoint-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .method {
+            padding: 5px 15px;
+            border-radius: 4px;
+            font-weight: bold;
+            font-size: 0.9em;
+            color: white;
+        }
+
+        .method.get { background: #28a745; }
+        .method.post { background: #007bff; }
+        .method.put { background: #ffc107; color: #333; }
+        .method.delete { background: #dc3545; }
+
+        .endpoint-path {
+            font-family: 'Courier New', monospace;
+            font-size: 1.1em;
+            color: #333;
+            font-weight: 600;
+        }
+
+        .badge {
+            padding: 3px 10px;
+            border-radius: 12px;
+            font-size: 0.85em;
+            font-weight: 600;
+        }
+
+        .badge.public { background: #d4edda; color: #155724; }
+        .badge.auth { background: #fff3cd; color: #856404; }
+        .badge.admin { background: #f8d7da; color: #721c24; }
+
+        pre {
+            background: #2d2d2d;
+            color: #f8f8f2;
+            padding: 15px;
+            border-radius: 6px;
+            overflow-x: auto;
+            margin: 10px 0;
+        }
+
+        code {
+            font-family: 'Courier New', monospace;
+            background: #f4f4f4;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 0.9em;
+        }
+
+        pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .info-box {
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 6px;
+            border-left: 4px solid;
+        }
+
+        .info-box.info {
+            background: #d1ecf1;
+            border-color: #0c5460;
+            color: #0c5460;
+        }
+
+        .info-box.warning {
+            background: #fff3cd;
+            border-color: #856404;
+            color: #856404;
+        }
+
+        .info-box.success {
+            background: #d4edda;
+            border-color: #155724;
+            color: #155724;
+        }
+
+        .info-box.danger {
+            background: #f8d7da;
+            border-color: #721c24;
+            color: #721c24;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+        }
+
+        table th {
+            background: #667eea;
+            color: white;
+            padding: 12px;
+            text-align: left;
+            font-weight: 600;
+        }
+
+        table td {
+            padding: 10px 12px;
+            border-bottom: 1px solid #dee2e6;
+        }
+
+        table tr:hover {
+            background: #f8f9fa;
+        }
+
+        .feature-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .feature-list li {
+            padding: 8px 0;
+            padding-left: 30px;
+            position: relative;
+        }
+
+        .feature-list li:before {
+            content: "✓";
+            position: absolute;
+            left: 0;
+            color: #28a745;
+            font-weight: bold;
+            font-size: 1.2em;
+        }
+
+        .use-case {
+            background: #e7f3ff;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 6px;
+            border-left: 4px solid #007bff;
+        }
+
+        .use-case h5 {
+            color: #007bff;
+            margin-bottom: 8px;
+        }
+
+        footer {
+            background: #2d3748;
+            color: white;
+            text-align: center;
+            padding: 30px 20px;
+            margin-top: 40px;
+        }
+
+        .back-to-top {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: #667eea;
+            color: white;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+            transition: all 0.3s;
+            text-decoration: none;
+            font-size: 1.5em;
+        }
+
+        .back-to-top:hover {
+            background: #764ba2;
+            transform: translateY(-5px);
+        }
+
+        @media print {
+            .nav-container, .back-to-top {
+                display: none;
+            }
+            .api-section {
+                page-break-inside: avoid;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>🚀 ThinkOnERP API Documentation</h1>
+        <p>Complete Reference for All 21 API Controllers</p>
+        <p style="font-size: 0.9em; margin-top: 10px;">Version 1.0 | Last Updated: May 6, 2026</p>
+    </header>
+
+    <div class="container">
+        <!-- Navigation -->
+        <div class="nav-container" id="navigation">
+            <h2>📑 Quick Navigation</h2>
+            <div class="nav-grid">
+                <div class="nav-item"><a href="#auth-api">1. Authentication API</a></div>
+                <div class="nav-item"><a href="#users-api">2. Users API</a></div>
+                <div class="nav-item"><a href="#company-api">3. Company API</a></div>
+                <div class="nav-item"><a href="#branch-api">4. Branch API</a></div>
+                <div class="nav-item"><a href="#currency-api">5. Currency API</a></div>
+                <div class="nav-item"><a href="#roles-api">6. Roles API</a></div>
+                <div class="nav-item"><a href="#permissions-api">7. Permissions API</a></div>
+                <div class="nav-item"><a href="#fiscalyear-api">8. Fiscal Year API</a></div>
+                <div class="nav-item"><a href="#superadmin-api">9. Super Admin API</a></div>
+                <div class="nav-item"><a href="#tickets-api">10. Tickets API</a></div>
+                <div class="nav-item"><a href="#tickettypes-api">11. Ticket Types API</a></div>
+                <div class="nav-item"><a href="#savedsearches-api">12. Saved Searches API</a></div>
+                <div class="nav-item"><a href="#auditlogs-api">13. Audit Logs API</a></div>
+                <div class="nav-item"><a href="#audittrail-api">14. Audit Trail API</a></div>
+                <div class="nav-item"><a href="#compliance-api">15. Compliance API</a></div>
+                <div class="nav-item"><a href="#monitoring-api">16. Monitoring API</a></div>
+                <div class="nav-item"><a href="#alerts-api">17. Alerts API</a></div>
+                <div class="nav-item"><a href="#configuration-api">18. Configuration API</a></div>
+                <div class="nav-item"><a href="#keymanagement-api">19. Key Management API</a></div>
+                <div class="nav-item"><a href="#health-api">20. Health API</a></div>
+                <div class="nav-item"><a href="#audithealth-api">21. Audit Health API</a></div>
+            </div>
+        </div>
+
+        <!-- Overview Section -->
+        <div class="api-section">
+            <h2>📖 Overview</h2>
+            <p>ThinkOnERP provides a comprehensive REST API with <strong>21 controllers</strong> covering authentication, business operations, monitoring, compliance, and system management.</p>
+            
+            <h3>Base URLs</h3>
+            <ul>
+                <li><strong>HTTPS:</strong> <code>https://localhost:7136</code></li>
+                <li><strong>HTTP:</strong> <code>http://localhost:5160</code></li>
+                <li><strong>Swagger UI:</strong> <code>https://localhost:7136/swagger</code></li>
+            </ul>
+
+            <h3>Authentication</h3>
+            <p>Most endpoints require JWT authentication. Include the token in the Authorization header:</p>
+            <pre><code>Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...</code></pre>
+
+            <h3>Response Format</h3>
+            <p>All API responses follow a consistent format:</p>
+            <pre><code>{
+  "success": true,
+  "statusCode": 200,
+  "message": "Operation completed successfully",
+  "data": { ... },
+  "errors": null,
+  "timestamp": "2026-05-06T00:00:00Z",
+  "traceId": "abc123..."
+}</code></pre>
+
+            <h3>Test Credentials</h3>
+            <table>
+                <tr>
+                    <th>Username</th>
+                    <th>Password</th>
+                    <th>Type</th>
+                </tr>
+                <tr>
+                    <td>superadmin</td>
+                    <td>Admin@123</td>
+                    <td>SuperAdmin</td>
+                </tr>
+                <tr>
+                    <td>moe</td>
+                    <td>Admin@123</td>
+                    <td>Admin</td>
+                </tr>
+                <tr>
+                    <td>user1</td>
+                    <td>User@123</td>
+                    <td>User</td>
+                </tr>
+            </table>
+        </div>
+
+        <!-- 1. Authentication API -->
+        <div class="api-section" id="auth-api">
+            <h2>1. 🔐 Authentication API</h2>
+            <p><strong>Base Route:</strong> <code>/api/auth</code></p>
+            <p><strong>Purpose:</strong> User authentication, token management, and session control</p>
+
+            <h3>Key Features</h3>
+            <ul class="feature-list">
+                <li>JWT-based authentication</li>
+                <li>Refresh token support</li>
+                <li>Dual authentication (users and super admins)</li>
+                <li>SHA-256 password hashing</li>
+                <li>Public endpoints (no authentication required)</li>
+            </ul>
+
+            <h3>Endpoints</h3>
+
+            <div class="endpoint">
+                <div class="endpoint-header">
+                    <span class="method post">POST</span>
+                    <span class="endpoint-path">/api/auth/login</span>
+                    <span class="badge public">Public</span>
+                </div>
+                <p><strong>Purpose:</strong> Authenticate a regular user and generate JWT tokens</p>
+                <h4>Request Body:</h4>
+                <pre><code>{
+  "userName": "moe",
+  "password": "Admin@123"
+}</code></pre>
+                <h4>Success Response (200 OK):</h4>
+                <pre><code>{
+  "success": true,
+  "data": {
+    "token": "eyJhbGciOiJIUzI1NiIs...",
+    "refreshToken": "a1b2c3d4-e5f6-7890...",
+    "expiresAt": "2026-05-07T00:00:00Z",
+    "refreshTokenExpiresAt": "2026-05-13T00:00:00Z",
+    "userId": 5,
+    "userName": "moe",
+    "userType": "Admin"
+  }
+}</code></pre>
+                <div class="use-case">
+                    <h5>Use Cases:</h5>
+                    <ul>
+                        <li>User login to access the system</li>
+                        <li>Mobile app authentication</li>
+                        <li>Web application login</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="endpoint">
+                <div class="endpoint-header">
+                    <span class="method post">POST</span>
+                    <span class="endpoint-path">/api/auth/refresh</span>
+                    <span class="badge public">Public</span>
+                </div>
+                <p><strong>Purpose:</strong> Get a new access token using a valid refresh token</p>
+                <h4>Request Body:</h4>
+                <pre><code>{
+  "refreshToken": "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+}</code></pre>
+                <div class="use-case">
+                    <h5>Use Cases:</h5>
+                    <ul>
+                        <li>Refresh expired access token without re-login</li>
+                        <li>Maintain user session seamlessly</li>
+                        <li>Background token refresh in mobile apps</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="endpoint">
+                <div class="endpoint-header">
+                    <span class="method post">POST</span>
+                    <span class="endpoint-path">/api/auth/superadmin/login</span>
+                    <span class="badge public">Public</span>
+                </div>
+                <p><strong>Purpose:</strong> Authenticate a super administrator</p>
+                <h4>Request Body:</h4>
+                <pre><code>{
+  "userName": "superadmin",
+  "password": "Admin@123"
+}</code></pre>
+            </div>
+
+            <div class="endpoint">
+                <div class="endpoint-header">
+                    <span class="method post">POST</span>
+                    <span class="endpoint-path">/api/auth/superadmin/refresh</span>
+                    <span class="badge public">Public</span>
+                </div>
+                <p><strong>Purpose:</strong> Refresh super admin access token</p>
+            </div>
+
+            <div class="info-box info">
+                <strong>💡 Security Note:</strong> All passwords are hashed with SHA-256 before storage. JWT tokens expire after 60 minutes by default, while refresh tokens last 7 days.
+            </div>
+        </div>
+
+        <!-- 2. Users API -->
+        <div class="api-section" id="users-api">
+            <h2>2. 👥 Users API</h2>
+            <p><strong>Base Route:</strong> <code>/api/users</code></p>
+            <p><strong>Purpose:</strong> User account management (CRUD operations)</p>
+
+            <h3>Key Features</h3>
+            <ul class="feature-list">
+                <li>Complete CRUD operations</li>
+                <li>Password management (change and reset)</li>
+                <li>Force logout capability</li>
+                <li>Organization filtering (company/branch)</li>
+                <li>Self-service password change</li>
+            </ul>
+
+            <h3>Endpoints</h3>
+
+            <div class="endpoint">
+                <div class="endpoint-header">
+                    <span class="method get">GET</span>
+                    <span class="endpoint-path">/api/users</span>
+                    <span class="badge admin">Admin Only</span>
+                </div>
+                <p><strong>Purpose:</strong> Retrieve all active users</p>
+                <h4>Success Response (200 OK):</h4>
+                <pre><code>{
+  "success": true,
+  "data": [
+    {
+      "rowId": 5,
+      "userName": "moe",
+      "email": "moe@example.com",
+      "userType": "Admin",
+      "companyId": 1,
+      "companyName": "Acme Corporation",
+      "branchId": 1,
+      "branchName": "Main Branch",
+      "roleId": 2,
+      "roleName": "Administrator",
+      "isActive": true
+    }
+  ]
+}</code></pre>
+            </div>
+
+            <div class="endpoint">
+                <div class="endpoint-header">
+                    <span class="method get">GET</span>
+                    <span class="endpoint-path">/api/users/{id}</span>
+                    <span class="badge admin">Admin Only</span>
+                </div>
+                <p><strong>Purpose:</strong> Retrieve a specific user by ID</p>
+            </div>
+
+            <div class="endpoint">
+                <div class="endpoint-header">
+                    <span class="method post">POST</span>
+                    <span class="endpoint-path">/api/users</span>
+                    <span class="badge admin">Admin Only</span>
+                </div>
+                <p><strong>Purpose:</strong> Create a new user account</p>
+                <h4>Request Body:</h4>
+                <pre><code>{
+  "userName": "john.doe",
+  "password": "SecurePass@123",
+  "email": "john.doe@example.com",
+  "userType": "User",
+  "companyId": 1,
+  "branchId": 1,
+  "roleId": 3
+}</code></pre>
+                <h4>Success Response (201 Created):</h4>
+                <pre><code>{
+  "success": true,
+  "statusCode": 201,
+  "message": "User created successfully",
+  "data": 15
+}</code></pre>
+            </div>
+
+            <div class="endpoint">
+                <div class="endpoint-header">
+                    <span class="method put">PUT</span>
+                    <span class="endpoint-path">/api/users/{id}</span>
+                    <span class="badge admin">Admin Only</span>
+                </div>
+                <p><strong>Purpose:</strong> Update an existing user</p>
+            </div>
+
+            <div class="endpoint">
+                <div class="endpoint-header">
+                    <span class="method delete">DELETE</span>
+                    <span class="endpoint-path">/api/users/{id}</span>
+                    <span class="badge admin">Admin Only</span>
+                </div>
+                <p><strong>Purpose:</strong> Delete (soft delete) a user account</p>
+            </div>
+
+            <div class="endpoint">
+                <div class="endpoint-header">
+                    <span class="method put">PUT</span>
+                    <span class="endpoint-path">/api/users/{id}/change-password</span>
+                    <span class="badge auth">Authenticated</span>
+                </div>
+                <p><strong>Purpose:</strong> Change user password (users can change their own password)</p>
+                <h4>Request Body:</h4>
+                <pre><code>{
+  "currentPassword": "OldPass@123",
+  "newPassword": "NewSecurePass@456",
+  "confirmPassword": "NewSecurePass@456"
+}</code></pre>
+            </div>
+
+            <div class="endpoint">
+                <div class="endpoint-header">
+                    <span class="method post">POST</span>
+                    <span class="endpoint-path">/api/users/{id}/reset-password</span>
+                    <span class="badge admin">Admin Only</span>
+                </div>
+                <p><strong>Purpose:</strong> Reset user password (admin-initiated) and generate temporary password</p>
+                <h4>Success Response (200 OK):</h4>
+                <pre><code>{
+  "success": true,
+  "data": {
+    "temporaryPassword": "Temp@Pass2026!Xy7",
+    "message": "Password has been reset successfully..."
+  }
+}</code></pre>
+            </div>
+
+            <div class="endpoint">
+                <div class="endpoint-header">
+                    <span class="method post">POST</span>
+                    <span class="endpoint-path">/api/users/{id}/force-logout</span>
+                    <span class="badge admin">Admin Only</span>
+                </div>
+                <p><strong>Purpose:</strong> Force logout a user by invalidating all their tokens</p>
+            </div>
+
+            <div class="endpoint">
+                <div class="endpoint-header">
+                    <span class="method get">GET</span>
+                    <span class="endpoint-path">/api/users/branch/{branchId}</span>
+                    <span class="badge admin">Admin Only</span>
+                </div>
+                <p><strong>Purpose:</strong> Get all users for a specific branch</p>
+            </div>
+
+            <div class="endpoint">
+                <div class="endpoint-header">
+                    <span class="method get">GET</span>
+                    <span class="endpoint-path">/api/users/company/{companyId}</span>
+                    <span class="badge admin">Admin Only</span>
+                </div>
+                <p><strong>Purpose:</strong> Get all users for a specific company</p>
+            </div>
+        </div>
+
+        <!-- 3. Company API -->
+        <div class="api-section" id="company-api">
+            <h2>3. 🏢 Company API</h2>
+            <p><strong>Base Route:</strong> <code>/api/companies</code></p>
+            <p><strong>Purpose:</strong> Company management with Base64 logo support</p>
+
+            <h3>Key Features</h3>
+            <ul class="feature-list">
+                <li>Create company with default branch in single call</li>
+                <li>Base64 logo support (embedded in JSON)</li>
+                <li>Multi-language support (Arabic and English)</li>
+                <li>Fiscal year integration</li>
+                <li>Currency management</li>
+            </ul>
+
+            <h3>Endpoints</h3>
+
+            <div class="endpoint">
+                <div class="endpoint-header">
+                    <span class="method get">GET</span>
+                    <span class="endpoint-path">/api/companies</span>
+                    <span class="badge auth">Authenticated</span>
+                </div>
+                <p><strong>Purpose:</strong> Retrieve all active companies with Base64 logos</p>
+                <h4>Success Response (200 OK):</h4>
+                <pre><code>{
+  "success": true,
+  "data": [
+    {
+      "rowId": 1,
+      "companyNameAr": "شركة المثال",
+      "companyNameEn": "Example Company",
+      "companyCode": "EX001",
+      "countryId": 1,
+      "currId": 1,
+      "taxNumber": "123456789",
+      "companyLogoBase64": "data:image/png;base64,iVBORw0KG...",
+      "hasLogo": true,
+      "isActive": true
+    }
+  ]
+}</code></pre>
+            </div>
+
+            <div class="endpoint">
+                <div class="endpoint-header">
+                    <span class="method get">GET</span>
+                    <span class="endpoint-path">/api/companies/{id}</span>
+                    <span class="badge auth">Authenticated</span>
+                </div>
+                <p><strong>Purpose:</strong> Retrieve a specific company by ID with Base64 logo</p>
+            </div>
+
+            <div class="endpoint">
+                <div class="endpoint-header">
+                    <span class="method post">POST</span>
+                    <span class="endpoint-path">/api/companies</span>
+                    <span class="badge admin">Admin Only</span>
+                </div>
+                <p><strong>Purpose:</strong> Create a new company with default branch and optional logos</p>
+                <h4>Request Body:</h4>
+                <pre><code>{
+  "companyNameAr": "شركة جديدة",
+  "companyNameEn": "New Company",
+  "companyCode": "NC001",
+  "countryId": 1,
+  "currId": 1,
+  "taxNumber": "987654321",
+  "companyLogoBase64": "data:image/png;base64,iVBORw0KG...",
+  "branchNameAr": "الفرع الرئيسي",
+  "branchNameEn": "Main Branch",
+  "branchPhone": "+966123456789",
+  "branchEmail": "info@newcompany.com",
+  "branchLogoBase64": "data:image/png;base64,iVBORw0KG..."
+}</code></pre>
+                <h4>Success Response (201 Created):</h4>
+                <pre><code>{
+  "success": true,
+  "statusCode": 201,
+  "data": {
+    "companyId": 5,
+    "branchId": 10
+  }
+}</code></pre>
+            </div>
+
+            <div class="endpoint">
+                <div class="endpoint-header">
+                    <span class="method put">PUT</span>
+                    <span class="endpoint-path">/api/companies/{id}</span>
+                    <span class="badge admin">Admin Only</span>
+                </div>
+                <p><strong>Purpose:</strong> Update an existing company with optional Base64 logo</p>
+            </div>
+
+            <div class="endpoint">
+                <div class="endpoint-header">
+                    <span class="method delete">DELETE</span>
+                    <span class="endpoint-path">/api/companies/{id}</span>
+                    <span class="badge admin">Admin Only</span>
+                </div>
+                <p><strong>Purpose:</strong> Delete (soft delete) a company</p>
+            </div>
+
+            <div class="info-box success">
+                <strong>✨ Feature:</strong> Company creation automatically creates a default branch, simplifying the setup process for new organizations.
+            </div>
+        </div>
+
+        <!-- 4. Branch API -->
+        <div class="api-section" id="branch-api">
+            <h2>4. 🏪 Branch API</h2>
+            <p><strong>Base Route:</strong> <code>/api/branches</code></p>
+            <p><strong>Purpose:</strong> Branch management with Base64 logo support</p>
+
+            <h3>Key Features</h3>
+            <ul class="feature-list">
+                <li>Branch CRUD operations</li>
+                <li>Base64 logo support</li>
+                <li>Multi-language support</li>
+                <li>Currency and language settings per branch</li>
+                <li>Head branch designation</li>
+            </ul>
+
+            <h3>Endpoints</h3>
+
+            <div class="endpoint">
+                <div class="endpoint-header">
+                    <span class="method get">GET</span>
+                    <span class="endpoint-path">/api/branches</span>
+                    <span class="badge auth">Authenticated</span>
+                </div>
+                <p><strong>Purpose:</strong> Retrieve all active branches with Base64 logos</p>
+            </div>
+
+            <div class="endpoint">
+                <div class="endpoint-header">
+                    <span class="method get">GET</span>
+                    <span class="endpoint-path">/api/branches/{id}</span>
+                    <span class="badge auth">Authenticated</span>
+                </div>
+                <p><strong>Purpose:</strong> Retrieve a specific branch by ID with Base64 logo</p>
+            </div>
+
+            <div class="endpoint">
+                <div class="endpoint-header">
+                    <span class="method post">POST</span>
+                    <span class="endpoint-path">/api/branches</span>
+                    <span class="badge admin">Admin Only</span>
+                </div>
+                <p><strong>Purpose:</strong> Create a new branch with optional Base64 logo</p>
+                <h4>Request Body:</h4>
+                <pre><code>{
+  "companyId": 1,
+  "branchNameAr": "فرع جديد",
+  "branchNameEn": "New Branch",
+  "phone": "+966123456789",
+  "email": "branch@example.com",
+  "isHeadBranch": false,
+  "defaultLang": "ar",
+  "baseCurrencyId": 1,
+  "branchLogoBase64": "data:image/png;base64,iVBORw0KG..."
+}</code></pre>
+            </div>
+
+            <div class="endpoint">
+                <div class="endpoint-header">
+                    <span class="method put">PUT</span>
+                    <span class="endpoint-path">/api/branches/{id}</span>
+                    <span class="badge admin">Admin Only</span>
+                </div>
+                <p><strong>Purpose:</strong> Update an existing branch with optional Base64 logo</p>
+            </div>
+
+            <div class="endpoint">
+                <div class="endpoint-header">
+                    <span class="method delete">DELETE</span>
+                    <span class="endpoint-path">/api/branches/{id}</span>
+                    <span class="badge admin">Admin Only</span>
+                </div>
+                <p><strong>Purpose:</strong> Delete (soft delete) a branch</p>
+            </div>
+
+            <div class="endpoint">
+                <div class="endpoint-header">
+                    <span class="method get">GET</span>
+                    <span class="endpoint-path">/api/branches/company/{companyId}</span>
+                    <span class="badge auth">Authenticated</span>
+                </div>
+                <p><strong>Purpose:</strong> Get all branches for a specific company with Base64 logos</p>
+            </div>
+        </div>
+
+        <!-- 5. Currency API -->
+        <div class="api-section" id="currency-api">
+            <h2>5. 💱 Currency API</h2>
+            <p><strong>Base Route:</strong> <code>/api/currencies</code></p>
+            <p><strong>Purpose:</strong> Currency management for multi-currency support</p>
+
+            <h3>Endpoints</h3>
+
+            <div class="endpoint">
+                <div class="endpoint-header">
+                    <span class="method get">GET</span>
+                    <span class="endpoint-path">/api/currencies</span>
+                    <span class="badge auth">Authenticated</span>
+                </div>
+                <p><strong>Purpose:</strong> Retrieve all active currencies</p>
+                <h4>Success Response (200 OK):</h4>
+                <pre><code>{
+  "success": true,
+  "data": [
+    {
+      "rowId": 1,
+      "currencyCode": "SAR",
+      "currencyNameAr": "ريال سعودي",
+      "currencyNameEn": "Saudi Riyal",
+      "symbol": "﷼",
+      "exchangeRate": 1.0,
+      "isActive": true
+    }
+  ]
+}</code></pre>
+            </div>
+
+            <div class="endpoint">
+                <div class="endpoint-header">
+                    <span class="method get">GET</span>
+                    <span class="endpoint-path">/api/currencies/{id}</span>
+                    <span class="badge auth">Authenticated</span>
+                </div>
+                <p><strong>Purpose:</strong> Retrieve a specific currency by ID</p>
+            </div>
+
+            <div class="endpoint">
+                <div class="endpoint-header">
+                    <span class="method post">POST</span>
+                    <span class="endpoint-path">/api/currencies</span>
+                    <span class="badge admin">Admin Only</span>
+                </div>
+                <p><strong>Purpose:</strong> Create a new currency</p>
+            </div>
+
+            <div class="endpoint">
+                <div class="endpoint-header">
+                    <span class="method put">PUT</span>
+                    <span class="endpoint-path">/api/currencies/{id}</span>
+                    <span class="badge admin">Admin Only</span>
+                </div>
+                <p><strong>Purpose:</strong> Update an existing currency</p>
+            </div>
+
+            <div class="endpoint">
+                <div class="endpoint-header">
+                    <span class="method delete">DELETE</span>
+                    <span class="endpoint-path">/api/currencies/{id}</span>
+                    <span class="badge admin">Admin Only</span>
+                </div>
+                <p><strong>Purpose:</strong> Delete (soft delete) a currency</p>
+            </div>
+        </div>
+
+        <!-- 6. Roles API -->
+        <div class="api-section" id="roles-api">
+            <h2>6. 🎭 Roles API</h2>
+            <p><strong>Base Route:</strong> <code>/api/roles</code></p>
+            <p><strong>Purpose:</strong> Role-based access control management</p>
+
+            <h3>Endpoints</h3>
+
+            <div class="endpoint">
+                <div class="endpoint-header">
+                    <span class="method get">GET</span>
+                    <span class="endpoint-path">/api/roles</span>
+                    <span class="badge auth">Authenticated</span>
+                </div>
+                <p><strong>Purpose:</strong> Retrieve all active roles</p>
+            </div>
+
+            <div class="endpoint">
+                <div class="endpoint-header">
+                    <span class="method get">GET</span>
+                    <span class="endpoint-path">/api/roles/{id}</span>
+                    <span class="badge auth">Authenticated</span>
+                </div>
+                <p><strong>Purpose:</strong> Retrieve a specific role by ID</p>
+            </div>
+
+            <div class="endpoint">
+                <div class="endpoint-header">
+                    <span class="method post">POST</span>
+                    <span class="endpoint-path">/api/roles</span>
+                    <span class="badge admin">Admin Only</span>
+                </div>
+                <p><strong>Purpose:</strong> Create a new role</p>
+            </div>
+
+            <div class="endpoint">
+                <div class="endpoint-header">
+                    <span class="method put">PUT</span>
+                    <span class="endpoint-path">/api/roles/{id}</span>
+                    <span class="badge admin">Admin Only</span>
+                </div>
+                <p><strong>Purpose:</strong> Update an existing role</p>
+            </div>
+
+            <div class="endpoint">
+                <div class="endpoint-header">
+                    <span class="method delete">DELETE</span>
+                    <span class="endpoint-path">/api/roles/{id}</span>
+                    <span class="badge admin">Admin Only</span>
+                </div>
+                <p><strong>Purpose:</strong> Delete (soft delete) a role</p>
+            </div>
+        </div>
+
+        <!-- 7. Permissions API -->
+        <div class="api-section" id="permissions-api">
+            <h2>7. 🔑 Permissions API</h2>
+            <p><strong>Base Route:</strong> <code>/api/permissions</code></p>
+            <p><strong>Purpose:</strong> Fine-grained permission management</p>
+
+            <h3>Endpoints</h3>
+
+            <div class="endpoint">
+                <div class="endpoint-header">
+                    <span class="method get">GET</span>
+                    <span class="endpoint-path">/api/permissions</span>
+                    <span class="badge auth">Authenticated</span>
+                </div>
+                <p><strong>Purpose:</strong> Retrieve all permissions</p>
+            </div>
+
+            <div class="endpoint">
+                <div class="endpoint-header">
+                    <span class="method get">GET</span>
+                    <span class="endpoint-path">/api/permissions/user/{userId}</span>
+                    <span class="badge auth">Authenticated</span>
+                </div>
+                <p><strong>Purpose:</strong> Get all permissions for a specific user</p>
+            </div>
+
+            <div class="endpoint">
+                <div class="endpoint-header">
+                    <span class="method post">POST</span>
+                    <span class="endpoint-path">/api/permissions/assign</span>
+                    <span class="badge admin">Admin Only</span>
+                </div>
+                <p><strong>Purpose:</strong> Assign a permission to a role</p>
+            </div>
+
+            <div class="endpoint">
+                <div class="endpoint-header">
+                    <span class="method delete">DELETE</span>
+                    <span class="endpoint-path">/api/permissions/revoke</span>
+                    <span class="badge admin">Admin Only</span>
+                </div>
+                <p><strong>Purpose:</strong> Revoke a permission from a role</p>
+            </div>
+        </div>
+
+        <!-- 8. Fiscal Year API -->
+        <div class="api-section" id="fiscalyear-api">
+            <h2>8. 📅 Fiscal Year API</h2>
+            <p><strong>Base Route:</strong> <code>/api/fiscalyears</code></p>
+            <p><strong>Purpose:</strong> Fiscal year management for financial periods</p>
+
+            <h3>Endpoints</h3>
+
+            <div class="endpoint">
+                <div class="endpoint-header">
+                    <span class="method get">GET</span>
+                    <span class="endpoint-path">/api/fiscalyears</span>
+                    <span class="badge auth">Authenticated</span>
+                </div>
+                <p><strong>Purpose:</strong> Retrieve all fiscal years</p>
+            </div>
+
+            <div class="endpoint">
+                <div class="endpoint-header">
+                    <span class="method get">GET</span>
+                    <span class="endpoint-path">/api/fiscalyears/{id}</span>
+                    <span class="badge auth">Authenticated</span>
+                </div>
+                <p><strong>Purpose:</strong> Retrieve a specific fiscal year by ID</p>
+            </div>
+
+            <div class="endpoint">
+                <div class="endpoint-header">
+                    <span class="method post">POST</span>
+                    <span class="endpoint-path">/api/fiscalyears</span>
+                    <span class="badge admin">Admin Only</span>
+                </div>
+                <p><strong>Purpose:</strong> Create a new fiscal year</p>
+            </div>
+
+            <div class="endpoint">
+                <div class="endpoint-header">
+                    <span class="method put">PUT</span>
+                    <span class="endpoint-path">/api/fiscalyears/{id}</span>
+                    <span class="badge admin">Admin Only</span>
+                </div>
+                <p><strong>Purpose:</strong> Update an existing fiscal year</p>
+            </div>
+
+            <div class="endpoint">
+                <div class="endpoint-header">
+                    <span class="method delete">DELETE</span>
+                    <span class="endpoint-path">/api/fiscalyears/{id}</span>
+                    <span class="badge admin">Admin Only</span>
+                </div>
+                <p><strong>Purpose:</strong> Delete (soft delete) a fiscal year</p>
+            </div>
+        </div>
+
+        <!-- 9. Super Admin API -->
+        <div class="api-section" id="superadmin-api">
+            <h2>9. 👑 Super Admin API</h2>
+            <p><strong>Base Route:</strong> <code>/api/superadmins</code></p>
+            <p><strong>Purpose:</strong> Super administrator account management</p>
+
+            <h3>Endpoints</h3>
+
+            <div class="endpoint">
+                <div class="endpoint-header">
+                    <span class="method get">GET</span>
+                    <span class="endpoint-path">/api/superadmins</span>
+                    <span class="badge admin">Admin Only</span>
+                </div>
+                <p><strong>Purpose:</strong> Retrieve all super admins</p>
+            </div>
+
+            <div class="endpoint">
+                <div class="endpoint-header">
+                    <span class="method get">GET</span>
+                    <span class="endpoint-path">/api/superadmins/{id}</span>
+                    <span class="badge admin">Admin Only</span>
+                </div>
+                <p><strong>Purpose:</strong> Retrieve a specific super admin by ID</p>
+            </div>
+
+            <div class="endpoint">
+                <div class="endpoint-header">
+                    <span class="method post">POST</span>
+                    <span class="endpoint-path">/api/superadmins</span>
+                    <span class="badge admin">Admin Only</span>
+                </div>
+                <p><strong>Purpose:</strong> Create a new super admin</p>
+            </div>
+
+            <div class="endpoint">
+                <div class="endpoint-header">
+                    <span class="method put">PUT</span>
+                    <span class="endpoint-path">/api/superadmins/{id}</span>
+                    <span class="badge admin">Admin Only</span>
+                </div>
+                <p><strong>Purpose:</strong> Update an existing super admin</p>
+            </div>
+
+            <div class="endpoint">
+                <div class="endpoint-header">
+                    <span class="method delete">DELETE</span>
+                    <span class="endpoint-path">/api/superadmins/{id}</span>
+                    <span class="badge admin">Admin Only</span>
+                </div>
+                <p><strong>Purpose:</strong> Delete (soft delete) a super admin</p>
+            </div>
+
+            <div class="endpoint">
+                <div class="endpoint-header">
+                    <span class="method post">POST</span>
+                    <span class="endpoint-path">/api/superadmins/{id}/change-password</span>
+                    <span class="badge admin">Admin Only</span>
+                </div>
+                <p><strong>Purpose:</strong> Change super admin password</p>
+            </div>
+        </div>
+
+        <!-- 10. Tickets API -->
+        <div class="api-section" id="tickets-api">
+            <h2>10. 🎫 Tickets API</h2>
+            <p><strong>Base Route:</strong> <code>/api/tickets</code></p>
+            <p><strong>Purpose:</strong> Support ticket and request management system</p>
+
+            <h3>Key Features</h3>
+            <ul class="feature-list">
+                <li>Complete ticket lifecycle management</li>
+                <li>Ticket assignment and status tracking</li>
+                <li>Comments and attachments support</li>
+                <li>SLA monitoring and reporting</li>
+                <li>Advanced filtering and pagination</li>
+                <li>Workload and volume reports</li>
+            </ul>
+
+            <h3>Main Endpoints</h3>
+
+            <div class="endpoint">
+                <div class="endpoint-header">
+                    <span class="method get">GET</span>
+                    <span class="endpoint-path">/api/tickets</span>
+                    <span class="badge auth">Authenticated</span>
+                </div>
+                <p><strong>Purpose:</strong> Retrieve tickets with filtering, sorting, and pagination</p>
+                <h4>Query Parameters:</h4>
+                <ul>
+                    <li><code>page</code> - Page number (default: 1)</li>
+                    <li><code>pageSize</code> - Items per page (default: 50)</li>
+                    <li><code>status</code> - Filter by status</li>
+                    <li><code>priority</code> - Filter by priority</li>
+                    <li><code>assignedToUserId</code> - Filter by assignee</li>
+                    <li><code>companyId</code> - Filter by company</li>
+                    <li><code>branchId</code> - Filter by branch</li>
+                </ul>
+            </div>
+
+            <div class="endpoint">
+                <div class="endpoint-header">
+                    <span class="method get">GET</span>
+                    <span class="endpoint-path">/api/tickets/{id}</span>
+                    <span class="badge auth">Authenticated</span>
+                </div>
+                <p><strong>Purpose:</strong> Retrieve a specific ticket with full details</p>
+            </div>
+
+            <div class="endpoint">
+                <div class="endpoint-header">
+                    <span class="method post">POST</span>
+                    <span class="endpoint-path">/api/tickets</span>
+                    <span class="badge auth">Authenticated</span>
+                </div>
+                <p><strong>Purpose:</strong> Create a new ticket with optional attachments</p>
+                <h4>Request Body:</h4>
+                <pre><code>{
+  "titleAr": "مشكلة في النظام",
+  "titleEn": "System Issue",
+  "descriptionAr": "وصف المشكلة",
+  "descriptionEn": "Issue description",
+  "priority": "High",
+  "ticketTypeId": 1,
+  "companyId": 1,
+  "branchId": 1
+}</code></pre>
+            </div>
+
+            <div class="endpoint">
+                <div class="endpoint-header">
+                    <span class="method put">PUT</span>
+                    <span class="endpoint-path">/api/tickets/{id}</span>
+                    <span class="badge auth">Authenticated</span>
+                </div>
+                <p><strong>Purpose:</strong> Update an existing ticket</p>
+            </div>
+
+            <div class="endpoint">
+                <div class="endpoint-header">
+                    <span class="method delete">DELETE</span>
+                    <span class="endpoint-path">/api/tickets/{id}</span>
+                    <span class="badge admin">Admin Only</span>
+                </div>
+                <p><strong>Purpose:</strong> Delete (soft delete) a ticket</p>
+            </div>
+
+            <h3>Ticket Management Endpoints</h3>
+
+            <div class="endpoint">
+                <div class="endpoint-header">
+                    <span class="method put">PUT</span>
+                    <span class="endpoint-path">/api/tickets/{id}/assign</span>
+                    <span class="badge admin">Admin Only</span>
+                </div>
+                <p><strong>Purpose:</strong> Assign a ticket to a support staff member</p>
+            </div>
+
+            <div class="endpoint">
+                <div class="endpoint-header">
+                    <span class="method put">PUT</span>
+                    <span class="endpoint-path">/api/tickets/{id}/status</span>
+                    <span class="badge auth">Authenticated</span>
+                </div>
+                <p><strong>Purpose:</strong> Update ticket status with workflow validation</p>
+            </div>
+
+            <h3>Comments & Attachments</h3>
+
+            <div class="endpoint">
+                <div class="endpoint-header">
+                    <span class="method post">POST</span>
+                    <span class="endpoint-path">/api/tickets/{id}/comments</span>
+                    <span class="badge auth">Authenticated</span>
+                </div>
+                <p><strong>Purpose:</strong> Add a comment to a ticket</p>
+            </div>
+
+            <div class="endpoint">
+                <div class="endpoint-header">
+                    <span class="method get">GET</span>
+                    <span class="endpoint-path">/api/tickets/{id}/comments</span>
+                    <span class="badge auth">Authenticated</span>
+                </div>
+                <p><strong>Purpose:</strong> Retrieve all comments for a ticket</p>
+            </div>
+
+            <div class="endpoint">
+                <div class="endpoint-header">
+                    <span class="method post">POST</span>
+                    <span class="endpoint-path">/api/tickets/{id}/attachments</span>
+                    <span class="badge auth">Authenticated</span>
+                </div>
+                <p><strong>Purpose:</strong> Upload a file attachment (Base64 encoded)</p>
+            </div>
+
+            <div class="endpoint">
+                <div class="endpoint-header">
+                    <span class="method get">GET</span>
+                    <span class="endpoint-path">/api/tickets/{id}/attachments</span>
+                    <span class="badge auth">Authenticated</span>
+                </div>
+                <p><strong>Purpose:</strong> Retrieve all attachments for a ticket</p>
+            </div>
+
+            <div class="endpoint">
+                <div class="endpoint-header">
+                    <span class="method get">GET</span>
+                    <span class="endpoint-path">/api/tickets/{id}/attachments/{attachmentId}</span>
+                    <span class="badge auth">Authenticated</span>
+                </div>
+                <p><strong>Purpose:</strong> Download a specific attachment file</p>
+            </div>
+
+            <h3>Reporting Endpoints</h3>
+
+            <div class="endpoint">
+                <div class="endpoint-header">
+                    <span class="method get">GET</span>
+                    <span class="endpoint-path">/api/tickets/reports/volume</span>
+                    <span class="badge admin">Admin Only</span>
+                </div>
+                <p><strong>Purpose:</strong> Ticket volume report with time-based grouping</p>
+                <h4>Query Parameters:</h4>
+                <ul>
+                    <li><code>startDate</code> - Report start date</li>
+                    <li><code>endDate</code> - Report end date</li>
+                    <li><code>groupBy</code> - Group by: day, week, month</li>
+                    <li><code>format</code> - Export format: json, pdf, excel</li>
+                </ul>
+            </div>
+
+            <div class="endpoint">
+                <div class="endpoint-header">
+                    <span class="method get">GET</span>
+                    <span class="endpoint-path">/api/tickets/reports/sla-compliance</span>
+                    <span class="badge admin">Admin Only</span>
+                </div>
+                <p><strong>Purpose:</strong> SLA compliance report with priority breakdown</p>
+            </div>
+
+            <div class="endpoint">
+                <div class="endpoint-header">
+                    <span class="method get">GET</span>
+                    <span class="endpoint-path">/api/tickets/reports/workload</span>
+                    <span class="badge admin">Admin Only</span>
+                </div>
+                <p><strong>Purpose:</strong> Workload report showing ticket distribution per assignee</p>
+            </div>
+
+            <div class="info-box info">
+                <strong>💡 Ticket Statuses:</strong> Open, In Progress, Resolved, Closed, Cancelled<br>
+                <strong>💡 Priorities:</strong> Low, Medium, High, Critical
+            </div>
+        </div>
+
+        <!-- 11. Ticket Types API -->
+        <div class="api-section" id="tickettypes-api">
+            <h2>11. 🏷️ Ticket Types API</h2>
+            <p><strong>Base Route:</strong> <code>/api/ticket-types</code></p>
+            <p><strong>Purpose:</strong> Manage ticket categories and types</p>
+
+            <h3>Endpoints</h3>
+
+            <div class="endpoint">
+                <div class="endpoint-header">
+                    <span class="method get">GET</span>
+                    <span class="endpoint-path">/api/ticket-types</span>
+                    <span class="badge auth">Authenticated</span>
+                </div>
+                <p><strong>Purpose:</strong> Retrieve all ticket types</p>
+            </div>
+
+            <div class="endpoint">
+                <div class="endpoint-header">
+                    <span class="method get">GET</span>
+                    <span class="endpoint-path">/api/ticket-types/{id}</span>
+                    <span class="badge auth">Authenticated</span>
+                </div>
+                <p><strong>Purpose:</strong> Retrieve a specific ticket type by ID</p>
+            </div>
+
+            <div class="endpoint">
+                <div class="endpoint-header">
+                    <span class="method post">POST</span>
+                    <span class="endpoint-path">/api/ticket-types</span>
+                    <span class="badge admin">Admin Only</span>
+                </div>
+                <p><strong>Purpose:</strong> Create a new ticket type</p>
+            </div>
+
+            <div class="endpoint">
+                <div class="endpoint-header">
+                    <span class="method put">PUT</span>
+                    <span class="endpoint-path">/api/ticket-types/{id}</span>
+                    <span class="badge admin">Admin Only</span>
+                </div>
+                <p><strong>Purpose:</strong> Update an existing ticket type</p>
+            </div>
+
+            <div class="endpoint">
+                <div class="endpoint-header">
+                    <span class="method delete">DELETE</span>
+                    <span class="endpoint-path">/api/ticket-types/{id}</span>
+                    <span class="badge admin">Admin Only</span>
+                </div>
+                <p><strong>Purpose:</strong> Delete (soft delete) a ticket type</p>
+            </div>
+        </div>
+
+        <!-- 12. Saved Searches API -->
+        <div class="api-section" id="savedsearches-api">
+            <h2>12. 🔍 Saved Searches API</h2>
+            <p><strong>Base Route:</strong> <code>/api/saved-searches</code></p>
+            <p><strong>Purpose:</strong> Save and manage custom search queries</p>
+
+            <h3>Endpoints</h3>
+
+            <div class="endpoint">
+                <div class="endpoint-header">
+                    <span class="method get">GET</span>
+                    <span class="endpoint-path">/api/saved-searches</span>
+                    <span class="badge auth">Authenticated</span>
+                </div>
+                <p><strong>Purpose:</strong> Get user's saved searches</p>
+            </div>
+
+            <div class="endpoint">
+                <div class="endpoint-header">
+                    <span class="method get">GET</span>
+                    <span class="endpoint-path">/api/saved-searches/{id}</span>
+                    <span class="badge auth">Authenticated</span>
+                </div>
+                <p><strong>Purpose:</strong> Get saved search by ID</p>
+            </div>
+
+            <div class="endpoint">
+                <div class="endpoint-header">
+                    <span class="method post">POST</span>
+                    <span class="endpoint-path">/api/saved-searches</span>
+                    <span class="badge auth">Authenticated</span>
+                </div>
+                <p><strong>Purpose:</strong> Create a new saved search</p>
+                <h4>Request Body:</h4>
+                <pre><code>{
+  "searchName": "High Priority Tickets",
+  "searchCriteria": {
+    "priority": "High",
+    "status": "Open"
+  },
+  "isPublic": false
+}</code></pre>
+            </div>
+
+            <div class="endpoint">
+                <div class="endpoint-header">
+                    <span class="method put">PUT</span>
+                    <span class="endpoint-path">/api/saved-searches/{id}</span>
+                    <span class="badge auth">Authenticated</span>
+                </div>
+                <p><strong>Purpose:</strong> Update a saved search</p>
+            </div>
+
+            <div class="endpoint">
+                <div class="endpoint-header">
+                    <span class="method delete">DELETE</span>
+                    <span class="endpoint-path">/api/saved-searches/{id}</span>
+                    <span class="badge auth">Authenticated</span>
+                </div>
+                <p><strong>Purpose:</strong> Delete a saved search</p>
+            </div>
+
+            <div class="endpoint">
+                <div class="endpoint-header">
+                    <span class="method post">POST</span>
+                    <span class="endpoint-path">/api/saved-searches/{id}/execute</span>
+                    <span class="badge auth">Authenticated</span>
+                </div>
+                <p><strong>Purpose:</strong> Execute a saved search</p>
+            </div>
+        </div>
+
+        <!-- 13. Audit Logs API -->
+        <div class="api-section" id="auditlogs-api">
+            <h2>13. 📋 Audit Logs API</h2>
+            <p><strong>Base Route:</strong> <code>/api/auditlogs</code></p>
+            <p><strong>Purpose:</strong> Legacy audit log viewing (logs.png interface compatibility)</p>
+
+            <h3>Endpoints</h3>
+
+            <div class="endpoint">
+                <div class="endpoint-header">
+                    <span class="method get">GET</span>
+                    <span class="endpoint-path">/api/auditlogs/legacy</span>
+                    <span class="badge admin">Admin Only</span>
+                </div>
+                <p><strong>Purpose:</strong> Get audit logs in legacy format</p>
+                <h4>Query Parameters:</h4>
+                <ul>
+                    <li><code>companyId</code> - Filter by company</li>
+                    <li><code>businessModule</code> - Filter by module</li>
+                    <li><code>branchId</code> - Filter by branch</li>
+                    <li><code>status</code> - Filter by status (Resolved/Unresolved/Critical)</li>
+                    <li><code>startDate</code> - Start date</li>
+                    <li><code>endDate</code> - End date</li>
+                    <li><code>searchTerm</code> - Search text</li>
+                    <li><code>pageNumber</code> - Page number</li>
+                    <li><code>pageSize</code> - Items per page</li>
+                </ul>
+                <h4>Success Response (200 OK):</h4>
+                <pre><code>{
+  "success": true,
+  "data": {
+    "items": [
+      {
+        "id": 35,
+        "errorDescription": "UNHANDLED_EXCEPTION performed on Unknown by System",
+        "module": "System",
+        "company": "Unknown",
+        "branch": "Unknown",
+        "user": "System",
+        "device": "Desktop Chrome 147",
+        "dateTime": "2026-05-05T21:05:35",
+        "status": "Unresolved",
+        "errorCode": "UNKNOWN_SYS_677",
+        "correlationId": "3eef2a78-21a9-4212-b31c-87da9100a0ad"
+      }
+    ],
+    "totalCount": 21,
+    "page": 1,
+    "pageSize": 50
+  }
+}</code></pre>
+            </div>
+        </div>
+
+        <!-- 14. Audit Trail API -->
+        <div class="api-section" id="audittrail-api">
+            <h2>14. 🔎 Audit Trail API</h2>
+            <p><strong>Base Route:</strong> <code>/api/audit-trail</code></p>
+            <p><strong>Purpose:</strong> Advanced audit trail queries and analysis</p>
+
+            <h3>Endpoints</h3>
+
+            <div class="endpoint">
+                <div class="endpoint-header">
+                    <span class="method get">GET</span>
+                    <span class="endpoint-path">/api/audit-trail</span>
+                    <span class="badge admin">Admin Only</span>
+                </div>
+                <p><strong>Purpose:</strong> Query audit trail with advanced filters</p>
+            </div>
+
+            <div class="endpoint">
+                <div class="endpoint-header">
+                    <span class="method get">GET</span>
+                    <span class="endpoint-path">/api/audit-trail/{id}</span>
+                    <span class="badge admin">Admin Only</span>
+                </div>
+                <p><strong>Purpose:</strong> Get specific audit entry</p>
+            </div>
+
+            <div class="endpoint">
+                <div class="endpoint-header">
+                    <span class="method get">GET</span>
+                    <span class="endpoint-path">/api/audit-trail/user/{userId}</span>
+                    <span class="badge admin">Admin Only</span>
+                </div>
+                <p><strong>Purpose:</strong> Get user's audit trail</p>
+            </div>
+
+            <div class="endpoint">
+                <div class="endpoint-header">
+                    <span class="method get">GET</span>
+                    <span class="endpoint-path">/api/audit-trail/entity/{entityType}/{entityId}</span>
+                    <span class="badge admin">Admin Only</span>
+                </div>
+                <p><strong>Purpose:</strong> Get entity audit trail</p>
+            </div>
+
+            <div class="endpoint">
+                <div class="endpoint-header">
+                    <span class="method get">GET</span>
+                    <span class="endpoint-path">/api/audit-trail/search</span>
+                    <span class="badge admin">Admin Only</span>
+                </div>
+                <p><strong>Purpose:</strong> Advanced search</p>
+            </div>
+
+            <div class="endpoint">
+                <div class="endpoint-header">
+                    <span class="method post">POST</span>
+                    <span class="endpoint-path">/api/audit-trail/export</span>
+                    <span class="badge admin">Admin Only</span>
+                </div>
+                <p><strong>Purpose:</strong> Export audit trail</p>
+            </div>
+        </div>
+
+        <!-- 15. Compliance API -->
+        <div class="api-section" id="compliance-api">
+            <h2>15. ⚖️ Compliance API</h2>
+            <p><strong>Base Route:</strong> <code>/api/compliance</code></p>
+            <p><strong>Purpose:</strong> Generate compliance reports for GDPR, SOX, and ISO 27001</p>
+
+            <h3>Key Features</h3>
+            <ul class="feature-list">
+                <li>GDPR compliance reports (data access, data export)</li>
+                <li>SOX compliance reports (financial access, segregation of duties)</li>
+                <li>ISO 27001 security reports</li>
+                <li>Multiple export formats (JSON, CSV, PDF)</li>
+                <li>User activity and data modification tracking</li>
+            </ul>
+
+            <h3>GDPR Reports</h3>
+
+            <div class="endpoint">
+                <div class="endpoint-header">
+                    <span class="method get">GET</span>
+                    <span class="endpoint-path">/api/compliance/gdpr/access-report</span>
+                    <span class="badge admin">Admin Only</span>
+                </div>
+                <p><strong>Purpose:</strong> GDPR data access report (Article 15 - Right of Access)</p>
+                <h4>Query Parameters:</h4>
+                <ul>
+                    <li><code>dataSubjectId</code> - User ID whose data access to track</li>
+                    <li><code>startDate</code> - Start date of report period</li>
+                    <li><code>endDate</code> - End date of report period</li>
+                    <li><code>format</code> - Export format: json, csv, pdf</li>
+                </ul>
+            </div>
+
+            <div class="endpoint">
+                <div class="endpoint-header">
+                    <span class="method get">GET</span>
+                    <span class="endpoint-path">/api/compliance/gdpr/data-export</span>
+                    <span class="badge admin">Admin Only</span>
+                </div>
+                <p><strong>Purpose:</strong> GDPR data export (Article 20 - Right to Data Portability)</p>
+                <h4>Query Parameters:</h4>
+                <ul>
+                    <li><code>dataSubjectId</code> - User ID whose data to export</li>
+                    <li><code>format</code> - Export format: json, csv, pdf</li>
+                </ul>
+            </div>
+
+            <h3>SOX Reports</h3>
+
+            <div class="endpoint">
+                <div class="endpoint-header">
+                    <span class="method get">GET</span>
+                    <span class="endpoint-path">/api/compliance/sox/financial-access</span>
+                    <span class="badge admin">Admin Only</span>
+                </div>
+                <p><strong>Purpose:</strong> SOX financial data access report (Section 404 compliance)</p>
+                <h4>Query Parameters:</h4>
+                <ul>
+                    <li><code>startDate</code> - Start date of report period</li>
+                    <li><code>endDate</code> - End date of report period</li>
+                    <li><code>format</code> - Export format: json, csv, pdf</li>
+                </ul>
+            </div>
+
+            <div class="endpoint">
+                <div class="endpoint-header">
+                    <span class="method get">GET</span>
+                    <span class="endpoint-path">/api/compliance/sox/segregation-of-duties</span>
+                    <span class="badge admin">Admin Only</span>
+                </div>
+                <p><strong>Purpose:</strong> SOX segregation of duties violations report</p>
+            </div>
+
+            <h3>ISO 27001 Reports</h3>
+
+            <div class="endpoint">
+                <div class="endpoint-header">
+                    <span class="method get">GET</span>
+                    <span class="endpoint-path">/api/compliance/iso27001/security-report</span>
+                    <span class="badge admin">Admin Only</span>
+                </div>
+                <p><strong>Purpose:</strong> ISO 27001 security event report (Annex A.12.4 compliance)</p>
+                <h4>Query Parameters:</h4>
+                <ul>
+                    <li><code>startDate</code> - Start date of report period</li>
+                    <li><code>endDate</code> - End date of report period</li>
+                    <li><code>format</code> - Export format: json, csv, pdf</li>
+                </ul>
+            </div>
+
+            <h3>General Reports</h3>
+
+            <div class="endpoint">
+                <div class="endpoint-header">
+                    <span class="method get">GET</span>
+                    <span class="endpoint-path">/api/compliance/user-activity</span>
+                    <span class="badge admin">Admin Only</span>
+                </div>
+                <p><strong>Purpose:</strong> Chronological report of all actions performed by a user</p>
+                <h4>Query Parameters:</h4>
+                <ul>
+                    <li><code>userId</code> - User ID to track</li>
+                    <li><code>startDate</code> - Start date</li>
+                    <li><code>endDate</code> - End date</li>
+                    <li><code>format</code> - Export format: json, csv, pdf</li>
+                </ul>
+            </div>
+
+            <div class="endpoint">
+                <div class="endpoint-header">
+                    <span class="method get">GET</span>
+                    <span class="endpoint-path">/api/compliance/data-modification</span>
+                    <span class="badge admin">Admin Only</span>
+                </div>
+                <p><strong>Purpose:</strong> Complete audit trail of all changes to a specific entity</p>
+                <h4>Query Parameters:</h4>
+                <ul>
+                    <li><code>entityType</code> - Type of entity (e.g., "SysUser", "SysCompany")</li>
+                    <li><code>entityId</code> - Entity ID to track</li>
+                    <li><code>format</code> - Export format: json, csv, pdf</li>
+                </ul>
+            </div>
+
+            <div class="info-box success">
+                <strong>✅ Compliance Coverage:</strong> GDPR (EU), SOX (US), ISO 27001 (International)
+            </div>
+        </div>
+
+        <!-- 16. Monitoring API -->
+        <div class="api-section" id="monitoring-api">
+            <h2>16. 📊 Monitoring API</h2>
+            <p><strong>Base Route:</strong> <code>/api/monitoring</code></p>
+            <p><strong>Purpose:</strong> System monitoring, performance metrics, and diagnostics</p>
+
+            <h3>Key Features</h3>
+            <ul class="feature-list">
+                <li>System health monitoring</li>
+                <li>Memory management and optimization</li>
+                <li>Performance tracking (slow requests/queries)</li>
+                <li>Security threat detection</li>
+                <li>Audit system monitoring</li>
+                <li>Alerting capabilities</li>
+            </ul>
+
+            <h3>System Health</h3>
+
+            <div class="endpoint">
+                <div class="endpoint-header">
+                    <span class="method get">GET</span>
+                    <span class="endpoint-path">/api/monitoring/health</span>
+                    <span class="badge public">Public</span>
+                </div>
+                <p><strong>Purpose:</strong> Comprehensive system health check</p>
+                <h4>Success Response (200 OK):</h4>
+                <pre><code>{
+  "status": "Healthy",
+  "cpuUsagePercent": 45.2,
+  "memoryUsageMB": 512,
+  "totalMemoryMB": 2048,
+  "requestsPerSecond": 125.5,
+  "errorRatePercent": 0.5,
+  "auditQueueDepth": 150,
+  "databaseConnectionsActive": 5,
+  "databaseConnectionsIdle": 15,
+  "healthChecks": {
+    "database": "Healthy",
+    "auditLogging": "Healthy",
+    "memory": "Healthy"
+  }
+}</code></pre>
+            </div>
+
+            <h3>Memory Management</h3>
+
+            <div class="endpoint">
+                <div class="endpoint-header">
+                    <span class="method get">GET</span>
+                    <span class="endpoint-path">/api/monitoring/memory</span>
+                    <span class="badge admin">Admin Only</span>
+                </div>
+                <p><strong>Purpose:</strong> Detailed memory usage analysis</p>
+            </div>
+
+            <div class="endpoint">
+                <div class="endpoint-header">
+                    <span class="method get">GET</span>
+                    <span class="endpoint-path">/api/monitoring/memory/pressure</span>
+                    <span class="badge admin">Admin Only</span>
+                </div>
+                <p><strong>Purpose:</strong> Detect current memory pressure level</p>
+            </div>
+
+            <div class="endpoint">
+                <div class="endpoint-header">
+                    <span class="method get">GET</span>
+                    <span class="endpoint-path">/api/monitoring/memory/recommendations</span>
+                    <span class="badge admin">Admin Only</span>
+                </div>
+                <p><strong>Purpose:</strong> Get memory optimization suggestions</p>
+            </div>
+
+            <div class="endpoint">
+                <div class="endpoint-header">
+                    <span class="method post">POST</span>
+                    <span class="endpoint-path">/api/monitoring/memory/optimize</span>
+                    <span class="badge admin">Admin Only</span>
+                </div>
+                <p><strong>Purpose:</strong> Trigger memory optimization strategies</p>
+                <div class="info-box warning">
+                    <strong>⚠️ Warning:</strong> Can temporarily impact performance. Use during low-traffic periods.
+                </div>
+            </div>
+
+            <div class="endpoint">
+                <div class="endpoint-header">
+                    <span class="method post">POST</span>
+                    <span class="endpoint-path">/api/monitoring/memory/gc</span>
+                    <span class="badge admin">Admin Only</span>
+                </div>
+                <p><strong>Purpose:</strong> Manually trigger garbage collection</p>
+                <h4>Query Parameters:</h4>
+                <ul>
+                    <li><code>generation</code> - GC generation (0, 1, or 2) - default: 2</li>
+                    <li><code>blocking</code> - Wait for GC to complete - default: true</li>
+                    <li><code>compacting</code> - Compact the heap - default: true</li>
+                </ul>
+            </div>
+
+            <h3>Performance Monitoring</h3>
+
+            <div class="endpoint">
+                <div class="endpoint-header">
+                    <span class="method get">GET</span>
+                    <span class="endpoint-path">/api/monitoring/performance/endpoint</span>
+                    <span class="badge admin">Admin Only</span>
+                </div>
+                <p><strong>Purpose:</strong> Performance statistics for a specific API endpoint</p>
+                <h4>Query Parameters:</h4>
+                <ul>
+                    <li><code>endpoint</code> - Endpoint path (e.g., "/api/users")</li>
+                    <li><code>periodMinutes</code> - Time period in minutes - default: 60</li>
+                </ul>
+            </div>
+
+            <div class="endpoint">
+                <div class="endpoint-header">
+                    <span class="method get">GET</span>
+                    <span class="endpoint-path">/api/monitoring/performance/slow-requests</span>
+                    <span class="badge admin">Admin Only</span>
+                </div>
+                <p><strong>Purpose:</strong> Find requests that exceeded execution time threshold</p>
+                <h4>Query Parameters:</h4>
+                <ul>
+                    <li><code>thresholdMs</code> - Execution time threshold in ms - default: 1000</li>
+                    <li><code>pageNumber</code> - Page number - default: 1</li>
+                    <li><code>pageSize</code> - Items per page - default: 50</li>
+                </ul>
+            </div>
+
+            <div class="endpoint">
+                <div class="endpoint-header">
+                    <span class="method get">GET</span>
+                    <span class="endpoint-path">/api/monitoring/performance/slow-queries</span>
+                    <span class="badge admin">Admin Only</span>
+                </div>
+                <p><strong>Purpose:</strong> Find database queries that exceeded execution time threshold</p>
+            </div>
+
+            <div class="endpoint">
+                <div class="endpoint-header">
+                    <span class="method get">GET</span>
+                    <span class="endpoint-path">/api/monitoring/performance/connection-pool</span>
+                    <span class="badge admin">Admin Only</span>
+                </div>
+                <p><strong>Purpose:</strong> Oracle connection pool health and utilization</p>
+            </div>
+
+            <h3>Security Monitoring</h3>
+
+            <div class="endpoint">
+                <div class="endpoint-header">
+                    <span class="method get">GET</span>
+                    <span class="endpoint-path">/api/monitoring/security/threats</span>
+                    <span class="badge admin">Admin Only</span>
+                </div>
+                <p><strong>Purpose:</strong> List all unresolved security threats</p>
+            </div>
+
+            <div class="endpoint">
+                <div class="endpoint-header">
+                    <span class="method get">GET</span>
+                    <span class="endpoint-path">/api/monitoring/security/daily-summary</span>
+                    <span class="badge admin">Admin Only</span>
+                </div>
+                <p><strong>Purpose:</strong> Comprehensive security summary for a specific date</p>
+            </div>
+
+            <div class="endpoint">
+                <div class="endpoint-header">
+                    <span class="method get">GET</span>
+                    <span class="endpoint-path">/api/monitoring/security/check-failed-logins</span>
+                    <span class="badge admin">Admin Only</span>
+                </div>
+                <p><strong>Purpose:</strong> Check if an IP has exceeded failed login threshold</p>
+            </div>
+
+            <div class="endpoint">
+                <div class="endpoint-header">
+                    <span class="method post">POST</span>
+                    <span class="endpoint-path">/api/monitoring/security/check-sql-injection</span>
+                    <span class="badge admin">Admin Only</span>
+                </div>
+                <p><strong>Purpose:</strong> Scan input for SQL injection patterns</p>
+            </div>
+
+            <div class="endpoint">
+                <div class="endpoint-header">
+                    <span class="method post">POST</span>
+                    <span class="endpoint-path">/api/monitoring/security/check-xss</span>
+                    <span class="badge admin">Admin Only</span>
+                </div>
+                <p><strong>Purpose:</strong> Scan input for XSS patterns</p>
+            </div>
+
+            <h3>Audit System Monitoring</h3>
+
+            <div class="endpoint">
+                <div class="endpoint-header">
+                    <span class="method get">GET</span>
+                    <span class="endpoint-path">/api/monitoring/audit-queue-depth</span>
+                    <span class="badge admin">Admin Only</span>
+                </div>
+                <p><strong>Purpose:</strong> Monitor audit logging queue status</p>
+            </div>
+
+            <div class="endpoint">
+                <div class="endpoint-header">
+                    <span class="method get">GET</span>
+                    <span class="endpoint-path">/api/monitoring/audit/metrics</span>
+                    <span class="badge admin">Admin Only</span>
+                </div>
+                <p><strong>Purpose:</strong> Comprehensive audit logging system metrics</p>
+            </div>
+
+            <div class="endpoint">
+                <div class="endpoint-header">
+                    <span class="method get">GET</span>
+                    <span class="endpoint-path">/api/monitoring/audit/fallback-status</span>
+                    <span class="badge admin">Admin Only</span>
+                </div>
+                <p><strong>Purpose:</strong> Check fallback file storage status</p>
+            </div>
+
+            <div class="endpoint">
+                <div class="endpoint-header">
+                    <span class="method post">POST</span>
+                    <span class="endpoint-path">/api/monitoring/audit/replay-fallback</span>
+                    <span class="badge admin">Admin Only</span>
+                </div>
+                <p><strong>Purpose:</strong> Manually replay fallback events to database</p>
+            </div>
+
+            <h3>Alerting</h3>
+
+            <div class="endpoint">
+                <div class="endpoint-header">
+                    <span class="method post">POST</span>
+                    <span class="endpoint-path">/api/monitoring/test-alert</span>
+                    <span class="badge admin">Admin Only</span>
+                </div>
+                <p><strong>Purpose:</strong> Test alert delivery through configured channels</p>
+            </div>
+        </div>
+
+        <!-- 17. Alerts API -->
+        <div class="api-section" id="alerts-api">
+            <h2>17. 🚨 Alerts API</h2>
+            <p><strong>Base Route:</strong> <code>/api/alerts</code></p>
+            <p><strong>Purpose:</strong> Alert rule management and alert history</p>
+
+            <h3>Endpoints</h3>
+
+            <div class="endpoint">
+                <div class="endpoint-header">
+                    <span class="method get">GET</span>
+                    <span class="endpoint-path">/api/alerts/rules</span>
+                    <span class="badge admin">Admin Only</span>
+                </div>
+                <p><strong>Purpose:</strong> Get all alert rules</p>
+            </div>
+
+            <div class="endpoint">
+                <div class="endpoint-header">
+                    <span class="method get">GET</span>
+                    <span class="endpoint-path">/api/alerts/rules/{id}</span>
+                    <span class="badge admin">Admin Only</span>
+                </div>
+                <p><strong>Purpose:</strong> Get alert rule by ID</p>
+            </div>
+
+            <div class="endpoint">
+                <div class="endpoint-header">
+                    <span class="method post">POST</span>
+                    <span class="endpoint-path">/api/alerts/rules</span>
+                    <span class="badge admin">Admin Only</span>
+                </div>
+                <p><strong>Purpose:</strong> Create alert rule</p>
+                <h4>Request Body:</h4>
+                <pre><code>{
+  "ruleName": "High CPU Usage",
+  "condition": "cpuUsagePercent > 80",
+  "severity": "High",
+  "channels": ["Email", "Webhook"],
+  "isActive": true
+}</code></pre>
+            </div>
+
+            <div class="endpoint">
+                <div class="endpoint-header">
+                    <span class="method put">PUT</span>
+                    <span class="endpoint-path">/api/alerts/rules/{id}</span>
+                    <span class="badge admin">Admin Only</span>
+                </div>
+                <p><strong>Purpose:</strong> Update alert rule</p>
+            </div>
+
+            <div class="endpoint">
+                <div class="endpoint-header">
+                    <span class="method delete">DELETE</span>
+                    <span class="endpoint-path">/api/alerts/rules/{id}</span>
+                    <span class="badge admin">Admin Only</span>
+                </div>
+                <p><strong>Purpose:</strong> Delete alert rule</p>
+            </div>
+
+            <div class="endpoint">
+                <div class="endpoint-header">
+                    <span class="method get">GET</span>
+                    <span class="endpoint-path">/api/alerts/history</span>
+                    <span class="badge admin">Admin Only</span>
+                </div>
+                <p><strong>Purpose:</strong> Get alert history</p>
+            </div>
+
+            <div class="endpoint">
+                <div class="endpoint-header">
+                    <span class="method post">POST</span>
+                    <span class="endpoint-path">/api/alerts/test</span>
+                    <span class="badge admin">Admin Only</span>
+                </div>
+                <p><strong>Purpose:</strong> Test alert rule</p>
+            </div>
+        </div>
+
+        <!-- 18. Configuration API -->
+        <div class="api-section" id="configuration-api">
+            <h2>18. ⚙️ Configuration API</h2>
+            <p><strong>Base Route:</strong> <code>/api/configuration</code></p>
+            <p><strong>Purpose:</strong> System configuration management</p>
+
+            <h3>Endpoints</h3>
+
+            <div class="endpoint">
+                <div class="endpoint-header">
+                    <span class="method get">GET</span>
+                    <span class="endpoint-path">/api/configuration</span>
+                    <span class="badge admin">Admin Only</span>
+                </div>
+                <p><strong>Purpose:</strong> Get all configuration settings</p>
+            </div>
+
+            <div class="endpoint">
+                <div class="endpoint-header">
+                    <span class="method get">GET</span>
+                    <span class="endpoint-path">/api/configuration/{key}</span>
+                    <span class="badge admin">Admin Only</span>
+                </div>
+                <p><strong>Purpose:</strong> Get configuration by key</p>
+            </div>
+
+            <div class="endpoint">
+                <div class="endpoint-header">
+                    <span class="method put">PUT</span>
+                    <span class="endpoint-path">/api/configuration/{key}</span>
+                    <span class="badge admin">Admin Only</span>
+                </div>
+                <p><strong>Purpose:</strong> Update configuration</p>
+                <h4>Request Body:</h4>
+                <pre><code>{
+  "key": "MaxLoginAttempts",
+  "value": "5",
+  "description": "Maximum failed login attempts before lockout"
+}</code></pre>
+            </div>
+
+            <div class="endpoint">
+                <div class="endpoint-header">
+                    <span class="method post">POST</span>
+                    <span class="endpoint-path">/api/configuration/reload</span>
+                    <span class="badge admin">Admin Only</span>
+                </div>
+                <p><strong>Purpose:</strong> Reload configuration from database</p>
+            </div>
+        </div>
+
+        <!-- 19. Key Management API -->
+        <div class="api-section" id="keymanagement-api">
+            <h2>19. 🔐 Key Management API</h2>
+            <p><strong>Base Route:</strong> <code>/api/keymanagement</code></p>
+            <p><strong>Purpose:</strong> Encryption key management for audit log integrity</p>
+
+            <h3>Endpoints</h3>
+
+            <div class="endpoint">
+                <div class="endpoint-header">
+                    <span class="method get">GET</span>
+                    <span class="endpoint-path">/api/keymanagement/current</span>
+                    <span class="badge admin">Admin Only</span>
+                </div>
+                <p><strong>Purpose:</strong> Get current key info</p>
+                <h4>Success Response (200 OK):</h4>
+                <pre><code>{
+  "success": true,
+  "data": {
+    "keyId": "key-2026-05-06",
+    "algorithm": "HMACSHA256",
+    "createdAt": "2026-05-06T00:00:00Z",
+    "expiresAt": "2027-05-06T00:00:00Z",
+    "status": "Active"
+  }
+}</code></pre>
+            </div>
+
+            <div class="endpoint">
+                <div class="endpoint-header">
+                    <span class="method post">POST</span>
+                    <span class="endpoint-path">/api/keymanagement/rotate</span>
+                    <span class="badge admin">Admin Only</span>
+                </div>
+                <p><strong>Purpose:</strong> Rotate encryption key</p>
+                <div class="info-box warning">
+                    <strong>⚠️ Important:</strong> Key rotation is a critical operation. Ensure proper backup before rotating keys.
+                </div>
+            </div>
+
+            <div class="endpoint">
+                <div class="endpoint-header">
+                    <span class="method get">GET</span>
+                    <span class="endpoint-path">/api/keymanagement/history</span>
+                    <span class="badge admin">Admin Only</span>
+                </div>
+                <p><strong>Purpose:</strong> Get key rotation history</p>
+            </div>
+        </div>
+
+        <!-- 20. Health API -->
+        <div class="api-section" id="health-api">
+            <h2>20. ❤️ Health API</h2>
+            <p><strong>Base Route:</strong> <code>/api/health</code></p>
+            <p><strong>Purpose:</strong> Application health checks for load balancers</p>
+
+            <h3>Endpoints</h3>
+
+            <div class="endpoint">
+                <div class="endpoint-header">
+                    <span class="method get">GET</span>
+                    <span class="endpoint-path">/api/health</span>
+                    <span class="badge public">Public</span>
+                </div>
+                <p><strong>Purpose:</strong> Basic health check</p>
+                <h4>Success Response (200 OK):</h4>
+                <pre><code>{
+  "status": "Healthy",
+  "timestamp": "2026-05-06T00:00:00Z"
+}</code></pre>
+            </div>
+
+            <div class="endpoint">
+                <div class="endpoint-header">
+                    <span class="method get">GET</span>
+                    <span class="endpoint-path">/api/health/ready</span>
+                    <span class="badge public">Public</span>
+                </div>
+                <p><strong>Purpose:</strong> Readiness check (can accept traffic)</p>
+            </div>
+
+            <div class="endpoint">
+                <div class="endpoint-header">
+                    <span class="method get">GET</span>
+                    <span class="endpoint-path">/api/health/live</span>
+                    <span class="badge public">Public</span>
+                </div>
+                <p><strong>Purpose:</strong> Liveness check (application is running)</p>
+            </div>
+
+            <div class="endpoint">
+                <div class="endpoint-header">
+                    <span class="method get">GET</span>
+                    <span class="endpoint-path">/api/health/circuit-breakers</span>
+                    <span class="badge public">Public</span>
+                </div>
+                <p><strong>Purpose:</strong> Circuit breaker status</p>
+            </div>
+
+            <div class="info-box info">
+                <strong>💡 Use Case:</strong> These endpoints are designed for Kubernetes liveness/readiness probes and load balancer health checks.
+            </div>
+        </div>
+
+        <!-- 21. Audit Health API -->
+        <div class="api-section" id="audithealth-api">
+            <h2>21. 🏥 Audit Health API</h2>
+            <p><strong>Base Route:</strong> <code>/api/audithealth</code></p>
+            <p><strong>Purpose:</strong> Audit logging system health checks</p>
+
+            <h3>Endpoints</h3>
+
+            <div class="endpoint">
+                <div class="endpoint-header">
+                    <span class="method get">GET</span>
+                    <span class="endpoint-path">/api/audithealth</span>
+                    <span class="badge public">Public</span>
+                </div>
+                <p><strong>Purpose:</strong> Audit system health</p>
+                <h4>Success Response (200 OK):</h4>
+                <pre><code>{
+  "status": "Healthy",
+  "queueDepth": 150,
+  "queueCapacity": 10000,
+  "circuitState": "Closed",
+  "timestamp": "2026-05-06T00:00:00Z"
+}</code></pre>
+            </div>
+
+            <div class="endpoint">
+                <div class="endpoint-header">
+                    <span class="method get">GET</span>
+                    <span class="endpoint-path">/api/audithealth/queue</span>
+                    <span class="badge public">Public</span>
+                </div>
+                <p><strong>Purpose:</strong> Queue status</p>
+            </div>
+
+            <div class="endpoint">
+                <div class="endpoint-header">
+                    <span class="method get">GET</span>
+                    <span class="endpoint-path">/api/audithealth/circuit-breaker</span>
+                    <span class="badge public">Public</span>
+                </div>
+                <p><strong>Purpose:</strong> Circuit breaker status</p>
+            </div>
+        </div>
+
+        <!-- Best Practices Section -->
+        <div class="api-section">
+            <h2>📚 Best Practices</h2>
+
+            <h3>1. Authentication</h3>
+            <ul class="feature-list">
+                <li>Always use HTTPS in production</li>
+                <li>Store tokens securely (not in localStorage)</li>
+                <li>Implement automatic token refresh</li>
+                <li>Handle 401 errors gracefully</li>
+            </ul>
+
+            <h3>2. Error Handling</h3>
+            <ul class="feature-list">
+                <li>Check the <code>success</code> field in responses</li>
+                <li>Display user-friendly error messages</li>
+                <li>Log errors with <code>traceId</code> for debugging</li>
+                <li>Implement retry logic with exponential backoff</li>
+            </ul>
+
+            <h3>3. Performance</h3>
+            <ul class="feature-list">
+                <li>Use pagination for large datasets</li>
+                <li>Implement caching where appropriate</li>
+                <li>Monitor slow requests and queries</li>
+                <li>Use filtering to reduce data transfer</li>
+            </ul>
+
+            <h3>4. Security</h3>
+            <ul class="feature-list">
+                <li>Validate all input on client side</li>
+                <li>Never expose sensitive data in URLs</li>
+                <li>Implement rate limiting on client side</li>
+                <li>Use CORS properly in production</li>
+            </ul>
+
+            <h3>5. Monitoring</h3>
+            <ul class="feature-list">
+                <li>Monitor API response times</li>
+                <li>Track error rates and patterns</li>
+                <li>Set up alerts for critical issues</li>
+                <li>Review audit logs regularly</li>
+            </ul>
+        </div>
+
+        <!-- Common Workflows Section -->
+        <div class="api-section">
+            <h2>🔄 Common Workflows</h2>
+
+            <h3>1. User Registration and Login</h3>
+            <div class="use-case">
+                <h5>Steps:</h5>
+                <ol>
+                    <li>Admin logs in: <code>POST /api/auth/login</code></li>
+                    <li>Admin creates user: <code>POST /api/users</code></li>
+                    <li>User logs in: <code>POST /api/auth/login</code></li>
+                    <li>User changes password: <code>PUT /api/users/{id}/change-password</code></li>
+                </ol>
+            </div>
+
+            <h3>2. Create Company with Branch</h3>
+            <div class="use-case">
+                <h5>Steps:</h5>
+                <ol>
+                    <li>Super admin logs in: <code>POST /api/auth/superadmin/login</code></li>
+                    <li>Create company with default branch: <code>POST /api/companies</code></li>
+                    <li>Create additional branches: <code>POST /api/branches</code></li>
+                    <li>Create users for branches: <code>POST /api/users</code></li>
+                </ol>
+            </div>
+
+            <h3>3. Support Ticket Lifecycle</h3>
+            <div class="use-case">
+                <h5>Steps:</h5>
+                <ol>
+                    <li>User creates ticket: <code>POST /api/tickets</code></li>
+                    <li>Admin assigns ticket: <code>PUT /api/tickets/{id}/assign</code></li>
+                    <li>Support adds comments: <code>POST /api/tickets/{id}/comments</code></li>
+                    <li>Update status: <code>PUT /api/tickets/{id}/status</code></li>
+                    <li>Close ticket: <code>PUT /api/tickets/{id}/status</code> (status: Closed)</li>
+                </ol>
+            </div>
+
+            <h3>4. Generate Compliance Report</h3>
+            <div class="use-case">
+                <h5>Steps:</h5>
+                <ol>
+                    <li>Admin logs in: <code>POST /api/auth/login</code></li>
+                    <li>Generate GDPR report: <code>GET /api/compliance/gdpr/data-export</code></li>
+                    <li>Export to CSV: Add <code>?format=csv</code> parameter</li>
+                    <li>Download and provide to data subject</li>
+                </ol>
+            </div>
+        </div>
+
+        <!-- Error Codes Section -->
+        <div class="api-section">
+            <h2>⚠️ HTTP Status Codes</h2>
+            <table>
+                <tr>
+                    <th>Code</th>
+                    <th>Status</th>
+                    <th>Description</th>
+                </tr>
+                <tr>
+                    <td>200</td>
+                    <td>OK</td>
+                    <td>Request succeeded</td>
+                </tr>
+                <tr>
+                    <td>201</td>
+                    <td>Created</td>
+                    <td>Resource created successfully</td>
+                </tr>
+                <tr>
+                    <td>400</td>
+                    <td>Bad Request</td>
+                    <td>Invalid request data or validation errors</td>
+                </tr>
+                <tr>
+                    <td>401</td>
+                    <td>Unauthorized</td>
+                    <td>Authentication required or invalid token</td>
+                </tr>
+                <tr>
+                    <td>403</td>
+                    <td>Forbidden</td>
+                    <td>Insufficient permissions</td>
+                </tr>
+                <tr>
+                    <td>404</td>
+                    <td>Not Found</td>
+                    <td>Resource not found</td>
+                </tr>
+                <tr>
+                    <td>409</td>
+                    <td>Conflict</td>
+                    <td>Resource conflict (e.g., duplicate)</td>
+                </tr>
+                <tr>
+                    <td>422</td>
+                    <td>Unprocessable Entity</td>
+                    <td>Validation error</td>
+                </tr>
+                <tr>
+                    <td>429</td>
+                    <td>Too Many Requests</td>
+                    <td>Rate limit exceeded</td>
+                </tr>
+                <tr>
+                    <td>500</td>
+                    <td>Internal Server Error</td>
+                    <td>Unexpected server error</td>
+                </tr>
+                <tr>
+                    <td>503</td>
+                    <td>Service Unavailable</td>
+                    <td>Service temporarily unavailable</td>
+                </tr>
+            </table>
+        </div>
+
+        <!-- Rate Limiting Section -->
+        <div class="api-section">
+            <h2>⏱️ Rate Limiting</h2>
+            <table>
+                <tr>
+                    <th>Endpoint Type</th>
+                    <th>Limit</th>
+                    <th>Window</th>
+                </tr>
+                <tr>
+                    <td>Authentication</td>
+                    <td>10 requests</td>
+                    <td>Per minute per IP</td>
+                </tr>
+                <tr>
+                    <td>Admin endpoints</td>
+                    <td>50 requests</td>
+                    <td>Per minute per user</td>
+                </tr>
+                <tr>
+                    <td>General endpoints</td>
+                    <td>100 requests</td>
+                    <td>Per minute per user</td>
+                </tr>
+            </table>
+
+            <h3>Rate Limit Headers</h3>
+            <pre><code>X-RateLimit-Limit: 100
+X-RateLimit-Remaining: 95
+X-RateLimit-Reset: 1620000000</code></pre>
+        </div>
+
+        <!-- Versioning Section -->
+        <div class="api-section">
+            <h2>📌 API Versioning</h2>
+            <p>Current API Version: <strong>v1.0</strong></p>
+            <p>The API uses URL-based versioning. Future versions will be accessible via:</p>
+            <pre><code>https://localhost:7136/api/v2/...</code></pre>
+            <div class="info-box info">
+                <strong>💡 Backward Compatibility:</strong> We maintain backward compatibility for at least 12 months after a new version is released.
+            </div>
+        </div>
+
+        <!-- Support Section -->
+        <div class="api-section">
+            <h2>📞 Support & Resources</h2>
+
+            <h3>Documentation</h3>
+            <ul>
+                <li><strong>Swagger UI:</strong> <a href="https://localhost:7136/swagger" target="_blank">https://localhost:7136/swagger</a></li>
+                <li><strong>Postman Collection:</strong> Available on request</li>
+                <li><strong>Code Examples:</strong> See GitHub repository</li>
+            </ul>
+
+            <h3>Testing</h3>
+            <ul>
+                <li><strong>Test Environment:</strong> https://localhost:7136</li>
+                <li><strong>Test Credentials:</strong> See Overview section above</li>
+                <li><strong>Sample Data:</strong> Pre-loaded in test environment</li>
+            </ul>
+
+            <h3>Monitoring</h3>
+            <ul>
+                <li><strong>System Health:</strong> <code>GET /api/monitoring/health</code></li>
+                <li><strong>API Status:</strong> <code>GET /api/health</code></li>
+                <li><strong>Audit Health:</strong> <code>GET /api/audithealth</code></li>
+            </ul>
+        </div>
+    </div>
+
+    <footer>
+        <p><strong>ThinkOnERP API Documentation</strong></p>
+        <p>Version 1.0 | Last Updated: May 6, 2026</p>
+        <p>© 2026 ThinkOnERP. All rights reserved.</p>
+        <p style="margin-top: 10px; font-size: 0.9em;">
+            For support, please contact your system administrator or refer to the Swagger documentation.
+        </p>
+    </footer>
+
+    <a href="#navigation" class="back-to-top">↑</a>
+
+    <script>
+        // Smooth scrolling for navigation links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+
+        // Show/hide back to top button
+        window.addEventListener('scroll', function() {
+            const backToTop = document.querySelector('.back-to-top');
+            if (window.pageYOffset > 300) {
+                backToTop.style.display = 'flex';
+            } else {
+                backToTop.style.display = 'none';
+            }
+        });
+
+        // Print functionality
+        function printDocumentation() {
+            window.print();
+        }
+
+        // Search functionality (basic)
+        function searchDocumentation() {
+            const searchTerm = prompt('Enter search term:');
+            if (searchTerm) {
+                window.find(searchTerm);
+            }
+        }
+
+        // Add keyboard shortcuts
+        document.addEventListener('keydown', function(e) {
+            // Ctrl+F or Cmd+F for search
+            if ((e.ctrlKey || e.metaKey) && e.key === 'f') {
+                e.preventDefault();
+                searchDocumentation();
+            }
+            // Ctrl+P or Cmd+P for print
+            if ((e.ctrlKey || e.metaKey) && e.key === 'p') {
+                e.preventDefault();
+                printDocumentation();
+            }
+        });
+    </script>
+</body>
+</html>

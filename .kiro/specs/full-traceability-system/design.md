@@ -473,7 +473,61 @@ public interface IArchivalService
 - Supports external storage (S3, Azure Blob) for cold storage
 - Implements incremental archival to avoid long-running transactions
 
-### 8. AlertManager
+### 9. LegacyAuditService
+
+**Responsibility**: Provide audit data in the exact format shown in logs.png for backward compatibility.
+
+**Interface**:
+```csharp
+public interface ILegacyAuditService
+{
+    // Legacy view methods (matches logs.png exactly)
+    Task<PagedResult<LegacyAuditLogDto>> GetLegacyAuditLogsAsync(
+        LegacyAuditLogFilter filter, 
+        PaginationOptions pagination);
+    
+    Task<LegacyDashboardCounters> GetLegacyDashboardCountersAsync();
+    
+    // Status management (for error resolution workflow)
+    Task UpdateStatusAsync(long auditLogId, string status, string? resolutionNotes = null, long? assignedToUserId = null);
+    Task<string> GetCurrentStatusAsync(long auditLogId);
+    
+    // Data transformation methods
+    Task<LegacyAuditLogDto> TransformToLegacyFormatAsync(AuditLogEntry auditEntry);
+    Task<string> GenerateBusinessDescriptionAsync(AuditLogEntry auditEntry);
+    Task<string> ExtractDeviceIdentifierAsync(string userAgent, string? ipAddress);
+    Task<string> DetermineBusinessModuleAsync(string entityType, string? endpointPath);
+    Task<string> GenerateErrorCodeAsync(string exceptionType, string entityType);
+}
+```
+
+**Implementation Details**:
+- Transforms comprehensive audit data into the simple format shown in logs.png
+- Maps technical exception messages to business-friendly descriptions
+- Extracts device information from User-Agent strings
+- Determines business modules from entity types and endpoints
+- Generates standardized error codes for different exception types
+- Manages status workflow for error resolution
+
+**Data Transformation Examples**:
+```csharp
+// Transform technical audit entry to legacy format
+var legacyEntry = new LegacyAuditLogDto
+{
+    Id = auditEntry.RowId,
+    ErrorDescription = await GenerateBusinessDescriptionAsync(auditEntry),
+    Module = await DetermineBusinessModuleAsync(auditEntry.EntityType, auditEntry.EndpointPath),
+    Company = auditEntry.CompanyName ?? "Unknown",
+    Branch = auditEntry.BranchName ?? "Unknown", 
+    User = auditEntry.ActorName ?? "System",
+    Device = await ExtractDeviceIdentifierAsync(auditEntry.UserAgent, auditEntry.IpAddress),
+    DateTime = auditEntry.CreationDate,
+    Status = await GetCurrentStatusAsync(auditEntry.RowId),
+    ErrorCode = await GenerateErrorCodeAsync(auditEntry.ExceptionType, auditEntry.EntityType)
+};
+```
+
+### 10. AlertManager
 
 **Responsibility**: Manage alert notifications for critical events.
 
@@ -664,6 +718,13 @@ ALTER TABLE SYS_AUDIT_LOG ADD (
     SEVERITY NVARCHAR2(20) DEFAULT 'Info',
     EVENT_CATEGORY NVARCHAR2(50) DEFAULT 'DataChange',
     METADATA CLOB, -- Additional JSON metadata
+    
+    -- Legacy compatibility fields for logs.png format
+    BUSINESS_MODULE NVARCHAR2(50), -- POS, HR, Accounting, etc.
+    DEVICE_IDENTIFIER NVARCHAR2(100), -- POS Terminal 03, Desktop-HR-02, etc.
+    ERROR_CODE NVARCHAR2(50), -- DB_TIMEOUT_001, API_HR_045, etc.
+    BUSINESS_DESCRIPTION NVARCHAR2(4000), -- Human-readable error description
+    
     CONSTRAINT FK_AUDIT_LOG_BRANCH FOREIGN KEY (BRANCH_ID) REFERENCES SYS_BRANCH(ROW_ID)
 );
 
@@ -684,6 +745,37 @@ COMMENT ON COLUMN SYS_AUDIT_LOG.CORRELATION_ID IS 'Unique identifier tracking re
 COMMENT ON COLUMN SYS_AUDIT_LOG.EVENT_CATEGORY IS 'Category: DataChange, Authentication, Permission, Exception, Configuration, Request';
 COMMENT ON COLUMN SYS_AUDIT_LOG.SEVERITY IS 'Severity level: Critical, Error, Warning, Info';
 COMMENT ON COLUMN SYS_AUDIT_LOG.METADATA IS 'Additional JSON metadata for extensibility';
+```
+
+### Status Tracking Table for Legacy Compatibility
+
+```sql
+-- Status tracking table for error resolution workflow (matches logs.png status functionality)
+CREATE TABLE SYS_AUDIT_STATUS_TRACKING (
+    ROW_ID NUMBER(19) PRIMARY KEY,
+    AUDIT_LOG_ID NUMBER(19) NOT NULL,
+    STATUS NVARCHAR2(20) NOT NULL, -- Unresolved, In Progress, Resolved, Critical
+    ASSIGNED_TO_USER_ID NUMBER(19),
+    RESOLUTION_NOTES NVARCHAR2(4000),
+    STATUS_CHANGED_BY NUMBER(19) NOT NULL,
+    STATUS_CHANGED_DATE DATE DEFAULT SYSDATE,
+    CONSTRAINT FK_STATUS_AUDIT_LOG FOREIGN KEY (AUDIT_LOG_ID) REFERENCES SYS_AUDIT_LOG(ROW_ID),
+    CONSTRAINT FK_STATUS_ASSIGNED_USER FOREIGN KEY (ASSIGNED_TO_USER_ID) REFERENCES SYS_USERS(ROW_ID),
+    CONSTRAINT FK_STATUS_CHANGED_BY FOREIGN KEY (STATUS_CHANGED_BY) REFERENCES SYS_USERS(ROW_ID),
+    CONSTRAINT CHK_STATUS_VALUES CHECK (STATUS IN ('Unresolved', 'In Progress', 'Resolved', 'Critical'))
+);
+
+-- Index for status queries
+CREATE INDEX IDX_STATUS_TRACKING_AUDIT ON SYS_AUDIT_STATUS_TRACKING(AUDIT_LOG_ID);
+CREATE INDEX IDX_STATUS_TRACKING_STATUS ON SYS_AUDIT_STATUS_TRACKING(STATUS);
+CREATE INDEX IDX_STATUS_TRACKING_ASSIGNED ON SYS_AUDIT_STATUS_TRACKING(ASSIGNED_TO_USER_ID);
+
+-- Comments
+COMMENT ON TABLE SYS_AUDIT_STATUS_TRACKING IS 'Status tracking for audit log entries (legacy compatibility)';
+COMMENT ON COLUMN SYS_AUDIT_STATUS_TRACKING.STATUS IS 'Status values: Unresolved, In Progress, Resolved, Critical';
+
+-- Default status for new audit entries (only for exception-type entries)
+-- This will be handled by application logic to create status records for exceptions
 ```
 
 ### Archive Table Schema
@@ -716,6 +808,13 @@ CREATE TABLE SYS_AUDIT_LOG_ARCHIVE (
     SEVERITY NVARCHAR2(20) DEFAULT 'Info',
     EVENT_CATEGORY NVARCHAR2(50) DEFAULT 'DataChange',
     METADATA CLOB,
+    
+    -- Legacy compatibility fields
+    BUSINESS_MODULE NVARCHAR2(50),
+    DEVICE_IDENTIFIER NVARCHAR2(100),
+    ERROR_CODE NVARCHAR2(50),
+    BUSINESS_DESCRIPTION NVARCHAR2(4000),
+    
     CREATION_DATE DATE,
     ARCHIVED_DATE DATE DEFAULT SYSDATE,
     ARCHIVE_BATCH_ID NUMBER(19),
@@ -867,7 +966,7 @@ INTERVAL (NUMTOYMINTERVAL(1, 'MONTH'))
 
 ## API Design
 
-### Audit Query Endpoints
+### Legacy Audit Logs View (Compatible with logs.png)
 
 ```csharp
 [ApiController]
@@ -875,6 +974,42 @@ INTERVAL (NUMTOYMINTERVAL(1, 'MONTH'))
 [Authorize]
 public class AuditLogsController : ControllerBase
 {
+    /// <summary>
+    /// Get audit logs in legacy format (compatible with existing UI)
+    /// </summary>
+    /// <remarks>
+    /// Returns data in the exact format shown in logs.png interface:
+    /// Error Description, Module, Company, Branch, User, Device, Date & Time, Status, Actions
+    /// </remarks>
+    [HttpGet("legacy-view")]
+    [ProducesResponseType(typeof(PagedResult<LegacyAuditLogDto>), StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetLegacyAuditLogs(
+        [FromQuery] LegacyAuditLogFilter filter,
+        [FromQuery] PaginationOptions pagination)
+    {
+        // Implementation returns data exactly like logs.png
+    }
+
+    /// <summary>
+    /// Get dashboard counters for legacy view
+    /// </summary>
+    [HttpGet("legacy-dashboard")]
+    [ProducesResponseType(typeof(LegacyDashboardCounters), StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetLegacyDashboard()
+    {
+        // Returns: Unresolved count, In Progress count, Resolved count, Critical Errors count
+    }
+
+    /// <summary>
+    /// Update status of audit log entry (for error resolution workflow)
+    /// </summary>
+    [HttpPut("legacy/{id}/status")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    public async Task<IActionResult> UpdateLegacyStatus(long id, [FromBody] UpdateStatusRequest request)
+    {
+        // Updates status: Unresolved -> In Progress -> Resolved
+    }
+
     /// <summary>
     /// Query audit logs with filtering and pagination
     /// </summary>
@@ -1178,6 +1313,82 @@ public class AlertsController : ControllerBase
 ### DTOs
 
 ```csharp
+/// <summary>
+/// Legacy audit log DTO that matches the exact format from logs.png
+/// </summary>
+public class LegacyAuditLogDto
+{
+    public long Id { get; set; }
+    
+    // Matches "Error Description" column in logs.png
+    public string ErrorDescription { get; set; } = null!;
+    
+    // Matches "Module" column in logs.png (POS, HR, Accounting)
+    public string Module { get; set; } = null!;
+    
+    // Matches "Company" column in logs.png
+    public string Company { get; set; } = null!;
+    
+    // Matches "Branch" column in logs.png
+    public string Branch { get; set; } = null!;
+    
+    // Matches "User" column in logs.png
+    public string User { get; set; } = null!;
+    
+    // Matches "Device" column in logs.png (POS Terminal 03, Desktop-HR-02, etc.)
+    public string Device { get; set; } = null!;
+    
+    // Matches "Date & Time" column in logs.png
+    public DateTime DateTime { get; set; }
+    
+    // Matches "Status" column in logs.png (Unresolved, In Progress, Resolved, Critical Errors)
+    public string Status { get; set; } = null!;
+    
+    // For the Actions column functionality
+    public bool CanResolve { get; set; }
+    public bool CanDelete { get; set; }
+    public bool CanViewDetails { get; set; }
+    
+    // Additional fields for error tracking
+    public string? ErrorCode { get; set; } // DB_TIMEOUT_001, API_HR_045, etc.
+    public string? CorrelationId { get; set; } // For detailed tracing
+}
+
+/// <summary>
+/// Dashboard counters that match the top section of logs.png
+/// </summary>
+public class LegacyDashboardCounters
+{
+    public int UnresolvedCount { get; set; }      // Red circle with "3"
+    public int InProgressCount { get; set; }     // Orange circle with "3"
+    public int ResolvedCount { get; set; }       // Green circle with "4"
+    public int CriticalErrorsCount { get; set; } // Dark red circle with "2"
+}
+
+/// <summary>
+/// Filter for legacy audit logs view
+/// </summary>
+public class LegacyAuditLogFilter
+{
+    public string? Company { get; set; }
+    public string? Module { get; set; }
+    public string? Branch { get; set; }
+    public string? Status { get; set; }
+    public DateTime? StartDate { get; set; }
+    public DateTime? EndDate { get; set; }
+    public string? SearchTerm { get; set; } // Search by description, user, device, or error code
+}
+
+/// <summary>
+/// Request to update status of an audit log entry
+/// </summary>
+public class UpdateStatusRequest
+{
+    public string Status { get; set; } = null!; // Unresolved, In Progress, Resolved
+    public string? ResolutionNotes { get; set; }
+    public long? AssignedToUserId { get; set; }
+}
+
 public class AuditLogDto
 {
     public long Id { get; set; }

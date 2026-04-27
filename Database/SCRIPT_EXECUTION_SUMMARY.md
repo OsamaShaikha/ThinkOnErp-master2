@@ -23,10 +23,13 @@ Execute the scripts in the following order for a fresh database setup:
 
 ### Audit & Monitoring
 14. `13_Extend_SYS_AUDIT_LOG_For_Traceability.sql` - Enhanced audit logging
-15. `14_Create_Audit_Archive_Table.sql` - Audit archiving
-16. `15_Create_Performance_Metrics_Tables.sql` - Performance monitoring
-17. `16_Create_Security_Monitoring_Tables.sql` - Security monitoring
-18. `17_Create_Retention_Policy_Table.sql` - Data retention policies
+15. `57_Add_Foreign_Key_Constraint_BRANCH_ID.sql` - Foreign key constraint for BRANCH_ID
+16. `57_Add_Legacy_Compatibility_Columns.sql` - Legacy compatibility columns
+17. `14_Create_Audit_Archive_Table.sql` - Audit archiving
+18. `58_Update_SYS_AUDIT_LOG_ARCHIVE_Add_Legacy_Columns.sql` - **NEW: Complete archive table structure**
+19. `15_Create_Performance_Metrics_Tables.sql` - Performance monitoring
+20. `16_Create_Security_Monitoring_Tables.sql` - Security monitoring
+21. `17_Create_Retention_Policy_Table.sql` - Data retention policies
 
 ### **NEW: Fiscal Year & Company Extensions**
 19. **`18_Create_SYS_FISCAL_YEAR_Table.sql`** - Fiscal year table and procedures
@@ -50,6 +53,14 @@ Execute the scripts in the following order for a fresh database setup:
 ### Execute All New Scripts (Oracle SQL*Plus)
 ```bash
 sqlplus username/password@database <<EOF
+@Database/Scripts/13_Extend_SYS_AUDIT_LOG_For_Traceability.sql
+@Database/Scripts/57_Add_Foreign_Key_Constraint_BRANCH_ID.sql
+@Database/Scripts/57_Add_Legacy_Compatibility_Columns.sql
+@Database/Scripts/14_Create_Audit_Archive_Table.sql
+@Database/Scripts/58_Update_SYS_AUDIT_LOG_ARCHIVE_Add_Legacy_Columns.sql
+@Database/Scripts/15_Create_Performance_Metrics_Tables.sql
+@Database/Scripts/16_Create_Security_Monitoring_Tables.sql
+@Database/Scripts/17_Create_Retention_Policy_Table.sql
 @Database/Scripts/18_Create_SYS_FISCAL_YEAR_Table.sql
 @Database/Scripts/19_Extend_SYS_COMPANY_Table.sql
 @Database/Scripts/20_Update_SYS_COMPANY_Procedures.sql
@@ -65,6 +76,21 @@ EOF
 
 ### Execute Individual Scripts
 ```bash
+# Extend audit log table
+sqlplus username/password@database @Database/Scripts/13_Extend_SYS_AUDIT_LOG_For_Traceability.sql
+
+# Add foreign key constraint for BRANCH_ID
+sqlplus username/password@database @Database/Scripts/57_Add_Foreign_Key_Constraint_BRANCH_ID.sql
+
+# Add legacy compatibility columns to main table
+sqlplus username/password@database @Database/Scripts/57_Add_Legacy_Compatibility_Columns.sql
+
+# Create audit archive table
+sqlplus username/password@database @Database/Scripts/14_Create_Audit_Archive_Table.sql
+
+# Update archive table with legacy columns (NEW - Task 1.7)
+sqlplus username/password@database @Database/Scripts/58_Update_SYS_AUDIT_LOG_ARCHIVE_Add_Legacy_Columns.sql
+
 # Create fiscal year table
 sqlplus username/password@database @Database/Scripts/18_Create_SYS_FISCAL_YEAR_Table.sql
 
@@ -94,6 +120,30 @@ sqlplus username/password@database @Database/Scripts/34_Recreate_Company_Procedu
 ```
 
 ## Verification Queries
+
+### Check Foreign Key Constraint
+```sql
+-- Verify FK_AUDIT_LOG_BRANCH constraint exists and is enabled
+SELECT 
+    constraint_name,
+    constraint_type,
+    table_name,
+    r_constraint_name,
+    status
+FROM user_constraints
+WHERE constraint_name = 'FK_AUDIT_LOG_BRANCH';
+
+-- Verify parent-child relationship
+SELECT 
+    a.constraint_name,
+    a.table_name AS child_table,
+    a.column_name AS child_column,
+    b.table_name AS parent_table,
+    b.column_name AS parent_column
+FROM user_cons_columns a
+JOIN user_cons_columns b ON a.r_constraint_name = b.constraint_name
+WHERE a.constraint_name = 'FK_AUDIT_LOG_BRANCH';
+```
 
 ### Check Fiscal Year Table
 ```sql

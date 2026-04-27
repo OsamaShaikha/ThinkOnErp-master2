@@ -3,6 +3,7 @@ using MediatR;
 using Microsoft.Extensions.DependencyInjection;
 using System.Reflection;
 using ThinkOnErp.Application.Behaviors;
+using ThinkOnErp.Application.Services;
 
 namespace ThinkOnErp.Application;
 
@@ -26,13 +27,17 @@ public static class DependencyInjection
         {
             cfg.RegisterServicesFromAssembly(assembly);
             
-            // Register pipeline behaviors in order: Logging -> Validation -> Handler
+            // Register pipeline behaviors in order: Logging -> Audit -> Validation -> Handler
             cfg.AddBehavior(typeof(IPipelineBehavior<,>), typeof(LoggingBehavior<,>));
+            cfg.AddBehavior(typeof(IPipelineBehavior<,>), typeof(AuditLoggingBehavior<,>));
             cfg.AddBehavior(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
         });
 
         // Register FluentValidation validators from this assembly
         services.AddValidatorsFromAssembly(assembly);
+
+        // Register application services
+        services.AddScoped<ITicketConfigurationService, TicketConfigurationService>();
 
         return services;
     }
