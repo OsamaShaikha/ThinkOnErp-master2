@@ -120,7 +120,7 @@ public class CompanyRepository : ICompanyRepository
         command.CommandType = CommandType.StoredProcedure;
         command.CommandText = "SP_SYS_COMPANY_INSERT";
 
-        // Add input parameters - original fields
+        // Add input parameters matching actual table schema
         _ = command.Parameters.Add(new OracleParameter
         {
             ParameterName = "P_ROW_DESC",
@@ -137,7 +137,6 @@ public class CompanyRepository : ICompanyRepository
             Value = company.RowDescE
         });
 
-        // Add input parameters - new fields
         _ = command.Parameters.Add(new OracleParameter
         {
             ParameterName = "P_LEGAL_NAME",
@@ -170,7 +169,6 @@ public class CompanyRepository : ICompanyRepository
             Value = (object?)company.TaxNumber ?? DBNull.Value
         });
 
-        // Original fields
         _ = command.Parameters.Add(new OracleParameter
         {
             ParameterName = "P_COUNTRY_ID",
@@ -225,7 +223,7 @@ public class CompanyRepository : ICompanyRepository
         command.CommandType = CommandType.StoredProcedure;
         command.CommandText = "SP_SYS_COMPANY_UPDATE";
 
-        // Add input parameters
+        // Add input parameters matching actual table schema
         _ = command.Parameters.Add(new OracleParameter
         {
             ParameterName = "P_ROW_ID",
@@ -250,7 +248,6 @@ public class CompanyRepository : ICompanyRepository
             Value = company.RowDescE
         });
 
-        // New fields
         _ = command.Parameters.Add(new OracleParameter
         {
             ParameterName = "P_LEGAL_NAME",
@@ -283,7 +280,6 @@ public class CompanyRepository : ICompanyRepository
             Value = (object?)company.TaxNumber ?? DBNull.Value
         });
 
-        // Original fields
         _ = command.Parameters.Add(new OracleParameter
         {
             ParameterName = "P_COUNTRY_ID",
@@ -298,6 +294,14 @@ public class CompanyRepository : ICompanyRepository
             OracleDbType = OracleDbType.Decimal,
             Direction = ParameterDirection.Input,
             Value = (object?)company.CurrId ?? DBNull.Value
+        });
+
+        _ = command.Parameters.Add(new OracleParameter
+        {
+            ParameterName = "P_DEFAULT_BRANCH_ID",
+            OracleDbType = OracleDbType.Decimal,
+            Direction = ParameterDirection.Input,
+            Value = (object?)company.DefaultBranchId ?? DBNull.Value
         });
 
         _ = command.Parameters.Add(new OracleParameter

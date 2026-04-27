@@ -26,6 +26,7 @@ public class UpdateCompanyCommandHandler : IRequestHandler<UpdateCompanyCommand,
             TaxNumber = request.TaxNumber,
             CountryId = request.CountryId,
             CurrId = request.CurrId,
+            DefaultBranchId = request.DefaultBranchId,
             UpdateUser = request.UpdateUser,
             UpdateDate = DateTime.UtcNow
         };

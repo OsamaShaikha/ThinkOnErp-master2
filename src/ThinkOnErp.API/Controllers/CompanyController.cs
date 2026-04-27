@@ -238,6 +238,7 @@ public class CompanyController : ControllerBase
                 LegalNameEn = dto.LegalNameEn,
                 CompanyCode = dto.CompanyCode,
                 TaxNumber = dto.TaxNumber,
+                DefaultBranchId = dto.DefaultBranchId,
                 CompanyLogoBase64 = dto.CompanyLogoBase64,
                 UpdateUser = User.Identity?.Name ?? "system"
             };

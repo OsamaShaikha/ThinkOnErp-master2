@@ -1,0 +1,634 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ThinkOnErp - Project Documentation</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#0f0f1a;--bg2:#161625;--bg3:#1e1e32;--card:#1a1a2e;--border:#2a2a4a;--text:#e0e0f0;--text2:#a0a0c0;--accent:#6c63ff;--accent2:#ff6b9d;--accent3:#00d4aa;--green:#22c55e;--yellow:#eab308;--orange:#f97316;--red:#ef4444;--blue:#3b82f6}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-height:1.7;overflow-x:hidden}
+.hero{background:linear-gradient(135deg,#1a1a3e 0%,#0f0f2a 50%,#1a0a2e 100%);padding:80px 0 60px;text-align:center;position:relative;overflow:hidden}
+.hero::before{content:'';position:absolute;top:-50%;left:-50%;width:200%;height:200%;background:radial-gradient(circle at 30% 40%,rgba(108,99,255,.08) 0%,transparent 50%),radial-gradient(circle at 70% 60%,rgba(255,107,157,.06) 0%,transparent 50%);animation:float 20s ease-in-out infinite}
+@keyframes float{0%,100%{transform:translate(0,0)}50%{transform:translate(-2%,2%)}}
+.hero h1{font-size:3.2rem;font-weight:800;background:linear-gradient(135deg,#6c63ff,#ff6b9d,#00d4aa);-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:12px;position:relative}
+.hero .subtitle{font-size:1.15rem;color:var(--text2);max-width:700px;margin:0 auto 30px}
+.badges{display:flex;justify-content:center;gap:10px;flex-wrap:wrap;margin-top:16px;position:relative}
+.badge{padding:6px 16px;border-radius:20px;font-size:.78rem;font-weight:600;border:1px solid var(--border);background:rgba(255,255,255,.04)}
+.badge.net{color:#9b7dff;border-color:#6c63ff40}.badge.oracle{color:#ff6b6b;border-color:#ff6b6b40}
+.badge.jwt{color:#fbbf24;border-color:#fbbf2440}.badge.clean{color:#22c55e;border-color:#22c55e40}
+.badge.cqrs{color:#38bdf8;border-color:#38bdf840}.badge.otel{color:#ff6b9d;border-color:#ff6b9d40}
+.container{max-width:1200px;margin:0 auto;padding:0 24px}
+nav.sidebar{position:fixed;left:0;top:0;width:260px;height:100vh;background:var(--bg2);border-right:1px solid var(--border);padding:20px 0;overflow-y:auto;z-index:100}
+nav.sidebar .logo{padding:0 20px 20px;font-weight:700;font-size:1.1rem;color:var(--accent);border-bottom:1px solid var(--border)}
+nav.sidebar a{display:block;padding:8px 20px;color:var(--text2);text-decoration:none;font-size:.85rem;transition:all .2s}
+nav.sidebar a:hover{color:var(--accent);background:rgba(108,99,255,.06)}
+nav.sidebar .nav-group{padding:14px 20px 4px;font-weight:700;font-size:.7rem;letter-spacing:1.5px;text-transform:uppercase;color:var(--text2);opacity:.5}
+main{margin-left:260px;padding:0}
+section{padding:50px 40px;border-bottom:1px solid var(--border)}
+section:target{scroll-margin-top:20px}
+h2{font-size:1.8rem;font-weight:700;margin-bottom:8px;color:#fff}
+h2 .icon{margin-right:10px}
+h3{font-size:1.15rem;font-weight:600;margin:28px 0 12px;color:var(--accent)}
+h4{font-size:.95rem;font-weight:600;margin:18px 0 8px;color:var(--text)}
+p,.desc{color:var(--text2);margin-bottom:14px;font-size:.92rem}
+.grid{display:grid;gap:18px;margin:20px 0}
+.grid-2{grid-template-columns:repeat(auto-fill,minmax(340px,1fr))}
+.grid-3{grid-template-columns:repeat(auto-fill,minmax(260px,1fr))}
+.grid-4{grid-template-columns:repeat(auto-fill,minmax(200px,1fr))}
+.card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:22px;transition:transform .2s,box-shadow .2s}
+.card:hover{transform:translateY(-2px);box-shadow:0 8px 32px rgba(108,99,255,.1)}
+.card h4{margin:0 0 8px;color:#fff;font-size:.95rem}
+.card p{margin:0;font-size:.82rem;color:var(--text2);line-height:1.5}
+.card .tag{display:inline-block;padding:2px 8px;border-radius:6px;font-size:.68rem;font-weight:600;margin-top:8px}
+.tag-api{background:rgba(59,130,246,.15);color:#60a5fa}
+.tag-domain{background:rgba(34,197,94,.15);color:#4ade80}
+.tag-infra{background:rgba(249,115,22,.15);color:#fb923c}
+.tag-app{background:rgba(168,85,247,.15);color:#c084fc}
+.tag-db{background:rgba(239,68,68,.15);color:#f87171}
+.tag-test{background:rgba(234,179,8,.15);color:#facc15}
+table{width:100%;border-collapse:collapse;margin:16px 0;font-size:.85rem}
+th{text-align:left;padding:10px 14px;background:var(--bg3);color:var(--text);border:1px solid var(--border);font-weight:600;font-size:.78rem;text-transform:uppercase;letter-spacing:.5px}
+td{padding:10px 14px;border:1px solid var(--border);color:var(--text2)}
+tr:hover td{background:rgba(108,99,255,.03)}
+code{font-family:'JetBrains Mono',monospace;background:var(--bg3);padding:2px 6px;border-radius:4px;font-size:.82rem;color:var(--accent)}
+pre{background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:18px;overflow-x:auto;font-size:.82rem;margin:14px 0;line-height:1.6}
+pre code{background:none;padding:0}
+.stat-row{display:flex;gap:16px;flex-wrap:wrap;margin:20px 0}
+.stat{flex:1;min-width:140px;background:var(--card);border:1px solid var(--border);border-radius:10px;padding:18px;text-align:center}
+.stat .num{font-size:2rem;font-weight:800;background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.stat .label{font-size:.75rem;color:var(--text2);margin-top:4px;text-transform:uppercase;letter-spacing:.5px}
+.method{display:inline-block;padding:2px 8px;border-radius:4px;font-size:.72rem;font-weight:700;min-width:48px;text-align:center;margin-right:6px}
+.GET{background:rgba(34,197,94,.15);color:#4ade80}.POST{background:rgba(59,130,246,.15);color:#60a5fa}
+.PUT{background:rgba(234,179,8,.15);color:#facc15}.DELETE{background:rgba(239,68,68,.15);color:#f87171}
+.phase{display:inline-block;padding:4px 12px;border-radius:8px;font-size:.75rem;font-weight:600;margin-bottom:12px}
+.phase-done{background:rgba(34,197,94,.12);color:#4ade80;border:1px solid rgba(34,197,94,.25)}
+.phase-wip{background:rgba(234,179,8,.12);color:#facc15;border:1px solid rgba(234,179,8,.25)}
+.phase-todo{background:rgba(148,163,184,.1);color:#94a3b8;border:1px solid rgba(148,163,184,.2)}
+.arch-diagram{display:flex;flex-direction:column;gap:4px;margin:20px 0;align-items:center}
+.arch-layer{width:100%;max-width:700px;padding:18px 24px;border-radius:10px;text-align:center;font-weight:600;font-size:.9rem;position:relative}
+.arch-arrow{font-size:1.2rem;color:var(--text2);opacity:.4}
+.layer-api{background:linear-gradient(135deg,rgba(59,130,246,.15),rgba(59,130,246,.05));border:1px solid rgba(59,130,246,.3);color:#60a5fa}
+.layer-app{background:linear-gradient(135deg,rgba(168,85,247,.15),rgba(168,85,247,.05));border:1px solid rgba(168,85,247,.3);color:#c084fc}
+.layer-domain{background:linear-gradient(135deg,rgba(34,197,94,.15),rgba(34,197,94,.05));border:1px solid rgba(34,197,94,.3);color:#4ade80}
+.layer-infra{background:linear-gradient(135deg,rgba(249,115,22,.15),rgba(249,115,22,.05));border:1px solid rgba(249,115,22,.3);color:#fb923c}
+.flow{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:12px 0;font-size:.82rem}
+.flow-step{padding:6px 14px;border-radius:8px;background:var(--card);border:1px solid var(--border);font-weight:500}
+.flow-arrow{color:var(--text2);opacity:.4}
+.toc-list{column-count:2;column-gap:30px;list-style:none;margin:14px 0}
+.toc-list li{break-inside:avoid;padding:4px 0;font-size:.85rem;color:var(--text2)}
+.toc-list li::before{content:'→ ';color:var(--accent);font-weight:600}
+@media(max-width:900px){nav.sidebar{display:none}main{margin-left:0}section{padding:30px 20px}.grid-2,.grid-3{grid-template-columns:1fr}.toc-list{column-count:1}}
+</style>
+</head>
+<body>
+
+<nav class="sidebar">
+<div class="logo">📘 ThinkOnErp Docs</div>
+<div class="nav-group">Overview</div>
+<a href="#overview">Project Overview</a>
+<a href="#architecture">Architecture</a>
+<a href="#tech-stack">Technology Stack</a>
+<div class="nav-group">Core Modules</div>
+<a href="#domain">Domain Layer</a>
+<a href="#application">Application Layer</a>
+<a href="#infrastructure">Infrastructure Layer</a>
+<a href="#api">API Layer</a>
+<div class="nav-group">Features</div>
+<a href="#auth">Authentication & Auth</a>
+<a href="#endpoints">API Endpoints</a>
+<a href="#tickets">Ticket System</a>
+<a href="#permissions">Permissions System</a>
+<div class="nav-group">Traceability</div>
+<a href="#audit">Audit & Traceability</a>
+<a href="#monitoring">Monitoring & APM</a>
+<a href="#security-mon">Security Monitoring</a>
+<a href="#alerts">Alert System</a>
+<a href="#compliance">Compliance Reports</a>
+<a href="#archival">Archival & Retention</a>
+<div class="nav-group">Operations</div>
+<a href="#database">Database</a>
+<a href="#config">Configuration</a>
+<a href="#deployment">Deployment</a>
+<a href="#testing">Testing</a>
+<a href="#project-stats">Project Stats</a>
+</nav>
+
+<main>
+<!-- HERO -->
+<div class="hero">
+<h1>ThinkOnErp</h1>
+<p class="subtitle">Enterprise Resource Planning API — A production-ready .NET 8 system with Clean Architecture, CQRS, full audit traceability, compliance reporting, and enterprise-grade security.</p>
+<div class="badges">
+<span class="badge net">.NET 8</span>
+<span class="badge oracle">Oracle DB</span>
+<span class="badge jwt">JWT Auth</span>
+<span class="badge clean">Clean Architecture</span>
+<span class="badge cqrs">CQRS / MediatR</span>
+<span class="badge otel">OpenTelemetry</span>
+</div>
+</div>
+
+<!-- OVERVIEW -->
+<section id="overview">
+<h2><span class="icon">📋</span>Project Overview</h2>
+<p>ThinkOnErp is a comprehensive Enterprise Resource Planning (ERP) API designed for multi-tenant organizations. It provides secure role-based management of companies, branches, users, currencies, fiscal years, permissions, and a full support ticket system. On top of the core ERP, a massive <strong>Full Traceability System</strong> provides audit logging, compliance reporting, performance monitoring, security threat detection, and alerting.</p>
+
+<div class="stat-row">
+<div class="stat"><div class="num">21</div><div class="label">API Controllers</div></div>
+<div class="stat"><div class="num">24</div><div class="label">Domain Entities</div></div>
+<div class="stat"><div class="num">49</div><div class="label">Interfaces</div></div>
+<div class="stat"><div class="num">45</div><div class="label">Services</div></div>
+<div class="stat"><div class="num">23</div><div class="label">Repositories</div></div>
+<div class="stat"><div class="num">91</div><div class="label">DB Scripts</div></div>
+</div>
+</section>
+
+<!-- ARCHITECTURE -->
+<section id="architecture">
+<h2><span class="icon">🏗️</span>Architecture</h2>
+<p>The system follows <strong>Clean Architecture</strong> with strict dependency rules. All dependencies point inward — the Domain layer has zero external dependencies.</p>
+
+<div class="arch-diagram">
+<div class="arch-layer layer-api">🌐 API Layer — Controllers, Middleware, Program.cs</div>
+<div class="arch-arrow">▼</div>
+<div class="arch-layer layer-app">⚙️ Application Layer — MediatR Commands/Queries, DTOs, Validators, Behaviors</div>
+<div class="arch-arrow">▼</div>
+<div class="arch-layer layer-domain">💎 Domain Layer — Entities, Interfaces, Models, Exceptions (zero dependencies)</div>
+<div class="arch-arrow">▲</div>
+<div class="arch-layer layer-infra">🔧 Infrastructure Layer — ADO.NET Repositories, JWT Service, Audit Services, Oracle DB</div>
+</div>
+
+<h3>Request Pipeline Flow</h3>
+<div class="flow">
+<span class="flow-step">HTTP Request</span><span class="flow-arrow">→</span>
+<span class="flow-step">RequestTracingMiddleware</span><span class="flow-arrow">→</span>
+<span class="flow-step">ExceptionHandlingMiddleware</span><span class="flow-arrow">→</span>
+<span class="flow-step">JWT Authentication</span><span class="flow-arrow">→</span>
+<span class="flow-step">ForceLogoutMiddleware</span><span class="flow-arrow">→</span>
+<span class="flow-step">Authorization</span><span class="flow-arrow">→</span>
+<span class="flow-step">Controller</span><span class="flow-arrow">→</span>
+<span class="flow-step">MediatR Pipeline</span><span class="flow-arrow">→</span>
+<span class="flow-step">Handler</span><span class="flow-arrow">→</span>
+<span class="flow-step">Repository → Oracle</span>
+</div>
+</section>
+
+<!-- TECH STACK -->
+<section id="tech-stack">
+<h2><span class="icon">🛠️</span>Technology Stack</h2>
+<div class="grid grid-3">
+<div class="card"><h4>Framework</h4><p>ASP.NET Core 8 Web API</p></div>
+<div class="card"><h4>Database</h4><p>Oracle Database with stored procedures, ADO.NET, Oracle.ManagedDataAccess.Core</p></div>
+<div class="card"><h4>Authentication</h4><p>JWT Bearer tokens, SHA-256 password hashing, refresh tokens</p></div>
+<div class="card"><h4>CQRS Pattern</h4><p>MediatR for command/query separation with pipeline behaviors</p></div>
+<div class="card"><h4>Validation</h4><p>FluentValidation with automatic MediatR pipeline integration</p></div>
+<div class="card"><h4>Logging</h4><p>Serilog — console + file sinks, correlation IDs, structured output</p></div>
+<div class="card"><h4>Caching</h4><p>Redis distributed cache + in-memory cache</p></div>
+<div class="card"><h4>Observability</h4><p>OpenTelemetry (traces + metrics), Prometheus, Grafana</p></div>
+<div class="card"><h4>Testing</h4><p>xUnit, FsCheck (property-based, 100+ iterations), Moq</p></div>
+<div class="card"><h4>Containerization</h4><p>Docker + Docker Compose (prod, simple, monitoring profiles)</p></div>
+<div class="card"><h4>Cloud Storage</h4><p>AWS S3 and Azure Blob Storage for audit archive cold storage</p></div>
+<div class="card"><h4>Notifications</h4><p>SMTP Email, Twilio SMS, Webhooks</p></div>
+</div>
+</section>
+
+<!-- DOMAIN LAYER -->
+<section id="domain">
+<h2><span class="icon">💎</span>Domain Layer</h2>
+<p>The core domain contains 24 entities with zero external dependencies, 49 repository/service interfaces, 9 exception types, and 9 models.</p>
+
+<h3>Core ERP Entities</h3>
+<div class="grid grid-4">
+<div class="card"><h4>SysCompany</h4><p>Multi-tenant company entity</p><span class="tag tag-domain">Entity</span></div>
+<div class="card"><h4>SysBranch</h4><p>Branch within a company</p><span class="tag tag-domain">Entity</span></div>
+<div class="card"><h4>SysUser</h4><p>System users with roles</p><span class="tag tag-domain">Entity</span></div>
+<div class="card"><h4>SysRole</h4><p>Role definitions</p><span class="tag tag-domain">Entity</span></div>
+<div class="card"><h4>SysCurrency</h4><p>Currency management</p><span class="tag tag-domain">Entity</span></div>
+<div class="card"><h4>SysFiscalYear</h4><p>Fiscal year periods</p><span class="tag tag-domain">Entity</span></div>
+<div class="card"><h4>SysSuperAdmin</h4><p>Super admin accounts</p><span class="tag tag-domain">Entity</span></div>
+<div class="card"><h4>SysScreen</h4><p>UI screen definitions</p><span class="tag tag-domain">Entity</span></div>
+</div>
+
+<h3>Ticket System Entities</h3>
+<div class="grid grid-4">
+<div class="card"><h4>SysRequestTicket</h4><p>Support tickets</p><span class="tag tag-domain">Entity</span></div>
+<div class="card"><h4>SysTicketType</h4><p>Ticket type classification</p><span class="tag tag-domain">Entity</span></div>
+<div class="card"><h4>SysTicketStatus</h4><p>Workflow statuses</p><span class="tag tag-domain">Entity</span></div>
+<div class="card"><h4>SysTicketPriority</h4><p>Priority levels with SLA</p><span class="tag tag-domain">Entity</span></div>
+<div class="card"><h4>SysTicketCategory</h4><p>Ticket categorization</p><span class="tag tag-domain">Entity</span></div>
+<div class="card"><h4>SysTicketComment</h4><p>Threaded comments</p><span class="tag tag-domain">Entity</span></div>
+<div class="card"><h4>SysTicketAttachment</h4><p>File attachments</p><span class="tag tag-domain">Entity</span></div>
+<div class="card"><h4>SysTicketConfig</h4><p>Configuration settings</p><span class="tag tag-domain">Entity</span></div>
+</div>
+
+<h3>Audit Event Models</h3>
+<div class="grid grid-3">
+<div class="card"><h4>AuditEvent (base)</h4><p>Abstract base class with correlation ID, actor, entity, timestamp</p></div>
+<div class="card"><h4>DataChangeAuditEvent</h4><p>Tracks INSERT / UPDATE / DELETE with old/new values</p></div>
+<div class="card"><h4>AuthenticationAuditEvent</h4><p>Login, logout, failed login events</p></div>
+<div class="card"><h4>PermissionChangeAuditEvent</h4><p>Permission grant/revoke tracking</p></div>
+<div class="card"><h4>ExceptionAuditEvent</h4><p>Exception logging with stack trace</p></div>
+<div class="card"><h4>ConfigChangeAuditEvent</h4><p>System configuration changes</p></div>
+</div>
+</section>
+
+<!-- APPLICATION LAYER -->
+<section id="application">
+<h2><span class="icon">⚙️</span>Application Layer</h2>
+<p>Implements CQRS with MediatR across 13 feature modules, 77 DTOs, and 3 pipeline behaviors.</p>
+
+<h3>CQRS Feature Modules</h3>
+<table>
+<tr><th>Module</th><th>Commands & Queries</th><th>Description</th></tr>
+<tr><td>Auth</td><td>Login, RefreshToken</td><td>JWT authentication flow</td></tr>
+<tr><td>Companies</td><td>Create, Update, Delete, GetAll, GetById + more</td><td>Company management with logo support</td></tr>
+<tr><td>Branches</td><td>CRUD + 19 operations</td><td>Branch management within companies</td></tr>
+<tr><td>Users</td><td>CRUD + ChangePassword, ResetPassword</td><td>User management with role assignment</td></tr>
+<tr><td>Roles</td><td>CRUD operations</td><td>Role definition management</td></tr>
+<tr><td>Currencies</td><td>CRUD operations</td><td>Multi-currency support</td></tr>
+<tr><td>FiscalYears</td><td>CRUD + 18 operations</td><td>Fiscal year period management</td></tr>
+<tr><td>Permissions</td><td>20 operations</td><td>Screen-level & user-level permissions</td></tr>
+<tr><td>Tickets</td><td>36 operations</td><td>Full ticket lifecycle with comments & attachments</td></tr>
+<tr><td>TicketTypes</td><td>CRUD + config</td><td>Ticket type & category management</td></tr>
+<tr><td>SuperAdmins</td><td>CRUD + password management</td><td>Super admin operations</td></tr>
+<tr><td>SavedSearches</td><td>CRUD</td><td>User-saved search criteria</td></tr>
+<tr><td>TicketConfig</td><td>16 operations</td><td>Ticket system configuration</td></tr>
+</table>
+
+<h3>Pipeline Behaviors</h3>
+<div class="grid grid-3">
+<div class="card"><h4>ValidationBehavior</h4><p>Auto-runs FluentValidation before handler execution</p><span class="tag tag-app">Behavior</span></div>
+<div class="card"><h4>LoggingBehavior</h4><p>Logs request/response timing for every MediatR command</p><span class="tag tag-app">Behavior</span></div>
+<div class="card"><h4>AuditLoggingBehavior</h4><p>Auto-audits all commands with before/after state capture</p><span class="tag tag-app">Behavior</span></div>
+</div>
+</section>
+
+<!-- INFRASTRUCTURE LAYER -->
+<section id="infrastructure">
+<h2><span class="icon">🔧</span>Infrastructure Layer</h2>
+<p>Contains 23 repositories, 45+ services, resilience patterns, and 27 configuration option classes. All database operations use stored procedures via ADO.NET.</p>
+
+<h3>Key Services</h3>
+<div class="grid grid-3">
+<div class="card"><h4>AuditLogger</h4><p>High-performance batch audit writer using System.Threading.Channels. Default: 50 events/batch, 100ms window.</p></div>
+<div class="card"><h4>ResilientAuditLogger</h4><p>Wraps AuditLogger with circuit breaker pattern for database failure resilience.</p></div>
+<div class="card"><h4>SecurityMonitor</h4><p>Real-time threat detection: SQL injection, XSS, brute force, anomalous behavior.</p></div>
+<div class="card"><h4>PerformanceMonitor</h4><p>Sliding window metrics, t-digest percentiles, slow query detection.</p></div>
+<div class="card"><h4>ComplianceReporter</h4><p>Generates GDPR, SOX, ISO 27001 compliance reports. PDF/CSV/JSON export.</p></div>
+<div class="card"><h4>AlertManager</h4><p>Alert processing with rate limiting. Email, SMS (Twilio), Webhook channels.</p></div>
+<div class="card"><h4>ArchivalService</h4><p>GZip-compressed archival with SHA-256 checksums. S3/Azure cold storage.</p></div>
+<div class="card"><h4>AuditDataEncryption</h4><p>AES encryption for sensitive audit data at rest.</p></div>
+<div class="card"><h4>AuditLogIntegrityService</h4><p>Cryptographic signatures for tamper-evident audit log entries.</p></div>
+<div class="card"><h4>KeyManagementService</h4><p>Encryption/signing key lifecycle with automated rotation.</p></div>
+<div class="card"><h4>FileSystemAuditFallback</h4><p>Writes audit events to disk during database outages, replays on recovery.</p></div>
+<div class="card"><h4>SlaCalculationService</h4><p>SLA response/resolution time calculations for ticket system.</p></div>
+</div>
+
+<h3>Background Services</h3>
+<table>
+<tr><th>Service</th><th>Purpose</th></tr>
+<tr><td>AuditLogger (HostedService)</td><td>Continuous batch processing of queued audit events</td></tr>
+<tr><td>ArchivalBackgroundService</td><td>Cron-scheduled archival and retention policy enforcement</td></tr>
+<tr><td>MetricsAggregationBackgroundService</td><td>Hourly performance metrics rollup</td></tr>
+<tr><td>AlertProcessingBackgroundService</td><td>Alert rule evaluation and notification dispatch</td></tr>
+<tr><td>ConnectionPoolMonitoringService</td><td>Oracle connection pool utilization tracking</td></tr>
+<tr><td>MemoryMonitor</td><td>Application memory usage tracking and alerting</td></tr>
+<tr><td>FallbackReplayBackgroundService</td><td>Replays audit events from file fallback after DB recovery</td></tr>
+<tr><td>SlaEscalationBackgroundService</td><td>Automatic ticket escalation on SLA breach</td></tr>
+<tr><td>KeyRotationBackgroundService</td><td>Automated encryption/signing key rotation</td></tr>
+<tr><td>ScheduledReportGenerationService</td><td>Periodic compliance report generation</td></tr>
+</table>
+</section>
+
+<!-- API LAYER -->
+<section id="api">
+<h2><span class="icon">🌐</span>API Layer</h2>
+<p>21 controllers with comprehensive Swagger/OpenAPI documentation. All endpoints wrapped in a unified <code>ApiResponse&lt;T&gt;</code> envelope with trace IDs.</p>
+
+<h3>Middleware Pipeline</h3>
+<div class="grid grid-3">
+<div class="card"><h4>RequestTracingMiddleware</h4><p>Generates correlation IDs, captures request/response payloads, measures execution time, populates legacy audit fields.</p></div>
+<div class="card"><h4>ExceptionHandlingMiddleware</h4><p>Global exception catching with audit logging. Returns structured error responses.</p></div>
+<div class="card"><h4>ForceLogoutMiddleware</h4><p>Checks for forced logout state, invalidates JWT tokens on demand.</p></div>
+</div>
+</section>
+
+<!-- AUTH -->
+<section id="auth">
+<h2><span class="icon">🔐</span>Authentication & Authorization</h2>
+<div class="grid grid-2">
+<div class="card">
+<h4>JWT Bearer Authentication</h4>
+<p>Login returns access + refresh token pair. Tokens contain userId, companyId, branchId, isAdmin claims. Configurable expiration. SHA-256 password hashing.</p>
+</div>
+<div class="card">
+<h4>Authorization Policies</h4>
+<p><strong>AdminOnly</strong> — Admin-level operations<br>
+<strong>MultiTenantAccess</strong> — Auto-filters data by company/branch<br>
+<strong>AuditDataAccess</strong> — Role-based audit data filtering<br>
+<strong>AdminOnlyAuditDataAccess</strong> — Admin-restricted audit access</p>
+</div>
+</div>
+</section>
+
+<!-- ENDPOINTS -->
+<section id="endpoints">
+<h2><span class="icon">📡</span>API Endpoints</h2>
+<table>
+<tr><th>Controller</th><th>Base Path</th><th>Key Operations</th><th>Auth</th></tr>
+<tr><td>AuthController</td><td><code>/api/auth</code></td><td>Login, Refresh Token</td><td>Public</td></tr>
+<tr><td>CompanyController</td><td><code>/api/companies</code></td><td>CRUD with logo (Base64), default branch creation</td><td>Admin</td></tr>
+<tr><td>BranchController</td><td><code>/api/branches</code></td><td>CRUD, fiscal year allocation</td><td>Admin</td></tr>
+<tr><td>UsersController</td><td><code>/api/users</code></td><td>CRUD, change/reset password, force logout</td><td>Admin</td></tr>
+<tr><td>RolesController</td><td><code>/api/roles</code></td><td>Full CRUD with soft delete</td><td>Admin</td></tr>
+<tr><td>CurrencyController</td><td><code>/api/currencies</code></td><td>Full CRUD</td><td>Admin</td></tr>
+<tr><td>FiscalYearController</td><td><code>/api/fiscalyears</code></td><td>CRUD, period management</td><td>Admin</td></tr>
+<tr><td>PermissionsController</td><td><code>/api/permissions</code></td><td>Screen/user permission management</td><td>Admin</td></tr>
+<tr><td>TicketsController</td><td><code>/api/tickets</code></td><td>Full lifecycle: create, assign, comment, attach, close</td><td>Auth</td></tr>
+<tr><td>SuperAdminController</td><td><code>/api/superadmins</code></td><td>CRUD, password management</td><td>SuperAdmin</td></tr>
+<tr><td>AuditLogsController</td><td><code>/api/auditlogs</code></td><td>Query, search, legacy view, entity history, export</td><td>Admin</td></tr>
+<tr><td>ComplianceController</td><td><code>/api/compliance</code></td><td>GDPR, SOX, ISO 27001 report generation</td><td>Admin</td></tr>
+<tr><td>MonitoringController</td><td><code>/api/monitoring</code></td><td>Health, performance metrics, memory, security, slow queries</td><td>Admin</td></tr>
+<tr><td>AlertsController</td><td><code>/api/alerts</code></td><td>Alert rules CRUD, history, acknowledge, resolve</td><td>Admin</td></tr>
+<tr><td>ConfigurationController</td><td><code>/api/configuration</code></td><td>Runtime configuration management</td><td>Admin</td></tr>
+<tr><td>KeyManagementController</td><td><code>/api/keys</code></td><td>Encryption key lifecycle and rotation</td><td>Admin</td></tr>
+<tr><td>HealthController</td><td><code>/health</code></td><td>System health check</td><td>Public</td></tr>
+</table>
+</section>
+
+<!-- TICKETS -->
+<section id="tickets">
+<h2><span class="icon">🎫</span>Ticket System</h2>
+<p>Full-featured support ticket system with 36 operations, SLA tracking, priority escalation, comments, and file attachments.</p>
+<div class="grid grid-3">
+<div class="card"><h4>Ticket Lifecycle</h4><p>Create → Assign → In Progress → Resolved → Closed. Auto-SLA escalation via background service.</p></div>
+<div class="card"><h4>Comments & Attachments</h4><p>Threaded comments, file attachments with size/type validation, attachment storage service.</p></div>
+<div class="card"><h4>Configuration</h4><p>Configurable types, categories, priorities, statuses. SLA rules per priority level.</p></div>
+</div>
+</section>
+
+<!-- PERMISSIONS -->
+<section id="permissions">
+<h2><span class="icon">🛡️</span>Permissions System</h2>
+<p>Granular role-based + user-level screen permissions. 20 CQRS operations manage what users can access at the screen level.</p>
+<div class="grid grid-2">
+<div class="card"><h4>Role-Screen Permissions</h4><p>Assign permissions to roles (SysRoleScreenPermission). Users inherit via role assignment.</p></div>
+<div class="card"><h4>User-Screen Overrides</h4><p>Override per-user (SysUserScreenPermission). Fine-grained access control beyond role defaults.</p></div>
+</div>
+</section>
+
+<!-- AUDIT SYSTEM -->
+<section id="audit">
+<h2><span class="icon">📝</span>Full Traceability System</h2>
+<p>Enterprise-grade audit logging system implemented across 8 phases with 250+ completed tasks.</p>
+
+<h3>Core Capabilities</h3>
+<div class="grid grid-3">
+<div class="card"><h4>Automatic Auditing</h4><p>MediatR AuditLoggingBehavior auto-captures before/after states for all commands.</p></div>
+<div class="card"><h4>Batch Processing</h4><p>System.Threading.Channels queue, 50-event batches, 100ms window, transactional writes.</p></div>
+<div class="card"><h4>Correlation Tracking</h4><p>AsyncLocal-based CorrelationContext propagated across all services via middleware.</p></div>
+<div class="card"><h4>Sensitive Data Masking</h4><p>Configurable field patterns automatically mask passwords, tokens, SSN, credit cards.</p></div>
+<div class="card"><h4>Legacy Compatibility</h4><p>Business module mapping, device identification, error code generation, business descriptions.</p></div>
+<div class="card"><h4>Tamper Detection</h4><p>Cryptographic hash chains and digital signatures for every audit entry.</p></div>
+</div>
+
+<h3>Resilience Patterns</h3>
+<div class="flow">
+<span class="flow-step">Circuit Breaker</span><span class="flow-arrow">→</span>
+<span class="flow-step">Retry Policy</span><span class="flow-arrow">→</span>
+<span class="flow-step">File System Fallback</span><span class="flow-arrow">→</span>
+<span class="flow-step">Auto-Replay on Recovery</span>
+</div>
+</section>
+
+<!-- MONITORING -->
+<section id="monitoring">
+<h2><span class="icon">📊</span>Monitoring & APM</h2>
+<div class="grid grid-2">
+<div class="card"><h4>OpenTelemetry Integration</h4><p>Distributed tracing, custom metrics, Prometheus scraping endpoint, OTLP exporter, Grafana dashboards.</p></div>
+<div class="card"><h4>Performance Monitoring</h4><p>Request latency tracking, t-digest percentiles (p50/p95/p99), slow request detection, hourly metric aggregation.</p></div>
+<div class="card"><h4>Connection Pool Monitoring</h4><p>Oracle connection pool utilization, pool exhaustion alerts, configurable thresholds.</p></div>
+<div class="card"><h4>Memory Monitoring</h4><p>GC pressure tracking, working set monitoring, memory usage alerts with configurable thresholds.</p></div>
+</div>
+</section>
+
+<!-- SECURITY MONITORING -->
+<section id="security-mon">
+<h2><span class="icon">🔍</span>Security Monitoring</h2>
+<div class="grid grid-3">
+<div class="card"><h4>Failed Login Detection</h4><p>Redis sliding window tracks failed attempts. Auto-blocks after 5 failures in 5 minutes.</p></div>
+<div class="card"><h4>SQL Injection Detection</h4><p>Pattern matching on request payloads to detect injection attempts.</p></div>
+<div class="card"><h4>XSS Detection</h4><p>Script tag and event handler pattern detection in input data.</p></div>
+<div class="card"><h4>Unauthorized Access</h4><p>Tracks repeated 401/403 responses to detect probing attacks.</p></div>
+<div class="card"><h4>Anomaly Detection</h4><p>User behavior baseline analysis to detect unusual activity patterns.</p></div>
+<div class="card"><h4>Threat Reporting</h4><p>SecuritySummaryReport aggregates all threats with severity levels.</p></div>
+</div>
+</section>
+
+<!-- ALERTS -->
+<section id="alerts">
+<h2><span class="icon">🚨</span>Alert System</h2>
+<p>Configurable alert rules with rate limiting, multiple notification channels, and acknowledgment workflows.</p>
+<div class="grid grid-3">
+<div class="card"><h4>📧 Email (SMTP)</h4><p>Templated email notifications with HTML formatting and configurable SMTP.</p></div>
+<div class="card"><h4>📱 SMS (Twilio)</h4><p>SMS notifications via Twilio integration for critical alerts.</p></div>
+<div class="card"><h4>🔗 Webhooks</h4><p>HTTP POST to configured endpoints with retry logic.</p></div>
+</div>
+</section>
+
+<!-- COMPLIANCE -->
+<section id="compliance">
+<h2><span class="icon">📋</span>Compliance Reporting</h2>
+<div class="grid grid-3">
+<div class="card"><h4>GDPR Reports</h4><p>Data access reports, data export reports for Subject Access Requests.</p></div>
+<div class="card"><h4>SOX Reports</h4><p>Financial access reports, segregation of duties analysis.</p></div>
+<div class="card"><h4>ISO 27001 Reports</h4><p>Security event tracking and information security compliance.</p></div>
+</div>
+<p>All reports support <strong>PDF</strong> (QuestPDF), <strong>CSV</strong>, and <strong>JSON</strong> export. Scheduled generation via background service.</p>
+</section>
+
+<!-- ARCHIVAL -->
+<section id="archival">
+<h2><span class="icon">🗄️</span>Archival & Retention</h2>
+<div class="grid grid-2">
+<div class="card"><h4>Retention Policies</h4><p>Per-category retention rules. Automatic enforcement via cron-scheduled background service.</p></div>
+<div class="card"><h4>Archive Storage</h4><p>GZip compression + SHA-256 checksums. S3 and Azure Blob cold storage integration.</p></div>
+<div class="card"><h4>Incremental Archival</h4><p>Avoids long-running transactions by processing in configurable chunk sizes.</p></div>
+<div class="card"><h4>Retrieval</h4><p>Decompress and verify checksum integrity for archived audit data retrieval.</p></div>
+</div>
+</section>
+
+<!-- DATABASE -->
+<section id="database">
+<h2><span class="icon">🗃️</span>Database</h2>
+<p>Oracle Database with 91 SQL scripts, 11 rollback scripts, stored procedures for all operations, and comprehensive indexing strategy.</p>
+
+<h3>Key Tables</h3>
+<table>
+<tr><th>Table</th><th>Purpose</th></tr>
+<tr><td>SYS_COMPANY</td><td>Multi-tenant company records with logos</td></tr>
+<tr><td>SYS_BRANCH</td><td>Company branches</td></tr>
+<tr><td>SYS_USERS</td><td>User accounts and credentials</td></tr>
+<tr><td>SYS_ROLE</td><td>Role definitions</td></tr>
+<tr><td>SYS_CURRENCY</td><td>Currency master data</td></tr>
+<tr><td>SYS_FISCAL_YEAR</td><td>Fiscal year periods</td></tr>
+<tr><td>SYS_REQUEST_TICKET</td><td>Support tickets</td></tr>
+<tr><td>SYS_AUDIT_LOG</td><td>Main audit log (partitioned)</td></tr>
+<tr><td>SYS_AUDIT_LOG_ARCHIVE</td><td>Compressed archived audit data</td></tr>
+<tr><td>SYS_PERFORMANCE_METRICS</td><td>Aggregated performance data</td></tr>
+<tr><td>SYS_SLOW_QUERIES</td><td>Slow query tracking</td></tr>
+<tr><td>SYS_SECURITY_THREATS</td><td>Security threat records</td></tr>
+<tr><td>SYS_FAILED_LOGINS</td><td>Failed login tracking</td></tr>
+<tr><td>SYS_RETENTION_POLICIES</td><td>Data retention rules</td></tr>
+</table>
+
+<h3>Performance Optimizations</h3>
+<ul style="color:var(--text2);font-size:.88rem;padding-left:20px">
+<li>Table partitioning on SYS_AUDIT_LOG by date</li>
+<li>Covering indexes for common query patterns</li>
+<li>Composite indexes for company+date, actor+date, entity+date</li>
+<li>Oracle connection pooling optimization</li>
+<li>Parallel query execution for large date ranges</li>
+</ul>
+</section>
+
+<!-- CONFIG -->
+<section id="config">
+<h2><span class="icon">⚙️</span>Configuration</h2>
+<p>27 configuration option classes with data annotation validation. Environment-specific overrides via <code>appsettings.{Environment}.json</code>.</p>
+<div class="grid grid-3">
+<div class="card"><h4>AuditLoggingOptions</h4><p>Batch size, window, queue size, sensitive fields, circuit breaker settings.</p></div>
+<div class="card"><h4>SecurityMonitoringOptions</h4><p>Threat detection thresholds, failed login limits, pattern matching rules.</p></div>
+<div class="card"><h4>PerformanceMonitoringOptions</h4><p>Slow request threshold, metrics window, percentile configuration.</p></div>
+<div class="card"><h4>AlertingOptions</h4><p>Notification channels, rate limits, retry configuration.</p></div>
+<div class="card"><h4>ArchivalOptions</h4><p>Retention policies, compression level, external storage provider.</p></div>
+<div class="card"><h4>KeyManagementOptions</h4><p>Key rotation schedule, storage provider, algorithm selection.</p></div>
+</div>
+</section>
+
+<!-- DEPLOYMENT -->
+<section id="deployment">
+<h2><span class="icon">🚀</span>Deployment</h2>
+<div class="grid grid-2">
+<div class="card">
+<h4>Docker Deployment</h4>
+<pre><code># Build and run
+docker-compose up -d
+
+# Production mode
+docker-compose -f docker-compose.prod.yml up -d
+
+# With monitoring stack
+docker-compose -f monitoring/docker-compose.monitoring.yml up -d</code></pre>
+</div>
+<div class="card">
+<h4>Local Development</h4>
+<pre><code># Restore & build
+dotnet restore
+dotnet build
+
+# Run API
+dotnet run --project src/ThinkOnErp.API
+
+# Swagger: https://localhost:5001/swagger</code></pre>
+</div>
+</div>
+<p>Additional scripts: <code>deploy.sh</code>, <code>deploy-simple.sh</code>, <code>deploy-to-server.ps1</code>, <code>upload-to-server.ps1</code>, <code>quick-deploy.ps1</code></p>
+</section>
+
+<!-- TESTING -->
+<section id="testing">
+<h2><span class="icon">🧪</span>Testing</h2>
+<p>5 test projects with comprehensive coverage: property-based tests, unit tests, integration tests, and load tests.</p>
+
+<div class="grid grid-2">
+<div class="card">
+<h4>Test Projects</h4>
+<table>
+<tr><td><code>ThinkOnErp.API.Tests</code></td><td>51 files — controller & middleware tests</td></tr>
+<tr><td><code>ThinkOnErp.Infrastructure.Tests</code></td><td>131 files — service, repository & integration tests</td></tr>
+<tr><td><code>LoadTests</code></td><td>28 files — throughput & latency benchmarks</td></tr>
+<tr><td><code>AuditLoggerTest</code></td><td>Focused audit logger verification</td></tr>
+<tr><td><code>SimpleAuditTest</code></td><td>Simple audit flow verification</td></tr>
+</table>
+</div>
+<div class="card">
+<h4>Testing Approaches</h4>
+<p><strong>Property-Based (FsCheck)</strong> — 15+ properties testing universal correctness with 100+ random iterations each.<br><br>
+<strong>Unit Tests</strong> — Isolated tests with Moq for all services, validators, and pipeline behaviors.<br><br>
+<strong>Integration Tests</strong> — End-to-end flows covering middleware, MediatR pipeline, caching, and notifications.<br><br>
+<strong>Load Tests</strong> — 10,000 req/min throughput, p99 latency, spike to 50,000 req/min.</p>
+</div>
+</div>
+<pre><code># Run all tests
+dotnet test
+
+# Run specific project
+dotnet test tests/ThinkOnErp.API.Tests
+dotnet test tests/ThinkOnErp.Infrastructure.Tests</code></pre>
+</section>
+
+<!-- PROJECT STATS -->
+<section id="project-stats">
+<h2><span class="icon">📈</span>Project Statistics</h2>
+<div class="stat-row">
+<div class="stat"><div class="num">4</div><div class="label">Architecture Layers</div></div>
+<div class="stat"><div class="num">21</div><div class="label">Controllers</div></div>
+<div class="stat"><div class="num">13</div><div class="label">Feature Modules</div></div>
+<div class="stat"><div class="num">77</div><div class="label">DTOs</div></div>
+<div class="stat"><div class="num">45+</div><div class="label">Services</div></div>
+<div class="stat"><div class="num">10</div><div class="label">Background Services</div></div>
+</div>
+<div class="stat-row">
+<div class="stat"><div class="num">23</div><div class="label">Repositories</div></div>
+<div class="stat"><div class="num">91</div><div class="label">DB Scripts</div></div>
+<div class="stat"><div class="num">5</div><div class="label">Test Projects</div></div>
+<div class="stat"><div class="num">182+</div><div class="label">Test Files</div></div>
+<div class="stat"><div class="num">27</div><div class="label">Config Classes</div></div>
+<div class="stat"><div class="num">250+</div><div class="label">Traceability Tasks</div></div>
+</div>
+
+<h3>Traceability System Progress</h3>
+<table>
+<tr><th>Phase</th><th>Description</th><th>Status</th></tr>
+<tr><td>Phase 1</td><td>Core Infrastructure + Legacy Compatibility</td><td><span class="phase phase-done">✅ Complete</span></td></tr>
+<tr><td>Phase 2</td><td>Monitoring and Security</td><td><span class="phase phase-done">✅ Complete</span></td></tr>
+<tr><td>Phase 3</td><td>Querying and Reporting</td><td><span class="phase phase-done">✅ Complete</span></td></tr>
+<tr><td>Phase 4</td><td>Archival and Optimization</td><td><span class="phase phase-done">✅ Complete</span></td></tr>
+<tr><td>Phase 5</td><td>Integration and Advanced Features</td><td><span class="phase phase-done">✅ Complete</span></td></tr>
+<tr><td>Phase 6</td><td>Testing and Validation</td><td><span class="phase phase-done">✅ Complete</span></td></tr>
+<tr><td>Phase 7</td><td>Configuration and Deployment</td><td><span class="phase phase-done">✅ Complete</span></td></tr>
+<tr><td>Phase 8</td><td>Documentation and Training</td><td><span class="phase phase-wip">🔄 In Progress</span></td></tr>
+</table>
+</section>
+
+<footer style="padding:40px;text-align:center;color:var(--text2);font-size:.8rem;border-top:1px solid var(--border)">
+<p>ThinkOnErp API Documentation — Generated May 2026 — Proprietary Software. All rights reserved.</p>
+</footer>
+</main>
+
+<script>
+// Smooth scrolling for sidebar links
+document.querySelectorAll('nav.sidebar a').forEach(a=>{
+  a.addEventListener('click',e=>{
+    e.preventDefault();
+    const id=a.getAttribute('href').slice(1);
+    document.getElementById(id)?.scrollIntoView({behavior:'smooth',block:'start'});
+  });
+});
+// Highlight active section in sidebar
+const obs=new IntersectionObserver(entries=>{
+  entries.forEach(e=>{
+    if(e.isIntersecting){
+      document.querySelectorAll('nav.sidebar a').forEach(a=>a.style.color='');
+      const link=document.querySelector(`nav.sidebar a[href="#${e.target.id}"]`);
+      if(link)link.style.color='var(--accent)';
+    }
+  });
+},{threshold:0.3});
+document.querySelectorAll('section[id]').forEach(s=>obs.observe(s));
+</script>
+</body>
+</html>

@@ -1,0 +1,202 @@
+groups:
+  - name: audit_system_alerts
+    interval: 30s
+    rules:
+      # ============================================================================
+      # Queue Depth Alerts
+      # ============================================================================
+      
+      - alert: AuditQueueDepthCritical
+        expr: audit_queue_depth > 8000
+        for: 2m
+        labels:
+          severity: critical
+          component: audit_system
+          category: queue_depth
+        annotations:
+          summary: "Audit queue depth critically high"
+          description: "Audit queue depth is {{ $value }} events (threshold: 8000). The audit system may be unable to keep up with incoming events. Immediate action required."
+          impact: "Audit events may be dropped if queue reaches maximum capacity (10000). API performance may degrade."
+          action: "1. Check audit system health\n2. Verify database connectivity\n3. Review batch processing performance\n4. Consider scaling audit workers\n5. Check for database bottlenecks"
+          runbook_url: "https://docs.thinkonerp.com/runbooks/audit-queue-depth-critical"
+      
+      - alert: AuditQueueDepthHigh
+        expr: audit_queue_depth > 5000
+        for: 5m
+        labels:
+          severity: warning
+          component: audit_system
+          category: queue_depth
+        annotations:
+          summary: "Audit queue depth elevated"
+          description: "Audit queue depth is {{ $value }} events (threshold: 5000). The audit system is experiencing higher than normal load."
+          impact: "Audit write latency may increase. System is approaching capacity limits."
+          action: "1. Monitor queue depth trend\n2. Check audit write latency\n3. Review recent traffic patterns\n4. Prepare to scale if trend continues"
+          runbook_url: "https://docs.thinkonerp.com/runbooks/audit-queue-depth-high"
+      
+      - alert: AuditQueueDepthGrowing
+        expr: rate(audit_queue_depth[5m]) > 100
+        for: 3m
+        labels:
+          severity: warning
+          component: audit_system
+          category: queue_depth
+        annotations:
+          summary: "Audit queue depth growing rapidly"
+          description: "Audit queue depth is growing at {{ $value | humanize }} events per second. Current depth: {{ query \"audit_queue_depth\" | first | value }}."
+          impact: "Queue may reach critical levels if growth continues. Audit system may fall behind."
+          action: "1. Investigate cause of increased audit events\n2. Check for traffic spikes\n3. Verify batch processing is functioning\n4. Monitor database performance"
+          runbook_url: "https://docs.thinkonerp.com/runbooks/audit-queue-growing"
+      
+      # ============================================================================
+      # Processing Delay Alerts
+      # ============================================================================
+      
+      - alert: AuditBatchProcessingDelayCritical
+        expr: histogram_quantile(0.95, rate(audit_batch_processing_time_bucket[5m])) > 5000
+        for: 3m
+        labels:
+          severity: critical
+          component: audit_system
+          category: processing_delay
+        annotations:
+          summary: "Audit batch processing critically slow"
+          description: "Audit batch processing p95 latency is {{ $value | humanize }}ms (threshold: 5000ms). Batches are taking too long to process."
+          impact: "Audit events are being delayed significantly. Queue depth will increase. Real-time audit visibility is compromised."
+          action: "1. Check database performance and connection pool\n2. Review slow query logs\n3. Verify database indexes are optimal\n4. Check for database locks or contention\n5. Consider reducing batch size temporarily"
+          runbook_url: "https://docs.thinkonerp.com/runbooks/audit-batch-processing-slow"
+      
+      - alert: AuditBatchProcessingDelayHigh
+        expr: histogram_quantile(0.95, rate(audit_batch_processing_time_bucket[5m])) > 2000
+        for: 5m
+        labels:
+          severity: warning
+          component: audit_system
+          category: processing_delay
+        annotations:
+          summary: "Audit batch processing slower than normal"
+          description: "Audit batch processing p95 latency is {{ $value | humanize }}ms (threshold: 2000ms). Processing is slower than expected."
+          impact: "Audit events may accumulate in queue. Audit visibility may be delayed."
+          action: "1. Monitor database query performance\n2. Check connection pool utilization\n3. Review recent database changes\n4. Monitor trend for further degradation"
+          runbook_url: "https://docs.thinkonerp.com/runbooks/audit-batch-processing-slow"
+      
+      - alert: AuditWriteLatencyCritical
+        expr: histogram_quantile(0.95, rate(audit_write_latency_bucket[5m])) > 200
+        for: 3m
+        labels:
+          severity: critical
+          component: audit_system
+          category: processing_delay
+        annotations:
+          summary: "Audit write latency critically high"
+          description: "Audit write p95 latency is {{ $value | humanize }}ms (threshold: 200ms). Individual audit writes are taking too long."
+          impact: "Audit system throughput is severely degraded. Queue will grow rapidly."
+          action: "1. Check database health immediately\n2. Review database connection pool\n3. Check for database locks\n4. Verify network connectivity to database\n5. Review database resource utilization (CPU, I/O)"
+          runbook_url: "https://docs.thinkonerp.com/runbooks/audit-write-latency-high"
+      
+      - alert: AuditWriteLatencyHigh
+        expr: histogram_quantile(0.95, rate(audit_write_latency_bucket[5m])) > 100
+        for: 5m
+        labels:
+          severity: warning
+          component: audit_system
+          category: processing_delay
+        annotations:
+          summary: "Audit write latency elevated"
+          description: "Audit write p95 latency is {{ $value | humanize }}ms (threshold: 100ms). Writes are slower than target."
+          impact: "Audit system may not meet performance SLA. Queue depth may increase."
+          action: "1. Monitor database performance\n2. Check for slow queries\n3. Review database load\n4. Monitor for further degradation"
+          runbook_url: "https://docs.thinkonerp.com/runbooks/audit-write-latency-high"
+      
+      # ============================================================================
+      # Processing Rate Alerts
+      # ============================================================================
+      
+      - alert: AuditProcessingRateLow
+        expr: rate(audit_events_total[5m]) < 10 and audit_queue_depth > 1000
+        for: 5m
+        labels:
+          severity: warning
+          component: audit_system
+          category: processing_delay
+        annotations:
+          summary: "Audit processing rate is low while queue has events"
+          description: "Audit events are being processed at {{ $value | humanize }} events/sec, but queue depth is {{ query \"audit_queue_depth\" | first | value }}. Processing may be stalled."
+          impact: "Audit events are not being processed despite queue backlog. System may be stuck."
+          action: "1. Check if audit background service is running\n2. Verify database connectivity\n3. Check for exceptions in audit logger\n4. Review circuit breaker state\n5. Check for deadlocks or blocking"
+          runbook_url: "https://docs.thinkonerp.com/runbooks/audit-processing-stalled"
+      
+      - alert: AuditProcessingStalled
+        expr: rate(audit_events_total[5m]) == 0 and audit_queue_depth > 100
+        for: 2m
+        labels:
+          severity: critical
+          component: audit_system
+          category: processing_delay
+        annotations:
+          summary: "Audit processing appears to be stalled"
+          description: "No audit events have been processed in the last 5 minutes, but queue depth is {{ query \"audit_queue_depth\" | first | value }}. Processing is completely stalled."
+          impact: "Audit events are not being written to database. Audit trail is incomplete. Queue may reach capacity."
+          action: "1. IMMEDIATE: Check audit background service status\n2. Check for critical exceptions\n3. Verify database is accessible\n4. Check circuit breaker state\n5. Review application logs for errors\n6. Consider restarting audit service"
+          runbook_url: "https://docs.thinkonerp.com/runbooks/audit-processing-stalled"
+      
+      # ============================================================================
+      # Throughput Alerts
+      # ============================================================================
+      
+      - alert: AuditThroughputDegraded
+        expr: |
+          (
+            rate(audit_events_total[5m]) 
+            / 
+            (rate(audit_events_total[5m] offset 1h) + 1)
+          ) < 0.5
+          and
+          rate(audit_events_total[5m] offset 1h) > 10
+        for: 10m
+        labels:
+          severity: warning
+          component: audit_system
+          category: processing_delay
+        annotations:
+          summary: "Audit throughput significantly degraded"
+          description: "Current audit throughput ({{ query \"rate(audit_events_total[5m])\" | first | value | humanize }} events/sec) is less than 50% of throughput 1 hour ago."
+          impact: "Audit system is processing events much slower than normal. Queue may grow."
+          action: "1. Compare current vs historical performance\n2. Check for database performance degradation\n3. Review system resource utilization\n4. Check for increased event complexity\n5. Verify no configuration changes were made"
+          runbook_url: "https://docs.thinkonerp.com/runbooks/audit-throughput-degraded"
+      
+      # ============================================================================
+      # Queue Capacity Alerts
+      # ============================================================================
+      
+      - alert: AuditQueueNearCapacity
+        expr: audit_queue_depth > 9000
+        for: 1m
+        labels:
+          severity: critical
+          component: audit_system
+          category: queue_depth
+        annotations:
+          summary: "Audit queue near maximum capacity"
+          description: "Audit queue depth is {{ $value }} events, approaching maximum capacity of 10000. Events may be dropped soon."
+          impact: "CRITICAL: Audit events will be dropped when queue reaches 10000. Audit trail will be incomplete."
+          action: "IMMEDIATE ACTION REQUIRED:\n1. Stop non-critical audit event generation if possible\n2. Scale audit processing immediately\n3. Check database for critical issues\n4. Consider emergency database optimization\n5. Alert on-call engineer\n6. Prepare incident response"
+          runbook_url: "https://docs.thinkonerp.com/runbooks/audit-queue-near-capacity"
+      
+      # ============================================================================
+      # Batch Size Alerts
+      # ============================================================================
+      
+      - alert: AuditBatchSizeTooSmall
+        expr: avg_over_time(audit_batch_size[10m]) < 10 and audit_queue_depth > 500
+        for: 5m
+        labels:
+          severity: info
+          component: audit_system
+          category: processing_delay
+        annotations:
+          summary: "Audit batch size is smaller than optimal"
+          description: "Average audit batch size is {{ $value | humanize }} events (expected: 50). Small batches reduce throughput efficiency."
+          impact: "Audit processing is less efficient than optimal. More database round trips than necessary."
+          action: "1. Check batch window configuration\n2. Verify batch size configuration\n3. Review audit event arrival patterns\n4. Consider adjusting batch parameters"
+          runbook_url: "https://docs.thinkonerp.com/runbooks/audit-batch-size-optimization"

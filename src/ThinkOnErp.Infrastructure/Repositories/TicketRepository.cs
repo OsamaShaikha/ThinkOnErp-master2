@@ -169,7 +169,7 @@ public class TicketRepository : ITicketRepository
         }
 
         // Get total count from output parameter
-        totalCount = Convert.ToInt32(((OracleDecimal)totalCountParam.Value).Value);
+        totalCount = (int)((OracleDecimal)totalCountParam.Value).Value;
 
         return (tickets, totalCount);
     }
@@ -1542,5 +1542,382 @@ public class TicketRepository : ITicketRepository
         }
 
         return tickets;
+    }
+
+    /// <summary>
+    /// Generates ticket volume reports by time period, company, and type.
+    /// Calls SP_SYS_TICKET_REPORTS_VOLUME stored procedure.
+    /// </summary>
+    public async Task<List<Dictionary<string, object>>> GetTicketVolumeReportAsync(
+        DateTime startDate,
+        DateTime endDate,
+        Int64 companyId = 0,
+        Int64 ticketTypeId = 0,
+        string groupBy = "DAILY")
+    {
+        using var connection = _dbContext.CreateConnection();
+        using var command = new OracleCommand("SP_SYS_TICKET_REPORTS_VOLUME", connection)
+        {
+            CommandType = CommandType.StoredProcedure
+        };
+
+        // Add parameters
+        command.Parameters.Add("P_START_DATE", OracleDbType.Date).Value = startDate;
+        command.Parameters.Add("P_END_DATE", OracleDbType.Date).Value = endDate;
+        command.Parameters.Add("P_COMPANY_ID", OracleDbType.Int64).Value = companyId;
+        command.Parameters.Add("P_TICKET_TYPE_ID", OracleDbType.Int64).Value = ticketTypeId;
+        command.Parameters.Add("P_GROUP_BY", OracleDbType.Varchar2).Value = groupBy.ToUpper();
+        var cursorParam = new OracleParameter("P_RESULT_CURSOR", OracleDbType.RefCursor, ParameterDirection.Output);
+        command.Parameters.Add(cursorParam);
+
+        await connection.OpenAsync();
+        await command.ExecuteNonQueryAsync();
+
+        var results = new List<Dictionary<string, object>>();
+        using var reader = ((OracleRefCursor)cursorParam.Value).GetDataReader();
+        
+        while (await reader.ReadAsync())
+        {
+            var row = new Dictionary<string, object>();
+            for (int i = 0; i < reader.FieldCount; i++)
+            {
+                var columnName = reader.GetName(i);
+                row[columnName] = reader.IsDBNull(i) ? null : reader.GetValue(i);
+            }
+            results.Add(row);
+        }
+
+        return results;
+    }
+
+    /// <summary>
+    /// Calculates SLA compliance percentages by priority and type.
+    /// Calls SP_SYS_TICKET_REPORTS_SLA_COMPLIANCE stored procedure.
+    /// </summary>
+    public async Task<List<Dictionary<string, object>>> GetSlaComplianceReportAsync(
+        DateTime startDate,
+        DateTime endDate,
+        Int64 companyId = 0)
+    {
+        using var connection = _dbContext.CreateConnection();
+        using var command = new OracleCommand("SP_SYS_TICKET_REPORTS_SLA_COMPLIANCE", connection)
+        {
+            CommandType = CommandType.StoredProcedure
+        };
+
+        // Add parameters
+        command.Parameters.Add("P_START_DATE", OracleDbType.Date).Value = startDate;
+        command.Parameters.Add("P_END_DATE", OracleDbType.Date).Value = endDate;
+        command.Parameters.Add("P_COMPANY_ID", OracleDbType.Int64).Value = companyId;
+        var cursorParam = new OracleParameter("P_RESULT_CURSOR", OracleDbType.RefCursor, ParameterDirection.Output);
+        command.Parameters.Add(cursorParam);
+
+        await connection.OpenAsync();
+        await command.ExecuteNonQueryAsync();
+
+        var results = new List<Dictionary<string, object>>();
+        using var reader = ((OracleRefCursor)cursorParam.Value).GetDataReader();
+        
+        while (await reader.ReadAsync())
+        {
+            var row = new Dictionary<string, object>();
+            for (int i = 0; i < reader.FieldCount; i++)
+            {
+                var columnName = reader.GetName(i);
+                row[columnName] = reader.IsDBNull(i) ? null : reader.GetValue(i);
+            }
+            results.Add(row);
+        }
+
+        return results;
+    }
+
+    /// <summary>
+    /// Generates workload reports showing active and resolved tickets per assignee.
+    /// Calls SP_SYS_TICKET_REPORTS_WORKLOAD stored procedure.
+    /// </summary>
+    public async Task<List<Dictionary<string, object>>> GetWorkloadReportAsync(
+        DateTime? startDate = null,
+        DateTime? endDate = null,
+        Int64 companyId = 0)
+    {
+        using var connection = _dbContext.CreateConnection();
+        using var command = new OracleCommand("SP_SYS_TICKET_REPORTS_WORKLOAD", connection)
+        {
+            CommandType = CommandType.StoredProcedure
+        };
+
+        // Add parameters
+        if (startDate.HasValue)
+            command.Parameters.Add("P_START_DATE", OracleDbType.Date).Value = startDate.Value;
+        else
+            command.Parameters.Add("P_START_DATE", OracleDbType.Date).Value = DBNull.Value;
+
+        if (endDate.HasValue)
+            command.Parameters.Add("P_END_DATE", OracleDbType.Date).Value = endDate.Value;
+        else
+            command.Parameters.Add("P_END_DATE", OracleDbType.Date).Value = DBNull.Value;
+
+        command.Parameters.Add("P_COMPANY_ID", OracleDbType.Int64).Value = companyId;
+        var cursorParam = new OracleParameter("P_RESULT_CURSOR", OracleDbType.RefCursor, ParameterDirection.Output);
+        command.Parameters.Add(cursorParam);
+
+        await connection.OpenAsync();
+        await command.ExecuteNonQueryAsync();
+
+        var results = new List<Dictionary<string, object>>();
+        using var reader = ((OracleRefCursor)cursorParam.Value).GetDataReader();
+        
+        while (await reader.ReadAsync())
+        {
+            var row = new Dictionary<string, object>();
+            for (int i = 0; i < reader.FieldCount; i++)
+            {
+                var columnName = reader.GetName(i);
+                row[columnName] = reader.IsDBNull(i) ? null : reader.GetValue(i);
+            }
+            results.Add(row);
+        }
+
+        return results;
+    }
+
+    /// <summary>
+    /// Provides trend analysis showing ticket creation and resolution patterns over time.
+    /// Calls SP_SYS_TICKET_REPORTS_TRENDS stored procedure.
+    /// </summary>
+    public async Task<List<Dictionary<string, object>>> GetTicketTrendsReportAsync(
+        DateTime startDate,
+        DateTime endDate,
+        string periodType = "DAILY")
+    {
+        using var connection = _dbContext.CreateConnection();
+        using var command = new OracleCommand("SP_SYS_TICKET_REPORTS_TRENDS", connection)
+        {
+            CommandType = CommandType.StoredProcedure
+        };
+
+        // Add parameters
+        command.Parameters.Add("P_START_DATE", OracleDbType.Date).Value = startDate;
+        command.Parameters.Add("P_END_DATE", OracleDbType.Date).Value = endDate;
+        command.Parameters.Add("P_PERIOD_TYPE", OracleDbType.Varchar2).Value = periodType.ToUpper();
+        var cursorParam = new OracleParameter("P_RESULT_CURSOR", OracleDbType.RefCursor, ParameterDirection.Output);
+        command.Parameters.Add(cursorParam);
+
+        await connection.OpenAsync();
+        await command.ExecuteNonQueryAsync();
+
+        var results = new List<Dictionary<string, object>>();
+        using var reader = ((OracleRefCursor)cursorParam.Value).GetDataReader();
+        
+        while (await reader.ReadAsync())
+        {
+            var row = new Dictionary<string, object>();
+            for (int i = 0; i < reader.FieldCount; i++)
+            {
+                var columnName = reader.GetName(i);
+                row[columnName] = reader.IsDBNull(i) ? null : reader.GetValue(i);
+            }
+            results.Add(row);
+        }
+
+        return results;
+    }
+
+    /// <summary>
+    /// Performs advanced search with multi-criteria filtering, AND/OR logic, and relevance scoring.
+    /// Calls SP_SYS_REQUEST_TICKET_ADVANCED_SEARCH stored procedure.
+    /// Requirements: 8.1-8.12, 8.9
+    /// </summary>
+    public async Task<(List<SysRequestTicket> Tickets, int TotalCount)> AdvancedSearchAsync(
+        string? searchTerm = null,
+        Int64? companyId = null,
+        Int64? branchId = null,
+        Int64? assigneeId = null,
+        Int64? requesterId = null,
+        string? statusIds = null,
+        string? priorityIds = null,
+        string? typeIds = null,
+        string? categoryIds = null,
+        DateTime? createdFrom = null,
+        DateTime? createdTo = null,
+        DateTime? dueFrom = null,
+        DateTime? dueTo = null,
+        string? slaStatus = null,
+        string filterLogic = "AND",
+        bool includeInactive = false,
+        int page = 1,
+        int pageSize = 20,
+        string sortBy = "RELEVANCE",
+        string sortDirection = "DESC")
+    {
+        List<SysRequestTicket> tickets = new();
+        int totalCount = 0;
+
+        using var connection = _dbContext.CreateConnection();
+        await connection.OpenAsync();
+
+        using var command = connection.CreateCommand();
+        command.CommandType = CommandType.StoredProcedure;
+        command.CommandText = "SP_SYS_REQUEST_TICKET_ADVANCED_SEARCH";
+
+        // Add input parameters
+        command.Parameters.Add("P_SEARCH_TERM", OracleDbType.NVarchar2).Value = (object?)searchTerm ?? DBNull.Value;
+        command.Parameters.Add("P_COMPANY_ID", OracleDbType.Decimal).Value = companyId ?? 0;
+        command.Parameters.Add("P_BRANCH_ID", OracleDbType.Decimal).Value = branchId ?? 0;
+        command.Parameters.Add("P_ASSIGNEE_ID", OracleDbType.Decimal).Value = assigneeId ?? 0;
+        command.Parameters.Add("P_REQUESTER_ID", OracleDbType.Decimal).Value = requesterId ?? 0;
+        command.Parameters.Add("P_STATUS_IDS", OracleDbType.Varchar2).Value = (object?)statusIds ?? DBNull.Value;
+        command.Parameters.Add("P_PRIORITY_IDS", OracleDbType.Varchar2).Value = (object?)priorityIds ?? DBNull.Value;
+        command.Parameters.Add("P_TYPE_IDS", OracleDbType.Varchar2).Value = (object?)typeIds ?? DBNull.Value;
+        command.Parameters.Add("P_CATEGORY_IDS", OracleDbType.Varchar2).Value = (object?)categoryIds ?? DBNull.Value;
+        command.Parameters.Add("P_CREATED_FROM", OracleDbType.Date).Value = (object?)createdFrom ?? DBNull.Value;
+        command.Parameters.Add("P_CREATED_TO", OracleDbType.Date).Value = (object?)createdTo ?? DBNull.Value;
+        command.Parameters.Add("P_DUE_FROM", OracleDbType.Date).Value = (object?)dueFrom ?? DBNull.Value;
+        command.Parameters.Add("P_DUE_TO", OracleDbType.Date).Value = (object?)dueTo ?? DBNull.Value;
+        command.Parameters.Add("P_SLA_STATUS", OracleDbType.Varchar2).Value = (object?)slaStatus ?? DBNull.Value;
+        command.Parameters.Add("P_FILTER_LOGIC", OracleDbType.Varchar2).Value = filterLogic;
+        command.Parameters.Add("P_INCLUDE_INACTIVE", OracleDbType.Char).Value = includeInactive ? "Y" : "N";
+        command.Parameters.Add("P_PAGE_NUMBER", OracleDbType.Decimal).Value = page;
+        command.Parameters.Add("P_PAGE_SIZE", OracleDbType.Decimal).Value = pageSize;
+        command.Parameters.Add("P_SORT_BY", OracleDbType.Varchar2).Value = sortBy;
+        command.Parameters.Add("P_SORT_DIRECTION", OracleDbType.Varchar2).Value = sortDirection;
+
+        // Add output parameters
+        var cursorParam = command.Parameters.Add("P_RESULT_CURSOR", OracleDbType.RefCursor);
+        cursorParam.Direction = ParameterDirection.Output;
+
+        var totalCountParam = command.Parameters.Add("P_TOTAL_COUNT", OracleDbType.Decimal);
+        totalCountParam.Direction = ParameterDirection.Output;
+
+        await command.ExecuteNonQueryAsync();
+
+        // Get total count
+        totalCount = Convert.ToInt32(totalCountParam.Value.ToString());
+
+        // Read tickets from cursor
+        using var reader = ((OracleRefCursor)cursorParam.Value).GetDataReader();
+        while (await reader.ReadAsync())
+        {
+            var ticket = new SysRequestTicket
+            {
+                RowId = reader.GetInt64(reader.GetOrdinal("ROW_ID")),
+                TitleAr = reader.GetString(reader.GetOrdinal("TITLE_AR")),
+                TitleEn = reader.GetString(reader.GetOrdinal("TITLE_EN")),
+                Description = reader.GetString(reader.GetOrdinal("DESCRIPTION")),
+                CompanyId = reader.GetInt64(reader.GetOrdinal("COMPANY_ID")),
+                BranchId = reader.GetInt64(reader.GetOrdinal("BRANCH_ID")),
+                RequesterId = reader.GetInt64(reader.GetOrdinal("REQUESTER_ID")),
+                AssigneeId = reader.IsDBNull(reader.GetOrdinal("ASSIGNEE_ID")) 
+                    ? null 
+                    : reader.GetInt64(reader.GetOrdinal("ASSIGNEE_ID")),
+                TicketTypeId = reader.GetInt64(reader.GetOrdinal("TICKET_TYPE_ID")),
+                TicketStatusId = reader.GetInt64(reader.GetOrdinal("TICKET_STATUS_ID")),
+                TicketPriorityId = reader.GetInt64(reader.GetOrdinal("TICKET_PRIORITY_ID")),
+                TicketCategoryId = reader.IsDBNull(reader.GetOrdinal("TICKET_CATEGORY_ID")) 
+                    ? null 
+                    : reader.GetInt64(reader.GetOrdinal("TICKET_CATEGORY_ID")),
+                ExpectedResolutionDate = reader.IsDBNull(reader.GetOrdinal("EXPECTED_RESOLUTION_DATE")) 
+                    ? null 
+                    : reader.GetDateTime(reader.GetOrdinal("EXPECTED_RESOLUTION_DATE")),
+                ActualResolutionDate = reader.IsDBNull(reader.GetOrdinal("ACTUAL_RESOLUTION_DATE")) 
+                    ? null 
+                    : reader.GetDateTime(reader.GetOrdinal("ACTUAL_RESOLUTION_DATE")),
+                IsActive = reader.GetString(reader.GetOrdinal("IS_ACTIVE")) == "Y",
+                CreationUser = reader.GetString(reader.GetOrdinal("CREATION_USER")),
+                CreationDate = reader.IsDBNull(reader.GetOrdinal("CREATION_DATE")) 
+                    ? null 
+                    : reader.GetDateTime(reader.GetOrdinal("CREATION_DATE")),
+                UpdateUser = reader.IsDBNull(reader.GetOrdinal("UPDATE_USER")) 
+                    ? null 
+                    : reader.GetString(reader.GetOrdinal("UPDATE_USER")),
+                UpdateDate = reader.IsDBNull(reader.GetOrdinal("UPDATE_DATE")) 
+                    ? null 
+                    : reader.GetDateTime(reader.GetOrdinal("UPDATE_DATE"))
+            };
+
+            // Store relevance score in a temporary property for later use
+            // Note: We'll need to add this to the entity or handle it differently
+            var relevanceScore = reader.GetInt32(reader.GetOrdinal("RELEVANCE_SCORE"));
+            
+            // Create navigation property objects with names
+            ticket.Company = new SysCompany 
+            { 
+                RowId = ticket.CompanyId,
+                RowDescE = reader.IsDBNull(reader.GetOrdinal("COMPANY_NAME")) 
+                    ? null 
+                    : reader.GetString(reader.GetOrdinal("COMPANY_NAME"))
+            };
+
+            ticket.Branch = new SysBranch 
+            { 
+                RowId = ticket.BranchId,
+                RowDescE = reader.IsDBNull(reader.GetOrdinal("BRANCH_NAME")) 
+                    ? null 
+                    : reader.GetString(reader.GetOrdinal("BRANCH_NAME"))
+            };
+
+            ticket.Requester = new SysUser 
+            { 
+                RowId = ticket.RequesterId,
+                RowDescE = reader.IsDBNull(reader.GetOrdinal("REQUESTER_NAME")) 
+                    ? null 
+                    : reader.GetString(reader.GetOrdinal("REQUESTER_NAME"))
+            };
+
+            if (ticket.AssigneeId.HasValue)
+            {
+                ticket.Assignee = new SysUser 
+                { 
+                    RowId = ticket.AssigneeId.Value,
+                    RowDescE = reader.IsDBNull(reader.GetOrdinal("ASSIGNEE_NAME")) 
+                        ? null 
+                        : reader.GetString(reader.GetOrdinal("ASSIGNEE_NAME"))
+                };
+            }
+
+            ticket.TicketType = new SysTicketType 
+            { 
+                RowId = ticket.TicketTypeId,
+                TypeNameEn = reader.IsDBNull(reader.GetOrdinal("TYPE_NAME")) 
+                    ? null 
+                    : reader.GetString(reader.GetOrdinal("TYPE_NAME"))
+            };
+
+            ticket.TicketStatus = new SysTicketStatus 
+            { 
+                RowId = ticket.TicketStatusId,
+                StatusNameEn = reader.IsDBNull(reader.GetOrdinal("STATUS_NAME")) 
+                    ? null 
+                    : reader.GetString(reader.GetOrdinal("STATUS_NAME")),
+                StatusCode = reader.IsDBNull(reader.GetOrdinal("STATUS_CODE")) 
+                    ? null 
+                    : reader.GetString(reader.GetOrdinal("STATUS_CODE"))
+            };
+
+            ticket.TicketPriority = new SysTicketPriority 
+            { 
+                RowId = ticket.TicketPriorityId,
+                PriorityNameEn = reader.IsDBNull(reader.GetOrdinal("PRIORITY_NAME")) 
+                    ? null 
+                    : reader.GetString(reader.GetOrdinal("PRIORITY_NAME")),
+                PriorityLevel = reader.GetInt32(reader.GetOrdinal("PRIORITY_LEVEL"))
+            };
+
+            if (ticket.TicketCategoryId.HasValue)
+            {
+                ticket.TicketCategory = new SysTicketCategory 
+                { 
+                    RowId = ticket.TicketCategoryId.Value,
+                    CategoryNameEn = reader.IsDBNull(reader.GetOrdinal("CATEGORY_NAME")) 
+                        ? null 
+                        : reader.GetString(reader.GetOrdinal("CATEGORY_NAME"))
+                };
+            }
+
+            tickets.Add(ticket);
+        }
+
+        return (tickets, totalCount);
     }
 }

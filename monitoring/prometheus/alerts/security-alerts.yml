@@ -1,0 +1,279 @@
+groups:
+  - name: security_alerts
+    interval: 30s
+    rules:
+      # ============================================================================
+      # Authentication Threat Alerts
+      # ============================================================================
+      
+      - alert: HighFailedLoginRate
+        expr: rate(failed_login_attempts_total[5m]) > 10
+        for: 2m
+        labels:
+          severity: critical
+          component: security
+          category: authentication
+        annotations:
+          summary: "High rate of failed login attempts"
+          description: "Failed login attempts are occurring at {{ $value | humanize }} per second. Possible brute force attack."
+          impact: "CRITICAL: System may be under brute force attack. User accounts at risk of compromise."
+          action: "IMMEDIATE ACTION REQUIRED:\n1. Review failed login sources (IPs)\n2. Check for targeted accounts\n3. Consider temporary IP blocking\n4. Enable rate limiting if not active\n5. Alert security team\n6. Monitor for successful breaches\n7. Consider forcing password resets for targeted accounts"
+          runbook_url: "https://docs.thinkonerp.com/runbooks/high-failed-logins"
+      
+      - alert: FailedLoginSpike
+        expr: |
+          (
+            rate(failed_login_attempts_total[5m])
+            /
+            (rate(failed_login_attempts_total[5m] offset 1h) + 1)
+          ) > 5
+        for: 3m
+        labels:
+          severity: warning
+          component: security
+          category: authentication
+        annotations:
+          summary: "Spike in failed login attempts"
+          description: "Failed login rate ({{ query \"rate(failed_login_attempts_total[5m])\" | first | value | humanize }}/sec) is 5x higher than 1 hour ago."
+          impact: "Unusual authentication activity detected. Possible attack or system issue."
+          action: "1. Investigate cause of spike\n2. Check for specific IP addresses or accounts\n3. Review authentication logs\n4. Monitor for escalation\n5. Prepare to block IPs if attack confirmed"
+          runbook_url: "https://docs.thinkonerp.com/runbooks/failed-login-spike"
+      
+      - alert: MultipleFailedLoginsFromSingleIP
+        expr: |
+          topk(5, 
+            sum by (ip_address) (
+              rate(failed_login_attempts_total[5m])
+            )
+          ) > 5
+        for: 2m
+        labels:
+          severity: warning
+          component: security
+          category: authentication
+        annotations:
+          summary: "Multiple failed logins from single IP"
+          description: "IP address is generating {{ $value | humanize }} failed login attempts per second."
+          impact: "Possible targeted attack from specific IP. Account compromise risk."
+          action: "1. Identify the IP address from metrics\n2. Check if IP is known/legitimate\n3. Review targeted accounts\n4. Consider blocking IP temporarily\n5. Check for successful logins from same IP\n6. Review geographic location of IP"
+          runbook_url: "https://docs.thinkonerp.com/runbooks/failed-logins-single-ip"
+      
+      # ============================================================================
+      # Security Threat Detection Alerts
+      # ============================================================================
+      
+      - alert: SecurityThreatsDetectedHigh
+        expr: rate(security_threats_detected_total[5m]) > 5
+        for: 3m
+        labels:
+          severity: critical
+          component: security
+          category: threats
+        annotations:
+          summary: "High rate of security threats detected"
+          description: "Security threats are being detected at {{ $value | humanize }} per second."
+          impact: "CRITICAL: System is under active attack. Multiple security threats detected."
+          action: "IMMEDIATE ACTION REQUIRED:\n1. Alert security team immediately\n2. Review threat types and sources\n3. Check for successful exploits\n4. Enable enhanced monitoring\n5. Consider blocking malicious IPs\n6. Review recent security patches\n7. Initiate incident response"
+          runbook_url: "https://docs.thinkonerp.com/runbooks/high-security-threats"
+      
+      - alert: SQLInjectionAttemptsDetected
+        expr: rate(sql_injection_attempts_total[5m]) > 1
+        for: 2m
+        labels:
+          severity: critical
+          component: security
+          category: threats
+        annotations:
+          summary: "SQL injection attempts detected"
+          description: "SQL injection attempts are occurring at {{ $value | humanize }} per second."
+          impact: "CRITICAL: Database security at risk. Attacker attempting to exploit SQL vulnerabilities."
+          action: "IMMEDIATE ACTION REQUIRED:\n1. Alert security team immediately\n2. Review attack patterns and sources\n3. Block attacking IPs\n4. Verify parameterized queries are used\n5. Check for successful injections\n6. Review database audit logs\n7. Scan for data exfiltration"
+          runbook_url: "https://docs.thinkonerp.com/runbooks/sql-injection-detected"
+      
+      - alert: XSSAttemptsDetected
+        expr: rate(xss_attempts_total[5m]) > 1
+        for: 2m
+        labels:
+          severity: warning
+          component: security
+          category: threats
+        annotations:
+          summary: "Cross-site scripting (XSS) attempts detected"
+          description: "XSS attempts are occurring at {{ $value | humanize }} per second."
+          impact: "XSS attacks detected. User sessions and data at risk if successful."
+          action: "1. Alert security team\n2. Review attack sources and patterns\n3. Verify input sanitization is working\n4. Check for successful XSS exploits\n5. Review affected endpoints\n6. Consider blocking attacking IPs"
+          runbook_url: "https://docs.thinkonerp.com/runbooks/xss-detected"
+      
+      - alert: UnauthorizedAccessAttemptsHigh
+        expr: rate(unauthorized_access_attempts_total[5m]) > 5
+        for: 3m
+        labels:
+          severity: warning
+          component: security
+          category: authorization
+        annotations:
+          summary: "High rate of unauthorized access attempts"
+          description: "Unauthorized access attempts are occurring at {{ $value | humanize }} per second."
+          impact: "Users attempting to access resources without proper authorization. Possible privilege escalation attempts."
+          action: "1. Review unauthorized access patterns\n2. Check for specific users or resources\n3. Verify authorization rules are correct\n4. Check for compromised accounts\n5. Review recent permission changes\n6. Monitor for successful unauthorized access"
+          runbook_url: "https://docs.thinkonerp.com/runbooks/unauthorized-access-high"
+      
+      # ============================================================================
+      # Anomalous Activity Alerts
+      # ============================================================================
+      
+      - alert: AnomalousActivityDetected
+        expr: rate(anomalous_activity_detected_total[5m]) > 2
+        for: 5m
+        labels:
+          severity: warning
+          component: security
+          category: anomaly
+        annotations:
+          summary: "Anomalous user activity detected"
+          description: "Anomalous activity is being detected at {{ $value | humanize }} per second."
+          impact: "Unusual user behavior detected. Possible compromised accounts or insider threats."
+          action: "1. Review anomalous activity details\n2. Identify affected users\n3. Check for unusual access patterns\n4. Review geographic anomalies\n5. Check for unusual data access\n6. Consider account verification\n7. Monitor for escalation"
+          runbook_url: "https://docs.thinkonerp.com/runbooks/anomalous-activity"
+      
+      - alert: UnusualGeographicAccess
+        expr: rate(geographic_anomaly_detected_total[5m]) > 1
+        for: 3m
+        labels:
+          severity: warning
+          component: security
+          category: anomaly
+        annotations:
+          summary: "Unusual geographic access patterns detected"
+          description: "Geographic anomalies are being detected at {{ $value | humanize }} per second."
+          impact: "Users accessing from unusual locations. Possible account compromise or VPN usage."
+          action: "1. Review geographic access details\n2. Identify affected users and locations\n3. Check for impossible travel scenarios\n4. Verify with users if access is legitimate\n5. Consider additional authentication\n6. Monitor for data exfiltration"
+          runbook_url: "https://docs.thinkonerp.com/runbooks/geographic-anomaly"
+      
+      # ============================================================================
+      # Active Threat Alerts
+      # ============================================================================
+      
+      - alert: ActiveSecurityThreatsHigh
+        expr: active_security_threats > 10
+        for: 5m
+        labels:
+          severity: critical
+          component: security
+          category: threats
+        annotations:
+          summary: "High number of active security threats"
+          description: "There are {{ $value }} active security threats that have not been resolved."
+          impact: "CRITICAL: Multiple unresolved security threats. System security posture degraded."
+          action: "IMMEDIATE ACTION REQUIRED:\n1. Review all active threats\n2. Prioritize by severity\n3. Assign threats to security team\n4. Investigate and remediate\n5. Block malicious actors\n6. Update security rules\n7. Document incident response"
+          runbook_url: "https://docs.thinkonerp.com/runbooks/active-threats-high"
+      
+      - alert: CriticalSecurityThreatsUnresolved
+        expr: active_security_threats{severity="critical"} > 0
+        for: 10m
+        labels:
+          severity: critical
+          component: security
+          category: threats
+        annotations:
+          summary: "Critical security threats remain unresolved"
+          description: "There are {{ $value }} critical security threats that have been active for over 10 minutes."
+          impact: "CRITICAL: Critical security threats not being addressed. System at high risk."
+          action: "IMMEDIATE ACTION REQUIRED:\n1. Escalate to security team lead\n2. Review critical threat details\n3. Implement immediate mitigation\n4. Block attack sources\n5. Assess damage/impact\n6. Initiate incident response\n7. Alert management"
+          runbook_url: "https://docs.thinkonerp.com/runbooks/critical-threats-unresolved"
+      
+      # ============================================================================
+      # IP Blocking Alerts
+      # ============================================================================
+      
+      - alert: HighNumberOfBlockedIPs
+        expr: blocked_ips_count > 100
+        for: 10m
+        labels:
+          severity: warning
+          component: security
+          category: blocking
+        annotations:
+          summary: "High number of blocked IP addresses"
+          description: "There are {{ $value }} IP addresses currently blocked."
+          impact: "Large-scale attack or misconfiguration. Legitimate users may be affected."
+          action: "1. Review blocked IP list\n2. Verify blocks are legitimate\n3. Check for false positives\n4. Review blocking criteria\n5. Consider geographic blocking\n6. Monitor for attack patterns\n7. Plan for IP unblocking process"
+          runbook_url: "https://docs.thinkonerp.com/runbooks/high-blocked-ips"
+      
+      - alert: RapidIPBlocking
+        expr: rate(blocked_ips_count[5m]) > 5
+        for: 3m
+        labels:
+          severity: warning
+          component: security
+          category: blocking
+        annotations:
+          summary: "Rapid increase in blocked IPs"
+          description: "IPs are being blocked at {{ $value | humanize }} per second."
+          impact: "Active attack in progress. System is blocking multiple malicious sources."
+          action: "1. Monitor attack patterns\n2. Verify blocking is effective\n3. Check for distributed attack (DDoS)\n4. Consider upstream blocking (firewall/WAF)\n5. Alert security team\n6. Document attack characteristics"
+          runbook_url: "https://docs.thinkonerp.com/runbooks/rapid-ip-blocking"
+      
+      # ============================================================================
+      # Account Security Alerts
+      # ============================================================================
+      
+      - alert: MultipleAccountsCompromised
+        expr: rate(account_compromise_detected_total[5m]) > 0.1
+        for: 2m
+        labels:
+          severity: critical
+          component: security
+          category: accounts
+        annotations:
+          summary: "Multiple account compromises detected"
+          description: "Account compromises are being detected at {{ $value | humanize }} per second."
+          impact: "CRITICAL: User accounts are being compromised. Data breach risk high."
+          action: "IMMEDIATE ACTION REQUIRED:\n1. Alert security team immediately\n2. Force password resets for affected accounts\n3. Revoke active sessions\n4. Enable MFA if not active\n5. Review access logs for data exfiltration\n6. Notify affected users\n7. Initiate breach response protocol"
+          runbook_url: "https://docs.thinkonerp.com/runbooks/account-compromise"
+      
+      - alert: PrivilegeEscalationAttempts
+        expr: rate(privilege_escalation_attempts_total[5m]) > 0.5
+        for: 3m
+        labels:
+          severity: critical
+          component: security
+          category: authorization
+        annotations:
+          summary: "Privilege escalation attempts detected"
+          description: "Privilege escalation attempts are occurring at {{ $value | humanize }} per second."
+          impact: "CRITICAL: Attackers attempting to gain elevated privileges. System compromise risk."
+          action: "IMMEDIATE ACTION REQUIRED:\n1. Alert security team immediately\n2. Review escalation attempt details\n3. Identify attacking accounts/IPs\n4. Block malicious actors\n5. Review permission configurations\n6. Check for successful escalations\n7. Audit privileged account activity"
+          runbook_url: "https://docs.thinkonerp.com/runbooks/privilege-escalation"
+      
+      # ============================================================================
+      # Data Access Alerts
+      # ============================================================================
+      
+      - alert: SuspiciousDataAccessPatterns
+        expr: rate(suspicious_data_access_total[5m]) > 1
+        for: 5m
+        labels:
+          severity: warning
+          component: security
+          category: data_access
+        annotations:
+          summary: "Suspicious data access patterns detected"
+          description: "Suspicious data access is occurring at {{ $value | humanize }} per second."
+          impact: "Unusual data access patterns. Possible data exfiltration or insider threat."
+          action: "1. Review data access details\n2. Identify users and resources\n3. Check for bulk data downloads\n4. Review access justification\n5. Check for unusual query patterns\n6. Monitor for data exfiltration\n7. Consider access restrictions"
+          runbook_url: "https://docs.thinkonerp.com/runbooks/suspicious-data-access"
+      
+      - alert: BulkDataExportDetected
+        expr: rate(bulk_data_export_detected_total[5m]) > 0.1
+        for: 2m
+        labels:
+          severity: critical
+          component: security
+          category: data_access
+        annotations:
+          summary: "Bulk data export detected"
+          description: "Bulk data exports are occurring at {{ $value | humanize }} per second."
+          impact: "CRITICAL: Large-scale data export detected. Possible data breach in progress."
+          action: "IMMEDIATE ACTION REQUIRED:\n1. Alert security team immediately\n2. Identify users performing exports\n3. Review exported data types\n4. Consider blocking exports temporarily\n5. Check for compromised accounts\n6. Review export justification\n7. Initiate data breach protocol if unauthorized"
+          runbook_url: "https://docs.thinkonerp.com/runbooks/bulk-data-export"

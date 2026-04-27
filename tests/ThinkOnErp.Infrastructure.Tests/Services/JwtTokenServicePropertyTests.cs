@@ -168,7 +168,7 @@ public class JwtTokenServicePropertyTests
                                from branchId in Gen.Choose(0, 100).Select(i => (Int64?)i)
                                from isAdmin in Arb.Generate<bool>()
                                from creationUser in Gen.Elements("admin", "system", "root")
-                               select new Domain.Entities.SysUser
+                               select new ThinkOnErp.Domain.Entities.SysUser
                                {
                                    RowId = rowId,
                                    UserName = userName,

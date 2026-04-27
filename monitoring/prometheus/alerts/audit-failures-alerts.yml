@@ -1,0 +1,222 @@
+groups:
+  - name: audit_failures_alerts
+    interval: 30s
+    rules:
+      # ============================================================================
+      # Audit Write Failure Alerts
+      # ============================================================================
+      
+      - alert: AuditWriteFailuresCritical
+        expr: rate(audit_writes_failed_total[5m]) > 10
+        for: 2m
+        labels:
+          severity: critical
+          component: audit_system
+          category: failures
+        annotations:
+          summary: "High rate of audit write failures"
+          description: "Audit writes are failing at {{ $value | humanize }} per second. Audit trail may be incomplete."
+          impact: "CRITICAL: Audit events are not being persisted. Compliance and security audit trail is compromised."
+          action: "IMMEDIATE ACTION REQUIRED:\n1. Check database connectivity and health\n2. Review audit system error logs\n3. Check circuit breaker state\n4. Verify database permissions\n5. Check disk space on database server\n6. Review database error logs\n7. Alert compliance team if prolonged"
+          runbook_url: "https://docs.thinkonerp.com/runbooks/audit-write-failures"
+      
+      - alert: AuditWriteFailuresElevated
+        expr: rate(audit_writes_failed_total[5m]) > 1
+        for: 5m
+        labels:
+          severity: warning
+          component: audit_system
+          category: failures
+        annotations:
+          summary: "Elevated audit write failure rate"
+          description: "Audit writes are failing at {{ $value | humanize }} per second."
+          impact: "Some audit events are not being persisted. Audit trail may have gaps."
+          action: "1. Monitor failure rate trend\n2. Review audit error logs\n3. Check database health\n4. Verify no recent schema changes\n5. Check for transient errors"
+          runbook_url: "https://docs.thinkonerp.com/runbooks/audit-write-failures"
+      
+      - alert: AuditWriteSuccessRateLow
+        expr: |
+          (
+            rate(audit_writes_success_total[5m]) 
+            / 
+            (rate(audit_writes_success_total[5m]) + rate(audit_writes_failed_total[5m]))
+          ) < 0.95
+        for: 5m
+        labels:
+          severity: critical
+          component: audit_system
+          category: failures
+        annotations:
+          summary: "Audit write success rate below threshold"
+          description: "Audit write success rate is {{ $value | humanizePercentage }} (threshold: 95%). Significant number of writes are failing."
+          impact: "CRITICAL: Audit trail is incomplete. Compliance requirements may not be met."
+          action: "IMMEDIATE ACTION REQUIRED:\n1. Investigate root cause of failures\n2. Check database health and connectivity\n3. Review error patterns in logs\n4. Verify database schema integrity\n5. Check for resource constraints\n6. Alert compliance team"
+          runbook_url: "https://docs.thinkonerp.com/runbooks/audit-success-rate-low"
+      
+      # ============================================================================
+      # Circuit Breaker Alerts
+      # ============================================================================
+      
+      - alert: AuditCircuitBreakerOpen
+        expr: circuit_breaker_state{component="audit_system"} == 2
+        for: 1m
+        labels:
+          severity: critical
+          component: audit_system
+          category: failures
+        annotations:
+          summary: "Audit system circuit breaker is OPEN"
+          description: "The audit system circuit breaker has opened due to repeated failures. Audit writes are being rejected."
+          impact: "CRITICAL: Audit events are not being written. Audit trail is incomplete. System is in degraded state."
+          action: "IMMEDIATE ACTION REQUIRED:\n1. Check database connectivity\n2. Review recent failures that triggered circuit breaker\n3. Fix underlying issue (database, network, etc.)\n4. Circuit breaker will auto-reset after issue is resolved\n5. Monitor for successful writes after reset\n6. Alert compliance team"
+          runbook_url: "https://docs.thinkonerp.com/runbooks/circuit-breaker-open"
+      
+      - alert: AuditCircuitBreakerHalfOpen
+        expr: circuit_breaker_state{component="audit_system"} == 1
+        for: 2m
+        labels:
+          severity: warning
+          component: audit_system
+          category: failures
+        annotations:
+          summary: "Audit system circuit breaker is HALF-OPEN"
+          description: "The audit system circuit breaker is in half-open state, testing if the system has recovered."
+          impact: "Audit system is recovering from failures. Limited audit writes are being attempted."
+          action: "1. Monitor circuit breaker state transitions\n2. Watch for successful writes\n3. If circuit opens again, investigate persistent issue\n4. Review recent fixes to ensure they resolved the problem"
+          runbook_url: "https://docs.thinkonerp.com/runbooks/circuit-breaker-half-open"
+      
+      # ============================================================================
+      # Fallback Storage Alerts
+      # ============================================================================
+      
+      - alert: AuditFallbackStorageActive
+        expr: audit_fallback_storage_active == 1
+        for: 2m
+        labels:
+          severity: warning
+          component: audit_system
+          category: failures
+        annotations:
+          summary: "Audit fallback storage is active"
+          description: "Audit system has switched to fallback file storage due to database issues."
+          impact: "Audit events are being written to file system instead of database. Events will be replayed when database recovers."
+          action: "1. Check database connectivity and health\n2. Monitor fallback file size\n3. Ensure sufficient disk space\n4. Fix database issue to restore normal operation\n5. Verify fallback events are replayed after recovery"
+          runbook_url: "https://docs.thinkonerp.com/runbooks/fallback-storage-active"
+      
+      - alert: AuditFallbackStorageNearCapacity
+        expr: audit_fallback_storage_size_bytes > 1073741824
+        for: 5m
+        labels:
+          severity: critical
+          component: audit_system
+          category: failures
+        annotations:
+          summary: "Audit fallback storage near capacity"
+          description: "Audit fallback storage has grown to {{ $value | humanize1024 }}B (threshold: 1GB). Database has been unavailable for extended period."
+          impact: "CRITICAL: Fallback storage may fill disk. Audit events may be lost if disk fills."
+          action: "IMMEDIATE ACTION REQUIRED:\n1. Restore database connectivity urgently\n2. Check disk space on application server\n3. Consider emergency disk space expansion\n4. Monitor fallback file growth\n5. Prepare for fallback event replay\n6. Alert infrastructure team"
+          runbook_url: "https://docs.thinkonerp.com/runbooks/fallback-storage-capacity"
+      
+      # ============================================================================
+      # Audit System Health Alerts
+      # ============================================================================
+      
+      - alert: AuditSystemUnhealthy
+        expr: audit_system_health_status == 0
+        for: 2m
+        labels:
+          severity: critical
+          component: audit_system
+          category: health
+        annotations:
+          summary: "Audit system health check failing"
+          description: "Audit system health check is reporting unhealthy status."
+          impact: "CRITICAL: Audit system may not be functioning correctly. Audit trail may be incomplete."
+          action: "IMMEDIATE ACTION REQUIRED:\n1. Check audit background service status\n2. Review audit system error logs\n3. Check database connectivity\n4. Verify queue is processing\n5. Check circuit breaker state\n6. Review recent deployments or changes"
+          runbook_url: "https://docs.thinkonerp.com/runbooks/audit-system-unhealthy"
+      
+      - alert: AuditSystemDegraded
+        expr: audit_system_health_status == 1
+        for: 5m
+        labels:
+          severity: warning
+          component: audit_system
+          category: health
+        annotations:
+          summary: "Audit system in degraded state"
+          description: "Audit system health check is reporting degraded status."
+          impact: "Audit system is functioning but with reduced performance or reliability."
+          action: "1. Review audit system metrics\n2. Check for elevated error rates\n3. Monitor queue depth and latency\n4. Review recent changes\n5. Prepare to escalate if condition worsens"
+          runbook_url: "https://docs.thinkonerp.com/runbooks/audit-system-degraded"
+      
+      # ============================================================================
+      # Data Integrity Alerts
+      # ============================================================================
+      
+      - alert: AuditDataIntegrityFailures
+        expr: rate(audit_integrity_check_failures_total[5m]) > 0
+        for: 1m
+        labels:
+          severity: critical
+          component: audit_system
+          category: integrity
+        annotations:
+          summary: "Audit data integrity check failures detected"
+          description: "Audit data integrity checks are failing at {{ $value | humanize }} per second. Data tampering or corruption suspected."
+          impact: "CRITICAL: Audit data integrity is compromised. Audit trail may not be trustworthy for compliance."
+          action: "IMMEDIATE ACTION REQUIRED:\n1. Alert security team immediately\n2. Investigate potential data tampering\n3. Review audit log access patterns\n4. Check database audit logs\n5. Verify cryptographic signing keys\n6. Initiate security incident response\n7. Alert compliance team"
+          runbook_url: "https://docs.thinkonerp.com/runbooks/audit-integrity-failures"
+      
+      # ============================================================================
+      # Batch Processing Failures
+      # ============================================================================
+      
+      - alert: AuditBatchProcessingFailures
+        expr: rate(audit_batch_failures_total[5m]) > 0.1
+        for: 3m
+        labels:
+          severity: warning
+          component: audit_system
+          category: failures
+        annotations:
+          summary: "Audit batch processing failures occurring"
+          description: "Audit batch processing is failing at {{ $value | humanize }} batches per second."
+          impact: "Audit events in failed batches are being retried. Queue depth may increase."
+          action: "1. Review batch processing error logs\n2. Check for database errors\n3. Verify batch size is appropriate\n4. Check for data validation errors\n5. Monitor retry success rate"
+          runbook_url: "https://docs.thinkonerp.com/runbooks/batch-processing-failures"
+      
+      # ============================================================================
+      # Serialization Failures
+      # ============================================================================
+      
+      - alert: AuditSerializationFailures
+        expr: rate(audit_serialization_failures_total[5m]) > 1
+        for: 5m
+        labels:
+          severity: warning
+          component: audit_system
+          category: failures
+        annotations:
+          summary: "Audit event serialization failures"
+          description: "Audit events are failing to serialize at {{ $value | humanize }} per second."
+          impact: "Some audit events cannot be persisted due to serialization errors. Audit trail may have gaps."
+          action: "1. Review serialization error logs\n2. Check for complex or circular object references\n3. Verify data types are serializable\n4. Check for recent code changes\n5. Review event payload structure"
+          runbook_url: "https://docs.thinkonerp.com/runbooks/serialization-failures"
+      
+      # ============================================================================
+      # Audit Event Validation Failures
+      # ============================================================================
+      
+      - alert: AuditEventValidationFailures
+        expr: rate(audit_validation_failures_total[5m]) > 5
+        for: 5m
+        labels:
+          severity: warning
+          component: audit_system
+          category: failures
+        annotations:
+          summary: "High rate of audit event validation failures"
+          description: "Audit events are failing validation at {{ $value | humanize }} per second."
+          impact: "Invalid audit events are being rejected. Some events may not be logged."
+          action: "1. Review validation error logs\n2. Check for missing required fields\n3. Verify event structure matches schema\n4. Check for recent API changes\n5. Review event generation code"
+          runbook_url: "https://docs.thinkonerp.com/runbooks/validation-failures"

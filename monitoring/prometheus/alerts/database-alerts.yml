@@ -1,0 +1,172 @@
+groups:
+  - name: database_alerts
+    interval: 30s
+    rules:
+      # ============================================================================
+      # Connection Pool Exhaustion Alerts
+      # ============================================================================
+      
+      - alert: DatabaseConnectionPoolExhausted
+        expr: (db_connection_pool_active / db_connection_pool_max) > 0.95
+        for: 2m
+        labels:
+          severity: critical
+          component: database
+          category: connection_pool
+        annotations:
+          summary: "Database connection pool nearly exhausted"
+          description: "Database connection pool utilization is {{ $value | humanizePercentage }} ({{ query \"db_connection_pool_active\" | first | value }} / {{ query \"db_connection_pool_max\" | first | value }} connections). New requests may be blocked."
+          impact: "CRITICAL: API requests will fail or timeout waiting for database connections. Application performance severely degraded."
+          action: "IMMEDIATE ACTION REQUIRED:\n1. Check for connection leaks in application code\n2. Review long-running queries and transactions\n3. Check for database deadlocks\n4. Consider increasing max pool size temporarily\n5. Restart application if connection leak suspected\n6. Review recent code deployments"
+          runbook_url: "https://docs.thinkonerp.com/runbooks/connection-pool-exhausted"
+      
+      - alert: DatabaseConnectionPoolHighUtilization
+        expr: (db_connection_pool_active / db_connection_pool_max) > 0.80
+        for: 5m
+        labels:
+          severity: warning
+          component: database
+          category: connection_pool
+        annotations:
+          summary: "Database connection pool utilization high"
+          description: "Database connection pool utilization is {{ $value | humanizePercentage }} ({{ query \"db_connection_pool_active\" | first | value }} / {{ query \"db_connection_pool_max\" | first | value }} connections)."
+          impact: "Connection pool approaching capacity. Risk of connection exhaustion if load increases."
+          action: "1. Monitor connection pool trend\n2. Review active connections and their duration\n3. Check for slow queries holding connections\n4. Verify connection timeout settings\n5. Consider increasing pool size if sustained high usage"
+          runbook_url: "https://docs.thinkonerp.com/runbooks/connection-pool-high"
+      
+      - alert: DatabaseConnectionPoolNoIdleConnections
+        expr: db_connection_pool_idle == 0 and db_connection_pool_active > 10
+        for: 3m
+        labels:
+          severity: warning
+          component: database
+          category: connection_pool
+        annotations:
+          summary: "No idle database connections available"
+          description: "All database connections are in use. Active: {{ query \"db_connection_pool_active\" | first | value }}, Idle: 0."
+          impact: "New requests must wait for connections to become available. Increased latency likely."
+          action: "1. Check current database load\n2. Review active queries\n3. Look for long-running transactions\n4. Monitor for connection pool exhaustion\n5. Consider scaling if load is legitimate"
+          runbook_url: "https://docs.thinkonerp.com/runbooks/no-idle-connections"
+      
+      # ============================================================================
+      # Connection Pool Growth Alerts
+      # ============================================================================
+      
+      - alert: DatabaseConnectionPoolGrowingRapidly
+        expr: rate(db_connection_pool_active[5m]) > 5
+        for: 3m
+        labels:
+          severity: warning
+          component: database
+          category: connection_pool
+        annotations:
+          summary: "Database connection pool growing rapidly"
+          description: "Active database connections are growing at {{ $value | humanize }} connections per second. Current active: {{ query \"db_connection_pool_active\" | first | value }}."
+          impact: "Rapid connection growth may indicate connection leak or traffic spike. Pool may exhaust soon."
+          action: "1. Investigate cause of connection growth\n2. Check for traffic spikes\n3. Review recent code changes\n4. Look for connection leaks\n5. Monitor for pool exhaustion"
+          runbook_url: "https://docs.thinkonerp.com/runbooks/connection-pool-growing"
+      
+      # ============================================================================
+      # Connection Timeout Alerts
+      # ============================================================================
+      
+      - alert: DatabaseConnectionTimeouts
+        expr: rate(db_connection_timeouts_total[5m]) > 1
+        for: 2m
+        labels:
+          severity: critical
+          component: database
+          category: connection_pool
+        annotations:
+          summary: "Database connection timeouts occurring"
+          description: "Database connection timeouts are occurring at {{ $value | humanize }} per second. Applications are unable to acquire connections."
+          impact: "CRITICAL: API requests are failing due to connection timeouts. User experience severely impacted."
+          action: "IMMEDIATE ACTION REQUIRED:\n1. Check connection pool exhaustion\n2. Review database health and connectivity\n3. Check for network issues\n4. Review long-running queries\n5. Consider emergency pool size increase\n6. Check for connection leaks"
+          runbook_url: "https://docs.thinkonerp.com/runbooks/connection-timeouts"
+      
+      # ============================================================================
+      # Database Health Alerts
+      # ============================================================================
+      
+      - alert: DatabaseConnectionFailures
+        expr: rate(db_connection_failures_total[5m]) > 0.1
+        for: 2m
+        labels:
+          severity: critical
+          component: database
+          category: connectivity
+        annotations:
+          summary: "Database connection failures occurring"
+          description: "Database connection failures are occurring at {{ $value | humanize }} per second."
+          impact: "CRITICAL: Application cannot connect to database. All database operations failing."
+          action: "IMMEDIATE ACTION REQUIRED:\n1. Verify database is running\n2. Check network connectivity to database\n3. Verify database credentials\n4. Check database listener status\n5. Review database logs for errors\n6. Check firewall rules"
+          runbook_url: "https://docs.thinkonerp.com/runbooks/database-connection-failures"
+      
+      - alert: DatabaseHealthCheckFailing
+        expr: database_health_status == 0
+        for: 1m
+        labels:
+          severity: critical
+          component: database
+          category: health
+        annotations:
+          summary: "Database health check failing"
+          description: "Database health check is reporting unhealthy status."
+          impact: "CRITICAL: Database may be unavailable or experiencing critical issues. All operations at risk."
+          action: "IMMEDIATE ACTION REQUIRED:\n1. Check database status\n2. Review database logs\n3. Verify database connectivity\n4. Check database resource utilization\n5. Check for database locks or blocking\n6. Alert DBA team"
+          runbook_url: "https://docs.thinkonerp.com/runbooks/database-health-failing"
+      
+      # ============================================================================
+      # Slow Query Alerts
+      # ============================================================================
+      
+      - alert: DatabaseSlowQueriesHigh
+        expr: rate(slow_queries_total[5m]) > 10
+        for: 5m
+        labels:
+          severity: warning
+          component: database
+          category: performance
+        annotations:
+          summary: "High rate of slow database queries"
+          description: "Slow queries (>500ms) are occurring at {{ $value | humanize }} per second."
+          impact: "Database performance degraded. API latency likely increased. User experience impacted."
+          action: "1. Review slow query log\n2. Identify most frequent slow queries\n3. Check for missing indexes\n4. Review query execution plans\n5. Check database resource utilization\n6. Consider query optimization"
+          runbook_url: "https://docs.thinkonerp.com/runbooks/slow-queries-high"
+      
+      - alert: DatabaseQueryLatencyCritical
+        expr: histogram_quantile(0.95, rate(db_query_duration_bucket[5m])) > 1000
+        for: 3m
+        labels:
+          severity: critical
+          component: database
+          category: performance
+        annotations:
+          summary: "Database query latency critically high"
+          description: "Database query p95 latency is {{ $value | humanize }}ms (threshold: 1000ms)."
+          impact: "CRITICAL: Database queries are extremely slow. API performance severely degraded."
+          action: "IMMEDIATE ACTION REQUIRED:\n1. Check database CPU and I/O utilization\n2. Review active sessions and blocking\n3. Check for long-running queries\n4. Review database locks\n5. Check for resource contention\n6. Consider emergency database optimization"
+          runbook_url: "https://docs.thinkonerp.com/runbooks/query-latency-critical"
+      
+      # ============================================================================
+      # Connection Leak Detection
+      # ============================================================================
+      
+      - alert: PossibleDatabaseConnectionLeak
+        expr: |
+          (
+            db_connection_pool_active > 20
+            and
+            rate(http_server_requests_total[5m]) < 10
+          )
+        for: 10m
+        labels:
+          severity: warning
+          component: database
+          category: connection_pool
+        annotations:
+          summary: "Possible database connection leak detected"
+          description: "High number of active connections ({{ query \"db_connection_pool_active\" | first | value }}) despite low request rate ({{ query \"rate(http_server_requests_total[5m])\" | first | value | humanize }} req/sec)."
+          impact: "Connection pool may be leaking. Pool exhaustion risk if leak continues."
+          action: "1. Review recent code changes\n2. Check for unclosed connections in code\n3. Review connection disposal patterns\n4. Check for exceptions preventing connection release\n5. Monitor connection pool trend\n6. Consider application restart if leak confirmed"
+          runbook_url: "https://docs.thinkonerp.com/runbooks/connection-leak-detection"

@@ -173,7 +173,14 @@ public class AdminOnlyEndpointAuthorizationPropertyTests : IClassFixture<WebAppl
                 ("/api/users/1", "GET"),
                 ("/api/users", "POST"),
                 ("/api/users/1", "PUT"),
-                ("/api/users/1", "DELETE")
+                ("/api/users/1", "DELETE"),
+
+                // Audit logs endpoints (all operations require admin)
+                ("/api/auditlogs/legacy", "GET"),
+                ("/api/auditlogs/dashboard", "GET"),
+                ("/api/auditlogs/legacy/1/status", "PUT"),
+                ("/api/auditlogs/1/status", "GET"),
+                ("/api/auditlogs/transform", "POST")
             };
 
             var requestGenerator = from endpointMethod in Gen.Elements(adminOnlyEndpoints)

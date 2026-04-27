@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ThinkOnErp API & UI Documentation</title>
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Outfit', sans-serif;
+        }
+        
+        /* Customizing some of the ReDoc theme elements to fit the dark modern aesthetics you had before */
+        :root {
+            --redoc-background-color: #0f172a;
+            --redoc-text-color: #f8fafc;
+        }
+    </style>
+</head>
+<body>
+    <!-- ReDoc Container targeting the locally extracted swagger.json -->
+    <redoc spec-url="swagger.json" 
+           expand-responses="200,201" 
+           hide-download-button="true"
+           theme='{
+               "colors": {
+                   "primary": {
+                       "main": "#3b82f6"
+                   },
+                   "text": {
+                       "primary": "#333333"
+                   }
+               },
+               "typography": {
+                   "fontFamily": "Outfit, sans-serif",
+                   "headings": {
+                       "fontFamily": "Outfit, sans-serif"
+                   }
+               }
+           }'>
+    </redoc>
+
+    <!-- ReDoc Standalone Script -->
+    <script src="https://cdn.redoc.ly/redoc/latest/bundles/redoc.standalone.js"></script>
+</body>
+</html>

@@ -177,4 +177,107 @@ public interface ITicketRepository
         Int64? branchId = null, 
         DateTime? fromDate = null, 
         DateTime? toDate = null);
+
+    /// <summary>
+    /// Generates ticket volume reports by time period, company, and type.
+    /// Calls SP_SYS_TICKET_REPORTS_VOLUME stored procedure.
+    /// </summary>
+    /// <param name="startDate">Report start date</param>
+    /// <param name="endDate">Report end date</param>
+    /// <param name="companyId">Filter by company (0 = all)</param>
+    /// <param name="ticketTypeId">Filter by ticket type (0 = all)</param>
+    /// <param name="groupBy">Grouping option (DAILY, WEEKLY, MONTHLY, COMPANY, TYPE)</param>
+    /// <returns>List of volume report data</returns>
+    Task<List<Dictionary<string, object>>> GetTicketVolumeReportAsync(
+        DateTime startDate,
+        DateTime endDate,
+        Int64 companyId = 0,
+        Int64 ticketTypeId = 0,
+        string groupBy = "DAILY");
+
+    /// <summary>
+    /// Calculates SLA compliance percentages by priority and type.
+    /// Calls SP_SYS_TICKET_REPORTS_SLA_COMPLIANCE stored procedure.
+    /// </summary>
+    /// <param name="startDate">Report start date</param>
+    /// <param name="endDate">Report end date</param>
+    /// <param name="companyId">Filter by company (0 = all)</param>
+    /// <returns>List of SLA compliance data</returns>
+    Task<List<Dictionary<string, object>>> GetSlaComplianceReportAsync(
+        DateTime startDate,
+        DateTime endDate,
+        Int64 companyId = 0);
+
+    /// <summary>
+    /// Generates workload reports showing active and resolved tickets per assignee.
+    /// Calls SP_SYS_TICKET_REPORTS_WORKLOAD stored procedure.
+    /// </summary>
+    /// <param name="startDate">Report start date (optional)</param>
+    /// <param name="endDate">Report end date (optional)</param>
+    /// <param name="companyId">Filter by company (0 = all)</param>
+    /// <returns>List of workload data per assignee</returns>
+    Task<List<Dictionary<string, object>>> GetWorkloadReportAsync(
+        DateTime? startDate = null,
+        DateTime? endDate = null,
+        Int64 companyId = 0);
+
+    /// <summary>
+    /// Provides trend analysis showing ticket creation and resolution patterns over time.
+    /// Calls SP_SYS_TICKET_REPORTS_TRENDS stored procedure.
+    /// </summary>
+    /// <param name="startDate">Analysis start date</param>
+    /// <param name="endDate">Analysis end date</param>
+    /// <param name="periodType">Period grouping (DAILY, WEEKLY, MONTHLY)</param>
+    /// <returns>List of trend data</returns>
+    Task<List<Dictionary<string, object>>> GetTicketTrendsReportAsync(
+        DateTime startDate,
+        DateTime endDate,
+        string periodType = "DAILY");
+
+    /// <summary>
+    /// Performs advanced search with multi-criteria filtering, AND/OR logic, and relevance scoring.
+    /// Calls SP_SYS_REQUEST_TICKET_ADVANCED_SEARCH stored procedure.
+    /// </summary>
+    /// <param name="searchTerm">Full-text search term</param>
+    /// <param name="companyId">Filter by company (0 = all)</param>
+    /// <param name="branchId">Filter by branch (0 = all)</param>
+    /// <param name="assigneeId">Filter by assignee (0 = all)</param>
+    /// <param name="requesterId">Filter by requester (0 = all)</param>
+    /// <param name="statusIds">Comma-separated status IDs</param>
+    /// <param name="priorityIds">Comma-separated priority IDs</param>
+    /// <param name="typeIds">Comma-separated type IDs</param>
+    /// <param name="categoryIds">Comma-separated category IDs</param>
+    /// <param name="createdFrom">Creation date range start</param>
+    /// <param name="createdTo">Creation date range end</param>
+    /// <param name="dueFrom">Expected resolution date range start</param>
+    /// <param name="dueTo">Expected resolution date range end</param>
+    /// <param name="slaStatus">Filter by SLA status (OnTime, AtRisk, Overdue)</param>
+    /// <param name="filterLogic">AND or OR for combining criteria</param>
+    /// <param name="includeInactive">Include inactive tickets</param>
+    /// <param name="page">Page number for pagination</param>
+    /// <param name="pageSize">Records per page</param>
+    /// <param name="sortBy">Sort field (RELEVANCE, CREATION_DATE, PRIORITY, etc.)</param>
+    /// <param name="sortDirection">Sort direction (ASC/DESC)</param>
+    /// <returns>A tuple containing search results with relevance scores and total count</returns>
+    Task<(List<SysRequestTicket> Tickets, int TotalCount)> AdvancedSearchAsync(
+        string? searchTerm = null,
+        Int64? companyId = null,
+        Int64? branchId = null,
+        Int64? assigneeId = null,
+        Int64? requesterId = null,
+        string? statusIds = null,
+        string? priorityIds = null,
+        string? typeIds = null,
+        string? categoryIds = null,
+        DateTime? createdFrom = null,
+        DateTime? createdTo = null,
+        DateTime? dueFrom = null,
+        DateTime? dueTo = null,
+        string? slaStatus = null,
+        string filterLogic = "AND",
+        bool includeInactive = false,
+        int page = 1,
+        int pageSize = 20,
+        string sortBy = "RELEVANCE",
+        string sortDirection = "DESC");
 }

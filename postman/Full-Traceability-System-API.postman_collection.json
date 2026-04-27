@@ -1,0 +1,1382 @@
+{
+  "info": {
+    "name": "Full Traceability System API",
+    "description": "Comprehensive API testing collection for the ThinkOnErp Full Traceability System. This collection covers all endpoints for audit logging, compliance reporting, performance monitoring, security monitoring, and alert management.\n\n## Features\n- Complete audit log querying and management\n- GDPR, SOX, and ISO 27001 compliance reports\n- System health and performance monitoring\n- Security threat detection and monitoring\n- Alert rule management and notification testing\n\n## Authentication\nAll endpoints require JWT authentication. Use the Auth > Login endpoint to obtain a token, which will be automatically set in the collection variables.\n\n## Environment Variables\n- `baseUrl`: API base URL (default: http://localhost:5000)\n- `token`: JWT access token (auto-populated after login)\n- `refreshToken`: JWT refresh token (auto-populated after login)",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "full-traceability-system"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:5000",
+      "type": "string"
+    },
+    {
+      "key": "token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "refreshToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "correlationId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "auditLogId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "alertRuleId",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Authentication",
+      "description": "Authentication endpoints for obtaining JWT tokens",
+      "item": [
+        {
+          "name": "Login (Admin)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const response = pm.response.json();",
+                  "    if (response.data && response.data.token) {",
+                  "        pm.collectionVariables.set('token', response.data.token);",
+                  "        pm.collectionVariables.set('refreshToken', response.data.refreshToken);",
+                  "        console.log('Token set successfully');",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"admin\",\n  \"password\": \"Admin@123\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "login"]
+            },
+            "description": "Login with admin credentials to obtain JWT token for accessing protected endpoints"
+          },
+          "response": []
+        },
+        {
+          "name": "Refresh Token",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const response = pm.response.json();",
+                  "    if (response.data && response.data.token) {",
+                  "        pm.collectionVariables.set('token', response.data.token);",
+                  "        pm.collectionVariables.set('refreshToken', response.data.refreshToken);",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refreshToken\": \"{{refreshToken}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/refresh",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "refresh"]
+            },
+            "description": "Refresh the JWT token using the refresh token"
+          },
+          "response": []
+        }
+      ]
+    }
+,
+    {
+      "name": "Audit Logs",
+      "description": "Endpoints for querying and managing audit logs with legacy compatibility",
+      "item": [
+        {
+          "name": "Get Legacy Audit Logs",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/auditlogs/legacy?pageNumber=1&pageSize=50&status=Unresolved",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auditlogs", "legacy"],
+              "query": [
+                {
+                  "key": "company",
+                  "value": "TechCorp",
+                  "disabled": true,
+                  "description": "Filter by company name"
+                },
+                {
+                  "key": "module",
+                  "value": "POS",
+                  "disabled": true,
+                  "description": "Filter by business module (POS, HR, Accounting, etc.)"
+                },
+                {
+                  "key": "branch",
+                  "value": "Main Branch",
+                  "disabled": true,
+                  "description": "Filter by branch name"
+                },
+                {
+                  "key": "status",
+                  "value": "Unresolved",
+                  "description": "Filter by status (Unresolved, In Progress, Resolved, Critical)"
+                },
+                {
+                  "key": "startDate",
+                  "value": "2024-01-01",
+                  "disabled": true,
+                  "description": "Filter by start date (ISO 8601 format)"
+                },
+                {
+                  "key": "endDate",
+                  "value": "2024-12-31",
+                  "disabled": true,
+                  "description": "Filter by end date (ISO 8601 format)"
+                },
+                {
+                  "key": "searchTerm",
+                  "value": "error",
+                  "disabled": true,
+                  "description": "Search term for description, user, device, or error code"
+                },
+                {
+                  "key": "pageNumber",
+                  "value": "1",
+                  "description": "Page number (1-based)"
+                },
+                {
+                  "key": "pageSize",
+                  "value": "50",
+                  "description": "Number of items per page (max: 100)"
+                }
+              ]
+            },
+            "description": "Retrieve audit logs in legacy format compatible with logs.png interface. Returns error descriptions, modules, companies, branches, users, devices, timestamps, and status."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Dashboard Counters",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/auditlogs/dashboard",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auditlogs", "dashboard"]
+            },
+            "description": "Get dashboard counters showing: Unresolved count, In Progress count, Resolved count, and Critical Errors count"
+          },
+          "response": []
+        },
+        {
+          "name": "Update Audit Log Status",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"In Progress\",\n  \"resolutionNotes\": \"Investigating the issue\",\n  \"assignedToUserId\": 1\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auditlogs/legacy/{{auditLogId}}/status",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auditlogs", "legacy", "{{auditLogId}}", "status"]
+            },
+            "description": "Update the status of an audit log entry for error resolution workflow. Status values: Unresolved, In Progress, Resolved, Critical"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Audit Log Status",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/auditlogs/{{auditLogId}}/status",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auditlogs", "{{auditLogId}}", "status"]
+            },
+            "description": "Get the current status of a specific audit log entry"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Logs by Correlation ID",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const response = pm.response.json();",
+                  "    if (response.data && response.data.length > 0) {",
+                  "        pm.collectionVariables.set('auditLogId', response.data[0].id);",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/auditlogs/correlation/{{correlationId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auditlogs", "correlation", "{{correlationId}}"]
+            },
+            "description": "Get all audit log entries associated with a specific correlation ID for request tracing"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Entity History",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/auditlogs/entity/SysUser/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auditlogs", "entity", "SysUser", "1"]
+            },
+            "description": "Get complete audit history for a specific entity (all INSERT, UPDATE, DELETE operations)"
+          },
+          "response": []
+        },
+        {
+          "name": "Get User Action Replay",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/auditlogs/replay/user/1?startDate=2024-01-01T00:00:00Z&endDate=2024-12-31T23:59:59Z",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auditlogs", "replay", "user", "1"],
+              "query": [
+                {
+                  "key": "startDate",
+                  "value": "2024-01-01T00:00:00Z",
+                  "description": "Start date (ISO 8601 format)"
+                },
+                {
+                  "key": "endDate",
+                  "value": "2024-12-31T23:59:59Z",
+                  "description": "End date (ISO 8601 format)"
+                }
+              ]
+            },
+            "description": "Get chronological sequence of all actions performed by a user for debugging and analysis"
+          },
+          "response": []
+        },
+        {
+          "name": "Search Audit Logs",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/auditlogs/search?searchTerm=login&pageNumber=1&pageSize=50",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auditlogs", "search"],
+              "query": [
+                {
+                  "key": "searchTerm",
+                  "value": "login",
+                  "description": "Full-text search term"
+                },
+                {
+                  "key": "pageNumber",
+                  "value": "1"
+                },
+                {
+                  "key": "pageSize",
+                  "value": "50"
+                }
+              ]
+            },
+            "description": "Full-text search across audit log entries"
+          },
+          "response": []
+        },
+        {
+          "name": "Export Audit Logs (CSV)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"startDate\": \"2024-01-01T00:00:00Z\",\n  \"endDate\": \"2024-12-31T23:59:59Z\",\n  \"actorId\": null,\n  \"companyId\": null,\n  \"entityType\": null\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auditlogs/export/csv",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auditlogs", "export", "csv"]
+            },
+            "description": "Export audit logs to CSV format based on filter criteria"
+          },
+          "response": []
+        },
+        {
+          "name": "Export Audit Logs (JSON)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"startDate\": \"2024-01-01T00:00:00Z\",\n  \"endDate\": \"2024-12-31T23:59:59Z\",\n  \"actorId\": null,\n  \"companyId\": null,\n  \"entityType\": null\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auditlogs/export/json",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auditlogs", "export", "json"]
+            },
+            "description": "Export audit logs to JSON format based on filter criteria"
+          },
+          "response": []
+        }
+      ]
+    }
+,
+    {
+      "name": "Compliance Reports",
+      "description": "Endpoints for generating GDPR, SOX, and ISO 27001 compliance reports",
+      "item": [
+        {
+          "name": "GDPR",
+          "description": "GDPR compliance reports",
+          "item": [
+            {
+              "name": "GDPR Access Report (JSON)",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/api/compliance/gdpr/access-report?dataSubjectId=1&startDate=2024-01-01&endDate=2024-12-31&format=json",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "compliance", "gdpr", "access-report"],
+                  "query": [
+                    {
+                      "key": "dataSubjectId",
+                      "value": "1",
+                      "description": "User ID of the data subject"
+                    },
+                    {
+                      "key": "startDate",
+                      "value": "2024-01-01",
+                      "description": "Start date (ISO 8601 format)"
+                    },
+                    {
+                      "key": "endDate",
+                      "value": "2024-12-31",
+                      "description": "End date (ISO 8601 format)"
+                    },
+                    {
+                      "key": "format",
+                      "value": "json",
+                      "description": "Export format: json, csv, pdf"
+                    }
+                  ]
+                },
+                "description": "Generate GDPR data access report showing all access to personal data (Article 15 compliance)"
+              },
+              "response": []
+            },
+            {
+              "name": "GDPR Access Report (PDF)",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/api/compliance/gdpr/access-report?dataSubjectId=1&startDate=2024-01-01&endDate=2024-12-31&format=pdf",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "compliance", "gdpr", "access-report"],
+                  "query": [
+                    {
+                      "key": "dataSubjectId",
+                      "value": "1"
+                    },
+                    {
+                      "key": "startDate",
+                      "value": "2024-01-01"
+                    },
+                    {
+                      "key": "endDate",
+                      "value": "2024-12-31"
+                    },
+                    {
+                      "key": "format",
+                      "value": "pdf"
+                    }
+                  ]
+                },
+                "description": "Generate GDPR access report in PDF format"
+              },
+              "response": []
+            },
+            {
+              "name": "GDPR Data Export",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/api/compliance/gdpr/data-export?dataSubjectId=1&format=json",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "compliance", "gdpr", "data-export"],
+                  "query": [
+                    {
+                      "key": "dataSubjectId",
+                      "value": "1",
+                      "description": "User ID of the data subject"
+                    },
+                    {
+                      "key": "format",
+                      "value": "json",
+                      "description": "Export format: json, csv, pdf"
+                    }
+                  ]
+                },
+                "description": "Generate GDPR data export report with complete personal data (Article 20 compliance)"
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "SOX",
+          "description": "SOX compliance reports",
+          "item": [
+            {
+              "name": "SOX Financial Access Report",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/api/compliance/sox/financial-access?startDate=2024-01-01&endDate=2024-12-31&format=json",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "compliance", "sox", "financial-access"],
+                  "query": [
+                    {
+                      "key": "startDate",
+                      "value": "2024-01-01",
+                      "description": "Start date (ISO 8601 format)"
+                    },
+                    {
+                      "key": "endDate",
+                      "value": "2024-12-31",
+                      "description": "End date (ISO 8601 format)"
+                    },
+                    {
+                      "key": "format",
+                      "value": "json",
+                      "description": "Export format: json, csv, pdf"
+                    }
+                  ]
+                },
+                "description": "Generate SOX financial data access report (Section 404 compliance)"
+              },
+              "response": []
+            },
+            {
+              "name": "SOX Segregation of Duties Report",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/api/compliance/sox/segregation-of-duties?format=json",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "compliance", "sox", "segregation-of-duties"],
+                  "query": [
+                    {
+                      "key": "format",
+                      "value": "json",
+                      "description": "Export format: json, csv, pdf"
+                    }
+                  ]
+                },
+                "description": "Generate SOX segregation of duties report identifying potential violations"
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "ISO 27001",
+          "description": "ISO 27001 compliance reports",
+          "item": [
+            {
+              "name": "ISO 27001 Security Report",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/api/compliance/iso27001/security-report?startDate=2024-01-01&endDate=2024-12-31&format=json",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "compliance", "iso27001", "security-report"],
+                  "query": [
+                    {
+                      "key": "startDate",
+                      "value": "2024-01-01",
+                      "description": "Start date (ISO 8601 format)"
+                    },
+                    {
+                      "key": "endDate",
+                      "value": "2024-12-31",
+                      "description": "End date (ISO 8601 format)"
+                    },
+                    {
+                      "key": "format",
+                      "value": "json",
+                      "description": "Export format: json, csv, pdf"
+                    }
+                  ]
+                },
+                "description": "Generate ISO 27001 security event report (Annex A.12.4 compliance)"
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "General Reports",
+          "description": "General compliance and audit reports",
+          "item": [
+            {
+              "name": "User Activity Report",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/api/compliance/user-activity?userId=1&startDate=2024-01-01&endDate=2024-12-31&format=json",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "compliance", "user-activity"],
+                  "query": [
+                    {
+                      "key": "userId",
+                      "value": "1",
+                      "description": "User ID"
+                    },
+                    {
+                      "key": "startDate",
+                      "value": "2024-01-01",
+                      "description": "Start date (ISO 8601 format)"
+                    },
+                    {
+                      "key": "endDate",
+                      "value": "2024-12-31",
+                      "description": "End date (ISO 8601 format)"
+                    },
+                    {
+                      "key": "format",
+                      "value": "json",
+                      "description": "Export format: json, csv, pdf"
+                    }
+                  ]
+                },
+                "description": "Generate chronological report of all user actions"
+              },
+              "response": []
+            },
+            {
+              "name": "Data Modification Report",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/api/compliance/data-modification?entityType=SysUser&entityId=1&format=json",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "compliance", "data-modification"],
+                  "query": [
+                    {
+                      "key": "entityType",
+                      "value": "SysUser",
+                      "description": "Entity type (e.g., SysUser, SysCompany)"
+                    },
+                    {
+                      "key": "entityId",
+                      "value": "1",
+                      "description": "Entity ID"
+                    },
+                    {
+                      "key": "format",
+                      "value": "json",
+                      "description": "Export format: json, csv, pdf"
+                    }
+                  ]
+                },
+                "description": "Generate complete audit trail of all modifications to a specific entity"
+              },
+              "response": []
+            }
+          ]
+        }
+      ]
+    }
+,
+    {
+      "name": "Monitoring",
+      "description": "System health, performance, memory, and security monitoring endpoints",
+      "item": [
+        {
+          "name": "Health & Performance",
+          "description": "System health and performance metrics",
+          "item": [
+            {
+              "name": "Get System Health",
+              "request": {
+                "auth": {
+                  "type": "noauth"
+                },
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/api/monitoring/health",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "monitoring", "health"]
+                },
+                "description": "Get comprehensive system health metrics including CPU, memory, database connections, request rate, and error rate. This endpoint is publicly accessible for health checks."
+              },
+              "response": []
+            },
+            {
+              "name": "Get Endpoint Statistics",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/api/monitoring/performance/endpoint?endpoint=/api/users&periodMinutes=60",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "monitoring", "performance", "endpoint"],
+                  "query": [
+                    {
+                      "key": "endpoint",
+                      "value": "/api/users",
+                      "description": "Endpoint path to get statistics for"
+                    },
+                    {
+                      "key": "periodMinutes",
+                      "value": "60",
+                      "description": "Time period in minutes (default: 60)"
+                    }
+                  ]
+                },
+                "description": "Get performance statistics for a specific endpoint including request count, average/min/max execution time, and percentiles (p50, p95, p99)"
+              },
+              "response": []
+            },
+            {
+              "name": "Get Slow Requests",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/api/monitoring/performance/slow-requests?thresholdMs=1000&pageNumber=1&pageSize=50",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "monitoring", "performance", "slow-requests"],
+                  "query": [
+                    {
+                      "key": "thresholdMs",
+                      "value": "1000",
+                      "description": "Execution time threshold in milliseconds (default: 1000)"
+                    },
+                    {
+                      "key": "pageNumber",
+                      "value": "1",
+                      "description": "Page number (1-based)"
+                    },
+                    {
+                      "key": "pageSize",
+                      "value": "50",
+                      "description": "Number of items per page (max: 100)"
+                    }
+                  ]
+                },
+                "description": "Get requests that exceeded the specified execution time threshold"
+              },
+              "response": []
+            },
+            {
+              "name": "Get Slow Queries",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/api/monitoring/performance/slow-queries?thresholdMs=500&pageNumber=1&pageSize=50",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "monitoring", "performance", "slow-queries"],
+                  "query": [
+                    {
+                      "key": "thresholdMs",
+                      "value": "500",
+                      "description": "Execution time threshold in milliseconds (default: 500)"
+                    },
+                    {
+                      "key": "pageNumber",
+                      "value": "1"
+                    },
+                    {
+                      "key": "pageSize",
+                      "value": "50"
+                    }
+                  ]
+                },
+                "description": "Get database queries that exceeded the specified execution time threshold"
+              },
+              "response": []
+            },
+            {
+              "name": "Get Connection Pool Metrics",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/api/monitoring/performance/connection-pool",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "monitoring", "performance", "connection-pool"]
+                },
+                "description": "Get detailed Oracle connection pool metrics including active/idle connections, pool size, and utilization"
+              },
+              "response": []
+            },
+            {
+              "name": "Get Audit Queue Depth",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/api/monitoring/audit-queue-depth",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "monitoring", "audit-queue-depth"]
+                },
+                "description": "Get the current audit queue depth and utilization percentage"
+              },
+              "response": []
+            },
+            {
+              "name": "Get Audit Metrics",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/api/monitoring/audit/metrics",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "monitoring", "audit", "metrics"]
+                },
+                "description": "Get comprehensive audit logging system metrics including queue depth, circuit breaker state, success/failure rates, and pending fallback files"
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "Memory Management",
+          "description": "Memory monitoring and optimization endpoints",
+          "item": [
+            {
+              "name": "Get Memory Metrics",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/api/monitoring/memory",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "monitoring", "memory"]
+                },
+                "description": "Get detailed memory usage metrics including heap sizes, GC statistics, and allocation rate"
+              },
+              "response": []
+            },
+            {
+              "name": "Get Memory Pressure",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/api/monitoring/memory/pressure",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "monitoring", "memory", "pressure"]
+                },
+                "description": "Detect current memory pressure level and get recommendations"
+              },
+              "response": []
+            },
+            {
+              "name": "Get Memory Optimization Recommendations",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/api/monitoring/memory/recommendations",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "monitoring", "memory", "recommendations"]
+                },
+                "description": "Get memory optimization recommendations based on current usage patterns"
+              },
+              "response": []
+            },
+            {
+              "name": "Optimize Memory",
+              "request": {
+                "method": "POST",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/api/monitoring/memory/optimize",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "monitoring", "memory", "optimize"]
+                },
+                "description": "Trigger memory optimization strategies including garbage collection and heap compaction. WARNING: This can temporarily impact performance."
+              },
+              "response": []
+            },
+            {
+              "name": "Force Garbage Collection",
+              "request": {
+                "method": "POST",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/api/monitoring/memory/gc?generation=2&blocking=true&compacting=true",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "monitoring", "memory", "gc"],
+                  "query": [
+                    {
+                      "key": "generation",
+                      "value": "2",
+                      "description": "GC generation (0, 1, or 2). Default: 2 (full collection)"
+                    },
+                    {
+                      "key": "blocking",
+                      "value": "true",
+                      "description": "Wait for GC to complete. Default: true"
+                    },
+                    {
+                      "key": "compacting",
+                      "value": "true",
+                      "description": "Compact the heap. Default: true"
+                    }
+                  ]
+                },
+                "description": "Force garbage collection for a specific generation. WARNING: Can impact performance."
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "Security Monitoring",
+          "description": "Security threat detection and monitoring endpoints",
+          "item": [
+            {
+              "name": "Get Active Security Threats",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/api/monitoring/security/threats?pageNumber=1&pageSize=50",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "monitoring", "security", "threats"],
+                  "query": [
+                    {
+                      "key": "pageNumber",
+                      "value": "1"
+                    },
+                    {
+                      "key": "pageSize",
+                      "value": "50"
+                    }
+                  ]
+                },
+                "description": "Get all active security threats including failed login patterns, unauthorized access, SQL injection, XSS, and anomalous activity"
+              },
+              "response": []
+            },
+            {
+              "name": "Get Daily Security Summary",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/api/monitoring/security/daily-summary?date=2024-01-15",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "monitoring", "security", "daily-summary"],
+                  "query": [
+                    {
+                      "key": "date",
+                      "value": "2024-01-15",
+                      "description": "Date for the summary (default: today)",
+                      "disabled": true
+                    }
+                  ]
+                },
+                "description": "Generate daily security summary report including threat counts, top sources, and trend analysis"
+              },
+              "response": []
+            },
+            {
+              "name": "Check Failed Login Pattern",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/api/monitoring/security/check-failed-logins?ipAddress=192.168.1.100",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "monitoring", "security", "check-failed-logins"],
+                  "query": [
+                    {
+                      "key": "ipAddress",
+                      "value": "192.168.1.100",
+                      "description": "IP address to check"
+                    }
+                  ]
+                },
+                "description": "Check if an IP address has exceeded the failed login threshold"
+              },
+              "response": []
+            },
+            {
+              "name": "Get Failed Login Count",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/api/monitoring/security/failed-login-count?username=testuser",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "monitoring", "security", "failed-login-count"],
+                  "query": [
+                    {
+                      "key": "username",
+                      "value": "testuser",
+                      "description": "Username to check"
+                    }
+                  ]
+                },
+                "description": "Get the count of failed login attempts for a specific user"
+              },
+              "response": []
+            },
+            {
+              "name": "Check SQL Injection",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "\"SELECT * FROM users WHERE id = 1 OR 1=1\""
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/api/monitoring/security/check-sql-injection",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "monitoring", "security", "check-sql-injection"]
+                },
+                "description": "Scan input text for SQL injection patterns"
+              },
+              "response": []
+            },
+            {
+              "name": "Check XSS",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "\"<script>alert('XSS')</script>\""
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/api/monitoring/security/check-xss",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "monitoring", "security", "check-xss"]
+                },
+                "description": "Scan input text for XSS (Cross-Site Scripting) patterns"
+              },
+              "response": []
+            },
+            {
+              "name": "Check Anomalous Activity",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/api/monitoring/security/check-anomalous-activity?userId=1",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "monitoring", "security", "check-anomalous-activity"],
+                  "query": [
+                    {
+                      "key": "userId",
+                      "value": "1",
+                      "description": "User ID to check"
+                    }
+                  ]
+                },
+                "description": "Detect anomalous activity for a specific user (unusual request volumes, timing, or geographic patterns)"
+              },
+              "response": []
+            }
+          ]
+        }
+      ]
+    }
+,
+    {
+      "name": "Alerts",
+      "description": "Alert rule management, alert history, and notification testing endpoints",
+      "item": [
+        {
+          "name": "Alert Rules",
+          "description": "Manage alert rules and configurations",
+          "item": [
+            {
+              "name": "Get Alert Rules",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "if (pm.response.code === 200) {",
+                      "    const response = pm.response.json();",
+                      "    if (response.data && response.data.items && response.data.items.length > 0) {",
+                      "        pm.collectionVariables.set('alertRuleId', response.data.items[0].id);",
+                      "    }",
+                      "}"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ],
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/api/alerts/rules?pageNumber=1&pageSize=50",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "alerts", "rules"],
+                  "query": [
+                    {
+                      "key": "pageNumber",
+                      "value": "1"
+                    },
+                    {
+                      "key": "pageSize",
+                      "value": "50"
+                    }
+                  ]
+                },
+                "description": "Get all configured alert rules with pagination"
+              },
+              "response": []
+            },
+            {
+              "name": "Create Alert Rule",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "if (pm.response.code === 201) {",
+                      "    const response = pm.response.json();",
+                      "    if (response.data && response.data.id) {",
+                      "        pm.collectionVariables.set('alertRuleId', response.data.id);",
+                      "    }",
+                      "}"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"High Error Rate Alert\",\n  \"description\": \"Alert when error rate exceeds 5% in 5 minutes\",\n  \"eventType\": \"Exception\",\n  \"severityThreshold\": \"Error\",\n  \"condition\": {\n    \"metric\": \"ErrorRate\",\n    \"operator\": \"GreaterThan\",\n    \"threshold\": 5,\n    \"windowMinutes\": 5\n  },\n  \"notificationChannels\": \"Email,Webhook\",\n  \"emailRecipients\": [\"admin@example.com\", \"ops@example.com\"],\n  \"webhookUrl\": \"https://hooks.slack.com/services/YOUR/WEBHOOK/URL\",\n  \"smsRecipients\": null\n}"
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/api/alerts/rules",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "alerts", "rules"]
+                },
+                "description": "Create a new alert rule with conditions, thresholds, and notification settings"
+              },
+              "response": []
+            },
+            {
+              "name": "Update Alert Rule",
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"High Error Rate Alert (Updated)\",\n  \"description\": \"Alert when error rate exceeds 10% in 5 minutes\",\n  \"severityThreshold\": \"Critical\",\n  \"condition\": {\n    \"metric\": \"ErrorRate\",\n    \"operator\": \"GreaterThan\",\n    \"threshold\": 10,\n    \"windowMinutes\": 5\n  },\n  \"isActive\": true\n}"
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/api/alerts/rules/{{alertRuleId}}",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "alerts", "rules", "{{alertRuleId}}"]
+                },
+                "description": "Update an existing alert rule"
+              },
+              "response": []
+            },
+            {
+              "name": "Delete Alert Rule",
+              "request": {
+                "method": "DELETE",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/api/alerts/rules/{{alertRuleId}}",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "alerts", "rules", "{{alertRuleId}}"]
+                },
+                "description": "Delete an alert rule"
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "Alert History",
+          "description": "View and manage alert history",
+          "item": [
+            {
+              "name": "Get Alert History",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/api/alerts/history?pageNumber=1&pageSize=20",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "alerts", "history"],
+                  "query": [
+                    {
+                      "key": "pageNumber",
+                      "value": "1"
+                    },
+                    {
+                      "key": "pageSize",
+                      "value": "20"
+                    }
+                  ]
+                },
+                "description": "Get historical alerts with acknowledgment and resolution status"
+              },
+              "response": []
+            },
+            {
+              "name": "Acknowledge Alert",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"notes\": \"Acknowledged and investigating\"\n}"
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/api/alerts/1/acknowledge",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "alerts", "1", "acknowledge"]
+                },
+                "description": "Acknowledge an alert to indicate it has been reviewed"
+              },
+              "response": []
+            },
+            {
+              "name": "Resolve Alert",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"resolutionNotes\": \"Issue resolved by restarting the service and clearing cache\"\n}"
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/api/alerts/1/resolve",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "alerts", "1", "resolve"]
+                },
+                "description": "Resolve an alert with resolution notes"
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "Notification Testing",
+          "description": "Test notification channels",
+          "item": [
+            {
+              "name": "Test Email Notification",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "[\n  \"admin@example.com\",\n  \"ops@example.com\"\n]"
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/api/alerts/test/email",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "alerts", "test", "email"]
+                },
+                "description": "Send a test email alert to verify email configuration"
+              },
+              "response": []
+            },
+            {
+              "name": "Test Webhook Notification",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "\"https://hooks.slack.com/services/YOUR/WEBHOOK/URL\""
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/api/alerts/test/webhook",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "alerts", "test", "webhook"]
+                },
+                "description": "Send a test webhook alert to verify webhook configuration"
+              },
+              "response": []
+            },
+            {
+              "name": "Test SMS Notification",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "[\n  \"+1234567890\",\n  \"+0987654321\"\n]"
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/api/alerts/test/sms",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "alerts", "test", "sms"]
+                },
+                "description": "Send a test SMS alert to verify SMS configuration (E.164 format)"
+              },
+              "response": []
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -17,11 +17,22 @@ CREATE SEQUENCE SEQ_SYS_RETENTION_POLICY
     NOCACHE
     NOCYCLE;
 
+-- Create index for performance
+CREATE INDEX IDX_RETENTION_POLICIES_CATEGORY ON SYS_RETENTION_POLICIES(EVENT_CATEGORY);
+
+-- Add foreign key constraint
+ALTER TABLE SYS_RETENTION_POLICIES 
+ADD CONSTRAINT FK_RETENTION_POLICIES_USER 
+FOREIGN KEY (LAST_MODIFIED_BY) REFERENCES SYS_USERS(ROW_ID);
+
 -- Add comments
 COMMENT ON TABLE SYS_RETENTION_POLICIES IS 'Data retention policies by event category for compliance';
-COMMENT ON COLUMN SYS_RETENTION_POLICIES.EVENT_CATEGORY IS 'Event category: Authentication, DataChange, Financial, PersonalData, Security, Configuration';
+COMMENT ON COLUMN SYS_RETENTION_POLICIES.EVENT_CATEGORY IS 'Event category: Authentication, DataChange, Financial, PersonalData, Security, Configuration, Request, PerformanceMetrics, PerformanceAggregated, Exception, Permission';
 COMMENT ON COLUMN SYS_RETENTION_POLICIES.RETENTION_DAYS IS 'Number of days to retain data before archival';
 COMMENT ON COLUMN SYS_RETENTION_POLICIES.ARCHIVE_ENABLED IS '1 = archive after retention, 0 = delete after retention';
+COMMENT ON COLUMN SYS_RETENTION_POLICIES.DESCRIPTION IS 'Human-readable description of the retention policy';
+COMMENT ON COLUMN SYS_RETENTION_POLICIES.LAST_MODIFIED_DATE IS 'Date when the policy was last modified';
+COMMENT ON COLUMN SYS_RETENTION_POLICIES.LAST_MODIFIED_BY IS 'User ID who last modified the policy';
 
 -- Insert default retention policies
 INSERT INTO SYS_RETENTION_POLICIES (ROW_ID, EVENT_CATEGORY, RETENTION_DAYS, DESCRIPTION)
@@ -44,6 +55,12 @@ VALUES (SEQ_SYS_RETENTION_POLICY.NEXTVAL, 'Configuration', 1825, 'Configuration 
 
 INSERT INTO SYS_RETENTION_POLICIES (ROW_ID, EVENT_CATEGORY, RETENTION_DAYS, DESCRIPTION)
 VALUES (SEQ_SYS_RETENTION_POLICY.NEXTVAL, 'Request', 90, 'API request logs retained for 90 days');
+
+INSERT INTO SYS_RETENTION_POLICIES (ROW_ID, EVENT_CATEGORY, RETENTION_DAYS, DESCRIPTION)
+VALUES (SEQ_SYS_RETENTION_POLICY.NEXTVAL, 'PerformanceMetrics', 90, 'Performance metrics detailed data retained for 90 days');
+
+INSERT INTO SYS_RETENTION_POLICIES (ROW_ID, EVENT_CATEGORY, RETENTION_DAYS, DESCRIPTION)
+VALUES (SEQ_SYS_RETENTION_POLICY.NEXTVAL, 'PerformanceAggregated', 365, 'Performance metrics aggregated data retained for 1 year');
 
 INSERT INTO SYS_RETENTION_POLICIES (ROW_ID, EVENT_CATEGORY, RETENTION_DAYS, DESCRIPTION)
 VALUES (SEQ_SYS_RETENTION_POLICY.NEXTVAL, 'Exception', 365, 'Exception logs retained for 1 year');

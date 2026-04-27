@@ -1,0 +1,1099 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ThinkOnErp — Screens & Permissions Report</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Noto+Sans+Arabic:wght@400;600;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box
+        }
+
+        :root {
+            --bg: #0b0b1a;
+            --bg2: #111128;
+            --bg3: #181838;
+            --card: #141432;
+            --border: #252550;
+            --text: #dcdcf0;
+            --text2: #9898c0;
+            --accent: #7c6cff;
+            --acc2: #ff6baa;
+            --green: #22c55e;
+            --yellow: #eab308;
+            --cyan: #06b6d4;
+            --orange: #f97316;
+            --red: #ef4444
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.6
+        }
+
+        /* Hero */
+        .hero {
+            background: linear-gradient(135deg, #12122e 0%, #0a0a20 40%, #18082e 100%);
+            padding: 70px 40px 50px;
+            text-align: center;
+            position: relative;
+            overflow: hidden
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(ellipse at 30% 50%, rgba(124, 108, 255, .06), transparent 60%), radial-gradient(ellipse at 70% 50%, rgba(255, 107, 170, .05), transparent 60%)
+        }
+
+        .hero h1 {
+            font-size: 2.6rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #7c6cff, #ff6baa);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            position: relative;
+            margin-bottom: 8px
+        }
+
+        .hero p {
+            color: var(--text2);
+            font-size: 1rem;
+            max-width: 650px;
+            margin: 0 auto;
+            position: relative
+        }
+
+        /* Stats */
+        .stats {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            flex-wrap: wrap;
+            margin-top: 30px;
+            position: relative
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, .03);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 20px 32px;
+            text-align: center;
+            min-width: 130px
+        }
+
+        .stat-card .num {
+            font-size: 2.4rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--accent), var(--acc2));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent
+        }
+
+        .stat-card .lbl {
+            font-size: .7rem;
+            color: var(--text2);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-top: 2px
+        }
+
+        /* Container */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 40px 24px
+        }
+
+        /* Section */
+        .section {
+            margin-bottom: 50px
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 6px;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            gap: 10px
+        }
+
+        .section-desc {
+            color: var(--text2);
+            font-size: .88rem;
+            margin-bottom: 24px
+        }
+
+        /* System card */
+        .system-card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 28px;
+            margin-bottom: 28px;
+            transition: box-shadow .3s
+        }
+
+        .system-card:hover {
+            box-shadow: 0 0 40px rgba(124, 108, 255, .08)
+        }
+
+        .system-header {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 20px;
+            flex-wrap: wrap
+        }
+
+        .system-icon {
+            width: 52px;
+            height: 52px;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.3rem;
+            flex-shrink: 0
+        }
+
+        .system-icon.accounting {
+            background: linear-gradient(135deg, rgba(124, 108, 255, .2), rgba(124, 108, 255, .05));
+            color: #a59bff;
+            border: 1px solid rgba(124, 108, 255, .3)
+        }
+
+        .system-icon.inventory {
+            background: linear-gradient(135deg, rgba(249, 115, 22, .2), rgba(249, 115, 22, .05));
+            color: #fb923c;
+            border: 1px solid rgba(249, 115, 22, .3)
+        }
+
+        .system-icon.hr {
+            background: linear-gradient(135deg, rgba(34, 197, 94, .2), rgba(34, 197, 94, .05));
+            color: #4ade80;
+            border: 1px solid rgba(34, 197, 94, .3)
+        }
+
+        .system-icon.crm {
+            background: linear-gradient(135deg, rgba(6, 182, 212, .2), rgba(6, 182, 212, .05));
+            color: #22d3ee;
+            border: 1px solid rgba(6, 182, 212, .3)
+        }
+
+        .system-icon.pos {
+            background: linear-gradient(135deg, rgba(255, 107, 170, .2), rgba(255, 107, 170, .05));
+            color: #ff8ac4;
+            border: 1px solid rgba(255, 107, 170, .3)
+        }
+
+        .system-info h3 {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: #fff
+        }
+
+        .system-info .ar {
+            font-family: 'Noto Sans Arabic', sans-serif;
+            font-size: .85rem;
+            color: var(--text2);
+            direction: rtl
+        }
+
+        .system-info .desc {
+            font-size: .82rem;
+            color: var(--text2);
+            margin-top: 2px
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 8px;
+            font-size: .7rem;
+            font-weight: 600;
+            margin-left: auto
+        }
+
+        .badge-count {
+            background: rgba(124, 108, 255, .12);
+            color: #a59bff;
+            border: 1px solid rgba(124, 108, 255, .25)
+        }
+
+        /* Screen table */
+        .screen-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            font-size: .84rem;
+            margin-top: 12px
+        }
+
+        .screen-table thead th {
+            text-align: left;
+            padding: 10px 14px;
+            background: var(--bg3);
+            color: var(--text);
+            font-weight: 600;
+            font-size: .72rem;
+            text-transform: uppercase;
+            letter-spacing: .8px;
+            border-bottom: 1px solid var(--border)
+        }
+
+        .screen-table thead th:first-child {
+            border-radius: 10px 0 0 0
+        }
+
+        .screen-table thead th:last-child {
+            border-radius: 0 10px 0 0
+        }
+
+        .screen-table tbody td {
+            padding: 12px 14px;
+            border-bottom: 1px solid rgba(255, 255, 255, .03);
+            color: var(--text2);
+            vertical-align: middle
+        }
+
+        .screen-table tbody tr:hover td {
+            background: rgba(124, 108, 255, .03)
+        }
+
+        .screen-table tbody tr:last-child td:first-child {
+            border-radius: 0 0 0 10px
+        }
+
+        .screen-table tbody tr:last-child td:last-child {
+            border-radius: 0 0 10px 0
+        }
+
+        .screen-name {
+            color: #fff;
+            font-weight: 600;
+            font-size: .88rem
+        }
+
+        .screen-ar {
+            font-family: 'Noto Sans Arabic', sans-serif;
+            direction: rtl;
+            font-size: .82rem;
+            color: var(--text2)
+        }
+
+        .route {
+            font-family: 'Courier New', monospace;
+            font-size: .78rem;
+            color: var(--accent);
+            background: rgba(124, 108, 255, .08);
+            padding: 3px 8px;
+            border-radius: 6px;
+            white-space: nowrap
+        }
+
+        .icon-cell {
+            text-align: center;
+            font-size: 1rem;
+            color: var(--text2)
+        }
+
+        .perm {
+            display: inline-flex;
+            gap: 4px
+        }
+
+        .perm-badge {
+            width: 24px;
+            height: 24px;
+            border-radius: 6px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: .6rem;
+            font-weight: 700
+        }
+
+        .perm-v {
+            background: rgba(34, 197, 94, .12);
+            color: #4ade80;
+            border: 1px solid rgba(34, 197, 94, .25)
+        }
+
+        .perm-i {
+            background: rgba(59, 130, 246, .12);
+            color: #60a5fa;
+            border: 1px solid rgba(59, 130, 246, .25)
+        }
+
+        .perm-u {
+            background: rgba(234, 179, 8, .12);
+            color: #facc15;
+            border: 1px solid rgba(234, 179, 8, .25)
+        }
+
+        .perm-d {
+            background: rgba(239, 68, 68, .12);
+            color: #f87171;
+            border: 1px solid rgba(239, 68, 68, .25)
+        }
+
+        /* Permission model */
+        .perm-model {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 28px;
+            margin-bottom: 28px
+        }
+
+        .perm-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 16px;
+            margin-top: 16px
+        }
+
+        .perm-item {
+            background: var(--bg3);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 18px
+        }
+
+        .perm-item h4 {
+            font-size: .9rem;
+            font-weight: 600;
+            color: #fff;
+            margin-bottom: 6px
+        }
+
+        .perm-item p {
+            font-size: .8rem;
+            color: var(--text2);
+            line-height: 1.5
+        }
+
+        /* API section */
+        .api-box {
+            background: var(--bg3);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 16px;
+            margin: 10px 0;
+            font-size: .82rem
+        }
+
+        .api-box code {
+            font-family: 'Courier New', monospace;
+            color: var(--accent)
+        }
+
+        .api-method {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: .7rem;
+            font-weight: 700;
+            margin-right: 6px
+        }
+
+        .api-get {
+            background: rgba(34, 197, 94, .12);
+            color: #4ade80
+        }
+
+        .api-post {
+            background: rgba(59, 130, 246, .12);
+            color: #60a5fa
+        }
+
+        .api-put {
+            background: rgba(234, 179, 8, .12);
+            color: #facc15
+        }
+
+        .api-delete {
+            background: rgba(239, 68, 68, .12);
+            color: #f87171
+        }
+
+        /* Tree */
+        .tree {
+            margin: 16px 0
+        }
+
+        .tree-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 0;
+            font-size: .85rem;
+            color: var(--text2)
+        }
+
+        .tree-item .fa-folder {
+            color: #facc15
+        }
+
+        .tree-item .fa-file {
+            color: #60a5fa
+        }
+
+        .tree-indent {
+            margin-left: 28px
+        }
+
+        /* Footer */
+        footer {
+            text-align: center;
+            padding: 30px;
+            color: var(--text2);
+            font-size: .75rem;
+            border-top: 1px solid var(--border);
+            margin-top: 40px
+        }
+
+        @media(max-width:768px) {
+            .hero {
+                padding: 40px 20px
+            }
+
+            .stats {
+                gap: 10px
+            }
+
+            .stat-card {
+                padding: 14px 18px
+            }
+
+            .system-header {
+                flex-direction: column;
+                text-align: center
+            }
+
+            .badge {
+                margin: 0
+            }
+
+            .perm-grid {
+                grid-template-columns: 1fr
+            }
+
+            .screen-table {
+                display: block;
+                overflow-x: auto
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="hero">
+        <h1><i class="fas fa-tv" style="margin-right:10px;font-size:2rem"></i> Screens Report</h1>
+        <p>Complete inventory of all screens, systems, and permission capabilities available in ThinkOnErp ERP platform.
+        </p>
+        <div class="stats">
+            <div class="stat-card">
+                <div class="num">5</div>
+                <div class="lbl">Systems</div>
+            </div>
+            <div class="stat-card">
+                <div class="num">24</div>
+                <div class="lbl">Screens</div>
+            </div>
+            <div class="stat-card">
+                <div class="num">4</div>
+                <div class="lbl">Permission Types</div>
+            </div>
+            <div class="stat-card">
+                <div class="num">2</div>
+                <div class="lbl">Permission Levels</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+
+        <!-- PERMISSION MODEL -->
+        <div class="section">
+            <h2 class="section-title"><i class="fas fa-shield-halved" style="color:var(--accent)"></i> Permission Model
+            </h2>
+            <p class="section-desc">Each screen supports 4 granular permission flags, managed at both the role and
+                individual user level.</p>
+
+            <div class="perm-model">
+                <h3 style="font-size:1rem;color:#fff;margin-bottom:4px">Permission Types</h3>
+                <p style="font-size:.82rem;color:var(--text2);margin-bottom:14px">Every screen can have these 4
+                    independent permissions assigned:</p>
+                <div class="perm-grid">
+                    <div class="perm-item">
+                        <h4><span class="perm-badge perm-v">V</span> &nbsp;Can View</h4>
+                        <p>Allows viewing and reading screen data. The most basic access level.</p>
+                    </div>
+                    <div class="perm-item">
+                        <h4><span class="perm-badge perm-i">I</span> &nbsp;Can Insert</h4>
+                        <p>Allows creating new records. Typically paired with View permission.</p>
+                    </div>
+                    <div class="perm-item">
+                        <h4><span class="perm-badge perm-u">U</span> &nbsp;Can Update</h4>
+                        <p>Allows editing existing records. Requires View permission to be useful.</p>
+                    </div>
+                    <div class="perm-item">
+                        <h4><span class="perm-badge perm-d">D</span> &nbsp;Can Delete</h4>
+                        <p>Allows soft-deleting records. Highest privilege level per screen.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="perm-model">
+                <h3 style="font-size:1rem;color:#fff;margin-bottom:4px">Permission Hierarchy</h3>
+                <p style="font-size:.82rem;color:var(--text2);margin-bottom:14px">Permissions flow from role to user,
+                    with user-level overrides taking precedence:</p>
+                <div class="perm-grid">
+                    <div class="perm-item">
+                        <h4><i class="fas fa-user-shield" style="color:var(--accent)"></i> &nbsp;Role-Screen Permissions
+                        </h4>
+                        <p>Assigned to a role via <code>SYS_ROLE_SCREEN_PERMISSION</code>. All users with that role
+                            inherit these permissions.</p>
+                    </div>
+                    <div class="perm-item">
+                        <h4><i class="fas fa-user-pen" style="color:var(--acc2)"></i> &nbsp;User-Screen Overrides</h4>
+                        <p>Per-user overrides via <code>SYS_USER_SCREEN_PERMISSION</code>. Takes precedence over role
+                            permissions. Includes notes and audit trail.</p>
+                    </div>
+                    <div class="perm-item">
+                        <h4><i class="fas fa-building" style="color:var(--yellow)"></i> &nbsp;Company-System Access</h4>
+                        <p>Companies subscribe to systems via <code>SYS_COMPANY_SYSTEM</code>. Only subscribed systems'
+                            screens are accessible.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ACCOUNTING SYSTEM -->
+        <div class="section">
+            <h2 class="section-title"><i class="fas fa-calculator" style="color:#a59bff"></i> Systems & Screens</h2>
+            <p class="section-desc">All 5 ERP systems with their 24 screens, routes, and default permission
+                capabilities.</p>
+
+            <!-- System 1: Accounting -->
+            <div class="system-card">
+                <div class="system-header">
+                    <div class="system-icon accounting"><i class="fas fa-calculator"></i></div>
+                    <div class="system-info">
+                        <h3>Accounting System</h3>
+                        <div class="ar">نظام المحاسبة</div>
+                        <div class="desc">Manage accounts and financial transactions</div>
+                    </div>
+                    <span class="badge badge-count">5 Screens</span>
+                </div>
+                <table class="screen-table">
+                    <thead>
+                        <tr>
+                            <th>Icon</th>
+                            <th>Screen Name</th>
+                            <th>Arabic Name</th>
+                            <th>Code</th>
+                            <th>Route</th>
+                            <th>Permissions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td class="icon-cell"><i class="fas fa-list"></i></td>
+                            <td class="screen-name">Chart of Accounts</td>
+                            <td class="screen-ar">دليل الحسابات</td>
+                            <td><code>chart_of_accounts</code></td>
+                            <td><span class="route">/accounting/chart-of-accounts</span></td>
+                            <td class="perm"><span class="perm-badge perm-v" title="View">V</span><span
+                                    class="perm-badge perm-i" title="Insert">I</span><span class="perm-badge perm-u"
+                                    title="Update">U</span><span class="perm-badge perm-d" title="Delete">D</span></td>
+                        </tr>
+                        <tr>
+                            <td class="icon-cell"><i class="fas fa-book"></i></td>
+                            <td class="screen-name">Journal Entries</td>
+                            <td class="screen-ar">القيود اليومية</td>
+                            <td><code>journal_entries</code></td>
+                            <td><span class="route">/accounting/journal-entries</span></td>
+                            <td class="perm"><span class="perm-badge perm-v" title="View">V</span><span
+                                    class="perm-badge perm-i" title="Insert">I</span><span class="perm-badge perm-u"
+                                    title="Update">U</span><span class="perm-badge perm-d" title="Delete">D</span></td>
+                        </tr>
+                        <tr>
+                            <td class="icon-cell"><i class="fas fa-file-lines"></i></td>
+                            <td class="screen-name">Invoices</td>
+                            <td class="screen-ar">الفواتير</td>
+                            <td><code>invoices</code></td>
+                            <td><span class="route">/accounting/invoices</span></td>
+                            <td class="perm"><span class="perm-badge perm-v" title="View">V</span><span
+                                    class="perm-badge perm-i" title="Insert">I</span><span class="perm-badge perm-u"
+                                    title="Update">U</span><span class="perm-badge perm-d" title="Delete">D</span></td>
+                        </tr>
+                        <tr>
+                            <td class="icon-cell"><i class="fas fa-dollar-sign"></i></td>
+                            <td class="screen-name">Payments</td>
+                            <td class="screen-ar">المدفوعات</td>
+                            <td><code>payments</code></td>
+                            <td><span class="route">/accounting/payments</span></td>
+                            <td class="perm"><span class="perm-badge perm-v" title="View">V</span><span
+                                    class="perm-badge perm-i" title="Insert">I</span><span class="perm-badge perm-u"
+                                    title="Update">U</span><span class="perm-badge perm-d" title="Delete">D</span></td>
+                        </tr>
+                        <tr>
+                            <td class="icon-cell"><i class="fas fa-chart-bar"></i></td>
+                            <td class="screen-name">Financial Reports</td>
+                            <td class="screen-ar">التقارير المالية</td>
+                            <td><code>financial_reports</code></td>
+                            <td><span class="route">/accounting/reports</span></td>
+                            <td class="perm"><span class="perm-badge perm-v" title="View">V</span><span
+                                    class="perm-badge perm-i" title="Insert">I</span><span class="perm-badge perm-u"
+                                    title="Update">U</span><span class="perm-badge perm-d" title="Delete">D</span></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- System 2: Inventory -->
+            <div class="system-card">
+                <div class="system-header">
+                    <div class="system-icon inventory"><i class="fas fa-warehouse"></i></div>
+                    <div class="system-info">
+                        <h3>Inventory System</h3>
+                        <div class="ar">نظام المخزون</div>
+                        <div class="desc">Manage products and warehouses</div>
+                    </div>
+                    <span class="badge badge-count">5 Screens</span>
+                </div>
+                <table class="screen-table">
+                    <thead>
+                        <tr>
+                            <th>Icon</th>
+                            <th>Screen Name</th>
+                            <th>Arabic Name</th>
+                            <th>Code</th>
+                            <th>Route</th>
+                            <th>Permissions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td class="icon-cell"><i class="fas fa-box"></i></td>
+                            <td class="screen-name">Products</td>
+                            <td class="screen-ar">المنتجات</td>
+                            <td><code>products</code></td>
+                            <td><span class="route">/inventory/products</span></td>
+                            <td class="perm"><span class="perm-badge perm-v">V</span><span
+                                    class="perm-badge perm-i">I</span><span class="perm-badge perm-u">U</span><span
+                                    class="perm-badge perm-d">D</span></td>
+                        </tr>
+                        <tr>
+                            <td class="icon-cell"><i class="fas fa-house"></i></td>
+                            <td class="screen-name">Warehouses</td>
+                            <td class="screen-ar">المخازن</td>
+                            <td><code>warehouses</code></td>
+                            <td><span class="route">/inventory/warehouses</span></td>
+                            <td class="perm"><span class="perm-badge perm-v">V</span><span
+                                    class="perm-badge perm-i">I</span><span class="perm-badge perm-u">U</span><span
+                                    class="perm-badge perm-d">D</span></td>
+                        </tr>
+                        <tr>
+                            <td class="icon-cell"><i class="fas fa-truck"></i></td>
+                            <td class="screen-name">Stock Movements</td>
+                            <td class="screen-ar">حركات المخزون</td>
+                            <td><code>stock_movements</code></td>
+                            <td><span class="route">/inventory/stock-movements</span></td>
+                            <td class="perm"><span class="perm-badge perm-v">V</span><span
+                                    class="perm-badge perm-i">I</span><span class="perm-badge perm-u">U</span><span
+                                    class="perm-badge perm-d">D</span></td>
+                        </tr>
+                        <tr>
+                            <td class="icon-cell"><i class="fas fa-bag-shopping"></i></td>
+                            <td class="screen-name">Purchase Orders</td>
+                            <td class="screen-ar">أوامر الشراء</td>
+                            <td><code>purchase_orders</code></td>
+                            <td><span class="route">/inventory/purchase-orders</span></td>
+                            <td class="perm"><span class="perm-badge perm-v">V</span><span
+                                    class="perm-badge perm-i">I</span><span class="perm-badge perm-u">U</span><span
+                                    class="perm-badge perm-d">D</span></td>
+                        </tr>
+                        <tr>
+                            <td class="icon-cell"><i class="fas fa-chart-pie"></i></td>
+                            <td class="screen-name">Stock Reports</td>
+                            <td class="screen-ar">تقارير المخزون</td>
+                            <td><code>stock_reports</code></td>
+                            <td><span class="route">/inventory/reports</span></td>
+                            <td class="perm"><span class="perm-badge perm-v">V</span><span
+                                    class="perm-badge perm-i">I</span><span class="perm-badge perm-u">U</span><span
+                                    class="perm-badge perm-d">D</span></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- System 3: HR -->
+            <div class="system-card">
+                <div class="system-header">
+                    <div class="system-icon hr"><i class="fas fa-users"></i></div>
+                    <div class="system-info">
+                        <h3>HR System</h3>
+                        <div class="ar">نظام الموارد البشرية</div>
+                        <div class="desc">Manage employees and payroll</div>
+                    </div>
+                    <span class="badge badge-count">5 Screens</span>
+                </div>
+                <table class="screen-table">
+                    <thead>
+                        <tr>
+                            <th>Icon</th>
+                            <th>Screen Name</th>
+                            <th>Arabic Name</th>
+                            <th>Code</th>
+                            <th>Route</th>
+                            <th>Permissions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td class="icon-cell"><i class="fas fa-user"></i></td>
+                            <td class="screen-name">Employees</td>
+                            <td class="screen-ar">الموظفين</td>
+                            <td><code>employees</code></td>
+                            <td><span class="route">/hr/employees</span></td>
+                            <td class="perm"><span class="perm-badge perm-v">V</span><span
+                                    class="perm-badge perm-i">I</span><span class="perm-badge perm-u">U</span><span
+                                    class="perm-badge perm-d">D</span></td>
+                        </tr>
+                        <tr>
+                            <td class="icon-cell"><i class="fas fa-credit-card"></i></td>
+                            <td class="screen-name">Payroll</td>
+                            <td class="screen-ar">الرواتب</td>
+                            <td><code>payroll</code></td>
+                            <td><span class="route">/hr/payroll</span></td>
+                            <td class="perm"><span class="perm-badge perm-v">V</span><span
+                                    class="perm-badge perm-i">I</span><span class="perm-badge perm-u">U</span><span
+                                    class="perm-badge perm-d">D</span></td>
+                        </tr>
+                        <tr>
+                            <td class="icon-cell"><i class="fas fa-calendar"></i></td>
+                            <td class="screen-name">Leave Requests</td>
+                            <td class="screen-ar">طلبات الإجازة</td>
+                            <td><code>leave_requests</code></td>
+                            <td><span class="route">/hr/leave-requests</span></td>
+                            <td class="perm"><span class="perm-badge perm-v">V</span><span
+                                    class="perm-badge perm-i">I</span><span class="perm-badge perm-u">U</span><span
+                                    class="perm-badge perm-d">D</span></td>
+                        </tr>
+                        <tr>
+                            <td class="icon-cell"><i class="fas fa-clock"></i></td>
+                            <td class="screen-name">Attendance</td>
+                            <td class="screen-ar">الحضور والانصراف</td>
+                            <td><code>attendance</code></td>
+                            <td><span class="route">/hr/attendance</span></td>
+                            <td class="perm"><span class="perm-badge perm-v">V</span><span
+                                    class="perm-badge perm-i">I</span><span class="perm-badge perm-u">U</span><span
+                                    class="perm-badge perm-d">D</span></td>
+                        </tr>
+                        <tr>
+                            <td class="icon-cell"><i class="fas fa-file"></i></td>
+                            <td class="screen-name">HR Reports</td>
+                            <td class="screen-ar">تقارير الموارد البشرية</td>
+                            <td><code>hr_reports</code></td>
+                            <td><span class="route">/hr/reports</span></td>
+                            <td class="perm"><span class="perm-badge perm-v">V</span><span
+                                    class="perm-badge perm-i">I</span><span class="perm-badge perm-u">U</span><span
+                                    class="perm-badge perm-d">D</span></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- System 4: CRM -->
+            <div class="system-card">
+                <div class="system-header">
+                    <div class="system-icon crm"><i class="fas fa-user-check"></i></div>
+                    <div class="system-info">
+                        <h3>CRM System</h3>
+                        <div class="ar">نظام إدارة العملاء</div>
+                        <div class="desc">Manage customers and sales</div>
+                    </div>
+                    <span class="badge badge-count">4 Screens</span>
+                </div>
+                <table class="screen-table">
+                    <thead>
+                        <tr>
+                            <th>Icon</th>
+                            <th>Screen Name</th>
+                            <th>Arabic Name</th>
+                            <th>Code</th>
+                            <th>Route</th>
+                            <th>Permissions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td class="icon-cell"><i class="fas fa-users"></i></td>
+                            <td class="screen-name">Customers</td>
+                            <td class="screen-ar">العملاء</td>
+                            <td><code>customers</code></td>
+                            <td><span class="route">/crm/customers</span></td>
+                            <td class="perm"><span class="perm-badge perm-v">V</span><span
+                                    class="perm-badge perm-i">I</span><span class="perm-badge perm-u">U</span><span
+                                    class="perm-badge perm-d">D</span></td>
+                        </tr>
+                        <tr>
+                            <td class="icon-cell"><i class="fas fa-user-plus"></i></td>
+                            <td class="screen-name">Leads</td>
+                            <td class="screen-ar">العملاء المحتملين</td>
+                            <td><code>leads</code></td>
+                            <td><span class="route">/crm/leads</span></td>
+                            <td class="perm"><span class="perm-badge perm-v">V</span><span
+                                    class="perm-badge perm-i">I</span><span class="perm-badge perm-u">U</span><span
+                                    class="perm-badge perm-d">D</span></td>
+                        </tr>
+                        <tr>
+                            <td class="icon-cell"><i class="fas fa-bullseye"></i></td>
+                            <td class="screen-name">Opportunities</td>
+                            <td class="screen-ar">الفرص</td>
+                            <td><code>opportunities</code></td>
+                            <td><span class="route">/crm/opportunities</span></td>
+                            <td class="perm"><span class="perm-badge perm-v">V</span><span
+                                    class="perm-badge perm-i">I</span><span class="perm-badge perm-u">U</span><span
+                                    class="perm-badge perm-d">D</span></td>
+                        </tr>
+                        <tr>
+                            <td class="icon-cell"><i class="fas fa-arrow-trend-up"></i></td>
+                            <td class="screen-name">Sales Reports</td>
+                            <td class="screen-ar">تقارير المبيعات</td>
+                            <td><code>sales_reports</code></td>
+                            <td><span class="route">/crm/reports</span></td>
+                            <td class="perm"><span class="perm-badge perm-v">V</span><span
+                                    class="perm-badge perm-i">I</span><span class="perm-badge perm-u">U</span><span
+                                    class="perm-badge perm-d">D</span></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- System 5: POS -->
+            <div class="system-card">
+                <div class="system-header">
+                    <div class="system-icon pos"><i class="fas fa-cart-shopping"></i></div>
+                    <div class="system-info">
+                        <h3>POS System</h3>
+                        <div class="ar">نظام نقاط البيع</div>
+                        <div class="desc">Manage point of sale and daily sales</div>
+                    </div>
+                    <span class="badge badge-count">4 Screens</span>
+                </div>
+                <table class="screen-table">
+                    <thead>
+                        <tr>
+                            <th>Icon</th>
+                            <th>Screen Name</th>
+                            <th>Arabic Name</th>
+                            <th>Code</th>
+                            <th>Route</th>
+                            <th>Permissions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td class="icon-cell"><i class="fas fa-desktop"></i></td>
+                            <td class="screen-name">Point of Sale</td>
+                            <td class="screen-ar">نقطة البيع</td>
+                            <td><code>point_of_sale</code></td>
+                            <td><span class="route">/pos/sale</span></td>
+                            <td class="perm"><span class="perm-badge perm-v">V</span><span
+                                    class="perm-badge perm-i">I</span><span class="perm-badge perm-u">U</span><span
+                                    class="perm-badge perm-d">D</span></td>
+                        </tr>
+                        <tr>
+                            <td class="icon-cell"><i class="fas fa-calendar-check"></i></td>
+                            <td class="screen-name">Daily Sales</td>
+                            <td class="screen-ar">المبيعات اليومية</td>
+                            <td><code>daily_sales</code></td>
+                            <td><span class="route">/pos/daily-sales</span></td>
+                            <td class="perm"><span class="perm-badge perm-v">V</span><span
+                                    class="perm-badge perm-i">I</span><span class="perm-badge perm-u">U</span><span
+                                    class="perm-badge perm-d">D</span></td>
+                        </tr>
+                        <tr>
+                            <td class="icon-cell"><i class="fas fa-briefcase"></i></td>
+                            <td class="screen-name">Cash Drawer</td>
+                            <td class="screen-ar">الصندوق</td>
+                            <td><code>cash_drawer</code></td>
+                            <td><span class="route">/pos/cash-drawer</span></td>
+                            <td class="perm"><span class="perm-badge perm-v">V</span><span
+                                    class="perm-badge perm-i">I</span><span class="perm-badge perm-u">U</span><span
+                                    class="perm-badge perm-d">D</span></td>
+                        </tr>
+                        <tr>
+                            <td class="icon-cell"><i class="fas fa-chart-line"></i></td>
+                            <td class="screen-name">POS Reports</td>
+                            <td class="screen-ar">تقارير نقاط البيع</td>
+                            <td><code>pos_reports</code></td>
+                            <td><span class="route">/pos/reports</span></td>
+                            <td class="perm"><span class="perm-badge perm-v">V</span><span
+                                    class="perm-badge perm-i">I</span><span class="perm-badge perm-u">U</span><span
+                                    class="perm-badge perm-d">D</span></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- COMPANY SUBSCRIPTIONS -->
+        <div class="section">
+            <h2 class="section-title"><i class="fas fa-building" style="color:var(--yellow)"></i> Company System
+                Subscriptions</h2>
+            <p class="section-desc">Companies subscribe to individual systems. Only subscribed systems' screens are
+                accessible to company users.</p>
+
+            <div class="system-card">
+                <table class="screen-table">
+                    <thead>
+                        <tr>
+                            <th>System</th>
+                            <th>Company 1</th>
+                            <th>Company 2</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><i class="fas fa-calculator" style="color:#a59bff;margin-right:8px"></i> Accounting</td>
+                            <td><span style="color:#4ade80"><i class="fas fa-check-circle"></i> Subscribed</span></td>
+                            <td><span style="color:#4ade80"><i class="fas fa-check-circle"></i> Subscribed</span></td>
+                        </tr>
+                        <tr>
+                            <td><i class="fas fa-warehouse" style="color:#fb923c;margin-right:8px"></i> Inventory</td>
+                            <td><span style="color:#4ade80"><i class="fas fa-check-circle"></i> Subscribed</span></td>
+                            <td><span style="color:#f87171"><i class="fas fa-times-circle"></i> Not subscribed</span>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><i class="fas fa-users" style="color:#4ade80;margin-right:8px"></i> HR</td>
+                            <td><span style="color:#f87171"><i class="fas fa-times-circle"></i> Not subscribed</span>
+                            </td>
+                            <td><span style="color:#f87171"><i class="fas fa-times-circle"></i> Not subscribed</span>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><i class="fas fa-user-check" style="color:#22d3ee;margin-right:8px"></i> CRM</td>
+                            <td><span style="color:#4ade80"><i class="fas fa-check-circle"></i> Subscribed</span></td>
+                            <td><span style="color:#f87171"><i class="fas fa-times-circle"></i> Not subscribed</span>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><i class="fas fa-cart-shopping" style="color:#ff8ac4;margin-right:8px"></i> POS</td>
+                            <td><span style="color:#f87171"><i class="fas fa-times-circle"></i> Not subscribed</span>
+                            </td>
+                            <td><span style="color:#4ade80"><i class="fas fa-check-circle"></i> Subscribed</span></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- PERMISSIONS API -->
+        <div class="section">
+            <h2 class="section-title"><i class="fas fa-code" style="color:var(--cyan)"></i> Screen & Permission API
+                Endpoints</h2>
+            <p class="section-desc">Manage screens and permissions programmatically via the REST API.</p>
+
+            <div class="api-box"><span class="api-method api-get">GET</span> <code>/api/permissions/screens</code> — Get
+                all screens for a system</div>
+            <div class="api-box"><span class="api-method api-get">GET</span> <code>/api/permissions/screens/{id}</code>
+                — Get screen by ID</div>
+            <div class="api-box"><span class="api-method api-post">POST</span> <code>/api/permissions/screens</code> —
+                Create a new screen</div>
+            <div class="api-box"><span class="api-method api-put">PUT</span> <code>/api/permissions/screens/{id}</code>
+                — Update a screen</div>
+            <div class="api-box"><span class="api-method api-delete">DEL</span>
+                <code>/api/permissions/screens/{id}</code> — Delete a screen (soft delete)</div>
+            <div class="api-box"><span class="api-method api-get">GET</span>
+                <code>/api/permissions/roles/{roleId}/screens</code> — Get role screen permissions</div>
+            <div class="api-box"><span class="api-method api-post">POST</span>
+                <code>/api/permissions/roles/{roleId}/screens</code> — Assign screen permissions to role</div>
+            <div class="api-box"><span class="api-method api-get">GET</span>
+                <code>/api/permissions/users/{userId}/screens</code> — Get user screen permissions</div>
+            <div class="api-box"><span class="api-method api-post">POST</span>
+                <code>/api/permissions/users/{userId}/screens</code> — Assign screen permissions to user</div>
+            <div class="api-box"><span class="api-method api-get">GET</span>
+                <code>/api/permissions/users/{userId}/effective</code> — Get effective (merged role + user) permissions
+            </div>
+        </div>
+
+        <!-- DB SCHEMA -->
+        <div class="section">
+            <h2 class="section-title"><i class="fas fa-database" style="color:var(--orange)"></i> Database Schema</h2>
+            <p class="section-desc">Underlying Oracle tables that store screen and permission data.</p>
+
+            <div class="system-card">
+                <table class="screen-table">
+                    <thead>
+                        <tr>
+                            <th>Table</th>
+                            <th>Purpose</th>
+                            <th>Key Columns</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>SYS_SYSTEM</code></td>
+                            <td>ERP system modules</td>
+                            <td>SYSTEM_CODE, SYSTEM_NAME, SYSTEM_NAME_E, ICON, IS_ACTIVE</td>
+                        </tr>
+                        <tr>
+                            <td><code>SYS_SCREEN</code></td>
+                            <td>Individual screens within systems</td>
+                            <td>SYSTEM_ID, PARENT_SCREEN_ID, SCREEN_CODE, SCREEN_NAME, ROUTE, ICON</td>
+                        </tr>
+                        <tr>
+                            <td><code>SYS_COMPANY_SYSTEM</code></td>
+                            <td>Company ↔ System subscriptions</td>
+                            <td>COMPANY_ID, SYSTEM_ID, IS_ALLOWED, GRANTED_BY</td>
+                        </tr>
+                        <tr>
+                            <td><code>SYS_ROLE_SCREEN_PERMISSION</code></td>
+                            <td>Role-level screen permissions</td>
+                            <td>ROLE_ID, SCREEN_ID, CAN_VIEW, CAN_INSERT, CAN_UPDATE, CAN_DELETE</td>
+                        </tr>
+                        <tr>
+                            <td><code>SYS_USER_SCREEN_PERMISSION</code></td>
+                            <td>User-level permission overrides</td>
+                            <td>USER_ID, SCREEN_ID, CAN_VIEW, CAN_INSERT, CAN_UPDATE, CAN_DELETE, NOTES</td>
+                        </tr>
+                        <tr>
+                            <td><code>SYS_USER_ROLE</code></td>
+                            <td>User ↔ Role assignments</td>
+                            <td>USER_ID, ROLE_ID, ASSIGNED_BY, ASSIGNED_DATE</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+
+    <footer>
+        <p>ThinkOnErp — Screens & Permissions Report — Generated May 2026</p>
+    </footer>
+
+</body>
+
+</html>
