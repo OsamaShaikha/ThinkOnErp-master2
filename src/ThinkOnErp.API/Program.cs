@@ -84,6 +84,9 @@ try
             policy.RequireClaim("isAdmin", "true"));
     });
 
+    // Add Memory Cache for configuration and caching services
+    builder.Services.AddMemoryCache();
+
     // Register Application and Infrastructure services
     builder.Services.AddApplication();
     builder.Services.AddInfrastructure(builder.Configuration);

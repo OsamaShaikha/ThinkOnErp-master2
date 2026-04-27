@@ -1,9 +1,11 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using ThinkOnErp.Domain.Interfaces;
 using ThinkOnErp.Infrastructure.Data;
 using ThinkOnErp.Infrastructure.Repositories;
 using ThinkOnErp.Infrastructure.Services;
+using ThinkOnErp.Infrastructure.Resilience;
 
 namespace ThinkOnErp.Infrastructure;
 
@@ -23,6 +25,17 @@ public static class DependencyInjection
     {
         // Register OracleDbContext as Scoped
         services.AddScoped<OracleDbContext>();
+
+        // Register resilience services as Singleton
+        services.AddSingleton<CircuitBreakerRegistry>();
+        services.AddScoped<RetryPolicy>();
+        services.AddScoped<CircuitBreaker>(sp =>
+        {
+            var loggerFactory = sp.GetRequiredService<ILoggerFactory>();
+            var logger = loggerFactory.CreateLogger<CircuitBreaker>();
+            return new CircuitBreaker(logger);
+        });
+        services.AddScoped<ResilientDatabaseExecutor>();
 
         // Register all repositories as Scoped
         services.AddScoped<IRoleRepository, RoleRepository>();
@@ -46,13 +59,21 @@ public static class DependencyInjection
         services.AddScoped<ITicketStatusRepository, TicketStatusRepository>();
         services.AddScoped<ITicketCommentRepository, TicketCommentRepository>();
         services.AddScoped<ITicketAttachmentRepository, TicketAttachmentRepository>();
+        services.AddScoped<ISavedSearchRepository, SavedSearchRepository>();
+        services.AddScoped<ISearchAnalyticsRepository, SearchAnalyticsRepository>();
+        services.AddScoped<ITicketConfigRepository, TicketConfigRepository>();
 
         // Register infrastructure services as Scoped
         services.AddScoped<PasswordHashingService>();
         services.AddScoped<JwtTokenService>();
         services.AddScoped<ITicketNotificationService, TicketNotificationService>();
         services.AddScoped<IAttachmentService, AttachmentService>();
+        services.AddScoped<ISlaCalculationService, SlaCalculationService>();
         services.AddScoped<ISlaEscalationService, SlaEscalationService>();
+        services.AddScoped<IAuditTrailService, AuditTrailService>();
+
+        // Register background services as Hosted Services
+        services.AddHostedService<SlaEscalationBackgroundService>();
 
         return services;
     }

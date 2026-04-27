@@ -3,6 +3,7 @@ using MediatR;
 using Microsoft.Extensions.DependencyInjection;
 using System.Reflection;
 using ThinkOnErp.Application.Behaviors;
+using ThinkOnErp.Application.Services;
 
 namespace ThinkOnErp.Application;
 
@@ -33,6 +34,9 @@ public static class DependencyInjection
 
         // Register FluentValidation validators from this assembly
         services.AddValidatorsFromAssembly(assembly);
+
+        // Register application services
+        services.AddScoped<ITicketConfigurationService, TicketConfigurationService>();
 
         return services;
     }

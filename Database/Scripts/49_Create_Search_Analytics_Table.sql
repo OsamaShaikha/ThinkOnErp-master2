@@ -1,0 +1,190 @@
+-- =============================================
+-- Search Analytics and Query Logging
+-- Description: Table and procedures for tracking search queries and analytics
+-- Requirements: 8.11, 19.9, 19.10
+-- Task: 10.2 - Add search analytics and query logging
+-- =============================================
+
+-- =============================================
+-- Table: SYS_SEARCH_ANALYTICS
+-- Description: Stores search query logs for analytics and performance optimization
+-- =============================================
+CREATE TABLE SYS_SEARCH_ANALYTICS (
+    ROW_ID NUMBER(19) PRIMARY KEY,
+    USER_ID NUMBER(19) NOT NULL,
+    SEARCH_TERM NVARCHAR2(500),
+    SEARCH_CRITERIA NCLOB,
+    FILTER_LOGIC NVARCHAR2(10),
+    RESULT_COUNT NUMBER(10),
+    EXECUTION_TIME_MS NUMBER(10),
+    SEARCH_DATE DATE DEFAULT SYSDATE NOT NULL,
+    COMPANY_ID NUMBER(19),
+    BRANCH_ID NUMBER(19),
+    
+    CONSTRAINT FK_SEARCH_ANALYTICS_USER FOREIGN KEY (USER_ID) REFERENCES SYS_USERS(ROW_ID),
+    CONSTRAINT FK_SEARCH_ANALYTICS_COMPANY FOREIGN KEY (COMPANY_ID) REFERENCES SYS_COMPANY(ROW_ID),
+    CONSTRAINT FK_SEARCH_ANALYTICS_BRANCH FOREIGN KEY (BRANCH_ID) REFERENCES SYS_BRANCH(ROW_ID)
+);
+
+-- Create sequence for search analytics
+CREATE SEQUENCE SEQ_SYS_SEARCH_ANALYTICS START WITH 1 INCREMENT BY 1;
+
+-- Create indexes for performance and analytics queries
+CREATE INDEX IDX_SEARCH_ANALYTICS_USER ON SYS_SEARCH_ANALYTICS(USER_ID, SEARCH_DATE);
+CREATE INDEX IDX_SEARCH_ANALYTICS_DATE ON SYS_SEARCH_ANALYTICS(SEARCH_DATE);
+CREATE INDEX IDX_SEARCH_ANALYTICS_TERM ON SYS_SEARCH_ANALYTICS(SEARCH_TERM);
+CREATE INDEX IDX_SEARCH_ANALYTICS_COMPANY ON SYS_SEARCH_ANALYTICS(COMPANY_ID, SEARCH_DATE);
+
+-- =============================================
+-- Procedure: SP_SYS_SEARCH_ANALYTICS_INSERT
+-- Description: Logs a search query for analytics
+-- =============================================
+CREATE OR REPLACE PROCEDURE SP_SYS_SEARCH_ANALYTICS_INSERT (
+    P_NEW_ID OUT NUMBER,
+    P_USER_ID IN NUMBER,
+    P_SEARCH_TERM IN NVARCHAR2,
+    P_SEARCH_CRITERIA IN NCLOB,
+    P_FILTER_LOGIC IN NVARCHAR2,
+    P_RESULT_COUNT IN NUMBER,
+    P_EXECUTION_TIME_MS IN NUMBER,
+    P_COMPANY_ID IN NUMBER DEFAULT NULL,
+    P_BRANCH_ID IN NUMBER DEFAULT NULL
+)
+AS
+BEGIN
+    -- Generate new ID
+    SELECT SEQ_SYS_SEARCH_ANALYTICS.NEXTVAL INTO P_NEW_ID FROM DUAL;
+    
+    -- Insert search analytics record
+    INSERT INTO SYS_SEARCH_ANALYTICS (
+        ROW_ID,
+        USER_ID,
+        SEARCH_TERM,
+        SEARCH_CRITERIA,
+        FILTER_LOGIC,
+        RESULT_COUNT,
+        EXECUTION_TIME_MS,
+        SEARCH_DATE,
+        COMPANY_ID,
+        BRANCH_ID
+    ) VALUES (
+        P_NEW_ID,
+        P_USER_ID,
+        P_SEARCH_TERM,
+        P_SEARCH_CRITERIA,
+        P_FILTER_LOGIC,
+        P_RESULT_COUNT,
+        P_EXECUTION_TIME_MS,
+        SYSDATE,
+        P_COMPANY_ID,
+        P_BRANCH_ID
+    );
+    
+    COMMIT;
+EXCEPTION
+    WHEN OTHERS THEN
+        ROLLBACK;
+        RAISE_APPLICATION_ERROR(-20470, 'Error logging search analytics: ' || SQLERRM);
+END SP_SYS_SEARCH_ANALYTICS_INSERT;
+/
+
+-- =============================================
+-- Procedure: SP_SYS_SEARCH_ANALYTICS_GET_TOP_SEARCHES
+-- Description: Retrieves most popular search terms
+-- =============================================
+CREATE OR REPLACE PROCEDURE SP_SYS_SEARCH_ANALYTICS_GET_TOP_SEARCHES (
+    P_DAYS_BACK IN NUMBER DEFAULT 30,
+    P_TOP_COUNT IN NUMBER DEFAULT 10,
+    P_RESULT_CURSOR OUT SYS_REFCURSOR
+)
+AS
+BEGIN
+    OPEN P_RESULT_CURSOR FOR
+    SELECT 
+        SEARCH_TERM,
+        COUNT(*) AS SEARCH_COUNT,
+        AVG(RESULT_COUNT) AS AVG_RESULTS,
+        AVG(EXECUTION_TIME_MS) AS AVG_EXECUTION_TIME
+    FROM SYS_SEARCH_ANALYTICS
+    WHERE SEARCH_DATE >= SYSDATE - P_DAYS_BACK
+        AND SEARCH_TERM IS NOT NULL
+    GROUP BY SEARCH_TERM
+    ORDER BY COUNT(*) DESC
+    FETCH FIRST P_TOP_COUNT ROWS ONLY;
+EXCEPTION
+    WHEN OTHERS THEN
+        RAISE_APPLICATION_ERROR(-20471, 'Error retrieving top searches: ' || SQLERRM);
+END SP_SYS_SEARCH_ANALYTICS_GET_TOP_SEARCHES;
+/
+
+-- =============================================
+-- Procedure: SP_SYS_SEARCH_ANALYTICS_GET_USER_HISTORY
+-- Description: Retrieves search history for a specific user
+-- =============================================
+CREATE OR REPLACE PROCEDURE SP_SYS_SEARCH_ANALYTICS_GET_USER_HISTORY (
+    P_USER_ID IN NUMBER,
+    P_DAYS_BACK IN NUMBER DEFAULT 30,
+    P_RESULT_CURSOR OUT SYS_REFCURSOR
+)
+AS
+BEGIN
+    OPEN P_RESULT_CURSOR FOR
+    SELECT 
+        ROW_ID,
+        SEARCH_TERM,
+        SEARCH_CRITERIA,
+        FILTER_LOGIC,
+        RESULT_COUNT,
+        EXECUTION_TIME_MS,
+        SEARCH_DATE
+    FROM SYS_SEARCH_ANALYTICS
+    WHERE USER_ID = P_USER_ID
+        AND SEARCH_DATE >= SYSDATE - P_DAYS_BACK
+    ORDER BY SEARCH_DATE DESC;
+EXCEPTION
+    WHEN OTHERS THEN
+        RAISE_APPLICATION_ERROR(-20472, 'Error retrieving user search history: ' || SQLERRM);
+END SP_SYS_SEARCH_ANALYTICS_GET_USER_HISTORY;
+/
+
+-- =============================================
+-- Procedure: SP_SYS_SEARCH_ANALYTICS_GET_PERFORMANCE
+-- Description: Retrieves search performance metrics
+-- =============================================
+CREATE OR REPLACE PROCEDURE SP_SYS_SEARCH_ANALYTICS_GET_PERFORMANCE (
+    P_DAYS_BACK IN NUMBER DEFAULT 7,
+    P_RESULT_CURSOR OUT SYS_REFCURSOR
+)
+AS
+BEGIN
+    OPEN P_RESULT_CURSOR FOR
+    SELECT 
+        TRUNC(SEARCH_DATE) AS SEARCH_DAY,
+        COUNT(*) AS TOTAL_SEARCHES,
+        AVG(RESULT_COUNT) AS AVG_RESULTS,
+        AVG(EXECUTION_TIME_MS) AS AVG_EXECUTION_TIME,
+        MAX(EXECUTION_TIME_MS) AS MAX_EXECUTION_TIME,
+        MIN(EXECUTION_TIME_MS) AS MIN_EXECUTION_TIME
+    FROM SYS_SEARCH_ANALYTICS
+    WHERE SEARCH_DATE >= SYSDATE - P_DAYS_BACK
+    GROUP BY TRUNC(SEARCH_DATE)
+    ORDER BY SEARCH_DAY DESC;
+EXCEPTION
+    WHEN OTHERS THEN
+        RAISE_APPLICATION_ERROR(-20473, 'Error retrieving search performance metrics: ' || SQLERRM);
+END SP_SYS_SEARCH_ANALYTICS_GET_PERFORMANCE;
+/
+
+-- =============================================
+-- Verification
+-- =============================================
+SELECT 'Table created: SYS_SEARCH_ANALYTICS' AS status FROM DUAL
+WHERE EXISTS (SELECT 1 FROM user_tables WHERE table_name = 'SYS_SEARCH_ANALYTICS');
+
+SELECT 'Sequence created: SEQ_SYS_SEARCH_ANALYTICS' AS status FROM DUAL
+WHERE EXISTS (SELECT 1 FROM user_sequences WHERE sequence_name = 'SEQ_SYS_SEARCH_ANALYTICS');
+
+SELECT object_name, object_type, status
+FROM user_objects
+WHERE object_name LIKE 'SP_SYS_SEARCH_ANALYTICS%'
+ORDER BY object_name;

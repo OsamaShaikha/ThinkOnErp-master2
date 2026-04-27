@@ -155,4 +155,10 @@ public class TicketDto
     /// SLA compliance status
     /// </summary>
     public string SlaStatus { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Relevance score for search results (0-100+)
+    /// Only populated when using advanced search with relevance scoring
+    /// </summary>
+    public int? RelevanceScore { get; set; }
 }

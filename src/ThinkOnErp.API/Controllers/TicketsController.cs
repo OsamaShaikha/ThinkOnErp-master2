@@ -14,6 +14,9 @@ using ThinkOnErp.Application.Features.Tickets.Queries.GetTickets;
 using ThinkOnErp.Application.Features.Tickets.Queries.GetTicketById;
 using ThinkOnErp.Application.Features.Tickets.Queries.GetTicketComments;
 using ThinkOnErp.Application.Features.Tickets.Queries.GetTicketAttachments;
+using ThinkOnErp.Application.Features.Tickets.Queries.GetTicketVolumeReport;
+using ThinkOnErp.Application.Features.Tickets.Queries.GetSlaComplianceReport;
+using ThinkOnErp.Application.Features.Tickets.Queries.GetWorkloadReport;
 
 namespace ThinkOnErp.API.Controllers;
 
@@ -703,5 +706,219 @@ public class TicketsController : ControllerBase
             _logger.LogError(ex, "Error downloading attachment {AttachmentId} from ticket {TicketId}", attachmentId, id);
             throw;
         }
+    }
+
+    /// <summary>
+    /// Retrieves ticket volume report with time-based filtering and grouping.
+    /// Requires AdminOnly authorization.
+    /// Supports export to PDF and Excel formats via format parameter.
+    /// </summary>
+    /// <param name="query">Query parameters for report generation</param>
+    /// <param name="format">Export format: json (default), pdf, excel</param>
+    /// <returns>ApiResponse containing list of TicketVolumeReportDto objects or file download</returns>
+    /// <response code="200">Returns the ticket volume report data</response>
+    /// <response code="400">Validation errors in query parameters</response>
+    /// <response code="401">User is not authenticated</response>
+    /// <response code="403">User does not have admin privileges</response>
+    [HttpGet("reports/volume")]
+    [Authorize(Policy = "AdminOnly")]
+    [ProducesResponseType(typeof(ApiResponse<List<TicketVolumeReportDto>>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<List<TicketVolumeReportDto>>), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ApiResponse<List<TicketVolumeReportDto>>), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ApiResponse<List<TicketVolumeReportDto>>), StatusCodes.Status403Forbidden)]
+    public async Task<ActionResult<ApiResponse<List<TicketVolumeReportDto>>>> GetTicketVolumeReport(
+        [FromQuery] GetTicketVolumeReportQuery query,
+        [FromQuery] string format = "json")
+    {
+        try
+        {
+            _logger.LogInformation("Generating ticket volume report - StartDate: {StartDate}, EndDate: {EndDate}, GroupBy: {GroupBy}, Format: {Format}",
+                query.StartDate, query.EndDate, query.GroupBy, format);
+
+            var result = await _mediator.Send(query);
+
+            _logger.LogInformation("Ticket volume report generated successfully with {Count} data points", result.Count);
+
+            // TODO: Implement PDF and Excel export functionality
+            // For now, only JSON format is supported
+            if (format.ToLower() == "pdf" || format.ToLower() == "excel")
+            {
+                _logger.LogWarning("Export format {Format} requested but not yet implemented", format);
+                return BadRequest(ApiResponse<List<TicketVolumeReportDto>>.CreateFailure(
+                    $"Export format '{format}' is not yet implemented. Currently only 'json' format is supported.",
+                    statusCode: 400));
+            }
+
+            return Ok(ApiResponse<List<TicketVolumeReportDto>>.CreateSuccess(
+                result,
+                "Ticket volume report generated successfully",
+                200));
+        }
+        catch (ArgumentException ex)
+        {
+            _logger.LogWarning("Validation error generating volume report: {ErrorMessage}", ex.Message);
+            return BadRequest(ApiResponse<List<TicketVolumeReportDto>>.CreateFailure(
+                ex.Message,
+                statusCode: 400));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error generating ticket volume report");
+            throw;
+        }
+    }
+
+    /// <summary>
+    /// Retrieves SLA compliance report with priority and type breakdown.
+    /// Requires AdminOnly authorization.
+    /// Supports export to PDF and Excel formats via format parameter.
+    /// </summary>
+    /// <param name="query">Query parameters for report generation</param>
+    /// <param name="format">Export format: json (default), pdf, excel</param>
+    /// <returns>ApiResponse containing list of SlaComplianceReportDto objects or file download</returns>
+    /// <response code="200">Returns the SLA compliance report data</response>
+    /// <response code="400">Validation errors in query parameters</response>
+    /// <response code="401">User is not authenticated</response>
+    /// <response code="403">User does not have admin privileges</response>
+    [HttpGet("reports/sla-compliance")]
+    [Authorize(Policy = "AdminOnly")]
+    [ProducesResponseType(typeof(ApiResponse<List<SlaComplianceReportDto>>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<List<SlaComplianceReportDto>>), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ApiResponse<List<SlaComplianceReportDto>>), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ApiResponse<List<SlaComplianceReportDto>>), StatusCodes.Status403Forbidden)]
+    public async Task<ActionResult<ApiResponse<List<SlaComplianceReportDto>>>> GetSlaComplianceReport(
+        [FromQuery] GetSlaComplianceReportQuery query,
+        [FromQuery] string format = "json")
+    {
+        try
+        {
+            _logger.LogInformation("Generating SLA compliance report - StartDate: {StartDate}, EndDate: {EndDate}, Format: {Format}",
+                query.StartDate, query.EndDate, format);
+
+            var result = await _mediator.Send(query);
+
+            _logger.LogInformation("SLA compliance report generated successfully with {Count} data points", result.Count);
+
+            // TODO: Implement PDF and Excel export functionality
+            // For now, only JSON format is supported
+            if (format.ToLower() == "pdf" || format.ToLower() == "excel")
+            {
+                _logger.LogWarning("Export format {Format} requested but not yet implemented", format);
+                return BadRequest(ApiResponse<List<SlaComplianceReportDto>>.CreateFailure(
+                    $"Export format '{format}' is not yet implemented. Currently only 'json' format is supported.",
+                    statusCode: 400));
+            }
+
+            return Ok(ApiResponse<List<SlaComplianceReportDto>>.CreateSuccess(
+                result,
+                "SLA compliance report generated successfully",
+                200));
+        }
+        catch (ArgumentException ex)
+        {
+            _logger.LogWarning("Validation error generating SLA compliance report: {ErrorMessage}", ex.Message);
+            return BadRequest(ApiResponse<List<SlaComplianceReportDto>>.CreateFailure(
+                ex.Message,
+                statusCode: 400));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error generating SLA compliance report");
+            throw;
+        }
+    }
+
+    /// <summary>
+    /// Retrieves workload report showing ticket distribution per assignee.
+    /// Requires AdminOnly authorization.
+    /// Supports export to PDF and Excel formats via format parameter.
+    /// </summary>
+    /// <param name="query">Query parameters for report generation</param>
+    /// <param name="format">Export format: json (default), pdf, excel</param>
+    /// <returns>ApiResponse containing list of WorkloadReportDto objects or file download</returns>
+    /// <response code="200">Returns the workload report data</response>
+    /// <response code="400">Validation errors in query parameters</response>
+    /// <response code="401">User is not authenticated</response>
+    /// <response code="403">User does not have admin privileges</response>
+    [HttpGet("reports/workload")]
+    [Authorize(Policy = "AdminOnly")]
+    [ProducesResponseType(typeof(ApiResponse<List<WorkloadReportDto>>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<List<WorkloadReportDto>>), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ApiResponse<List<WorkloadReportDto>>), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ApiResponse<List<WorkloadReportDto>>), StatusCodes.Status403Forbidden)]
+    public async Task<ActionResult<ApiResponse<List<WorkloadReportDto>>>> GetWorkloadReport(
+        [FromQuery] GetWorkloadReportQuery query,
+        [FromQuery] string format = "json")
+    {
+        try
+        {
+            _logger.LogInformation("Generating workload report - StartDate: {StartDate}, EndDate: {EndDate}, Format: {Format}",
+                query.StartDate, query.EndDate, format);
+
+            var result = await _mediator.Send(query);
+
+            _logger.LogInformation("Workload report generated successfully with {Count} assignees", result.Count);
+
+            // TODO: Implement PDF and Excel export functionality
+            // For now, only JSON format is supported
+            if (format.ToLower() == "pdf" || format.ToLower() == "excel")
+            {
+                _logger.LogWarning("Export format {Format} requested but not yet implemented", format);
+                return BadRequest(ApiResponse<List<WorkloadReportDto>>.CreateFailure(
+                    $"Export format '{format}' is not yet implemented. Currently only 'json' format is supported.",
+                    statusCode: 400));
+            }
+
+            return Ok(ApiResponse<List<WorkloadReportDto>>.CreateSuccess(
+                result,
+                "Workload report generated successfully",
+                200));
+        }
+        catch (ArgumentException ex)
+        {
+            _logger.LogWarning("Validation error generating workload report: {ErrorMessage}", ex.Message);
+            return BadRequest(ApiResponse<List<WorkloadReportDto>>.CreateFailure(
+                ex.Message,
+                statusCode: 400));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error generating workload report");
+            throw;
+        }
+    }
+
+    /// <summary>
+    /// Retrieves saved searches for the current user.
+    /// This is a convenience endpoint that redirects to /api/saved-searches.
+    /// Requires authentication.
+    /// </summary>
+    /// <returns>Redirect to SavedSearchesController</returns>
+    /// <response code="307">Temporary redirect to /api/saved-searches</response>
+    /// <response code="401">User is not authenticated</response>
+    [HttpGet("search/saved")]
+    [ProducesResponseType(StatusCodes.Status307TemporaryRedirect)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status401Unauthorized)]
+    public IActionResult GetSavedSearches()
+    {
+        _logger.LogInformation("Redirecting GET /api/tickets/search/saved to /api/saved-searches");
+        return RedirectPermanent("/api/saved-searches");
+    }
+
+    /// <summary>
+    /// Creates a new saved search.
+    /// This is a convenience endpoint that redirects to /api/saved-searches.
+    /// Requires authentication.
+    /// </summary>
+    /// <returns>Redirect to SavedSearchesController</returns>
+    /// <response code="307">Temporary redirect to /api/saved-searches</response>
+    /// <response code="401">User is not authenticated</response>
+    [HttpPost("search/save")]
+    [ProducesResponseType(StatusCodes.Status307TemporaryRedirect)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status401Unauthorized)]
+    public IActionResult SaveSearch()
+    {
+        _logger.LogInformation("Redirecting POST /api/tickets/search/save to /api/saved-searches");
+        return RedirectPermanent("/api/saved-searches");
     }
 }
