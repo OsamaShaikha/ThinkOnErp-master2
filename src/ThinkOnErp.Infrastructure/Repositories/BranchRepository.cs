@@ -55,7 +55,16 @@ public class BranchRepository : IBranchRepository
             using var reader = await command.ExecuteReaderAsync();
             while (await reader.ReadAsync())
             {
-                branches.Add(MapToEntity(reader));
+                try
+                {
+                  branches.Add(MapToEntity(reader));
+                }
+                catch (Exception ex)
+                {
+
+                    throw ex;
+                }
+               
             }
         }
 
