@@ -29,15 +29,11 @@ services:
       context: .
       dockerfile: Dockerfile
     container_name: thinkonerp-api
+    env_file:
+      - .env.production
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
       - ASPNETCORE_URLS=http://+:8080
-      - ConnectionStrings__OracleDb=Data Source=(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=oracle-db)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=XEPDB1)));User Id=SYSTEM;Password=OraclePassword123;
-      - JwtSettings__SecretKey=your-secret-key-here-must-be-at-least-32-characters-long-for-security-change-this-in-production
-      - JwtSettings__Issuer=ThinkOnErpAPI
-      - JwtSettings__Audience=ThinkOnErpClient
-      - JwtSettings__ExpiryInMinutes=60
-      - Serilog__MinimumLevel__Default=Information
     ports:
       - "5000:8080"
     depends_on:
