@@ -1,0 +1,31 @@
+# Oracle Database with ThinkOnErp Schema Pre-loaded
+FROM container-registry.oracle.com/database/express:21.3.0-xe
+
+# Metadata
+LABEL maintainer="ThinkOnErp Team"
+LABEL description="Oracle XE 21c with ThinkOnErp schema pre-loaded"
+LABEL version="1.0"
+
+# Set environment variables
+ENV ORACLE_PWD=OraclePassword123 \
+    ORACLE_CHARACTERSET=AL32UTF8 \
+    ORACLE_EDITION=xe
+
+# Copy consolidated database script (all-in-one)
+COPY Database/ALL_SCRIPTS_CONSOLIDATED.sql /opt/oracle/scripts/setup/
+
+# Copy initialization script
+COPY Database/init-database.sh /opt/oracle/scripts/startup/
+RUN chmod +x /opt/oracle/scripts/startup/init-database.sh
+
+# Expose Oracle ports
+# 1521: Database listener
+# 5500: Oracle Enterprise Manager Express
+EXPOSE 1521 5500
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --retries=5 --start-period=120s \
+    CMD echo "SELECT 1 FROM DUAL;" | sqlplus -s THINKON_ERP/THINKON_ERP@//localhost:1521/XEPDB1 || exit 1
+
+# Use Oracle's default entrypoint
+# The startup scripts in /opt/oracle/scripts/startup/ will run automatically

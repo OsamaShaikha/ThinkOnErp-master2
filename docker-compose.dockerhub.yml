@@ -1,0 +1,78 @@
+version: '3.8'
+
+services:
+  # Oracle Database with ThinkOnErp Schema Pre-loaded
+  oracle-db:
+    image: yourusername/thinkonerp-oracle:v1.0
+    container_name: thinkonerp-oracle
+    environment:
+      - ORACLE_PWD=OraclePassword123
+      - ORACLE_CHARACTERSET=AL32UTF8
+    ports:
+      - "1521:1521"
+      - "5500:5500"
+    volumes:
+      - oracle-data:/opt/oracle/oradata
+    networks:
+      - thinkonerp-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "echo 'SELECT 1 FROM DUAL;' | sqlplus -s THINKON_ERP/THINKON_ERP@//localhost:1521/XEPDB1 || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 120s
+
+  # ThinkOnErp API
+  thinkonerp-api:
+    image: yourusername/thinkonerp-api:v1.0
+    container_name: thinkonerp-api
+    env_file:
+      - .env
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ASPNETCORE_URLS=http://+:8080
+      - ConnectionStrings__OracleDb=User Id=THINKON_ERP;Password=THINKON_ERP;Data Source=oracle-db:1521/XEPDB1
+      - JwtSettings__SecretKey=${JWT_SECRET_KEY}
+      - JwtSettings__Issuer=${JWT_ISSUER}
+      - JwtSettings__Audience=${JWT_AUDIENCE}
+      - JwtSettings__ExpiryInMinutes=${JWT_EXPIRY_MINUTES}
+      - AuditTrail__PayloadLoggingLevel=${AUDIT__PAYLOADLOGGINGLEVEL}
+      - AuditTrail__EncryptionKey=${AUDIT__ENCRYPTIONKEY}
+      - AuditTrail__SigningKey=${AUDIT__SIGNINGKEY}
+      - AlertSettings__WebhookUrl=${ALERT__WEBHOOKURL}
+      - AlertSettings__NotificationTimeoutSeconds=${ALERT__NOTIFICATIONTIMEOUTSECONDS}
+      - AlertSettings__MaxRetryAttempts=${ALERT__MAXRETRYATTEMPTS}
+      - AlertSettings__RetryDelayMs=${ALERT__RETRYDELAYMS}
+      - RedisSettings__ConnectionString=${REDIS__CONNECTIONSTRING}
+      - Serilog__MinimumLevel__Default=${LOG_LEVEL}
+      - OpenTelemetry__OtlpEndpoint=${OPENTELEMETRY__OTLPENDPOINT}
+    ports:
+      - "${API_PORT:-5000}:8080"
+    depends_on:
+      oracle-db:
+        condition: service_healthy
+    networks:
+      - thinkonerp-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8080/health || exit 1"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 30s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    volumes:
+      - ./logs:/app/logs
+
+volumes:
+  oracle-data:
+    driver: local
+
+networks:
+  thinkonerp-network:
+    driver: bridge
