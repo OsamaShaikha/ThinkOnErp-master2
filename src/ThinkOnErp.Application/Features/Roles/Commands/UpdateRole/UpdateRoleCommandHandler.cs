@@ -21,9 +21,9 @@ public class UpdateRoleCommandHandler : IRequestHandler<UpdateRoleCommand, Int64
     {
         var role = new SysRole
         {
-            RowId = request.RoleId,
-            RowDesc = request.RoleNameAr,
-            RowDescE = request.RoleNameEn,
+            Id = request.RoleId,
+            RoleNameAr = request.RoleNameAr,
+            RoleNameEn = request.RoleNameEn,
             Note = request.Note,
             UpdateUser = request.UpdateUser,
             UpdateDate = DateTime.UtcNow

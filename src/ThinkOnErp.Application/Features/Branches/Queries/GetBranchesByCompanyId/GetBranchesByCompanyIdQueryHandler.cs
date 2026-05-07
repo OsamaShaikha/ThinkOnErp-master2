@@ -19,10 +19,10 @@ public class GetBranchesByCompanyIdQueryHandler : IRequestHandler<GetBranchesByC
 
         return branches.Select(b => new BranchDto
         {
-            BranchId = b.RowId,
-            CompanyId = b.ParRowId,
-            BranchNameAr = b.RowDesc,
-            BranchNameEn = b.RowDescE,
+            BranchId = b.Id,
+            CompanyId = b.CompanyId,
+            BranchNameAr = b.BranchNameAr,
+            BranchNameEn = b.BranchNameEn,
             Phone = b.Phone,
             Mobile = b.Mobile,
             Fax = b.Fax,

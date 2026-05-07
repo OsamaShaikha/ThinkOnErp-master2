@@ -44,9 +44,9 @@ public class RepositoryOperationsUnitTests : IClassFixture<TestWebApplicationFac
 
         // Assert
         Assert.NotNull(role);
-        Assert.Equal(roleId, role.RowId);
-        Assert.Equal("Test Role", role.RowDesc);
-        Assert.Equal("Test Role E", role.RowDescE);
+        Assert.Equal(roleId, role.Id);
+        Assert.Equal("Test Role", role.RoleNameAr);
+        Assert.Equal("Test Role E", role.RoleNameEn);
     }
 
     [Fact]

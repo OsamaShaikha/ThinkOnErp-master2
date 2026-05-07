@@ -59,7 +59,7 @@ public class JwtTokenServiceTests
         var handler = new JwtSecurityTokenHandler();
         var token = handler.ReadJwtToken(result.AccessToken);
 
-        Assert.Contains(token.Claims, c => c.Type == "userId" && c.Value == user.RowId.ToString());
+        Assert.Contains(token.Claims, c => c.Type == "userId" && c.Value == user.Id.ToString());
         Assert.Contains(token.Claims, c => c.Type == "userName" && c.Value == user.UserName);
         Assert.Contains(token.Claims, c => c.Type == "role" && c.Value == user.Role.ToString());
         Assert.Contains(token.Claims, c => c.Type == "branchId" && c.Value == user.BranchId.ToString());
@@ -229,10 +229,10 @@ public class JwtTokenServiceTests
     {
         return new SysUser
         {
-            RowId = 123,
+            Id = 123,
             UserName = "testuser",
-            RowDesc = "Test User Arabic",
-            RowDescE = "Test User English",
+            FullNameAr = "Test User Arabic",
+            FullNameEn = "Test User English",
             Password = "hashedpassword",
             Role = 5,
             BranchId = 10,

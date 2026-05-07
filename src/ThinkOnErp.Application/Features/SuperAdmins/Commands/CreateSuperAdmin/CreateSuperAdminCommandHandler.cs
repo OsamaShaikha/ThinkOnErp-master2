@@ -34,8 +34,8 @@ public class CreateSuperAdminCommandHandler : IRequestHandler<CreateSuperAdminCo
 
         var superAdmin = new SysSuperAdmin
         {
-            RowDesc = request.NameAr,
-            RowDescE = request.NameEn,
+            NameAr = request.NameAr,
+            NameEn = request.NameEn,
             UserName = request.UserName,
             Password = request.Password, // Will be hashed in API layer before reaching here
             Email = request.Email,

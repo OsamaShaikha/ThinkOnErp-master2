@@ -65,10 +65,10 @@ public class AdminOnlyEndpointAuthorizationPropertyTests : IClassFixture<WebAppl
         // Generate token for non-admin user (isAdmin = false)
         var nonAdminUser = new SysUser
         {
-            RowId = request.UserId,
+            Id = request.UserId,
             UserName = request.UserName,
-            RowDesc = "Non-Admin User",
-            RowDescE = "Non-Admin User",
+            FullNameAr = "Non-Admin User",
+            FullNameEn = "Non-Admin User",
             Password = "hash",
             Role = request.RoleId,
             BranchId = request.BranchId,

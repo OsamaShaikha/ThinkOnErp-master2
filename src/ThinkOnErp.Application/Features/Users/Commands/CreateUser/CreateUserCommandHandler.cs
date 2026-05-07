@@ -17,8 +17,8 @@ public class CreateUserCommandHandler : IRequestHandler<CreateUserCommand, Int64
     {
         var user = new SysUser
         {
-            RowDesc = request.NameAr,
-            RowDescE = request.NameEn,
+            FullNameAr = request.NameAr,
+            FullNameEn = request.NameEn,
             UserName = request.UserName,
             Password = request.Password, // Will be hashed in Infrastructure layer
             Phone = request.Phone,

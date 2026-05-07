@@ -132,4 +132,46 @@ public interface IPermissionRepository
     /// <param name="notes">Optional notes</param>
     /// <param name="creationUser">Username for audit</param>
     Task SetCompanySystemAsync(long companyId, long systemId, bool isAllowed, long? grantedBy, string? notes, string creationUser);
+
+    // =====================================================
+    // Branch System Assignments
+    // =====================================================
+
+    /// <summary>
+    /// Gets all system assignments for a branch.
+    /// </summary>
+    Task<List<SysBranchSystem>> GetBranchSystemsAsync(long branchId);
+
+    /// <summary>
+    /// Sets system access for a branch (allow or block).
+    /// </summary>
+    Task SetBranchSystemAsync(long branchId, long systemId, bool isAllowed, long? grantedBy, string? notes, string creationUser);
+
+    // =====================================================
+    // Branch Screen Permissions
+    // =====================================================
+
+    /// <summary>
+    /// Gets all screen permissions for a branch.
+    /// </summary>
+    Task<List<SysBranchScreenPermission>> GetBranchScreenPermissionsAsync(long branchId);
+
+    /// <summary>
+    /// Grants all screens of a system to a branch with full CRUD permissions.
+    /// </summary>
+    Task GrantSystemScreensToBranchAsync(long branchId, long systemId, long? grantedBy, string creationUser);
+
+    // =====================================================
+    // Company Screen Permissions
+    // =====================================================
+
+    /// <summary>
+    /// Gets all screen permissions for a company.
+    /// </summary>
+    Task<List<SysCompanyScreenPermission>> GetCompanyScreenPermissionsAsync(long companyId);
+
+    /// <summary>
+    /// Grants all screens of a system to a company with full CRUD permissions.
+    /// </summary>
+    Task GrantSystemScreensToCompanyAsync(long companyId, long systemId, long? grantedBy, string creationUser);
 }

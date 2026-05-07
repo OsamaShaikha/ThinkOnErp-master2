@@ -1,320 +1,345 @@
-using Oracle.ManagedDataAccess.Client;
-using System.Data;
+using Microsoft.EntityFrameworkCore;
 using ThinkOnErp.Domain.Entities;
 using ThinkOnErp.Domain.Interfaces;
 using ThinkOnErp.Infrastructure.Data;
 
 namespace ThinkOnErp.Infrastructure.Repositories;
 
-/// <summary>
-/// Repository implementation for permission operations using ADO.NET with Oracle stored procedures.
-/// </summary>
 public class PermissionRepository : IPermissionRepository
 {
-    private readonly OracleDbContext _dbContext;
-
-    public PermissionRepository(OracleDbContext dbContext)
-    {
-        _dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
-    }
-
-    // =====================================================
-    // Permission Check
-    // =====================================================
+    private readonly ThinkOnErpDbContext _context;
+    public PermissionRepository(ThinkOnErpDbContext context) => _context = context;
 
     public async Task<bool> CheckUserPermissionAsync(long userId, string screenCode, string action)
     {
-        using OracleConnection connection = _dbContext.CreateConnection();
-        await connection.OpenAsync();
+        var user = await _context.SysUsers.FirstOrDefaultAsync(u => u.Id == userId);
+        if (user == null || !user.IsActive) return false;
+        if (user.IsAdmin) return true;
 
-        using OracleCommand command = connection.CreateCommand();
-        command.CommandType = CommandType.Text;
-        command.CommandText = "SELECT FN_CHECK_USER_PERMISSION(:userId, :screenCode, :action) FROM DUAL";
+        var screen = await _context.SysScreens.FirstOrDefaultAsync(s => s.ScreenCode == screenCode && s.IsActive);
+        if (screen == null) return false;
 
-        command.Parameters.Add(new OracleParameter("userId", OracleDbType.Int64, userId, ParameterDirection.Input));
-        command.Parameters.Add(new OracleParameter("screenCode", OracleDbType.Varchar2, screenCode, ParameterDirection.Input));
-        command.Parameters.Add(new OracleParameter("action", OracleDbType.Varchar2, action.ToUpper(), ParameterDirection.Input));
+        // Check user-level permission overrides first
+        var userPermission = await _context.SysUserScreenPermissions
+            .FirstOrDefaultAsync(p => p.UserId == userId && p.ScreenId == screen.RowId);
 
-        var result = await command.ExecuteScalarAsync();
-        return result?.ToString() == "1";
-    }
-
-    // =====================================================
-    // User Role Management
-    // =====================================================
-
-    public async Task<List<SysUserRole>> GetUserRolesAsync(long userId)
-    {
-        using OracleConnection connection = _dbContext.CreateConnection();
-        await connection.OpenAsync();
-
-        using OracleCommand command = connection.CreateCommand();
-        command.CommandType = CommandType.StoredProcedure;
-        command.CommandText = "SP_SYS_USER_ROLE_GET";
-
-        command.Parameters.Add(new OracleParameter("P_USER_ID", OracleDbType.Int64, userId, ParameterDirection.Input));
-        
-        var cursorParam = new OracleParameter("P_RESULT_CURSOR", OracleDbType.RefCursor, ParameterDirection.Output);
-        command.Parameters.Add(cursorParam);
-
-        var userRoles = new List<SysUserRole>();
-
-        using OracleDataReader reader = await command.ExecuteReaderAsync();
-        while (await reader.ReadAsync())
+        if (userPermission != null)
         {
-            userRoles.Add(new SysUserRole
+            return action.ToUpper() switch
             {
-                RowId = reader.GetInt64(reader.GetOrdinal("ROW_ID")),
-                UserId = reader.GetInt64(reader.GetOrdinal("USER_ID")),
-                RoleId = reader.GetInt64(reader.GetOrdinal("ROLE_ID")),
-                AssignedBy = reader.IsDBNull(reader.GetOrdinal("ASSIGNED_BY")) ? null : reader.GetInt64(reader.GetOrdinal("ASSIGNED_BY")),
-                AssignedDate = reader.IsDBNull(reader.GetOrdinal("ASSIGNED_DATE")) ? null : reader.GetDateTime(reader.GetOrdinal("ASSIGNED_DATE")),
-                CreationUser = reader.GetString(reader.GetOrdinal("CREATION_USER")),
-                CreationDate = reader.IsDBNull(reader.GetOrdinal("CREATION_DATE")) ? null : reader.GetDateTime(reader.GetOrdinal("CREATION_DATE"))
-            });
+                "VIEW" => userPermission.CanView,
+                "INSERT" => userPermission.CanInsert,
+                "UPDATE" => userPermission.CanUpdate,
+                "DELETE" => userPermission.CanDelete,
+                _ => false
+            };
         }
 
-        return userRoles;
+        // Check role-level permissions
+        var userRoles = await _context.SysUserRoles
+            .Where(ur => ur.UserId == userId)
+            .Select(ur => ur.RoleId)
+            .ToListAsync();
+
+        foreach (var roleId in userRoles)
+        {
+            var rolePermission = await _context.SysRoleScreenPermissions
+                .FirstOrDefaultAsync(p => p.RoleId == roleId && p.ScreenId == screen.RowId);
+
+            if (rolePermission != null)
+            {
+                var allowed = action.ToUpper() switch
+                {
+                    "VIEW" => rolePermission.CanView,
+                    "INSERT" => rolePermission.CanInsert,
+                    "UPDATE" => rolePermission.CanUpdate,
+                    "DELETE" => rolePermission.CanDelete,
+                    _ => false
+                };
+                if (allowed) return true;
+            }
+        }
+
+        return false;
     }
+
+    public async Task<List<SysUserRole>> GetUserRolesAsync(long userId) =>
+        await _context.SysUserRoles.Where(ur => ur.UserId == userId).ToListAsync();
 
     public async Task AssignRoleToUserAsync(long userId, long roleId, long? assignedBy, string creationUser)
     {
-        using OracleConnection connection = _dbContext.CreateConnection();
-        await connection.OpenAsync();
-
-        using OracleCommand command = connection.CreateCommand();
-        command.CommandType = CommandType.StoredProcedure;
-        command.CommandText = "SP_SYS_USER_ROLE_ASSIGN";
-
-        command.Parameters.Add(new OracleParameter("P_USER_ID", OracleDbType.Int64, userId, ParameterDirection.Input));
-        command.Parameters.Add(new OracleParameter("P_ROLE_ID", OracleDbType.Int64, roleId, ParameterDirection.Input));
-        command.Parameters.Add(new OracleParameter("P_ASSIGNED_BY", OracleDbType.Int64, assignedBy ?? (object)DBNull.Value, ParameterDirection.Input));
-        command.Parameters.Add(new OracleParameter("P_CREATION_USER", OracleDbType.Varchar2, creationUser, ParameterDirection.Input));
-
-        await command.ExecuteNonQueryAsync();
+        var userRole = new SysUserRole
+        {
+            UserId = userId,
+            RoleId = roleId,
+            AssignedBy = assignedBy,
+            AssignedDate = DateTime.Now,
+            CreationUser = creationUser,
+            CreationDate = DateTime.Now
+        };
+        _context.SysUserRoles.Add(userRole);
+        await _context.SaveChangesAsync();
     }
 
     public async Task RemoveRoleFromUserAsync(long userId, long roleId)
     {
-        using OracleConnection connection = _dbContext.CreateConnection();
-        await connection.OpenAsync();
-
-        using OracleCommand command = connection.CreateCommand();
-        command.CommandType = CommandType.StoredProcedure;
-        command.CommandText = "SP_SYS_USER_ROLE_REMOVE";
-
-        command.Parameters.Add(new OracleParameter("P_USER_ID", OracleDbType.Int64, userId, ParameterDirection.Input));
-        command.Parameters.Add(new OracleParameter("P_ROLE_ID", OracleDbType.Int64, roleId, ParameterDirection.Input));
-
-        await command.ExecuteNonQueryAsync();
-    }
-
-    // =====================================================
-    // Role Screen Permissions
-    // =====================================================
-
-    public async Task<List<SysRoleScreenPermission>> GetRoleScreenPermissionsAsync(long roleId)
-    {
-        using OracleConnection connection = _dbContext.CreateConnection();
-        await connection.OpenAsync();
-
-        using OracleCommand command = connection.CreateCommand();
-        command.CommandType = CommandType.StoredProcedure;
-        command.CommandText = "SP_SYS_ROLE_SCREEN_PERM_GET";
-
-        command.Parameters.Add(new OracleParameter("P_ROLE_ID", OracleDbType.Int64, roleId, ParameterDirection.Input));
-        
-        var cursorParam = new OracleParameter("P_RESULT_CURSOR", OracleDbType.RefCursor, ParameterDirection.Output);
-        command.Parameters.Add(cursorParam);
-
-        var permissions = new List<SysRoleScreenPermission>();
-
-        using OracleDataReader reader = await command.ExecuteReaderAsync();
-        while (await reader.ReadAsync())
+        var userRole = await _context.SysUserRoles
+            .FirstOrDefaultAsync(ur => ur.UserId == userId && ur.RoleId == roleId);
+        if (userRole != null)
         {
-            permissions.Add(new SysRoleScreenPermission
-            {
-                RowId = reader.GetInt64(reader.GetOrdinal("ROW_ID")),
-                RoleId = reader.GetInt64(reader.GetOrdinal("ROLE_ID")),
-                ScreenId = reader.GetInt64(reader.GetOrdinal("SCREEN_ID")),
-                CanView = reader.GetString(reader.GetOrdinal("CAN_VIEW")) == "1",
-                CanInsert = reader.GetString(reader.GetOrdinal("CAN_INSERT")) == "1",
-                CanUpdate = reader.GetString(reader.GetOrdinal("CAN_UPDATE")) == "1",
-                CanDelete = reader.GetString(reader.GetOrdinal("CAN_DELETE")) == "1"
-            });
+            _context.SysUserRoles.Remove(userRole);
+            await _context.SaveChangesAsync();
         }
-
-        return permissions;
     }
+
+    public async Task<List<SysRoleScreenPermission>> GetRoleScreenPermissionsAsync(long roleId) =>
+        await _context.SysRoleScreenPermissions.Where(p => p.RoleId == roleId).ToListAsync();
 
     public async Task SetRoleScreenPermissionAsync(long roleId, long screenId, bool canView, bool canInsert, bool canUpdate, bool canDelete, string creationUser)
     {
-        using OracleConnection connection = _dbContext.CreateConnection();
-        await connection.OpenAsync();
-
-        using OracleCommand command = connection.CreateCommand();
-        command.CommandType = CommandType.StoredProcedure;
-        command.CommandText = "SP_SYS_ROLE_SCREEN_PERM_SET";
-
-        command.Parameters.Add(new OracleParameter("P_ROLE_ID", OracleDbType.Int64, roleId, ParameterDirection.Input));
-        command.Parameters.Add(new OracleParameter("P_SCREEN_ID", OracleDbType.Int64, screenId, ParameterDirection.Input));
-        command.Parameters.Add(new OracleParameter("P_CAN_VIEW", OracleDbType.Char, canView ? "1" : "0", ParameterDirection.Input));
-        command.Parameters.Add(new OracleParameter("P_CAN_INSERT", OracleDbType.Char, canInsert ? "1" : "0", ParameterDirection.Input));
-        command.Parameters.Add(new OracleParameter("P_CAN_UPDATE", OracleDbType.Char, canUpdate ? "1" : "0", ParameterDirection.Input));
-        command.Parameters.Add(new OracleParameter("P_CAN_DELETE", OracleDbType.Char, canDelete ? "1" : "0", ParameterDirection.Input));
-        command.Parameters.Add(new OracleParameter("P_CREATION_USER", OracleDbType.Varchar2, creationUser, ParameterDirection.Input));
-
-        await command.ExecuteNonQueryAsync();
+        var existing = await _context.SysRoleScreenPermissions
+            .FirstOrDefaultAsync(p => p.RoleId == roleId && p.ScreenId == screenId);
+        
+        if (existing != null)
+        {
+            existing.CanView = canView;
+            existing.CanInsert = canInsert;
+            existing.CanUpdate = canUpdate;
+            existing.CanDelete = canDelete;
+            existing.UpdateUser = creationUser;
+            existing.UpdateDate = DateTime.Now;
+        }
+        else
+        {
+            _context.SysRoleScreenPermissions.Add(new SysRoleScreenPermission
+            {
+                RoleId = roleId,
+                ScreenId = screenId,
+                CanView = canView,
+                CanInsert = canInsert,
+                CanUpdate = canUpdate,
+                CanDelete = canDelete,
+                CreationUser = creationUser,
+                CreationDate = DateTime.Now
+            });
+        }
+        await _context.SaveChangesAsync();
     }
 
     public async Task DeleteRoleScreenPermissionAsync(long roleId, long screenId)
     {
-        using OracleConnection connection = _dbContext.CreateConnection();
-        await connection.OpenAsync();
-
-        using OracleCommand command = connection.CreateCommand();
-        command.CommandType = CommandType.StoredProcedure;
-        command.CommandText = "SP_SYS_ROLE_SCREEN_PERM_DEL";
-
-        command.Parameters.Add(new OracleParameter("P_ROLE_ID", OracleDbType.Int64, roleId, ParameterDirection.Input));
-        command.Parameters.Add(new OracleParameter("P_SCREEN_ID", OracleDbType.Int64, screenId, ParameterDirection.Input));
-
-        await command.ExecuteNonQueryAsync();
-    }
-
-    // =====================================================
-    // User Screen Permission Overrides
-    // =====================================================
-
-    public async Task<List<SysUserScreenPermission>> GetUserScreenPermissionsAsync(long userId)
-    {
-        using OracleConnection connection = _dbContext.CreateConnection();
-        await connection.OpenAsync();
-
-        using OracleCommand command = connection.CreateCommand();
-        command.CommandType = CommandType.StoredProcedure;
-        command.CommandText = "SP_SYS_USER_SCREEN_PERM_GET";
-
-        command.Parameters.Add(new OracleParameter("P_USER_ID", OracleDbType.Int64, userId, ParameterDirection.Input));
-        
-        var cursorParam = new OracleParameter("P_RESULT_CURSOR", OracleDbType.RefCursor, ParameterDirection.Output);
-        command.Parameters.Add(cursorParam);
-
-        var permissions = new List<SysUserScreenPermission>();
-
-        using OracleDataReader reader = await command.ExecuteReaderAsync();
-        while (await reader.ReadAsync())
+        var perm = await _context.SysRoleScreenPermissions
+            .FirstOrDefaultAsync(p => p.RoleId == roleId && p.ScreenId == screenId);
+        if (perm != null)
         {
-            permissions.Add(new SysUserScreenPermission
-            {
-                RowId = reader.GetInt64(reader.GetOrdinal("ROW_ID")),
-                UserId = reader.GetInt64(reader.GetOrdinal("USER_ID")),
-                ScreenId = reader.GetInt64(reader.GetOrdinal("SCREEN_ID")),
-                CanView = reader.GetString(reader.GetOrdinal("CAN_VIEW")) == "1",
-                CanInsert = reader.GetString(reader.GetOrdinal("CAN_INSERT")) == "1",
-                CanUpdate = reader.GetString(reader.GetOrdinal("CAN_UPDATE")) == "1",
-                CanDelete = reader.GetString(reader.GetOrdinal("CAN_DELETE")) == "1",
-                AssignedBy = reader.IsDBNull(reader.GetOrdinal("ASSIGNED_BY")) ? null : reader.GetInt64(reader.GetOrdinal("ASSIGNED_BY")),
-                AssignedDate = reader.IsDBNull(reader.GetOrdinal("ASSIGNED_DATE")) ? null : reader.GetDateTime(reader.GetOrdinal("ASSIGNED_DATE")),
-                Notes = reader.IsDBNull(reader.GetOrdinal("NOTES")) ? null : reader.GetString(reader.GetOrdinal("NOTES"))
-            });
+            _context.SysRoleScreenPermissions.Remove(perm);
+            await _context.SaveChangesAsync();
         }
-
-        return permissions;
     }
+
+    public async Task<List<SysUserScreenPermission>> GetUserScreenPermissionsAsync(long userId) =>
+        await _context.SysUserScreenPermissions.Where(p => p.UserId == userId).ToListAsync();
 
     public async Task SetUserScreenPermissionAsync(long userId, long screenId, bool canView, bool canInsert, bool canUpdate, bool canDelete, long? assignedBy, string? notes, string creationUser)
     {
-        using OracleConnection connection = _dbContext.CreateConnection();
-        await connection.OpenAsync();
-
-        using OracleCommand command = connection.CreateCommand();
-        command.CommandType = CommandType.StoredProcedure;
-        command.CommandText = "SP_SYS_USER_SCREEN_PERM_SET";
-
-        command.Parameters.Add(new OracleParameter("P_USER_ID", OracleDbType.Int64, userId, ParameterDirection.Input));
-        command.Parameters.Add(new OracleParameter("P_SCREEN_ID", OracleDbType.Int64, screenId, ParameterDirection.Input));
-        command.Parameters.Add(new OracleParameter("P_CAN_VIEW", OracleDbType.Char, canView ? "1" : "0", ParameterDirection.Input));
-        command.Parameters.Add(new OracleParameter("P_CAN_INSERT", OracleDbType.Char, canInsert ? "1" : "0", ParameterDirection.Input));
-        command.Parameters.Add(new OracleParameter("P_CAN_UPDATE", OracleDbType.Char, canUpdate ? "1" : "0", ParameterDirection.Input));
-        command.Parameters.Add(new OracleParameter("P_CAN_DELETE", OracleDbType.Char, canDelete ? "1" : "0", ParameterDirection.Input));
-        command.Parameters.Add(new OracleParameter("P_ASSIGNED_BY", OracleDbType.Int64, assignedBy ?? (object)DBNull.Value, ParameterDirection.Input));
-        command.Parameters.Add(new OracleParameter("P_NOTES", OracleDbType.Varchar2, notes ?? (object)DBNull.Value, ParameterDirection.Input));
-        command.Parameters.Add(new OracleParameter("P_CREATION_USER", OracleDbType.Varchar2, creationUser, ParameterDirection.Input));
-
-        await command.ExecuteNonQueryAsync();
+        var existing = await _context.SysUserScreenPermissions
+            .FirstOrDefaultAsync(p => p.UserId == userId && p.ScreenId == screenId);
+        
+        if (existing != null)
+        {
+            existing.CanView = canView;
+            existing.CanInsert = canInsert;
+            existing.CanUpdate = canUpdate;
+            existing.CanDelete = canDelete;
+            existing.Notes = notes;
+            existing.UpdateUser = creationUser;
+            existing.UpdateDate = DateTime.Now;
+        }
+        else
+        {
+            _context.SysUserScreenPermissions.Add(new SysUserScreenPermission
+            {
+                UserId = userId,
+                ScreenId = screenId,
+                CanView = canView,
+                CanInsert = canInsert,
+                CanUpdate = canUpdate,
+                CanDelete = canDelete,
+                AssignedBy = assignedBy,
+                Notes = notes,
+                CreationUser = creationUser,
+                CreationDate = DateTime.Now
+            });
+        }
+        await _context.SaveChangesAsync();
     }
 
     public async Task DeleteUserScreenPermissionAsync(long userId, long screenId)
     {
-        using OracleConnection connection = _dbContext.CreateConnection();
-        await connection.OpenAsync();
-
-        using OracleCommand command = connection.CreateCommand();
-        command.CommandType = CommandType.StoredProcedure;
-        command.CommandText = "SP_SYS_USER_SCREEN_PERM_DEL";
-
-        command.Parameters.Add(new OracleParameter("P_USER_ID", OracleDbType.Int64, userId, ParameterDirection.Input));
-        command.Parameters.Add(new OracleParameter("P_SCREEN_ID", OracleDbType.Int64, screenId, ParameterDirection.Input));
-
-        await command.ExecuteNonQueryAsync();
-    }
-
-    // =====================================================
-    // Company System Assignments
-    // =====================================================
-
-    public async Task<List<SysCompanySystem>> GetCompanySystemsAsync(long companyId)
-    {
-        using OracleConnection connection = _dbContext.CreateConnection();
-        await connection.OpenAsync();
-
-        using OracleCommand command = connection.CreateCommand();
-        command.CommandType = CommandType.StoredProcedure;
-        command.CommandText = "SP_SYS_COMPANY_SYSTEM_GET";
-
-        command.Parameters.Add(new OracleParameter("P_COMPANY_ID", OracleDbType.Int64, companyId, ParameterDirection.Input));
-        
-        var cursorParam = new OracleParameter("P_RESULT_CURSOR", OracleDbType.RefCursor, ParameterDirection.Output);
-        command.Parameters.Add(cursorParam);
-
-        var companySystems = new List<SysCompanySystem>();
-
-        using OracleDataReader reader = await command.ExecuteReaderAsync();
-        while (await reader.ReadAsync())
+        var perm = await _context.SysUserScreenPermissions
+            .FirstOrDefaultAsync(p => p.UserId == userId && p.ScreenId == screenId);
+        if (perm != null)
         {
-            companySystems.Add(new SysCompanySystem
-            {
-                RowId = reader.GetInt64(reader.GetOrdinal("ROW_ID")),
-                CompanyId = reader.GetInt64(reader.GetOrdinal("COMPANY_ID")),
-                SystemId = reader.GetInt64(reader.GetOrdinal("SYSTEM_ID")),
-                IsAllowed = reader.GetString(reader.GetOrdinal("IS_ALLOWED")) == "1",
-                GrantedBy = reader.IsDBNull(reader.GetOrdinal("GRANTED_BY")) ? null : reader.GetInt64(reader.GetOrdinal("GRANTED_BY")),
-                GrantedDate = reader.IsDBNull(reader.GetOrdinal("GRANTED_DATE")) ? null : reader.GetDateTime(reader.GetOrdinal("GRANTED_DATE")),
-                RevokedDate = reader.IsDBNull(reader.GetOrdinal("REVOKED_DATE")) ? null : reader.GetDateTime(reader.GetOrdinal("REVOKED_DATE")),
-                Notes = reader.IsDBNull(reader.GetOrdinal("NOTES")) ? null : reader.GetString(reader.GetOrdinal("NOTES"))
-            });
+            _context.SysUserScreenPermissions.Remove(perm);
+            await _context.SaveChangesAsync();
         }
-
-        return companySystems;
     }
+
+    public async Task<List<SysCompanySystem>> GetCompanySystemsAsync(long companyId) =>
+        await _context.SysCompanySystems.Where(cs => cs.CompanyId == companyId).ToListAsync();
 
     public async Task SetCompanySystemAsync(long companyId, long systemId, bool isAllowed, long? grantedBy, string? notes, string creationUser)
     {
-        using OracleConnection connection = _dbContext.CreateConnection();
-        await connection.OpenAsync();
+        var existing = await _context.SysCompanySystems
+            .FirstOrDefaultAsync(cs => cs.CompanyId == companyId && cs.SystemId == systemId);
+        
+        if (existing != null)
+        {
+            existing.IsAllowed = isAllowed;
+            existing.GrantedBy = grantedBy;
+            existing.Notes = notes;
+            existing.GrantedDate = DateTime.Now;
+            existing.UpdateUser = creationUser;
+            existing.UpdateDate = DateTime.Now;
+        }
+        else
+        {
+            _context.SysCompanySystems.Add(new SysCompanySystem
+            {
+                CompanyId = companyId,
+                SystemId = systemId,
+                IsAllowed = isAllowed,
+                GrantedBy = grantedBy,
+                GrantedDate = DateTime.Now,
+                Notes = notes,
+                CreationUser = creationUser,
+                CreationDate = DateTime.Now
+            });
+        }
+        await _context.SaveChangesAsync();
+    }
 
-        using OracleCommand command = connection.CreateCommand();
-        command.CommandType = CommandType.StoredProcedure;
-        command.CommandText = "SP_SYS_COMPANY_SYSTEM_SET";
+    public async Task<List<SysBranchSystem>> GetBranchSystemsAsync(long branchId) =>
+        await _context.SysBranchSystems.Where(bs => bs.BranchId == branchId).ToListAsync();
 
-        command.Parameters.Add(new OracleParameter("P_COMPANY_ID", OracleDbType.Int64, companyId, ParameterDirection.Input));
-        command.Parameters.Add(new OracleParameter("P_SYSTEM_ID", OracleDbType.Int64, systemId, ParameterDirection.Input));
-        command.Parameters.Add(new OracleParameter("P_IS_ALLOWED", OracleDbType.Char, isAllowed ? "1" : "0", ParameterDirection.Input));
-        command.Parameters.Add(new OracleParameter("P_GRANTED_BY", OracleDbType.Int64, grantedBy ?? (object)DBNull.Value, ParameterDirection.Input));
-        command.Parameters.Add(new OracleParameter("P_NOTES", OracleDbType.Varchar2, notes ?? (object)DBNull.Value, ParameterDirection.Input));
-        command.Parameters.Add(new OracleParameter("P_CREATION_USER", OracleDbType.Varchar2, creationUser, ParameterDirection.Input));
+    public async Task SetBranchSystemAsync(long branchId, long systemId, bool isAllowed, long? grantedBy, string? notes, string creationUser)
+    {
+        var existing = await _context.SysBranchSystems
+            .FirstOrDefaultAsync(bs => bs.BranchId == branchId && bs.SystemId == systemId);
 
-        await command.ExecuteNonQueryAsync();
+        if (existing != null)
+        {
+            existing.IsAllowed = isAllowed;
+            existing.GrantedBy = grantedBy;
+            existing.Notes = notes;
+            existing.GrantedDate = DateTime.Now;
+            existing.UpdateUser = creationUser;
+            existing.UpdateDate = DateTime.Now;
+        }
+        else
+        {
+            _context.SysBranchSystems.Add(new SysBranchSystem
+            {
+                BranchId = branchId,
+                SystemId = systemId,
+                IsAllowed = isAllowed,
+                GrantedBy = grantedBy,
+                GrantedDate = DateTime.Now,
+                Notes = notes,
+                CreationUser = creationUser,
+                CreationDate = DateTime.Now
+            });
+        }
+        await _context.SaveChangesAsync();
+    }
+
+    public async Task<List<SysBranchScreenPermission>> GetBranchScreenPermissionsAsync(long branchId) =>
+        await _context.SysBranchScreenPermissions.Where(bp => bp.BranchId == branchId).ToListAsync();
+
+    public async Task GrantSystemScreensToBranchAsync(long branchId, long systemId, long? grantedBy, string creationUser)
+    {
+        var screens = await _context.SysScreens
+            .Where(s => s.SystemId == systemId && s.IsActive)
+            .ToListAsync();
+
+        foreach (var screen in screens)
+        {
+            var existing = await _context.SysBranchScreenPermissions
+                .FirstOrDefaultAsync(bp => bp.BranchId == branchId && bp.ScreenId == screen.RowId);
+
+            if (existing != null)
+            {
+                existing.CanView = true;
+                existing.CanInsert = true;
+                existing.CanUpdate = true;
+                existing.CanDelete = true;
+                existing.GrantedBy = grantedBy;
+                existing.GrantedDate = DateTime.Now;
+                existing.UpdateUser = creationUser;
+                existing.UpdateDate = DateTime.Now;
+            }
+            else
+            {
+                _context.SysBranchScreenPermissions.Add(new SysBranchScreenPermission
+                {
+                    BranchId = branchId,
+                    ScreenId = screen.RowId,
+                    CanView = true,
+                    CanInsert = true,
+                    CanUpdate = true,
+                    CanDelete = true,
+                    GrantedBy = grantedBy,
+                    GrantedDate = DateTime.Now,
+                    CreationUser = creationUser,
+                    CreationDate = DateTime.Now
+                });
+            }
+        }
+        await _context.SaveChangesAsync();
+    }
+
+    public async Task<List<SysCompanyScreenPermission>> GetCompanyScreenPermissionsAsync(long companyId) =>
+        await _context.SysCompanyScreenPermissions.Where(cp => cp.CompanyId == companyId).ToListAsync();
+
+    public async Task GrantSystemScreensToCompanyAsync(long companyId, long systemId, long? grantedBy, string creationUser)
+    {
+        var screens = await _context.SysScreens
+            .Where(s => s.SystemId == systemId && s.IsActive)
+            .ToListAsync();
+
+        foreach (var screen in screens)
+        {
+            var existing = await _context.SysCompanyScreenPermissions
+                .FirstOrDefaultAsync(cp => cp.CompanyId == companyId && cp.ScreenId == screen.RowId);
+
+            if (existing != null)
+            {
+                existing.CanView = true;
+                existing.CanInsert = true;
+                existing.CanUpdate = true;
+                existing.CanDelete = true;
+                existing.GrantedBy = grantedBy;
+                existing.GrantedDate = DateTime.Now;
+                existing.UpdateUser = creationUser;
+                existing.UpdateDate = DateTime.Now;
+            }
+            else
+            {
+                _context.SysCompanyScreenPermissions.Add(new SysCompanyScreenPermission
+                {
+                    CompanyId = companyId,
+                    ScreenId = screen.RowId,
+                    CanView = true,
+                    CanInsert = true,
+                    CanUpdate = true,
+                    CanDelete = true,
+                    GrantedBy = grantedBy,
+                    GrantedDate = DateTime.Now,
+                    CreationUser = creationUser,
+                    CreationDate = DateTime.Now
+                });
+            }
+        }
+        await _context.SaveChangesAsync();
     }
 }

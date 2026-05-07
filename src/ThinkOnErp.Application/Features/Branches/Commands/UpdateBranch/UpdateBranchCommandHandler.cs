@@ -17,10 +17,10 @@ public class UpdateBranchCommandHandler : IRequestHandler<UpdateBranchCommand, I
     {
         var branch = new SysBranch
         {
-            RowId = request.BranchId,
-            ParRowId = request.CompanyId,
-            RowDesc = request.BranchNameAr,
-            RowDescE = request.BranchNameEn,
+            Id = request.BranchId,
+            CompanyId = request.CompanyId,
+            BranchNameAr = request.BranchNameAr,
+            BranchNameEn = request.BranchNameEn,
             Phone = request.Phone,
             Mobile = request.Mobile,
             Fax = request.Fax,

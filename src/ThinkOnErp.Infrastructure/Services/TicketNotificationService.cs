@@ -58,11 +58,11 @@ public class TicketNotificationService : ITicketNotificationService
             {
                 var emailContent = await RenderTemplateAsync(template, new
                 {
-                    RecipientName = recipient.RowDescE ?? recipient.RowDesc,
+                    RecipientName = recipient.FullNameEn ?? recipient.FullNameAr,
                     TicketId = ticket.RowId,
                     TicketTitle = ticket.TitleEn ?? ticket.TitleAr,
                     Priority = ticket.TicketPriority?.PriorityNameEn ?? "Unknown",
-                    CreatedBy = ticket.Requester?.RowDescE ?? ticket.Requester?.RowDesc ?? "Unknown",
+                    CreatedBy = ticket.Requester?.FullNameEn ?? ticket.Requester?.FullNameAr ?? "Unknown",
                     CreatedDate = ticket.CreationDate?.ToString("yyyy-MM-dd HH:mm"),
                     TicketUrl = GenerateTicketUrl(ticket.RowId),
                     Description = TruncateText(ticket.Description, 200)
@@ -109,7 +109,7 @@ public class TicketNotificationService : ITicketNotificationService
             var template = GetTicketAssignedTemplate();
             var emailContent = await RenderTemplateAsync(template, new
             {
-                AssigneeName = assignee.RowDescE ?? assignee.RowDesc,
+                AssigneeName = assignee.FullNameEn ?? assignee.FullNameAr,
                 TicketId = ticket.RowId,
                 TicketTitle = ticket.TitleEn ?? ticket.TitleAr,
                 Priority = ticket.TicketPriority?.PriorityNameEn ?? "Unknown",
@@ -149,7 +149,7 @@ public class TicketNotificationService : ITicketNotificationService
             {
                 var emailContent = await RenderTemplateAsync(template, new
                 {
-                    RecipientName = recipient.RowDescE ?? recipient.RowDesc,
+                    RecipientName = recipient.FullNameEn ?? recipient.FullNameAr,
                     TicketId = ticket.RowId,
                     TicketTitle = ticket.TitleEn ?? ticket.TitleAr,
                     NewStatus = ticket.TicketStatus?.StatusNameEn ?? "Unknown",
@@ -192,7 +192,7 @@ public class TicketNotificationService : ITicketNotificationService
 
                 var emailContent = await RenderTemplateAsync(template, new
                 {
-                    RecipientName = recipient.RowDescE ?? recipient.RowDesc,
+                    RecipientName = recipient.FullNameEn ?? recipient.FullNameAr,
                     TicketId = ticket.RowId,
                     TicketTitle = ticket.TitleEn ?? ticket.TitleAr,
                     CommentBy = comment.CreationUser,
@@ -235,13 +235,13 @@ public class TicketNotificationService : ITicketNotificationService
 
                 var emailContent = await RenderTemplateAsync(template, new
                 {
-                    AdminName = admin.RowDescE ?? admin.RowDesc,
+                    AdminName = admin.FullNameEn ?? admin.FullNameAr,
                     TicketId = ticket.RowId,
                     TicketTitle = ticket.TitleEn ?? ticket.TitleAr,
                     Priority = ticket.TicketPriority?.PriorityNameEn ?? "Unknown",
                     ExpectedResolution = ticket.ExpectedResolutionDate?.ToString("yyyy-MM-dd HH:mm"),
                     CreatedDate = ticket.CreationDate?.ToString("yyyy-MM-dd HH:mm"),
-                    AssigneeName = ticket.Assignee?.RowDescE ?? ticket.Assignee?.RowDesc ?? "Unassigned",
+                    AssigneeName = ticket.Assignee?.FullNameEn ?? ticket.Assignee?.FullNameAr ?? "Unassigned",
                     TicketUrl = GenerateTicketUrl(ticket.RowId)
                 });
 
@@ -279,7 +279,7 @@ public class TicketNotificationService : ITicketNotificationService
 
                 var emailContent = await RenderTemplateAsync(template, new
                 {
-                    RecipientName = recipient.RowDescE ?? recipient.RowDesc,
+                    RecipientName = recipient.FullNameEn ?? recipient.FullNameAr,
                     TicketId = ticket.RowId,
                     TicketTitle = ticket.TitleEn ?? ticket.TitleAr,
                     FileName = attachment.FileName,

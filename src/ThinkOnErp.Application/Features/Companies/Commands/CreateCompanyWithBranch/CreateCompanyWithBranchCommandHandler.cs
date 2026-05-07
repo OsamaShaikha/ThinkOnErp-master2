@@ -11,13 +11,16 @@ namespace ThinkOnErp.Application.Features.Companies.Commands.CreateCompanyWithBr
 public class CreateCompanyWithBranchCommandHandler : IRequestHandler<CreateCompanyWithBranchCommand, CreateCompanyWithBranchResult>
 {
     private readonly ICompanyRepository _companyRepository;
+    private readonly IPermissionRepository _permissionRepository;
     private readonly ILogger<CreateCompanyWithBranchCommandHandler> _logger;
 
     public CreateCompanyWithBranchCommandHandler(
         ICompanyRepository companyRepository,
+        IPermissionRepository permissionRepository,
         ILogger<CreateCompanyWithBranchCommandHandler> logger)
     {
         _companyRepository = companyRepository ?? throw new ArgumentNullException(nameof(companyRepository));
+        _permissionRepository = permissionRepository ?? throw new ArgumentNullException(nameof(permissionRepository));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
@@ -83,6 +86,25 @@ public class CreateCompanyWithBranchCommandHandler : IRequestHandler<CreateCompa
             _logger.LogInformation(
                 "Company created successfully with ID: {CompanyId}, Default branch created with ID: {BranchId}, Default fiscal year created with ID: {FiscalYearId}",
                 result.CompanyId, result.BranchId, result.FiscalYearId);
+
+            // Grant systems and auto-grant all their screens if specified
+            if (request.Systems?.Count > 0)
+            {
+                foreach (var systemId in request.Systems)
+                {
+                    await _permissionRepository.SetCompanySystemAsync(
+                        result.CompanyId, systemId, isAllowed: true,
+                        grantedBy: null, notes: null,
+                        creationUser: request.CreationUser
+                    );
+
+                    await _permissionRepository.GrantSystemScreensToCompanyAsync(
+                        result.CompanyId, systemId,
+                        grantedBy: null,
+                        creationUser: request.CreationUser
+                    );
+                }
+            }
 
             // Generate branch name for response (if not provided)
             var branchName = request.BranchNameEn ?? $"{request.CompanyNameEn} - Head Office";

@@ -54,7 +54,7 @@ public class GetAllReturnsOnlyActiveRecordsPropertyTests
 
         // Property 4: All active records from input are in the result
         var allActiveRecordsReturned = activeRoles.All(activeRole => 
-            result.Any(r => r.RowId == activeRole.RowId));
+            result.Any(r => r.Id == activeRole.Id));
 
         // Combine all properties with descriptive labels
         var resultProperty = allRecordsAreActive
@@ -92,7 +92,7 @@ public class GetAllReturnsOnlyActiveRecordsPropertyTests
 
         // Property: All input records are in the result
         var allInputRecordsReturned = currencies.All(currency => 
-            result.Any(r => r.RowId == currency.RowId));
+            result.Any(r => r.Id == currency.Id));
 
         // Combine all properties with descriptive labels
         var resultProperty = allRecordsReturned && allInputRecordsReturned;
@@ -131,7 +131,7 @@ public class GetAllReturnsOnlyActiveRecordsPropertyTests
 
         // Property 4: All active records from input are in the result
         var allActiveRecordsReturned = activeCompanies.All(activeCompany => 
-            result.Any(r => r.RowId == activeCompany.RowId));
+            result.Any(r => r.Id == activeCompany.Id));
 
         // Combine all properties with descriptive labels
         var resultProperty = allRecordsAreActive
@@ -175,7 +175,7 @@ public class GetAllReturnsOnlyActiveRecordsPropertyTests
 
         // Property 4: All active records from input are in the result
         var allActiveRecordsReturned = activeBranches.All(activeBranch => 
-            result.Any(r => r.RowId == activeBranch.RowId));
+            result.Any(r => r.Id == activeBranch.Id));
 
         // Combine all properties with descriptive labels
         var resultProperty = allRecordsAreActive
@@ -219,7 +219,7 @@ public class GetAllReturnsOnlyActiveRecordsPropertyTests
 
         // Property 4: All active records from input are in the result
         var allActiveRecordsReturned = activeUsers.All(activeUser => 
-            result.Any(r => r.RowId == activeUser.RowId));
+            result.Any(r => r.Id == activeUser.Id));
 
         // Combine all properties with descriptive labels
         var resultProperty = allRecordsAreActive
@@ -261,15 +261,15 @@ public class GetAllReturnsOnlyActiveRecordsPropertyTests
                    from isActive in Arb.Generate<bool>()
                    from creationUser in Gen.Elements("admin", "system", "root")
                    select new SysRole
-                   {
-                       RowId = rowId,
-                       RowDesc = rowDesc,
-                       RowDescE = rowDescE,
-                       Note = note,
-                       IsActive = isActive,
-                       CreationUser = creationUser,
-                       CreationDate = DateTime.UtcNow
-                   };
+                    {
+                        Id = rowId,
+                        RoleNameAr = rowDesc,
+                        RoleNameEn = rowDescE,
+                        Note = note,
+                        IsActive = isActive,
+                        CreationUser = creationUser,
+                        CreationDate = DateTime.UtcNow
+                    };
         }
 
         /// <summary>
@@ -294,24 +294,24 @@ public class GetAllReturnsOnlyActiveRecordsPropertyTests
                    from shortDescE in Gen.Elements("USD", "EUR", "GBP")
                    from creationUser in Gen.Elements("admin", "system", "root")
                    select new SysCurrency
-                   {
-                       RowId = rowId,
-                       RowDesc = rowDesc,
-                       RowDescE = rowDescE,
-                       ShortDesc = shortDesc,
-                       ShortDescE = shortDescE,
-                       SingulerDesc = "واحد",
-                       SingulerDescE = "One",
-                       DualDesc = "اثنان",
-                       DualDescE = "Two",
-                       SumDesc = "مجموع",
-                       SumDescE = "Sum",
-                       FracDesc = "كسر",
-                       FracDescE = "Fraction",
-                       CurrRate = 1.0m,
-                       CreationUser = creationUser,
-                       CreationDate = DateTime.UtcNow
-                   };
+                    {
+                        Id = rowId,
+                        CurrencyNameAr = rowDesc,
+                        CurrencyNameEn = rowDescE,
+                        ShortNameAr = shortDesc,
+                        ShortNameEn = shortDescE,
+                        SingularNameAr = "واحد",
+                        SingularNameEn = "One",
+                        DualNameAr = "اثنان",
+                        DualNameEn = "Two",
+                        CollectiveNameAr = "مجموع",
+                        CollectiveNameEn = "Sum",
+                        FractionNameAr = "كسر",
+                        FractionNameEn = "Fraction",
+                        CurrRate = 1.0m,
+                        CreationUser = creationUser,
+                        CreationDate = DateTime.UtcNow
+                    };
         }
 
         /// <summary>
@@ -334,14 +334,14 @@ public class GetAllReturnsOnlyActiveRecordsPropertyTests
                    from isActive in Arb.Generate<bool>()
                    from creationUser in Gen.Elements("admin", "system", "root")
                    select new SysCompany
-                   {
-                       RowId = rowId,
-                       RowDesc = rowDesc,
-                       RowDescE = rowDescE,
-                       IsActive = isActive,
-                       CreationUser = creationUser,
-                       CreationDate = DateTime.UtcNow
-                   };
+                    {
+                        Id = rowId,
+                        CompanyNameAr = rowDesc,
+                        CompanyNameEn = rowDescE,
+                        IsActive = isActive,
+                        CreationUser = creationUser,
+                        CreationDate = DateTime.UtcNow
+                    };
         }
 
         /// <summary>
@@ -365,15 +365,15 @@ public class GetAllReturnsOnlyActiveRecordsPropertyTests
                    from isHeadBranch in Arb.Generate<bool>()
                    from creationUser in Gen.Elements("admin", "system", "root")
                    select new SysBranch
-                   {
-                       RowId = rowId,
-                       RowDesc = rowDesc,
-                       RowDescE = rowDescE,
-                       IsActive = isActive,
-                       IsHeadBranch = isHeadBranch,
-                       CreationUser = creationUser,
-                       CreationDate = DateTime.UtcNow
-                   };
+                    {
+                        Id = rowId,
+                        BranchNameAr = rowDesc,
+                        BranchNameEn = rowDescE,
+                        IsActive = isActive,
+                        IsHeadBranch = isHeadBranch,
+                        CreationUser = creationUser,
+                        CreationDate = DateTime.UtcNow
+                    };
         }
 
         /// <summary>
@@ -399,17 +399,17 @@ public class GetAllReturnsOnlyActiveRecordsPropertyTests
                    from isAdmin in Arb.Generate<bool>()
                    from creationUser in Gen.Elements("admin", "system", "root")
                    select new SysUser
-                   {
-                       RowId = rowId,
-                       UserName = userName,
-                       RowDesc = rowDesc,
-                       RowDescE = rowDescE,
-                       Password = password,
-                       IsActive = isActive,
-                       IsAdmin = isAdmin,
-                       CreationUser = creationUser,
-                       CreationDate = DateTime.UtcNow
-                   };
+                    {
+                        Id = rowId,
+                        UserName = userName,
+                        FullNameAr = rowDesc,
+                        FullNameEn = rowDescE,
+                        Password = password,
+                        IsActive = isActive,
+                        IsAdmin = isAdmin,
+                        CreationUser = creationUser,
+                        CreationDate = DateTime.UtcNow
+                    };
         }
     }
 }

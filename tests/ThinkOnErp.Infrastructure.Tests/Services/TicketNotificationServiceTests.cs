@@ -47,8 +47,8 @@ public class TicketNotificationServiceTests
         // Arrange
         var requester = new SysUser
         {
-            RowId = 1,
-            RowDescE = "John Doe",
+            Id = 1,
+            FullNameEn = "John Doe",
             Email = "john@test.com"
         };
 
@@ -106,8 +106,8 @@ public class TicketNotificationServiceTests
         // Arrange
         var assignee = new SysUser
         {
-            RowId = 2,
-            RowDescE = "Jane Admin",
+            Id = 2,
+            FullNameEn = "Jane Admin",
             Email = "jane@test.com"
         };
 
@@ -168,8 +168,8 @@ public class TicketNotificationServiceTests
         // Arrange
         var requester = new SysUser
         {
-            RowId = 1,
-            RowDescE = "John Doe",
+            Id = 1,
+            FullNameEn = "John Doe",
             Email = "john@test.com"
         };
 
@@ -205,8 +205,8 @@ public class TicketNotificationServiceTests
         // Arrange
         var requester = new SysUser
         {
-            RowId = 1,
-            RowDescE = "John Doe",
+            Id = 1,
+            FullNameEn = "John Doe",
             Email = "john@test.com",
             UserName = "john.doe"
         };
@@ -249,8 +249,8 @@ public class TicketNotificationServiceTests
         {
             new SysUser
             {
-                RowId = 1,
-                RowDescE = "Admin User",
+                Id = 1,
+                FullNameEn = "Admin User",
                 Email = "admin@test.com"
             }
         };
@@ -262,7 +262,7 @@ public class TicketNotificationServiceTests
             ExpectedResolutionDate = DateTime.UtcNow.AddHours(-1),
             CreationDate = DateTime.UtcNow.AddDays(-1),
             TicketPriority = new SysTicketPriority { PriorityNameEn = "Critical" },
-            Assignee = new SysUser { RowDescE = "John Assignee" }
+            Assignee = new SysUser { FullNameEn = "John Assignee" }
         };
 
         _mockUserRepository.Setup(r => r.GetAdminUsersAsync())
@@ -288,8 +288,8 @@ public class TicketNotificationServiceTests
         // Arrange
         var requester = new SysUser
         {
-            RowId = 1,
-            RowDescE = "John Doe",
+            Id = 1,
+            FullNameEn = "John Doe",
             Email = "john@test.com",
             UserName = "john.doe"
         };
@@ -342,7 +342,7 @@ public class TicketNotificationServiceTests
             RowId = 123,
             TitleEn = "Test",
             Description = input ?? "",
-            Requester = new SysUser { Email = "test@test.com", RowDescE = "Test User" }
+            Requester = new SysUser { Email = "test@test.com", FullNameEn = "Test User" }
         };
 
         // Act & Assert - Should not throw
@@ -358,7 +358,7 @@ public class TicketNotificationServiceTests
         {
             RowId = 123,
             TitleEn = "Test Ticket",
-            Requester = new SysUser { Email = "test@test.com" }
+            Requester = new SysUser { Email = "test@test.com", Id = 0 }
         };
 
         // Setup configuration to throw exception during email sending

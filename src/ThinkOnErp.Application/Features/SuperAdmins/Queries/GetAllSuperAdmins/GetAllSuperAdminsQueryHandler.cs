@@ -19,9 +19,9 @@ public class GetAllSuperAdminsQueryHandler : IRequestHandler<GetAllSuperAdminsQu
 
         return superAdmins.Select(sa => new SuperAdminDto
         {
-            SuperAdminId = sa.RowId,
-            NameAr = sa.RowDesc,
-            NameEn = sa.RowDescE,
+            SuperAdminId = sa.Id,
+            NameAr = sa.NameAr,
+            NameEn = sa.NameEn,
             UserName = sa.UserName,
             Email = sa.Email,
             Phone = sa.Phone,

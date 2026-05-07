@@ -22,9 +22,9 @@ public class GetUserByIdQueryHandler : IRequestHandler<GetUserByIdQuery, UserDto
 
         return new UserDto
         {
-            UserId = user.RowId,
-            NameAr = user.RowDesc,
-            NameEn = user.RowDescE,
+            UserId = user.Id,
+            NameAr = user.FullNameAr,
+            NameEn = user.FullNameEn,
             UserName = user.UserName,
             Phone = user.Phone,
             Phone2 = user.Phone2,

@@ -79,7 +79,7 @@ public class JwtTokenServicePropertyTests
                 && isAdminClaim != null;
 
             // Property 2: Claims must have correct values
-            var claimsHaveCorrectValues = userIdClaim?.Value == user.RowId.ToString()
+            var claimsHaveCorrectValues = userIdClaim?.Value == user.Id.ToString()
                 && userNameClaim?.Value == user.UserName
                 && roleClaim?.Value == (user.Role?.ToString() ?? "0")
                 && branchIdClaim?.Value == (user.BranchId?.ToString() ?? "0")
@@ -168,12 +168,21 @@ public class JwtTokenServicePropertyTests
                                from branchId in Gen.Choose(0, 100).Select(i => (Int64?)i)
                                from isAdmin in Arb.Generate<bool>()
                                from creationUser in Gen.Elements("admin", "system", "root")
+<<<<<<< Updated upstream
                                select new ThinkOnErp.Domain.Entities.SysUser
                                {
                                    RowId = rowId,
                                    UserName = userName,
                                    RowDesc = rowDesc,
                                    RowDescE = rowDescE,
+=======
+                                select new Domain.Entities.SysUser
+                                {
+                                    Id = rowId,
+                                    UserName = userName,
+                                    FullNameAr = rowDesc,
+                                    FullNameEn = rowDescE,
+>>>>>>> Stashed changes
                                    Password = password,
                                    Role = role,
                                    BranchId = branchId,

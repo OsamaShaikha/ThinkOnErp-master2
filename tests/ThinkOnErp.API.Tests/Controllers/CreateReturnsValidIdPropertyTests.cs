@@ -34,7 +34,7 @@ public class CreateReturnsValidIdPropertyTests
         var mockRepository = new Mock<IRoleRepository>();
         
         // Generate a valid positive ID (simulating Oracle sequence behavior)
-        var generatedId = role.RowId;
+        var generatedId = role.Id;
         
         mockRepository
             .Setup(x => x.CreateAsync(It.IsAny<SysRole>()))
@@ -74,7 +74,7 @@ public class CreateReturnsValidIdPropertyTests
         var mockRepository = new Mock<ICurrencyRepository>();
         
         // Generate a valid positive ID (simulating Oracle sequence behavior)
-        var generatedId = currency.RowId;
+        var generatedId = currency.Id;
         
         mockRepository
             .Setup(x => x.CreateAsync(It.IsAny<SysCurrency>()))
@@ -114,7 +114,7 @@ public class CreateReturnsValidIdPropertyTests
         var mockRepository = new Mock<ICompanyRepository>();
         
         // Generate a valid positive ID (simulating Oracle sequence behavior)
-        var generatedId =company.RowId;
+        var generatedId = company.Id;
         
         mockRepository
             .Setup(x => x.CreateAsync(It.IsAny<SysCompany>()))
@@ -154,7 +154,7 @@ public class CreateReturnsValidIdPropertyTests
         var mockRepository = new Mock<IBranchRepository>();
         
         // Generate a valid positive ID (simulating Oracle sequence behavior)
-        var generatedId = branch.RowId;
+        var generatedId = branch.Id;
         
         mockRepository
             .Setup(x => x.CreateAsync(It.IsAny<SysBranch>()))
@@ -194,7 +194,7 @@ public class CreateReturnsValidIdPropertyTests
         var mockRepository = new Mock<IUserRepository>();
         
         // Generate a valid positive ID (simulating Oracle sequence behavior)
-        var generatedId = user.RowId;
+        var generatedId = user.Id;
         
         mockRepository
             .Setup(x => x.CreateAsync(It.IsAny<SysUser>()))
@@ -248,15 +248,15 @@ public class CreateReturnsValidIdPropertyTests
                    from note in Gen.Elements("Note 1", "Note 2", "Important role", null)
                    from creationUser in Gen.Elements("admin", "system", "root", "superuser")
                    select new SysRole
-                   {
-                       RowId = rowId,
-                       RowDesc = rowDesc,
-                       RowDescE = rowDescE,
-                       Note = note,
-                       IsActive = true,
-                       CreationUser = creationUser,
-                       CreationDate = DateTime.UtcNow
-                   };
+                    {
+                        Id = rowId,
+                        RoleNameAr = rowDesc,
+                        RoleNameEn = rowDescE,
+                        Note = note,
+                        IsActive = true,
+                        CreationUser = creationUser,
+                        CreationDate = DateTime.UtcNow
+                    };
         }
 
         /// <summary>
@@ -277,25 +277,25 @@ public class CreateReturnsValidIdPropertyTests
                    from currRate in Gen.Choose(1, 100).Select(i => (decimal)i / 10m)
                    from creationUser in Gen.Elements("admin", "system", "root", "superuser")
                    select new SysCurrency
-                   {
-                       RowId = rowId,
-                       RowDesc = rowDesc,
-                       RowDescE = rowDescE,
-                       ShortDesc = shortDesc,
-                       ShortDescE = shortDescE,
-                       SingulerDesc = "واحد",
-                       SingulerDescE = "One",
-                       DualDesc = "اثنان",
-                       DualDescE = "Two",
-                       SumDesc = "مجموع",
-                       SumDescE = "Sum",
-                       FracDesc = "كسر",
-                       FracDescE = "Fraction",
-                       CurrRate = currRate,
-                       CurrRateDate = DateTime.UtcNow,
-                       CreationUser = creationUser,
-                       CreationDate = DateTime.UtcNow
-                   };
+                    {
+                        Id = rowId,
+                        CurrencyNameAr = rowDesc,
+                        CurrencyNameEn = rowDescE,
+                        ShortNameAr = shortDesc,
+                        ShortNameEn = shortDescE,
+                        SingularNameAr = "واحد",
+                        SingularNameEn = "One",
+                        DualNameAr = "اثنان",
+                        DualNameEn = "Two",
+                        CollectiveNameAr = "مجموع",
+                        CollectiveNameEn = "Sum",
+                        FractionNameAr = "كسر",
+                        FractionNameEn = "Fraction",
+                        CurrRate = currRate,
+                        CurrRateDate = DateTime.UtcNow,
+                        CreationUser = creationUser,
+                        CreationDate = DateTime.UtcNow
+                    };
         }
 
         /// <summary>
@@ -315,16 +315,16 @@ public class CreateReturnsValidIdPropertyTests
                    from currId in Gen.Choose(1, 50).Select(i => (Int64?)i)
                    from creationUser in Gen.Elements("admin", "system", "root", "superuser")
                    select new SysCompany
-                   {
-                       RowId = rowId,
-                       RowDesc = rowDesc,
-                       RowDescE = rowDescE,
-                       CountryId = countryId,
-                       CurrId = currId,
-                       IsActive = true,
-                       CreationUser = creationUser,
-                       CreationDate = DateTime.UtcNow
-                   };
+                    {
+                        Id = rowId,
+                        CompanyNameAr = rowDesc,
+                        CompanyNameEn = rowDescE,
+                        CountryId = countryId,
+                        CurrId = currId,
+                        IsActive = true,
+                        CreationUser = creationUser,
+                        CreationDate = DateTime.UtcNow
+                    };
         }
 
         /// <summary>
@@ -338,7 +338,7 @@ public class CreateReturnsValidIdPropertyTests
         private static Gen<SysBranch> GenerateSysBranch()
         {
             return from rowId in Gen.Choose(1, 1000000).Select(i => (Int64)i)
-                   from parRowId in Gen.Choose(1, 100).Select(i => (Int64?)i)
+                   from companyId in Gen.Choose(1, 100).Select(i => (Int64?)i)
                    from rowDesc in Gen.Elements("فرع الرياض", "مكتب جدة", "قسم الدمام")
                    from rowDescE in Gen.Elements("Riyadh Branch", "Jeddah Office", "Dammam Department")
                    from phone in Gen.Elements("+966112345678", "+966123456789", null)
@@ -347,19 +347,19 @@ public class CreateReturnsValidIdPropertyTests
                    from isHeadBranch in Arb.Generate<bool>()
                    from creationUser in Gen.Elements("admin", "system", "root", "superuser")
                    select new SysBranch
-                   {
-                       RowId = rowId,
-                       ParRowId = parRowId,
-                       RowDesc = rowDesc,
-                       RowDescE = rowDescE,
-                       Phone = phone,
-                       Mobile = mobile,
-                       Email = email,
-                       IsHeadBranch = isHeadBranch,
-                       IsActive = true,
-                       CreationUser = creationUser,
-                       CreationDate = DateTime.UtcNow
-                   };
+                    {
+                        Id = rowId,
+                        CompanyId = companyId,
+                        BranchNameAr = rowDesc,
+                        BranchNameEn = rowDescE,
+                        Phone = phone,
+                        Mobile = mobile,
+                        Email = email,
+                        IsHeadBranch = isHeadBranch,
+                        IsActive = true,
+                        CreationUser = creationUser,
+                        CreationDate = DateTime.UtcNow
+                    };
         }
 
         /// <summary>
@@ -384,21 +384,21 @@ public class CreateReturnsValidIdPropertyTests
                    from isAdmin in Arb.Generate<bool>()
                    from creationUser in Gen.Elements("admin", "system", "root", "superuser")
                    select new SysUser
-                   {
-                       RowId = rowId,
-                       UserName = userName,
-                       RowDesc = rowDesc,
-                       RowDescE = rowDescE,
-                       Password = password,
-                       Phone = phone,
-                       Email = email,
-                       Role = role,
-                       BranchId = branchId,
-                       IsActive = true,
-                       IsAdmin = isAdmin,
-                       CreationUser = creationUser,
-                       CreationDate = DateTime.UtcNow
-                   };
+                    {
+                        Id = rowId,
+                        UserName = userName,
+                        FullNameAr = rowDesc,
+                        FullNameEn = rowDescE,
+                        Password = password,
+                        Phone = phone,
+                        Email = email,
+                        Role = role,
+                        BranchId = branchId,
+                        IsActive = true,
+                        IsAdmin = isAdmin,
+                        CreationUser = creationUser,
+                        CreationDate = DateTime.UtcNow
+                    };
         }
     }
 }

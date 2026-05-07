@@ -18,4 +18,10 @@ public class CreateBranchCommand : IRequest<Int64>
     public Int64? FiscalYearId { get; set; }
     public string? BranchLogoBase64 { get; set; }
     public string CreationUser { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Systems to grant to the branch after creation.
+    /// All screens of each system will be auto-granted with full CRUD.
+    /// </summary>
+    public List<long>? Systems { get; set; }
 }

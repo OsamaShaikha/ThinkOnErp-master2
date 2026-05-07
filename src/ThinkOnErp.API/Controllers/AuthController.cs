@@ -81,7 +81,7 @@ public class AuthController : ControllerBase
 
             // Save refresh token to database
             await _authRepository.SaveRefreshTokenAsync(
-                user.RowId, 
+                user.Id, 
                 tokenDto.RefreshToken, 
                 tokenDto.RefreshTokenExpiresAt);
 
@@ -142,7 +142,7 @@ public class AuthController : ControllerBase
 
             // Save new refresh token to database
             await _authRepository.SaveRefreshTokenAsync(
-                user.RowId,
+                user.Id,
                 tokenDto.RefreshToken,
                 tokenDto.RefreshTokenExpiresAt);
 
@@ -198,7 +198,7 @@ public class AuthController : ControllerBase
 
             // Save refresh token to database
             await _superAdminRepository.SaveRefreshTokenAsync(
-                superAdmin.RowId, 
+                superAdmin.Id, 
                 tokenDto.RefreshToken, 
                 tokenDto.RefreshTokenExpiresAt);
 
@@ -259,7 +259,7 @@ public class AuthController : ControllerBase
 
             // Save new refresh token to database
             await _superAdminRepository.SaveRefreshTokenAsync(
-                superAdmin.RowId,
+                superAdmin.Id,
                 tokenDto.RefreshToken,
                 tokenDto.RefreshTokenExpiresAt);
 

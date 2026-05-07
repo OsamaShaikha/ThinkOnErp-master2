@@ -54,11 +54,11 @@ public class AuthControllerTests
         var passwordHash = "HASHED_PASSWORD";
         var user = new SysUser
         {
-            RowId = 1,
+            Id = 1,
             UserName = "testuser",
             Password = passwordHash,
-            RowDesc = "Test User",
-            RowDescE = "Test User",
+            FullNameAr = "Test User",
+            FullNameEn = "Test User",
             Role = 1,
             BranchId = 1,
             IsActive = true,

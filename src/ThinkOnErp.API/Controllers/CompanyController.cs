@@ -153,6 +153,7 @@ public class CompanyController : ControllerBase
                 DefaultLang = dto.BranchDefaultLang ?? "ar",
                 BranchBaseCurrencyId = dto.BranchBaseCurrencyId,
                 BranchRoundingRules = dto.BranchRoundingRules,
+                Systems = dto.Systems,
                 
                 // Branch contact fields
                 BranchNameAr = dto.BranchNameAr ?? dto.CompanyNameAr ?? "Default Branch",

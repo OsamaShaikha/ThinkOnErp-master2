@@ -54,7 +54,7 @@ public class JwtTokenService
         // Create claims with user information
         var claims = new[]
         {
-            new Claim("userId", user.RowId.ToString()),
+            new Claim("userId", user.Id.ToString()),
             new Claim("userName", user.UserName),
             new Claim("role", user.Role?.ToString() ?? "0"),
             new Claim("branchId", user.BranchId?.ToString() ?? "0"),
@@ -117,7 +117,7 @@ public class JwtTokenService
         // Create claims with super admin information
         var claims = new[]
         {
-            new Claim("userId", superAdmin.RowId.ToString()),
+            new Claim("userId", superAdmin.Id.ToString()),
             new Claim("userName", superAdmin.UserName),
             new Claim("userType", "SuperAdmin"), // Distinguish from regular users
             new Claim("isAdmin", "true"), // Super admins are always admins

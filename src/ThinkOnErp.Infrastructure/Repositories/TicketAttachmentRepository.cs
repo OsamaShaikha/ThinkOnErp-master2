@@ -1,626 +1,239 @@
-using Oracle.ManagedDataAccess.Client;
-using System.Data;
+using Microsoft.EntityFrameworkCore;
 using ThinkOnErp.Domain.Entities;
 using ThinkOnErp.Domain.Interfaces;
 using ThinkOnErp.Infrastructure.Data;
 
 namespace ThinkOnErp.Infrastructure.Repositories;
 
-/// <summary>
-/// Repository implementation for SysTicketAttachment entity using ADO.NET with Oracle stored procedures.
-/// Implements ITicketAttachmentRepository interface from the Domain layer.
-/// Uses OracleDbContext to create connections and maps Oracle data types to C# types.
-/// Handles Base64 file storage and retrieval with security validation.
-/// </summary>
 public class TicketAttachmentRepository : ITicketAttachmentRepository
 {
-    private readonly OracleDbContext _dbContext;
+    private readonly ThinkOnErpDbContext _context;
+    public TicketAttachmentRepository(ThinkOnErpDbContext context) => _context = context;
 
-    /// <summary>
-    /// Initializes a new instance of the TicketAttachmentRepository class.
-    /// </summary>
-    /// <param name="dbContext">The Oracle database context for connection management.</param>
-    /// <exception cref="ArgumentNullException">Thrown when dbContext is null.</exception>
-    public TicketAttachmentRepository(OracleDbContext dbContext)
+    public async Task<List<SysTicketAttachment>> GetByTicketIdAsync(long ticketId) =>
+        await _context.SysTicketAttachments.Where(a => a.TicketId == ticketId).ToListAsync();
+
+    public async Task<SysTicketAttachment?> GetByIdAsync(long rowId) =>
+        await _context.SysTicketAttachments.FindAsync(rowId);
+
+    public async Task<long> CreateAsync(SysTicketAttachment attachment)
     {
-        _dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
+        _context.SysTicketAttachments.Add(attachment);
+        await _context.SaveChangesAsync();
+        return attachment.RowId;
     }
 
-    /// <summary>
-    /// Retrieves all attachments for a specific ticket.
-    /// Calls SP_SYS_TICKET_ATTACHMENT_SELECT_BY_TICKET stored procedure.
-    /// </summary>
-    /// <param name="ticketId">The unique identifier of the ticket</param>
-    /// <returns>A list of attachments for the ticket</returns>
-    public async Task<List<SysTicketAttachment>> GetByTicketIdAsync(Int64 ticketId)
+    public async Task<long> DeleteAsync(long rowId, string userName)
     {
-        List<SysTicketAttachment> attachments = new();
-
-        using (var connection = _dbContext.CreateConnection())
-        {
-            await connection.OpenAsync();
-
-            using var command = connection.CreateCommand();
-            command.CommandType = CommandType.StoredProcedure;
-            command.CommandText = "SP_SYS_TICKET_ATTACHMENT_SELECT_BY_TICKET";
-
-            // Add input parameter
-            _ = command.Parameters.Add(new OracleParameter
-            {
-                ParameterName = "P_TICKET_ID",
-                OracleDbType = OracleDbType.Decimal,
-                Direction = ParameterDirection.Input,
-                Value = ticketId
-            });
-
-            // Add output parameter for SYS_REFCURSOR
-            OracleParameter cursorParam = new()
-            {
-                ParameterName = "P_RESULT_CURSOR",
-                OracleDbType = OracleDbType.RefCursor,
-                Direction = ParameterDirection.Output
-            };
-            _ = command.Parameters.Add(cursorParam);
-
-            using var reader = await command.ExecuteReaderAsync();
-            while (await reader.ReadAsync())
-            {
-                attachments.Add(MapToEntityMetadata(reader));
-            }
-        }
-
-        return attachments;
+        var attachment = await _context.SysTicketAttachments.FindAsync(rowId);
+        if (attachment == null) return 0;
+        _context.SysTicketAttachments.Remove(attachment);
+        return await _context.SaveChangesAsync();
     }
 
-    /// <summary>
-    /// Retrieves a specific attachment by its ID.
-    /// Calls SP_SYS_TICKET_ATTACHMENT_SELECT_BY_ID stored procedure.
-    /// </summary>
-    /// <param name="rowId">The unique identifier of the attachment</param>
-    /// <returns>The SysTicketAttachment entity if found, null otherwise</returns>
-    public async Task<SysTicketAttachment?> GetByIdAsync(Int64 rowId)
-    {
-        using var connection = _dbContext.CreateConnection();
-        await connection.OpenAsync();
+    public async Task<int> GetAttachmentCountAsync(long ticketId) =>
+        await _context.SysTicketAttachments.CountAsync(a => a.TicketId == ticketId);
 
-        using var command = connection.CreateCommand();
-        command.CommandType = CommandType.StoredProcedure;
-        command.CommandText = "SP_SYS_TICKET_ATTACHMENT_SELECT_BY_ID";
+    public async Task<long> GetTotalAttachmentSizeAsync(long ticketId) =>
+        await _context.SysTicketAttachments.Where(a => a.TicketId == ticketId).SumAsync(a => a.FileSize);
 
-        // Add input parameter for ROW_ID
-        OracleParameter idParam = new()
+    public async Task<List<SysTicketAttachment>> GetAttachmentMetadataAsync(long ticketId) =>
+        await _context.SysTicketAttachments.Where(a => a.TicketId == ticketId).Select(a => new SysTicketAttachment
         {
-            ParameterName = "P_ROW_ID",
-            OracleDbType = OracleDbType.Decimal,
-            Direction = ParameterDirection.Input,
-            Value = rowId
+            RowId = a.RowId,
+            TicketId = a.TicketId,
+            FileName = a.FileName,
+            FileSize = a.FileSize,
+            MimeType = a.MimeType,
+            CreationUser = a.CreationUser,
+            CreationDate = a.CreationDate
+        }).ToListAsync();
+
+    public async Task<byte[]?> GetFileContentAsync(long rowId) =>
+        await _context.SysTicketAttachments.Where(a => a.RowId == rowId).Select(a => a.FileContent).FirstOrDefaultAsync();
+
+    public async Task<bool> CanAddAttachmentAsync(long ticketId, long newFileSize)
+    {
+        var count = await GetAttachmentCountAsync(ticketId);
+        var totalSize = await GetTotalAttachmentSizeAsync(ticketId);
+        return count < SysTicketAttachment.MaxAttachmentsPerTicket && (totalSize + newFileSize) <= SysTicketAttachment.MaxFileSizeBytes;
+    }
+
+    public async Task<List<SysTicketAttachment>> GetByFileTypeAsync(string mimeType, long? companyId = null, long? branchId = null, DateTime? fromDate = null, DateTime? toDate = null)
+    {
+        var query = _context.SysTicketAttachments.Where(a => a.MimeType == mimeType).AsQueryable();
+        if (fromDate.HasValue) query = query.Where(a => a.CreationDate >= fromDate.Value);
+        if (toDate.HasValue) query = query.Where(a => a.CreationDate <= toDate.Value);
+        return await query.ToListAsync();
+    }
+
+    public async Task<Dictionary<string, object>> GetAttachmentStatisticsAsync(long? companyId = null, long? branchId = null, DateTime? fromDate = null, DateTime? toDate = null)
+    {
+        var query = _context.SysTicketAttachments.AsQueryable();
+        if (fromDate.HasValue) query = query.Where(a => a.CreationDate >= fromDate.Value);
+        if (toDate.HasValue) query = query.Where(a => a.CreationDate <= toDate.Value);
+        return new Dictionary<string, object>
+        {
+            ["TotalAttachments"] = await query.CountAsync(),
+            ["TotalSize"] = await query.SumAsync(a => a.FileSize),
+            ["ByType"] = await query.GroupBy(a => a.MimeType).Select(g => new { Type = g.Key, Count = g.Count() }).ToListAsync()
         };
-        _ = command.Parameters.Add(idParam);
+    }
+}
 
-        // Add output parameter for SYS_REFCURSOR
-        OracleParameter cursorParam = new()
-        {
-            ParameterName = "P_RESULT_CURSOR",
-            OracleDbType = OracleDbType.RefCursor,
-            Direction = ParameterDirection.Output
-        };
-        _ = command.Parameters.Add(cursorParam);
+public class SavedSearchRepository : ISavedSearchRepository
+{
+    private readonly ThinkOnErpDbContext _context;
+    public SavedSearchRepository(ThinkOnErpDbContext context) => _context = context;
 
-        using var reader = await command.ExecuteReaderAsync();
-        if (await reader.ReadAsync())
+    public async Task<long> CreateAsync(SysSavedSearch savedSearch)
+    {
+        _context.SysSavedSearches.Add(savedSearch);
+        await _context.SaveChangesAsync();
+        return savedSearch.RowId;
+    }
+
+    public async Task<long> UpdateAsync(SysSavedSearch savedSearch)
+    {
+        savedSearch.UpdateDate = DateTime.Now;
+        _context.SysSavedSearches.Update(savedSearch);
+        return await _context.SaveChangesAsync();
+    }
+
+    public async Task<List<SysSavedSearch>> GetByUserIdAsync(long userId) =>
+        await _context.SysSavedSearches.Where(s => (s.UserId == userId || s.IsPublic) && s.IsActive).ToListAsync();
+
+    public async Task<SysSavedSearch?> GetByIdAsync(long rowId) =>
+        await _context.SysSavedSearches.FindAsync(rowId);
+
+    public async Task<long> DeleteAsync(long rowId, string userName)
+    {
+        var search = await _context.SysSavedSearches.FindAsync(rowId);
+        if (search == null) return 0;
+        search.IsActive = false;
+        search.UpdateUser = userName;
+        search.UpdateDate = DateTime.Now;
+        return await _context.SaveChangesAsync();
+    }
+
+    public async Task IncrementUsageAsync(long rowId)
+    {
+        var search = await _context.SysSavedSearches.FindAsync(rowId);
+        if (search != null)
         {
-            return MapToEntityWithContent(reader);
+            search.UsageCount++;
+            search.LastUsedDate = DateTime.Now;
+            await _context.SaveChangesAsync();
         }
+    }
+}
 
-        return null;
+public class SearchAnalyticsRepository : ISearchAnalyticsRepository
+{
+    private readonly ThinkOnErpDbContext _context;
+    public SearchAnalyticsRepository(ThinkOnErpDbContext context) => _context = context;
+
+    public async Task<long> LogSearchAsync(SysSearchAnalytics analytics)
+    {
+        _context.SysSearchAnalytics.Add(analytics);
+        await _context.SaveChangesAsync();
+        return analytics.RowId;
     }
 
-    /// <summary>
-    /// Creates a new attachment in the database.
-    /// Calls SP_SYS_TICKET_ATTACHMENT_INSERT stored procedure.
-    /// Validates file size, type, and content before storage.
-    /// </summary>
-    /// <param name="attachment">The attachment entity to create</param>
-    /// <returns>The generated RowId from SEQ_SYS_TICKET_ATTACHMENT sequence</returns>
-    public async Task<Int64> CreateAsync(SysTicketAttachment attachment)
+    public async Task<List<TopSearchResult>> GetTopSearchesAsync(int daysBack = 30, int topCount = 10)
     {
-        // Validate attachment before insertion
-        if (!attachment.IsValid)
-        {
-            throw new ArgumentException("Attachment validation failed. Check file size, type, and content.");
-        }
-
-        using var connection = _dbContext.CreateConnection();
-        await connection.OpenAsync();
-
-        using var command = connection.CreateCommand();
-        command.CommandType = CommandType.StoredProcedure;
-        command.CommandText = "SP_SYS_TICKET_ATTACHMENT_INSERT";
-
-        // Add input parameters
-        _ = command.Parameters.Add(new OracleParameter
-        {
-            ParameterName = "P_TICKET_ID",
-            OracleDbType = OracleDbType.Decimal,
-            Direction = ParameterDirection.Input,
-            Value = attachment.TicketId
-        });
-
-        _ = command.Parameters.Add(new OracleParameter
-        {
-            ParameterName = "P_FILE_NAME",
-            OracleDbType = OracleDbType.NVarchar2,
-            Direction = ParameterDirection.Input,
-            Value = attachment.FileName
-        });
-
-        _ = command.Parameters.Add(new OracleParameter
-        {
-            ParameterName = "P_FILE_SIZE",
-            OracleDbType = OracleDbType.Decimal,
-            Direction = ParameterDirection.Input,
-            Value = attachment.FileSize
-        });
-
-        _ = command.Parameters.Add(new OracleParameter
-        {
-            ParameterName = "P_MIME_TYPE",
-            OracleDbType = OracleDbType.NVarchar2,
-            Direction = ParameterDirection.Input,
-            Value = attachment.MimeType
-        });
-
-        _ = command.Parameters.Add(new OracleParameter
-        {
-            ParameterName = "P_FILE_CONTENT",
-            OracleDbType = OracleDbType.Blob,
-            Direction = ParameterDirection.Input,
-            Value = attachment.FileContent
-        });
-
-        _ = command.Parameters.Add(new OracleParameter
-        {
-            ParameterName = "P_CREATION_USER",
-            OracleDbType = OracleDbType.NVarchar2,
-            Direction = ParameterDirection.Input,
-            Value = attachment.CreationUser
-        });
-
-        // Add output parameter for new ID
-        OracleParameter newIdParam = new()
-        {
-            ParameterName = "P_NEW_ID",
-            OracleDbType = OracleDbType.Decimal,
-            Direction = ParameterDirection.Output
-        };
-        _ = command.Parameters.Add(newIdParam);
-
-        _ = await command.ExecuteNonQueryAsync();
-
-        // Return the generated ID
-        return long.Parse(newIdParam.Value.ToString()!);
+        var cutoff = DateTime.Now.AddDays(-daysBack);
+        return await _context.SysSearchAnalytics
+            .Where(s => s.SearchDate >= cutoff && s.SearchTerm != null)
+            .GroupBy(s => s.SearchTerm)
+            .Select(g => new TopSearchResult
+            {
+                SearchTerm = g.Key!,
+                SearchCount = g.Count(),
+                AvgResults = g.Average(s => (double)s.ResultCount),
+                AvgExecutionTime = g.Average(s => (double)s.ExecutionTimeMs)
+            })
+            .OrderByDescending(r => r.SearchCount)
+            .Take(topCount)
+            .ToListAsync();
     }
 
-    /// <summary>
-    /// Deletes an attachment from the database.
-    /// Calls SP_SYS_TICKET_ATTACHMENT_DELETE stored procedure.
-    /// </summary>
-    /// <param name="rowId">The unique identifier of the attachment to delete</param>
-    /// <param name="userName">The username of the user performing the deletion</param>
-    /// <returns>The number of rows affected</returns>
-    public async Task<Int64> DeleteAsync(Int64 rowId, string userName)
+    public async Task<List<SysSearchAnalytics>> GetUserSearchHistoryAsync(long userId, int daysBack = 30)
     {
-        using var connection = _dbContext.CreateConnection();
-        await connection.OpenAsync();
-
-        using var command = connection.CreateCommand();
-        command.CommandType = CommandType.StoredProcedure;
-        command.CommandText = "SP_SYS_TICKET_ATTACHMENT_DELETE";
-
-        // Add input parameters
-        _ = command.Parameters.Add(new OracleParameter
-        {
-            ParameterName = "P_ROW_ID",
-            OracleDbType = OracleDbType.Decimal,
-            Direction = ParameterDirection.Input,
-            Value = rowId
-        });
-
-        _ = command.Parameters.Add(new OracleParameter
-        {
-            ParameterName = "P_DELETE_USER",
-            OracleDbType = OracleDbType.NVarchar2,
-            Direction = ParameterDirection.Input,
-            Value = userName
-        });
-
-        return await command.ExecuteNonQueryAsync();
+        var cutoff = DateTime.Now.AddDays(-daysBack);
+        return await _context.SysSearchAnalytics
+            .Where(s => s.UserId == userId && s.SearchDate >= cutoff)
+            .OrderByDescending(s => s.SearchDate)
+            .ToListAsync();
     }
 
-    /// <summary>
-    /// Gets the count of attachments for a specific ticket.
-    /// </summary>
-    /// <param name="ticketId">The unique identifier of the ticket</param>
-    /// <returns>The number of attachments</returns>
-    public async Task<int> GetAttachmentCountAsync(Int64 ticketId)
+    public async Task<List<SearchPerformanceMetric>> GetSearchPerformanceAsync(int daysBack = 7)
     {
-        using var connection = _dbContext.CreateConnection();
-        await connection.OpenAsync();
+        var cutoff = DateTime.Now.AddDays(-daysBack);
+        return await _context.SysSearchAnalytics
+            .Where(s => s.SearchDate >= cutoff)
+            .GroupBy(s => s.SearchDate.Date)
+            .Select(g => new SearchPerformanceMetric
+            {
+                SearchDay = g.Key,
+                TotalSearches = g.Count(),
+                AvgResults = g.Average(s => (double)s.ResultCount),
+                AvgExecutionTime = g.Average(s => (double)s.ExecutionTimeMs),
+                MaxExecutionTime = g.Max(s => s.ExecutionTimeMs),
+                MinExecutionTime = g.Min(s => s.ExecutionTimeMs)
+            })
+            .OrderBy(m => m.SearchDay)
+            .ToListAsync();
+    }
+}
 
-        using var command = connection.CreateCommand();
-        command.CommandType = CommandType.Text;
-        command.CommandText = @"
-            SELECT COUNT(*) 
-            FROM SYS_TICKET_ATTACHMENT 
-            WHERE TICKET_ID = :ticketId";
+public class TicketConfigRepository : ITicketConfigRepository
+{
+    private readonly ThinkOnErpDbContext _context;
+    public TicketConfigRepository(ThinkOnErpDbContext context) => _context = context;
 
-        _ = command.Parameters.Add(new OracleParameter
-        {
-            ParameterName = "ticketId",
-            OracleDbType = OracleDbType.Decimal,
-            Direction = ParameterDirection.Input,
-            Value = ticketId
-        });
+    public async Task<List<SysTicketConfig>> GetAllAsync() =>
+        await _context.SysTicketConfigs.Where(c => c.IsActive).ToListAsync();
 
-        var result = await command.ExecuteScalarAsync();
-        return Convert.ToInt32(result);
+    public async Task<SysTicketConfig?> GetByKeyAsync(string key) =>
+        await _context.SysTicketConfigs.FirstOrDefaultAsync(c => c.ConfigKey == key && c.IsActive);
+
+    public async Task<List<SysTicketConfig>> GetByTypeAsync(string configType) =>
+        await _context.SysTicketConfigs.Where(c => c.ConfigType == configType && c.IsActive).ToListAsync();
+
+    public async Task<long> CreateAsync(SysTicketConfig config)
+    {
+        _context.SysTicketConfigs.Add(config);
+        await _context.SaveChangesAsync();
+        return config.RowId;
     }
 
-    /// <summary>
-    /// Gets the total size of all attachments for a specific ticket.
-    /// </summary>
-    /// <param name="ticketId">The unique identifier of the ticket</param>
-    /// <returns>The total size in bytes</returns>
-    public async Task<Int64> GetTotalAttachmentSizeAsync(Int64 ticketId)
+    public async Task<long> UpdateAsync(SysTicketConfig config)
     {
-        using var connection = _dbContext.CreateConnection();
-        await connection.OpenAsync();
-
-        using var command = connection.CreateCommand();
-        command.CommandType = CommandType.Text;
-        command.CommandText = @"
-            SELECT COALESCE(SUM(FILE_SIZE), 0) 
-            FROM SYS_TICKET_ATTACHMENT 
-            WHERE TICKET_ID = :ticketId";
-
-        _ = command.Parameters.Add(new OracleParameter
-        {
-            ParameterName = "ticketId",
-            OracleDbType = OracleDbType.Decimal,
-            Direction = ParameterDirection.Input,
-            Value = ticketId
-        });
-
-        var result = await command.ExecuteScalarAsync();
-        return Convert.ToInt64(result);
+        config.UpdateDate = DateTime.Now;
+        _context.SysTicketConfigs.Update(config);
+        return await _context.SaveChangesAsync();
     }
 
-    /// <summary>
-    /// Retrieves attachment metadata without file content for listing purposes.
-    /// Calls SP_SYS_TICKET_ATTACHMENT_SELECT_BY_TICKET stored procedure.
-    /// </summary>
-    /// <param name="ticketId">The unique identifier of the ticket</param>
-    /// <returns>A list of attachments with metadata only (no file content)</returns>
-    public async Task<List<SysTicketAttachment>> GetAttachmentMetadataAsync(Int64 ticketId)
+    public async Task<bool> UpdateByKeyAsync(string configKey, string configValue, string updateUser)
     {
-        // This is the same as GetByTicketIdAsync since the stored procedure already excludes BLOB content
-        return await GetByTicketIdAsync(ticketId);
-    }
-
-    /// <summary>
-    /// Retrieves the file content for a specific attachment for download.
-    /// </summary>
-    /// <param name="rowId">The unique identifier of the attachment</param>
-    /// <returns>The file content as byte array, null if not found</returns>
-    public async Task<byte[]?> GetFileContentAsync(Int64 rowId)
-    {
-        var attachment = await GetByIdAsync(rowId);
-        return attachment?.FileContent;
-    }
-
-    /// <summary>
-    /// Validates if adding a new attachment would exceed limits.
-    /// Checks both count and size limits per ticket.
-    /// </summary>
-    /// <param name="ticketId">The unique identifier of the ticket</param>
-    /// <param name="newFileSize">The size of the new file to be added</param>
-    /// <returns>True if the attachment can be added, false if limits would be exceeded</returns>
-    public async Task<bool> CanAddAttachmentAsync(Int64 ticketId, Int64 newFileSize)
-    {
-        // Check file size limit
-        if (newFileSize > SysTicketAttachment.MaxFileSizeBytes)
-        {
-            return false;
-        }
-
-        // Check attachment count limit
-        var currentCount = await GetAttachmentCountAsync(ticketId);
-        if (currentCount >= SysTicketAttachment.MaxAttachmentsPerTicket)
-        {
-            return false;
-        }
-
+        var config = await _context.SysTicketConfigs.FirstOrDefaultAsync(c => c.ConfigKey == configKey);
+        if (config == null) return false;
+        config.ConfigValue = configValue;
+        config.UpdateUser = updateUser;
+        config.UpdateDate = DateTime.Now;
+        await _context.SaveChangesAsync();
         return true;
     }
 
-    /// <summary>
-    /// Retrieves attachments by file type for analytics.
-    /// </summary>
-    /// <param name="mimeType">The MIME type to filter by</param>
-    /// <param name="companyId">Optional company filter</param>
-    /// <param name="branchId">Optional branch filter</param>
-    /// <param name="fromDate">Optional date range start</param>
-    /// <param name="toDate">Optional date range end</param>
-    /// <returns>A list of attachments matching the criteria</returns>
-    public async Task<List<SysTicketAttachment>> GetByFileTypeAsync(
-        string mimeType,
-        Int64? companyId = null,
-        Int64? branchId = null,
-        DateTime? fromDate = null,
-        DateTime? toDate = null)
+    public async Task<bool> DeleteAsync(long rowId, string updateUser)
     {
-        List<SysTicketAttachment> attachments = new();
-
-        using var connection = _dbContext.CreateConnection();
-        await connection.OpenAsync();
-
-        using var command = connection.CreateCommand();
-        command.CommandType = CommandType.Text;
-        
-        var whereClause = "WHERE a.MIME_TYPE = :mimeType";
-        
-        if (companyId.HasValue)
-        {
-            whereClause += " AND t.COMPANY_ID = :companyId";
-        }
-        
-        if (branchId.HasValue)
-        {
-            whereClause += " AND t.BRANCH_ID = :branchId";
-        }
-
-        if (fromDate.HasValue)
-        {
-            whereClause += " AND a.CREATION_DATE >= :fromDate";
-        }
-
-        if (toDate.HasValue)
-        {
-            whereClause += " AND a.CREATION_DATE <= :toDate";
-        }
-
-        command.CommandText = $@"
-            SELECT 
-                a.ROW_ID,
-                a.TICKET_ID,
-                a.FILE_NAME,
-                a.FILE_SIZE,
-                a.MIME_TYPE,
-                a.CREATION_USER,
-                a.CREATION_DATE
-            FROM SYS_TICKET_ATTACHMENT a
-            INNER JOIN SYS_REQUEST_TICKET t ON a.TICKET_ID = t.ROW_ID
-            {whereClause}
-            AND t.IS_ACTIVE = 'Y'
-            ORDER BY a.CREATION_DATE DESC";
-
-        _ = command.Parameters.Add(new OracleParameter
-        {
-            ParameterName = "mimeType",
-            OracleDbType = OracleDbType.NVarchar2,
-            Direction = ParameterDirection.Input,
-            Value = mimeType
-        });
-
-        if (companyId.HasValue)
-        {
-            _ = command.Parameters.Add(new OracleParameter
-            {
-                ParameterName = "companyId",
-                OracleDbType = OracleDbType.Decimal,
-                Direction = ParameterDirection.Input,
-                Value = companyId.Value
-            });
-        }
-
-        if (branchId.HasValue)
-        {
-            _ = command.Parameters.Add(new OracleParameter
-            {
-                ParameterName = "branchId",
-                OracleDbType = OracleDbType.Decimal,
-                Direction = ParameterDirection.Input,
-                Value = branchId.Value
-            });
-        }
-
-        if (fromDate.HasValue)
-        {
-            _ = command.Parameters.Add(new OracleParameter
-            {
-                ParameterName = "fromDate",
-                OracleDbType = OracleDbType.Date,
-                Direction = ParameterDirection.Input,
-                Value = fromDate.Value
-            });
-        }
-
-        if (toDate.HasValue)
-        {
-            _ = command.Parameters.Add(new OracleParameter
-            {
-                ParameterName = "toDate",
-                OracleDbType = OracleDbType.Date,
-                Direction = ParameterDirection.Input,
-                Value = toDate.Value
-            });
-        }
-
-        using var reader = await command.ExecuteReaderAsync();
-        while (await reader.ReadAsync())
-        {
-            attachments.Add(MapToEntityMetadata(reader));
-        }
-
-        return attachments;
-    }
-
-    /// <summary>
-    /// Gets attachment statistics for reporting.
-    /// </summary>
-    /// <param name="companyId">Optional company filter</param>
-    /// <param name="branchId">Optional branch filter</param>
-    /// <param name="fromDate">Optional date range start</param>
-    /// <param name="toDate">Optional date range end</param>
-    /// <returns>Dictionary containing attachment statistics</returns>
-    public async Task<Dictionary<string, object>> GetAttachmentStatisticsAsync(
-        Int64? companyId = null,
-        Int64? branchId = null,
-        DateTime? fromDate = null,
-        DateTime? toDate = null)
-    {
-        var statistics = new Dictionary<string, object>();
-
-        using var connection = _dbContext.CreateConnection();
-        await connection.OpenAsync();
-
-        using var command = connection.CreateCommand();
-        command.CommandType = CommandType.Text;
-        
-        var whereClause = "WHERE 1=1";
-        
-        if (companyId.HasValue)
-        {
-            whereClause += " AND t.COMPANY_ID = :companyId";
-        }
-        
-        if (branchId.HasValue)
-        {
-            whereClause += " AND t.BRANCH_ID = :branchId";
-        }
-
-        if (fromDate.HasValue)
-        {
-            whereClause += " AND a.CREATION_DATE >= :fromDate";
-        }
-
-        if (toDate.HasValue)
-        {
-            whereClause += " AND a.CREATION_DATE <= :toDate";
-        }
-
-        command.CommandText = $@"
-            SELECT 
-                COUNT(*) AS TOTAL_ATTACHMENTS,
-                COUNT(DISTINCT a.TICKET_ID) AS TICKETS_WITH_ATTACHMENTS,
-                SUM(a.FILE_SIZE) AS TOTAL_SIZE_BYTES,
-                AVG(a.FILE_SIZE) AS AVERAGE_SIZE_BYTES,
-                MAX(a.FILE_SIZE) AS MAX_SIZE_BYTES,
-                MIN(a.FILE_SIZE) AS MIN_SIZE_BYTES
-            FROM SYS_TICKET_ATTACHMENT a
-            INNER JOIN SYS_REQUEST_TICKET t ON a.TICKET_ID = t.ROW_ID
-            {whereClause}
-            AND t.IS_ACTIVE = 'Y'";
-
-        if (companyId.HasValue)
-        {
-            _ = command.Parameters.Add(new OracleParameter
-            {
-                ParameterName = "companyId",
-                OracleDbType = OracleDbType.Decimal,
-                Direction = ParameterDirection.Input,
-                Value = companyId.Value
-            });
-        }
-
-        if (branchId.HasValue)
-        {
-            _ = command.Parameters.Add(new OracleParameter
-            {
-                ParameterName = "branchId",
-                OracleDbType = OracleDbType.Decimal,
-                Direction = ParameterDirection.Input,
-                Value = branchId.Value
-            });
-        }
-
-        if (fromDate.HasValue)
-        {
-            _ = command.Parameters.Add(new OracleParameter
-            {
-                ParameterName = "fromDate",
-                OracleDbType = OracleDbType.Date,
-                Direction = ParameterDirection.Input,
-                Value = fromDate.Value
-            });
-        }
-
-        if (toDate.HasValue)
-        {
-            _ = command.Parameters.Add(new OracleParameter
-            {
-                ParameterName = "toDate",
-                OracleDbType = OracleDbType.Date,
-                Direction = ParameterDirection.Input,
-                Value = toDate.Value
-            });
-        }
-
-        using var reader = await command.ExecuteReaderAsync();
-        if (await reader.ReadAsync())
-        {
-            statistics["TotalAttachments"] = reader.GetInt32(reader.GetOrdinal("TOTAL_ATTACHMENTS"));
-            statistics["TicketsWithAttachments"] = reader.GetInt32(reader.GetOrdinal("TICKETS_WITH_ATTACHMENTS"));
-            statistics["TotalSizeBytes"] = reader.IsDBNull(reader.GetOrdinal("TOTAL_SIZE_BYTES")) ? 0L : reader.GetInt64(reader.GetOrdinal("TOTAL_SIZE_BYTES"));
-            statistics["AverageSizeBytes"] = reader.IsDBNull(reader.GetOrdinal("AVERAGE_SIZE_BYTES")) ? 0.0 : reader.GetDouble(reader.GetOrdinal("AVERAGE_SIZE_BYTES"));
-            statistics["MaxSizeBytes"] = reader.IsDBNull(reader.GetOrdinal("MAX_SIZE_BYTES")) ? 0L : reader.GetInt64(reader.GetOrdinal("MAX_SIZE_BYTES"));
-            statistics["MinSizeBytes"] = reader.IsDBNull(reader.GetOrdinal("MIN_SIZE_BYTES")) ? 0L : reader.GetInt64(reader.GetOrdinal("MIN_SIZE_BYTES"));
-        }
-
-        return statistics;
-    }
-
-    /// <summary>
-    /// Maps an OracleDataReader row to a SysTicketAttachment entity with metadata only (no BLOB content).
-    /// Handles Oracle data type conversions to C# types.
-    /// </summary>
-    /// <param name="reader">The OracleDataReader positioned at a row</param>
-    /// <returns>A SysTicketAttachment entity populated with metadata from the reader</returns>
-    private SysTicketAttachment MapToEntityMetadata(OracleDataReader reader)
-    {
-        return new SysTicketAttachment
-        {
-            RowId = reader.GetInt64(reader.GetOrdinal("ROW_ID")),
-            TicketId = reader.GetInt64(reader.GetOrdinal("TICKET_ID")),
-            FileName = reader.GetString(reader.GetOrdinal("FILE_NAME")),
-            FileSize = reader.GetInt64(reader.GetOrdinal("FILE_SIZE")),
-            MimeType = reader.GetString(reader.GetOrdinal("MIME_TYPE")),
-            FileContent = Array.Empty<byte>(), // No content in metadata queries for performance
-            CreationUser = reader.GetString(reader.GetOrdinal("CREATION_USER")),
-            CreationDate = reader.IsDBNull(reader.GetOrdinal("CREATION_DATE")) ? null : reader.GetDateTime(reader.GetOrdinal("CREATION_DATE"))
-        };
-    }
-
-    /// <summary>
-    /// Maps an OracleDataReader row to a SysTicketAttachment entity with full content including BLOB.
-    /// Handles Oracle data type conversions to C# types.
-    /// </summary>
-    /// <param name="reader">The OracleDataReader positioned at a row</param>
-    /// <returns>A SysTicketAttachment entity populated with complete data from the reader</returns>
-    private SysTicketAttachment MapToEntityWithContent(OracleDataReader reader)
-    {
-        return new SysTicketAttachment
-        {
-            RowId = reader.GetInt64(reader.GetOrdinal("ROW_ID")),
-            TicketId = reader.GetInt64(reader.GetOrdinal("TICKET_ID")),
-            FileName = reader.GetString(reader.GetOrdinal("FILE_NAME")),
-            FileSize = reader.GetInt64(reader.GetOrdinal("FILE_SIZE")),
-            MimeType = reader.GetString(reader.GetOrdinal("MIME_TYPE")),
-            FileContent = reader.IsDBNull(reader.GetOrdinal("FILE_CONTENT")) ? 
-                         Array.Empty<byte>() : 
-                         (byte[])reader.GetValue(reader.GetOrdinal("FILE_CONTENT")),
-            CreationUser = reader.GetString(reader.GetOrdinal("CREATION_USER")),
-            CreationDate = reader.IsDBNull(reader.GetOrdinal("CREATION_DATE")) ? null : reader.GetDateTime(reader.GetOrdinal("CREATION_DATE"))
-        };
+        var config = await _context.SysTicketConfigs.FindAsync(rowId);
+        if (config == null) return false;
+        config.IsActive = false;
+        config.UpdateUser = updateUser;
+        config.UpdateDate = DateTime.Now;
+        await _context.SaveChangesAsync();
+        return true;
     }
 }

@@ -1,31 +1,36 @@
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+<<<<<<< Updated upstream
 using Microsoft.Extensions.Logging;
 using System.Threading.Channels;
+=======
+>>>>>>> Stashed changes
 using ThinkOnErp.Domain.Interfaces;
 using ThinkOnErp.Infrastructure.Data;
 using ThinkOnErp.Infrastructure.Repositories;
 using ThinkOnErp.Infrastructure.Services;
+<<<<<<< Updated upstream
 using ThinkOnErp.Infrastructure.Resilience;
 using ThinkOnErp.Infrastructure.Configuration;
 using ThinkOnErp.Infrastructure.Configuration.Validation;
+=======
+>>>>>>> Stashed changes
 
 namespace ThinkOnErp.Infrastructure;
 
 /// <summary>
 /// Extension methods for registering Infrastructure layer services.
-/// Configures database context, repositories, and infrastructure services.
+/// Configures Entity Framework Core database context, repositories, and services.
 /// </summary>
 public static class DependencyInjection
 {
     /// <summary>
-    /// Registers Infrastructure layer services including database context, repositories, and services.
+    /// Registers Infrastructure layer services including EF Core DbContext, repositories, and services.
     /// </summary>
-    /// <param name="services">The service collection</param>
-    /// <param name="configuration">The configuration</param>
-    /// <returns>The service collection for chaining</returns>
     public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration configuration)
     {
+<<<<<<< Updated upstream
         // Register all configuration options with data annotation validation
         // This validates configuration on application startup and throws if invalid
         services.AddTraceabilityConfigurationValidation(configuration);
@@ -97,6 +102,17 @@ public static class DependencyInjection
             return new CircuitBreaker(logger);
         });
         services.AddScoped<ResilientDatabaseExecutor>();
+=======
+        // Register EF Core DbContext with Oracle provider
+        var connectionString = configuration.GetConnectionString("OracleDb")
+            ?? throw new InvalidOperationException("Oracle connection string 'OracleDb' not found in configuration.");
+        
+        services.AddDbContext<ThinkOnErpDbContext>(options =>
+            options.UseOracle(connectionString, b =>
+            {
+                b.MigrationsAssembly(typeof(ThinkOnErpDbContext).Assembly.FullName);
+            }));
+>>>>>>> Stashed changes
 
         // Register all repositories as Scoped
         services.AddScoped<IRoleRepository, RoleRepository>();
@@ -209,6 +225,7 @@ public static class DependencyInjection
 
         return services;
     }
+<<<<<<< Updated upstream
 
     /// <summary>
     /// Registers all traceability system services with appropriate lifetimes.
@@ -408,3 +425,6 @@ public static class DependencyInjection
         return services;
     }
 }
+=======
+}
+>>>>>>> Stashed changes

@@ -10,16 +10,16 @@ public class CreateCurrencyCommand : IRequest<Int64>
 {
     public string CurrencyNameAr { get; set; } = string.Empty;
     public string CurrencyNameEn { get; set; } = string.Empty;
-    public string ShortDesc { get; set; } = string.Empty;
-    public string ShortDescE { get; set; } = string.Empty;
-    public string SingulerDesc { get; set; } = string.Empty;
-    public string SingulerDescE { get; set; } = string.Empty;
-    public string DualDesc { get; set; } = string.Empty;
-    public string DualDescE { get; set; } = string.Empty;
-    public string SumDesc { get; set; } = string.Empty;
-    public string SumDescE { get; set; } = string.Empty;
-    public string FracDesc { get; set; } = string.Empty;
-    public string FracDescE { get; set; } = string.Empty;
+    public string ShortNameAr { get; set; } = string.Empty;
+    public string ShortNameEn { get; set; } = string.Empty;
+    public string SingularNameAr { get; set; } = string.Empty;
+    public string SingularNameEn { get; set; } = string.Empty;
+    public string DualNameAr { get; set; } = string.Empty;
+    public string DualNameEn { get; set; } = string.Empty;
+    public string CollectiveNameAr { get; set; } = string.Empty;
+    public string CollectiveNameEn { get; set; } = string.Empty;
+    public string FractionNameAr { get; set; } = string.Empty;
+    public string FractionNameEn { get; set; } = string.Empty;
     public decimal? CurrRate { get; set; }
     public DateTime? CurrRateDate { get; set; }
     public string CreationUser { get; set; } = string.Empty;

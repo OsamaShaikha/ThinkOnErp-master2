@@ -8,16 +8,16 @@ public class CreateCurrencyCommandValidator : AbstractValidator<CreateCurrencyCo
     {
         RuleFor(x => x.CurrencyNameAr).NotEmpty().MaximumLength(100);
         RuleFor(x => x.CurrencyNameEn).NotEmpty().MaximumLength(100);
-        RuleFor(x => x.ShortDesc).NotEmpty().MaximumLength(50);
-        RuleFor(x => x.ShortDescE).NotEmpty().MaximumLength(50);
-        RuleFor(x => x.SingulerDesc).NotEmpty().MaximumLength(50);
-        RuleFor(x => x.SingulerDescE).NotEmpty().MaximumLength(50);
-        RuleFor(x => x.DualDesc).NotEmpty().MaximumLength(50);
-        RuleFor(x => x.DualDescE).NotEmpty().MaximumLength(50);
-        RuleFor(x => x.SumDesc).NotEmpty().MaximumLength(50);
-        RuleFor(x => x.SumDescE).NotEmpty().MaximumLength(50);
-        RuleFor(x => x.FracDesc).NotEmpty().MaximumLength(50);
-        RuleFor(x => x.FracDescE).NotEmpty().MaximumLength(50);
+        RuleFor(x => x.ShortNameAr).NotEmpty().MaximumLength(50);
+        RuleFor(x => x.ShortNameEn).NotEmpty().MaximumLength(50);
+        RuleFor(x => x.SingularNameAr).NotEmpty().MaximumLength(50);
+        RuleFor(x => x.SingularNameEn).NotEmpty().MaximumLength(50);
+        RuleFor(x => x.DualNameAr).NotEmpty().MaximumLength(50);
+        RuleFor(x => x.DualNameEn).NotEmpty().MaximumLength(50);
+        RuleFor(x => x.CollectiveNameAr).NotEmpty().MaximumLength(50);
+        RuleFor(x => x.CollectiveNameEn).NotEmpty().MaximumLength(50);
+        RuleFor(x => x.FractionNameAr).NotEmpty().MaximumLength(50);
+        RuleFor(x => x.FractionNameEn).NotEmpty().MaximumLength(50);
         RuleFor(x => x.CurrRate).GreaterThan(0).When(x => x.CurrRate.HasValue);
         RuleFor(x => x.CreationUser).NotEmpty();
     }
