@@ -374,6 +374,13 @@ Example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...'
 
     var app = builder.Build();
 
+    // Configure allowed hosts - allow all hosts in production (for IP-based access)
+    app.Use(async (context, next) =>
+    {
+        context.Request.Host = new HostString(context.Request.Host.Host, context.Request.Host.Port);
+        await next();
+    });
+
     // Add request tracing middleware (must be early in pipeline to capture all requests and generate correlation IDs)
     app.UseMiddleware<ThinkOnErp.API.Middleware.RequestTracingMiddleware>();
 
@@ -387,7 +394,8 @@ Example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...'
         app.UseSwaggerUI();
     //}
 
-    app.UseHttpsRedirection();
+    // Disable HTTPS redirection for IP-based access
+    // app.UseHttpsRedirection();
 
     // Add Prometheus metrics endpoint (if enabled)
     if (builder.Configuration.GetValue<bool>("OpenTelemetry:EnablePrometheusExporter", true))
