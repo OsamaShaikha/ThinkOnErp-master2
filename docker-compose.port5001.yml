@@ -1,0 +1,34 @@
+version: '3.8'
+
+services:
+  # ThinkOnErp API on Port 5001
+  thinkonerp-api-5001:
+    build:
+      context: .
+      dockerfile: Dockerfile.port5001
+    container_name: thinkonerp-api-5001
+    env_file:
+      - .env.production
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ASPNETCORE_URLS=http://+:5001
+    ports:
+      - "5001:5001"
+    networks:
+      - thinkonerp-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5001/health"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 10s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+networks:
+  thinkonerp-network:
+    driver: bridge

@@ -32,8 +32,8 @@ public class AuditQueryCachingOptions
     /// Redis connection string for distributed caching.
     /// Format: "host:port" or "host:port,password=xxx"
     /// Example: "localhost:6379" or "redis.example.com:6379,password=secret"
+    /// Required only when Enabled is true (validated by AuditQueryCachingOptionsValidator)
     /// </summary>
-    [Required]
     public string RedisConnectionString { get; set; } = "localhost:6379";
 
     /// <summary>
