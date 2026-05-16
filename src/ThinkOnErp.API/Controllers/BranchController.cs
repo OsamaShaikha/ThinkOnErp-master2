@@ -148,6 +148,7 @@ public class BranchController : ControllerBase
                 BaseCurrencyId = dto.BaseCurrencyId,
                 RoundingRules = dto.RoundingRules,
                 BranchLogoBase64 = dto.BranchLogoBase64,
+                Systems = dto.Systems,
                 CreationUser = User.Identity?.Name ?? "system"
             };
 

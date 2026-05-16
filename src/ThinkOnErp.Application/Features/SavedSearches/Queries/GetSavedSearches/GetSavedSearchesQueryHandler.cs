@@ -35,7 +35,7 @@ public class GetSavedSearchesQueryHandler : IRequestHandler<GetSavedSearchesQuer
             {
                 SavedSearchId = s.RowId,
                 UserId = s.UserId,
-                UserName = s.User?.RowDescE,
+                UserName = s.User?.FullNameEn,
                 SearchName = s.SearchName,
                 SearchDescription = s.SearchDescription,
                 SearchCriteria = s.SearchCriteria,

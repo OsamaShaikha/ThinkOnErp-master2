@@ -157,10 +157,10 @@ public class PasswordHashingOnAuthenticationPropertyTests
                     Password = password,
                     User = new SysUser
                     {
-                        RowId = userId,
+                        Id = userId,
                         UserName = userName,
-                        RowDesc = $"User {userName}",
-                        RowDescE = $"User {userName}",
+                        FullNameAr = $"User {userName}",
+                        FullNameEn = $"User {userName}",
                         Password = ComputeSHA256Hash(password), // Stored hash
                         Role = roleId,
                         BranchId = branchId,

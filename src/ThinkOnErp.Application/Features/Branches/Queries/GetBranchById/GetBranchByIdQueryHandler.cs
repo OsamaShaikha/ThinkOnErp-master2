@@ -22,10 +22,10 @@ public class GetBranchByIdQueryHandler : IRequestHandler<GetBranchByIdQuery, Bra
 
         return new BranchDto
         {
-            BranchId = branch.RowId,
-            CompanyId = branch.ParRowId,
-            BranchNameAr = branch.RowDesc,
-            BranchNameEn = branch.RowDescE,
+            BranchId = branch.Id,
+            CompanyId = branch.CompanyId,
+            BranchNameAr = branch.BranchNameAr,
+            BranchNameEn = branch.BranchNameEn,
             Phone = branch.Phone,
             Mobile = branch.Mobile,
             Fax = branch.Fax,

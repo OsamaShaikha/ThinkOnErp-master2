@@ -123,7 +123,7 @@ public class ValidTokenAuthenticationPropertyTests
             var principalUserName = principal.FindFirst("userName")?.Value;
             var principalIsAdmin = principal.FindFirst("isAdmin")?.Value;
 
-            principalHasExpectedClaims = principalUserId == user.RowId.ToString()
+            principalHasExpectedClaims = principalUserId == user.Id.ToString()
                 && principalUserName == user.UserName
                 && principalIsAdmin == user.IsAdmin.ToString().ToLower();
         }
@@ -172,12 +172,12 @@ public class ValidTokenAuthenticationPropertyTests
                                from branchId in Gen.Choose(1, 100).Select(i => (Int64?)i)
                                from isAdmin in Arb.Generate<bool>()
                                from creationUser in Gen.Elements("admin", "system", "root")
-                               select new Domain.Entities.SysUser
-                               {
-                                   RowId = rowId,
-                                   UserName = userName,
-                                   RowDesc = rowDesc,
-                                   RowDescE = rowDescE,
+                                select new Domain.Entities.SysUser
+                                {
+                                    Id = rowId,
+                                    UserName = userName,
+                                    FullNameAr = rowDesc,
+                                    FullNameEn = rowDescE,
                                    Password = password,
                                    Role = role,
                                    BranchId = branchId,

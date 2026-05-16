@@ -21,8 +21,8 @@ public class CreateRoleCommandHandler : IRequestHandler<CreateRoleCommand, Int64
     {
         var role = new SysRole
         {
-            RowDesc = request.RoleNameAr,
-            RowDescE = request.RoleNameEn,
+            RoleNameAr = request.RoleNameAr,
+            RoleNameEn = request.RoleNameEn,
             Note = request.Note,
             IsActive = true,
             CreationUser = request.CreationUser,

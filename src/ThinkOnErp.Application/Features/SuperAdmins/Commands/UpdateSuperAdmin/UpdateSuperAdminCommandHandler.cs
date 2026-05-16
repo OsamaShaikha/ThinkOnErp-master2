@@ -20,8 +20,8 @@ public class UpdateSuperAdminCommandHandler : IRequestHandler<UpdateSuperAdminCo
             throw new InvalidOperationException($"Super admin with ID {request.SuperAdminId} not found");
         }
 
-        superAdmin.RowDesc = request.NameAr;
-        superAdmin.RowDescE = request.NameEn;
+        superAdmin.NameAr = request.NameAr;
+        superAdmin.NameEn = request.NameEn;
         superAdmin.Email = request.Email;
         superAdmin.Phone = request.Phone;
         superAdmin.UpdateUser = request.UpdateUser;

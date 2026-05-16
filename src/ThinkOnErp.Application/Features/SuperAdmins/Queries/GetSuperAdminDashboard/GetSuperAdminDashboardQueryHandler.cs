@@ -94,10 +94,10 @@ public class GetSuperAdminDashboardQueryHandler : IRequestHandler<GetSuperAdminD
                 .Take(4)
                 .Select(c => new RecentCompanyDto
                 {
-                    NameAr = c.RowDesc,
-                    NameEn = c.RowDescE,
+                    NameAr = c.CompanyNameAr,
+                    NameEn = c.CompanyNameEn,
                     Country = null, // Country name not available in entity, only CountryId
-                    BranchCount = branches.Count(b => b.ParRowId == c.RowId),
+                    BranchCount = branches.Count(b => b.CompanyId == c.Id),
                     Status = c.IsActive ? "Active" : "Inactive",
                     CreatedDate = c.CreationDate ?? DateTime.MinValue
                 })
@@ -110,13 +110,13 @@ public class GetSuperAdminDashboardQueryHandler : IRequestHandler<GetSuperAdminD
                 .Take(4)
                 .Select(b =>
                 {
-                    var company = companies.FirstOrDefault(c => c.RowId == b.ParRowId);
+                    var company = companies.FirstOrDefault(c => c.Id == b.CompanyId);
                     return new RecentBranchActivityDto
                     {
-                        BranchNameAr = b.RowDesc,
-                        BranchNameEn = b.RowDescE,
-                        CompanyNameAr = company?.RowDesc ?? "",
-                        CompanyNameEn = company?.RowDescE ?? "",
+                        BranchNameAr = b.BranchNameAr,
+                        BranchNameEn = b.BranchNameEn,
+                        CompanyNameAr = company?.CompanyNameAr ?? "",
+                        CompanyNameEn = company?.CompanyNameEn ?? "",
                         ActivityType = b.CreationDate == b.UpdateDate ? "New" : "Update",
                         ActivityDate = b.UpdateDate ?? DateTime.MinValue
                     };

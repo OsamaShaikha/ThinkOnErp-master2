@@ -16,17 +16,19 @@
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
     <PackageReference Include="Moq" Version="4.20.70" />
-    <PackageReference Include="Microsoft.Extensions.Configuration" Version="10.0.0" />
-    <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="10.0.0" />
     <PackageReference Include="FsCheck" Version="2.16.6" />
     <PackageReference Include="FsCheck.Xunit" Version="2.16.6" />
     <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="8.0.0" />
+<<<<<<< Updated upstream
     <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="8.0.0" />
     <PackageReference Include="Microsoft.Extensions.Caching.StackExchangeRedis" Version="8.0.0" />
     <PackageReference Include="StackExchange.Redis" Version="2.7.20" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.0" />
     <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="10.0.0" />
     <PackageReference Include="netDumbster" Version="2.0.0.7" />
+=======
+    <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="8.0.3" />
+>>>>>>> Stashed changes
   </ItemGroup>
 
   <ItemGroup>

@@ -24,52 +24,52 @@ public class CurrencyDto
     /// <summary>
     /// Arabic short description
     /// </summary>
-    public string ShortDesc { get; set; } = string.Empty;
+    public string ShortNameAr { get; set; } = string.Empty;
 
     /// <summary>
     /// English short description
     /// </summary>
-    public string ShortDescE { get; set; } = string.Empty;
+    public string ShortNameEn { get; set; } = string.Empty;
 
     /// <summary>
     /// Arabic singular form
     /// </summary>
-    public string SingulerDesc { get; set; } = string.Empty;
+    public string SingularNameAr { get; set; } = string.Empty;
 
     /// <summary>
     /// English singular form
     /// </summary>
-    public string SingulerDescE { get; set; } = string.Empty;
+    public string SingularNameEn { get; set; } = string.Empty;
 
     /// <summary>
     /// Arabic dual form
     /// </summary>
-    public string DualDesc { get; set; } = string.Empty;
+    public string DualNameAr { get; set; } = string.Empty;
 
     /// <summary>
     /// English dual form
     /// </summary>
-    public string DualDescE { get; set; } = string.Empty;
+    public string DualNameEn { get; set; } = string.Empty;
 
     /// <summary>
     /// Arabic sum form
     /// </summary>
-    public string SumDesc { get; set; } = string.Empty;
+    public string CollectiveNameAr { get; set; } = string.Empty;
 
     /// <summary>
     /// English sum form
     /// </summary>
-    public string SumDescE { get; set; } = string.Empty;
+    public string CollectiveNameEn { get; set; } = string.Empty;
 
     /// <summary>
     /// Arabic fraction form
     /// </summary>
-    public string FracDesc { get; set; } = string.Empty;
+    public string FractionNameAr { get; set; } = string.Empty;
 
     /// <summary>
     /// English fraction form
     /// </summary>
-    public string FracDescE { get; set; } = string.Empty;
+    public string FractionNameEn { get; set; } = string.Empty;
 
     /// <summary>
     /// Exchange rate for the currency

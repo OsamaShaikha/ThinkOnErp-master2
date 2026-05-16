@@ -17,9 +17,9 @@ public class UpdateUserCommandHandler : IRequestHandler<UpdateUserCommand, Int64
     {
         var user = new SysUser
         {
-            RowId = request.UserId,
-            RowDesc = request.NameAr,
-            RowDescE = request.NameEn,
+            Id = request.UserId,
+            FullNameAr = request.NameAr,
+            FullNameEn = request.NameEn,
             UserName = request.UserName,
             Phone = request.Phone,
             Phone2 = request.Phone2,

@@ -111,16 +111,16 @@ public class ValidationEdgeCasesUnitTests : IClassFixture<TestWebApplicationFact
         {
             CurrencyNameAr = "Test Currency",
             CurrencyNameEn = "Test Currency E",
-            ShortDesc = "TC",
-            ShortDescE = "TC",
-            SingulerDesc = "Test",
-            SingulerDescE = "Test",
-            DualDesc = "Tests",
-            DualDescE = "Tests",
-            SumDesc = "Tests",
-            SumDescE = "Tests",
-            FracDesc = "Cent",
-            FracDescE = "Cent",
+            ShortNameAr = "TC",
+            ShortNameEn = "TC",
+            SingularNameAr = "Test",
+            SingularNameEn = "Test",
+            DualNameAr = "Tests",
+            DualNameEn = "Tests",
+            CollectiveNameAr = "Tests",
+            CollectiveNameEn = "Tests",
+            FractionNameAr = "Cent",
+            FractionNameEn = "Cent",
             CurrRate = -1.5m, // Invalid - negative
             CurrRateDate = DateTime.Now
         };

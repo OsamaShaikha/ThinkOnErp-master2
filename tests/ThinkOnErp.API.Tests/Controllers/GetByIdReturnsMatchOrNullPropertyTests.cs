@@ -34,7 +34,7 @@ public class GetByIdReturnsMatchOrNullPropertyTests
         var mockRepository = new Mock<IRoleRepository>();
         
         // Find the role with the search ID
-        var expectedRole = roles.FirstOrDefault(r => r.RowId == searchId);
+        var expectedRole = roles.FirstOrDefault(r => r.Id == searchId);
         
         mockRepository
             .Setup(x => x.GetByIdAsync(searchId))
@@ -52,12 +52,12 @@ public class GetByIdReturnsMatchOrNullPropertyTests
             var resultIsNotNull = result != null;
             
             // Property 2: Returned record has the correct ID
-            var correctId = result?.RowId == searchId;
+            var correctId = result?.Id == searchId;
             
             // Property 3: Returned record matches the expected record
-            var matchesExpected = result?.RowId == expectedRole.RowId &&
-                                 result?.RowDesc == expectedRole.RowDesc &&
-                                 result?.RowDescE == expectedRole.RowDescE;
+            var matchesExpected = result?.Id == expectedRole.Id &&
+                                 result?.RoleNameAr == expectedRole.RoleNameAr &&
+                                 result?.RoleNameEn == expectedRole.RoleNameEn;
             
             propertyHolds = resultIsNotNull && correctId && matchesExpected;
             
@@ -88,7 +88,7 @@ public class GetByIdReturnsMatchOrNullPropertyTests
         var mockRepository = new Mock<ICurrencyRepository>();
         
         // Find the currency with the search ID
-        var expectedCurrency = currencies.FirstOrDefault(c => c.RowId == searchId);
+        var expectedCurrency = currencies.FirstOrDefault(c => c.Id == searchId);
         
         mockRepository
             .Setup(x => x.GetByIdAsync(searchId))
@@ -106,12 +106,12 @@ public class GetByIdReturnsMatchOrNullPropertyTests
             var resultIsNotNull = result != null;
             
             // Property 2: Returned record has the correct ID
-            var correctId = result?.RowId == searchId;
+            var correctId = result?.Id == searchId;
             
             // Property 3: Returned record matches the expected record
-            var matchesExpected = result?.RowId == expectedCurrency.RowId &&
-                                 result?.RowDesc == expectedCurrency.RowDesc &&
-                                 result?.RowDescE == expectedCurrency.RowDescE;
+            var matchesExpected = result?.Id == expectedCurrency.Id &&
+                                 result?.CurrencyNameAr == expectedCurrency.CurrencyNameAr &&
+                                 result?.CurrencyNameEn == expectedCurrency.CurrencyNameEn;
             
             propertyHolds = resultIsNotNull && correctId && matchesExpected;
             
@@ -142,7 +142,7 @@ public class GetByIdReturnsMatchOrNullPropertyTests
         var mockRepository = new Mock<ICompanyRepository>();
         
         // Find the company with the search ID
-        var expectedCompany = companies.FirstOrDefault(c => c.RowId == searchId);
+        var expectedCompany = companies.FirstOrDefault(c => c.Id == searchId);
         
         mockRepository
             .Setup(x => x.GetByIdAsync(searchId))
@@ -160,12 +160,12 @@ public class GetByIdReturnsMatchOrNullPropertyTests
             var resultIsNotNull = result != null;
             
             // Property 2: Returned record has the correct ID
-            var correctId = result?.RowId == searchId;
+            var correctId = result?.Id == searchId;
             
             // Property 3: Returned record matches the expected record
-            var matchesExpected = result?.RowId == expectedCompany.RowId &&
-                                 result?.RowDesc == expectedCompany.RowDesc &&
-                                 result?.RowDescE == expectedCompany.RowDescE;
+            var matchesExpected = result?.Id == expectedCompany.Id &&
+                                 result?.CompanyNameAr == expectedCompany.CompanyNameAr &&
+                                 result?.CompanyNameEn == expectedCompany.CompanyNameEn;
             
             propertyHolds = resultIsNotNull && correctId && matchesExpected;
             
@@ -196,7 +196,7 @@ public class GetByIdReturnsMatchOrNullPropertyTests
         var mockRepository = new Mock<IBranchRepository>();
         
         // Find the branch with the search ID
-        var expectedBranch = branches.FirstOrDefault(b => b.RowId == searchId);
+        var expectedBranch = branches.FirstOrDefault(b => b.Id == searchId);
         
         mockRepository
             .Setup(x => x.GetByIdAsync(searchId))
@@ -214,12 +214,12 @@ public class GetByIdReturnsMatchOrNullPropertyTests
             var resultIsNotNull = result != null;
             
             // Property 2: Returned record has the correct ID
-            var correctId = result?.RowId == searchId;
+            var correctId = result?.Id == searchId;
             
             // Property 3: Returned record matches the expected record
-            var matchesExpected = result?.RowId == expectedBranch.RowId &&
-                                 result?.RowDesc == expectedBranch.RowDesc &&
-                                 result?.RowDescE == expectedBranch.RowDescE;
+            var matchesExpected = result?.Id == expectedBranch.Id &&
+                                 result?.BranchNameAr == expectedBranch.BranchNameAr &&
+                                 result?.BranchNameEn == expectedBranch.BranchNameEn;
             
             propertyHolds = resultIsNotNull && correctId && matchesExpected;
             
@@ -250,7 +250,7 @@ public class GetByIdReturnsMatchOrNullPropertyTests
         var mockRepository = new Mock<IUserRepository>();
         
         // Find the user with the search ID
-        var expectedUser = users.FirstOrDefault(u => u.RowId == searchId);
+        var expectedUser = users.FirstOrDefault(u => u.Id == searchId);
         
         mockRepository
             .Setup(x => x.GetByIdAsync(searchId))
@@ -268,12 +268,12 @@ public class GetByIdReturnsMatchOrNullPropertyTests
             var resultIsNotNull = result != null;
             
             // Property 2: Returned record has the correct ID
-            var correctId = result?.RowId == searchId;
+            var correctId = result?.Id == searchId;
             
             // Property 3: Returned record matches the expected record
-            var matchesExpected = result?.RowId == expectedUser.RowId &&
+            var matchesExpected = result?.Id == expectedUser.Id &&
                                  result?.UserName == expectedUser.UserName &&
-                                 result?.RowDescE == expectedUser.RowDescE;
+                                 result?.FullNameEn == expectedUser.FullNameEn;
             
             propertyHolds = resultIsNotNull && correctId && matchesExpected;
             
@@ -309,7 +309,7 @@ public class GetByIdReturnsMatchOrNullPropertyTests
         {
             var roleGenerator = from count in Gen.Choose(0, 20)
                                from roles in Gen.ListOf(count, GenerateSysRole())
-                               select roles.GroupBy(r => r.RowId).Select(g => g.First()).ToList();
+                               select roles.GroupBy(r => r.Id).Select(g => g.First()).ToList();
 
             return Arb.From(roleGenerator);
         }
@@ -323,15 +323,15 @@ public class GetByIdReturnsMatchOrNullPropertyTests
                    from isActive in Arb.Generate<bool>()
                    from creationUser in Gen.Elements("admin", "system", "root")
                    select new SysRole
-                   {
-                       RowId = rowId,
-                       RowDesc = rowDesc,
-                       RowDescE = rowDescE,
-                       Note = note,
-                       IsActive = isActive,
-                       CreationUser = creationUser,
-                       CreationDate = DateTime.UtcNow
-                   };
+                    {
+                        Id = rowId,
+                        RoleNameAr = rowDesc,
+                        RoleNameEn = rowDescE,
+                        Note = note,
+                        IsActive = isActive,
+                        CreationUser = creationUser,
+                        CreationDate = DateTime.UtcNow
+                    };
         }
 
         /// <summary>
@@ -341,7 +341,7 @@ public class GetByIdReturnsMatchOrNullPropertyTests
         {
             var currencyGenerator = from count in Gen.Choose(0, 20)
                                    from currencies in Gen.ListOf(count, GenerateSysCurrency())
-                                   select currencies.GroupBy(c => c.RowId).Select(g => g.First()).ToList();
+                                   select currencies.GroupBy(c => c.Id).Select(g => g.First()).ToList();
 
             return Arb.From(currencyGenerator);
         }
@@ -355,24 +355,24 @@ public class GetByIdReturnsMatchOrNullPropertyTests
                    from shortDescE in Gen.Elements("USD", "EUR", "GBP")
                    from creationUser in Gen.Elements("admin", "system", "root")
                    select new SysCurrency
-                   {
-                       RowId = rowId,
-                       RowDesc = rowDesc,
-                       RowDescE = rowDescE,
-                       ShortDesc = shortDesc,
-                       ShortDescE = shortDescE,
-                       SingulerDesc = "واحد",
-                       SingulerDescE = "One",
-                       DualDesc = "اثنان",
-                       DualDescE = "Two",
-                       SumDesc = "مجموع",
-                       SumDescE = "Sum",
-                       FracDesc = "كسر",
-                       FracDescE = "Fraction",
-                       CurrRate = 1.0m,
-                       CreationUser = creationUser,
-                       CreationDate = DateTime.UtcNow
-                   };
+                    {
+                        Id = rowId,
+                        CurrencyNameAr = rowDesc,
+                        CurrencyNameEn = rowDescE,
+                        ShortNameAr = shortDesc,
+                        ShortNameEn = shortDescE,
+                        SingularNameAr = "واحد",
+                        SingularNameEn = "One",
+                        DualNameAr = "اثنان",
+                        DualNameEn = "Two",
+                        CollectiveNameAr = "مجموع",
+                        CollectiveNameEn = "Sum",
+                        FractionNameAr = "كسر",
+                        FractionNameEn = "Fraction",
+                        CurrRate = 1.0m,
+                        CreationUser = creationUser,
+                        CreationDate = DateTime.UtcNow
+                    };
         }
 
         /// <summary>
@@ -382,7 +382,7 @@ public class GetByIdReturnsMatchOrNullPropertyTests
         {
             var companyGenerator = from count in Gen.Choose(0, 20)
                                   from companies in Gen.ListOf(count, GenerateSysCompany())
-                                  select companies.GroupBy(c => c.RowId).Select(g => g.First()).ToList();
+                                  select companies.GroupBy(c => c.Id).Select(g => g.First()).ToList();
 
             return Arb.From(companyGenerator);
         }
@@ -395,14 +395,14 @@ public class GetByIdReturnsMatchOrNullPropertyTests
                    from isActive in Arb.Generate<bool>()
                    from creationUser in Gen.Elements("admin", "system", "root")
                    select new SysCompany
-                   {
-                       RowId = rowId,
-                       RowDesc = rowDesc,
-                       RowDescE = rowDescE,
-                       IsActive = isActive,
-                       CreationUser = creationUser,
-                       CreationDate = DateTime.UtcNow
-                   };
+                    {
+                        Id = rowId,
+                        CompanyNameAr = rowDesc,
+                        CompanyNameEn = rowDescE,
+                        IsActive = isActive,
+                        CreationUser = creationUser,
+                        CreationDate = DateTime.UtcNow
+                    };
         }
 
         /// <summary>
@@ -412,7 +412,7 @@ public class GetByIdReturnsMatchOrNullPropertyTests
         {
             var branchGenerator = from count in Gen.Choose(0, 20)
                                  from branches in Gen.ListOf(count, GenerateSysBranch())
-                                 select branches.GroupBy(b => b.RowId).Select(g => g.First()).ToList();
+                                 select branches.GroupBy(b => b.Id).Select(g => g.First()).ToList();
 
             return Arb.From(branchGenerator);
         }
@@ -426,15 +426,15 @@ public class GetByIdReturnsMatchOrNullPropertyTests
                    from isHeadBranch in Arb.Generate<bool>()
                    from creationUser in Gen.Elements("admin", "system", "root")
                    select new SysBranch
-                   {
-                       RowId = rowId,
-                       RowDesc = rowDesc,
-                       RowDescE = rowDescE,
-                       IsActive = isActive,
-                       IsHeadBranch = isHeadBranch,
-                       CreationUser = creationUser,
-                       CreationDate = DateTime.UtcNow
-                   };
+                    {
+                        Id = rowId,
+                        BranchNameAr = rowDesc,
+                        BranchNameEn = rowDescE,
+                        IsActive = isActive,
+                        IsHeadBranch = isHeadBranch,
+                        CreationUser = creationUser,
+                        CreationDate = DateTime.UtcNow
+                    };
         }
 
         /// <summary>
@@ -444,7 +444,7 @@ public class GetByIdReturnsMatchOrNullPropertyTests
         {
             var userGenerator = from count in Gen.Choose(0, 20)
                                from users in Gen.ListOf(count, GenerateSysUser())
-                               select users.GroupBy(u => u.RowId).Select(g => g.First()).ToList();
+                               select users.GroupBy(u => u.Id).Select(g => g.First()).ToList();
 
             return Arb.From(userGenerator);
         }
@@ -460,17 +460,17 @@ public class GetByIdReturnsMatchOrNullPropertyTests
                    from isAdmin in Arb.Generate<bool>()
                    from creationUser in Gen.Elements("admin", "system", "root")
                    select new SysUser
-                   {
-                       RowId = rowId,
-                       UserName = userName,
-                       RowDesc = rowDesc,
-                       RowDescE = rowDescE,
-                       Password = password,
-                       IsActive = isActive,
-                       IsAdmin = isAdmin,
-                       CreationUser = creationUser,
-                       CreationDate = DateTime.UtcNow
-                   };
+                    {
+                        Id = rowId,
+                        UserName = userName,
+                        FullNameAr = rowDesc,
+                        FullNameEn = rowDescE,
+                        Password = password,
+                        IsActive = isActive,
+                        IsAdmin = isAdmin,
+                        CreationUser = creationUser,
+                        CreationDate = DateTime.UtcNow
+                    };
         }
     }
 }

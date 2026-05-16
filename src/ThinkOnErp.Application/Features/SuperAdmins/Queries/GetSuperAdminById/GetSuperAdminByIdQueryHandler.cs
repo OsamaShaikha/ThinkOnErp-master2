@@ -22,9 +22,9 @@ public class GetSuperAdminByIdQueryHandler : IRequestHandler<GetSuperAdminByIdQu
 
         return new SuperAdminDto
         {
-            SuperAdminId = superAdmin.RowId,
-            NameAr = superAdmin.RowDesc,
-            NameEn = superAdmin.RowDescE,
+            SuperAdminId = superAdmin.Id,
+            NameAr = superAdmin.NameAr,
+            NameEn = superAdmin.NameEn,
             UserName = superAdmin.UserName,
             Email = superAdmin.Email,
             Phone = superAdmin.Phone,

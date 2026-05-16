@@ -17,9 +17,9 @@ public class UpdateCompanyCommandHandler : IRequestHandler<UpdateCompanyCommand,
     {
         var company = new SysCompany
         {
-            RowId = request.CompanyId,
-            RowDesc = request.CompanyNameAr,
-            RowDescE = request.CompanyNameEn,
+            Id = request.CompanyId,
+            CompanyNameAr = request.CompanyNameAr,
+            CompanyNameEn = request.CompanyNameEn,
             LegalName = request.LegalNameAr,
             LegalNameE = request.LegalNameEn,
             CompanyCode = request.CompanyCode,

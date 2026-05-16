@@ -115,6 +115,12 @@ public class CreateCompanyWithBranchCommand : IRequest<CreateCompanyWithBranchRe
     /// </summary>
     public Int64? BranchFiscalYearId { get; set; }
 
+    /// <summary>
+    /// Systems to grant to the company after creation.
+    /// All screens of each system will be auto-granted with full CRUD.
+    /// </summary>
+    public List<long>? Systems { get; set; }
+
     // Audit Information
     /// <summary>
     /// Username of the user creating the company and branch

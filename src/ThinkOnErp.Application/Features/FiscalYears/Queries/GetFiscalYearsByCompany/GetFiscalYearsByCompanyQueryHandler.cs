@@ -19,11 +19,11 @@ public class GetFiscalYearsByCompanyQueryHandler : IRequestHandler<GetFiscalYear
 
         return fiscalYears.Select(fy => new FiscalYearDto
         {
-            FiscalYearId = fy.RowId,
+            FiscalYearId = fy.Id,
             CompanyId = fy.CompanyId,
             FiscalYearCode = fy.FiscalYearCode,
-            FiscalYearNameAr = fy.RowDesc,
-            FiscalYearNameEn = fy.RowDescE,
+            FiscalYearNameAr = fy.FiscalYearNameAr,
+            FiscalYearNameEn = fy.FiscalYearNameEn,
             StartDate = fy.StartDate,
             EndDate = fy.EndDate,
             IsClosed = fy.IsClosed,

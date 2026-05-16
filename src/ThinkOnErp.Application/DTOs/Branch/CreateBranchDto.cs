@@ -65,4 +65,10 @@ public class CreateBranchDto
     /// Branch logo as Base64 string (optional)
     /// </summary>
     public string? BranchLogoBase64 { get; set; }
+
+    /// <summary>
+    /// Systems to grant to the branch after creation.
+    /// All screens of each system will be auto-granted with full CRUD.
+    /// </summary>
+    public List<long>? Systems { get; set; }
 }

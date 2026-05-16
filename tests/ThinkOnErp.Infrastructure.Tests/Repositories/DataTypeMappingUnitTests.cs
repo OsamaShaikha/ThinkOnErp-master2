@@ -41,8 +41,8 @@ public class DataTypeMappingUnitTests : IClassFixture<TestWebApplicationFactory>
 
         // Assert
         Assert.NotNull(role);
-        Assert.IsType<decimal>(role.RowId);
-        Assert.True(role.RowId > 0);
+        Assert.IsType<decimal>(role.Id);
+        Assert.True(role.Id > 0);
     }
 
     [Fact]
@@ -67,10 +67,10 @@ public class DataTypeMappingUnitTests : IClassFixture<TestWebApplicationFactory>
 
         // Assert
         Assert.NotNull(role);
-        Assert.IsType<string>(role.RowDesc);
-        Assert.IsType<string>(role.RowDescE);
-        Assert.Equal("Arabic Description", role.RowDesc);
-        Assert.Equal("English Description", role.RowDescE);
+        Assert.IsType<string>(role.RoleNameAr);
+        Assert.IsType<string>(role.RoleNameEn);
+        Assert.Equal("Arabic Description", role.RoleNameAr);
+        Assert.Equal("English Description", role.RoleNameEn);
     }
 
     [Fact]

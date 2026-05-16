@@ -17,8 +17,8 @@ public class CreateCompanyCommandHandler : IRequestHandler<CreateCompanyCommand,
     {
         var company = new SysCompany
         {
-            RowDesc = request.CompanyNameAr,
-            RowDescE = request.CompanyNameEn,
+            CompanyNameAr = request.CompanyNameAr,
+            CompanyNameEn = request.CompanyNameEn,
             LegalName = request.LegalNameAr,
             LegalNameE = request.LegalNameEn,
             CompanyCode = request.CompanyCode,

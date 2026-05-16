@@ -19,9 +19,9 @@ public class GetAllUsersQueryHandler : IRequestHandler<GetAllUsersQuery, List<Us
 
         return users.Select(u => new UserDto
         {
-            UserId = u.RowId,
-            NameAr = u.RowDesc,
-            NameEn = u.RowDescE,
+            UserId = u.Id,
+            NameAr = u.FullNameAr,
+            NameEn = u.FullNameEn,
             UserName = u.UserName,
             Phone = u.Phone,
             Phone2 = u.Phone2,

@@ -22,12 +22,12 @@ public class GetFiscalYearByIdQueryHandler : IRequestHandler<GetFiscalYearByIdQu
 
         return new FiscalYearDto
         {
-            FiscalYearId = fiscalYear.RowId,
+            FiscalYearId = fiscalYear.Id,
             CompanyId = fiscalYear.CompanyId,
             BranchId = fiscalYear.BranchId,
             FiscalYearCode = fiscalYear.FiscalYearCode,
-            FiscalYearNameAr = fiscalYear.RowDesc,
-            FiscalYearNameEn = fiscalYear.RowDescE,
+            FiscalYearNameAr = fiscalYear.FiscalYearNameAr,
+            FiscalYearNameEn = fiscalYear.FiscalYearNameEn,
             StartDate = fiscalYear.StartDate,
             EndDate = fiscalYear.EndDate,
             IsClosed = fiscalYear.IsClosed,

@@ -101,4 +101,10 @@ public class CreateCompanyDto
     /// Rounding rules for branch calculations (1=HALF_UP, 2=HALF_DOWN, 3=UP, 4=DOWN, 5=CEILING, 6=FLOOR)
     /// </summary>
     public int? BranchRoundingRules { get; set; }
+
+    /// <summary>
+    /// Systems to grant to the company after creation.
+    /// All screens of each system will be auto-granted with full CRUD.
+    /// </summary>
+    public List<long>? Systems { get; set; }
 }

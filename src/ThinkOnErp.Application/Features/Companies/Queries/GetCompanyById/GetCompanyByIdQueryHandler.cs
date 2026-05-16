@@ -22,9 +22,9 @@ public class GetCompanyByIdQueryHandler : IRequestHandler<GetCompanyByIdQuery, C
 
         var dto = new CompanyDto
         {
-            CompanyId = company.RowId,
-            CompanyNameAr = company.RowDesc,
-            CompanyNameEn = company.RowDescE,
+            CompanyId = company.Id,
+            CompanyNameAr = company.CompanyNameAr,
+            CompanyNameEn = company.CompanyNameEn,
             CountryId = company.CountryId,
             CurrId = company.CurrId,
             LegalNameAr = company.LegalName,
@@ -32,7 +32,7 @@ public class GetCompanyByIdQueryHandler : IRequestHandler<GetCompanyByIdQuery, C
             CompanyCode = company.CompanyCode,
             TaxNumber = company.TaxNumber,
             DefaultBranchId = company.DefaultBranchId,
-            DefaultBranchName = company.DefaultBranch?.RowDescE,
+            DefaultBranchName = company.DefaultBranch?.BranchNameEn,
             HasLogo = company.HasLogo,
             IsActive = company.IsActive,
             CreationUser = company.CreationUser,
@@ -44,7 +44,7 @@ public class GetCompanyByIdQueryHandler : IRequestHandler<GetCompanyByIdQuery, C
         // Load company logo if it exists
         if (company.HasLogo)
         {
-            var companyLogo = await _companyRepository.GetLogoAsync(company.RowId);
+            var companyLogo = await _companyRepository.GetLogoAsync(company.Id);
             if (companyLogo != null)
             {
                 dto.CompanyLogoBase64 = Convert.ToBase64String(companyLogo);

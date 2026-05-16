@@ -17,12 +17,12 @@ public class UpdateFiscalYearCommandHandler : IRequestHandler<UpdateFiscalYearCo
     {
         var fiscalYear = new SysFiscalYear
         {
-            RowId = request.FiscalYearId,
+            Id = request.FiscalYearId,
             CompanyId = request.CompanyId,
             BranchId = request.BranchId,
             FiscalYearCode = request.FiscalYearCode,
-            RowDesc = request.FiscalYearNameAr,
-            RowDescE = request.FiscalYearNameEn,
+            FiscalYearNameAr = request.FiscalYearNameAr,
+            FiscalYearNameEn = request.FiscalYearNameEn,
             StartDate = request.StartDate,
             EndDate = request.EndDate,
             IsClosed = request.IsClosed,
