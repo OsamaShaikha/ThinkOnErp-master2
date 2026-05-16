@@ -33,7 +33,7 @@ public class GetSavedSearchesQueryHandler : IRequestHandler<GetSavedSearchesQuer
 
             var dtos = savedSearches.Select(s => new SavedSearchDto
             {
-                SavedSearchId = s.RowId,
+                SavedSearchId = s.Id,
                 UserId = s.UserId,
                 UserName = s.User?.FullNameEn,
                 SearchName = s.SearchName,

@@ -1,4 +1,4 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using ThinkOnErp.Domain.Entities;
 using ThinkOnErp.Domain.Interfaces;
 using ThinkOnErp.Infrastructure.Data;
@@ -7,8 +7,8 @@ namespace ThinkOnErp.Infrastructure.Repositories;
 
 public class TicketStatusRepository : ITicketStatusRepository
 {
-    private readonly ThinkOnErpDbContext _context;
-    public TicketStatusRepository(ThinkOnErpDbContext context) => _context = context;
+    private readonly OracleDbContext _context;
+    public TicketStatusRepository(OracleDbContext context) => _context = context;
 
     public async Task<List<SysTicketStatus>> GetAllAsync() =>
         await _context.SysTicketStatuses.Where(s => s.IsActive).OrderBy(s => s.DisplayOrder).ToListAsync();
@@ -40,7 +40,7 @@ public class TicketStatusRepository : ITicketStatusRepository
         var result = new List<(SysTicketStatus, int)>();
         foreach (var status in statuses)
         {
-            var query = _context.SysRequestTickets.Where(t => t.TicketStatusId == status.RowId).AsQueryable();
+            var query = _context.SysRequestTickets.Where(t => t.TicketStatusId == status.Id).AsQueryable();
             if (fromDate.HasValue) query = query.Where(t => t.CreationDate >= fromDate.Value);
             if (toDate.HasValue) query = query.Where(t => t.CreationDate <= toDate.Value);
             if (companyId.HasValue) query = query.Where(t => t.CompanyId == companyId.Value);

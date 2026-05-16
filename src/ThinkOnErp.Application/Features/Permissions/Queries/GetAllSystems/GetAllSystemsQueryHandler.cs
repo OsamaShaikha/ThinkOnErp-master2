@@ -23,7 +23,7 @@ public class GetAllSystemsQueryHandler : IRequestHandler<GetAllSystemsQuery, Lis
 
         return systems.Select(s => new SystemDto
         {
-            SystemId = s.RowId,
+            SystemId = s.Id,
             SystemCode = s.SystemCode,
             SystemNameAr = s.SystemName,
             SystemNameEn = s.SystemNameE,

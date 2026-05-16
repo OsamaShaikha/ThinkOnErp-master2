@@ -38,7 +38,7 @@ public class GetTicketTypeByIdQueryHandler : IRequestHandler<GetTicketTypeByIdQu
 
             var dto = new TicketTypeDto
             {
-                TicketTypeId = ticketType.RowId,
+                TicketTypeId = ticketType.Id,
                 TypeNameAr = ticketType.TypeNameAr,
                 TypeNameEn = ticketType.TypeNameEn,
                 DescriptionAr = ticketType.DescriptionAr,

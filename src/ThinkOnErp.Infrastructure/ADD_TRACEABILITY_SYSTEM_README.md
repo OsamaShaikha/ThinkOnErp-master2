@@ -63,7 +63,7 @@ services.AddTraceabilitySystem(configuration);
 |---------|-----------|----------|---------|
 | `ArchivalService` | `IArchivalService` | Scoped | Data retention and cold storage management |
 | `CompressionService` | `ICompressionService` | Scoped | GZip compression for archived data |
-| `ExternalStorageProviderFactory` | `IExternalStorageProviderFactory` | Singleton | Factory for S3/Azure Blob storage providers |
+| `ExternalStorageProviderFactory` | `IExternalStorageProviderFactory` | Singleton | Factory for S3/Azure CLOB storage providers |
 
 **Why these lifetimes?**
 - Archival and Compression services are Scoped for database transaction management

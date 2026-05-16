@@ -10,7 +10,7 @@ public class SysRequestTicket
     /// <summary>
     /// Primary key - generated from SEQ_SYS_REQUEST_TICKET sequence
     /// </summary>
-    public Int64 RowId { get; set; }
+    public Int64 Id { get; set; }
 
     /// <summary>
     /// Ticket title in Arabic (5-200 characters)

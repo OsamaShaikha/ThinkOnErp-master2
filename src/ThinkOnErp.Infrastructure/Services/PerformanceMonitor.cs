@@ -1,6 +1,7 @@
 using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.IO;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Oracle.ManagedDataAccess.Client;
@@ -563,11 +564,9 @@ public class PerformanceMonitor : IPerformanceMonitor
                 return (0, 100);
             }
 
-            // Create a temporary connection to access pool configuration
-            using var connection = dbContext.CreateConnection();
-            
             // Parse connection string to get pool configuration
-            var builder = new OracleConnectionStringBuilder(connection.ConnectionString);
+            var connStr = dbContext.Database.GetConnectionString();
+            var builder = new OracleConnectionStringBuilder(connStr);
             var maxPoolSize = builder.MaxPoolSize;
             
             // Note: Oracle.ManagedDataAccess.Client does not expose real-time connection pool statistics
@@ -704,11 +703,9 @@ public class PerformanceMonitor : IPerformanceMonitor
                 return CreateDefaultConnectionPoolMetrics();
             }
 
-            // Create a connection to access pool configuration and query database
-            using var connection = dbContext.CreateConnection();
-            
             // Parse connection string to get pool configuration
-            var builder = new OracleConnectionStringBuilder(connection.ConnectionString);
+            var connStr = dbContext.Database.GetConnectionString();
+            var builder = new OracleConnectionStringBuilder(connStr);
             var maxPoolSize = builder.MaxPoolSize;
             var minPoolSize = builder.MinPoolSize;
             var connectionTimeout = builder.ConnectionTimeout;
@@ -722,26 +719,20 @@ public class PerformanceMonitor : IPerformanceMonitor
             
             try
             {
-                await connection.OpenAsync();
-                
-                // Query V$SESSION to count connections from our application
-                // Filter by username to get connections from this application
-                using var command = connection.CreateCommand();
-                command.CommandText = @"
+                var username = builder.UserID.ToUpperInvariant();
+                var sessionRow = await dbContext.Database.SqlQueryRaw<SessionCountRow>(@"
                     SELECT 
                         COUNT(CASE WHEN status = 'ACTIVE' THEN 1 END) as active_count,
                         COUNT(CASE WHEN status = 'INACTIVE' THEN 1 END) as inactive_count
                     FROM V$SESSION 
                     WHERE username = :username 
-                    AND type = 'USER'";
+                    AND type = 'USER'", new OracleParameter("username", username))
+                    .FirstOrDefaultAsync();
                 
-                command.Parameters.Add(new OracleParameter("username", builder.UserID.ToUpperInvariant()));
-                
-                using var reader = await command.ExecuteReaderAsync();
-                if (await reader.ReadAsync())
+                if (sessionRow != null)
                 {
-                    activeConnections = reader.IsDBNull(0) ? 0 : reader.GetInt32(0);
-                    idleConnections = reader.IsDBNull(1) ? 0 : reader.GetInt32(1);
+                    activeConnections = sessionRow.ActiveCount;
+                    idleConnections = sessionRow.InactiveCount;
                 }
             }
             catch (OracleException ex) when (ex.Number == 942) // ORA-00942: table or view does not exist
@@ -892,4 +883,13 @@ public class PerformanceMonitor : IPerformanceMonitor
                 metrics.CorrelationId);
         }
     }
+}
+
+/// <summary>
+/// POCO for deserializing V$SESSION query results via SqlQueryRaw.
+/// </summary>
+public class SessionCountRow
+{
+    public int ActiveCount { get; set; }
+    public int InactiveCount { get; set; }
 }

@@ -650,7 +650,7 @@ public class DatabaseSchemaIntegrationTests : IDisposable
     #region Data Type Verification Tests
 
     [Theory]
-    [InlineData("SYS_AUDIT_LOG", "CORRELATION_ID", "NVARCHAR2")]
+    [InlineData("SYS_AUDIT_LOG", "CORRELATION_ID", "VARCHAR2")]
     [InlineData("SYS_AUDIT_LOG", "EXECUTION_TIME_MS", "NUMBER")]
     [InlineData("SYS_AUDIT_LOG", "REQUEST_PAYLOAD", "CLOB")]
     [InlineData("SYS_AUDIT_LOG", "RESPONSE_PAYLOAD", "CLOB")]

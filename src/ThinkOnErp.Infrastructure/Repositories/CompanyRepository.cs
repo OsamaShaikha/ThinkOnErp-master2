@@ -1,4 +1,4 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using ThinkOnErp.Domain.Entities;
 using ThinkOnErp.Domain.Interfaces;
 using ThinkOnErp.Infrastructure.Data;
@@ -7,9 +7,9 @@ namespace ThinkOnErp.Infrastructure.Repositories;
 
 public class CompanyRepository : ICompanyRepository
 {
-    private readonly ThinkOnErpDbContext _context;
+    private readonly OracleDbContext _context;
 
-    public CompanyRepository(ThinkOnErpDbContext context)
+    public CompanyRepository(OracleDbContext context)
     {
         _context = context;
     }
@@ -139,7 +139,7 @@ public class CompanyRepository : ICompanyRepository
                 CompanyId = company.Id,
                 BranchId = branch.Id,
                 FiscalYearCode = $"FY{DateTime.Now.Year}",
-                FiscalYearNameAr = $"السنة المالية {DateTime.Now.Year}",
+                FiscalYearNameAr = $"Ø§Ù„Ø³Ù†Ø© Ø§Ù„Ù…Ø§Ù„ÙŠØ© {DateTime.Now.Year}",
                 FiscalYearNameEn = $"Fiscal Year {DateTime.Now.Year}",
                 StartDate = new DateTime(DateTime.Now.Year, 1, 1),
                 EndDate = new DateTime(DateTime.Now.Year, 12, 31),

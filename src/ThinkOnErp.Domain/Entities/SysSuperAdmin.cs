@@ -5,9 +5,9 @@ namespace ThinkOnErp.Domain.Entities;
 /// </summary>
 public class SysSuperAdmin
 {
-    public long RowId { get; set; }
-    public string RowDesc { get; set; } = string.Empty;
-    public string RowDescE { get; set; } = string.Empty;
+    public long Id { get; set; }
+    public string NameAr { get; set; } = string.Empty;
+    public string NameEn { get; set; } = string.Empty;
     public string UserName { get; set; } = string.Empty;
     public string Password { get; set; } = string.Empty;
     public string? Email { get; set; }

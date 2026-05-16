@@ -15,7 +15,7 @@ namespace ThinkOnErp.Infrastructure.Tests.Integration;
 /// These tests verify that the external storage providers can be created and basic operations work.
 /// 
 /// **Validates: Task 19.9 - External Storage Integration Tests**
-/// - S3 and Azure Blob Storage provider creation
+/// - S3 and Azure CLOB Storage provider creation
 /// - Basic configuration validation
 /// - Factory pattern functionality
 /// </summary>
@@ -62,11 +62,11 @@ public class ExternalStorageBasicIntegrationTests : IDisposable
 
         // Act
         _output.WriteLine("Testing Azure provider creation...");
-        var provider = factory.CreateProvider("AzureBlob", connectionString);
+        var provider = factory.CreateProvider("AzureCLOB", connectionString);
 
         // Assert
         Assert.NotNull(provider);
-        Assert.Equal("AzureBlob", provider.ProviderName);
+        Assert.Equal("AzureCLOB", provider.ProviderName);
         _output.WriteLine("Azure provider created successfully");
     }
 
@@ -88,8 +88,8 @@ public class ExternalStorageBasicIntegrationTests : IDisposable
     [Theory]
     [InlineData("S3", "Region=us-east-1")] // Missing BucketName
     [InlineData("S3", "BucketName=")] // Empty BucketName
-    [InlineData("AzureBlob", "AccountName=test")] // Missing ContainerName
-    [InlineData("AzureBlob", "ContainerName=")] // Empty ContainerName
+    [InlineData("AzureCLOB", "AccountName=test")] // Missing ContainerName
+    [InlineData("AzureCLOB", "ContainerName=")] // Empty ContainerName
     public void ExternalStorageProviderFactory_InvalidConnectionString_ShouldThrowException(string providerType, string connectionString)
     {
         // Arrange
@@ -107,7 +107,7 @@ public class ExternalStorageBasicIntegrationTests : IDisposable
         // Arrange
         var factory = _serviceProvider.GetRequiredService<IExternalStorageProviderFactory>();
         var s3Provider = factory.CreateProvider("S3", "BucketName=test-bucket;Region=us-east-1");
-        var azureProvider = factory.CreateProvider("AzureBlob", "ContainerName=test-container");
+        var azureProvider = factory.CreateProvider("AzureCLOB", "ContainerName=test-container");
 
         // Act & Assert
         _output.WriteLine("Testing health checks...");
@@ -146,12 +146,12 @@ public class ExternalStorageBasicIntegrationTests : IDisposable
 
         // Act
         var s3Provider = factory.CreateProvider("S3", "BucketName=test;Region=us-east-1");
-        var azureProvider = factory.CreateProvider("AzureBlob", "ContainerName=test");
+        var azureProvider = factory.CreateProvider("AzureCLOB", "ContainerName=test");
 
         // Assert
         _output.WriteLine("Testing provider names...");
         Assert.Equal("S3", s3Provider.ProviderName);
-        Assert.Equal("AzureBlob", azureProvider.ProviderName);
+        Assert.Equal("AzureCLOB", azureProvider.ProviderName);
         _output.WriteLine("Provider names are correct");
     }
 

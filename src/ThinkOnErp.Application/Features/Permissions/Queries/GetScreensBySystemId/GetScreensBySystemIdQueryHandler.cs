@@ -23,7 +23,7 @@ public class GetScreensBySystemIdQueryHandler : IRequestHandler<GetScreensBySyst
 
         return screens.Select(s => new ScreenDto
         {
-            ScreenId = s.RowId,
+            ScreenId = s.Id,
             SystemId = s.SystemId,
             ParentScreenId = s.ParentScreenId,
             ScreenCode = s.ScreenCode,

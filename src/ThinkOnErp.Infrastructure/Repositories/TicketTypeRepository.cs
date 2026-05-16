@@ -1,4 +1,4 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using ThinkOnErp.Domain.Entities;
 using ThinkOnErp.Domain.Interfaces;
 using ThinkOnErp.Infrastructure.Data;
@@ -7,20 +7,20 @@ namespace ThinkOnErp.Infrastructure.Repositories;
 
 public class TicketTypeRepository : ITicketTypeRepository
 {
-    private readonly ThinkOnErpDbContext _context;
-    public TicketTypeRepository(ThinkOnErpDbContext context) => _context = context;
+    private readonly OracleDbContext _context;
+    public TicketTypeRepository(OracleDbContext context) => _context = context;
 
     public async Task<List<SysTicketType>> GetAllAsync() =>
         await _context.SysTicketTypes.Where(t => t.IsActive).Include(t => t.DefaultPriority).ToListAsync();
 
     public async Task<SysTicketType?> GetByIdAsync(long rowId) =>
-        await _context.SysTicketTypes.Include(t => t.DefaultPriority).FirstOrDefaultAsync(t => t.RowId == rowId);
+        await _context.SysTicketTypes.Include(t => t.DefaultPriority).FirstOrDefaultAsync(t => t.Id == rowId);
 
     public async Task<long> CreateAsync(SysTicketType ticketType)
     {
         _context.SysTicketTypes.Add(ticketType);
         await _context.SaveChangesAsync();
-        return ticketType.RowId;
+        return ticketType.Id;
     }
 
     public async Task<long> UpdateAsync(SysTicketType ticketType)
@@ -51,7 +51,7 @@ public class TicketTypeRepository : ITicketTypeRepository
         if (toDate.HasValue) tickets = tickets.Where(t => t.CreationDate <= toDate.Value);
 
         var result = await query
-            .GroupJoin(tickets, type => type.RowId, ticket => ticket.TicketTypeId,
+            .GroupJoin(tickets, type => type.Id, ticket => ticket.TicketTypeId,
                 (type, ticketGroup) => new { Type = type, Count = ticketGroup.Count() })
             .OrderByDescending(x => x.Count)
             .ToListAsync();

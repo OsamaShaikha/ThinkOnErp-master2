@@ -24,7 +24,7 @@ public interface IArchivalService
     /// Archive audit data within a specific date range regardless of retention policies.
     /// Useful for manual archival operations or compliance-driven data management.
     /// Moves data from SYS_AUDIT_LOG to SYS_AUDIT_LOG_ARCHIVE table.
-    /// Supports external storage (S3, Azure Blob) for cold storage.
+    /// Supports external storage (S3, Azure CLOB) for cold storage.
     /// </summary>
     /// <param name="startDate">Start date of the range to archive (inclusive)</param>
     /// <param name="endDate">End date of the range to archive (inclusive)</param>

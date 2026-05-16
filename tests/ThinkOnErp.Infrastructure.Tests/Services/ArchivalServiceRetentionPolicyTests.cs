@@ -267,7 +267,7 @@ public class ArchivalServiceRetentionPolicyTests : IDisposable
         foreach (var category in categories)
         {
             using var command = new OracleCommand(sql, connection);
-            command.Parameters.Add(":EventCategory", OracleDbType.NVarchar2).Value = category;
+            command.Parameters.Add(":EventCategory", OracleDbType.VARCHAR2).Value = category;
             command.Parameters.Add(":CreationDate", OracleDbType.Date).Value = DateTime.UtcNow.AddDays(-400); // Old enough to archive
             
             await command.ExecuteNonQueryAsync();
@@ -303,7 +303,7 @@ public class ArchivalServiceRetentionPolicyTests : IDisposable
         foreach (var (category, date) in testData)
         {
             using var command = new OracleCommand(sql, connection);
-            command.Parameters.Add(":EventCategory", OracleDbType.NVarchar2).Value = category;
+            command.Parameters.Add(":EventCategory", OracleDbType.VARCHAR2).Value = category;
             command.Parameters.Add(":CreationDate", OracleDbType.Date).Value = date;
             
             await command.ExecuteNonQueryAsync();
@@ -339,8 +339,8 @@ public class ArchivalServiceRetentionPolicyTests : IDisposable
         foreach (var (category, action, date) in testData)
         {
             using var command = new OracleCommand(sql, connection);
-            command.Parameters.Add(":Action", OracleDbType.NVarchar2).Value = action;
-            command.Parameters.Add(":EventCategory", OracleDbType.NVarchar2).Value = category;
+            command.Parameters.Add(":Action", OracleDbType.VARCHAR2).Value = action;
+            command.Parameters.Add(":EventCategory", OracleDbType.VARCHAR2).Value = category;
             command.Parameters.Add(":CreationDate", OracleDbType.Date).Value = date;
             
             await command.ExecuteNonQueryAsync();

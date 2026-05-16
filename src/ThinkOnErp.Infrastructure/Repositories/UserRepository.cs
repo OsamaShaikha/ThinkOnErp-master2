@@ -1,4 +1,4 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using ThinkOnErp.Domain.Entities;
 using ThinkOnErp.Domain.Interfaces;
 using ThinkOnErp.Infrastructure.Data;
@@ -7,9 +7,9 @@ namespace ThinkOnErp.Infrastructure.Repositories;
 
 public class UserRepository : IUserRepository
 {
-    private readonly ThinkOnErpDbContext _context;
+    private readonly OracleDbContext _context;
 
-    public UserRepository(ThinkOnErpDbContext context) => _context = context;
+    public UserRepository(OracleDbContext context) => _context = context;
 
     public async Task<List<SysUser>> GetAllAsync() =>
         await _context.SysUsers.Where(u => u.IsActive).ToListAsync();

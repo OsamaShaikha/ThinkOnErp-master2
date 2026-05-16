@@ -10,7 +10,7 @@ public class SysTicketStatus
     /// <summary>
     /// Primary key - generated from SEQ_SYS_TICKET_STATUS sequence
     /// </summary>
-    public Int64 RowId { get; set; }
+    public Int64 Id { get; set; }
 
     /// <summary>
     /// Status name in Arabic

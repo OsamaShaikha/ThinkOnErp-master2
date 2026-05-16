@@ -1,10 +1,9 @@
-using System.Data;
 using System.Text.Json;
 using System.Text.RegularExpressions;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
-using Oracle.ManagedDataAccess.Client;
-using Oracle.ManagedDataAccess.Types;
+using ThinkOnErp.Domain.Entities;
 using ThinkOnErp.Domain.Interfaces;
 using ThinkOnErp.Domain.Models;
 using ThinkOnErp.Infrastructure.Data;
@@ -112,69 +111,37 @@ public class LegacyAuditService : ILegacyAuditService
     {
         try
         {
-            using var connection = _dbContext.CreateConnection();
-            await connection.OpenAsync();
+            var query = _dbContext.SysAuditLogs.AsQueryable();
 
-            using var command = connection.CreateCommand();
-            command.CommandText = "SP_SYS_AUDIT_LOG_LEGACY_SELECT";
-            command.CommandType = CommandType.StoredProcedure;
+            if (!string.IsNullOrWhiteSpace(filter.Company))
+                query = query.Where(a => a.CompanyId.HasValue && _dbContext.SysCompanies.Any(c => c.Id == a.CompanyId.Value && c.CompanyNameEn!.Contains(filter.Company)));
+            if (!string.IsNullOrWhiteSpace(filter.Module))
+                query = query.Where(a => a.BusinessModule != null && a.BusinessModule.Contains(filter.Module));
+            if (!string.IsNullOrWhiteSpace(filter.Branch))
+                query = query.Where(a => a.BranchId.HasValue && _dbContext.SysBranches.Any(b => b.Id == a.BranchId.Value && b.BranchNameEn!.Contains(filter.Branch)));
+            if (!string.IsNullOrWhiteSpace(filter.Status))
+                query = query.Where(a => a.Status == filter.Status);
+            if (filter.StartDate.HasValue)
+                query = query.Where(a => a.CreationDate >= filter.StartDate.Value);
+            if (filter.EndDate.HasValue)
+                query = query.Where(a => a.CreationDate <= filter.EndDate.Value);
+            if (!string.IsNullOrWhiteSpace(filter.SearchTerm))
+                query = query.Where(a => a.Action.Contains(filter.SearchTerm) || a.EntityType.Contains(filter.SearchTerm) || (a.BusinessDescription != null && a.BusinessDescription.Contains(filter.SearchTerm)));
 
-            // Add filter parameters
-            command.Parameters.Add("p_company", OracleDbType.NVarchar2, 200).Value = filter.Company ?? (object)DBNull.Value;
-            command.Parameters.Add("p_module", OracleDbType.NVarchar2, 50).Value = filter.Module ?? (object)DBNull.Value;
-            command.Parameters.Add("p_branch", OracleDbType.NVarchar2, 200).Value = filter.Branch ?? (object)DBNull.Value;
-            command.Parameters.Add("p_status", OracleDbType.NVarchar2, 20).Value = filter.Status ?? (object)DBNull.Value;
-            command.Parameters.Add("p_start_date", OracleDbType.Date).Value = filter.StartDate ?? (object)DBNull.Value;
-            command.Parameters.Add("p_end_date", OracleDbType.Date).Value = filter.EndDate ?? (object)DBNull.Value;
-            command.Parameters.Add("p_search_term", OracleDbType.NVarchar2, 500).Value = filter.SearchTerm ?? (object)DBNull.Value;
-            command.Parameters.Add("p_page_number", OracleDbType.Int32).Value = pagination.PageNumber;
-            command.Parameters.Add("p_page_size", OracleDbType.Int32).Value = pagination.PageSize;
-            
-            // Output parameters
-            command.Parameters.Add("p_total_count", OracleDbType.Int32).Direction = ParameterDirection.Output;
-            command.Parameters.Add("p_result", OracleDbType.RefCursor).Direction = ParameterDirection.Output;
+            var totalCount = await query.CountAsync();
 
-            using var reader = await command.ExecuteReaderAsync();
+            var skip = (pagination.PageNumber - 1) * pagination.PageSize;
+            var auditLogs = await query
+                .OrderByDescending(a => a.CreationDate)
+                .Skip(skip)
+                .Take(pagination.PageSize)
+                .ToListAsync();
+
             var items = new List<LegacyAuditLogDto>();
-
-            while (await reader.ReadAsync())
+            foreach (var log in auditLogs)
             {
-                var item = new LegacyAuditLogDto
-                {
-                    Id = reader.GetInt64(reader.GetOrdinal("ROW_ID")),
-                    ErrorDescription = reader.IsDBNull(reader.GetOrdinal("BUSINESS_DESCRIPTION")) 
-                        ? await GenerateBusinessDescriptionFromReader(reader)
-                        : reader.GetString(reader.GetOrdinal("BUSINESS_DESCRIPTION")),
-                    Module = reader.IsDBNull(reader.GetOrdinal("BUSINESS_MODULE")) 
-                        ? await DetermineBusinessModuleAsync(
-                            reader.IsDBNull(reader.GetOrdinal("ENTITY_TYPE")) ? "Unknown" : reader.GetString(reader.GetOrdinal("ENTITY_TYPE")),
-                            reader.IsDBNull(reader.GetOrdinal("ENDPOINT_PATH")) ? null : reader.GetString(reader.GetOrdinal("ENDPOINT_PATH")))
-                        : reader.GetString(reader.GetOrdinal("BUSINESS_MODULE")),
-                    Company = reader.IsDBNull(reader.GetOrdinal("COMPANY_NAME")) ? "Unknown" : reader.GetString(reader.GetOrdinal("COMPANY_NAME")),
-                    Branch = reader.IsDBNull(reader.GetOrdinal("BRANCH_NAME")) ? "Unknown" : reader.GetString(reader.GetOrdinal("BRANCH_NAME")),
-                    User = reader.IsDBNull(reader.GetOrdinal("ACTOR_NAME")) ? "System" : reader.GetString(reader.GetOrdinal("ACTOR_NAME")),
-                    Device = reader.IsDBNull(reader.GetOrdinal("DEVICE_IDENTIFIER")) 
-                        ? await ExtractDeviceIdentifierAsync(
-                            reader.IsDBNull(reader.GetOrdinal("USER_AGENT")) ? "" : reader.GetString(reader.GetOrdinal("USER_AGENT")),
-                            reader.IsDBNull(reader.GetOrdinal("IP_ADDRESS")) ? null : reader.GetString(reader.GetOrdinal("IP_ADDRESS")))
-                        : reader.GetString(reader.GetOrdinal("DEVICE_IDENTIFIER")),
-                    DateTime = reader.GetDateTime(reader.GetOrdinal("CREATION_DATE")),
-                    Status = await GetCurrentStatusFromReader(reader),
-                    ErrorCode = reader.IsDBNull(reader.GetOrdinal("ERROR_CODE")) 
-                        ? await GenerateErrorCodeAsync(
-                            reader.IsDBNull(reader.GetOrdinal("EXCEPTION_TYPE")) ? "Unknown" : reader.GetString(reader.GetOrdinal("EXCEPTION_TYPE")),
-                            reader.IsDBNull(reader.GetOrdinal("ENTITY_TYPE")) ? "Unknown" : reader.GetString(reader.GetOrdinal("ENTITY_TYPE")))
-                        : reader.GetString(reader.GetOrdinal("ERROR_CODE")),
-                    CorrelationId = reader.IsDBNull(reader.GetOrdinal("CORRELATION_ID")) ? null : reader.GetString(reader.GetOrdinal("CORRELATION_ID")),
-                    CanResolve = true, // TODO: Implement permission-based logic
-                    CanDelete = false, // Audit logs should not be deletable
-                    CanViewDetails = true
-                };
-
-                items.Add(item);
+                items.Add(await TransformToLegacyFormatAsync(MapToAuditLogEntry(log)));
             }
-
-            var totalCount = (int)((OracleDecimal)command.Parameters["p_total_count"].Value).Value;
 
             return new PagedResult<LegacyAuditLogDto>
             {
@@ -191,32 +158,60 @@ public class LegacyAuditService : ILegacyAuditService
         }
     }
 
+    private static AuditLogEntry MapToAuditLogEntry(SysAuditLog log)
+    {
+        return new AuditLogEntry
+        {
+            Id = log.Id,
+            CorrelationId = log.CorrelationId,
+            ActorType = log.ActorType,
+            ActorId = log.ActorId,
+            CompanyId = log.CompanyId,
+            BranchId = log.BranchId,
+            Action = log.Action,
+            EntityType = log.EntityType,
+            EntityId = log.EntityId,
+            OldValue = log.OldValue,
+            NewValue = log.NewValue,
+            IpAddress = log.IpAddress,
+            UserAgent = log.UserAgent,
+            HttpMethod = log.HttpMethod,
+            EndpointPath = log.EndpointPath,
+            RequestPayload = log.RequestPayload,
+            ResponsePayload = log.ResponsePayload,
+            ExecutionTimeMs = log.ExecutionTimeMs,
+            StatusCode = log.StatusCode,
+            ExceptionType = log.ExceptionType,
+            ExceptionMessage = log.ExceptionMessage,
+            StackTrace = log.StackTrace,
+            Severity = log.Severity ?? "Info",
+            EventCategory = log.EventCategory ?? "DataChange",
+            Metadata = log.Metadata,
+            CreationDate = log.CreationDate,
+            BusinessModule = log.BusinessModule,
+            BusinessDescription = log.BusinessDescription,
+            DeviceIdentifier = log.DeviceIdentifier,
+            ErrorCode = log.ErrorCode
+        };
+    }
+
     /// <inheritdoc/>
     public async Task<LegacyDashboardCounters> GetLegacyDashboardCountersAsync()
     {
         try
         {
-            using var connection = _dbContext.CreateConnection();
-            await connection.OpenAsync();
-
-            using var command = connection.CreateCommand();
-            command.CommandText = "SP_SYS_AUDIT_LOG_STATUS_COUNTERS";
-            command.CommandType = CommandType.StoredProcedure;
-
-            // Output parameters for each status count
-            command.Parameters.Add("p_unresolved_count", OracleDbType.Int32).Direction = ParameterDirection.Output;
-            command.Parameters.Add("p_in_progress_count", OracleDbType.Int32).Direction = ParameterDirection.Output;
-            command.Parameters.Add("p_resolved_count", OracleDbType.Int32).Direction = ParameterDirection.Output;
-            command.Parameters.Add("p_critical_count", OracleDbType.Int32).Direction = ParameterDirection.Output;
-
-            await command.ExecuteNonQueryAsync();
+            var allLogs = _dbContext.SysAuditLogs;
+            var unresolvedCount = await allLogs.CountAsync(a => a.Status == null || a.Status == "Unresolved");
+            var inProgressCount = await allLogs.CountAsync(a => a.Status == "InProgress");
+            var resolvedCount = await allLogs.CountAsync(a => a.Status == "Resolved");
+            var criticalCount = await allLogs.CountAsync(a => a.Severity == "Critical" || a.Severity == "High");
 
             return new LegacyDashboardCounters
             {
-                UnresolvedCount = (int)((OracleDecimal)command.Parameters["p_unresolved_count"].Value).Value,
-                InProgressCount = (int)((OracleDecimal)command.Parameters["p_in_progress_count"].Value).Value,
-                ResolvedCount = (int)((OracleDecimal)command.Parameters["p_resolved_count"].Value).Value,
-                CriticalErrorsCount = (int)((OracleDecimal)command.Parameters["p_critical_count"].Value).Value
+                UnresolvedCount = unresolvedCount,
+                InProgressCount = inProgressCount,
+                ResolvedCount = resolvedCount,
+                CriticalErrorsCount = criticalCount
             };
         }
         catch (Exception ex)
@@ -231,20 +226,18 @@ public class LegacyAuditService : ILegacyAuditService
     {
         try
         {
-            using var connection = _dbContext.CreateConnection();
-            await connection.OpenAsync();
+            var auditLog = await _dbContext.SysAuditLogs.FindAsync(auditLogId);
+            if (auditLog == null)
+            {
+                _logger.LogWarning("Audit log not found: {AuditLogId}", auditLogId);
+                return;
+            }
 
-            using var command = connection.CreateCommand();
-            command.CommandText = "SP_SYS_AUDIT_STATUS_UPDATE";
-            command.CommandType = CommandType.StoredProcedure;
+            auditLog.Status = status;
+            if (!string.IsNullOrWhiteSpace(resolutionNotes))
+                auditLog.Metadata = resolutionNotes;
 
-            command.Parameters.Add("p_audit_log_id", OracleDbType.Int64).Value = auditLogId;
-            command.Parameters.Add("p_status", OracleDbType.NVarchar2, 20).Value = status;
-            command.Parameters.Add("p_resolution_notes", OracleDbType.NVarchar2, 4000).Value = resolutionNotes ?? (object)DBNull.Value;
-            command.Parameters.Add("p_assigned_to_user_id", OracleDbType.Int64).Value = assignedToUserId ?? (object)DBNull.Value;
-            command.Parameters.Add("p_status_changed_by", OracleDbType.Int64).Value = 1; // TODO: Get from current user context
-
-            await command.ExecuteNonQueryAsync();
+            await _dbContext.SaveChangesAsync();
 
             _logger.LogInformation("Updated audit log {AuditLogId} status to {Status}", auditLogId, status);
         }
@@ -260,25 +253,16 @@ public class LegacyAuditService : ILegacyAuditService
     {
         try
         {
-            using var connection = _dbContext.CreateConnection();
-            await connection.OpenAsync();
-
-            using var command = connection.CreateCommand();
-            command.CommandText = "SP_SYS_AUDIT_STATUS_GET_CURRENT";
-            command.CommandType = CommandType.StoredProcedure;
-
-            command.Parameters.Add("p_audit_log_id", OracleDbType.Int64).Value = auditLogId;
-            command.Parameters.Add("p_status", OracleDbType.NVarchar2, 20).Direction = ParameterDirection.Output;
-
-            await command.ExecuteNonQueryAsync();
-
-            var status = command.Parameters["p_status"].Value?.ToString();
-            return status ?? "Unresolved"; // Default status
+            var auditLog = await _dbContext.SysAuditLogs
+                .Where(a => a.Id == auditLogId)
+                .Select(a => a.Status)
+                .FirstOrDefaultAsync();
+            return auditLog ?? "Unresolved";
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to get current status for audit log {AuditLogId}", auditLogId);
-            return "Unresolved"; // Default fallback
+            return "Unresolved";
         }
     }
 
@@ -289,7 +273,7 @@ public class LegacyAuditService : ILegacyAuditService
         {
             return new LegacyAuditLogDto
             {
-                Id = auditEntry.RowId,
+                Id = auditEntry.Id,
                 ErrorDescription = await GenerateBusinessDescriptionAsync(auditEntry),
                 Module = await DetermineBusinessModuleAsync(auditEntry.EntityType, auditEntry.EndpointPath),
                 Company = auditEntry.CompanyName ?? "Unknown",
@@ -297,7 +281,7 @@ public class LegacyAuditService : ILegacyAuditService
                 User = auditEntry.ActorName ?? "System",
                 Device = await ExtractDeviceIdentifierAsync(auditEntry.UserAgent ?? "", auditEntry.IpAddress),
                 DateTime = auditEntry.CreationDate,
-                Status = await GetCurrentStatusAsync(auditEntry.RowId),
+                Status = await GetCurrentStatusAsync(auditEntry.Id),
                 ErrorCode = await GenerateErrorCodeAsync(auditEntry.ExceptionType ?? "Unknown", auditEntry.EntityType),
                 CorrelationId = auditEntry.CorrelationId,
                 CanResolve = true,
@@ -307,7 +291,7 @@ public class LegacyAuditService : ILegacyAuditService
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to transform audit entry {AuditLogId} to legacy format", auditEntry.RowId);
+            _logger.LogError(ex, "Failed to transform audit entry {AuditLogId} to legacy format", auditEntry.Id);
             throw;
         }
     }
@@ -378,7 +362,7 @@ public class LegacyAuditService : ILegacyAuditService
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to generate business description for audit entry {AuditLogId}", auditEntry.RowId);
+            _logger.LogError(ex, "Failed to generate business description for audit entry {AuditLogId}", auditEntry.Id);
             return "System activity occurred";
         }
     }
@@ -946,51 +930,6 @@ public class LegacyAuditService : ILegacyAuditService
     }
 
     #region Private Helper Methods
-
-    private async Task<string> GenerateBusinessDescriptionFromReader(IDataReader reader)
-    {
-        var auditEntry = new AuditLogEntry
-        {
-            RowId = reader.GetInt64(reader.GetOrdinal("ROW_ID")),
-            Action = reader.IsDBNull(reader.GetOrdinal("ACTION")) ? "Unknown" : reader.GetString(reader.GetOrdinal("ACTION")),
-            EntityType = reader.IsDBNull(reader.GetOrdinal("ENTITY_TYPE")) ? "Unknown" : reader.GetString(reader.GetOrdinal("ENTITY_TYPE")),
-            ActorName = reader.IsDBNull(reader.GetOrdinal("ACTOR_NAME")) ? "System" : reader.GetString(reader.GetOrdinal("ACTOR_NAME")),
-            ExceptionType = reader.IsDBNull(reader.GetOrdinal("EXCEPTION_TYPE")) ? null : reader.GetString(reader.GetOrdinal("EXCEPTION_TYPE")),
-            ExceptionMessage = reader.IsDBNull(reader.GetOrdinal("EXCEPTION_MESSAGE")) ? null : reader.GetString(reader.GetOrdinal("EXCEPTION_MESSAGE")),
-            OldValue = reader.IsDBNull(reader.GetOrdinal("OLD_VALUE")) ? null : reader.GetString(reader.GetOrdinal("OLD_VALUE")),
-            NewValue = reader.IsDBNull(reader.GetOrdinal("NEW_VALUE")) ? null : reader.GetString(reader.GetOrdinal("NEW_VALUE")),
-            CompanyName = reader.IsDBNull(reader.GetOrdinal("COMPANY_NAME")) ? null : reader.GetString(reader.GetOrdinal("COMPANY_NAME")),
-            BranchName = reader.IsDBNull(reader.GetOrdinal("BRANCH_NAME")) ? null : reader.GetString(reader.GetOrdinal("BRANCH_NAME")),
-            EndpointPath = reader.IsDBNull(reader.GetOrdinal("ENDPOINT_PATH")) ? null : reader.GetString(reader.GetOrdinal("ENDPOINT_PATH")),
-            Severity = reader.IsDBNull(reader.GetOrdinal("SEVERITY")) ? "Info" : reader.GetString(reader.GetOrdinal("SEVERITY")),
-            EventCategory = reader.IsDBNull(reader.GetOrdinal("EVENT_CATEGORY")) ? "DataChange" : reader.GetString(reader.GetOrdinal("EVENT_CATEGORY")),
-            Metadata = reader.IsDBNull(reader.GetOrdinal("METADATA")) ? null : reader.GetString(reader.GetOrdinal("METADATA")),
-            CreationDate = reader.GetDateTime(reader.GetOrdinal("CREATION_DATE"))
-        };
-
-        return await GenerateBusinessDescriptionAsync(auditEntry);
-    }
-
-    private async Task<string> GetCurrentStatusFromReader(IDataReader reader)
-    {
-        // Try to get status from joined status tracking table
-        if (!reader.IsDBNull(reader.GetOrdinal("STATUS")))
-        {
-            return reader.GetString(reader.GetOrdinal("STATUS"));
-        }
-
-        // Fallback: determine status based on severity and event category
-        var severity = reader.IsDBNull(reader.GetOrdinal("SEVERITY")) ? "Info" : reader.GetString(reader.GetOrdinal("SEVERITY"));
-        var eventCategory = reader.IsDBNull(reader.GetOrdinal("EVENT_CATEGORY")) ? "DataChange" : reader.GetString(reader.GetOrdinal("EVENT_CATEGORY"));
-
-        return (severity, eventCategory) switch
-        {
-            ("Critical", _) => "Critical",
-            ("Error", _) => "Unresolved",
-            ("Warning", "Permission") => "Unresolved",
-            _ => "Resolved"
-        };
-    }
 
     private string GenerateInsertDescription(AuditLogEntry auditEntry)
     {

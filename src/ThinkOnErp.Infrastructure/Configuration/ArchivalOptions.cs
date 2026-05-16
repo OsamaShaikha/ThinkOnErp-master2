@@ -63,16 +63,16 @@ public class ArchivalOptions
 
     /// <summary>
     /// Storage provider for archived data.
-    /// Supported values: "Database", "FileSystem", "S3", "AzureBlob"
+    /// Supported values: "Database", "FileSystem", "S3", "AzureCLOB"
     /// Default: "Database"
     /// </summary>
     [Required(ErrorMessage = "StorageProvider is required")]
-    [RegularExpression("^(Database|FileSystem|S3|AzureBlob)$", ErrorMessage = "StorageProvider must be 'Database', 'FileSystem', 'S3', or 'AzureBlob'")]
+    [RegularExpression("^(Database|FileSystem|S3|AzureCLOB)$", ErrorMessage = "StorageProvider must be 'Database', 'FileSystem', 'S3', or 'AzureCLOB'")]
     public string StorageProvider { get; set; } = "Database";
 
     /// <summary>
     /// Connection string or configuration for the storage provider.
-    /// Required for FileSystem, S3, and AzureBlob providers.
+    /// Required for FileSystem, S3, and AzureCLOB providers.
     /// </summary>
     public string? StorageConnectionString { get; set; }
 

@@ -10,7 +10,7 @@ public class SysTicketAttachment
     /// <summary>
     /// Primary key - generated from SEQ_SYS_TICKET_ATTACHMENT sequence
     /// </summary>
-    public Int64 RowId { get; set; }
+    public Int64 Id { get; set; }
 
     /// <summary>
     /// Foreign key to SYS_REQUEST_TICKET table - the ticket this attachment belongs to
@@ -33,7 +33,7 @@ public class SysTicketAttachment
     public string MimeType { get; set; } = string.Empty;
 
     /// <summary>
-    /// File content stored as binary data (BLOB in database)
+    /// File content stored as binary data (CLOB in database)
     /// </summary>
     public byte[] FileContent { get; set; } = Array.Empty<byte>();
 

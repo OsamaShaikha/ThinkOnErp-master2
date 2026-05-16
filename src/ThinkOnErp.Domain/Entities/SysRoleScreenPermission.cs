@@ -8,7 +8,7 @@ public class SysRoleScreenPermission
     /// <summary>
     /// Unique identifier for the permission record
     /// </summary>
-    public Int64 RowId { get; set; }
+    public Int64 Id { get; set; }
 
     /// <summary>
     /// Foreign key to SYS_ROLE table

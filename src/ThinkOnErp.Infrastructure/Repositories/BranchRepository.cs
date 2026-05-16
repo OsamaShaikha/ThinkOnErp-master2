@@ -1,4 +1,4 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using ThinkOnErp.Domain.Entities;
 using ThinkOnErp.Domain.Interfaces;
 using ThinkOnErp.Infrastructure.Data;
@@ -7,9 +7,9 @@ namespace ThinkOnErp.Infrastructure.Repositories;
 
 public class BranchRepository : IBranchRepository
 {
-    private readonly ThinkOnErpDbContext _context;
+    private readonly OracleDbContext _context;
 
-    public BranchRepository(ThinkOnErpDbContext context) => _context = context;
+    public BranchRepository(OracleDbContext context) => _context = context;
 
     public async Task<List<SysBranch>> GetAllAsync() =>
         await _context.SysBranches.Where(b => b.IsActive).ToListAsync();

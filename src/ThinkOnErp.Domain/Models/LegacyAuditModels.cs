@@ -219,7 +219,7 @@ public class PagedResult<T>
 /// </summary>
 public class AuditLogEntry
 {
-    public long RowId { get; set; }
+    public long Id { get; set; }
     public string ActorType { get; set; } = null!;
     public long ActorId { get; set; }
     public string? ActorName { get; set; }

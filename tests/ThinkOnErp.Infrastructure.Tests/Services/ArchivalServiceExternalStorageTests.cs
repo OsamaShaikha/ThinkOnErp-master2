@@ -12,7 +12,7 @@ namespace ThinkOnErp.Infrastructure.Tests.Services;
 
 /// <summary>
 /// Integration tests for ArchivalService with external storage providers.
-/// Tests export to and import from external storage (S3, Azure Blob).
+/// Tests export to and import from external storage (S3, Azure CLOB).
 /// </summary>
 public class ArchivalServiceExternalStorageTests
 {

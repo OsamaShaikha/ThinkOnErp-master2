@@ -9,14 +9,14 @@ public class SysTicketTypeConfiguration : IEntityTypeConfiguration<SysTicketType
     public void Configure(EntityTypeBuilder<SysTicketType> builder)
     {
         builder.ToTable("SYS_TICKET_TYPE");
-        builder.HasKey(e => e.RowId);
-        builder.Property(e => e.RowId).HasColumnName("ROW_ID").ValueGeneratedOnAdd();
+        builder.HasKey(e => e.Id);
+        builder.Property(e => e.Id).ValueGeneratedOnAdd();
         builder.Property(e => e.TypeNameAr).HasColumnName("TYPE_NAME_AR").HasMaxLength(200).IsRequired();
         builder.Property(e => e.TypeNameEn).HasColumnName("TYPE_NAME_EN").HasMaxLength(200).IsRequired();
         builder.Property(e => e.DescriptionAr).HasColumnName("DESCRIPTION_AR").HasMaxLength(500);
         builder.Property(e => e.DescriptionEn).HasColumnName("DESCRIPTION_EN").HasMaxLength(500);
         builder.Property(e => e.DefaultPriorityId).HasColumnName("DEFAULT_PRIORITY_ID").IsRequired();
-        builder.Property(e => e.SlaTargetHours).HasColumnName("SLA_TARGET_HOURS").HasColumnType("DECIMAL(10,2)");
+        builder.Property(e => e.SlaTargetHours).HasColumnName("SLA_TARGET_HOURS").HasColumnType("NUMBER");
         builder.Property(e => e.IsActive).HasColumnName("IS_ACTIVE").HasConversion<string>(v => v ? "Y" : "N", v => v == "Y").HasMaxLength(1);
         builder.Property(e => e.CreationUser).HasColumnName("CREATION_USER").HasMaxLength(100).IsRequired();
         builder.Property(e => e.CreationDate).HasColumnName("CREATION_DATE");
@@ -32,13 +32,13 @@ public class SysTicketPriorityConfiguration : IEntityTypeConfiguration<SysTicket
     public void Configure(EntityTypeBuilder<SysTicketPriority> builder)
     {
         builder.ToTable("SYS_TICKET_PRIORITY");
-        builder.HasKey(e => e.RowId);
-        builder.Property(e => e.RowId).HasColumnName("ROW_ID").ValueGeneratedOnAdd();
+        builder.HasKey(e => e.Id);
+        builder.Property(e => e.Id).ValueGeneratedOnAdd();
         builder.Property(e => e.PriorityNameAr).HasColumnName("PRIORITY_NAME_AR").HasMaxLength(200).IsRequired();
         builder.Property(e => e.PriorityNameEn).HasColumnName("PRIORITY_NAME_EN").HasMaxLength(200).IsRequired();
         builder.Property(e => e.PriorityLevel).HasColumnName("PRIORITY_LEVEL").IsRequired();
-        builder.Property(e => e.SlaTargetHours).HasColumnName("SLA_TARGET_HOURS").HasColumnType("DECIMAL(10,2)");
-        builder.Property(e => e.EscalationThresholdHours).HasColumnName("ESCALATION_THRESHOLD_HOURS").HasColumnType("DECIMAL(10,2)");
+        builder.Property(e => e.SlaTargetHours).HasColumnName("SLA_TARGET_HOURS").HasColumnType("NUMBER");
+        builder.Property(e => e.EscalationThresholdHours).HasColumnName("ESCALATION_THRESHOLD_HOURS").HasColumnType("NUMBER");
         builder.Property(e => e.IsActive).HasColumnName("IS_ACTIVE").HasConversion<string>(v => v ? "Y" : "N", v => v == "Y").HasMaxLength(1);
         builder.Property(e => e.CreationUser).HasColumnName("CREATION_USER").HasMaxLength(100).IsRequired();
         builder.Property(e => e.CreationDate).HasColumnName("CREATION_DATE");
@@ -50,8 +50,8 @@ public class SysTicketStatusConfiguration : IEntityTypeConfiguration<SysTicketSt
     public void Configure(EntityTypeBuilder<SysTicketStatus> builder)
     {
         builder.ToTable("SYS_TICKET_STATUS");
-        builder.HasKey(e => e.RowId);
-        builder.Property(e => e.RowId).HasColumnName("ROW_ID").ValueGeneratedOnAdd();
+        builder.HasKey(e => e.Id);
+        builder.Property(e => e.Id).ValueGeneratedOnAdd();
         builder.Property(e => e.StatusNameAr).HasColumnName("STATUS_NAME_AR").HasMaxLength(200).IsRequired();
         builder.Property(e => e.StatusNameEn).HasColumnName("STATUS_NAME_EN").HasMaxLength(200).IsRequired();
         builder.Property(e => e.StatusCode).HasColumnName("STATUS_CODE").HasMaxLength(50).IsRequired();
@@ -69,8 +69,8 @@ public class SysTicketCategoryConfiguration : IEntityTypeConfiguration<SysTicket
     public void Configure(EntityTypeBuilder<SysTicketCategory> builder)
     {
         builder.ToTable("SYS_TICKET_CATEGORY");
-        builder.HasKey(e => e.RowId);
-        builder.Property(e => e.RowId).HasColumnName("ROW_ID").ValueGeneratedOnAdd();
+        builder.HasKey(e => e.Id);
+        builder.Property(e => e.Id).ValueGeneratedOnAdd();
         builder.Property(e => e.CategoryNameAr).HasColumnName("CATEGORY_NAME_AR").HasMaxLength(200).IsRequired();
         builder.Property(e => e.CategoryNameEn).HasColumnName("CATEGORY_NAME_EN").HasMaxLength(200).IsRequired();
         builder.Property(e => e.DescriptionAr).HasColumnName("DESCRIPTION_AR").HasMaxLength(500);
@@ -89,8 +89,8 @@ public class SysTicketCommentConfiguration : IEntityTypeConfiguration<SysTicketC
     public void Configure(EntityTypeBuilder<SysTicketComment> builder)
     {
         builder.ToTable("SYS_TICKET_COMMENT");
-        builder.HasKey(e => e.RowId);
-        builder.Property(e => e.RowId).HasColumnName("ROW_ID").ValueGeneratedOnAdd();
+        builder.HasKey(e => e.Id);
+        builder.Property(e => e.Id).ValueGeneratedOnAdd();
         builder.Property(e => e.TicketId).HasColumnName("TICKET_ID").IsRequired();
         builder.Property(e => e.CommentText).HasColumnName("COMMENT_TEXT").HasMaxLength(2000).IsRequired();
         builder.Property(e => e.IsInternal).HasColumnName("IS_INTERNAL").HasConversion<string>(v => v ? "Y" : "N", v => v == "Y").HasMaxLength(1);
@@ -106,11 +106,11 @@ public class SysTicketAttachmentConfiguration : IEntityTypeConfiguration<SysTick
     public void Configure(EntityTypeBuilder<SysTicketAttachment> builder)
     {
         builder.ToTable("SYS_TICKET_ATTACHMENT");
-        builder.HasKey(e => e.RowId);
-        builder.Property(e => e.RowId).HasColumnName("ROW_ID").ValueGeneratedOnAdd();
+        builder.HasKey(e => e.Id);
+        builder.Property(e => e.Id).ValueGeneratedOnAdd();
         builder.Property(e => e.TicketId).HasColumnName("TICKET_ID").IsRequired();
         builder.Property(e => e.FileName).HasColumnName("FILE_NAME").HasMaxLength(255).IsRequired();
-        builder.Property(e => e.FileContent).HasColumnName("FILE_CONTENT").HasColumnType("BLOB").IsRequired();
+        builder.Property(e => e.FileContent).HasColumnName("FILE_CONTENT").HasColumnType("CLOB").IsRequired();
         builder.Property(e => e.MimeType).HasColumnName("MIME_TYPE").HasMaxLength(100).IsRequired();
         builder.Property(e => e.FileSize).HasColumnName("FILE_SIZE");
         builder.Property(e => e.CreationUser).HasColumnName("CREATION_USER").HasMaxLength(100).IsRequired();
@@ -125,8 +125,8 @@ public class SysRequestTicketConfiguration : IEntityTypeConfiguration<SysRequest
     public void Configure(EntityTypeBuilder<SysRequestTicket> builder)
     {
         builder.ToTable("SYS_REQUEST_TICKET");
-        builder.HasKey(e => e.RowId);
-        builder.Property(e => e.RowId).HasColumnName("ROW_ID").ValueGeneratedOnAdd();
+        builder.HasKey(e => e.Id);
+        builder.Property(e => e.Id).ValueGeneratedOnAdd();
         builder.Property(e => e.TitleAr).HasColumnName("TITLE_AR").HasMaxLength(200).IsRequired();
         builder.Property(e => e.TitleEn).HasColumnName("TITLE_EN").HasMaxLength(200).IsRequired();
         builder.Property(e => e.Description).HasColumnName("DESCRIPTION").HasMaxLength(5000).IsRequired();
@@ -169,8 +169,8 @@ public class SysTicketConfigConfiguration : IEntityTypeConfiguration<SysTicketCo
     public void Configure(EntityTypeBuilder<SysTicketConfig> builder)
     {
         builder.ToTable("SYS_TICKET_CONFIG");
-        builder.HasKey(e => e.RowId);
-        builder.Property(e => e.RowId).HasColumnName("ROW_ID").ValueGeneratedOnAdd();
+        builder.HasKey(e => e.Id);
+        builder.Property(e => e.Id).ValueGeneratedOnAdd();
         builder.Property(e => e.ConfigKey).HasColumnName("CONFIG_KEY").HasMaxLength(100).IsRequired();
         builder.HasIndex(e => e.ConfigKey).IsUnique();
         builder.Property(e => e.ConfigValue).HasColumnName("CONFIG_VALUE").HasMaxLength(1000).IsRequired();
@@ -190,8 +190,8 @@ public class SysSavedSearchConfiguration : IEntityTypeConfiguration<SysSavedSear
     public void Configure(EntityTypeBuilder<SysSavedSearch> builder)
     {
         builder.ToTable("SYS_SAVED_SEARCH");
-        builder.HasKey(e => e.RowId);
-        builder.Property(e => e.RowId).HasColumnName("ROW_ID").ValueGeneratedOnAdd();
+        builder.HasKey(e => e.Id);
+        builder.Property(e => e.Id).ValueGeneratedOnAdd();
         builder.Property(e => e.SearchName).HasColumnName("SEARCH_NAME").HasMaxLength(200).IsRequired();
         builder.Property(e => e.UserId).HasColumnName("USER_ID").IsRequired();
         builder.Property(e => e.SearchCriteria).HasColumnName("SEARCH_CRITERIA").HasColumnType("CLOB").IsRequired();
@@ -213,8 +213,8 @@ public class SysSearchAnalyticsConfiguration : IEntityTypeConfiguration<SysSearc
     public void Configure(EntityTypeBuilder<SysSearchAnalytics> builder)
     {
         builder.ToTable("SYS_SEARCH_ANALYTICS");
-        builder.HasKey(e => e.RowId);
-        builder.Property(e => e.RowId).HasColumnName("ROW_ID").ValueGeneratedOnAdd();
+        builder.HasKey(e => e.Id);
+        builder.Property(e => e.Id).ValueGeneratedOnAdd();
         builder.Property(e => e.UserId).HasColumnName("USER_ID").IsRequired();
         builder.Property(e => e.SearchTerm).HasColumnName("SEARCH_TERM").HasMaxLength(500);
         builder.Property(e => e.SearchCriteria).HasColumnName("SEARCH_CRITERIA").HasColumnType("CLOB");

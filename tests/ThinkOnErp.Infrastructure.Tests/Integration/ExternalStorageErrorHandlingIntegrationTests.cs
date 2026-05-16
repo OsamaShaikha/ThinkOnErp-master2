@@ -225,22 +225,22 @@ public class ExternalStorageErrorHandlingIntegrationTests : IDisposable
 
     #endregion
 
-    #region Azure Blob Storage Error Handling Tests
+    #region Azure CLOB Storage Error Handling Tests
 
     [Fact]
     public async Task AzureStorage_AuthenticationFailure_ShouldThrowAppropriateException()
     {
         // Arrange
-        var mockBlobServiceClient = new Mock<BlobServiceClient>();
-        var mockLogger = new Mock<ILogger<AzureBlobStorageProvider>>();
+        var mockCLOBServiceClient = new Mock<CLOBServiceClient>();
+        var mockLogger = new Mock<ILogger<AzureCLOBStorageProvider>>();
         var connectionString = "ContainerName=test-container";
 
         // Setup mock to throw authentication exception
-        mockBlobServiceClient
-            .Setup(x => x.GetBlobContainerClient(It.IsAny<string>()))
+        mockCLOBServiceClient
+            .Setup(x => x.GetCLOBContainerClient(It.IsAny<string>()))
             .Throws(new Azure.RequestFailedException(401, "Authentication failed"));
 
-        var provider = new AzureBlobStorageProvider(mockBlobServiceClient.Object, mockLogger.Object, connectionString);
+        var provider = new AzureCLOBStorageProvider(mockCLOBServiceClient.Object, mockLogger.Object, connectionString);
         var testData = new byte[] { 1, 2, 3, 4, 5 };
 
         // Act & Assert
@@ -255,16 +255,16 @@ public class ExternalStorageErrorHandlingIntegrationTests : IDisposable
     public async Task AzureStorage_ContainerNotFound_ShouldThrowAppropriateException()
     {
         // Arrange
-        var mockBlobServiceClient = new Mock<BlobServiceClient>();
-        var mockLogger = new Mock<ILogger<AzureBlobStorageProvider>>();
+        var mockCLOBServiceClient = new Mock<CLOBServiceClient>();
+        var mockLogger = new Mock<ILogger<AzureCLOBStorageProvider>>();
         var connectionString = "ContainerName=nonexistent-container";
 
         // Setup mock to throw container not found exception
-        mockBlobServiceClient
-            .Setup(x => x.GetBlobContainerClient(It.IsAny<string>()))
+        mockCLOBServiceClient
+            .Setup(x => x.GetCLOBContainerClient(It.IsAny<string>()))
             .Throws(new Azure.RequestFailedException(404, "Container not found"));
 
-        var provider = new AzureBlobStorageProvider(mockBlobServiceClient.Object, mockLogger.Object, connectionString);
+        var provider = new AzureCLOBStorageProvider(mockCLOBServiceClient.Object, mockLogger.Object, connectionString);
         var testData = new byte[] { 1, 2, 3, 4, 5 };
 
         // Act & Assert
@@ -279,16 +279,16 @@ public class ExternalStorageErrorHandlingIntegrationTests : IDisposable
     public async Task AzureStorage_NetworkError_ShouldThrowNetworkException()
     {
         // Arrange
-        var mockBlobServiceClient = new Mock<BlobServiceClient>();
-        var mockLogger = new Mock<ILogger<AzureBlobStorageProvider>>();
+        var mockCLOBServiceClient = new Mock<CLOBServiceClient>();
+        var mockLogger = new Mock<ILogger<AzureCLOBStorageProvider>>();
         var connectionString = "ContainerName=test-container";
 
         // Setup mock to throw network exception
-        mockBlobServiceClient
-            .Setup(x => x.GetBlobContainerClient(It.IsAny<string>()))
+        mockCLOBServiceClient
+            .Setup(x => x.GetCLOBContainerClient(It.IsAny<string>()))
             .Throws(new Azure.RequestFailedException(500, "Internal server error"));
 
-        var provider = new AzureBlobStorageProvider(mockBlobServiceClient.Object, mockLogger.Object, connectionString);
+        var provider = new AzureCLOBStorageProvider(mockCLOBServiceClient.Object, mockLogger.Object, connectionString);
         var testData = new byte[] { 1, 2, 3, 4, 5 };
 
         // Act & Assert
@@ -300,38 +300,38 @@ public class ExternalStorageErrorHandlingIntegrationTests : IDisposable
     }
 
     [Fact]
-    public async Task AzureStorage_BlobNotFound_ShouldReturnFalseForExists()
+    public async Task AzureStorage_CLOBNotFound_ShouldReturnFalseForExists()
     {
         // Arrange
-        var mockBlobServiceClient = new Mock<BlobServiceClient>();
-        var mockBlobContainerClient = new Mock<BlobContainerClient>();
-        var mockBlobClient = new Mock<BlobClient>();
-        var mockLogger = new Mock<ILogger<AzureBlobStorageProvider>>();
+        var mockCLOBServiceClient = new Mock<CLOBServiceClient>();
+        var mockCLOBContainerClient = new Mock<CLOBContainerClient>();
+        var mockCLOBClient = new Mock<CLOBClient>();
+        var mockLogger = new Mock<ILogger<AzureCLOBStorageProvider>>();
         var connectionString = "ContainerName=test-container";
 
         // Setup mock chain
-        mockBlobServiceClient
-            .Setup(x => x.GetBlobContainerClient(It.IsAny<string>()))
-            .Returns(mockBlobContainerClient.Object);
+        mockCLOBServiceClient
+            .Setup(x => x.GetCLOBContainerClient(It.IsAny<string>()))
+            .Returns(mockCLOBContainerClient.Object);
         
-        mockBlobContainerClient
-            .Setup(x => x.GetBlobClient(It.IsAny<string>()))
-            .Returns(mockBlobClient.Object);
+        mockCLOBContainerClient
+            .Setup(x => x.GetCLOBClient(It.IsAny<string>()))
+            .Returns(mockCLOBClient.Object);
 
         // Setup mock to throw not found exception
-        mockBlobClient
+        mockCLOBClient
             .Setup(x => x.ExistsAsync(It.IsAny<CancellationToken>()))
-            .ThrowsAsync(new Azure.RequestFailedException(404, "Blob not found"));
+            .ThrowsAsync(new Azure.RequestFailedException(404, "CLOB not found"));
 
-        var provider = new AzureBlobStorageProvider(mockBlobServiceClient.Object, mockLogger.Object, connectionString);
-        var storageLocation = "https://test.blob.core.windows.net/test-container/nonexistent/archive-12345.bin";
+        var provider = new AzureCLOBStorageProvider(mockCLOBServiceClient.Object, mockLogger.Object, connectionString);
+        var storageLocation = "https://test.CLOB.core.windows.net/test-container/nonexistent/archive-12345.bin";
 
         // Act & Assert
-        _output.WriteLine("Testing Azure blob not found scenario...");
+        _output.WriteLine("Testing Azure CLOB not found scenario...");
         await Assert.ThrowsAsync<Azure.RequestFailedException>(async () =>
             await provider.ExistsAsync(storageLocation));
         
-        _output.WriteLine("Azure blob not found handled correctly");
+        _output.WriteLine("Azure CLOB not found handled correctly");
     }
 
     #endregion
@@ -400,16 +400,16 @@ public class ExternalStorageErrorHandlingIntegrationTests : IDisposable
     }
 
     [Fact]
-    public void AzureBlobStorageProvider_InvalidConnectionString_ShouldThrowArgumentException()
+    public void AzureCLOBStorageProvider_InvalidConnectionString_ShouldThrowArgumentException()
     {
         // Arrange
-        var mockBlobServiceClient = new Mock<BlobServiceClient>();
-        var mockLogger = new Mock<ILogger<AzureBlobStorageProvider>>();
+        var mockCLOBServiceClient = new Mock<CLOBServiceClient>();
+        var mockLogger = new Mock<ILogger<AzureCLOBStorageProvider>>();
 
         // Act & Assert - Missing ContainerName
         _output.WriteLine("Testing Azure provider with invalid connection string (missing ContainerName)...");
         var exception = Assert.Throws<ArgumentException>(() =>
-            new AzureBlobStorageProvider(mockBlobServiceClient.Object, mockLogger.Object, "AccountName=test"));
+            new AzureCLOBStorageProvider(mockCLOBServiceClient.Object, mockLogger.Object, "AccountName=test"));
         
         Assert.Contains("ContainerName is required", exception.Message);
         _output.WriteLine($"Invalid Azure connection string handled correctly: {exception.Message}");

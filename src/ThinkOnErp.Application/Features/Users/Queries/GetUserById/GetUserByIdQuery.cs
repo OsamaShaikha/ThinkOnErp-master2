@@ -5,5 +5,5 @@ namespace ThinkOnErp.Application.Features.Users.Queries.GetUserById;
 
 public class GetUserByIdQuery : IRequest<UserDto?>
 {
-    public Int64 RowId { get; set; }
+    public Int64 Id { get; set; }
 }

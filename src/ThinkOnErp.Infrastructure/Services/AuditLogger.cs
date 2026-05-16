@@ -710,7 +710,7 @@ public class AuditLogger : IAuditLogger, IHostedService
             // BUSINESS_DESCRIPTION: Create human-readable error descriptions
             var tempAuditEntry = new AuditLogEntry
             {
-                RowId = 0,
+                Id = 0,
                 Action = auditEvent.Action,
                 EntityType = auditEvent.EntityType,
                 ActorName = null,

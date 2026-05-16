@@ -1,4 +1,4 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using ThinkOnErp.Domain.Entities;
 using ThinkOnErp.Domain.Interfaces;
 using ThinkOnErp.Infrastructure.Data;
@@ -7,8 +7,8 @@ namespace ThinkOnErp.Infrastructure.Repositories;
 
 public class CurrencyRepository : ICurrencyRepository
 {
-    private readonly ThinkOnErpDbContext _context;
-    public CurrencyRepository(ThinkOnErpDbContext context) => _context = context;
+    private readonly OracleDbContext _context;
+    public CurrencyRepository(OracleDbContext context) => _context = context;
 
     public async Task<List<SysCurrency>> GetAllAsync() =>
         await _context.SysCurrencies.ToListAsync();

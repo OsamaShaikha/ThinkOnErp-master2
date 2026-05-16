@@ -134,7 +134,7 @@ Services/
  AuditLogIntegrityService.cs
  AuditQueryService.cs
  AuditTrailService.cs
- AzureBlobStorageProvider.cs
+ AzureCLOBStorageProvider.cs
  ComplianceReporter.cs
  CompressionService.cs
  ConnectionPoolMonitoringService.cs
@@ -350,7 +350,7 @@ Services/
  awssdk.core/3.7.303.16/lib/net8.0/AWSSDK.Core.dll
  awssdk.s3/3.7.307.17/lib/net8.0/AWSSDK.S3.dll
  azure.core/1.36.0/lib/net6.0/Azure.Core.dll
- azure.storage.blobs/12.19.1/lib/net6.0/Azure.Storage.Blobs.dll
+ azure.storage.CLOBs/12.19.1/lib/net6.0/Azure.Storage.CLOBs.dll
  azure.storage.common/12.18.1/lib/net6.0/Azure.Storage.Common.dll
  bouncycastle.cryptography/2.2.1/lib/net6.0/BouncyCastle.Cryptography.dll
  c5/2.3.0.1/lib/net40/C5.dll

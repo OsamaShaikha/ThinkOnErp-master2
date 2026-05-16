@@ -590,7 +590,7 @@ public class ExternalStoragePerformanceIntegrationTests : IDisposable
     private IExternalStorageProvider CreateAzureProvider()
     {
         var factory = _serviceProvider.GetRequiredService<IExternalStorageProviderFactory>();
-        return factory.CreateProvider("AzureBlob", _azureConnectionString!);
+        return factory.CreateProvider("AzureCLOB", _azureConnectionString!);
     }
 
     private static long GenerateTestArchiveId()
@@ -626,7 +626,7 @@ public class ExternalStoragePerformanceIntegrationTests : IDisposable
                             var s3Provider = CreateS3Provider();
                             await s3Provider.DeleteAsync(location);
                         }
-                        else if (location.Contains("blob.core.windows.net"))
+                        else if (location.Contains("CLOB.core.windows.net"))
                         {
                             var azureProvider = CreateAzureProvider();
                             await azureProvider.DeleteAsync(location);

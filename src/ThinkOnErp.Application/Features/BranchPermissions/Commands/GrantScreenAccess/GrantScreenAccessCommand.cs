@@ -6,7 +6,7 @@ public class GrantScreenAccessCommand : IRequest<long>
 {
     public long BranchId { get; set; }
     public long ScreenId { get; set; }
-    public string GrantedBy { get; set; } = string.Empty;
+    public long GrantedBy { get; set; }
     public string? Notes { get; set; }
     public string CreationUser { get; set; } = string.Empty;
 }

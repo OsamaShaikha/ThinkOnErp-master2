@@ -32,7 +32,7 @@ public class GetAllTicketTypesQueryHandler : IRequestHandler<GetAllTicketTypesQu
 
             var dtos = ticketTypes.Select(tt => new TicketTypeDto
             {
-                TicketTypeId = tt.RowId,
+                TicketTypeId = tt.Id,
                 TypeNameAr = tt.TypeNameAr,
                 TypeNameEn = tt.TypeNameEn,
                 DescriptionAr = tt.DescriptionAr,

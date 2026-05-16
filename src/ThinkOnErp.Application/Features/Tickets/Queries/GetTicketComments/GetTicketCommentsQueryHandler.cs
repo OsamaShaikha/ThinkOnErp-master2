@@ -44,7 +44,7 @@ public class GetTicketCommentsQueryHandler : IRequestHandler<GetTicketCommentsQu
             // Map to DTOs and sort
             var commentDtos = comments.Select(c => new TicketCommentDto
             {
-                CommentId = c.RowId,
+                CommentId = c.Id,
                 TicketId = c.TicketId,
                 CommentText = c.CommentText,
                 IsInternal = c.IsInternal,

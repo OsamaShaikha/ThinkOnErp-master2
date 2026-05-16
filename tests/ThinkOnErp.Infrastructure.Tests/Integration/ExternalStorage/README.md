@@ -1,6 +1,6 @@
 # External Storage Integration Tests
 
-This directory contains comprehensive integration tests for the external storage functionality (S3 and Azure Blob Storage) used by the ArchivalService for cold storage of archived audit data.
+This directory contains comprehensive integration tests for the external storage functionality (S3 and Azure CLOB Storage) used by the ArchivalService for cold storage of archived audit data.
 
 ## Test Files
 
@@ -117,12 +117,12 @@ AccountName=account;AccountKey=key;ContainerName=container[;Prefix=path/]
 ```
 
 **Required Parameters:**
-- `ContainerName`: Azure blob container name
+- `ContainerName`: Azure CLOB container name
 
 **Optional Parameters:**
 - `AccountName`: Storage account name
 - `AccountKey`: Storage account key
-- `Prefix`: Path prefix for all blobs (recommended for test isolation)
+- `Prefix`: Path prefix for all CLOBs (recommended for test isolation)
 
 ## Test Data and Cleanup
 
@@ -145,8 +145,8 @@ aws s3 rm s3://your-bucket/perf-tests/ --recursive
 
 **Azure:**
 ```bash
-az storage blob delete-batch --account-name youraccount --source test-audit-archives --pattern "integration-tests/*"
-az storage blob delete-batch --account-name youraccount --source test-audit-archives --pattern "perf-tests/*"
+az storage CLOB delete-batch --account-name youraccount --source test-audit-archives --pattern "integration-tests/*"
+az storage CLOB delete-batch --account-name youraccount --source test-audit-archives --pattern "perf-tests/*"
 ```
 
 ## Performance Test Results

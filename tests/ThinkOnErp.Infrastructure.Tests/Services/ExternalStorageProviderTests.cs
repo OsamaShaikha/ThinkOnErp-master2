@@ -10,7 +10,7 @@ using Xunit;
 namespace ThinkOnErp.Infrastructure.Tests.Services;
 
 /// <summary>
-/// Unit tests for external storage providers (S3 and Azure Blob Storage).
+/// Unit tests for external storage providers (S3 and Azure CLOB Storage).
 /// Tests upload, download, delete, exists, metadata, and integrity verification operations.
 /// </summary>
 public class ExternalStorageProviderTests
@@ -274,36 +274,36 @@ public class ExternalStorageProviderTests
 
     #endregion
 
-    #region AzureBlobStorageProvider Tests
+    #region AzureCLOBStorageProvider Tests
 
     [Fact]
-    public void AzureBlobStorageProvider_Constructor_ShouldThrowWhenConnectionStringMissingContainerName()
+    public void AzureCLOBStorageProvider_Constructor_ShouldThrowWhenConnectionStringMissingContainerName()
     {
         // Arrange
-        var mockBlobServiceClient = new Mock<BlobServiceClient>();
-        var mockLogger = new Mock<ILogger<AzureBlobStorageProvider>>();
+        var mockCLOBServiceClient = new Mock<CLOBServiceClient>();
+        var mockLogger = new Mock<ILogger<AzureCLOBStorageProvider>>();
         var connectionString = "AccountName=test;AccountKey=key"; // Missing ContainerName
 
         // Act & Assert
         Assert.Throws<ArgumentException>(() =>
-            new AzureBlobStorageProvider(mockBlobServiceClient.Object, mockLogger.Object, connectionString));
+            new AzureCLOBStorageProvider(mockCLOBServiceClient.Object, mockLogger.Object, connectionString));
     }
 
     [Fact]
-    public void AzureBlobStorageProvider_ProviderName_ShouldReturnAzureBlob()
+    public void AzureCLOBStorageProvider_ProviderName_ShouldReturnAzureCLOB()
     {
         // Arrange
-        var mockBlobServiceClient = new Mock<BlobServiceClient>();
-        var mockLogger = new Mock<ILogger<AzureBlobStorageProvider>>();
+        var mockCLOBServiceClient = new Mock<CLOBServiceClient>();
+        var mockLogger = new Mock<ILogger<AzureCLOBStorageProvider>>();
         var connectionString = "ContainerName=test-container";
 
-        var provider = new AzureBlobStorageProvider(mockBlobServiceClient.Object, mockLogger.Object, connectionString);
+        var provider = new AzureCLOBStorageProvider(mockCLOBServiceClient.Object, mockLogger.Object, connectionString);
 
         // Act
         var providerName = provider.ProviderName;
 
         // Assert
-        Assert.Equal("AzureBlob", providerName);
+        Assert.Equal("AzureCLOB", providerName);
     }
 
     #endregion
@@ -333,7 +333,7 @@ public class ExternalStorageProviderTests
     }
 
     [Fact]
-    public void ExternalStorageProviderFactory_CreateProvider_ShouldCreateAzureBlobProvider()
+    public void ExternalStorageProviderFactory_CreateProvider_ShouldCreateAzureCLOBProvider()
     {
         // Arrange
         var mockLoggerFactory = new Mock<ILoggerFactory>();
@@ -343,7 +343,7 @@ public class ExternalStorageProviderTests
 
         var factory = new ExternalStorageProviderFactory(mockLoggerFactory.Object);
 
-        var providerType = "AzureBlob";
+        var providerType = "AzureCLOB";
         var connectionString = "AccountName=test;AccountKey=testkey;ContainerName=test-container";
 
         // Act
@@ -351,7 +351,7 @@ public class ExternalStorageProviderTests
 
         // Assert
         Assert.NotNull(provider);
-        Assert.Equal("AzureBlob", provider.ProviderName);
+        Assert.Equal("AzureCLOB", provider.ProviderName);
     }
 
     [Fact]

@@ -19,7 +19,7 @@ public class GetAllScreensQueryHandler : IRequestHandler<GetAllScreensQuery, Lis
 
         return screens.Select(s => new ScreenDto
         {
-            RowId = s.RowId,
+            RowId = s.Id,
             SystemId = s.SystemId,
             ScreenCode = s.ScreenCode,
             ScreenName = s.ScreenName,

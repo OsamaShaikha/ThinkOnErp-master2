@@ -3,7 +3,8 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using Oracle.ManagedDataAccess.Client;
+using Microsoft.EntityFrameworkCore;
+using ThinkOnErp.Domain.Entities;
 using ThinkOnErp.Domain.Interfaces;
 using ThinkOnErp.Domain.Models;
 using ThinkOnErp.Infrastructure.Data;
@@ -172,62 +173,36 @@ public class ScheduledReportGenerationService : BackgroundService
         OracleDbContext dbContext,
         CancellationToken cancellationToken)
     {
-        var schedules = new List<ReportSchedule>();
         var now = DateTime.UtcNow;
         var currentTime = now.ToString("HH:mm");
-        var currentDayOfWeek = (int)now.DayOfWeek == 0 ? 7 : (int)now.DayOfWeek; // Convert Sunday from 0 to 7
+        var currentDayOfWeek = (int)now.DayOfWeek == 0 ? 7 : (int)now.DayOfWeek;
         var currentDayOfMonth = now.Day;
 
-        using var connection = dbContext.CreateConnection();
-        await connection.OpenAsync(cancellationToken);
+        var entitySchedules = await dbContext.SysReportSchedules
+            .Where(s => s.IsActive)
+            .OrderBy(s => s.TimeOfDay)
+            .ThenBy(s => s.Id)
+            .ToListAsync(cancellationToken);
 
-        using var command = connection.CreateCommand();
-        command.CommandText = @"
-            SELECT 
-                ROW_ID,
-                REPORT_TYPE,
-                FREQUENCY,
-                DAY_OF_WEEK,
-                DAY_OF_MONTH,
-                TIME_OF_DAY,
-                RECIPIENTS,
-                EXPORT_FORMAT,
-                PARAMETERS,
-                IS_ACTIVE,
-                CREATED_BY_USER_ID,
-                CREATED_AT,
-                LAST_GENERATED_AT
-            FROM SYS_REPORT_SCHEDULE
-            WHERE IS_ACTIVE = 1
-            ORDER BY TIME_OF_DAY, ROW_ID";
-
-        using var reader = await command.ExecuteReaderAsync(cancellationToken);
-
-        while (await reader.ReadAsync(cancellationToken))
-        {
-            var schedule = new ReportSchedule
+        var schedules = entitySchedules
+            .Select(s => new ReportSchedule
             {
-                Id = reader.GetInt64(0),
-                ReportType = reader.GetString(1),
-                Frequency = Enum.Parse<ReportFrequency>(reader.GetString(2)),
-                DayOfWeek = reader.IsDBNull(3) ? null : reader.GetInt32(3),
-                DayOfMonth = reader.IsDBNull(4) ? null : reader.GetInt32(4),
-                TimeOfDay = reader.GetString(5),
-                Recipients = reader.GetString(6),
-                ExportFormat = Enum.Parse<ReportExportFormat>(reader.GetString(7)),
-                Parameters = reader.IsDBNull(8) ? null : reader.GetString(8),
-                IsActive = reader.GetInt32(9) == 1,
-                CreatedByUserId = reader.GetInt64(10),
-                CreatedAt = reader.GetDateTime(11),
-                LastGeneratedAt = reader.IsDBNull(12) ? null : reader.GetDateTime(12)
-            };
-
-            // Check if this schedule is due for generation
-            if (IsScheduleDue(schedule, now, currentTime, currentDayOfWeek, currentDayOfMonth))
-            {
-                schedules.Add(schedule);
-            }
-        }
+                Id = s.Id,
+                ReportType = s.ReportType,
+                Frequency = Enum.Parse<ReportFrequency>(s.Frequency),
+                DayOfWeek = s.DayOfWeek,
+                DayOfMonth = s.DayOfMonth,
+                TimeOfDay = s.TimeOfDay,
+                Recipients = s.Recipients,
+                ExportFormat = Enum.Parse<ReportExportFormat>(s.ExportFormat),
+                Parameters = s.Parameters,
+                IsActive = s.IsActive,
+                CreatedByUserId = s.CreatedByUserId,
+                CreatedAt = s.CreatedAt,
+                LastGeneratedAt = s.LastGeneratedAt
+            })
+            .Where(s => IsScheduleDue(s, now, currentTime, currentDayOfWeek, currentDayOfMonth))
+            .ToList();
 
         return schedules;
     }
@@ -581,7 +556,7 @@ public class ScheduledReportGenerationService : BackgroundService
         // Note: Current email service doesn't support attachments
         // In a production system, you would either:
         // 1. Extend IEmailNotificationChannel to support attachments
-        // 2. Store the report in a file system/blob storage and include a download link
+        // 2. Store the report in a file system/CLOB storage and include a download link
         // 3. Use a dedicated email service with attachment support
         
         // For now, we'll send the notification without the attachment
@@ -676,25 +651,23 @@ public class ScheduledReportGenerationService : BackgroundService
         string? errorMessage,
         CancellationToken cancellationToken)
     {
-        using var connection = dbContext.CreateConnection();
-        await connection.OpenAsync(cancellationToken);
+        var schedule = await dbContext.SysReportSchedules.FindAsync(new object[] { scheduleId }, cancellationToken);
 
-        using var command = connection.CreateCommand();
-        command.CommandText = @"
-            UPDATE SYS_REPORT_SCHEDULE
-            SET LAST_GENERATION_STATUS = :P_STATUS,
-                LAST_ERROR_MESSAGE = :P_ERROR_MESSAGE,
-                LAST_GENERATED_AT = CASE WHEN :P_STATUS = 'Success' THEN SYSDATE ELSE LAST_GENERATED_AT END
-            WHERE ROW_ID = :P_SCHEDULE_ID";
+        if (schedule == null)
+        {
+            _logger.LogWarning("Schedule {ScheduleId} not found for status update", scheduleId);
+            return;
+        }
 
-        command.Parameters.Add(new OracleParameter("P_STATUS", OracleDbType.NVarchar2) 
-            { Value = status });
-        command.Parameters.Add(new OracleParameter("P_ERROR_MESSAGE", OracleDbType.NVarchar2) 
-            { Value = (object?)errorMessage ?? DBNull.Value });
-        command.Parameters.Add(new OracleParameter("P_SCHEDULE_ID", OracleDbType.Decimal) 
-            { Value = scheduleId });
+        schedule.LastGenerationStatus = status;
+        schedule.LastErrorMessage = errorMessage;
 
-        await command.ExecuteNonQueryAsync(cancellationToken);
+        if (status == "Success")
+        {
+            schedule.LastGeneratedAt = DateTime.UtcNow;
+        }
+
+        await dbContext.SaveChangesAsync(cancellationToken);
     }
 
     private bool IsBackgroundServiceEnabled()

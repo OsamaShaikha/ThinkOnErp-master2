@@ -396,14 +396,14 @@ public class AuditLogsController : ControllerBase
 
             _logger.LogInformation(
                 "Transforming audit entry {Id} to legacy format by admin user: {User}",
-                auditEntry.RowId,
+                auditEntry.Id,
                 User.Identity?.Name ?? "unknown");
 
             var legacyEntry = await _legacyAuditService.TransformToLegacyFormatAsync(auditEntry);
 
             _logger.LogInformation(
                 "Successfully transformed audit entry {Id} to legacy format",
-                auditEntry.RowId);
+                auditEntry.Id);
 
             return Ok(ApiResponse<LegacyAuditLogDto>.CreateSuccess(
                 legacyEntry,
@@ -457,7 +457,7 @@ public class AuditLogsController : ControllerBase
             // Convert AuditLogEntry to AuditLogDto
             var auditLogDtos = auditLogsList.Select(log => new AuditLogDto
             {
-                Id = log.RowId,
+                Id = log.Id,
                 CorrelationId = log.CorrelationId,
                 ActorType = log.ActorType,
                 ActorId = log.ActorId,
@@ -553,7 +553,7 @@ public class AuditLogsController : ControllerBase
             // Convert AuditLogEntry to AuditLogDto
             var auditLogDtos = auditLogsList.Select(log => new AuditLogDto
             {
-                Id = log.RowId,
+                Id = log.Id,
                 CorrelationId = log.CorrelationId,
                 ActorType = log.ActorType,
                 ActorId = log.ActorId,
@@ -820,7 +820,7 @@ public class AuditLogsController : ControllerBase
             // Convert AuditLogEntry to AuditLogDto
             var auditLogDtos = result.Items.Select(log => new AuditLogDto
             {
-                Id = log.RowId,
+                Id = log.Id,
                 CorrelationId = log.CorrelationId ?? string.Empty,
                 ActorType = log.ActorType,
                 ActorId = log.ActorId,
@@ -949,7 +949,7 @@ public class AuditLogsController : ControllerBase
             // Convert AuditLogEntry to AuditLogDto
             var auditLogDtos = result.Items.Select(log => new AuditLogDto
             {
-                Id = log.RowId,
+                Id = log.Id,
                 CorrelationId = log.CorrelationId ?? string.Empty,
                 ActorType = log.ActorType,
                 ActorId = log.ActorId,

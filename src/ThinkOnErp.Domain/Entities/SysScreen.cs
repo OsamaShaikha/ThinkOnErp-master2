@@ -8,7 +8,7 @@ public class SysScreen
     /// <summary>
     /// Unique identifier for the screen
     /// </summary>
-    public Int64 RowId { get; set; }
+    public Int64 Id { get; set; }
 
     /// <summary>
     /// Foreign key to SYS_SYSTEM table

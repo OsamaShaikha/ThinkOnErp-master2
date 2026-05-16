@@ -9,7 +9,7 @@ public class SysCompanySystem
     /// <summary>
     /// Primary key - generated from SEQ_SYS_COMPANY_SYSTEM sequence
     /// </summary>
-    public Int64 RowId { get; set; }
+    public Int64 Id { get; set; }
 
     /// <summary>
     /// Foreign key to SYS_COMPANY table

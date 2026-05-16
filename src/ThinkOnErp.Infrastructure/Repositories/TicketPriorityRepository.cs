@@ -1,4 +1,4 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using ThinkOnErp.Domain.Entities;
 using ThinkOnErp.Domain.Interfaces;
 using ThinkOnErp.Infrastructure.Data;
@@ -7,8 +7,8 @@ namespace ThinkOnErp.Infrastructure.Repositories;
 
 public class TicketPriorityRepository : ITicketPriorityRepository
 {
-    private readonly ThinkOnErpDbContext _context;
-    public TicketPriorityRepository(ThinkOnErpDbContext context) => _context = context;
+    private readonly OracleDbContext _context;
+    public TicketPriorityRepository(OracleDbContext context) => _context = context;
 
     public async Task<List<SysTicketPriority>> GetAllAsync() =>
         await _context.SysTicketPriorities.Where(p => p.IsActive).OrderBy(p => p.PriorityLevel).ToListAsync();
@@ -44,8 +44,8 @@ public class TicketPriorityRepository : ITicketPriorityRepository
         var result = new List<(SysTicketPriority, int, decimal)>();
         foreach (var priority in priorities)
         {
-            var count = await query.CountAsync(t => t.TicketPriorityId == priority.RowId);
-            var slaCompliant = await query.CountAsync(t => t.TicketPriorityId == priority.RowId && (t.ActualResolutionDate == null || t.ActualResolutionDate <= t.ExpectedResolutionDate));
+            var count = await query.CountAsync(t => t.TicketPriorityId == priority.Id);
+            var slaCompliant = await query.CountAsync(t => t.TicketPriorityId == priority.Id && (t.ActualResolutionDate == null || t.ActualResolutionDate <= t.ExpectedResolutionDate));
             var rate = count > 0 ? (decimal)slaCompliant / count * 100 : 100;
             result.Add((priority, count, rate));
         }
@@ -54,7 +54,7 @@ public class TicketPriorityRepository : ITicketPriorityRepository
 
     public async Task<List<SysRequestTicket>> GetEscalationCandidatesAsync(long? companyId = null, long? branchId = null)
     {
-        var highPriorities = await _context.SysTicketPriorities.Where(p => p.PriorityLevel <= 2 && p.IsActive).Select(p => p.RowId).ToListAsync();
+        var highPriorities = await _context.SysTicketPriorities.Where(p => p.PriorityLevel <= 2 && p.IsActive).Select(p => p.Id).ToListAsync();
         var query = _context.SysRequestTickets.Where(t => t.IsActive && t.ActualResolutionDate == null && highPriorities.Contains(t.TicketPriorityId));
         if (companyId.HasValue) query = query.Where(t => t.CompanyId == companyId.Value);
         if (branchId.HasValue) query = query.Where(t => t.BranchId == branchId.Value);

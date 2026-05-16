@@ -10,7 +10,7 @@ public class SysSavedSearch
     /// <summary>
     /// Unique identifier for the saved search
     /// </summary>
-    public Int64 RowId { get; set; }
+    public Int64 Id { get; set; }
 
     /// <summary>
     /// User ID who owns this saved search

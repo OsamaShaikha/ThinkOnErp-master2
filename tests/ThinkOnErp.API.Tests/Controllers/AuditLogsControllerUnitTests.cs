@@ -313,7 +313,7 @@ public class AuditLogsControllerUnitTests
         // Arrange
         var auditEntry = new AuditLogEntry
         {
-            RowId = 1,
+            Id = 1,
             ActorType = "USER",
             ActorId = 1,
             ActorName = "Test User",
@@ -383,7 +383,7 @@ public class AuditLogsControllerUnitTests
         {
             new AuditLogEntry
             {
-                RowId = 1,
+                Id = 1,
                 CorrelationId = correlationId,
                 ActorType = "USER",
                 ActorId = 1,
@@ -405,7 +405,7 @@ public class AuditLogsControllerUnitTests
             },
             new AuditLogEntry
             {
-                RowId = 2,
+                Id = 2,
                 CorrelationId = correlationId,
                 ActorType = "USER",
                 ActorId = 1,
@@ -523,7 +523,7 @@ public class AuditLogsControllerUnitTests
         var testDate = DateTime.UtcNow;
         var expectedAuditLog = new AuditLogEntry
         {
-            RowId = 123,
+            Id = 123,
             CorrelationId = correlationId,
             ActorType = "COMPANY_ADMIN",
             ActorId = 42,

@@ -2,8 +2,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using Oracle.ManagedDataAccess.Client;
-using System.Data;
+using ThinkOnErp.Domain.Entities;
 using ThinkOnErp.Domain.Interfaces;
 using ThinkOnErp.Infrastructure.Data;
 
@@ -188,75 +187,29 @@ public class MetricsAggregationBackgroundService : BackgroundService
         OracleDbContext dbContext,
         CancellationToken cancellationToken)
     {
-        using var connection = dbContext.CreateConnection();
-        await connection.OpenAsync(cancellationToken);
+        var avgDatabaseTimeMs = statistics.RequestCount > 0
+            ? (decimal)(statistics.AverageExecutionTimeMs * statistics.DatabaseTimePercentage / 100)
+            : 0m;
 
-        using var command = connection.CreateCommand();
-        command.CommandText = @"
-            INSERT INTO SYS_PERFORMANCE_METRICS (
-                ROW_ID,
-                ENDPOINT_PATH,
-                HOUR_TIMESTAMP,
-                REQUEST_COUNT,
-                AVG_EXECUTION_TIME_MS,
-                MIN_EXECUTION_TIME_MS,
-                MAX_EXECUTION_TIME_MS,
-                P50_EXECUTION_TIME_MS,
-                P95_EXECUTION_TIME_MS,
-                P99_EXECUTION_TIME_MS,
-                AVG_DATABASE_TIME_MS,
-                AVG_QUERY_COUNT,
-                ERROR_COUNT,
-                CREATION_DATE
-            ) VALUES (
-                SEQ_SYS_PERFORMANCE_METRICS.NEXTVAL,
-                :P_ENDPOINT_PATH,
-                :P_HOUR_TIMESTAMP,
-                :P_REQUEST_COUNT,
-                :P_AVG_EXECUTION_TIME_MS,
-                :P_MIN_EXECUTION_TIME_MS,
-                :P_MAX_EXECUTION_TIME_MS,
-                :P_P50_EXECUTION_TIME_MS,
-                :P_P95_EXECUTION_TIME_MS,
-                :P_P99_EXECUTION_TIME_MS,
-                :P_AVG_DATABASE_TIME_MS,
-                :P_AVG_QUERY_COUNT,
-                :P_ERROR_COUNT,
-                SYSDATE
-            )";
+        var metric = new SysPerformanceMetric
+        {
+            EndpointPath = endpoint,
+            HourTimestamp = hourTimestamp,
+            RequestCount = (int)statistics.RequestCount,
+            AvgExecutionTimeMs = (decimal)statistics.AverageExecutionTimeMs,
+            MinExecutionTimeMs = statistics.MinExecutionTimeMs,
+            MaxExecutionTimeMs = statistics.MaxExecutionTimeMs,
+            P50ExecutionTimeMs = percentiles.P50,
+            P95ExecutionTimeMs = percentiles.P95,
+            P99ExecutionTimeMs = percentiles.P99,
+            AvgDatabaseTimeMs = avgDatabaseTimeMs,
+            AvgQueryCount = (decimal)statistics.AverageQueryCount,
+            ErrorCount = (decimal)statistics.ErrorCount,
+            CreationDate = DateTime.UtcNow
+        };
 
-        command.Parameters.Add(new OracleParameter("P_ENDPOINT_PATH", OracleDbType.NVarchar2) 
-            { Value = endpoint });
-        command.Parameters.Add(new OracleParameter("P_HOUR_TIMESTAMP", OracleDbType.Date) 
-            { Value = hourTimestamp });
-        command.Parameters.Add(new OracleParameter("P_REQUEST_COUNT", OracleDbType.Decimal) 
-            { Value = statistics.RequestCount });
-        command.Parameters.Add(new OracleParameter("P_AVG_EXECUTION_TIME_MS", OracleDbType.Decimal) 
-            { Value = (long)statistics.AverageExecutionTimeMs });
-        command.Parameters.Add(new OracleParameter("P_MIN_EXECUTION_TIME_MS", OracleDbType.Decimal) 
-            { Value = statistics.MinExecutionTimeMs });
-        command.Parameters.Add(new OracleParameter("P_MAX_EXECUTION_TIME_MS", OracleDbType.Decimal) 
-            { Value = statistics.MaxExecutionTimeMs });
-        command.Parameters.Add(new OracleParameter("P_P50_EXECUTION_TIME_MS", OracleDbType.Decimal) 
-            { Value = percentiles.P50 });
-        command.Parameters.Add(new OracleParameter("P_P95_EXECUTION_TIME_MS", OracleDbType.Decimal) 
-            { Value = percentiles.P95 });
-        command.Parameters.Add(new OracleParameter("P_P99_EXECUTION_TIME_MS", OracleDbType.Decimal) 
-            { Value = percentiles.P99 });
-        
-        // Calculate average database time (if available in statistics)
-        var avgDatabaseTimeMs = statistics.RequestCount > 0 
-            ? (long)(statistics.AverageExecutionTimeMs * statistics.DatabaseTimePercentage / 100)
-            : 0;
-        command.Parameters.Add(new OracleParameter("P_AVG_DATABASE_TIME_MS", OracleDbType.Decimal) 
-            { Value = avgDatabaseTimeMs });
-        
-        command.Parameters.Add(new OracleParameter("P_AVG_QUERY_COUNT", OracleDbType.Decimal) 
-            { Value = statistics.AverageQueryCount });
-        command.Parameters.Add(new OracleParameter("P_ERROR_COUNT", OracleDbType.Decimal) 
-            { Value = statistics.ErrorCount });
-
-        await command.ExecuteNonQueryAsync(cancellationToken);
+        dbContext.SysPerformanceMetrics.Add(metric);
+        await dbContext.SaveChangesAsync(cancellationToken);
     }
 
     private async Task WaitUntilNextHourAsync(CancellationToken cancellationToken)

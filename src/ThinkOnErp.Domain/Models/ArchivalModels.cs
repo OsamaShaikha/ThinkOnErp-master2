@@ -73,7 +73,7 @@ public class ArchivalResult
     public string? ErrorMessage { get; set; }
     
     /// <summary>
-    /// Storage location of the archived data (file path, S3 URL, Azure Blob URL, etc.)
+    /// Storage location of the archived data (file path, S3 URL, Azure CLOB URL, etc.)
     /// </summary>
     public string? StorageLocation { get; set; }
     
@@ -178,7 +178,7 @@ public class ArchivalConfiguration
     public string CompressionAlgorithm { get; set; } = "GZip";
     
     /// <summary>
-    /// Storage provider for archived data (Database, FileSystem, S3, AzureBlob)
+    /// Storage provider for archived data (Database, FileSystem, S3, AzureCLOB)
     /// </summary>
     public string StorageProvider { get; set; } = "Database";
     

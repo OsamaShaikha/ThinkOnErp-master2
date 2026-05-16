@@ -49,7 +49,7 @@ public class ExternalStorageProviderFactory : IExternalStorageProviderFactory
         return providerType.ToUpperInvariant() switch
         {
             "S3" => CreateS3Provider(connectionString),
-            "AZUREBLOB" => CreateAzureBlobProvider(connectionString),
+            "AZUREBlob" => CreateAzureBlobProvider(connectionString),
             "FILESYSTEM" => throw new NotImplementedException("FileSystem provider not yet implemented"),
             _ => throw new ArgumentException($"Unsupported storage provider type: {providerType}", nameof(providerType))
         };
@@ -89,12 +89,12 @@ public class ExternalStorageProviderFactory : IExternalStorageProviderFactory
         var config = ParseConnectionString(connectionString);
 
         // Create Blob Service Client
-        BlobServiceClient blobServiceClient;
+        BlobServiceClient BlobServiceClient;
 
         if (config.ContainsKey("ConnectionString"))
         {
             // Use full Azure Storage connection string
-            blobServiceClient = new BlobServiceClient(config["ConnectionString"]);
+            BlobServiceClient = new BlobServiceClient(config["ConnectionString"]);
         }
         else if (config.ContainsKey("AccountName") && config.ContainsKey("AccountKey"))
         {
@@ -102,7 +102,7 @@ public class ExternalStorageProviderFactory : IExternalStorageProviderFactory
             var accountName = config["AccountName"];
             var accountKey = config["AccountKey"];
             var azureConnectionString = $"DefaultEndpointsProtocol=https;AccountName={accountName};AccountKey={accountKey};EndpointSuffix=core.windows.net";
-            blobServiceClient = new BlobServiceClient(azureConnectionString);
+            BlobServiceClient = new BlobServiceClient(azureConnectionString);
         }
         else
         {
@@ -110,7 +110,7 @@ public class ExternalStorageProviderFactory : IExternalStorageProviderFactory
         }
 
         var logger = _loggerFactory.CreateLogger<AzureBlobStorageProvider>();
-        return new AzureBlobStorageProvider(blobServiceClient, logger, connectionString);
+        return new AzureBlobStorageProvider(BlobServiceClient, logger, connectionString);
     }
 
     private Dictionary<string, string> ParseConnectionString(string connectionString)

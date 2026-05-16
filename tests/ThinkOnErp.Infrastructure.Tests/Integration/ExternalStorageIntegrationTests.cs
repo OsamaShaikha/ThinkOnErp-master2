@@ -25,7 +25,7 @@ using ThinkOnErp.Infrastructure.Services;
 namespace ThinkOnErp.Infrastructure.Tests.Integration;
 
 /// <summary>
-/// Integration tests for external storage functionality (S3 and Azure Blob Storage).
+/// Integration tests for external storage functionality (S3 and Azure CLOB Storage).
 /// Tests data upload, download, integrity verification, and error handling scenarios.
 /// 
 /// **Validates: Requirements 12.4, 12.5, 12.6, 12.7**
@@ -281,7 +281,7 @@ public class ExternalStorageIntegrationTests : IDisposable
 
     #endregion
 
-    #region Azure Blob Storage Integration Tests
+    #region Azure CLOB Storage Integration Tests
 
     [Fact]
     public async Task AzureStorage_UploadDownloadDelete_ShouldWorkEndToEnd()
@@ -305,17 +305,17 @@ public class ExternalStorageIntegrationTests : IDisposable
             var storageLocation = await provider.UploadAsync(archiveId, testData, metadata);
             
             Assert.NotNull(storageLocation);
-            Assert.Contains("blob.core.windows.net", storageLocation);
+            Assert.Contains("CLOB.core.windows.net", storageLocation);
             _createdStorageLocations.Add(storageLocation);
             _output.WriteLine($"Upload successful: {storageLocation}");
 
             // Act & Assert - Verify existence
-            _output.WriteLine("Verifying Azure blob exists...");
+            _output.WriteLine("Verifying Azure CLOB exists...");
             var exists = await provider.ExistsAsync(storageLocation);
-            Assert.True(exists, "Uploaded blob should exist");
+            Assert.True(exists, "Uploaded CLOB should exist");
 
             // Act & Assert - Get metadata
-            _output.WriteLine("Retrieving Azure blob metadata...");
+            _output.WriteLine("Retrieving Azure CLOB metadata...");
             var retrievedMetadata = await provider.GetMetadataAsync(storageLocation);
             Assert.NotNull(retrievedMetadata);
             Assert.Contains("eventtype", retrievedMetadata.Keys.Select(k => k.ToLowerInvariant()));
@@ -339,7 +339,7 @@ public class ExternalStorageIntegrationTests : IDisposable
 
             // Verify deletion
             var existsAfterDelete = await provider.ExistsAsync(storageLocation);
-            Assert.False(existsAfterDelete, "Blob should not exist after deletion");
+            Assert.False(existsAfterDelete, "CLOB should not exist after deletion");
             
             _createdStorageLocations.Remove(storageLocation);
             _output.WriteLine("Azure end-to-end test completed successfully");
@@ -403,7 +403,7 @@ public class ExternalStorageIntegrationTests : IDisposable
         
         try
         {
-            var provider = factory.CreateProvider("AzureBlob", invalidConnectionString);
+            var provider = factory.CreateProvider("AzureCLOB", invalidConnectionString);
             var archiveId = GenerateTestArchiveId();
             var testData = GenerateTestArchiveData();
 
@@ -420,7 +420,7 @@ public class ExternalStorageIntegrationTests : IDisposable
             {
                 // With mocked Azure, the provider should still be created successfully
                 Assert.NotNull(provider);
-                Assert.Equal("AzureBlob", provider.ProviderName);
+                Assert.Equal("AzureCLOB", provider.ProviderName);
             }
             
             _output.WriteLine("Azure invalid credentials test completed");
@@ -450,9 +450,9 @@ public class ExternalStorageIntegrationTests : IDisposable
 
         // Act & Assert - Azure Provider
         _output.WriteLine("Testing Azure provider creation...");
-        var azureProvider = factory.CreateProvider("AzureBlob", _azureConnectionString!);
+        var azureProvider = factory.CreateProvider("AzureCLOB", _azureConnectionString!);
         Assert.NotNull(azureProvider);
-        Assert.Equal("AzureBlob", azureProvider.ProviderName);
+        Assert.Equal("AzureCLOB", azureProvider.ProviderName);
 
         // Act & Assert - Invalid Provider
         _output.WriteLine("Testing invalid provider creation...");
@@ -549,7 +549,7 @@ public class ExternalStorageIntegrationTests : IDisposable
     private IExternalStorageProvider CreateAzureProvider()
     {
         var factory = _serviceProvider.GetRequiredService<IExternalStorageProviderFactory>();
-        return factory.CreateProvider("AzureBlob", _azureConnectionString!);
+        return factory.CreateProvider("AzureCLOB", _azureConnectionString!);
     }
 
     private static long GenerateTestArchiveId()
@@ -609,7 +609,7 @@ public class ExternalStorageIntegrationTests : IDisposable
                         var s3Provider = CreateS3Provider();
                         _ = s3Provider.DeleteAsync(location).GetAwaiter().GetResult();
                     }
-                    else if (location.Contains("blob.core.windows.net"))
+                    else if (location.Contains("CLOB.core.windows.net"))
                     {
                         var azureProvider = CreateAzureProvider();
                         _ = azureProvider.DeleteAsync(location).GetAwaiter().GetResult();

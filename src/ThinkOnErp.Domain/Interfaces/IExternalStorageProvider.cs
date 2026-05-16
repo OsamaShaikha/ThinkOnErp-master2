@@ -2,7 +2,7 @@ namespace ThinkOnErp.Domain.Interfaces;
 
 /// <summary>
 /// Interface for external storage providers that support cold storage of archived audit data.
-/// Implementations include AWS S3, Azure Blob Storage, and file system storage.
+/// Implementations include AWS S3, Azure CLOB Storage, and file system storage.
 /// Used by ArchivalService to export archived data to external storage for long-term retention.
 /// </summary>
 public interface IExternalStorageProvider
@@ -77,7 +77,7 @@ public interface IExternalStorageProvider
         CancellationToken cancellationToken = default);
     
     /// <summary>
-    /// Get the storage provider name (e.g., "S3", "AzureBlob", "FileSystem")
+    /// Get the storage provider name (e.g., "S3", "AzureCLOB", "FileSystem")
     /// </summary>
     string ProviderName { get; }
     

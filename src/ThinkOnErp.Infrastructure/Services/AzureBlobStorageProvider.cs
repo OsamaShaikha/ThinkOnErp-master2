@@ -29,11 +29,11 @@ public class AzureBlobStorageProvider : IExternalStorageProvider
     /// "AccountName=myaccount;AccountKey=mykey;ContainerName=audit-archives;Prefix=archives/"
     /// </summary>
     public AzureBlobStorageProvider(
-        BlobServiceClient blobServiceClient,
+        BlobServiceClient BlobServiceClient,
         ILogger<AzureBlobStorageProvider> logger,
         string connectionString)
     {
-        _blobServiceClient = blobServiceClient ?? throw new ArgumentNullException(nameof(blobServiceClient));
+        _blobServiceClient = BlobServiceClient ?? throw new ArgumentNullException(nameof(BlobServiceClient));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
         if (string.IsNullOrWhiteSpace(connectionString))
@@ -63,7 +63,7 @@ public class AzureBlobStorageProvider : IExternalStorageProvider
             throw new ArgumentException("Data cannot be null or empty", nameof(data));
         }
 
-        var blobName = GenerateBlobName(archiveId);
+        var BlobName = GenerateBlobName(archiveId);
 
         try
         {
@@ -71,7 +71,7 @@ public class AzureBlobStorageProvider : IExternalStorageProvider
                 "Uploading archive {ArchiveId} to Azure Blob container '{ContainerName}' with name '{BlobName}' ({SizeMB:N2} MB)",
                 archiveId,
                 _containerName,
-                blobName,
+                BlobName,
                 data.Length / (1024.0 * 1024.0));
 
             // Calculate checksum for integrity verification
@@ -85,7 +85,7 @@ public class AzureBlobStorageProvider : IExternalStorageProvider
             // Ensure container exists
             await containerClient.CreateIfNotExistsAsync(cancellationToken: cancellationToken);
 
-            var blobClient = containerClient.GetBlobClient(blobName);
+            var BlobClient = containerClient.GetBlobClient(BlobName);
 
             // Upload with Cool tier for cost savings
             var uploadOptions = new BlobUploadOptions
@@ -99,9 +99,9 @@ public class AzureBlobStorageProvider : IExternalStorageProvider
             };
 
             using var stream = new MemoryStream(data);
-            var response = await blobClient.UploadAsync(stream, uploadOptions, cancellationToken);
+            var response = await BlobClient.UploadAsync(stream, uploadOptions, cancellationToken);
 
-            var storageLocation = blobClient.Uri.ToString();
+            var storageLocation = BlobClient.Uri.ToString();
 
             _logger.LogInformation(
                 "Successfully uploaded archive {ArchiveId} to Azure Blob: {StorageLocation}",
@@ -136,20 +136,20 @@ public class AzureBlobStorageProvider : IExternalStorageProvider
             throw new ArgumentException("Storage location cannot be null or empty", nameof(storageLocation));
         }
 
-        var blobName = ExtractBlobNameFromLocation(storageLocation);
+        var BlobName = ExtractBlobNameFromLocation(storageLocation);
 
         try
         {
             _logger.LogInformation(
                 "Downloading archive from Azure Blob container '{ContainerName}' with name '{BlobName}'",
                 _containerName,
-                blobName);
+                BlobName);
 
             var containerClient = _blobServiceClient.GetBlobContainerClient(_containerName);
-            var blobClient = containerClient.GetBlobClient(blobName);
+            var BlobClient = containerClient.GetBlobClient(BlobName);
 
             using var memoryStream = new MemoryStream();
-            await blobClient.DownloadToAsync(memoryStream, cancellationToken);
+            await BlobClient.DownloadToAsync(memoryStream, cancellationToken);
 
             var data = memoryStream.ToArray();
 
@@ -186,19 +186,19 @@ public class AzureBlobStorageProvider : IExternalStorageProvider
             throw new ArgumentException("Storage location cannot be null or empty", nameof(storageLocation));
         }
 
-        var blobName = ExtractBlobNameFromLocation(storageLocation);
+        var BlobName = ExtractBlobNameFromLocation(storageLocation);
 
         try
         {
             _logger.LogInformation(
                 "Deleting archive from Azure Blob container '{ContainerName}' with name '{BlobName}'",
                 _containerName,
-                blobName);
+                BlobName);
 
             var containerClient = _blobServiceClient.GetBlobContainerClient(_containerName);
-            var blobClient = containerClient.GetBlobClient(blobName);
+            var BlobClient = containerClient.GetBlobClient(BlobName);
 
-            var response = await blobClient.DeleteIfExistsAsync(cancellationToken: cancellationToken);
+            var response = await BlobClient.DeleteIfExistsAsync(cancellationToken: cancellationToken);
 
             if (response.Value)
             {
@@ -237,14 +237,14 @@ public class AzureBlobStorageProvider : IExternalStorageProvider
             return false;
         }
 
-        var blobName = ExtractBlobNameFromLocation(storageLocation);
+        var BlobName = ExtractBlobNameFromLocation(storageLocation);
 
         try
         {
             var containerClient = _blobServiceClient.GetBlobContainerClient(_containerName);
-            var blobClient = containerClient.GetBlobClient(blobName);
+            var BlobClient = containerClient.GetBlobClient(BlobName);
 
-            var response = await blobClient.ExistsAsync(cancellationToken);
+            var response = await BlobClient.ExistsAsync(cancellationToken);
             return response.Value;
         }
         catch (Exception ex)
@@ -263,14 +263,14 @@ public class AzureBlobStorageProvider : IExternalStorageProvider
             throw new ArgumentException("Storage location cannot be null or empty", nameof(storageLocation));
         }
 
-        var blobName = ExtractBlobNameFromLocation(storageLocation);
+        var BlobName = ExtractBlobNameFromLocation(storageLocation);
 
         try
         {
             var containerClient = _blobServiceClient.GetBlobContainerClient(_containerName);
-            var blobClient = containerClient.GetBlobClient(blobName);
+            var BlobClient = containerClient.GetBlobClient(BlobName);
 
-            var properties = await blobClient.GetPropertiesAsync(cancellationToken: cancellationToken);
+            var properties = await BlobClient.GetPropertiesAsync(cancellationToken: cancellationToken);
 
             var metadata = new Dictionary<string, string>(properties.Value.Metadata);
 
@@ -371,7 +371,7 @@ public class AzureBlobStorageProvider : IExternalStorageProvider
     }
 
     /// <summary>
-    /// Generate blob name for an archive based on archive ID and date
+    /// Generate Blob name for an archive based on archive ID and date
     /// Format: {prefix}year=YYYY/month=MM/archive-{archiveId}.bin
     /// </summary>
     private string GenerateBlobName(long archiveId)
@@ -381,7 +381,7 @@ public class AzureBlobStorageProvider : IExternalStorageProvider
     }
 
     /// <summary>
-    /// Extract blob name from storage location URL
+    /// Extract Blob name from storage location URL
     /// </summary>
     private string ExtractBlobNameFromLocation(string storageLocation)
     {

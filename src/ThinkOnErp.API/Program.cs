@@ -385,6 +385,13 @@ Example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...'
 
     var app = builder.Build();
 
+    // Seed test data on startup
+    using (var scope = app.Services.CreateScope())
+    {
+        var dbContext = scope.ServiceProvider.GetRequiredService<ThinkOnErp.Infrastructure.Data.OracleDbContext>();
+        await ThinkOnErp.Infrastructure.Data.SeedData.InitializeAsync(dbContext);
+    }
+
     // Add request tracing middleware (must be early in pipeline to capture all requests and generate correlation IDs)
     app.UseMiddleware<ThinkOnErp.API.Middleware.RequestTracingMiddleware>();
 

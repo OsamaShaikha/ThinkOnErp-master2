@@ -1,4 +1,4 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using ThinkOnErp.Domain.Entities;
 using ThinkOnErp.Domain.Interfaces;
 using ThinkOnErp.Infrastructure.Data;
@@ -7,8 +7,8 @@ namespace ThinkOnErp.Infrastructure.Repositories;
 
 public class TicketAttachmentRepository : ITicketAttachmentRepository
 {
-    private readonly ThinkOnErpDbContext _context;
-    public TicketAttachmentRepository(ThinkOnErpDbContext context) => _context = context;
+    private readonly OracleDbContext _context;
+    public TicketAttachmentRepository(OracleDbContext context) => _context = context;
 
     public async Task<List<SysTicketAttachment>> GetByTicketIdAsync(long ticketId) =>
         await _context.SysTicketAttachments.Where(a => a.TicketId == ticketId).ToListAsync();
@@ -20,7 +20,7 @@ public class TicketAttachmentRepository : ITicketAttachmentRepository
     {
         _context.SysTicketAttachments.Add(attachment);
         await _context.SaveChangesAsync();
-        return attachment.RowId;
+        return attachment.Id;
     }
 
     public async Task<long> DeleteAsync(long rowId, string userName)
@@ -40,7 +40,7 @@ public class TicketAttachmentRepository : ITicketAttachmentRepository
     public async Task<List<SysTicketAttachment>> GetAttachmentMetadataAsync(long ticketId) =>
         await _context.SysTicketAttachments.Where(a => a.TicketId == ticketId).Select(a => new SysTicketAttachment
         {
-            RowId = a.RowId,
+            Id = a.Id,
             TicketId = a.TicketId,
             FileName = a.FileName,
             FileSize = a.FileSize,
@@ -50,7 +50,7 @@ public class TicketAttachmentRepository : ITicketAttachmentRepository
         }).ToListAsync();
 
     public async Task<byte[]?> GetFileContentAsync(long rowId) =>
-        await _context.SysTicketAttachments.Where(a => a.RowId == rowId).Select(a => a.FileContent).FirstOrDefaultAsync();
+        await _context.SysTicketAttachments.Where(a => a.Id == rowId).Select(a => a.FileContent).FirstOrDefaultAsync();
 
     public async Task<bool> CanAddAttachmentAsync(long ticketId, long newFileSize)
     {
@@ -83,14 +83,14 @@ public class TicketAttachmentRepository : ITicketAttachmentRepository
 
 public class SavedSearchRepository : ISavedSearchRepository
 {
-    private readonly ThinkOnErpDbContext _context;
-    public SavedSearchRepository(ThinkOnErpDbContext context) => _context = context;
+    private readonly OracleDbContext _context;
+    public SavedSearchRepository(OracleDbContext context) => _context = context;
 
     public async Task<long> CreateAsync(SysSavedSearch savedSearch)
     {
         _context.SysSavedSearches.Add(savedSearch);
         await _context.SaveChangesAsync();
-        return savedSearch.RowId;
+        return savedSearch.Id;
     }
 
     public async Task<long> UpdateAsync(SysSavedSearch savedSearch)
@@ -130,14 +130,14 @@ public class SavedSearchRepository : ISavedSearchRepository
 
 public class SearchAnalyticsRepository : ISearchAnalyticsRepository
 {
-    private readonly ThinkOnErpDbContext _context;
-    public SearchAnalyticsRepository(ThinkOnErpDbContext context) => _context = context;
+    private readonly OracleDbContext _context;
+    public SearchAnalyticsRepository(OracleDbContext context) => _context = context;
 
     public async Task<long> LogSearchAsync(SysSearchAnalytics analytics)
     {
         _context.SysSearchAnalytics.Add(analytics);
         await _context.SaveChangesAsync();
-        return analytics.RowId;
+        return analytics.Id;
     }
 
     public async Task<List<TopSearchResult>> GetTopSearchesAsync(int daysBack = 30, int topCount = 10)
@@ -189,8 +189,8 @@ public class SearchAnalyticsRepository : ISearchAnalyticsRepository
 
 public class TicketConfigRepository : ITicketConfigRepository
 {
-    private readonly ThinkOnErpDbContext _context;
-    public TicketConfigRepository(ThinkOnErpDbContext context) => _context = context;
+    private readonly OracleDbContext _context;
+    public TicketConfigRepository(OracleDbContext context) => _context = context;
 
     public async Task<List<SysTicketConfig>> GetAllAsync() =>
         await _context.SysTicketConfigs.Where(c => c.IsActive).ToListAsync();
@@ -205,7 +205,7 @@ public class TicketConfigRepository : ITicketConfigRepository
     {
         _context.SysTicketConfigs.Add(config);
         await _context.SaveChangesAsync();
-        return config.RowId;
+        return config.Id;
     }
 
     public async Task<long> UpdateAsync(SysTicketConfig config)

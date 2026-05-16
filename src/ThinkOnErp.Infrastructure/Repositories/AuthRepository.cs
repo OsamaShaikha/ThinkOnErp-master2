@@ -1,4 +1,4 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using ThinkOnErp.Domain.Entities;
 using ThinkOnErp.Domain.Interfaces;
 using ThinkOnErp.Infrastructure.Data;
@@ -7,9 +7,15 @@ namespace ThinkOnErp.Infrastructure.Repositories;
 
 public class AuthRepository : IAuthRepository
 {
-    private readonly ThinkOnErpDbContext _context;
+    private readonly OracleDbContext _context;
 
-    public AuthRepository(ThinkOnErpDbContext context) => _context = context;
+    public AuthRepository(OracleDbContext context) => _context = context;
+
+    public async Task<SysUser?> GetByUserNameAsync(string userName)
+    {
+        return await _context.SysUsers
+            .FirstOrDefaultAsync(u => u.UserName == userName && u.IsActive);
+    }
 
     public async Task<SysUser?> AuthenticateAsync(string userName, string passwordHash)
     {

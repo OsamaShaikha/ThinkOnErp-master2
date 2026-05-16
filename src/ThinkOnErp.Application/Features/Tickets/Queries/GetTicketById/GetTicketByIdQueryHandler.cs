@@ -45,7 +45,7 @@ public class GetTicketByIdQueryHandler : IRequestHandler<GetTicketByIdQuery, Tic
             // Map to DTO
             var ticketDto = new TicketDetailDto
             {
-                TicketId = ticket.RowId,
+                TicketId = ticket.Id,
                 TitleAr = ticket.TitleAr,
                 TitleEn = ticket.TitleEn,
                 Description = ticket.Description,
@@ -82,7 +82,7 @@ public class GetTicketByIdQueryHandler : IRequestHandler<GetTicketByIdQuery, Tic
                 
                 ticketDto.Comments = comments.Select(c => new TicketCommentDto
                     {
-                        CommentId = c.RowId,
+                        CommentId = c.Id,
                         TicketId = c.TicketId,
                         CommentText = c.CommentText,
                         IsInternal = c.IsInternal,
@@ -103,7 +103,7 @@ public class GetTicketByIdQueryHandler : IRequestHandler<GetTicketByIdQuery, Tic
                 
                 ticketDto.Attachments = attachments.Select(a => new TicketAttachmentDto
                 {
-                    AttachmentId = a.RowId,
+                    AttachmentId = a.Id,
                     TicketId = a.TicketId,
                     FileName = a.FileName,
                     FileSize = a.FileSize,
@@ -111,7 +111,7 @@ public class GetTicketByIdQueryHandler : IRequestHandler<GetTicketByIdQuery, Tic
                     CreationUser = a.CreationUser,
                     CreationUserName = a.CreationUser, // Using CreationUser from entity
                     CreationDate = a.CreationDate,
-                    DownloadUrl = $"/api/tickets/{request.TicketId}/attachments/{a.RowId}"
+                    DownloadUrl = $"/api/tickets/{request.TicketId}/attachments/{a.Id}"
                 }).ToList();
 
                 ticketDto.AttachmentCount = ticketDto.Attachments.Count;

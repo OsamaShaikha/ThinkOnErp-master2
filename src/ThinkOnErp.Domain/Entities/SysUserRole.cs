@@ -8,7 +8,7 @@ public class SysUserRole
     /// <summary>
     /// Unique identifier for the user-role assignment
     /// </summary>
-    public Int64 RowId { get; set; }
+    public Int64 Id { get; set; }
 
     /// <summary>
     /// Foreign key to SYS_USERS table

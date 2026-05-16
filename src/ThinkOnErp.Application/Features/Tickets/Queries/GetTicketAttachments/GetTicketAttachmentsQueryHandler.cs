@@ -44,7 +44,7 @@ public class GetTicketAttachmentsQueryHandler : IRequestHandler<GetTicketAttachm
             // Map to DTOs
             var attachmentDtos = attachments.Select(a => new TicketAttachmentDto
             {
-                AttachmentId = a.RowId,
+                AttachmentId = a.Id,
                 TicketId = a.TicketId,
                 FileName = a.FileName,
                 FileSize = a.FileSize,
@@ -52,7 +52,7 @@ public class GetTicketAttachmentsQueryHandler : IRequestHandler<GetTicketAttachm
                 CreationUser = a.CreationUser,
                 CreationUserName = a.CreationUser, // Using CreationUser from entity
                 CreationDate = a.CreationDate,
-                DownloadUrl = $"/api/tickets/{request.TicketId}/attachments/{a.RowId}"
+                DownloadUrl = $"/api/tickets/{request.TicketId}/attachments/{a.Id}"
             }).ToList();
 
             // Sort attachments

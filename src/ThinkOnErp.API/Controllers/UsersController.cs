@@ -109,7 +109,7 @@ public class UsersController : ControllerBase
         {
             _logger.LogInformation("Retrieving user with ID: {UserId}", id);
 
-            var query = new GetUserByIdQuery { RowId = id };
+            var query = new GetUserByIdQuery { Id = id };
             var user = await _mediator.Send(query);
 
             if (user == null)

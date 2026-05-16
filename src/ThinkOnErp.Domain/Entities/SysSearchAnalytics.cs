@@ -10,7 +10,7 @@ public class SysSearchAnalytics
     /// <summary>
     /// Unique identifier for the search analytics record
     /// </summary>
-    public Int64 RowId { get; set; }
+    public Int64 Id { get; set; }
 
     /// <summary>
     /// User who performed the search

@@ -8,7 +8,7 @@ public class SysSystem
     /// <summary>
     /// Unique identifier for the system
     /// </summary>
-    public Int64 RowId { get; set; }
+    public Int64 Id { get; set; }
 
     /// <summary>
     /// Unique code identifier (e.g., accounting, inventory)

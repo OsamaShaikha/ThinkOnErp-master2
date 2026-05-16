@@ -10,9 +10,9 @@ public class SysRoleConfiguration : IEntityTypeConfiguration<SysRole>
     {
         builder.ToTable("SYS_ROLE");
         builder.HasKey(e => e.Id);
-        builder.Property(e => e.Id).HasColumnName("ROW_ID").ValueGeneratedOnAdd();
-        builder.Property(e => e.RoleNameAr).HasColumnName("ROW_DESC").HasMaxLength(200).IsRequired();
-        builder.Property(e => e.RoleNameEn).HasColumnName("ROW_DESC_E").HasMaxLength(200).IsRequired();
+        builder.Property(e => e.Id).ValueGeneratedOnAdd();
+builder.Property(e => e.RoleNameAr).HasColumnName("NAME_AR").HasMaxLength(200).IsRequired();
+builder.Property(e => e.RoleNameEn).HasColumnName("NAME_EN").HasMaxLength(200).IsRequired();
         builder.Property(e => e.Note).HasColumnName("NOTE").HasMaxLength(500);
         builder.Property(e => e.IsActive).HasColumnName("IS_ACTIVE").HasConversion<string>(v => v ? "Y" : "N", v => v == "Y").HasMaxLength(1);
         builder.Property(e => e.CreationUser).HasColumnName("CREATION_USER").HasMaxLength(100).IsRequired();
@@ -28,9 +28,9 @@ public class SysCurrencyConfiguration : IEntityTypeConfiguration<SysCurrency>
     {
         builder.ToTable("SYS_CURRENCY");
         builder.HasKey(e => e.Id);
-        builder.Property(e => e.Id).HasColumnName("ROW_ID").ValueGeneratedOnAdd();
-        builder.Property(e => e.CurrencyNameAr).HasColumnName("ROW_DESC").HasMaxLength(200).IsRequired();
-        builder.Property(e => e.CurrencyNameEn).HasColumnName("ROW_DESC_E").HasMaxLength(200).IsRequired();
+        builder.Property(e => e.Id).ValueGeneratedOnAdd();
+builder.Property(e => e.CurrencyNameAr).HasColumnName("NAME_AR").HasMaxLength(200).IsRequired();
+builder.Property(e => e.CurrencyNameEn).HasColumnName("NAME_EN").HasMaxLength(200).IsRequired();
         builder.Property(e => e.ShortNameAr).HasColumnName("SHORT_DESC").HasMaxLength(50).IsRequired();
         builder.Property(e => e.ShortNameEn).HasColumnName("SHORT_DESC_E").HasMaxLength(50).IsRequired();
         builder.Property(e => e.SingularNameAr).HasColumnName("SINGULER_DESC").HasMaxLength(50).IsRequired();
@@ -56,9 +56,9 @@ public class SysCompanyConfiguration : IEntityTypeConfiguration<SysCompany>
     {
         builder.ToTable("SYS_COMPANY");
         builder.HasKey(e => e.Id);
-        builder.Property(e => e.Id).HasColumnName("ROW_ID").ValueGeneratedOnAdd();
-        builder.Property(e => e.CompanyNameAr).HasColumnName("ROW_DESC").HasMaxLength(200).IsRequired();
-        builder.Property(e => e.CompanyNameEn).HasColumnName("ROW_DESC_E").HasMaxLength(200).IsRequired();
+        builder.Property(e => e.Id).ValueGeneratedOnAdd();
+builder.Property(e => e.CompanyNameAr).HasColumnName("NAME_AR").HasMaxLength(200).IsRequired();
+builder.Property(e => e.CompanyNameEn).HasColumnName("NAME_EN").HasMaxLength(200).IsRequired();
         builder.Property(e => e.CountryId).HasColumnName("COUNTRY_ID");
         builder.Property(e => e.CurrId).HasColumnName("CURR_ID");
         builder.Property(e => e.LegalName).HasColumnName("LEGAL_NAME").HasMaxLength(300);
@@ -66,7 +66,7 @@ public class SysCompanyConfiguration : IEntityTypeConfiguration<SysCompany>
         builder.Property(e => e.CompanyCode).HasColumnName("COMPANY_CODE").HasMaxLength(50);
         builder.Property(e => e.TaxNumber).HasColumnName("TAX_NUMBER").HasMaxLength(50);
         builder.Property(e => e.DefaultBranchId).HasColumnName("DEFAULT_BRANCH_ID");
-        builder.Property(e => e.CompanyLogo).HasColumnName("COMPANY_LOGO").HasColumnType("BLOB");
+        builder.Property(e => e.CompanyLogo).HasColumnName("COMPANY_LOGO").HasColumnType("CLOB");
         builder.Property(e => e.IsActive).HasColumnName("IS_ACTIVE").HasConversion<string>(v => v ? "Y" : "N", v => v == "Y").HasMaxLength(1);
         builder.Property(e => e.CreationUser).HasColumnName("CREATION_USER").HasMaxLength(100).IsRequired();
         builder.Property(e => e.CreationDate).HasColumnName("CREATION_DATE");
@@ -86,10 +86,10 @@ public class SysBranchConfiguration : IEntityTypeConfiguration<SysBranch>
     {
         builder.ToTable("SYS_BRANCH");
         builder.HasKey(e => e.Id);
-        builder.Property(e => e.Id).HasColumnName("ROW_ID").ValueGeneratedOnAdd();
-        builder.Property(e => e.CompanyId).HasColumnName("PAR_ROW_ID");
-        builder.Property(e => e.BranchNameAr).HasColumnName("ROW_DESC").HasMaxLength(200).IsRequired();
-        builder.Property(e => e.BranchNameEn).HasColumnName("ROW_DESC_E").HasMaxLength(200).IsRequired();
+        builder.Property(e => e.Id).ValueGeneratedOnAdd();
+        builder.Property(e => e.CompanyId).HasColumnName("COMPANY_ID");
+builder.Property(e => e.BranchNameAr).HasColumnName("NAME_AR").HasMaxLength(200).IsRequired();
+builder.Property(e => e.BranchNameEn).HasColumnName("NAME_EN").HasMaxLength(200).IsRequired();
         builder.Property(e => e.Phone).HasColumnName("PHONE").HasMaxLength(50);
         builder.Property(e => e.Mobile).HasColumnName("MOBILE").HasMaxLength(50);
         builder.Property(e => e.Fax).HasColumnName("FAX").HasMaxLength(50);
@@ -98,7 +98,7 @@ public class SysBranchConfiguration : IEntityTypeConfiguration<SysBranch>
         builder.Property(e => e.DefaultLang).HasColumnName("DEFAULT_LANG").HasMaxLength(10);
         builder.Property(e => e.BaseCurrencyId).HasColumnName("BASE_CURRENCY_ID");
         builder.Property(e => e.RoundingRules).HasColumnName("ROUNDING_RULES");
-        builder.Property(e => e.BranchLogo).HasColumnName("BRANCH_LOGO").HasColumnType("BLOB");
+        builder.Property(e => e.BranchLogo).HasColumnName("BRANCH_LOGO").HasColumnType("CLOB");
         builder.Property(e => e.IsActive).HasColumnName("IS_ACTIVE").HasConversion<string>(v => v ? "Y" : "N", v => v == "Y").HasMaxLength(1);
         builder.Property(e => e.CreationUser).HasColumnName("CREATION_USER").HasMaxLength(100).IsRequired();
         builder.Property(e => e.CreationDate).HasColumnName("CREATION_DATE");
@@ -118,9 +118,9 @@ public class SysUserConfiguration : IEntityTypeConfiguration<SysUser>
     {
         builder.ToTable("SYS_USERS");
         builder.HasKey(e => e.Id);
-        builder.Property(e => e.Id).HasColumnName("ROW_ID").ValueGeneratedOnAdd();
-        builder.Property(e => e.FullNameAr).HasColumnName("ROW_DESC").HasMaxLength(200).IsRequired();
-        builder.Property(e => e.FullNameEn).HasColumnName("ROW_DESC_E").HasMaxLength(200).IsRequired();
+        builder.Property(e => e.Id).ValueGeneratedOnAdd();
+builder.Property(e => e.FullNameAr).HasColumnName("NAME_AR").HasMaxLength(200).IsRequired();
+builder.Property(e => e.FullNameEn).HasColumnName("NAME_EN").HasMaxLength(200).IsRequired();
         builder.Property(e => e.UserName).HasColumnName("USER_NAME").HasMaxLength(100).IsRequired();
         builder.HasIndex(e => e.UserName).IsUnique();
         builder.Property(e => e.Password).HasColumnName("PASSWORD").HasMaxLength(500).IsRequired();
@@ -128,6 +128,7 @@ public class SysUserConfiguration : IEntityTypeConfiguration<SysUser>
         builder.Property(e => e.Phone2).HasColumnName("PHONE2").HasMaxLength(50);
         builder.Property(e => e.Role).HasColumnName("ROLE");
         builder.Property(e => e.BranchId).HasColumnName("BRANCH_ID");
+        builder.Property(e => e.CompanyId).HasColumnName("COMPANY_ID");
         builder.Property(e => e.Email).HasColumnName("EMAIL").HasMaxLength(200);
         builder.Property(e => e.LastLoginDate).HasColumnName("LAST_LOGIN_DATE");
         builder.Property(e => e.IsActive).HasColumnName("IS_ACTIVE").HasConversion<string>(v => v ? "Y" : "N", v => v == "Y").HasMaxLength(1);
@@ -148,12 +149,12 @@ public class SysFiscalYearConfiguration : IEntityTypeConfiguration<SysFiscalYear
     {
         builder.ToTable("SYS_FISCAL_YEAR");
         builder.HasKey(e => e.Id);
-        builder.Property(e => e.Id).HasColumnName("ROW_ID").ValueGeneratedOnAdd();
+        builder.Property(e => e.Id).ValueGeneratedOnAdd();
         builder.Property(e => e.CompanyId).HasColumnName("COMPANY_ID").IsRequired();
         builder.Property(e => e.BranchId).HasColumnName("BRANCH_ID").IsRequired();
         builder.Property(e => e.FiscalYearCode).HasColumnName("FISCAL_YEAR_CODE").HasMaxLength(20).IsRequired();
-        builder.Property(e => e.FiscalYearNameAr).HasColumnName("ROW_DESC").HasMaxLength(200);
-        builder.Property(e => e.FiscalYearNameEn).HasColumnName("ROW_DESC_E").HasMaxLength(200);
+builder.Property(e => e.FiscalYearNameAr).HasColumnName("NAME_AR").HasMaxLength(200);
+builder.Property(e => e.FiscalYearNameEn).HasColumnName("NAME_EN").HasMaxLength(200);
         builder.Property(e => e.StartDate).HasColumnName("START_DATE").IsRequired();
         builder.Property(e => e.EndDate).HasColumnName("END_DATE").IsRequired();
         builder.Property(e => e.IsClosed).HasColumnName("IS_CLOSED").HasConversion<string>(v => v ? "Y" : "N", v => v == "Y").HasMaxLength(1);
@@ -175,9 +176,9 @@ public class SysSuperAdminConfiguration : IEntityTypeConfiguration<SysSuperAdmin
     {
         builder.ToTable("SYS_SUPER_ADMIN");
         builder.HasKey(e => e.Id);
-        builder.Property(e => e.Id).HasColumnName("ROW_ID").ValueGeneratedOnAdd();
-        builder.Property(e => e.NameAr).HasColumnName("ROW_DESC").HasMaxLength(200).IsRequired();
-        builder.Property(e => e.NameEn).HasColumnName("ROW_DESC_E").HasMaxLength(200).IsRequired();
+        builder.Property(e => e.Id).ValueGeneratedOnAdd();
+builder.Property(e => e.NameAr).HasColumnName("NAME_AR").HasMaxLength(200).IsRequired();
+builder.Property(e => e.NameEn).HasColumnName("NAME_EN").HasMaxLength(200).IsRequired();
         builder.Property(e => e.UserName).HasColumnName("USER_NAME").HasMaxLength(100).IsRequired();
         builder.HasIndex(e => e.UserName).IsUnique();
         builder.Property(e => e.Password).HasColumnName("PASSWORD").HasMaxLength(500).IsRequired();
@@ -200,8 +201,8 @@ public class SysSystemConfiguration : IEntityTypeConfiguration<SysSystem>
     public void Configure(EntityTypeBuilder<SysSystem> builder)
     {
         builder.ToTable("SYS_SYSTEM");
-        builder.HasKey(e => e.RowId);
-        builder.Property(e => e.RowId).HasColumnName("ROW_ID").ValueGeneratedOnAdd();
+        builder.HasKey(e => e.Id);
+        builder.Property(e => e.Id).ValueGeneratedOnAdd();
         builder.Property(e => e.SystemCode).HasColumnName("SYSTEM_CODE").HasMaxLength(50).IsRequired();
         builder.HasIndex(e => e.SystemCode).IsUnique();
         builder.Property(e => e.SystemName).HasColumnName("SYSTEM_NAME").HasMaxLength(200).IsRequired();
@@ -223,8 +224,8 @@ public class SysScreenConfiguration : IEntityTypeConfiguration<SysScreen>
     public void Configure(EntityTypeBuilder<SysScreen> builder)
     {
         builder.ToTable("SYS_SCREEN");
-        builder.HasKey(e => e.RowId);
-        builder.Property(e => e.RowId).HasColumnName("ROW_ID").ValueGeneratedOnAdd();
+        builder.HasKey(e => e.Id);
+        builder.Property(e => e.Id).ValueGeneratedOnAdd();
         builder.Property(e => e.SystemId).HasColumnName("SYSTEM_ID").IsRequired();
         builder.Property(e => e.ParentScreenId).HasColumnName("PARENT_SCREEN_ID");
         builder.Property(e => e.ScreenCode).HasColumnName("SCREEN_CODE").HasMaxLength(100).IsRequired();
@@ -252,8 +253,8 @@ public class SysUserRoleConfiguration : IEntityTypeConfiguration<SysUserRole>
     public void Configure(EntityTypeBuilder<SysUserRole> builder)
     {
         builder.ToTable("SYS_USERS_ROLES");
-        builder.HasKey(e => e.RowId);
-        builder.Property(e => e.RowId).HasColumnName("ROW_ID").ValueGeneratedOnAdd();
+        builder.HasKey(e => e.Id);
+        builder.Property(e => e.Id).ValueGeneratedOnAdd();
         builder.Property(e => e.UserId).HasColumnName("USER_ID").IsRequired();
         builder.Property(e => e.RoleId).HasColumnName("ROLE_ID").IsRequired();
         builder.Property(e => e.AssignedBy).HasColumnName("ASSIGNED_BY");
@@ -271,8 +272,8 @@ public class SysRoleScreenPermissionConfiguration : IEntityTypeConfiguration<Sys
     public void Configure(EntityTypeBuilder<SysRoleScreenPermission> builder)
     {
         builder.ToTable("SYS_ROLE_SCREEN_PERMISSIONS");
-        builder.HasKey(e => e.RowId);
-        builder.Property(e => e.RowId).HasColumnName("ROW_ID").ValueGeneratedOnAdd();
+        builder.HasKey(e => e.Id);
+        builder.Property(e => e.Id).ValueGeneratedOnAdd();
         builder.Property(e => e.RoleId).HasColumnName("ROLE_ID").IsRequired();
         builder.Property(e => e.ScreenId).HasColumnName("SCREEN_ID").IsRequired();
         builder.Property(e => e.CanView).HasColumnName("CAN_VIEW").HasConversion<string>(v => v ? "Y" : "N", v => v == "Y").HasMaxLength(1);
@@ -294,8 +295,8 @@ public class SysUserScreenPermissionConfiguration : IEntityTypeConfiguration<Sys
     public void Configure(EntityTypeBuilder<SysUserScreenPermission> builder)
     {
         builder.ToTable("SYS_USER_SCREEN_PERMISSIONS");
-        builder.HasKey(e => e.RowId);
-        builder.Property(e => e.RowId).HasColumnName("ROW_ID").ValueGeneratedOnAdd();
+        builder.HasKey(e => e.Id);
+        builder.Property(e => e.Id).ValueGeneratedOnAdd();
         builder.Property(e => e.UserId).HasColumnName("USER_ID").IsRequired();
         builder.Property(e => e.ScreenId).HasColumnName("SCREEN_ID").IsRequired();
         builder.Property(e => e.CanView).HasColumnName("CAN_VIEW").HasConversion<string>(v => v ? "Y" : "N", v => v == "Y").HasMaxLength(1);
@@ -317,7 +318,7 @@ public class SysBranchSystemConfiguration : IEntityTypeConfiguration<SysBranchSy
     {
         builder.ToTable("SYS_BRANCH_SYSTEMS");
         builder.HasKey(e => e.Id);
-        builder.Property(e => e.Id).HasColumnName("ROW_ID").ValueGeneratedOnAdd();
+        builder.Property(e => e.Id).ValueGeneratedOnAdd();
         builder.Property(e => e.BranchId).HasColumnName("BRANCH_ID").IsRequired();
         builder.Property(e => e.SystemId).HasColumnName("SYSTEM_ID").IsRequired();
         builder.Property(e => e.IsAllowed).HasColumnName("IS_ALLOWED").HasConversion<string>(v => v ? "Y" : "N", v => v == "Y").HasMaxLength(1);
@@ -342,7 +343,7 @@ public class SysBranchScreenPermissionConfiguration : IEntityTypeConfiguration<S
     {
         builder.ToTable("SYS_BRANCH_SCREEN_PERMISSIONS");
         builder.HasKey(e => e.Id);
-        builder.Property(e => e.Id).HasColumnName("ROW_ID").ValueGeneratedOnAdd();
+        builder.Property(e => e.Id).ValueGeneratedOnAdd();
         builder.Property(e => e.BranchId).HasColumnName("BRANCH_ID").IsRequired();
         builder.Property(e => e.ScreenId).HasColumnName("SCREEN_ID").IsRequired();
         builder.Property(e => e.CanView).HasColumnName("CAN_VIEW").HasConversion<string>(v => v ? "Y" : "N", v => v == "Y").HasMaxLength(1);
@@ -369,7 +370,7 @@ public class SysCompanyScreenPermissionConfiguration : IEntityTypeConfiguration<
     {
         builder.ToTable("SYS_COMPANY_SCREEN_PERMISSIONS");
         builder.HasKey(e => e.Id);
-        builder.Property(e => e.Id).HasColumnName("ROW_ID").ValueGeneratedOnAdd();
+        builder.Property(e => e.Id).ValueGeneratedOnAdd();
         builder.Property(e => e.CompanyId).HasColumnName("COMPANY_ID").IsRequired();
         builder.Property(e => e.ScreenId).HasColumnName("SCREEN_ID").IsRequired();
         builder.Property(e => e.CanView).HasColumnName("CAN_VIEW").HasConversion<string>(v => v ? "Y" : "N", v => v == "Y").HasMaxLength(1);
@@ -395,8 +396,8 @@ public class SysCompanySystemConfiguration : IEntityTypeConfiguration<SysCompany
     public void Configure(EntityTypeBuilder<SysCompanySystem> builder)
     {
         builder.ToTable("SYS_COMPANY_SYSTEMS");
-        builder.HasKey(e => e.RowId);
-        builder.Property(e => e.RowId).HasColumnName("ROW_ID").ValueGeneratedOnAdd();
+        builder.HasKey(e => e.Id);
+        builder.Property(e => e.Id).ValueGeneratedOnAdd();
         builder.Property(e => e.CompanyId).HasColumnName("COMPANY_ID").IsRequired();
         builder.Property(e => e.SystemId).HasColumnName("SYSTEM_ID").IsRequired();
         builder.Property(e => e.IsAllowed).HasColumnName("IS_ALLOWED").HasConversion<string>(v => v ? "Y" : "N", v => v == "Y").HasMaxLength(1);

@@ -10,7 +10,7 @@ public class SysAuditLog
     /// <summary>
     /// Primary key - unique identifier for the audit log entry
     /// </summary>
-    public long RowId { get; set; }
+    public long Id { get; set; }
 
     /// <summary>
     /// Type of actor performing the action (SUPER_ADMIN, COMPANY_ADMIN, USER, SYSTEM)
@@ -126,6 +126,11 @@ public class SysAuditLog
     /// Event category (DataChange, Authentication, Permission, Exception, Configuration, Request)
     /// </summary>
     public string EventCategory { get; set; } = "DataChange";
+
+    /// <summary>
+    /// Current status (Unresolved, InProgress, Resolved, Critical)
+    /// </summary>
+    public string? Status { get; set; }
 
     /// <summary>
     /// Additional metadata in JSON format for extensibility

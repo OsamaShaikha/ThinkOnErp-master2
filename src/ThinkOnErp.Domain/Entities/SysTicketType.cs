@@ -10,7 +10,7 @@ public class SysTicketType
     /// <summary>
     /// Primary key - generated from SEQ_SYS_TICKET_TYPE sequence
     /// </summary>
-    public Int64 RowId { get; set; }
+    public Int64 Id { get; set; }
 
     /// <summary>
     /// Type name in Arabic

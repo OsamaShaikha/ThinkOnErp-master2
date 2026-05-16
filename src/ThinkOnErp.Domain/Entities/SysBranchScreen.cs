@@ -5,7 +5,7 @@ namespace ThinkOnErp.Domain.Entities;
 /// </summary>
 public class SysBranchScreen
 {
-    public long RowId { get; set; }
+    public long Id { get; set; }
     public long BranchId { get; set; }
     public long ScreenId { get; set; }
     public bool IsAllowed { get; set; }

@@ -9,7 +9,7 @@ public class SysTicketConfig
     /// <summary>
     /// Unique identifier for the configuration setting
     /// </summary>
-    public Int64 RowId { get; set; }
+    public Int64 Id { get; set; }
 
     /// <summary>
     /// Unique key identifying the configuration setting (e.g., "SLA.Priority.High.Hours")

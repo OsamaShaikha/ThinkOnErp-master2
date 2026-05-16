@@ -10,7 +10,7 @@ public class SysTicketCategory
     /// <summary>
     /// Primary key - generated from SEQ_SYS_TICKET_CATEGORY sequence
     /// </summary>
-    public Int64 RowId { get; set; }
+    public Int64 Id { get; set; }
 
     /// <summary>
     /// Category name in Arabic

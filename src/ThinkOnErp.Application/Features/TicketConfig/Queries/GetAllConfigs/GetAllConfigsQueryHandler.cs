@@ -22,7 +22,7 @@ public class GetAllConfigsQueryHandler : IRequestHandler<GetAllConfigsQuery, Lis
 
         return configs.Select(c => new TicketConfigDto
         {
-            RowId = c.RowId,
+            RowId = c.Id,
             ConfigKey = c.ConfigKey,
             ConfigValue = c.ConfigValue,
             ConfigType = c.ConfigType,

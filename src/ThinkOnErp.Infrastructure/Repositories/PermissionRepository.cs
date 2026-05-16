@@ -1,4 +1,4 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using ThinkOnErp.Domain.Entities;
 using ThinkOnErp.Domain.Interfaces;
 using ThinkOnErp.Infrastructure.Data;
@@ -7,8 +7,8 @@ namespace ThinkOnErp.Infrastructure.Repositories;
 
 public class PermissionRepository : IPermissionRepository
 {
-    private readonly ThinkOnErpDbContext _context;
-    public PermissionRepository(ThinkOnErpDbContext context) => _context = context;
+    private readonly OracleDbContext _context;
+    public PermissionRepository(OracleDbContext context) => _context = context;
 
     public async Task<bool> CheckUserPermissionAsync(long userId, string screenCode, string action)
     {
@@ -21,7 +21,7 @@ public class PermissionRepository : IPermissionRepository
 
         // Check user-level permission overrides first
         var userPermission = await _context.SysUserScreenPermissions
-            .FirstOrDefaultAsync(p => p.UserId == userId && p.ScreenId == screen.RowId);
+            .FirstOrDefaultAsync(p => p.UserId == userId && p.ScreenId == screen.Id);
 
         if (userPermission != null)
         {
@@ -44,7 +44,7 @@ public class PermissionRepository : IPermissionRepository
         foreach (var roleId in userRoles)
         {
             var rolePermission = await _context.SysRoleScreenPermissions
-                .FirstOrDefaultAsync(p => p.RoleId == roleId && p.ScreenId == screen.RowId);
+                .FirstOrDefaultAsync(p => p.RoleId == roleId && p.ScreenId == screen.Id);
 
             if (rolePermission != null)
             {
@@ -265,7 +265,7 @@ public class PermissionRepository : IPermissionRepository
         foreach (var screen in screens)
         {
             var existing = await _context.SysBranchScreenPermissions
-                .FirstOrDefaultAsync(bp => bp.BranchId == branchId && bp.ScreenId == screen.RowId);
+                .FirstOrDefaultAsync(bp => bp.BranchId == branchId && bp.ScreenId == screen.Id);
 
             if (existing != null)
             {
@@ -283,7 +283,7 @@ public class PermissionRepository : IPermissionRepository
                 _context.SysBranchScreenPermissions.Add(new SysBranchScreenPermission
                 {
                     BranchId = branchId,
-                    ScreenId = screen.RowId,
+                    ScreenId = screen.Id,
                     CanView = true,
                     CanInsert = true,
                     CanUpdate = true,
@@ -310,7 +310,7 @@ public class PermissionRepository : IPermissionRepository
         foreach (var screen in screens)
         {
             var existing = await _context.SysCompanyScreenPermissions
-                .FirstOrDefaultAsync(cp => cp.CompanyId == companyId && cp.ScreenId == screen.RowId);
+                .FirstOrDefaultAsync(cp => cp.CompanyId == companyId && cp.ScreenId == screen.Id);
 
             if (existing != null)
             {
@@ -328,7 +328,7 @@ public class PermissionRepository : IPermissionRepository
                 _context.SysCompanyScreenPermissions.Add(new SysCompanyScreenPermission
                 {
                     CompanyId = companyId,
-                    ScreenId = screen.RowId,
+                    ScreenId = screen.Id,
                     CanView = true,
                     CanInsert = true,
                     CanUpdate = true,

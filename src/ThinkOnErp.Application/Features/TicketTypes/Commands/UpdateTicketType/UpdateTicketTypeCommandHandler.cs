@@ -55,7 +55,7 @@ public class UpdateTicketTypeCommandHandler : IRequestHandler<UpdateTicketTypeCo
             // Update entity
             var ticketType = new SysTicketType
             {
-                RowId = request.TicketTypeId,
+                Id = request.TicketTypeId,
                 TypeNameAr = request.TypeNameAr,
                 TypeNameEn = request.TypeNameEn,
                 DescriptionAr = request.DescriptionAr,

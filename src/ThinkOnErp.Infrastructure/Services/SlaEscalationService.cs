@@ -55,7 +55,7 @@ public class SlaEscalationService : ISlaEscalationService
             // Combine and deduplicate
             var ticketsToEscalate = approachingDeadline
                 .Concat(overdueTickets)
-                .GroupBy(t => t.RowId)
+                .GroupBy(t => t.Id)
                 .Select(g => g.First())
                 .ToList();
 
@@ -67,11 +67,11 @@ public class SlaEscalationService : ISlaEscalationService
                 try
                 {
                     await _notificationService.SendSlaEscalationAlertAsync(ticket);
-                    _logger.LogInformation("SLA escalation alert sent for ticket {TicketId}", ticket.RowId);
+                    _logger.LogInformation("SLA escalation alert sent for ticket {TicketId}", ticket.Id);
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError(ex, "Failed to send SLA escalation alert for ticket {TicketId}", ticket.RowId);
+                    _logger.LogError(ex, "Failed to send SLA escalation alert for ticket {TicketId}", ticket.Id);
                     // Continue with other tickets
                 }
             }

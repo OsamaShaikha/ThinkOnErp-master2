@@ -1,4 +1,4 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using ThinkOnErp.Domain.Entities;
 using ThinkOnErp.Domain.Interfaces;
 using ThinkOnErp.Infrastructure.Data;
@@ -7,8 +7,8 @@ namespace ThinkOnErp.Infrastructure.Repositories;
 
 public class SuperAdminRepository : ISuperAdminRepository
 {
-    private readonly ThinkOnErpDbContext _context;
-    public SuperAdminRepository(ThinkOnErpDbContext context) => _context = context;
+    private readonly OracleDbContext _context;
+    public SuperAdminRepository(OracleDbContext context) => _context = context;
 
     public async Task<List<SysSuperAdmin>> GetAllAsync() =>
         await _context.SysSuperAdmins.Where(s => s.IsActive).ToListAsync();

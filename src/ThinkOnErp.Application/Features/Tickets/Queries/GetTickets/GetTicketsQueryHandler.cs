@@ -100,7 +100,7 @@ public class GetTicketsQueryHandler : IRequestHandler<GetTicketsQuery, PagedResu
             // Map to DTOs
             var ticketDtos = tickets.Select(ticket => new TicketDto
             {
-                TicketId = ticket.RowId,
+                TicketId = ticket.Id,
                 TitleAr = ticket.TitleAr,
                 TitleEn = ticket.TitleEn,
                 Description = ticket.Description,

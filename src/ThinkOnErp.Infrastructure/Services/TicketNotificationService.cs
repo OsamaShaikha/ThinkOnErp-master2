@@ -43,13 +43,13 @@ public class TicketNotificationService : ITicketNotificationService
     {
         if (!IsNotificationEnabled())
         {
-            _logger.LogDebug("Notifications are disabled, skipping ticket created notification for ticket {TicketId}", ticket.RowId);
+            _logger.LogDebug("Notifications are disabled, skipping ticket created notification for ticket {TicketId}", ticket.Id);
             return;
         }
 
         try
         {
-            _logger.LogInformation("Sending ticket created notification for ticket {TicketId}", ticket.RowId);
+            _logger.LogInformation("Sending ticket created notification for ticket {TicketId}", ticket.Id);
 
             var recipients = await GetTicketNotificationRecipientsAsync(ticket);
             var template = GetTicketCreatedTemplate();
@@ -59,23 +59,23 @@ public class TicketNotificationService : ITicketNotificationService
                 var emailContent = await RenderTemplateAsync(template, new
                 {
                     RecipientName = recipient.FullNameEn ?? recipient.FullNameAr,
-                    TicketId = ticket.RowId,
+                    TicketId = ticket.Id,
                     TicketTitle = ticket.TitleEn ?? ticket.TitleAr,
                     Priority = ticket.TicketPriority?.PriorityNameEn ?? "Unknown",
                     CreatedBy = ticket.Requester?.FullNameEn ?? ticket.Requester?.FullNameAr ?? "Unknown",
                     CreatedDate = ticket.CreationDate?.ToString("yyyy-MM-dd HH:mm"),
-                    TicketUrl = GenerateTicketUrl(ticket.RowId),
+                    TicketUrl = GenerateTicketUrl(ticket.Id),
                     Description = TruncateText(ticket.Description, 200)
                 });
 
                 await SendEmailAsync(recipient.Email, "New Ticket Created", emailContent);
             }
 
-            _logger.LogInformation("Ticket created notification sent successfully for ticket {TicketId}", ticket.RowId);
+            _logger.LogInformation("Ticket created notification sent successfully for ticket {TicketId}", ticket.Id);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to send ticket created notification for ticket {TicketId}", ticket.RowId);
+            _logger.LogError(ex, "Failed to send ticket created notification for ticket {TicketId}", ticket.Id);
             // Don't throw - notification failures shouldn't break the main flow
         }
     }
@@ -84,18 +84,18 @@ public class TicketNotificationService : ITicketNotificationService
     {
         if (!IsNotificationEnabled())
         {
-            _logger.LogDebug("Notifications are disabled, skipping ticket assigned notification for ticket {TicketId}", ticket.RowId);
+            _logger.LogDebug("Notifications are disabled, skipping ticket assigned notification for ticket {TicketId}", ticket.Id);
             return;
         }
 
         try
         {
             _logger.LogInformation("Sending ticket assigned notification for ticket {TicketId} to assignee {AssigneeId}", 
-                ticket.RowId, ticket.AssigneeId);
+                ticket.Id, ticket.AssigneeId);
 
             if (ticket.AssigneeId == null)
             {
-                _logger.LogWarning("Cannot send assignment notification - ticket {TicketId} has no assignee", ticket.RowId);
+                _logger.LogWarning("Cannot send assignment notification - ticket {TicketId} has no assignee", ticket.Id);
                 return;
             }
 
@@ -110,22 +110,22 @@ public class TicketNotificationService : ITicketNotificationService
             var emailContent = await RenderTemplateAsync(template, new
             {
                 AssigneeName = assignee.FullNameEn ?? assignee.FullNameAr,
-                TicketId = ticket.RowId,
+                TicketId = ticket.Id,
                 TicketTitle = ticket.TitleEn ?? ticket.TitleAr,
                 Priority = ticket.TicketPriority?.PriorityNameEn ?? "Unknown",
                 AssignedBy = ticket.UpdateUser ?? ticket.CreationUser,
                 AssignedDate = DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm"),
-                TicketUrl = GenerateTicketUrl(ticket.RowId),
+                TicketUrl = GenerateTicketUrl(ticket.Id),
                 Description = TruncateText(ticket.Description, 200)
             });
 
             await SendEmailAsync(assignee.Email, "Ticket Assigned to You", emailContent);
 
-            _logger.LogInformation("Ticket assigned notification sent successfully for ticket {TicketId}", ticket.RowId);
+            _logger.LogInformation("Ticket assigned notification sent successfully for ticket {TicketId}", ticket.Id);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to send ticket assigned notification for ticket {TicketId}", ticket.RowId);
+            _logger.LogError(ex, "Failed to send ticket assigned notification for ticket {TicketId}", ticket.Id);
         }
     }
 
@@ -133,14 +133,14 @@ public class TicketNotificationService : ITicketNotificationService
     {
         if (!IsNotificationEnabled())
         {
-            _logger.LogDebug("Notifications are disabled, skipping status change notification for ticket {TicketId}", ticket.RowId);
+            _logger.LogDebug("Notifications are disabled, skipping status change notification for ticket {TicketId}", ticket.Id);
             return;
         }
 
         try
         {
             _logger.LogInformation("Sending status change notification for ticket {TicketId} from status {PreviousStatus} to {NewStatus}", 
-                ticket.RowId, previousStatusId, ticket.TicketStatusId);
+                ticket.Id, previousStatusId, ticket.TicketStatusId);
 
             var recipients = await GetTicketNotificationRecipientsAsync(ticket);
             var template = GetTicketStatusChangedTemplate();
@@ -150,22 +150,22 @@ public class TicketNotificationService : ITicketNotificationService
                 var emailContent = await RenderTemplateAsync(template, new
                 {
                     RecipientName = recipient.FullNameEn ?? recipient.FullNameAr,
-                    TicketId = ticket.RowId,
+                    TicketId = ticket.Id,
                     TicketTitle = ticket.TitleEn ?? ticket.TitleAr,
                     NewStatus = ticket.TicketStatus?.StatusNameEn ?? "Unknown",
                     UpdatedBy = ticket.UpdateUser ?? "System",
                     UpdatedDate = ticket.UpdateDate?.ToString("yyyy-MM-dd HH:mm") ?? DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm"),
-                    TicketUrl = GenerateTicketUrl(ticket.RowId)
+                    TicketUrl = GenerateTicketUrl(ticket.Id)
                 });
 
                 await SendEmailAsync(recipient.Email, "Ticket Status Updated", emailContent);
             }
 
-            _logger.LogInformation("Status change notification sent successfully for ticket {TicketId}", ticket.RowId);
+            _logger.LogInformation("Status change notification sent successfully for ticket {TicketId}", ticket.Id);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to send status change notification for ticket {TicketId}", ticket.RowId);
+            _logger.LogError(ex, "Failed to send status change notification for ticket {TicketId}", ticket.Id);
         }
     }
 
@@ -173,13 +173,13 @@ public class TicketNotificationService : ITicketNotificationService
     {
         if (!IsNotificationEnabled())
         {
-            _logger.LogDebug("Notifications are disabled, skipping comment notification for ticket {TicketId}", ticket.RowId);
+            _logger.LogDebug("Notifications are disabled, skipping comment notification for ticket {TicketId}", ticket.Id);
             return;
         }
 
         try
         {
-            _logger.LogInformation("Sending comment added notification for ticket {TicketId}", ticket.RowId);
+            _logger.LogInformation("Sending comment added notification for ticket {TicketId}", ticket.Id);
 
             var recipients = await GetTicketNotificationRecipientsAsync(ticket);
             var template = GetCommentAddedTemplate();
@@ -193,22 +193,22 @@ public class TicketNotificationService : ITicketNotificationService
                 var emailContent = await RenderTemplateAsync(template, new
                 {
                     RecipientName = recipient.FullNameEn ?? recipient.FullNameAr,
-                    TicketId = ticket.RowId,
+                    TicketId = ticket.Id,
                     TicketTitle = ticket.TitleEn ?? ticket.TitleAr,
                     CommentBy = comment.CreationUser,
                     CommentDate = comment.CreationDate?.ToString("yyyy-MM-dd HH:mm"),
                     CommentText = TruncateText(comment.CommentText, 300),
-                    TicketUrl = GenerateTicketUrl(ticket.RowId)
+                    TicketUrl = GenerateTicketUrl(ticket.Id)
                 });
 
                 await SendEmailAsync(recipient.Email, "New Comment on Ticket", emailContent);
             }
 
-            _logger.LogInformation("Comment added notification sent successfully for ticket {TicketId}", ticket.RowId);
+            _logger.LogInformation("Comment added notification sent successfully for ticket {TicketId}", ticket.Id);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to send comment added notification for ticket {TicketId}", ticket.RowId);
+            _logger.LogError(ex, "Failed to send comment added notification for ticket {TicketId}", ticket.Id);
         }
     }
 
@@ -216,13 +216,13 @@ public class TicketNotificationService : ITicketNotificationService
     {
         if (!IsNotificationEnabled())
         {
-            _logger.LogDebug("Notifications are disabled, skipping SLA escalation alert for ticket {TicketId}", ticket.RowId);
+            _logger.LogDebug("Notifications are disabled, skipping SLA escalation alert for ticket {TicketId}", ticket.Id);
             return;
         }
 
         try
         {
-            _logger.LogInformation("Sending SLA escalation alert for ticket {TicketId}", ticket.RowId);
+            _logger.LogInformation("Sending SLA escalation alert for ticket {TicketId}", ticket.Id);
 
             // Get admin users for escalation alerts
             var adminUsers = await GetAdminUsersAsync();
@@ -236,23 +236,23 @@ public class TicketNotificationService : ITicketNotificationService
                 var emailContent = await RenderTemplateAsync(template, new
                 {
                     AdminName = admin.FullNameEn ?? admin.FullNameAr,
-                    TicketId = ticket.RowId,
+                    TicketId = ticket.Id,
                     TicketTitle = ticket.TitleEn ?? ticket.TitleAr,
                     Priority = ticket.TicketPriority?.PriorityNameEn ?? "Unknown",
                     ExpectedResolution = ticket.ExpectedResolutionDate?.ToString("yyyy-MM-dd HH:mm"),
                     CreatedDate = ticket.CreationDate?.ToString("yyyy-MM-dd HH:mm"),
                     AssigneeName = ticket.Assignee?.FullNameEn ?? ticket.Assignee?.FullNameAr ?? "Unassigned",
-                    TicketUrl = GenerateTicketUrl(ticket.RowId)
+                    TicketUrl = GenerateTicketUrl(ticket.Id)
                 });
 
                 await SendEmailAsync(admin.Email, "SLA Escalation Alert", emailContent);
             }
 
-            _logger.LogInformation("SLA escalation alert sent successfully for ticket {TicketId}", ticket.RowId);
+            _logger.LogInformation("SLA escalation alert sent successfully for ticket {TicketId}", ticket.Id);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to send SLA escalation alert for ticket {TicketId}", ticket.RowId);
+            _logger.LogError(ex, "Failed to send SLA escalation alert for ticket {TicketId}", ticket.Id);
         }
     }
 
@@ -260,13 +260,13 @@ public class TicketNotificationService : ITicketNotificationService
     {
         if (!IsNotificationEnabled())
         {
-            _logger.LogDebug("Notifications are disabled, skipping attachment notification for ticket {TicketId}", ticket.RowId);
+            _logger.LogDebug("Notifications are disabled, skipping attachment notification for ticket {TicketId}", ticket.Id);
             return;
         }
 
         try
         {
-            _logger.LogInformation("Sending attachment added notification for ticket {TicketId}", ticket.RowId);
+            _logger.LogInformation("Sending attachment added notification for ticket {TicketId}", ticket.Id);
 
             var recipients = await GetTicketNotificationRecipientsAsync(ticket);
             var template = GetAttachmentAddedTemplate();
@@ -280,23 +280,23 @@ public class TicketNotificationService : ITicketNotificationService
                 var emailContent = await RenderTemplateAsync(template, new
                 {
                     RecipientName = recipient.FullNameEn ?? recipient.FullNameAr,
-                    TicketId = ticket.RowId,
+                    TicketId = ticket.Id,
                     TicketTitle = ticket.TitleEn ?? ticket.TitleAr,
                     FileName = attachment.FileName,
                     FileSize = FormatFileSize(attachment.FileSize),
                     UploadedBy = attachment.CreationUser,
                     UploadedDate = attachment.CreationDate?.ToString("yyyy-MM-dd HH:mm"),
-                    TicketUrl = GenerateTicketUrl(ticket.RowId)
+                    TicketUrl = GenerateTicketUrl(ticket.Id)
                 });
 
                 await SendEmailAsync(recipient.Email, "New Attachment Added", emailContent);
             }
 
-            _logger.LogInformation("Attachment added notification sent successfully for ticket {TicketId}", ticket.RowId);
+            _logger.LogInformation("Attachment added notification sent successfully for ticket {TicketId}", ticket.Id);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to send attachment added notification for ticket {TicketId}", ticket.RowId);
+            _logger.LogError(ex, "Failed to send attachment added notification for ticket {TicketId}", ticket.Id);
         }
     }
 

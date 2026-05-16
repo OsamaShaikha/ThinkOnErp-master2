@@ -31,7 +31,7 @@ public class ArchivalOptionsValidatorTests
     [Theory]
     [InlineData("FileSystem")]
     [InlineData("S3")]
-    [InlineData("AzureBlob")]
+    [InlineData("AzureCLOB")]
     public void NonDatabaseProvider_WithoutConnectionString_FailsValidation(string provider)
     {
         // Arrange

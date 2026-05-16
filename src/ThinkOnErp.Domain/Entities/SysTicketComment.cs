@@ -10,7 +10,7 @@ public class SysTicketComment
     /// <summary>
     /// Primary key - generated from SEQ_SYS_TICKET_COMMENT sequence
     /// </summary>
-    public Int64 RowId { get; set; }
+    public Int64 Id { get; set; }
 
     /// <summary>
     /// Foreign key to SYS_REQUEST_TICKET table - the ticket this comment belongs to

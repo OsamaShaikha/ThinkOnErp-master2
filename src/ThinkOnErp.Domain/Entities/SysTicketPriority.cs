@@ -10,7 +10,7 @@ public class SysTicketPriority
     /// <summary>
     /// Primary key - generated from SEQ_SYS_TICKET_PRIORITY sequence
     /// </summary>
-    public Int64 RowId { get; set; }
+    public Int64 Id { get; set; }
 
     /// <summary>
     /// Priority name in Arabic

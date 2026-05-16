@@ -1,4 +1,4 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using ThinkOnErp.Domain.Entities;
 using ThinkOnErp.Domain.Interfaces;
 using ThinkOnErp.Infrastructure.Data;
@@ -7,8 +7,8 @@ namespace ThinkOnErp.Infrastructure.Repositories;
 
 public class TicketRepository : ITicketRepository
 {
-    private readonly ThinkOnErpDbContext _context;
-    public TicketRepository(ThinkOnErpDbContext context) => _context = context;
+    private readonly OracleDbContext _context;
+    public TicketRepository(OracleDbContext context) => _context = context;
 
     public async Task<(List<SysRequestTicket> Tickets, int TotalCount)> GetAllAsync(
         long? companyId = null, long? branchId = null, long? assigneeId = null,
@@ -31,126 +31,9 @@ public class TicketRepository : ITicketRepository
 
         var totalCount = await query.CountAsync();
 
-<<<<<<< Updated upstream
-        // Add input parameters
-        _ = command.Parameters.Add(new OracleParameter
-        {
-            ParameterName = "P_COMPANY_ID",
-            OracleDbType = OracleDbType.Decimal,
-            Direction = ParameterDirection.Input,
-            Value = companyId ?? 0
-        });
-
-        _ = command.Parameters.Add(new OracleParameter
-        {
-            ParameterName = "P_BRANCH_ID",
-            OracleDbType = OracleDbType.Decimal,
-            Direction = ParameterDirection.Input,
-            Value = branchId ?? 0
-        });
-
-        _ = command.Parameters.Add(new OracleParameter
-        {
-            ParameterName = "P_ASSIGNEE_ID",
-            OracleDbType = OracleDbType.Decimal,
-            Direction = ParameterDirection.Input,
-            Value = assigneeId ?? 0
-        });
-
-        _ = command.Parameters.Add(new OracleParameter
-        {
-            ParameterName = "P_STATUS_ID",
-            OracleDbType = OracleDbType.Decimal,
-            Direction = ParameterDirection.Input,
-            Value = statusId ?? 0
-        });
-
-        _ = command.Parameters.Add(new OracleParameter
-        {
-            ParameterName = "P_PRIORITY_ID",
-            OracleDbType = OracleDbType.Decimal,
-            Direction = ParameterDirection.Input,
-            Value = priorityId ?? 0
-        });
-
-        _ = command.Parameters.Add(new OracleParameter
-        {
-            ParameterName = "P_TYPE_ID",
-            OracleDbType = OracleDbType.Decimal,
-            Direction = ParameterDirection.Input,
-            Value = typeId ?? 0
-        });
-
-        _ = command.Parameters.Add(new OracleParameter
-        {
-            ParameterName = "P_SEARCH_TERM",
-            OracleDbType = OracleDbType.NVarchar2,
-            Direction = ParameterDirection.Input,
-            Value = (object?)searchTerm ?? DBNull.Value
-        });
-
-        _ = command.Parameters.Add(new OracleParameter
-        {
-            ParameterName = "P_PAGE_NUMBER",
-            OracleDbType = OracleDbType.Decimal,
-            Direction = ParameterDirection.Input,
-            Value = page
-        });
-
-        _ = command.Parameters.Add(new OracleParameter
-        {
-            ParameterName = "P_PAGE_SIZE",
-            OracleDbType = OracleDbType.Decimal,
-            Direction = ParameterDirection.Input,
-            Value = pageSize
-        });
-
-        _ = command.Parameters.Add(new OracleParameter
-        {
-            ParameterName = "P_SORT_BY",
-            OracleDbType = OracleDbType.Varchar2,
-            Direction = ParameterDirection.Input,
-            Value = sortBy
-        });
-
-        _ = command.Parameters.Add(new OracleParameter
-        {
-            ParameterName = "P_SORT_DIRECTION",
-            OracleDbType = OracleDbType.Varchar2,
-            Direction = ParameterDirection.Input,
-            Value = sortDirection
-        });
-
-        // Add output parameters
-        OracleParameter cursorParam = new()
-        {
-            ParameterName = "P_RESULT_CURSOR",
-            OracleDbType = OracleDbType.RefCursor,
-            Direction = ParameterDirection.Output
-        };
-        _ = command.Parameters.Add(cursorParam);
-
-        OracleParameter totalCountParam = new()
-        {
-            ParameterName = "P_TOTAL_COUNT",
-            OracleDbType = OracleDbType.Decimal,
-            Direction = ParameterDirection.Output
-        };
-        _ = command.Parameters.Add(totalCountParam);
-
-        using var reader = await command.ExecuteReaderAsync();
-        while (await reader.ReadAsync())
-        {
-            tickets.Add(MapToEntity(reader));
-        }
-
-        // Get total count from output parameter
-        totalCount = (int)((OracleDecimal)totalCountParam.Value).Value;
-=======
         query = sortDirection.ToUpper() == "DESC"
             ? query.OrderByDescending(t => EF.Property<object>(t, sortBy))
             : query.OrderBy(t => EF.Property<object>(t, sortBy));
->>>>>>> Stashed changes
 
         var tickets = await query.Skip((page - 1) * pageSize).Take(pageSize).ToListAsync();
         return (tickets, totalCount);
@@ -163,13 +46,13 @@ public class TicketRepository : ITicketRepository
             .Include(t => t.TicketType).Include(t => t.TicketStatus)
             .Include(t => t.TicketPriority).Include(t => t.TicketCategory)
             .Include(t => t.Comments).Include(t => t.Attachments)
-            .FirstOrDefaultAsync(t => t.RowId == rowId);
+            .FirstOrDefaultAsync(t => t.Id == rowId);
 
     public async Task<long> CreateAsync(SysRequestTicket ticket)
     {
         _context.SysRequestTickets.Add(ticket);
         await _context.SaveChangesAsync();
-        return ticket.RowId;
+        return ticket.Id;
     }
 
     public async Task<long> UpdateAsync(SysRequestTicket ticket)
