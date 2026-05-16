@@ -62,13 +62,10 @@ public class AuthController : ControllerBase
         {
             _logger.LogInformation("Login attempt for user: {UserName}", command.UserName);
 
-            // Hash the password using SHA-256
-            var passwordHash = _passwordHashingService.HashPassword(command.Password);
+            // Get user by username for PBKDF2 password verification
+            var user = await _authRepository.GetByUserNameAsync(command.UserName);
 
-            // Authenticate user with hashed password
-            var user = await _authRepository.AuthenticateAsync(command.UserName, passwordHash);
-
-            if (user == null)
+            if (user == null || !_passwordHashingService.VerifyPassword(command.Password, user.Password))
             {
                 _logger.LogWarning("Authentication failed for user: {UserName}", command.UserName);
                 return Unauthorized(ApiResponse<TokenDto>.CreateFailure(
@@ -179,13 +176,10 @@ public class AuthController : ControllerBase
         {
             _logger.LogInformation("Super admin login attempt for user: {UserName}", command.UserName);
 
-            // Hash the password using SHA-256
-            var passwordHash = _passwordHashingService.HashPassword(command.Password);
+            // Get super admin by username for PBKDF2 password verification
+            var superAdmin = await _superAdminRepository.GetByUsernameAsync(command.UserName);
 
-            // Authenticate super admin with hashed password
-            var superAdmin = await _superAdminRepository.AuthenticateAsync(command.UserName, passwordHash);
-
-            if (superAdmin == null)
+            if (superAdmin == null || !_passwordHashingService.VerifyPassword(command.Password, superAdmin.Password))
             {
                 _logger.LogWarning("Super admin authentication failed for user: {UserName}", command.UserName);
                 return Unauthorized(ApiResponse<TokenDto>.CreateFailure(

@@ -156,18 +156,8 @@ public class AuditableOracleCommand : IDbCommand
     {
         var rowsAffected = _innerCommand.ExecuteNonQuery();
         
-        // Fire and forget audit logging (don't block the operation)
-        _ = Task.Run(async () =>
-        {
-            try
-            {
-                await _interceptor.OnCommandExecutedAsync(_innerCommand, rowsAffected);
-            }
-            catch
-            {
-                // Swallow exceptions to prevent breaking the database operation
-            }
-        });
+        // Non-blocking audit logging via channel-based AuditLogger (already runs in background)
+        _ = _interceptor.OnCommandExecutedAsync(_innerCommand, rowsAffected);
 
         return rowsAffected;
     }

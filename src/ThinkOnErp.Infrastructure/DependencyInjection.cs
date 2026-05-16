@@ -112,6 +112,7 @@ public static class DependencyInjection
         services.AddScoped<ISystemRepository, SystemRepository>();
         services.AddScoped<IScreenRepository, ScreenRepository>();
         services.AddScoped<IPermissionRepository, PermissionRepository>();
+        services.AddScoped<IBranchPermissionRepository, BranchPermissionRepository>();
         
         // Register ticket system repositories
         services.AddScoped<ITicketRepository, TicketRepository>();

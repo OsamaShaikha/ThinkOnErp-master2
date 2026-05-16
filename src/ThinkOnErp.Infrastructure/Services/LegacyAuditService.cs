@@ -324,26 +324,57 @@ public class LegacyAuditService : ILegacyAuditService
             }
 
             // Generate business-friendly description based on audit entry data
-            var description = auditEntry.Action.ToUpperInvariant() switch
+            string description;
+            switch (auditEntry.Action.ToUpperInvariant())
             {
-                "INSERT" => GenerateInsertDescription(auditEntry),
-                "UPDATE" => GenerateUpdateDescription(auditEntry),
-                "DELETE" => GenerateDeleteDescription(auditEntry),
-                "LOGIN" => GenerateLoginDescription(auditEntry),
-                "LOGOUT" => GenerateLogoutDescription(auditEntry),
-                "EXCEPTION" => GenerateExceptionDescription(auditEntry),
-                "AUTHORIZATION_FAILURE" => GenerateAuthorizationFailureDescription(auditEntry),
-                "STATUS_CHANGE" => GenerateStatusChangeDescription(auditEntry),
-                "ASSIGNMENT_CHANGE" => GenerateAssignmentChangeDescription(auditEntry),
-                "COMMENT_ADDED" => GenerateCommentDescription(auditEntry),
-                "ATTACHMENT_UPLOADED" => GenerateAttachmentUploadDescription(auditEntry),
-                "ATTACHMENT_DOWNLOADED" => GenerateAttachmentDownloadDescription(auditEntry),
-                "SEARCH" => GenerateSearchDescription(auditEntry),
-                "VIEW" => GenerateViewDescription(auditEntry),
-                _ => GenerateGenericDescription(auditEntry)
-            };
+                case "INSERT":
+                    description = GenerateInsertDescription(auditEntry);
+                    break;
+                case "UPDATE":
+                    description = GenerateUpdateDescription(auditEntry);
+                    break;
+                case "DELETE":
+                    description = GenerateDeleteDescription(auditEntry);
+                    break;
+                case "LOGIN":
+                    description = GenerateLoginDescription(auditEntry);
+                    break;
+                case "LOGOUT":
+                    description = GenerateLogoutDescription(auditEntry);
+                    break;
+                case "EXCEPTION":
+                    description = await GenerateExceptionDescription(auditEntry);
+                    break;
+                case "AUTHORIZATION_FAILURE":
+                    description = GenerateAuthorizationFailureDescription(auditEntry);
+                    break;
+                case "STATUS_CHANGE":
+                    description = GenerateStatusChangeDescription(auditEntry);
+                    break;
+                case "ASSIGNMENT_CHANGE":
+                    description = GenerateAssignmentChangeDescription(auditEntry);
+                    break;
+                case "COMMENT_ADDED":
+                    description = GenerateCommentDescription(auditEntry);
+                    break;
+                case "ATTACHMENT_UPLOADED":
+                    description = GenerateAttachmentUploadDescription(auditEntry);
+                    break;
+                case "ATTACHMENT_DOWNLOADED":
+                    description = GenerateAttachmentDownloadDescription(auditEntry);
+                    break;
+                case "SEARCH":
+                    description = GenerateSearchDescription(auditEntry);
+                    break;
+                case "VIEW":
+                    description = GenerateViewDescription(auditEntry);
+                    break;
+                default:
+                    description = GenerateGenericDescription(auditEntry);
+                    break;
+            }
 
-            return await Task.FromResult(description);
+            return description;
         }
         catch (Exception ex)
         {
@@ -1023,14 +1054,14 @@ public class LegacyAuditService : ILegacyAuditService
         return $"User {auditEntry.ActorName ?? "Unknown"} logged out";
     }
 
-    private string GenerateExceptionDescription(AuditLogEntry auditEntry)
+    private async Task<string> GenerateExceptionDescription(AuditLogEntry auditEntry)
     {
         if (!string.IsNullOrEmpty(auditEntry.ExceptionMessage))
         {
             // Convert technical exception to business-friendly message
             var message = auditEntry.ExceptionMessage.ToLowerInvariant();
             var entityName = GetFriendlyEntityName(auditEntry.EntityType);
-            var businessModule = DetermineBusinessModuleAsync(auditEntry.EntityType, auditEntry.EndpointPath).Result;
+            var businessModule = await DetermineBusinessModuleAsync(auditEntry.EntityType, auditEntry.EndpointPath);
             
             // Database-related errors
             if (message.Contains("timeout") || message.Contains("ora-00942") || message.Contains("ora-12170"))

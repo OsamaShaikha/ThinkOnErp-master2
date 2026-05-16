@@ -566,7 +566,11 @@ public class AuditLogger : IAuditLogger, IHostedService
             var legacyAuditService = scope.ServiceProvider.GetRequiredService<ILegacyAuditService>();
             
             // Convert AuditEvent objects to SysAuditLog entities
-            var auditLogs = batch.Select(e => MapToSysAuditLog(e, dataMasker, legacyAuditService)).ToList();
+            var auditLogs = new List<SysAuditLog>(batch.Count);
+            foreach (var e in batch)
+            {
+                auditLogs.Add(await MapToSysAuditLogAsync(e, dataMasker, legacyAuditService));
+            }
             
             int insertedCount;
 
@@ -610,7 +614,7 @@ public class AuditLogger : IAuditLogger, IHostedService
     /// <summary>
     /// Map an AuditEvent to a SysAuditLog entity for database persistence.
     /// </summary>
-    private SysAuditLog MapToSysAuditLog(AuditEvent auditEvent, ISensitiveDataMasker dataMasker, ILegacyAuditService legacyAuditService)
+    private async Task<SysAuditLog> MapToSysAuditLogAsync(AuditEvent auditEvent, ISensitiveDataMasker dataMasker, ILegacyAuditService legacyAuditService)
     {
         var auditLog = new SysAuditLog
         {
@@ -686,47 +690,46 @@ public class AuditLogger : IAuditLogger, IHostedService
         try
         {
             // BUSINESS_MODULE: Map endpoints to business modules (POS, HR, Accounting, etc.)
-            auditLog.BusinessModule = legacyAuditService.DetermineBusinessModuleAsync(
+            auditLog.BusinessModule = await legacyAuditService.DetermineBusinessModuleAsync(
                 auditEvent.EntityType, 
-                null).GetAwaiter().GetResult();
+                null);
 
             // DEVICE_IDENTIFIER: Extract device information from User-Agent and IP address
-            auditLog.DeviceIdentifier = legacyAuditService.ExtractDeviceIdentifierAsync(
+            auditLog.DeviceIdentifier = await legacyAuditService.ExtractDeviceIdentifierAsync(
                 auditEvent.UserAgent ?? string.Empty, 
-                auditEvent.IpAddress).GetAwaiter().GetResult();
+                auditEvent.IpAddress);
 
             // ERROR_CODE: Generate standardized error codes for exceptions
             if (auditEvent is ExceptionAuditEvent exceptionEvent)
             {
-                auditLog.ErrorCode = legacyAuditService.GenerateErrorCodeAsync(
+                auditLog.ErrorCode = await legacyAuditService.GenerateErrorCodeAsync(
                     exceptionEvent.ExceptionType, 
-                    auditEvent.EntityType).GetAwaiter().GetResult();
+                    auditEvent.EntityType);
             }
 
             // BUSINESS_DESCRIPTION: Create human-readable error descriptions
-            // Note: This requires converting to AuditLogEntry first, so we'll create a minimal one
             var tempAuditEntry = new AuditLogEntry
             {
-                RowId = 0, // Will be set by database
+                RowId = 0,
                 Action = auditEvent.Action,
                 EntityType = auditEvent.EntityType,
-                ActorName = null, // Will be populated by database join
+                ActorName = null,
                 ExceptionType = auditEvent is ExceptionAuditEvent ex ? ex.ExceptionType : null,
                 ExceptionMessage = auditEvent is ExceptionAuditEvent ex2 ? ex2.ExceptionMessage : null,
                 OldValue = auditLog.OldValue,
                 NewValue = auditLog.NewValue,
-                CompanyName = null, // Will be populated by database join
-                BranchName = null, // Will be populated by database join
+                CompanyName = null,
+                BranchName = null,
                 EndpointPath = null,
                 Severity = auditLog.Severity,
                 EventCategory = auditLog.EventCategory,
                 Metadata = auditLog.Metadata,
                 CreationDate = auditEvent.Timestamp,
-                BusinessDescription = null // Will be generated
+                BusinessDescription = null
             };
 
-            auditLog.BusinessDescription = legacyAuditService.GenerateBusinessDescriptionAsync(
-                tempAuditEntry).GetAwaiter().GetResult();
+            auditLog.BusinessDescription = await legacyAuditService.GenerateBusinessDescriptionAsync(
+                tempAuditEntry);
         }
         catch (Exception ex)
         {

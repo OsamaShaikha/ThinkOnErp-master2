@@ -56,7 +56,9 @@ public class JwtTokenService
         {
             new Claim("userId", user.RowId.ToString()),
             new Claim("userName", user.UserName),
+            new Claim(ClaimTypes.Name, user.UserName),
             new Claim("role", user.Role?.ToString() ?? "0"),
+            new Claim(ClaimTypes.Role, user.Role?.ToString() ?? "0"),
             new Claim("branchId", user.BranchId?.ToString() ?? "0"),
             new Claim("isAdmin", user.IsAdmin.ToString().ToLower())
         };
@@ -119,7 +121,10 @@ public class JwtTokenService
         {
             new Claim("userId", superAdmin.RowId.ToString()),
             new Claim("userName", superAdmin.UserName),
+            new Claim(ClaimTypes.Name, superAdmin.UserName),
             new Claim("userType", "SuperAdmin"), // Distinguish from regular users
+            new Claim("role", "SuperAdmin"),
+            new Claim(ClaimTypes.Role, "SuperAdmin"),
             new Claim("isAdmin", "true"), // Super admins are always admins
             new Claim("isSuperAdmin", "true") // Special claim for super admin
         };

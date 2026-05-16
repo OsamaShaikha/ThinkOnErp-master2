@@ -696,9 +696,10 @@ public class KeyManagementService : IKeyManagementService
     /// <summary>
     /// Validates that all required keys are configured and accessible.
     /// </summary>
-    Task<bool> IKeyManagementService.ValidateKeysAsync(CancellationToken cancellationToken)
+    async Task<bool> IKeyManagementService.ValidateKeysAsync(CancellationToken cancellationToken)
     {
-        return Task.FromResult(ValidateKeysAsync().Result.IsValid);
+        var result = await ValidateKeysAsync();
+        return result.IsValid;
     }
 
     /// <summary>

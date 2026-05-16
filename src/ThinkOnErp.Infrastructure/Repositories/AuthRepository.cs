@@ -78,6 +78,35 @@ public class AuthRepository : IAuthRepository
     }
 
     /// <summary>
+    /// Retrieves a user by username (for PBKDF2 password verification).
+    /// </summary>
+    public async Task<SysUser?> GetByUserNameAsync(string userName)
+    {
+        using OracleConnection connection = _dbContext.CreateConnection();
+        await connection.OpenAsync();
+
+        using OracleCommand command = connection.CreateCommand();
+        command.CommandType = CommandType.Text;
+        command.CommandText = @"
+            SELECT ROW_ID, ROW_DESC, ROW_DESC_E, USER_NAME, PASSWORD, PHONE, PHONE2, 
+                   ROLE, BRANCH_ID, EMAIL, LAST_LOGIN_DATE, IS_ACTIVE, IS_ADMIN, 
+                   CREATION_USER, CREATION_DATE, UPDATE_USER, UPDATE_DATE
+            FROM SYS_USERS 
+            WHERE USER_NAME = :userName 
+              AND IS_ACTIVE = '1'";
+
+        command.Parameters.Add(new OracleParameter("userName", OracleDbType.Varchar2, userName, ParameterDirection.Input));
+
+        using OracleDataReader reader = await command.ExecuteReaderAsync();
+        if (await reader.ReadAsync())
+        {
+            return MapToEntity(reader);
+        }
+
+        return null;
+    }
+
+    /// <summary>
     /// Maps an OracleDataReader row to a SysUser entity.
     /// Handles Oracle data type conversions to C# types.
     /// </summary>
@@ -155,7 +184,6 @@ public class AuthRepository : IAuthRepository
         command.Parameters.Add(new OracleParameter("userId", OracleDbType.Int64, userId, ParameterDirection.Input));
 
         var rowsAffected = await command.ExecuteNonQueryAsync();
-        Console.WriteLine($"DEBUG: SaveRefreshToken - UserId: {userId}, Token: {refreshToken.Substring(0, Math.Min(20, refreshToken.Length))}..., Rows affected: {rowsAffected}");
     }
 
     /// <summary>
@@ -181,7 +209,6 @@ public class AuthRepository : IAuthRepository
         command.Parameters.Add(new OracleParameter("refreshToken", OracleDbType.Varchar2, refreshToken, ParameterDirection.Input));
         
         var count = Convert.ToInt32(await command.ExecuteScalarAsync());
-        Console.WriteLine($"DEBUG: Found {count} users with this refresh token");
         
         // Now do the full query
         command.CommandText = @"

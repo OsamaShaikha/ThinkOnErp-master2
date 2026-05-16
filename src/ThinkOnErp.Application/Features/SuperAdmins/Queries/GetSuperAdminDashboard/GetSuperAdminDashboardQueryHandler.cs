@@ -57,9 +57,9 @@ public class GetSuperAdminDashboardQueryHandler : IRequestHandler<GetSuperAdminD
 
             // Null safety checks with warning logs for empty data
             // Validates Requirements: 11.5
-            var companies = companiesTask.Result ?? new List<Domain.Entities.SysCompany>();
-            var branches = branchesTask.Result ?? new List<Domain.Entities.SysBranch>();
-            var users = usersTask.Result ?? new List<Domain.Entities.SysUser>();
+            var companies = await companiesTask ?? new List<Domain.Entities.SysCompany>();
+            var branches = await branchesTask ?? new List<Domain.Entities.SysBranch>();
+            var users = await usersTask ?? new List<Domain.Entities.SysUser>();
 
             // Log warnings for empty data
             if (companies.Count == 0)

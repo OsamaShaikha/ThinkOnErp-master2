@@ -9,6 +9,13 @@ namespace ThinkOnErp.Domain.Interfaces;
 public interface IAuthRepository
 {
     /// <summary>
+    /// Retrieves a user by username (for password verification using PBKDF2)
+    /// </summary>
+    /// <param name="userName">The username to look up</param>
+    /// <returns>The SysUser entity if found and active, null otherwise</returns>
+    Task<SysUser?> GetByUserNameAsync(string userName);
+
+    /// <summary>
     /// Authenticates a user by username and password hash.
     /// Calls SP_SYS_USERS_LOGIN stored procedure.
     /// </summary>

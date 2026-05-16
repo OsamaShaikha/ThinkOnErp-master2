@@ -290,10 +290,22 @@ public class ExceptionHandlingMiddleware
             return "ANONYMOUS";
         }
 
+        // Check for super admin first (uses userType claim)
+        var userType = user.FindFirst("userType")?.Value;
+        if (string.Equals(userType, "SuperAdmin", StringComparison.OrdinalIgnoreCase))
+        {
+            return "SUPER_ADMIN";
+        }
+
         var roleClaim = user.FindFirst(ClaimTypes.Role)?.Value
                      ?? user.FindFirst("role")?.Value;
 
-        return roleClaim?.ToUpperInvariant() switch
+        if (string.IsNullOrEmpty(roleClaim))
+        {
+            return "USER";
+        }
+
+        return roleClaim.ToUpperInvariant() switch
         {
             "SUPERADMIN" => "SUPER_ADMIN",
             "COMPANYADMIN" => "COMPANY_ADMIN",

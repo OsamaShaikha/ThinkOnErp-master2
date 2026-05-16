@@ -300,10 +300,8 @@ public class SuperAdminController : ControllerBase
                     statusCode: 404));
             }
 
-            // Hash current password and verify it matches
-            var currentPasswordHash = _passwordHashingService.HashPassword(dto.CurrentPassword);
-            
-            if (currentPasswordHash != superAdmin.Password)
+            // Verify current password
+            if (!_passwordHashingService.VerifyPassword(dto.CurrentPassword, superAdmin.Password))
             {
                 _logger.LogWarning("Current password verification failed for super admin ID: {SuperAdminId}", id);
                 return BadRequest(ApiResponse<bool>.CreateFailure(
@@ -464,35 +462,49 @@ public class SuperAdminController : ControllerBase
         }
     }
 
-    /// <summary>
-    /// Generates a secure temporary password
-    /// Format: Uppercase + Lowercase + Numbers + Special chars
-    /// Length: 12 characters
-    /// </summary>
-    private string GenerateTemporaryPassword()
-    {
-        const string uppercase = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-        const string lowercase = "abcdefghijklmnopqrstuvwxyz";
-        const string numbers = "0123456789";
-        const string special = "!@#$%^&*";
-        
-        var random = new Random();
-        var password = new char[12];
-        
-        // Ensure at least one of each type
-        password[0] = uppercase[random.Next(uppercase.Length)];
-        password[1] = lowercase[random.Next(lowercase.Length)];
-        password[2] = numbers[random.Next(numbers.Length)];
-        password[3] = special[random.Next(special.Length)];
-        
-        // Fill the rest randomly
-        var allChars = uppercase + lowercase + numbers + special;
-        for (int i = 4; i < 12; i++)
+        /// <summary>
+        /// Generates a cryptographically secure temporary password
+        /// Format: Uppercase + Lowercase + Numbers + Special chars
+        /// Length: 12 characters
+        /// </summary>
+        private string GenerateTemporaryPassword()
         {
-            password[i] = allChars[random.Next(allChars.Length)];
+            const string uppercase = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+            const string lowercase = "abcdefghijklmnopqrstuvwxyz";
+            const string numbers = "0123456789";
+            const string special = "!@#$%^&*";
+            
+            var allChars = uppercase + lowercase + numbers + special;
+            var password = new char[12];
+            var data = new byte[12];
+            
+            using (var rng = System.Security.Cryptography.RandomNumberGenerator.Create())
+            {
+                // Ensure at least one of each type
+                rng.GetBytes(data);
+                password[0] = uppercase[data[0] % uppercase.Length];
+                password[1] = lowercase[data[1] % lowercase.Length];
+                password[2] = numbers[data[2] % numbers.Length];
+                password[3] = special[data[3] % special.Length];
+                
+                // Fill the rest randomly
+                for (int i = 4; i < 12; i++)
+                {
+                    rng.GetBytes(data, i, 1);
+                    password[i] = allChars[data[i] % allChars.Length];
+                }
+            }
+            
+            // Fisher-Yates shuffle using crypto randomness
+            var shuffleData = new byte[1];
+            for (int i = password.Length - 1; i > 0; i--)
+            {
+                using var rng = System.Security.Cryptography.RandomNumberGenerator.Create();
+                rng.GetBytes(shuffleData);
+                var j = shuffleData[0] % (i + 1);
+                (password[i], password[j]) = (password[j], password[i]);
+            }
+            
+            return new string(password);
         }
-        
-        // Shuffle the password
-        return new string(password.OrderBy(x => random.Next()).ToArray());
-    }
 }

@@ -313,10 +313,8 @@ public class UsersController : ControllerBase
                     statusCode: 404));
             }
 
-            // Hash current password and verify it matches
-            var currentPasswordHash = _passwordHashingService.HashPassword(dto.CurrentPassword);
-            
-            if (currentPasswordHash != user.Password)
+            // Verify current password
+            if (!_passwordHashingService.VerifyPassword(dto.CurrentPassword, user.Password))
             {
                 _logger.LogWarning("Current password verification failed for user ID: {UserId}", id);
                 return BadRequest(ApiResponse<bool>.CreateFailure(

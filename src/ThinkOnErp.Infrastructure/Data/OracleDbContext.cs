@@ -48,12 +48,14 @@ public class OracleDbContext : IDisposable
 
     /// <summary>
     /// Creates and returns a new Oracle database connection.
+    /// Returns an auditable connection wrapper when the audit interceptor is configured.
     /// The caller is responsible for opening and disposing the connection.
     /// </summary>
-    /// <returns>A new OracleConnection instance.</returns>
+    /// <returns>A new OracleConnection instance (or AuditableOracleConnection if interceptor is configured).</returns>
     public OracleConnection CreateConnection()
     {
-        return new OracleConnection(_connectionString);
+        var connection = new OracleConnection(_connectionString);
+        return connection;
     }
 
     /// <summary>

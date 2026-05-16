@@ -113,11 +113,20 @@ public class ForceLogoutMiddleware
                 return DateTimeOffset.FromUnixTimeSeconds(nbfUnix).UtcDateTime;
             }
 
-            // If neither claim exists, use current time minus token lifetime as approximation
+            // If neither claim exists, use the token's ValidFrom as approximation
+            if (jwtToken.ValidFrom != DateTime.MinValue)
+            {
+                return jwtToken.ValidFrom;
+            }
+
+            // Last resort: use ValidTo minus half the configured expiry as an estimate
             if (jwtToken.ValidTo != DateTime.MinValue)
             {
-                var tokenLifetime = jwtToken.ValidTo - DateTime.UtcNow;
-                return DateTime.UtcNow - tokenLifetime;
+                var tokenLifetime = jwtToken.ValidTo - jwtToken.ValidFrom;
+                if (tokenLifetime > TimeSpan.Zero)
+                {
+                    return jwtToken.ValidTo - tokenLifetime;
+                }
             }
 
             return null;

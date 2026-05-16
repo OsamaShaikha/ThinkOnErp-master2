@@ -141,53 +141,50 @@ public class GetTicketsQueryHandler : IRequestHandler<GetTicketsQuery, PagedResu
                 PageSize = pageSize
             };
 
-            // Log search analytics asynchronously (fire and forget)
-            _ = Task.Run(async () =>
+            // Log search analytics (non-critical, exceptions are logged but not propagated)
+            try
             {
-                try
+                var searchCriteria = JsonSerializer.Serialize(new
                 {
-                    var searchCriteria = JsonSerializer.Serialize(new
-                    {
-                        request.CompanyId,
-                        request.BranchId,
-                        request.AssigneeId,
-                        request.RequesterId,
-                        request.StatusId,
-                        request.StatusIds,
-                        request.PriorityId,
-                        request.PriorityIds,
-                        request.TypeId,
-                        request.TypeIds,
-                        request.CategoryId,
-                        request.CategoryIds,
-                        request.CreatedFrom,
-                        request.CreatedTo,
-                        request.DueFrom,
-                        request.DueTo,
-                        request.SlaStatus,
-                        request.SortBy,
-                        request.SortDirection,
-                        request.UseAdvancedSearch
-                    });
+                    request.CompanyId,
+                    request.BranchId,
+                    request.AssigneeId,
+                    request.RequesterId,
+                    request.StatusId,
+                    request.StatusIds,
+                    request.PriorityId,
+                    request.PriorityIds,
+                    request.TypeId,
+                    request.TypeIds,
+                    request.CategoryId,
+                    request.CategoryIds,
+                    request.CreatedFrom,
+                    request.CreatedTo,
+                    request.DueFrom,
+                    request.DueTo,
+                    request.SlaStatus,
+                    request.SortBy,
+                    request.SortDirection,
+                    request.UseAdvancedSearch
+                });
 
-                    await _searchAnalyticsRepository.LogSearchAsync(new SysSearchAnalytics
-                    {
-                        UserId = 0, // Will be set from HTTP context in controller
-                        SearchTerm = request.SearchTerm,
-                        SearchCriteria = searchCriteria,
-                        FilterLogic = request.FilterLogic,
-                        ResultCount = totalCount,
-                        ExecutionTimeMs = (int)stopwatch.ElapsedMilliseconds,
-                        CompanyId = request.CompanyId,
-                        BranchId = request.BranchId,
-                        SearchDate = DateTime.UtcNow
-                    });
-                }
-                catch (Exception ex)
+                await _searchAnalyticsRepository.LogSearchAsync(new SysSearchAnalytics
                 {
-                    _logger.LogWarning(ex, "Failed to log search analytics (non-critical)");
-                }
-            }, cancellationToken);
+                    UserId = 0,
+                    SearchTerm = request.SearchTerm,
+                    SearchCriteria = searchCriteria,
+                    FilterLogic = request.FilterLogic,
+                    ResultCount = totalCount,
+                    ExecutionTimeMs = (int)stopwatch.ElapsedMilliseconds,
+                    CompanyId = request.CompanyId,
+                    BranchId = request.BranchId,
+                    SearchDate = DateTime.UtcNow
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Failed to log search analytics (non-critical)");
+            }
 
             _logger.LogInformation("Retrieved {Count} tickets out of {TotalCount} total tickets in {ElapsedMs}ms", 
                 ticketDtos.Count, totalCount, stopwatch.ElapsedMilliseconds);

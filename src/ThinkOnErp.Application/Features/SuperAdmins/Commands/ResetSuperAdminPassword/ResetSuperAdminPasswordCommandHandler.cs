@@ -39,7 +39,7 @@ public class ResetSuperAdminPasswordCommandHandler : IRequestHandler<ResetSuperA
     }
 
     /// <summary>
-    /// Generates a secure temporary password
+    /// Generates a cryptographically secure temporary password
     /// Format: Uppercase + Lowercase + Numbers + Special chars
     /// Length: 12 characters
     /// </summary>
@@ -50,23 +50,35 @@ public class ResetSuperAdminPasswordCommandHandler : IRequestHandler<ResetSuperA
         const string numbers = "0123456789";
         const string special = "!@#$%^&*";
         
-        var random = new Random();
-        var password = new char[12];
-        
-        // Ensure at least one of each type
-        password[0] = uppercase[random.Next(uppercase.Length)];
-        password[1] = lowercase[random.Next(lowercase.Length)];
-        password[2] = numbers[random.Next(numbers.Length)];
-        password[3] = special[random.Next(special.Length)];
-        
-        // Fill the rest randomly
         var allChars = uppercase + lowercase + numbers + special;
-        for (int i = 4; i < 12; i++)
+        var password = new char[12];
+        var data = new byte[12];
+        
+        using (var rng = System.Security.Cryptography.RandomNumberGenerator.Create())
         {
-            password[i] = allChars[random.Next(allChars.Length)];
+            rng.GetBytes(data);
+            password[0] = uppercase[data[0] % uppercase.Length];
+            password[1] = lowercase[data[1] % lowercase.Length];
+            password[2] = numbers[data[2] % numbers.Length];
+            password[3] = special[data[3] % special.Length];
+            
+            for (int i = 4; i < 12; i++)
+            {
+                rng.GetBytes(data, i, 1);
+                password[i] = allChars[data[i] % allChars.Length];
+            }
         }
         
-        // Shuffle the password
-        return new string(password.OrderBy(x => random.Next()).ToArray());
+        // Fisher-Yates shuffle using crypto randomness
+        var shuffleData = new byte[1];
+        for (int i = password.Length - 1; i > 0; i--)
+        {
+            using var rng = System.Security.Cryptography.RandomNumberGenerator.Create();
+            rng.GetBytes(shuffleData);
+            var j = shuffleData[0] % (i + 1);
+            (password[i], password[j]) = (password[j], password[i]);
+        }
+        
+        return new string(password);
     }
 }

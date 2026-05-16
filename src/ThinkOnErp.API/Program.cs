@@ -115,6 +115,17 @@ try
     // Add HttpContextAccessor for middleware access to HttpContext
     builder.Services.AddHttpContextAccessor();
 
+    // Add CORS policy for frontend applications
+    builder.Services.AddCors(options =>
+    {
+        options.AddPolicy("AllowFrontend", policy =>
+        {
+            policy.AllowAnyOrigin()
+                  .AllowAnyHeader()
+                  .AllowAnyMethod();
+        });
+    });
+
     // Configure OpenTelemetry for Application Performance Monitoring (APM)
     var serviceName = builder.Configuration["OpenTelemetry:ServiceName"] ?? "ThinkOnErp.API";
     var serviceVersion = builder.Configuration["OpenTelemetry:ServiceVersion"] ?? "1.0.0";
@@ -395,6 +406,9 @@ Example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...'
     {
         app.UseOpenTelemetryPrometheusScrapingEndpoint();
     }
+
+    // Add CORS middleware (must be before authentication)
+    app.UseCors("AllowFrontend");
 
     // Add authentication and authorization middleware
     app.UseAuthentication();
