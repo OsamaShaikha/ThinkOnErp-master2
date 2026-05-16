@@ -225,7 +225,7 @@ public class AuditLogIntegrityService : IAuditLogIntegrityService
 
             // Verify integrity
             var isValid = VerifyIntegrityHash(
-                auditLog.RowId,
+                auditLog.Id,
                 auditLog.ActorId,
                 auditLog.Action,
                 auditLog.EntityType,

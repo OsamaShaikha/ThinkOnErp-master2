@@ -1,11 +1,13 @@
 using System.Text;
 using System.Text.Json;
 using System.Security.Claims;
-using Oracle.ManagedDataAccess.Client;
 using Microsoft.AspNetCore.Http;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Options;
+using ThinkOnErp.Domain.Entities;
 using ThinkOnErp.Domain.Interfaces;
 using ThinkOnErp.Domain.Models;
 using ThinkOnErp.Infrastructure.Data;
@@ -25,6 +27,7 @@ public class AuditQueryService : IAuditQueryService
 {
     private readonly IAuditRepository _auditRepository;
     private readonly OracleDbContext _dbContext;
+    private readonly IServiceScopeFactory _serviceScopeFactory;
     private readonly ILogger<AuditQueryService> _logger;
     private readonly IDistributedCache? _cache;
     private readonly IHttpContextAccessor _httpContextAccessor;
@@ -41,12 +44,10 @@ public class AuditQueryService : IAuditQueryService
     private readonly int _parallelQueryChunkSizeDays;
     private readonly int _maxParallelQueries;
     
-    // Query timeout protection (30 seconds max)
-    private const int QueryTimeoutSeconds = 30;
-
     public AuditQueryService(
         IAuditRepository auditRepository,
         OracleDbContext dbContext,
+        IServiceScopeFactory serviceScopeFactory,
         ILogger<AuditQueryService> logger,
         IHttpContextAccessor httpContextAccessor,
         IOptions<AuditQueryCachingOptions> cachingOptions,
@@ -54,6 +55,7 @@ public class AuditQueryService : IAuditQueryService
     {
         _auditRepository = auditRepository ?? throw new ArgumentNullException(nameof(auditRepository));
         _dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
+        _serviceScopeFactory = serviceScopeFactory ?? throw new ArgumentNullException(nameof(serviceScopeFactory));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _httpContextAccessor = httpContextAccessor ?? throw new ArgumentNullException(nameof(httpContextAccessor));
         
@@ -274,62 +276,58 @@ public class AuditQueryService : IAuditQueryService
                 _logger.LogDebug("Cache MISS for audit search: {CacheKey}", cacheKey);
             }
 
-            // Cache miss or caching disabled - query database
-            using var connection = _dbContext.CreateConnection();
-            await connection.OpenAsync(cancellationToken);
-
+            // Cache miss or caching disabled - query database using EF Core LINQ
             // Check if Oracle Text is available
-            var isOracleTextAvailable = await IsOracleTextAvailableAsync(connection, cancellationToken);
+            var isOracleTextAvailable = await IsOracleTextAvailableAsync(cancellationToken);
 
-            string whereClause;
-            Dictionary<string, object> parameters;
+            // Apply role-based filtering first
+            var userContext = GetUserAccessContext();
+
+            IQueryable<SysAuditLog> searchQuery;
 
             if (isOracleTextAvailable)
             {
                 _logger.LogDebug("Using Oracle Text CONTAINS for search");
-                
-                // Use Oracle Text CONTAINS operator for advanced full-text search
-                // Transform search term for Oracle Text syntax
+
                 var oracleTextQuery = TransformSearchTermForOracleText(searchTerm);
-                
-                whereClause = "CONTAINS(BUSINESS_DESCRIPTION, :searchTerm) > 0";
-                parameters = new Dictionary<string, object>
-                {
-                    { "searchTerm", oracleTextQuery }
-                };
+
+                searchQuery = _dbContext.SysAuditLogs
+                    .FromSqlRaw($@"SELECT * FROM SYS_AUDIT_LOG WHERE CONTAINS(BUSINESS_DESCRIPTION, {{0}}) > 0", oracleTextQuery);
             }
             else
             {
                 _logger.LogDebug("Oracle Text not available, falling back to LIKE queries");
-                
-                // Fallback to LIKE queries for basic search
-                whereClause = @"
-                    (UPPER(BUSINESS_DESCRIPTION) LIKE :searchPattern
-                     OR UPPER(EXCEPTION_MESSAGE) LIKE :searchPattern
-                     OR UPPER(ENTITY_TYPE) LIKE :searchPattern
-                     OR UPPER(ACTION) LIKE :searchPattern
-                     OR UPPER(ACTOR_TYPE) LIKE :searchPattern
-                     OR UPPER(ERROR_CODE) LIKE :searchPattern
-                     OR UPPER(BUSINESS_MODULE) LIKE :searchPattern
-                     OR UPPER(ENDPOINT_PATH) LIKE :searchPattern
-                     OR UPPER(CORRELATION_ID) LIKE :searchPattern)";
 
                 var searchPattern = $"%{searchTerm.ToUpper()}%";
-                parameters = new Dictionary<string, object>
-                {
-                    { "searchPattern", searchPattern }
-                };
+
+                searchQuery = _dbContext.SysAuditLogs.Where(a =>
+                    a.BusinessDescription!.ToUpper().Contains(searchPattern) ||
+                    a.ExceptionMessage!.ToUpper().Contains(searchPattern) ||
+                    a.EntityType.ToUpper().Contains(searchPattern) ||
+                    a.Action.ToUpper().Contains(searchPattern) ||
+                    a.ActorType.ToUpper().Contains(searchPattern) ||
+                    a.ErrorCode!.ToUpper().Contains(searchPattern) ||
+                    a.BusinessModule!.ToUpper().Contains(searchPattern) ||
+                    a.EndpointPath!.ToUpper().Contains(searchPattern) ||
+                    a.CorrelationId!.ToUpper().Contains(searchPattern));
             }
 
+            // Apply role-based filtering
+            searchQuery = ApplyRoleBasedFiltering(searchQuery, userContext);
+
             // Get total count
-            var totalCount = await GetTotalCountAsync(connection, whereClause, parameters, cancellationToken);
+            var totalCount = await searchQuery.CountAsync(cancellationToken);
 
             // Get paged results
-            var items = await GetPagedResultsAsync(connection, whereClause, parameters, pagination, cancellationToken);
+            var items = await searchQuery
+                .OrderByDescending(a => a.CreationDate)
+                .Skip(pagination.Skip)
+                .Take(pagination.PageSize)
+                .ToListAsync(cancellationToken);
 
             var result = new PagedResult<AuditLogEntry>
             {
-                Items = items,
+                Items = items.Select(MapToAuditLogEntry).ToList(),
                 TotalCount = totalCount,
                 Page = pagination.PageNumber,
                 PageSize = pagination.PageSize
@@ -505,30 +503,15 @@ public class AuditQueryService : IAuditQueryService
         DateTime endDate,
         CancellationToken cancellationToken)
     {
-        using var connection = _dbContext.CreateConnection();
-        await connection.OpenAsync(cancellationToken);
+        var results = await _dbContext.SysAuditLogs
+            .AsNoTracking()
+            .Where(a => a.ActorId == actorId
+                     && a.CreationDate >= startDate
+                     && a.CreationDate <= endDate)
+            .OrderBy(a => a.CreationDate)
+            .ToListAsync(cancellationToken);
 
-        using var command = connection.CreateCommand();
-        command.CommandTimeout = QueryTimeoutSeconds; // 30 seconds max
-        command.CommandText = @"
-            SELECT * FROM SYS_AUDIT_LOG
-            WHERE ACTOR_ID = :actorId
-              AND CREATION_DATE >= :startDate
-              AND CREATION_DATE <= :endDate
-            ORDER BY CREATION_DATE ASC";
-
-        command.Parameters.Add(new OracleParameter("actorId", actorId));
-        command.Parameters.Add(new OracleParameter("startDate", startDate));
-        command.Parameters.Add(new OracleParameter("endDate", endDate));
-
-        var results = new List<AuditLogEntry>();
-        using var reader = await command.ExecuteReaderAsync(cancellationToken);
-        while (await reader.ReadAsync(cancellationToken))
-        {
-            results.Add(MapReaderToAuditLogEntry(reader));
-        }
-
-        return results;
+        return results.Select(MapToAuditLogEntry).ToList();
     }
 
     /// <summary>
@@ -541,12 +524,10 @@ public class AuditQueryService : IAuditQueryService
         DateTime endDate,
         CancellationToken cancellationToken)
     {
-        // Split date range into chunks
         var dateChunks = SplitDateRangeIntoChunks(startDate, endDate, _parallelQueryChunkSizeDays);
-        
+
         _logger.LogDebug("Split date range into {ChunkCount} chunks for parallel execution", dateChunks.Count);
 
-        // Execute queries in parallel with throttling
         var allResults = new List<AuditLogEntry>();
         var semaphore = new SemaphoreSlim(_maxParallelQueries);
         var tasks = new List<Task<List<AuditLogEntry>>>();
@@ -559,14 +540,21 @@ public class AuditQueryService : IAuditQueryService
             {
                 try
                 {
-                    _logger.LogTrace("Executing parallel query chunk: {ChunkStart} to {ChunkEnd}", 
+                    _logger.LogTrace("Executing parallel query chunk: {ChunkStart} to {ChunkEnd}",
                         chunk.StartDate, chunk.EndDate);
-                    
-                    return await ExecuteSingleActorQueryAsync(
-                        actorId, 
-                        chunk.StartDate, 
-                        chunk.EndDate, 
-                        cancellationToken);
+
+                    using var scope = _serviceScopeFactory.CreateScope();
+                    var context = scope.ServiceProvider.GetRequiredService<OracleDbContext>();
+
+                    var results = await context.SysAuditLogs
+                        .AsNoTracking()
+                        .Where(a => a.ActorId == actorId
+                                 && a.CreationDate >= chunk.StartDate
+                                 && a.CreationDate <= chunk.EndDate)
+                        .OrderBy(a => a.CreationDate)
+                        .ToListAsync(cancellationToken);
+
+                    return results.Select(MapToAuditLogEntry).ToList();
                 }
                 finally
                 {
@@ -577,16 +565,13 @@ public class AuditQueryService : IAuditQueryService
             tasks.Add(task);
         }
 
-        // Wait for all parallel queries to complete
         var chunkResults = await Task.WhenAll(tasks);
 
-        // Merge results from all chunks
         foreach (var chunkResult in chunkResults)
         {
             allResults.AddRange(chunkResult);
         }
 
-        // Sort merged results by creation date (ascending)
         allResults.Sort((a, b) => a.CreationDate.CompareTo(b.CreationDate));
 
         _logger.LogDebug("Parallel query execution completed. Total results: {ResultCount}", allResults.Count);
@@ -668,21 +653,19 @@ public class AuditQueryService : IAuditQueryService
         PaginationOptions pagination,
         CancellationToken cancellationToken)
     {
-        using var connection = _dbContext.CreateConnection();
-        await connection.OpenAsync(cancellationToken);
+        var query = ApplyQueryFilters(_dbContext.SysAuditLogs.AsQueryable(), filter);
 
-        // Build the WHERE clause based on filter criteria
-        var whereClause = BuildWhereClause(filter, out var parameters);
+        var totalCount = await query.CountAsync(cancellationToken);
 
-        // Get total count
-        var totalCount = await GetTotalCountAsync(connection, whereClause, parameters, cancellationToken);
-
-        // Get paged results
-        var items = await GetPagedResultsAsync(connection, whereClause, parameters, pagination, cancellationToken);
+        var items = await query
+            .OrderByDescending(a => a.CreationDate)
+            .Skip(pagination.Skip)
+            .Take(pagination.PageSize)
+            .ToListAsync(cancellationToken);
 
         return new PagedResult<AuditLogEntry>
         {
-            Items = items,
+            Items = items.Select(MapToAuditLogEntry).ToList(),
             TotalCount = totalCount,
             Page = pagination.PageNumber,
             PageSize = pagination.PageSize
@@ -703,15 +686,13 @@ public class AuditQueryService : IAuditQueryService
             throw new InvalidOperationException("Parallel query execution requires both StartDate and EndDate in the filter");
         }
 
-        // Split date range into chunks
         var dateChunks = SplitDateRangeIntoChunks(
-            filter.StartDate.Value, 
-            filter.EndDate.Value, 
+            filter.StartDate.Value,
+            filter.EndDate.Value,
             _parallelQueryChunkSizeDays);
-        
+
         _logger.LogDebug("Split date range into {ChunkCount} chunks for parallel execution", dateChunks.Count);
 
-        // Execute count queries in parallel for each chunk
         var semaphore = new SemaphoreSlim(_maxParallelQueries);
         var countTasks = new List<Task<int>>();
 
@@ -720,16 +701,15 @@ public class AuditQueryService : IAuditQueryService
             await semaphore.WaitAsync(cancellationToken);
 
             var chunkFilter = CloneFilterWithDateRange(filter, chunk.StartDate, chunk.EndDate);
-            
+
             var countTask = Task.Run(async () =>
             {
                 try
                 {
-                    using var connection = _dbContext.CreateConnection();
-                    await connection.OpenAsync(cancellationToken);
-                    
-                    var whereClause = BuildWhereClause(chunkFilter, out var parameters);
-                    return await GetTotalCountAsync(connection, whereClause, parameters, cancellationToken);
+                    using var scope = _serviceScopeFactory.CreateScope();
+                    var context = scope.ServiceProvider.GetRequiredService<OracleDbContext>();
+                    var query = ApplyQueryFilters(context.SysAuditLogs.AsQueryable(), chunkFilter);
+                    return await query.CountAsync(cancellationToken);
                 }
                 finally
                 {
@@ -740,13 +720,11 @@ public class AuditQueryService : IAuditQueryService
             countTasks.Add(countTask);
         }
 
-        // Wait for all count queries to complete
         var chunkCounts = await Task.WhenAll(countTasks);
         var totalCount = chunkCounts.Sum();
 
         _logger.LogDebug("Parallel count queries completed. Total count: {TotalCount}", totalCount);
 
-        // Execute data queries in parallel for each chunk
         var dataTasks = new List<Task<List<AuditLogEntry>>>();
 
         foreach (var chunk in dateChunks)
@@ -754,40 +732,23 @@ public class AuditQueryService : IAuditQueryService
             await semaphore.WaitAsync(cancellationToken);
 
             var chunkFilter = CloneFilterWithDateRange(filter, chunk.StartDate, chunk.EndDate);
-            
+
             var dataTask = Task.Run(async () =>
             {
                 try
                 {
-                    _logger.LogTrace("Executing parallel data query chunk: {ChunkStart} to {ChunkEnd}", 
+                    _logger.LogTrace("Executing parallel data query chunk: {ChunkStart} to {ChunkEnd}",
                         chunk.StartDate, chunk.EndDate);
-                    
-                    using var connection = _dbContext.CreateConnection();
-                    await connection.OpenAsync(cancellationToken);
-                    
-                    var whereClause = BuildWhereClause(chunkFilter, out var parameters);
-                    
-                    // Query all results from this chunk (no pagination at chunk level)
-                    using var command = connection.CreateCommand();
-                    command.CommandTimeout = QueryTimeoutSeconds;
-                    command.CommandText = $@"
-                        SELECT * FROM SYS_AUDIT_LOG
-                        WHERE {whereClause}
-                        ORDER BY CREATION_DATE DESC";
 
-                    foreach (var param in parameters)
-                    {
-                        command.Parameters.Add(new OracleParameter(param.Key, param.Value));
-                    }
+                    using var scope = _serviceScopeFactory.CreateScope();
+                    var context = scope.ServiceProvider.GetRequiredService<OracleDbContext>();
+                    var query = ApplyQueryFilters(context.SysAuditLogs.AsQueryable(), chunkFilter);
 
-                    var results = new List<AuditLogEntry>();
-                    using var reader = await command.ExecuteReaderAsync(cancellationToken);
-                    while (await reader.ReadAsync(cancellationToken))
-                    {
-                        results.Add(MapReaderToAuditLogEntry(reader));
-                    }
+                    var results = await query
+                        .OrderByDescending(a => a.CreationDate)
+                        .ToListAsync(cancellationToken);
 
-                    return results;
+                    return results.Select(MapToAuditLogEntry).ToList();
                 }
                 finally
                 {
@@ -798,26 +759,22 @@ public class AuditQueryService : IAuditQueryService
             dataTasks.Add(dataTask);
         }
 
-        // Wait for all data queries to complete
         var chunkResults = await Task.WhenAll(dataTasks);
 
-        // Merge results from all chunks
         var allResults = new List<AuditLogEntry>();
         foreach (var chunkResult in chunkResults)
         {
             allResults.AddRange(chunkResult);
         }
 
-        // Sort merged results by creation date (descending)
         allResults.Sort((a, b) => b.CreationDate.CompareTo(a.CreationDate));
 
-        // Apply pagination to merged results
         var pagedResults = allResults
             .Skip(pagination.Skip)
             .Take(pagination.PageSize)
             .ToList();
 
-        _logger.LogDebug("Parallel query execution completed. Total results: {TotalCount}, Page results: {PageCount}", 
+        _logger.LogDebug("Parallel query execution completed. Total results: {TotalCount}, Page results: {PageCount}",
             totalCount, pagedResults.Count);
 
         return new PagedResult<AuditLogEntry>
@@ -923,27 +880,22 @@ public class AuditQueryService : IAuditQueryService
     /// - CompanyAdmins: Filter by CompanyId (can see all data for their company)
     /// - Regular Users: Filter by ActorId (can only see their own audit data)
     /// </summary>
-    private void ApplyRoleBasedFiltering(
-        List<string> conditions,
-        Dictionary<string, object> parameters,
+    private IQueryable<SysAuditLog> ApplyRoleBasedFiltering(
+        IQueryable<SysAuditLog> query,
         UserAccessContext? userContext)
     {
         if (userContext == null)
         {
-            // If we can't determine user context, deny access by adding impossible condition
             _logger.LogWarning("No user context available, denying audit data access");
-            conditions.Add("1 = 0"); // Impossible condition - returns no results
-            return;
+            return query.Where(a => false);
         }
 
-        // SuperAdmins can access all audit data - no filtering needed
         if (userContext.IsSuperAdmin)
         {
             _logger.LogDebug("SuperAdmin user {UserId} - no filtering applied", userContext.UserId);
-            return;
+            return query;
         }
 
-        // Company admins can access audit data for their company
         if (userContext.Role == "COMPANY_ADMIN")
         {
             if (!userContext.CompanyId.HasValue)
@@ -951,205 +903,84 @@ public class AuditQueryService : IAuditQueryService
                 _logger.LogWarning(
                     "CompanyAdmin user {UserId} has no CompanyId, denying audit data access",
                     userContext.UserId);
-                conditions.Add("1 = 0"); // Impossible condition
-                return;
+                return query.Where(a => false);
             }
 
-            // Filter by company ID
-            conditions.Add("COMPANY_ID = :userCompanyId");
-            parameters.Add("userCompanyId", userContext.CompanyId.Value);
-            
             _logger.LogDebug(
                 "CompanyAdmin user {UserId} - filtering by CompanyId={CompanyId}",
                 userContext.UserId, userContext.CompanyId.Value);
-            return;
+            return query.Where(a => a.CompanyId == userContext.CompanyId.Value);
         }
 
-        // Regular users can only access their own audit data
-        conditions.Add("ACTOR_ID = :userActorId");
-        parameters.Add("userActorId", userContext.UserId);
-        
         _logger.LogDebug(
             "Regular user {UserId} - filtering by ActorId (self-access only)",
             userContext.UserId);
+        return query.Where(a => a.ActorId == userContext.UserId);
     }
 
     /// <summary>
     /// Builds the WHERE clause for SQL query based on filter criteria.
     /// Automatically applies role-based filtering based on the current user's access level.
     /// </summary>
-    private string BuildWhereClause(AuditQueryFilter filter, out Dictionary<string, object> parameters)
+    private IQueryable<SysAuditLog> ApplyQueryFilters(
+        IQueryable<SysAuditLog> query,
+        AuditQueryFilter filter)
     {
-        var conditions = new List<string>();
-        parameters = new Dictionary<string, object>();
-
-        // Apply role-based filtering first (enforces multi-tenant isolation)
         var userContext = GetUserAccessContext();
-        ApplyRoleBasedFiltering(conditions, parameters, userContext);
+        query = ApplyRoleBasedFiltering(query, userContext);
 
         if (filter.StartDate.HasValue)
-        {
-            conditions.Add("CREATION_DATE >= :startDate");
-            parameters.Add("startDate", filter.StartDate.Value);
-        }
+            query = query.Where(a => a.CreationDate >= filter.StartDate.Value);
 
         if (filter.EndDate.HasValue)
-        {
-            conditions.Add("CREATION_DATE <= :endDate");
-            parameters.Add("endDate", filter.EndDate.Value);
-        }
+            query = query.Where(a => a.CreationDate <= filter.EndDate.Value);
 
         if (filter.ActorId.HasValue)
-        {
-            conditions.Add("ACTOR_ID = :actorId");
-            parameters.Add("actorId", filter.ActorId.Value);
-        }
+            query = query.Where(a => a.ActorId == filter.ActorId.Value);
 
         if (!string.IsNullOrWhiteSpace(filter.ActorType))
-        {
-            conditions.Add("ACTOR_TYPE = :actorType");
-            parameters.Add("actorType", filter.ActorType);
-        }
+            query = query.Where(a => a.ActorType == filter.ActorType);
 
         if (filter.CompanyId.HasValue)
-        {
-            conditions.Add("COMPANY_ID = :companyId");
-            parameters.Add("companyId", filter.CompanyId.Value);
-        }
+            query = query.Where(a => a.CompanyId == filter.CompanyId.Value);
 
         if (filter.BranchId.HasValue)
-        {
-            conditions.Add("BRANCH_ID = :branchId");
-            parameters.Add("branchId", filter.BranchId.Value);
-        }
+            query = query.Where(a => a.BranchId == filter.BranchId.Value);
 
         if (!string.IsNullOrWhiteSpace(filter.EntityType))
-        {
-            conditions.Add("ENTITY_TYPE = :entityType");
-            parameters.Add("entityType", filter.EntityType);
-        }
+            query = query.Where(a => a.EntityType == filter.EntityType);
 
         if (filter.EntityId.HasValue)
-        {
-            conditions.Add("ENTITY_ID = :entityId");
-            parameters.Add("entityId", filter.EntityId.Value);
-        }
+            query = query.Where(a => a.EntityId == filter.EntityId.Value);
 
         if (!string.IsNullOrWhiteSpace(filter.Action))
-        {
-            conditions.Add("ACTION = :action");
-            parameters.Add("action", filter.Action);
-        }
+            query = query.Where(a => a.Action == filter.Action);
 
         if (!string.IsNullOrWhiteSpace(filter.IpAddress))
-        {
-            conditions.Add("IP_ADDRESS = :ipAddress");
-            parameters.Add("ipAddress", filter.IpAddress);
-        }
+            query = query.Where(a => a.IpAddress == filter.IpAddress);
 
         if (!string.IsNullOrWhiteSpace(filter.CorrelationId))
-        {
-            conditions.Add("CORRELATION_ID = :correlationId");
-            parameters.Add("correlationId", filter.CorrelationId);
-        }
+            query = query.Where(a => a.CorrelationId == filter.CorrelationId);
 
         if (!string.IsNullOrWhiteSpace(filter.EventCategory))
-        {
-            conditions.Add("EVENT_CATEGORY = :eventCategory");
-            parameters.Add("eventCategory", filter.EventCategory);
-        }
+            query = query.Where(a => a.EventCategory == filter.EventCategory);
 
         if (!string.IsNullOrWhiteSpace(filter.Severity))
-        {
-            conditions.Add("SEVERITY = :severity");
-            parameters.Add("severity", filter.Severity);
-        }
+            query = query.Where(a => a.Severity == filter.Severity);
 
         if (!string.IsNullOrWhiteSpace(filter.HttpMethod))
-        {
-            conditions.Add("HTTP_METHOD = :httpMethod");
-            parameters.Add("httpMethod", filter.HttpMethod);
-        }
+            query = query.Where(a => a.HttpMethod == filter.HttpMethod);
 
         if (!string.IsNullOrWhiteSpace(filter.EndpointPath))
-        {
-            conditions.Add("ENDPOINT_PATH = :endpointPath");
-            parameters.Add("endpointPath", filter.EndpointPath);
-        }
+            query = query.Where(a => a.EndpointPath == filter.EndpointPath);
 
         if (!string.IsNullOrWhiteSpace(filter.BusinessModule))
-        {
-            conditions.Add("BUSINESS_MODULE = :businessModule");
-            parameters.Add("businessModule", filter.BusinessModule);
-        }
+            query = query.Where(a => a.BusinessModule == filter.BusinessModule);
 
         if (!string.IsNullOrWhiteSpace(filter.ErrorCode))
-        {
-            conditions.Add("ERROR_CODE = :errorCode");
-            parameters.Add("errorCode", filter.ErrorCode);
-        }
+            query = query.Where(a => a.ErrorCode == filter.ErrorCode);
 
-        return conditions.Any() ? string.Join(" AND ", conditions) : "1=1";
-    }
-
-    /// <summary>
-    /// Gets the total count of records matching the filter criteria.
-    /// </summary>
-    private async Task<int> GetTotalCountAsync(
-        OracleConnection connection,
-        string whereClause,
-        Dictionary<string, object> parameters,
-        CancellationToken cancellationToken)
-    {
-        using var command = connection.CreateCommand();
-        command.CommandTimeout = QueryTimeoutSeconds; // 30 seconds max
-        command.CommandText = $"SELECT COUNT(*) FROM SYS_AUDIT_LOG WHERE {whereClause}";
-
-        foreach (var param in parameters)
-        {
-            command.Parameters.Add(new OracleParameter(param.Key, param.Value));
-        }
-
-        var result = await command.ExecuteScalarAsync(cancellationToken);
-        return Convert.ToInt32(result);
-    }
-
-    /// <summary>
-    /// Gets paged results matching the filter criteria.
-    /// </summary>
-    private async Task<List<AuditLogEntry>> GetPagedResultsAsync(
-        OracleConnection connection,
-        string whereClause,
-        Dictionary<string, object> parameters,
-        PaginationOptions pagination,
-        CancellationToken cancellationToken)
-    {
-        using var command = connection.CreateCommand();
-        command.CommandTimeout = QueryTimeoutSeconds; // 30 seconds max
-        
-        // Oracle pagination using OFFSET and FETCH
-        command.CommandText = $@"
-            SELECT * FROM SYS_AUDIT_LOG
-            WHERE {whereClause}
-            ORDER BY CREATION_DATE DESC
-            OFFSET :offset ROWS FETCH NEXT :pageSize ROWS ONLY";
-
-        foreach (var param in parameters)
-        {
-            command.Parameters.Add(new OracleParameter(param.Key, param.Value));
-        }
-
-        command.Parameters.Add(new OracleParameter("offset", pagination.Skip));
-        command.Parameters.Add(new OracleParameter("pageSize", pagination.PageSize));
-
-        var results = new List<AuditLogEntry>();
-        using var reader = await command.ExecuteReaderAsync(cancellationToken);
-        while (await reader.ReadAsync(cancellationToken))
-        {
-            results.Add(MapReaderToAuditLogEntry(reader));
-        }
-
-        return results;
+        return query;
     }
 
     /// <summary>
@@ -1159,71 +990,13 @@ public class AuditQueryService : IAuditQueryService
         AuditQueryFilter filter,
         CancellationToken cancellationToken)
     {
-        using var connection = _dbContext.CreateConnection();
-        await connection.OpenAsync(cancellationToken);
+        var query = ApplyQueryFilters(_dbContext.SysAuditLogs.AsQueryable(), filter);
 
-        var whereClause = BuildWhereClause(filter, out var parameters);
+        var results = await query
+            .OrderByDescending(a => a.CreationDate)
+            .ToListAsync(cancellationToken);
 
-        using var command = connection.CreateCommand();
-        command.CommandTimeout = QueryTimeoutSeconds; // 30 seconds max
-        command.CommandText = $@"
-            SELECT * FROM SYS_AUDIT_LOG
-            WHERE {whereClause}
-            ORDER BY CREATION_DATE DESC";
-
-        foreach (var param in parameters)
-        {
-            command.Parameters.Add(new OracleParameter(param.Key, param.Value));
-        }
-
-        var results = new List<AuditLogEntry>();
-        using var reader = await command.ExecuteReaderAsync(cancellationToken);
-        while (await reader.ReadAsync(cancellationToken))
-        {
-            results.Add(MapReaderToAuditLogEntry(reader));
-        }
-
-        return results;
-    }
-
-    /// <summary>
-    /// Maps OracleDataReader to AuditLogEntry.
-    /// </summary>
-    private AuditLogEntry MapReaderToAuditLogEntry(OracleDataReader reader)
-    {
-        return new AuditLogEntry
-        {
-            RowId = reader.GetInt64(reader.GetOrdinal("ROW_ID")),
-            ActorType = reader.GetString(reader.GetOrdinal("ACTOR_TYPE")),
-            ActorId = reader.GetInt64(reader.GetOrdinal("ACTOR_ID")),
-            CompanyId = reader.IsDBNull(reader.GetOrdinal("COMPANY_ID")) ? null : reader.GetInt64(reader.GetOrdinal("COMPANY_ID")),
-            BranchId = reader.IsDBNull(reader.GetOrdinal("BRANCH_ID")) ? null : reader.GetInt64(reader.GetOrdinal("BRANCH_ID")),
-            Action = reader.GetString(reader.GetOrdinal("ACTION")),
-            EntityType = reader.GetString(reader.GetOrdinal("ENTITY_TYPE")),
-            EntityId = reader.IsDBNull(reader.GetOrdinal("ENTITY_ID")) ? null : reader.GetInt64(reader.GetOrdinal("ENTITY_ID")),
-            OldValue = reader.IsDBNull(reader.GetOrdinal("OLD_VALUE")) ? null : reader.GetString(reader.GetOrdinal("OLD_VALUE")),
-            NewValue = reader.IsDBNull(reader.GetOrdinal("NEW_VALUE")) ? null : reader.GetString(reader.GetOrdinal("NEW_VALUE")),
-            IpAddress = reader.IsDBNull(reader.GetOrdinal("IP_ADDRESS")) ? null : reader.GetString(reader.GetOrdinal("IP_ADDRESS")),
-            UserAgent = reader.IsDBNull(reader.GetOrdinal("USER_AGENT")) ? null : reader.GetString(reader.GetOrdinal("USER_AGENT")),
-            CorrelationId = reader.IsDBNull(reader.GetOrdinal("CORRELATION_ID")) ? null : reader.GetString(reader.GetOrdinal("CORRELATION_ID")),
-            HttpMethod = reader.IsDBNull(reader.GetOrdinal("HTTP_METHOD")) ? null : reader.GetString(reader.GetOrdinal("HTTP_METHOD")),
-            EndpointPath = reader.IsDBNull(reader.GetOrdinal("ENDPOINT_PATH")) ? null : reader.GetString(reader.GetOrdinal("ENDPOINT_PATH")),
-            RequestPayload = reader.IsDBNull(reader.GetOrdinal("REQUEST_PAYLOAD")) ? null : reader.GetString(reader.GetOrdinal("REQUEST_PAYLOAD")),
-            ResponsePayload = reader.IsDBNull(reader.GetOrdinal("RESPONSE_PAYLOAD")) ? null : reader.GetString(reader.GetOrdinal("RESPONSE_PAYLOAD")),
-            ExecutionTimeMs = reader.IsDBNull(reader.GetOrdinal("EXECUTION_TIME_MS")) ? null : reader.GetInt64(reader.GetOrdinal("EXECUTION_TIME_MS")),
-            StatusCode = reader.IsDBNull(reader.GetOrdinal("STATUS_CODE")) ? null : reader.GetInt32(reader.GetOrdinal("STATUS_CODE")),
-            ExceptionType = reader.IsDBNull(reader.GetOrdinal("EXCEPTION_TYPE")) ? null : reader.GetString(reader.GetOrdinal("EXCEPTION_TYPE")),
-            ExceptionMessage = reader.IsDBNull(reader.GetOrdinal("EXCEPTION_MESSAGE")) ? null : reader.GetString(reader.GetOrdinal("EXCEPTION_MESSAGE")),
-            StackTrace = reader.IsDBNull(reader.GetOrdinal("STACK_TRACE")) ? null : reader.GetString(reader.GetOrdinal("STACK_TRACE")),
-            Severity = reader.GetString(reader.GetOrdinal("SEVERITY")),
-            EventCategory = reader.GetString(reader.GetOrdinal("EVENT_CATEGORY")),
-            Metadata = reader.IsDBNull(reader.GetOrdinal("METADATA")) ? null : reader.GetString(reader.GetOrdinal("METADATA")),
-            BusinessModule = reader.IsDBNull(reader.GetOrdinal("BUSINESS_MODULE")) ? null : reader.GetString(reader.GetOrdinal("BUSINESS_MODULE")),
-            DeviceIdentifier = reader.IsDBNull(reader.GetOrdinal("DEVICE_IDENTIFIER")) ? null : reader.GetString(reader.GetOrdinal("DEVICE_IDENTIFIER")),
-            ErrorCode = reader.IsDBNull(reader.GetOrdinal("ERROR_CODE")) ? null : reader.GetString(reader.GetOrdinal("ERROR_CODE")),
-            BusinessDescription = reader.IsDBNull(reader.GetOrdinal("BUSINESS_DESCRIPTION")) ? null : reader.GetString(reader.GetOrdinal("BUSINESS_DESCRIPTION")),
-            CreationDate = reader.GetDateTime(reader.GetOrdinal("CREATION_DATE"))
-        };
+        return results.Select(MapToAuditLogEntry).ToList();
     }
 
     /// <summary>
@@ -1233,7 +1006,7 @@ public class AuditQueryService : IAuditQueryService
     {
         return new AuditLogEntry
         {
-            RowId = sysAuditLog.RowId,
+            RowId = sysAuditLog.Id,
             ActorType = sysAuditLog.ActorType,
             ActorId = sysAuditLog.ActorId,
             CompanyId = sysAuditLog.CompanyId,
@@ -1350,11 +1123,9 @@ public class AuditQueryService : IAuditQueryService
     /// Checks if Oracle Text is available and the full-text index exists.
     /// This check is cached after the first call to avoid repeated database queries.
     /// </summary>
-    /// <param name="connection">Open Oracle connection</param>
     /// <param name="cancellationToken">Cancellation token</param>
     /// <returns>True if Oracle Text is available and configured, false otherwise</returns>
     private async Task<bool> IsOracleTextAvailableAsync(
-        OracleConnection connection,
         CancellationToken cancellationToken)
     {
         // Return cached result if available
@@ -1375,18 +1146,15 @@ public class AuditQueryService : IAuditQueryService
 
             _logger.LogDebug("Checking if Oracle Text is available");
 
-            using var command = connection.CreateCommand();
-            command.CommandTimeout = QueryTimeoutSeconds; // 30 seconds max
-            
-            // Check if the Oracle Text index exists
-            command.CommandText = @"
-                SELECT COUNT(*) 
-                FROM USER_INDEXES 
-                WHERE INDEX_NAME = 'IDX_AUDIT_LOG_FULLTEXT' 
-                  AND INDEX_TYPE = 'DOMAIN'";
+            var count = await _dbContext.Database
+                .SqlQueryRaw<int>(@"
+                    SELECT COUNT(*) 
+                    FROM USER_INDEXES 
+                    WHERE INDEX_NAME = 'IDX_AUDIT_LOG_FULLTEXT' 
+                      AND INDEX_TYPE = 'DOMAIN'")
+                .SingleAsync(cancellationToken);
 
-            var result = await command.ExecuteScalarAsync(cancellationToken);
-            var indexExists = Convert.ToInt32(result) > 0;
+            var indexExists = count > 0;
 
             if (indexExists)
             {

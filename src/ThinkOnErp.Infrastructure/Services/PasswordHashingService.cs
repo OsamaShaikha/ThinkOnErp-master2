@@ -57,8 +57,9 @@ public class PasswordHashingService
         Buffer.BlockCopy(hashBytes, 0, salt, 0, SaltSize);
         Buffer.BlockCopy(hashBytes, SaltSize, storedHash, 0, HashSize);
 
-        var computedHash = Rfc2898DeriveBytes.Pbkdf2(password, salt, Iterations, HashAlgorithmName.SHA256, HashSize);
-
+        var computedHash = Rfc2898DeriveBytes.Pbkdf2(password, salt, Iterations, HashAlgorithmName.SHA256, HashSize); 
         return CryptographicOperations.FixedTimeEquals(storedHash, computedHash);
+
+
     }
 }

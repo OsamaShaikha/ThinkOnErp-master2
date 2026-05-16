@@ -128,6 +128,7 @@ public class SysUserConfiguration : IEntityTypeConfiguration<SysUser>
         builder.Property(e => e.Phone2).HasColumnName("PHONE2").HasMaxLength(50);
         builder.Property(e => e.Role).HasColumnName("ROLE");
         builder.Property(e => e.BranchId).HasColumnName("BRANCH_ID");
+        builder.Property(e => e.CompanyId).HasColumnName("COMPANY_ID");
         builder.Property(e => e.Email).HasColumnName("EMAIL").HasMaxLength(200);
         builder.Property(e => e.LastLoginDate).HasColumnName("LAST_LOGIN_DATE");
         builder.Property(e => e.IsActive).HasColumnName("IS_ACTIVE").HasConversion<string>(v => v ? "Y" : "N", v => v == "Y").HasMaxLength(1);

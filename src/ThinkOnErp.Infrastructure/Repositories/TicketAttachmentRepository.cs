@@ -1,4 +1,4 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using ThinkOnErp.Domain.Entities;
 using ThinkOnErp.Domain.Interfaces;
 using ThinkOnErp.Infrastructure.Data;
@@ -7,8 +7,8 @@ namespace ThinkOnErp.Infrastructure.Repositories;
 
 public class TicketAttachmentRepository : ITicketAttachmentRepository
 {
-    private readonly ThinkOnErpDbContext _context;
-    public TicketAttachmentRepository(ThinkOnErpDbContext context) => _context = context;
+    private readonly OracleDbContext _context;
+    public TicketAttachmentRepository(OracleDbContext context) => _context = context;
 
     public async Task<List<SysTicketAttachment>> GetByTicketIdAsync(long ticketId) =>
         await _context.SysTicketAttachments.Where(a => a.TicketId == ticketId).ToListAsync();
@@ -83,8 +83,8 @@ public class TicketAttachmentRepository : ITicketAttachmentRepository
 
 public class SavedSearchRepository : ISavedSearchRepository
 {
-    private readonly ThinkOnErpDbContext _context;
-    public SavedSearchRepository(ThinkOnErpDbContext context) => _context = context;
+    private readonly OracleDbContext _context;
+    public SavedSearchRepository(OracleDbContext context) => _context = context;
 
     public async Task<long> CreateAsync(SysSavedSearch savedSearch)
     {
@@ -130,8 +130,8 @@ public class SavedSearchRepository : ISavedSearchRepository
 
 public class SearchAnalyticsRepository : ISearchAnalyticsRepository
 {
-    private readonly ThinkOnErpDbContext _context;
-    public SearchAnalyticsRepository(ThinkOnErpDbContext context) => _context = context;
+    private readonly OracleDbContext _context;
+    public SearchAnalyticsRepository(OracleDbContext context) => _context = context;
 
     public async Task<long> LogSearchAsync(SysSearchAnalytics analytics)
     {
@@ -189,8 +189,8 @@ public class SearchAnalyticsRepository : ISearchAnalyticsRepository
 
 public class TicketConfigRepository : ITicketConfigRepository
 {
-    private readonly ThinkOnErpDbContext _context;
-    public TicketConfigRepository(ThinkOnErpDbContext context) => _context = context;
+    private readonly OracleDbContext _context;
+    public TicketConfigRepository(OracleDbContext context) => _context = context;
 
     public async Task<List<SysTicketConfig>> GetAllAsync() =>
         await _context.SysTicketConfigs.Where(c => c.IsActive).ToListAsync();

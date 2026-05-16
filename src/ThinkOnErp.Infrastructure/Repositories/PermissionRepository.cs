@@ -1,4 +1,4 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using ThinkOnErp.Domain.Entities;
 using ThinkOnErp.Domain.Interfaces;
 using ThinkOnErp.Infrastructure.Data;
@@ -7,8 +7,8 @@ namespace ThinkOnErp.Infrastructure.Repositories;
 
 public class PermissionRepository : IPermissionRepository
 {
-    private readonly ThinkOnErpDbContext _context;
-    public PermissionRepository(ThinkOnErpDbContext context) => _context = context;
+    private readonly OracleDbContext _context;
+    public PermissionRepository(OracleDbContext context) => _context = context;
 
     public async Task<bool> CheckUserPermissionAsync(long userId, string screenCode, string action)
     {

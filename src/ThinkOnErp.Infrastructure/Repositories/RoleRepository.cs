@@ -1,4 +1,4 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using ThinkOnErp.Domain.Entities;
 using ThinkOnErp.Domain.Interfaces;
 using ThinkOnErp.Infrastructure.Data;
@@ -7,9 +7,9 @@ namespace ThinkOnErp.Infrastructure.Repositories;
 
 public class RoleRepository : IRoleRepository
 {
-    private readonly ThinkOnErpDbContext _context;
+    private readonly OracleDbContext _context;
 
-    public RoleRepository(ThinkOnErpDbContext context)
+    public RoleRepository(OracleDbContext context)
     {
         _context = context;
     }

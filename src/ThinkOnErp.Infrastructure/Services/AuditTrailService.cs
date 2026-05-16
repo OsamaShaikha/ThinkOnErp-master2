@@ -1,4 +1,4 @@
-using System.Text;
+﻿using System.Text;
 using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -10,10 +10,10 @@ namespace ThinkOnErp.Infrastructure.Services;
 
 public class AuditTrailService : IAuditTrailService
 {
-    private readonly ThinkOnErpDbContext _context;
+    private readonly OracleDbContext _context;
     private readonly ILogger<AuditTrailService> _logger;
 
-    public AuditTrailService(ThinkOnErpDbContext context, ILogger<AuditTrailService> logger)
+    public AuditTrailService(OracleDbContext context, ILogger<AuditTrailService> logger)
     {
         _context = context ?? throw new ArgumentNullException(nameof(context));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
@@ -681,23 +681,7 @@ public class AuditTrailService : IAuditTrailService
                 .Take(pageSize)
                 .ToListAsync();
 
-<<<<<<< Updated upstream
-            while (await reader.ReadAsync())
-            {
-                var row = new Dictionary<string, object>();
-                for (int i = 0; i < reader.FieldCount; i++)
-                {
-                    row[reader.GetName(i)] = reader.IsDBNull(i) ? null! : reader.GetValue(i);
-                }
-                results.Add(row);
-            }
-
-            var totalCount = (int)((OracleDecimal)command.Parameters["p_total_count"].Value).Value;
-
-            return (results, totalCount);
-=======
             return (results.Select(MapToDictionary).ToList(), totalCount);
->>>>>>> Stashed changes
         }
         catch (Exception ex)
         {

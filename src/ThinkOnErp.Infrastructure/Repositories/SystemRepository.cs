@@ -1,4 +1,4 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using ThinkOnErp.Domain.Entities;
 using ThinkOnErp.Domain.Interfaces;
 using ThinkOnErp.Infrastructure.Data;
@@ -7,8 +7,8 @@ namespace ThinkOnErp.Infrastructure.Repositories;
 
 public class SystemRepository : ISystemRepository
 {
-    private readonly ThinkOnErpDbContext _context;
-    public SystemRepository(ThinkOnErpDbContext context) => _context = context;
+    private readonly OracleDbContext _context;
+    public SystemRepository(OracleDbContext context) => _context = context;
 
     public async Task<List<SysSystem>> GetAllSystemsAsync() =>
         await _context.SysSystems.Where(s => s.IsActive).ToListAsync();

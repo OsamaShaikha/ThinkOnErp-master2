@@ -3,8 +3,8 @@ using System.Text.Json;
 using Microsoft.Extensions.Logging;
 using ThinkOnErp.Domain.Interfaces;
 using ThinkOnErp.Domain.Models;
+using Microsoft.EntityFrameworkCore;
 using ThinkOnErp.Infrastructure.Data;
-using Oracle.ManagedDataAccess.Client;
 
 namespace ThinkOnErp.Infrastructure.Services;
 
@@ -1117,23 +1117,15 @@ public class ComplianceReporter : IComplianceReporter
     {
         try
         {
-            using var connection = _dbContext.CreateConnection();
-            await connection.OpenAsync(cancellationToken);
+            var user = await _dbContext.SysUsers
+                .Where(u => u.Id == dataSubjectId)
+                .Select(u => new { u.UserName, u.Email })
+                .FirstOrDefaultAsync(cancellationToken);
 
-            using var command = connection.CreateCommand();
-            command.CommandTimeout = QueryTimeoutSeconds;
-            command.CommandText = @"
-                SELECT USER_NAME, EMAIL
-                FROM SYS_USERS
-                WHERE ROW_ID = :dataSubjectId";
-
-            command.Parameters.Add(new OracleParameter("dataSubjectId", dataSubjectId));
-
-            using var reader = await command.ExecuteReaderAsync(cancellationToken);
-            if (await reader.ReadAsync(cancellationToken))
+            if (user != null)
             {
-                report.DataSubjectName = reader.IsDBNull(0) ? "Unknown" : reader.GetString(0);
-                report.DataSubjectEmail = reader.IsDBNull(1) ? null : reader.GetString(1);
+                report.DataSubjectName = user.UserName ?? "Unknown";
+                report.DataSubjectEmail = user.Email;
             }
             else
             {
@@ -1145,7 +1137,6 @@ public class ComplianceReporter : IComplianceReporter
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error populating data subject info for {DataSubjectId}", dataSubjectId);
-            // Set default values and continue
             report.DataSubjectName = "Unknown";
             report.DataSubjectEmail = null;
         }
@@ -1164,64 +1155,38 @@ public class ComplianceReporter : IComplianceReporter
 
         try
         {
-            using var connection = _dbContext.CreateConnection();
-            await connection.OpenAsync(cancellationToken);
+            var query = from al in _dbContext.SysAuditLogs
+                        join u in _dbContext.SysUsers on al.ActorId equals u.Id into userJoin
+                        from u in userJoin.DefaultIfEmpty()
+                        where al.CreationDate >= startDate
+                           && al.CreationDate <= endDate
+                           && (al.ActorId == dataSubjectId
+                               || (al.EntityType == "SysUser" && al.EntityId == dataSubjectId))
+                        orderby al.CreationDate ascending
+                        select new { al, ActorName = u != null ? u.UserName : null };
 
-            using var command = connection.CreateCommand();
-            command.CommandTimeout = QueryTimeoutSeconds;
-            
-            // Query audit logs where:
-            // 1. The actor is the data subject (user accessing their own data)
-            // 2. The entity is the data subject (someone accessing the user's data)
-            // 3. The entity type is related to personal data and entity ID matches
-            command.CommandText = @"
-                SELECT 
-                    al.CREATION_DATE,
-                    al.ACTOR_ID,
-                    u.USER_NAME as ACTOR_NAME,
-                    al.ENTITY_TYPE,
-                    al.ENTITY_ID,
-                    al.ACTION,
-                    al.IP_ADDRESS,
-                    al.CORRELATION_ID,
-                    al.METADATA
-                FROM SYS_AUDIT_LOG al
-                LEFT JOIN SYS_USERS u ON al.ACTOR_ID = u.ROW_ID
-                WHERE al.CREATION_DATE >= :startDate
-                  AND al.CREATION_DATE <= :endDate
-                  AND (
-                      al.ACTOR_ID = :dataSubjectId
-                      OR (al.ENTITY_TYPE = 'SysUser' AND al.ENTITY_ID = :dataSubjectId)
-                  )
-                ORDER BY al.CREATION_DATE ASC";
+            var results = await query.ToListAsync(cancellationToken);
 
-            command.Parameters.Add(new OracleParameter("startDate", startDate));
-            command.Parameters.Add(new OracleParameter("endDate", endDate));
-            command.Parameters.Add(new OracleParameter("dataSubjectId", dataSubjectId));
-
-            using var reader = await command.ExecuteReaderAsync(cancellationToken);
-            while (await reader.ReadAsync(cancellationToken))
+            foreach (var item in results)
             {
                 var accessEvent = new DataAccessEvent
                 {
-                    AccessedAt = reader.GetDateTime(0),
-                    ActorId = reader.GetInt64(1),
-                    ActorName = reader.IsDBNull(2) ? "Unknown" : reader.GetString(2),
-                    EntityType = reader.IsDBNull(3) ? "Unknown" : reader.GetString(3),
-                    EntityId = reader.IsDBNull(4) ? null : reader.GetInt64(4),
-                    Action = reader.IsDBNull(5) ? "Unknown" : reader.GetString(5),
-                    IpAddress = reader.IsDBNull(6) ? null : reader.GetString(6),
-                    CorrelationId = reader.IsDBNull(7) ? null : reader.GetString(7)
+                    AccessedAt = item.al.CreationDate,
+                    ActorId = item.al.ActorId,
+                    ActorName = item.ActorName ?? "Unknown",
+                    EntityType = item.al.EntityType ?? "Unknown",
+                    EntityId = item.al.EntityId,
+                    Action = item.al.Action ?? "Unknown",
+                    IpAddress = item.al.IpAddress,
+                    CorrelationId = item.al.CorrelationId
                 };
 
-                // Try to extract purpose and legal basis from metadata if available
-                if (!reader.IsDBNull(8))
+                if (item.al.Metadata != null)
                 {
                     try
                     {
-                        var metadataJson = reader.GetString(8);
-                        var metadata = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(metadataJson);
-                        
+                        var metadata = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(item.al.Metadata);
+
                         if (metadata != null)
                         {
                             if (metadata.ContainsKey("purpose"))
@@ -1236,7 +1201,6 @@ public class ComplianceReporter : IComplianceReporter
                     }
                     catch (JsonException)
                     {
-                        // Ignore JSON parsing errors
                     }
                 }
 
@@ -1249,8 +1213,8 @@ public class ComplianceReporter : IComplianceReporter
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, 
-                "Error querying data subject access events for {DataSubjectId}", 
+            _logger.LogError(ex,
+                "Error querying data subject access events for {DataSubjectId}",
                 dataSubjectId);
             throw;
         }
@@ -1268,45 +1232,39 @@ public class ComplianceReporter : IComplianceReporter
     {
         try
         {
-            using var connection = _dbContext.CreateConnection();
-            await connection.OpenAsync(cancellationToken);
+            var user = await _dbContext.SysUsers
+                .Where(u => u.Id == dataSubjectId)
+                .Select(u => new
+                {
+                    u.Id,
+                    u.UserName,
+                    u.Email,
+                    u.Phone,
+                    u.CompanyId,
+                    u.Role,
+                    u.IsActive,
+                    u.CreationDate,
+                    u.UpdateDate,
+                    u.ForceLogoutDate
+                })
+                .FirstOrDefaultAsync(cancellationToken);
 
-            using var command = connection.CreateCommand();
-            command.CommandTimeout = QueryTimeoutSeconds;
-            command.CommandText = @"
-                SELECT 
-                    ROW_ID,
-                    USER_NAME,
-                    EMAIL,
-                    PHONE_NUMBER,
-                    COMPANY_ID,
-                    ROLE_ID,
-                    IS_ACTIVE,
-                    CREATION_DATE,
-                    LAST_MODIFIED_DATE,
-                    FORCE_LOGOUT
-                FROM SYS_USERS
-                WHERE ROW_ID = :dataSubjectId";
-
-            command.Parameters.Add(new OracleParameter("dataSubjectId", dataSubjectId));
-
-            using var reader = await command.ExecuteReaderAsync(cancellationToken);
             var userDataList = new List<string>();
 
-            if (await reader.ReadAsync(cancellationToken))
+            if (user != null)
             {
                 var userData = new Dictionary<string, object?>
                 {
-                    ["UserId"] = reader.GetInt64(0),
-                    ["UserName"] = reader.IsDBNull(1) ? null : reader.GetString(1),
-                    ["Email"] = reader.IsDBNull(2) ? null : reader.GetString(2),
-                    ["PhoneNumber"] = reader.IsDBNull(3) ? null : reader.GetString(3),
-                    ["CompanyId"] = reader.IsDBNull(4) ? null : reader.GetInt64(4),
-                    ["RoleId"] = reader.IsDBNull(5) ? null : reader.GetInt64(5),
-                    ["IsActive"] = reader.IsDBNull(6) ? null : reader.GetInt32(6) == 1,
-                    ["CreationDate"] = reader.IsDBNull(7) ? null : reader.GetDateTime(7),
-                    ["LastModifiedDate"] = reader.IsDBNull(8) ? null : reader.GetDateTime(8),
-                    ["ForceLogout"] = reader.IsDBNull(9) ? null : reader.GetInt32(9) == 1
+                    ["UserId"] = user.Id,
+                    ["UserName"] = user.UserName,
+                    ["Email"] = user.Email,
+                    ["PhoneNumber"] = user.Phone,
+                    ["CompanyId"] = user.CompanyId,
+                    ["RoleId"] = user.Role,
+                    ["IsActive"] = user.IsActive,
+                    ["CreationDate"] = user.CreationDate,
+                    ["LastModifiedDate"] = user.UpdateDate,
+                    ["ForceLogout"] = user.ForceLogoutDate != null
                 };
 
                 userDataList.Add(JsonSerializer.Serialize(userData, new JsonSerializerOptions
@@ -1325,7 +1283,6 @@ public class ComplianceReporter : IComplianceReporter
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error exporting user profile data for data subject {DataSubjectId}", dataSubjectId);
-            // Don't throw - continue with other exports
         }
     }
 
@@ -1339,62 +1296,35 @@ public class ComplianceReporter : IComplianceReporter
     {
         try
         {
-            using var connection = _dbContext.CreateConnection();
-            await connection.OpenAsync(cancellationToken);
+            var auditLogs = await _dbContext.SysAuditLogs
+                .Where(a => a.ActorId == dataSubjectId)
+                .OrderByDescending(a => a.CreationDate)
+                .ToListAsync(cancellationToken);
 
-            using var command = connection.CreateCommand();
-            command.CommandTimeout = QueryTimeoutSeconds;
-            command.CommandText = @"
-                SELECT 
-                    ROW_ID,
-                    ACTOR_TYPE,
-                    ACTOR_ID,
-                    COMPANY_ID,
-                    BRANCH_ID,
-                    ACTION,
-                    ENTITY_TYPE,
-                    ENTITY_ID,
-                    IP_ADDRESS,
-                    USER_AGENT,
-                    CORRELATION_ID,
-                    HTTP_METHOD,
-                    ENDPOINT_PATH,
-                    STATUS_CODE,
-                    EXECUTION_TIME_MS,
-                    EVENT_CATEGORY,
-                    SEVERITY,
-                    CREATION_DATE
-                FROM SYS_AUDIT_LOG
-                WHERE ACTOR_ID = :dataSubjectId
-                ORDER BY CREATION_DATE DESC";
-
-            command.Parameters.Add(new OracleParameter("dataSubjectId", dataSubjectId));
-
-            using var reader = await command.ExecuteReaderAsync(cancellationToken);
             var auditDataList = new List<string>();
 
-            while (await reader.ReadAsync(cancellationToken))
+            foreach (var log in auditLogs)
             {
                 var auditData = new Dictionary<string, object?>
                 {
-                    ["AuditLogId"] = reader.GetInt64(0),
-                    ["ActorType"] = reader.IsDBNull(1) ? null : reader.GetString(1),
-                    ["ActorId"] = reader.GetInt64(2),
-                    ["CompanyId"] = reader.IsDBNull(3) ? null : reader.GetInt64(3),
-                    ["BranchId"] = reader.IsDBNull(4) ? null : reader.GetInt64(4),
-                    ["Action"] = reader.IsDBNull(5) ? null : reader.GetString(5),
-                    ["EntityType"] = reader.IsDBNull(6) ? null : reader.GetString(6),
-                    ["EntityId"] = reader.IsDBNull(7) ? null : reader.GetInt64(7),
-                    ["IpAddress"] = reader.IsDBNull(8) ? null : reader.GetString(8),
-                    ["UserAgent"] = reader.IsDBNull(9) ? null : reader.GetString(9),
-                    ["CorrelationId"] = reader.IsDBNull(10) ? null : reader.GetString(10),
-                    ["HttpMethod"] = reader.IsDBNull(11) ? null : reader.GetString(11),
-                    ["EndpointPath"] = reader.IsDBNull(12) ? null : reader.GetString(12),
-                    ["StatusCode"] = reader.IsDBNull(13) ? null : reader.GetInt32(13),
-                    ["ExecutionTimeMs"] = reader.IsDBNull(14) ? null : reader.GetInt64(14),
-                    ["EventCategory"] = reader.IsDBNull(15) ? null : reader.GetString(15),
-                    ["Severity"] = reader.IsDBNull(16) ? null : reader.GetString(16),
-                    ["CreationDate"] = reader.IsDBNull(17) ? null : reader.GetDateTime(17)
+                    ["AuditLogId"] = log.Id,
+                    ["ActorType"] = log.ActorType,
+                    ["ActorId"] = log.ActorId,
+                    ["CompanyId"] = log.CompanyId,
+                    ["BranchId"] = log.BranchId,
+                    ["Action"] = log.Action,
+                    ["EntityType"] = log.EntityType,
+                    ["EntityId"] = log.EntityId,
+                    ["IpAddress"] = log.IpAddress,
+                    ["UserAgent"] = log.UserAgent,
+                    ["CorrelationId"] = log.CorrelationId,
+                    ["HttpMethod"] = log.HttpMethod,
+                    ["EndpointPath"] = log.EndpointPath,
+                    ["StatusCode"] = log.StatusCode,
+                    ["ExecutionTimeMs"] = log.ExecutionTimeMs,
+                    ["EventCategory"] = log.EventCategory,
+                    ["Severity"] = log.Severity,
+                    ["CreationDate"] = log.CreationDate
                 };
 
                 auditDataList.Add(JsonSerializer.Serialize(auditData, new JsonSerializerOptions
@@ -1414,7 +1344,6 @@ public class ComplianceReporter : IComplianceReporter
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error exporting audit log data for data subject {DataSubjectId}", dataSubjectId);
-            // Don't throw - continue with other exports
         }
     }
 
@@ -1428,49 +1357,30 @@ public class ComplianceReporter : IComplianceReporter
     {
         try
         {
-            using var connection = _dbContext.CreateConnection();
-            await connection.OpenAsync(cancellationToken);
+            var authLogs = await _dbContext.SysAuditLogs
+                .Where(a => a.ActorId == dataSubjectId && a.EventCategory == "Authentication")
+                .OrderByDescending(a => a.CreationDate)
+                .ToListAsync(cancellationToken);
 
-            using var command = connection.CreateCommand();
-            command.CommandTimeout = QueryTimeoutSeconds;
-            command.CommandText = @"
-                SELECT 
-                    ROW_ID,
-                    ACTION,
-                    IP_ADDRESS,
-                    USER_AGENT,
-                    STATUS_CODE,
-                    CREATION_DATE,
-                    METADATA
-                FROM SYS_AUDIT_LOG
-                WHERE ACTOR_ID = :dataSubjectId
-                  AND EVENT_CATEGORY = 'Authentication'
-                ORDER BY CREATION_DATE DESC";
-
-            command.Parameters.Add(new OracleParameter("dataSubjectId", dataSubjectId));
-
-            using var reader = await command.ExecuteReaderAsync(cancellationToken);
             var authDataList = new List<string>();
 
-            while (await reader.ReadAsync(cancellationToken))
+            foreach (var log in authLogs)
             {
                 var authData = new Dictionary<string, object?>
                 {
-                    ["AuditLogId"] = reader.GetInt64(0),
-                    ["Action"] = reader.IsDBNull(1) ? null : reader.GetString(1),
-                    ["IpAddress"] = reader.IsDBNull(2) ? null : reader.GetString(2),
-                    ["UserAgent"] = reader.IsDBNull(3) ? null : reader.GetString(3),
-                    ["StatusCode"] = reader.IsDBNull(4) ? null : reader.GetInt32(4),
-                    ["CreationDate"] = reader.IsDBNull(5) ? null : reader.GetDateTime(5)
+                    ["AuditLogId"] = log.Id,
+                    ["Action"] = log.Action,
+                    ["IpAddress"] = log.IpAddress,
+                    ["UserAgent"] = log.UserAgent,
+                    ["StatusCode"] = log.StatusCode,
+                    ["CreationDate"] = log.CreationDate
                 };
 
-                // Try to extract additional metadata if available
-                if (!reader.IsDBNull(6))
+                if (log.Metadata != null)
                 {
                     try
                     {
-                        var metadataJson = reader.GetString(6);
-                        var metadata = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(metadataJson);
+                        var metadata = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(log.Metadata);
                         if (metadata != null)
                         {
                             authData["Metadata"] = metadata;
@@ -1478,7 +1388,6 @@ public class ComplianceReporter : IComplianceReporter
                     }
                     catch (JsonException)
                     {
-                        // Ignore JSON parsing errors
                     }
                 }
 
@@ -1499,7 +1408,6 @@ public class ComplianceReporter : IComplianceReporter
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error exporting authentication data for data subject {DataSubjectId}", dataSubjectId);
-            // Don't throw - continue with other exports
         }
     }
 
@@ -1516,79 +1424,56 @@ public class ComplianceReporter : IComplianceReporter
 
         try
         {
-            using var connection = _dbContext.CreateConnection();
-            await connection.OpenAsync(cancellationToken);
+            var query = from al in _dbContext.SysAuditLogs
+                        join u in _dbContext.SysUsers on al.ActorId equals u.Id into userJoin
+                        from u in userJoin.DefaultIfEmpty()
+                        join r in _dbContext.SysRoles on u.Role equals r.Id into roleJoin
+                        from r in roleJoin.DefaultIfEmpty()
+                        where al.CreationDate >= startDate
+                           && al.CreationDate <= endDate
+                           && (al.EntityType.ToUpper().Contains("INVOICE")
+                               || al.EntityType.ToUpper().Contains("PAYMENT")
+                               || al.EntityType.ToUpper().Contains("TRANSACTION")
+                               || al.EntityType.ToUpper().Contains("ACCOUNT")
+                               || al.EntityType.ToUpper().Contains("BUDGET")
+                               || al.EntityType.ToUpper().Contains("JOURNAL")
+                               || al.EntityType.ToUpper().Contains("LEDGER")
+                               || al.EntityType.ToUpper().Contains("FINANCIAL")
+                               || al.EntityType.ToUpper().Contains("REVENUE")
+                               || al.EntityType.ToUpper().Contains("EXPENSE")
+                               || al.EntityType.ToUpper().Contains("ASSET")
+                               || al.EntityType.ToUpper().Contains("LIABILITY")
+                               || (al.BusinessModule ?? string.Empty).ToUpper() == "ACCOUNTING"
+                               || (al.BusinessModule ?? string.Empty).ToUpper() == "FINANCE")
+                        orderby al.CreationDate ascending
+                        select new { al, u, r };
 
-            using var command = connection.CreateCommand();
-            command.CommandTimeout = QueryTimeoutSeconds;
-            
-            // Query audit logs for financial entity types
-            // Financial entities typically include: Invoice, Payment, Transaction, Account, Budget, Journal, Ledger
-            command.CommandText = @"
-                SELECT 
-                    al.CREATION_DATE,
-                    al.ACTOR_ID,
-                    u.USER_NAME as ACTOR_NAME,
-                    r.ROLE_NAME as ACTOR_ROLE,
-                    al.ENTITY_TYPE,
-                    al.ENTITY_ID,
-                    al.ACTION,
-                    al.IP_ADDRESS,
-                    al.CORRELATION_ID,
-                    al.METADATA
-                FROM SYS_AUDIT_LOG al
-                LEFT JOIN SYS_USERS u ON al.ACTOR_ID = u.ROW_ID
-                LEFT JOIN SYS_ROLE r ON u.ROLE_ID = r.ROW_ID
-                WHERE al.CREATION_DATE >= :startDate
-                  AND al.CREATION_DATE <= :endDate
-                  AND (
-                      UPPER(al.ENTITY_TYPE) LIKE '%INVOICE%'
-                      OR UPPER(al.ENTITY_TYPE) LIKE '%PAYMENT%'
-                      OR UPPER(al.ENTITY_TYPE) LIKE '%TRANSACTION%'
-                      OR UPPER(al.ENTITY_TYPE) LIKE '%ACCOUNT%'
-                      OR UPPER(al.ENTITY_TYPE) LIKE '%BUDGET%'
-                      OR UPPER(al.ENTITY_TYPE) LIKE '%JOURNAL%'
-                      OR UPPER(al.ENTITY_TYPE) LIKE '%LEDGER%'
-                      OR UPPER(al.ENTITY_TYPE) LIKE '%FINANCIAL%'
-                      OR UPPER(al.ENTITY_TYPE) LIKE '%REVENUE%'
-                      OR UPPER(al.ENTITY_TYPE) LIKE '%EXPENSE%'
-                      OR UPPER(al.ENTITY_TYPE) LIKE '%ASSET%'
-                      OR UPPER(al.ENTITY_TYPE) LIKE '%LIABILITY%'
-                      OR UPPER(al.BUSINESS_MODULE) = 'ACCOUNTING'
-                      OR UPPER(al.BUSINESS_MODULE) = 'FINANCE'
-                  )
-                ORDER BY al.CREATION_DATE ASC";
+            var results = await query.ToListAsync(cancellationToken);
 
-            command.Parameters.Add(new OracleParameter("startDate", startDate));
-            command.Parameters.Add(new OracleParameter("endDate", endDate));
-
-            using var reader = await command.ExecuteReaderAsync(cancellationToken);
-            while (await reader.ReadAsync(cancellationToken))
+            foreach (var item in results)
             {
-                var accessedAt = reader.GetDateTime(0);
-                
+                var accessedAt = item.al.CreationDate;
+
                 var financialEvent = new FinancialAccessEvent
                 {
                     AccessedAt = accessedAt,
-                    ActorId = reader.GetInt64(1),
-                    ActorName = reader.IsDBNull(2) ? "Unknown" : reader.GetString(2),
-                    ActorRole = reader.IsDBNull(3) ? null : reader.GetString(3),
-                    EntityType = reader.IsDBNull(4) ? "Unknown" : reader.GetString(4),
-                    EntityId = reader.IsDBNull(5) ? null : reader.GetInt64(5),
-                    Action = reader.IsDBNull(6) ? "Unknown" : reader.GetString(6),
-                    IpAddress = reader.IsDBNull(7) ? null : reader.GetString(7),
-                    CorrelationId = reader.IsDBNull(8) ? null : reader.GetString(8),
+                    ActorId = item.al.ActorId,
+                    ActorName = item.u?.UserName ?? "Unknown",
+                    ActorRole = item.r?.RoleNameEn,
+                    EntityType = item.al.EntityType ?? "Unknown",
+                    EntityId = item.al.EntityId,
+                    Action = item.al.Action ?? "Unknown",
+                    IpAddress = item.al.IpAddress,
+                    CorrelationId = item.al.CorrelationId,
                     OutOfHours = IsOutOfHours(accessedAt)
                 };
 
-                // Try to extract business justification from metadata if available
-                if (!reader.IsDBNull(9))
+                if (item.al.Metadata != null)
                 {
                     try
                     {
-                        var metadataJson = reader.GetString(9);
-                        var metadata = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(metadataJson);
-                        
+                        var metadata = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(item.al.Metadata);
+
                         if (metadata != null && metadata.ContainsKey("businessJustification"))
                         {
                             financialEvent.BusinessJustification = metadata["businessJustification"].GetString();
@@ -1596,7 +1481,6 @@ public class ComplianceReporter : IComplianceReporter
                     }
                     catch (JsonException)
                     {
-                        // Ignore JSON parsing errors
                     }
                 }
 
@@ -1609,8 +1493,8 @@ public class ComplianceReporter : IComplianceReporter
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, 
-                "Error querying financial data access events from {StartDate} to {EndDate}", 
+            _logger.LogError(ex,
+                "Error querying financial data access events from {StartDate} to {EndDate}",
                 startDate, endDate);
             throw;
         }
@@ -1757,47 +1641,24 @@ public class ComplianceReporter : IComplianceReporter
 
         try
         {
-            using var connection = _dbContext.CreateConnection();
-            await connection.OpenAsync(cancellationToken);
+            var query = from u in _dbContext.SysUsers
+                        join ur in _dbContext.SysUserRoles on u.Id equals ur.UserId
+                        join r in _dbContext.SysRoles on ur.RoleId equals r.Id
+                        where u.IsActive && r.IsActive
+                        orderby u.UserName, r.RoleNameEn
+                        select new UserRoleAssignment
+                        {
+                            UserId = u.Id,
+                            UserName = u.UserName,
+                            UserEmail = u.Email,
+                            CompanyId = u.CompanyId,
+                            RoleId = r.Id,
+                            RoleName = r.RoleNameEn,
+                            RoleDescription = r.Note,
+                            AssignedDate = ur.AssignedDate
+                        };
 
-            using var command = connection.CreateCommand();
-            command.CommandTimeout = QueryTimeoutSeconds;
-            
-            // Query all active users with their role assignments
-            command.CommandText = @"
-                SELECT 
-                    u.ROW_ID as USER_ID,
-                    u.USER_NAME,
-                    u.EMAIL,
-                    u.COMPANY_ID,
-                    r.ROW_ID as ROLE_ID,
-                    r.ROLE_NAME,
-                    r.ROLE_DESC,
-                    ur.ASSIGNED_DATE
-                FROM SYS_USERS u
-                INNER JOIN SYS_USER_ROLE ur ON u.ROW_ID = ur.USER_ID
-                INNER JOIN SYS_ROLE r ON ur.ROLE_ID = r.ROW_ID
-                WHERE u.IS_ACTIVE = 1
-                  AND r.IS_ACTIVE = 1
-                ORDER BY u.USER_NAME, r.ROLE_NAME";
-
-            using var reader = await command.ExecuteReaderAsync(cancellationToken);
-            while (await reader.ReadAsync(cancellationToken))
-            {
-                var assignment = new UserRoleAssignment
-                {
-                    UserId = reader.GetInt64(0),
-                    UserName = reader.IsDBNull(1) ? "Unknown" : reader.GetString(1),
-                    UserEmail = reader.IsDBNull(2) ? null : reader.GetString(2),
-                    CompanyId = reader.IsDBNull(3) ? null : reader.GetInt64(3),
-                    RoleId = reader.GetInt64(4),
-                    RoleName = reader.IsDBNull(5) ? "Unknown" : reader.GetString(5),
-                    RoleDescription = reader.IsDBNull(6) ? null : reader.GetString(6),
-                    AssignedDate = reader.IsDBNull(7) ? null : reader.GetDateTime(7)
-                };
-
-                userRoleAssignments.Add(assignment);
-            }
+            userRoleAssignments = await query.ToListAsync(cancellationToken);
 
             _logger.LogDebug("Retrieved {Count} user role assignments", userRoleAssignments.Count);
         }
@@ -2027,36 +1888,26 @@ public class ComplianceReporter : IComplianceReporter
 
         try
         {
-            using var connection = _dbContext.CreateConnection();
-            await connection.OpenAsync(cancellationToken);
+            var rawData = await (from u in _dbContext.SysUsers
+                                 join usp in _dbContext.SysUserScreenPermissions on u.Id equals usp.UserId
+                                 join s in _dbContext.SysScreens on usp.ScreenId equals s.RowId
+                                 where u.IsActive
+                                    && (usp.CanView || usp.CanInsert || usp.CanUpdate || usp.CanDelete)
+                                 select new { u.Id, u.UserName, usp.ScreenId, s.ScreenName })
+                                 .ToListAsync(cancellationToken);
 
-            using var command = connection.CreateCommand();
-            command.CommandTimeout = QueryTimeoutSeconds;
-            
-            // Query users with direct screen permissions (overrides)
-            command.CommandText = @"
-                SELECT 
-                    u.ROW_ID as USER_ID,
-                    u.USER_NAME,
-                    COUNT(DISTINCT usp.SCREEN_ID) as PERMISSION_COUNT,
-                    LISTAGG(s.SCREEN_NAME, ', ') WITHIN GROUP (ORDER BY s.SCREEN_NAME) as SCREEN_NAMES
-                FROM SYS_USERS u
-                INNER JOIN SYS_USER_SCREEN_PERMISSION usp ON u.ROW_ID = usp.USER_ID
-                INNER JOIN SYS_SCREEN s ON usp.SCREEN_ID = s.ROW_ID
-                WHERE u.IS_ACTIVE = 1
-                  AND (usp.CAN_VIEW = '1' OR usp.CAN_INSERT = '1' OR usp.CAN_UPDATE = '1' OR usp.CAN_DELETE = '1')
-                GROUP BY u.ROW_ID, u.USER_NAME
-                HAVING COUNT(DISTINCT usp.SCREEN_ID) > 5";
+            var userGroups = rawData
+                .GroupBy(x => new { x.Id, x.UserName })
+                .Where(g => g.Select(x => x.ScreenId).Distinct().Count() > 5)
+                .ToList();
 
-            using var reader = await command.ExecuteReaderAsync(cancellationToken);
-            while (await reader.ReadAsync(cancellationToken))
+            foreach (var group in userGroups)
             {
-                var userId = reader.GetInt64(0);
-                var userName = reader.IsDBNull(1) ? "Unknown" : reader.GetString(1);
-                var permissionCount = reader.GetInt32(2);
-                var screenNames = reader.IsDBNull(3) ? "Unknown" : reader.GetString(3);
+                var userId = group.Key.Id;
+                var userName = group.Key.UserName ?? "Unknown";
+                var permissionCount = group.Select(x => x.ScreenId).Distinct().Count();
+                var screenNames = string.Join(", ", group.Select(x => x.ScreenName).Distinct());
 
-                // Truncate screen names if too long
                 if (screenNames.Length > 200)
                 {
                     screenNames = screenNames.Substring(0, 197) + "...";
@@ -2079,7 +1930,6 @@ public class ComplianceReporter : IComplianceReporter
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error detecting direct permission violations");
-            // Don't throw - return violations detected so far
         }
 
         return violations;
@@ -2098,76 +1948,50 @@ public class ComplianceReporter : IComplianceReporter
 
         try
         {
-            using var connection = _dbContext.CreateConnection();
-            await connection.OpenAsync(cancellationToken);
+            var query = from al in _dbContext.SysAuditLogs
+                        join u in _dbContext.SysUsers on al.ActorId equals u.Id into userJoin
+                        from u in userJoin.DefaultIfEmpty()
+                        where al.CreationDate >= startDate
+                           && al.CreationDate <= endDate
+                           && (al.EventCategory == "Authentication"
+                               || al.EventCategory == "Exception"
+                               || al.EventCategory == "Security"
+                               || al.Severity == "Critical"
+                               || al.Severity == "Error"
+                               || al.Severity == "Warning")
+                        orderby al.CreationDate descending
+                        select new { al, u };
 
-            using var command = connection.CreateCommand();
-            command.CommandTimeout = QueryTimeoutSeconds;
-            
-            // Query audit logs for security-related events:
-            // 1. Failed login attempts (EVENT_CATEGORY = 'Authentication' AND ACTION contains 'FAILED')
-            // 2. Unauthorized access attempts (SEVERITY = 'Warning' or 'Error' AND description contains 'unauthorized')
-            // 3. Exceptions (EVENT_CATEGORY = 'Exception')
-            // 4. Security threats from SYS_SECURITY_THREATS table
-            command.CommandText = @"
-                SELECT 
-                    al.CREATION_DATE,
-                    al.EVENT_CATEGORY,
-                    al.SEVERITY,
-                    al.ACTION,
-                    al.ACTOR_ID,
-                    u.USER_NAME,
-                    al.IP_ADDRESS,
-                    al.EXCEPTION_TYPE,
-                    al.EXCEPTION_MESSAGE,
-                    al.BUSINESS_DESCRIPTION,
-                    al.CORRELATION_ID
-                FROM SYS_AUDIT_LOG al
-                LEFT JOIN SYS_USERS u ON al.ACTOR_ID = u.ROW_ID
-                WHERE al.CREATION_DATE >= :startDate
-                  AND al.CREATION_DATE <= :endDate
-                  AND (
-                      al.EVENT_CATEGORY = 'Authentication'
-                      OR al.EVENT_CATEGORY = 'Exception'
-                      OR al.EVENT_CATEGORY = 'Security'
-                      OR al.SEVERITY IN ('Critical', 'Error', 'Warning')
-                  )
-                ORDER BY al.CREATION_DATE DESC";
+            var results = await query.ToListAsync(cancellationToken);
 
-            command.Parameters.Add(new OracleParameter("startDate", startDate));
-            command.Parameters.Add(new OracleParameter("endDate", endDate));
-
-            using var reader = await command.ExecuteReaderAsync(cancellationToken);
-            while (await reader.ReadAsync(cancellationToken))
+            foreach (var item in results)
             {
-                var eventCategory = reader.IsDBNull(1) ? "Unknown" : reader.GetString(1);
-                var severity = reader.IsDBNull(2) ? "Info" : reader.GetString(2);
-                var action = reader.IsDBNull(3) ? "Unknown" : reader.GetString(3);
-                var exceptionType = reader.IsDBNull(7) ? null : reader.GetString(7);
-                var exceptionMessage = reader.IsDBNull(8) ? null : reader.GetString(8);
-                var businessDescription = reader.IsDBNull(9) ? null : reader.GetString(9);
+                var eventCategory = item.al.EventCategory ?? "Unknown";
+                var severity = item.al.Severity ?? "Info";
+                var action = item.al.Action ?? "Unknown";
+                var exceptionType = item.al.ExceptionType;
+                var exceptionMessage = item.al.ExceptionMessage;
+                var businessDescription = item.al.BusinessDescription;
 
-                // Determine event type based on category and action
                 var eventType = DetermineSecurityEventType(eventCategory, action, exceptionType);
 
-                // Generate description
                 var description = GenerateSecurityEventDescription(
-                    eventCategory, 
-                    action, 
-                    exceptionType, 
-                    exceptionMessage, 
+                    eventCategory,
+                    action,
+                    exceptionType,
+                    exceptionMessage,
                     businessDescription);
 
                 var securityEvent = new SecurityEvent
                 {
-                    OccurredAt = reader.GetDateTime(0),
+                    OccurredAt = item.al.CreationDate,
                     EventType = eventType,
                     Severity = severity,
                     Description = description,
-                    UserId = reader.IsDBNull(4) ? null : reader.GetInt64(4),
-                    UserName = reader.IsDBNull(5) ? null : reader.GetString(5),
-                    IpAddress = reader.IsDBNull(6) ? null : reader.GetString(6),
-                    CorrelationId = reader.IsDBNull(10) ? null : reader.GetString(10)
+                    UserId = item.al.ActorId,
+                    UserName = item.u?.UserName,
+                    IpAddress = item.al.IpAddress,
+                    CorrelationId = item.al.CorrelationId
                 };
 
                 securityEvents.Add(securityEvent);
@@ -2179,8 +2003,8 @@ public class ComplianceReporter : IComplianceReporter
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, 
-                "Error querying security events from {StartDate} to {EndDate}", 
+            _logger.LogError(ex,
+                "Error querying security events from {StartDate} to {EndDate}",
                 startDate, endDate);
             throw;
         }

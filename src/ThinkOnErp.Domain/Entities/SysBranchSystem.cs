@@ -5,7 +5,7 @@ namespace ThinkOnErp.Domain.Entities;
 /// </summary>
 public class SysBranchSystem
 {
-    public long RowId { get; set; }
+    public long Id { get; set; }
     public long BranchId { get; set; }
     public long SystemId { get; set; }
     public bool IsAllowed { get; set; }
@@ -21,5 +21,5 @@ public class SysBranchSystem
     // Navigation properties
     public SysBranch? Branch { get; set; }
     public SysSystem? System { get; set; }
-    public SysSuperAdmin? GrantedByAdmin { get; set; }
+    public SysSuperAdmin? Granter { get; set; }
 }

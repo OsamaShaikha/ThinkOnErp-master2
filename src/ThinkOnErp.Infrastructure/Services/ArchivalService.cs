@@ -1,7 +1,7 @@
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using Oracle.ManagedDataAccess.Client;
-using System.Data;
+using ThinkOnErp.Domain.Entities;
 using ThinkOnErp.Domain.Interfaces;
 using ThinkOnErp.Domain.Models;
 using ThinkOnErp.Infrastructure.Configuration;
@@ -177,25 +177,10 @@ public class ArchivalService : IArchivalService
 
         try
         {
-            using var connection = _dbContext.CreateConnection();
-            await connection.OpenAsync(cancellationToken);
-
             // Step 1: Count records to be archived for this event category
-            var countSql = @"
-                SELECT COUNT(*) 
-                FROM SYS_AUDIT_LOG 
-                WHERE EVENT_CATEGORY = :EventCategory 
-                AND CREATION_DATE < :CutoffDate";
-
-            int recordCount;
-            using (var countCmd = new OracleCommand(countSql, connection))
-            {
-                countCmd.Parameters.Add(":EventCategory", OracleDbType.NVarchar2).Value = eventCategory;
-                countCmd.Parameters.Add(":CutoffDate", OracleDbType.Date).Value = cutoffDate;
-
-                var countResult = await countCmd.ExecuteScalarAsync(cancellationToken);
-                recordCount = Convert.ToInt32(countResult);
-            }
+            var recordCount = await _dbContext.SysAuditLogs
+                .Where(s => s.EventCategory == eventCategory && s.CreationDate < cutoffDate)
+                .CountAsync(cancellationToken);
 
             if (recordCount == 0)
             {
@@ -216,7 +201,7 @@ public class ArchivalService : IArchivalService
                 eventCategory);
 
             // Step 2: Generate archive batch ID
-            var archiveBatchId = await GetNextArchiveBatchIdAsync(connection, cancellationToken);
+            var archiveBatchId = await GetNextArchiveBatchIdAsync(cancellationToken);
 
             // Step 3: Move records to archive table in batches
             var totalArchived = 0;
@@ -273,54 +258,21 @@ public class ArchivalService : IArchivalService
                 }
 
                 // Insert into archive table and delete from active table in a transaction with timeout
-                using var transaction = connection.BeginTransaction();
+                await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
                 var batchStartTime = DateTime.UtcNow;
-                
+
                 try
                 {
-                    // Step 1: Fetch records to archive with CLOB fields
-                    var selectSql = @"
-                        SELECT 
-                            ROW_ID, ACTOR_TYPE, ACTOR_ID, COMPANY_ID, BRANCH_ID,
-                            ACTION, ENTITY_TYPE, ENTITY_ID, OLD_VALUE, NEW_VALUE,
-                            IP_ADDRESS, USER_AGENT, CORRELATION_ID, HTTP_METHOD, ENDPOINT_PATH,
-                            REQUEST_PAYLOAD, RESPONSE_PAYLOAD, EXECUTION_TIME_MS, STATUS_CODE,
-                            EXCEPTION_TYPE, EXCEPTION_MESSAGE, STACK_TRACE, SEVERITY,
-                            EVENT_CATEGORY, METADATA, BUSINESS_MODULE, DEVICE_IDENTIFIER,
-                            ERROR_CODE, BUSINESS_DESCRIPTION, CREATION_DATE
-                        FROM (
-                            SELECT * FROM SYS_AUDIT_LOG
-                            WHERE EVENT_CATEGORY = :EventCategory 
-                            AND CREATION_DATE < :CutoffDate
-                            AND ROWNUM <= :BatchSize
-                        )";
-
-                    var recordsToArchive = new List<Dictionary<string, object?>>();
-                    
-                    using (var selectCmd = new OracleCommand(selectSql, connection))
-                    {
-                        selectCmd.Transaction = transaction;
-                        selectCmd.Parameters.Add(":EventCategory", OracleDbType.NVarchar2).Value = eventCategory;
-                        selectCmd.Parameters.Add(":CutoffDate", OracleDbType.Date).Value = cutoffDate;
-                        selectCmd.Parameters.Add(":BatchSize", OracleDbType.Int32).Value = batchSize;
-
-                        using var reader = await selectCmd.ExecuteReaderAsync(cancellationToken);
-                        while (await reader.ReadAsync(cancellationToken))
-                        {
-                            var record = new Dictionary<string, object?>();
-                            for (int i = 0; i < reader.FieldCount; i++)
-                            {
-                                var fieldName = reader.GetName(i);
-                                var value = reader.IsDBNull(i) ? null : reader.GetValue(i);
-                                record[fieldName] = value;
-                            }
-                            recordsToArchive.Add(record);
-                        }
-                    }
+                    // Step 1: Fetch records to archive with ordering for determinism
+                    var recordsToArchive = await _dbContext.SysAuditLogs
+                        .Where(s => s.EventCategory == eventCategory && s.CreationDate < cutoffDate)
+                        .OrderBy(s => s.Id)
+                        .Take(batchSize)
+                        .ToListAsync(cancellationToken);
 
                     if (recordsToArchive.Count == 0)
                     {
-                        transaction.Commit();
+                        await transaction.CommitAsync(cancellationToken);
                         break;
                     }
 
@@ -330,94 +282,80 @@ public class ArchivalService : IArchivalService
                         foreach (var record in recordsToArchive)
                         {
                             // Compress CLOB fields: OLD_VALUE, NEW_VALUE, REQUEST_PAYLOAD, RESPONSE_PAYLOAD, STACK_TRACE, METADATA
-                            var clobFields = new[] { "OLD_VALUE", "NEW_VALUE", "REQUEST_PAYLOAD", "RESPONSE_PAYLOAD", "STACK_TRACE", "METADATA" };
-                            
-                            foreach (var field in clobFields)
+                            var clobFields = new Func<string?>[]
                             {
-                                if (record.ContainsKey(field) && record[field] != null)
+                                () => record.OldValue,
+                                () => record.NewValue,
+                                () => record.RequestPayload,
+                                () => record.ResponsePayload,
+                                () => record.StackTrace,
+                                () => record.Metadata
+                            };
+                            var clobSetters = new Action<string?>[]
+                            {
+                                v => record.OldValue = v,
+                                v => record.NewValue = v,
+                                v => record.RequestPayload = v,
+                                v => record.ResponsePayload = v,
+                                v => record.StackTrace = v,
+                                v => record.Metadata = v
+                            };
+
+                            for (int i = 0; i < clobFields.Length; i++)
+                            {
+                                var originalValue = clobFields[i]();
+                                if (!string.IsNullOrEmpty(originalValue))
                                 {
-                                    var originalValue = record[field]?.ToString();
-                                    if (!string.IsNullOrEmpty(originalValue))
-                                    {
-                                        // Track uncompressed size
-                                        totalUncompressedSize += _compressionService.GetSizeInBytes(originalValue);
-                                        
-                                        // Compress the field
-                                        var compressedValue = _compressionService.Compress(originalValue);
-                                        record[field] = compressedValue;
-                                        
-                                        // Track compressed size
-                                        totalCompressedSize += _compressionService.GetSizeInBytes(compressedValue);
-                                    }
+                                    totalUncompressedSize += _compressionService.GetSizeInBytes(originalValue);
+                                    var compressedValue = _compressionService.Compress(originalValue);
+                                    clobSetters[i](compressedValue);
+                                    totalCompressedSize += _compressionService.GetSizeInBytes(compressedValue);
                                 }
                             }
                         }
                     }
 
-                    // Step 3: Insert compressed records into archive table
-                    var insertSql = @"
-                        INSERT INTO SYS_AUDIT_LOG_ARCHIVE (
-                            ROW_ID, ACTOR_TYPE, ACTOR_ID, COMPANY_ID, BRANCH_ID,
-                            ACTION, ENTITY_TYPE, ENTITY_ID, OLD_VALUE, NEW_VALUE,
-                            IP_ADDRESS, USER_AGENT, CORRELATION_ID, HTTP_METHOD, ENDPOINT_PATH,
-                            REQUEST_PAYLOAD, RESPONSE_PAYLOAD, EXECUTION_TIME_MS, STATUS_CODE,
-                            EXCEPTION_TYPE, EXCEPTION_MESSAGE, STACK_TRACE, SEVERITY,
-                            EVENT_CATEGORY, METADATA, BUSINESS_MODULE, DEVICE_IDENTIFIER,
-                            ERROR_CODE, BUSINESS_DESCRIPTION, CREATION_DATE, ARCHIVED_DATE, ARCHIVE_BATCH_ID
-                        ) VALUES (
-                            :ROW_ID, :ACTOR_TYPE, :ACTOR_ID, :COMPANY_ID, :BRANCH_ID,
-                            :ACTION, :ENTITY_TYPE, :ENTITY_ID, :OLD_VALUE, :NEW_VALUE,
-                            :IP_ADDRESS, :USER_AGENT, :CORRELATION_ID, :HTTP_METHOD, :ENDPOINT_PATH,
-                            :REQUEST_PAYLOAD, :RESPONSE_PAYLOAD, :EXECUTION_TIME_MS, :STATUS_CODE,
-                            :EXCEPTION_TYPE, :EXCEPTION_MESSAGE, :STACK_TRACE, :SEVERITY,
-                            :EVENT_CATEGORY, :METADATA, :BUSINESS_MODULE, :DEVICE_IDENTIFIER,
-                            :ERROR_CODE, :BUSINESS_DESCRIPTION, :CREATION_DATE, SYSDATE, :ARCHIVE_BATCH_ID
-                        )";
-
-                    int insertedCount = 0;
-                    foreach (var record in recordsToArchive)
+                    // Step 3: Create archive entities and add them
+                    var archiveEntities = recordsToArchive.Select(record => new SysAuditLogArchive
                     {
-                        using var insertCmd = new OracleCommand(insertSql, connection);
-                        insertCmd.Transaction = transaction;
-                        
-                        // Add parameters
-                        insertCmd.Parameters.Add(":ROW_ID", OracleDbType.Int64).Value = record["ROW_ID"] ?? DBNull.Value;
-                        insertCmd.Parameters.Add(":ACTOR_TYPE", OracleDbType.NVarchar2).Value = record["ACTOR_TYPE"] ?? DBNull.Value;
-                        insertCmd.Parameters.Add(":ACTOR_ID", OracleDbType.Int64).Value = record["ACTOR_ID"] ?? DBNull.Value;
-                        insertCmd.Parameters.Add(":COMPANY_ID", OracleDbType.Int64).Value = record["COMPANY_ID"] ?? DBNull.Value;
-                        insertCmd.Parameters.Add(":BRANCH_ID", OracleDbType.Int64).Value = record["BRANCH_ID"] ?? DBNull.Value;
-                        insertCmd.Parameters.Add(":ACTION", OracleDbType.NVarchar2).Value = record["ACTION"] ?? DBNull.Value;
-                        insertCmd.Parameters.Add(":ENTITY_TYPE", OracleDbType.NVarchar2).Value = record["ENTITY_TYPE"] ?? DBNull.Value;
-                        insertCmd.Parameters.Add(":ENTITY_ID", OracleDbType.Int64).Value = record["ENTITY_ID"] ?? DBNull.Value;
-                        insertCmd.Parameters.Add(":OLD_VALUE", OracleDbType.Clob).Value = record["OLD_VALUE"] ?? DBNull.Value;
-                        insertCmd.Parameters.Add(":NEW_VALUE", OracleDbType.Clob).Value = record["NEW_VALUE"] ?? DBNull.Value;
-                        insertCmd.Parameters.Add(":IP_ADDRESS", OracleDbType.NVarchar2).Value = record["IP_ADDRESS"] ?? DBNull.Value;
-                        insertCmd.Parameters.Add(":USER_AGENT", OracleDbType.NVarchar2).Value = record["USER_AGENT"] ?? DBNull.Value;
-                        insertCmd.Parameters.Add(":CORRELATION_ID", OracleDbType.NVarchar2).Value = record["CORRELATION_ID"] ?? DBNull.Value;
-                        insertCmd.Parameters.Add(":HTTP_METHOD", OracleDbType.NVarchar2).Value = record["HTTP_METHOD"] ?? DBNull.Value;
-                        insertCmd.Parameters.Add(":ENDPOINT_PATH", OracleDbType.NVarchar2).Value = record["ENDPOINT_PATH"] ?? DBNull.Value;
-                        insertCmd.Parameters.Add(":REQUEST_PAYLOAD", OracleDbType.Clob).Value = record["REQUEST_PAYLOAD"] ?? DBNull.Value;
-                        insertCmd.Parameters.Add(":RESPONSE_PAYLOAD", OracleDbType.Clob).Value = record["RESPONSE_PAYLOAD"] ?? DBNull.Value;
-                        insertCmd.Parameters.Add(":EXECUTION_TIME_MS", OracleDbType.Int64).Value = record["EXECUTION_TIME_MS"] ?? DBNull.Value;
-                        insertCmd.Parameters.Add(":STATUS_CODE", OracleDbType.Int32).Value = record["STATUS_CODE"] ?? DBNull.Value;
-                        insertCmd.Parameters.Add(":EXCEPTION_TYPE", OracleDbType.NVarchar2).Value = record["EXCEPTION_TYPE"] ?? DBNull.Value;
-                        insertCmd.Parameters.Add(":EXCEPTION_MESSAGE", OracleDbType.NVarchar2).Value = record["EXCEPTION_MESSAGE"] ?? DBNull.Value;
-                        insertCmd.Parameters.Add(":STACK_TRACE", OracleDbType.Clob).Value = record["STACK_TRACE"] ?? DBNull.Value;
-                        insertCmd.Parameters.Add(":SEVERITY", OracleDbType.NVarchar2).Value = record["SEVERITY"] ?? DBNull.Value;
-                        insertCmd.Parameters.Add(":EVENT_CATEGORY", OracleDbType.NVarchar2).Value = record["EVENT_CATEGORY"] ?? DBNull.Value;
-                        insertCmd.Parameters.Add(":METADATA", OracleDbType.Clob).Value = record["METADATA"] ?? DBNull.Value;
-                        insertCmd.Parameters.Add(":BUSINESS_MODULE", OracleDbType.NVarchar2).Value = record["BUSINESS_MODULE"] ?? DBNull.Value;
-                        insertCmd.Parameters.Add(":DEVICE_IDENTIFIER", OracleDbType.NVarchar2).Value = record["DEVICE_IDENTIFIER"] ?? DBNull.Value;
-                        insertCmd.Parameters.Add(":ERROR_CODE", OracleDbType.NVarchar2).Value = record["ERROR_CODE"] ?? DBNull.Value;
-                        insertCmd.Parameters.Add(":BUSINESS_DESCRIPTION", OracleDbType.NVarchar2).Value = record["BUSINESS_DESCRIPTION"] ?? DBNull.Value;
-                        insertCmd.Parameters.Add(":CREATION_DATE", OracleDbType.Date).Value = record["CREATION_DATE"] ?? DBNull.Value;
-                        insertCmd.Parameters.Add(":ARCHIVE_BATCH_ID", OracleDbType.Int64).Value = archiveBatchId;
+                        Id = record.Id,
+                        ActorType = record.ActorType,
+                        ActorId = record.ActorId,
+                        CompanyId = record.CompanyId,
+                        BranchId = record.BranchId,
+                        Action = record.Action,
+                        EntityType = record.EntityType,
+                        EntityId = record.EntityId,
+                        OldValue = record.OldValue,
+                        NewValue = record.NewValue,
+                        IpAddress = record.IpAddress,
+                        UserAgent = record.UserAgent,
+                        CorrelationId = record.CorrelationId,
+                        HttpMethod = record.HttpMethod,
+                        EndpointPath = record.EndpointPath,
+                        RequestPayload = record.RequestPayload,
+                        ResponsePayload = record.ResponsePayload,
+                        ExecutionTimeMs = record.ExecutionTimeMs,
+                        StatusCode = record.StatusCode,
+                        ExceptionType = record.ExceptionType,
+                        ExceptionMessage = record.ExceptionMessage,
+                        StackTrace = record.StackTrace,
+                        Severity = record.Severity,
+                        EventCategory = record.EventCategory,
+                        Metadata = record.Metadata,
+                        BusinessModule = record.BusinessModule,
+                        DeviceIdentifier = record.DeviceIdentifier,
+                        ErrorCode = record.ErrorCode,
+                        BusinessDescription = record.BusinessDescription,
+                        CreationDate = record.CreationDate,
+                        ArchivedDate = DateTime.UtcNow,
+                        ArchiveBatchId = archiveBatchId
+                    }).ToList();
 
-                        await insertCmd.ExecuteNonQueryAsync(cancellationToken);
-                        insertedCount++;
-                    }
+                    await _dbContext.SysAuditLogArchives.AddRangeAsync(archiveEntities, cancellationToken);
 
                     // Step 4: Delete archived records from active table
+                    var insertedCount = archiveEntities.Count;
                     if (insertedCount > 0)
                     {
                         // Check if we're approaching transaction timeout
@@ -434,33 +372,20 @@ public class ArchivalService : IArchivalService
                                 batchSize);
                         }
 
-                        var deleteSql = @"
-                            DELETE FROM SYS_AUDIT_LOG
-                            WHERE EVENT_CATEGORY = :EventCategory 
-                            AND CREATION_DATE < :CutoffDate
-                            AND ROWNUM <= :BatchSize";
+                        _dbContext.SysAuditLogs.RemoveRange(recordsToArchive);
+                        await _dbContext.SaveChangesAsync(cancellationToken);
 
-                        using (var deleteCmd = new OracleCommand(deleteSql, connection))
-                        {
-                            deleteCmd.Transaction = transaction;
-                            deleteCmd.Parameters.Add(":EventCategory", OracleDbType.NVarchar2).Value = eventCategory;
-                            deleteCmd.Parameters.Add(":CutoffDate", OracleDbType.Date).Value = cutoffDate;
-                            deleteCmd.Parameters.Add(":BatchSize", OracleDbType.Int32).Value = batchSize;
-
-                            var deletedCount = await deleteCmd.ExecuteNonQueryAsync(cancellationToken);
-
-                            _logger.LogDebug(
-                                "Batch {BatchIndex}/{TotalBatches}: Archived {InsertedCount} records, deleted {DeletedCount} records in {ElapsedSeconds:F2}s",
-                                batchIndex + 1,
-                                batches,
-                                insertedCount,
-                                deletedCount,
-                                batchElapsedTime.TotalSeconds);
-                        }
+                        _logger.LogDebug(
+                            "Batch {BatchIndex}/{TotalBatches}: Archived {InsertedCount} records, deleted {DeletedCount} records in {ElapsedSeconds:F2}s",
+                            batchIndex + 1,
+                            batches,
+                            insertedCount,
+                            insertedCount,
+                            batchElapsedTime.TotalSeconds);
                     }
 
                     // Commit transaction - this releases locks immediately
-                    transaction.Commit();
+                    await transaction.CommitAsync(cancellationToken);
                     totalArchived += insertedCount;
                     batchesProcessed++;
 
@@ -472,10 +397,10 @@ public class ArchivalService : IArchivalService
                 }
                 catch (Exception ex)
                 {
-                    transaction.Rollback();
-                    
+                    await transaction.RollbackAsync(cancellationToken);
+
                     var batchElapsedTime = DateTime.UtcNow - batchStartTime;
-                    
+
                     // Check if this was a timeout-related error
                     if (batchElapsedTime.TotalSeconds > _options.TransactionTimeoutSeconds)
                     {
@@ -507,7 +432,7 @@ public class ArchivalService : IArchivalService
                             totalArchived,
                             recordCount);
                     }
-                    
+
                     throw;
                 }
             }
@@ -532,22 +457,16 @@ public class ArchivalService : IArchivalService
             string? checksum = null;
             if (_options.VerifyIntegrity)
             {
-                checksum = await CalculateArchiveChecksumAsync(connection, archiveBatchId, cancellationToken);
-                
-                // Update the CHECKSUM column for all records in this archive batch
+                checksum = await CalculateArchiveChecksumAsync(archiveBatchId, cancellationToken);
+
+                // Update the CHECKSUM column for all records in this archive batch using raw SQL
+                // (CHECKSUM column is not mapped in the entity)
                 if (!string.IsNullOrEmpty(checksum))
                 {
-                    var updateChecksumSql = @"
-                        UPDATE SYS_AUDIT_LOG_ARCHIVE 
-                        SET CHECKSUM = :Checksum 
-                        WHERE ARCHIVE_BATCH_ID = :ArchiveBatchId";
+                    var updatedRows = await _dbContext.Database.ExecuteSqlRawAsync(
+                        "UPDATE SYS_AUDIT_LOG_ARCHIVE SET CHECKSUM = {0} WHERE ARCHIVE_BATCH_ID = {1}",
+                        checksum, archiveBatchId, cancellationToken);
 
-                    using var updateCmd = new OracleCommand(updateChecksumSql, connection);
-                    updateCmd.Parameters.Add(":Checksum", OracleDbType.NVarchar2).Value = checksum;
-                    updateCmd.Parameters.Add(":ArchiveBatchId", OracleDbType.Int64).Value = archiveBatchId;
-
-                    var updatedRows = await updateCmd.ExecuteNonQueryAsync(cancellationToken);
-                    
                     _logger.LogDebug(
                         "Updated CHECKSUM column for {UpdatedRows} records in archive batch {ArchiveBatchId}",
                         updatedRows,
@@ -568,12 +487,12 @@ public class ArchivalService : IArchivalService
             result.Metadata["EventCategory"] = eventCategory;
             result.Metadata["PolicyId"] = policyId;
             result.Metadata["CompressionEnabled"] = compressionEnabled;
-            
+
             if (compressionEnabled && totalUncompressedSize > 0)
             {
                 var compressionRatio = (double)totalCompressedSize / totalUncompressedSize;
                 var spaceSaved = totalUncompressedSize - totalCompressedSize;
-                
+
                 _logger.LogInformation(
                     "Compression statistics for event category '{EventCategory}': " +
                     "Uncompressed: {UncompressedMB:N2} MB, Compressed: {CompressedMB:N2} MB, " +
@@ -598,7 +517,7 @@ public class ArchivalService : IArchivalService
             result.IsSuccess = false;
             result.ErrorMessage = ex.Message;
             result.ArchivalEndTime = DateTime.UtcNow;
-            
+
             _logger.LogError(
                 ex,
                 "Failed to archive data for event category '{EventCategory}'",
@@ -611,12 +530,12 @@ public class ArchivalService : IArchivalService
     /// <summary>
     /// Get the next archive batch ID from the sequence
     /// </summary>
-    private async Task<long> GetNextArchiveBatchIdAsync(OracleConnection connection, CancellationToken cancellationToken)
+    private async Task<long> GetNextArchiveBatchIdAsync(CancellationToken cancellationToken)
     {
-        var sql = "SELECT SEQ_SYS_AUDIT_LOG.NEXTVAL FROM DUAL";
-        using var command = new OracleCommand(sql, connection);
-        var result = await command.ExecuteScalarAsync(cancellationToken);
-        return Convert.ToInt64(result);
+        var result = await _dbContext.Database
+            .SqlQueryRaw<long>("SELECT SEQ_SYS_AUDIT_LOG.NEXTVAL FROM DUAL")
+            .FirstOrDefaultAsync(cancellationToken);
+        return result;
     }
 
     /// <summary>
@@ -625,7 +544,6 @@ public class ArchivalService : IArchivalService
     /// The checksum is calculated over the concatenated string of all field values in a deterministic order.
     /// </summary>
     private async Task<string> CalculateArchiveChecksumAsync(
-        OracleConnection connection,
         long archiveBatchId,
         CancellationToken cancellationToken)
     {
@@ -634,35 +552,23 @@ public class ArchivalService : IArchivalService
             _logger.LogDebug("Calculating SHA-256 checksum for archive batch {ArchiveBatchId}", archiveBatchId);
 
             // Query all archived records for this batch in a deterministic order
-            var sql = @"
-                SELECT 
-                    ROW_ID, ACTOR_TYPE, ACTOR_ID, COMPANY_ID, BRANCH_ID,
-                    ACTION, ENTITY_TYPE, ENTITY_ID, OLD_VALUE, NEW_VALUE,
-                    IP_ADDRESS, USER_AGENT, CORRELATION_ID, HTTP_METHOD, ENDPOINT_PATH,
-                    REQUEST_PAYLOAD, RESPONSE_PAYLOAD, EXECUTION_TIME_MS, STATUS_CODE,
-                    EXCEPTION_TYPE, EXCEPTION_MESSAGE, STACK_TRACE, SEVERITY,
-                    EVENT_CATEGORY, METADATA, BUSINESS_MODULE, DEVICE_IDENTIFIER,
-                    ERROR_CODE, BUSINESS_DESCRIPTION, CREATION_DATE
-                FROM SYS_AUDIT_LOG_ARCHIVE
-                WHERE ARCHIVE_BATCH_ID = :ArchiveBatchId
-                ORDER BY ROW_ID";
-
-            using var command = new OracleCommand(sql, connection);
-            command.Parameters.Add(":ArchiveBatchId", OracleDbType.Int64).Value = archiveBatchId;
+            var archivedRecords = await _dbContext.SysAuditLogArchives
+                .Where(a => a.ArchiveBatchId == archiveBatchId)
+                .OrderBy(a => a.Id)
+                .ToListAsync(cancellationToken);
 
             using var sha256 = System.Security.Cryptography.SHA256.Create();
-            using var reader = await command.ExecuteReaderAsync(cancellationToken);
 
             var recordCount = 0;
-            while (await reader.ReadAsync(cancellationToken))
+            foreach (var record in archivedRecords)
             {
                 // Build a deterministic string representation of the record
-                var recordData = BuildRecordDataString(reader);
-                
+                var recordData = BuildRecordDataString(record);
+
                 // Hash the record data
                 var recordBytes = System.Text.Encoding.UTF8.GetBytes(recordData);
                 sha256.TransformBlock(recordBytes, 0, recordBytes.Length, null, 0);
-                
+
                 recordCount++;
             }
 
@@ -690,71 +596,62 @@ public class ArchivalService : IArchivalService
     /// Build a deterministic string representation of an audit log record for checksum calculation.
     /// Uses pipe-delimited format with null handling to ensure consistent hashing.
     /// </summary>
-    private string BuildRecordDataString(OracleDataReader reader)
+    private string BuildRecordDataString(SysAuditLogArchive record)
     {
         var fields = new[]
         {
-            GetFieldValue(reader, "ROW_ID"),
-            GetFieldValue(reader, "ACTOR_TYPE"),
-            GetFieldValue(reader, "ACTOR_ID"),
-            GetFieldValue(reader, "COMPANY_ID"),
-            GetFieldValue(reader, "BRANCH_ID"),
-            GetFieldValue(reader, "ACTION"),
-            GetFieldValue(reader, "ENTITY_TYPE"),
-            GetFieldValue(reader, "ENTITY_ID"),
-            GetFieldValue(reader, "OLD_VALUE"),
-            GetFieldValue(reader, "NEW_VALUE"),
-            GetFieldValue(reader, "IP_ADDRESS"),
-            GetFieldValue(reader, "USER_AGENT"),
-            GetFieldValue(reader, "CORRELATION_ID"),
-            GetFieldValue(reader, "HTTP_METHOD"),
-            GetFieldValue(reader, "ENDPOINT_PATH"),
-            GetFieldValue(reader, "REQUEST_PAYLOAD"),
-            GetFieldValue(reader, "RESPONSE_PAYLOAD"),
-            GetFieldValue(reader, "EXECUTION_TIME_MS"),
-            GetFieldValue(reader, "STATUS_CODE"),
-            GetFieldValue(reader, "EXCEPTION_TYPE"),
-            GetFieldValue(reader, "EXCEPTION_MESSAGE"),
-            GetFieldValue(reader, "STACK_TRACE"),
-            GetFieldValue(reader, "SEVERITY"),
-            GetFieldValue(reader, "EVENT_CATEGORY"),
-            GetFieldValue(reader, "METADATA"),
-            GetFieldValue(reader, "BUSINESS_MODULE"),
-            GetFieldValue(reader, "DEVICE_IDENTIFIER"),
-            GetFieldValue(reader, "ERROR_CODE"),
-            GetFieldValue(reader, "BUSINESS_DESCRIPTION"),
-            GetFieldValue(reader, "CREATION_DATE")
+            GetFieldValue(record.Id),
+            GetFieldValue(record.ActorType),
+            GetFieldValue(record.ActorId),
+            GetFieldValue(record.CompanyId),
+            GetFieldValue(record.BranchId),
+            GetFieldValue(record.Action),
+            GetFieldValue(record.EntityType),
+            GetFieldValue(record.EntityId),
+            GetFieldValue(record.OldValue),
+            GetFieldValue(record.NewValue),
+            GetFieldValue(record.IpAddress),
+            GetFieldValue(record.UserAgent),
+            GetFieldValue(record.CorrelationId),
+            GetFieldValue(record.HttpMethod),
+            GetFieldValue(record.EndpointPath),
+            GetFieldValue(record.RequestPayload),
+            GetFieldValue(record.ResponsePayload),
+            GetFieldValue(record.ExecutionTimeMs),
+            GetFieldValue(record.StatusCode),
+            GetFieldValue(record.ExceptionType),
+            GetFieldValue(record.ExceptionMessage),
+            GetFieldValue(record.StackTrace),
+            GetFieldValue(record.Severity),
+            GetFieldValue(record.EventCategory),
+            GetFieldValue(record.Metadata),
+            GetFieldValue(record.BusinessModule),
+            GetFieldValue(record.DeviceIdentifier),
+            GetFieldValue(record.ErrorCode),
+            GetFieldValue(record.BusinessDescription),
+            GetFieldValue(record.CreationDate)
         };
 
         return string.Join("|", fields);
     }
 
     /// <summary>
-    /// Get field value from reader with null handling for checksum calculation
+    /// Get field value with null handling for checksum calculation
     /// </summary>
-    private string GetFieldValue(OracleDataReader reader, string fieldName)
+    private static string GetFieldValue(object? value)
     {
-        try
-        {
-            var ordinal = reader.GetOrdinal(fieldName);
-            if (reader.IsDBNull(ordinal))
-            {
-                return "NULL";
-            }
-
-            var value = reader.GetValue(ordinal);
-            if (value is DateTime dateTime)
-            {
-                // Use ISO 8601 format for consistent date representation
-                return dateTime.ToString("yyyy-MM-ddTHH:mm:ss.fffZ");
-            }
-
-            return value?.ToString() ?? "NULL";
-        }
-        catch
+        if (value == null)
         {
             return "NULL";
         }
+
+        if (value is DateTime dateTime)
+        {
+            // Use ISO 8601 format for consistent date representation
+            return dateTime.ToString("yyyy-MM-ddTHH:mm:ss.fffZ");
+        }
+
+        return value.ToString() ?? "NULL";
     }
 
     public async Task<ArchivalResult> ArchiveByDateRangeAsync(
@@ -787,23 +684,123 @@ public class ArchivalService : IArchivalService
 
         try
         {
-            using var connection = _dbContext.CreateConnection();
-            await connection.OpenAsync(cancellationToken);
+            // Build dynamic LINQ query based on filter criteria
+            var query = _dbContext.SysAuditLogArchives.AsQueryable();
 
-            // Build dynamic SQL query based on filter criteria
-            var sql = BuildArchivedDataQuery(filter);
-            
-            using var command = new OracleCommand(sql, connection);
-            AddFilterParameters(command, filter);
+            if (filter.StartDate.HasValue)
+            {
+                var startDate = filter.StartDate.Value;
+                query = query.Where(a => a.CreationDate >= startDate);
+            }
 
-            _logger.LogDebug("Executing archived data query: {Query}", sql);
+            if (filter.EndDate.HasValue)
+            {
+                var endDate = filter.EndDate.Value;
+                query = query.Where(a => a.CreationDate <= endDate);
+            }
 
-            using var reader = await command.ExecuteReaderAsync(cancellationToken);
-            
+            if (filter.ActorId.HasValue)
+            {
+                var actorId = filter.ActorId.Value;
+                query = query.Where(a => a.ActorId == actorId);
+            }
+
+            if (!string.IsNullOrEmpty(filter.ActorType))
+            {
+                var actorType = filter.ActorType;
+                query = query.Where(a => a.ActorType == actorType);
+            }
+
+            if (filter.CompanyId.HasValue)
+            {
+                var companyId = filter.CompanyId.Value;
+                query = query.Where(a => a.CompanyId == companyId);
+            }
+
+            if (filter.BranchId.HasValue)
+            {
+                var branchId = filter.BranchId.Value;
+                query = query.Where(a => a.BranchId == branchId);
+            }
+
+            if (!string.IsNullOrEmpty(filter.EntityType))
+            {
+                var entityType = filter.EntityType;
+                query = query.Where(a => a.EntityType == entityType);
+            }
+
+            if (filter.EntityId.HasValue)
+            {
+                var entityId = filter.EntityId.Value;
+                query = query.Where(a => a.EntityId == entityId);
+            }
+
+            if (!string.IsNullOrEmpty(filter.Action))
+            {
+                var action = filter.Action;
+                query = query.Where(a => a.Action == action);
+            }
+
+            if (!string.IsNullOrEmpty(filter.IpAddress))
+            {
+                var ipAddress = filter.IpAddress;
+                query = query.Where(a => a.IpAddress == ipAddress);
+            }
+
+            if (!string.IsNullOrEmpty(filter.CorrelationId))
+            {
+                var correlationId = filter.CorrelationId;
+                query = query.Where(a => a.CorrelationId == correlationId);
+            }
+
+            if (!string.IsNullOrEmpty(filter.EventCategory))
+            {
+                var eventCategory = filter.EventCategory;
+                query = query.Where(a => a.EventCategory == eventCategory);
+            }
+
+            if (!string.IsNullOrEmpty(filter.Severity))
+            {
+                var severity = filter.Severity;
+                query = query.Where(a => a.Severity == severity);
+            }
+
+            if (!string.IsNullOrEmpty(filter.HttpMethod))
+            {
+                var httpMethod = filter.HttpMethod;
+                query = query.Where(a => a.HttpMethod == httpMethod);
+            }
+
+            if (!string.IsNullOrEmpty(filter.EndpointPath))
+            {
+                var endpointPath = filter.EndpointPath;
+                query = query.Where(a => a.EndpointPath == endpointPath);
+            }
+
+            if (!string.IsNullOrEmpty(filter.BusinessModule))
+            {
+                var businessModule = filter.BusinessModule;
+                query = query.Where(a => a.BusinessModule == businessModule);
+            }
+
+            if (!string.IsNullOrEmpty(filter.ErrorCode))
+            {
+                var errorCode = filter.ErrorCode;
+                query = query.Where(a => a.ErrorCode == errorCode);
+            }
+
+            // Order by creation date for consistent results
+            query = query.OrderByDescending(a => a.CreationDate).ThenByDescending(a => a.Id);
+
+            var archivedRecords = await query.ToListAsync(cancellationToken);
+
+            _logger.LogDebug("Executing archived data query with {FilterCount} filter criteria", 
+                typeof(AuditQueryFilter).GetProperties().Count(p => p.GetValue(filter) != null));
+
             var recordCount = 0;
             var compressionEnabled = _options.CompressionAlgorithm.Equals("GZip", StringComparison.OrdinalIgnoreCase);
 
-            while (await reader.ReadAsync(cancellationToken))
+            foreach (var record in archivedRecords)
             {
                 if (cancellationToken.IsCancellationRequested)
                 {
@@ -811,7 +808,7 @@ public class ArchivalService : IArchivalService
                     break;
                 }
 
-                var entry = await MapArchivedDataToAuditLogEntryAsync(reader, compressionEnabled, cancellationToken);
+                var entry = await MapArchivedDataToAuditLogEntryAsync(record, compressionEnabled, cancellationToken);
                 results.Add(entry);
                 recordCount++;
 
@@ -836,387 +833,90 @@ public class ArchivalService : IArchivalService
     }
 
     /// <summary>
-    /// Build SQL query for retrieving archived data based on filter criteria
-    /// </summary>
-    private string BuildArchivedDataQuery(AuditQueryFilter filter)
-    {
-        var sql = @"
-            SELECT 
-                ROW_ID, ACTOR_TYPE, ACTOR_ID, COMPANY_ID, BRANCH_ID,
-                ACTION, ENTITY_TYPE, ENTITY_ID, OLD_VALUE, NEW_VALUE,
-                IP_ADDRESS, USER_AGENT, CORRELATION_ID, HTTP_METHOD, ENDPOINT_PATH,
-                REQUEST_PAYLOAD, RESPONSE_PAYLOAD, EXECUTION_TIME_MS, STATUS_CODE,
-                EXCEPTION_TYPE, EXCEPTION_MESSAGE, STACK_TRACE, SEVERITY,
-                EVENT_CATEGORY, METADATA, BUSINESS_MODULE, DEVICE_IDENTIFIER,
-                ERROR_CODE, BUSINESS_DESCRIPTION, CREATION_DATE, ARCHIVED_DATE,
-                ARCHIVE_BATCH_ID, CHECKSUM
-            FROM SYS_AUDIT_LOG_ARCHIVE
-            WHERE 1=1";
-
-        // Add filter conditions
-        if (filter.StartDate.HasValue)
-        {
-            sql += " AND CREATION_DATE >= :StartDate";
-        }
-
-        if (filter.EndDate.HasValue)
-        {
-            sql += " AND CREATION_DATE <= :EndDate";
-        }
-
-        if (filter.ActorId.HasValue)
-        {
-            sql += " AND ACTOR_ID = :ActorId";
-        }
-
-        if (!string.IsNullOrEmpty(filter.ActorType))
-        {
-            sql += " AND ACTOR_TYPE = :ActorType";
-        }
-
-        if (filter.CompanyId.HasValue)
-        {
-            sql += " AND COMPANY_ID = :CompanyId";
-        }
-
-        if (filter.BranchId.HasValue)
-        {
-            sql += " AND BRANCH_ID = :BranchId";
-        }
-
-        if (!string.IsNullOrEmpty(filter.EntityType))
-        {
-            sql += " AND ENTITY_TYPE = :EntityType";
-        }
-
-        if (filter.EntityId.HasValue)
-        {
-            sql += " AND ENTITY_ID = :EntityId";
-        }
-
-        if (!string.IsNullOrEmpty(filter.Action))
-        {
-            sql += " AND ACTION = :Action";
-        }
-
-        if (!string.IsNullOrEmpty(filter.IpAddress))
-        {
-            sql += " AND IP_ADDRESS = :IpAddress";
-        }
-
-        if (!string.IsNullOrEmpty(filter.CorrelationId))
-        {
-            sql += " AND CORRELATION_ID = :CorrelationId";
-        }
-
-        if (!string.IsNullOrEmpty(filter.EventCategory))
-        {
-            sql += " AND EVENT_CATEGORY = :EventCategory";
-        }
-
-        if (!string.IsNullOrEmpty(filter.Severity))
-        {
-            sql += " AND SEVERITY = :Severity";
-        }
-
-        if (!string.IsNullOrEmpty(filter.HttpMethod))
-        {
-            sql += " AND HTTP_METHOD = :HttpMethod";
-        }
-
-        if (!string.IsNullOrEmpty(filter.EndpointPath))
-        {
-            sql += " AND ENDPOINT_PATH = :EndpointPath";
-        }
-
-        if (!string.IsNullOrEmpty(filter.BusinessModule))
-        {
-            sql += " AND BUSINESS_MODULE = :BusinessModule";
-        }
-
-        if (!string.IsNullOrEmpty(filter.ErrorCode))
-        {
-            sql += " AND ERROR_CODE = :ErrorCode";
-        }
-
-        // Order by creation date for consistent results
-        sql += " ORDER BY CREATION_DATE DESC, ROW_ID DESC";
-
-        return sql;
-    }
-
-    /// <summary>
-    /// Add filter parameters to the Oracle command
-    /// </summary>
-    private void AddFilterParameters(OracleCommand command, AuditQueryFilter filter)
-    {
-        if (filter.StartDate.HasValue)
-        {
-            command.Parameters.Add(":StartDate", OracleDbType.Date).Value = filter.StartDate.Value;
-        }
-
-        if (filter.EndDate.HasValue)
-        {
-            command.Parameters.Add(":EndDate", OracleDbType.Date).Value = filter.EndDate.Value;
-        }
-
-        if (filter.ActorId.HasValue)
-        {
-            command.Parameters.Add(":ActorId", OracleDbType.Int64).Value = filter.ActorId.Value;
-        }
-
-        if (!string.IsNullOrEmpty(filter.ActorType))
-        {
-            command.Parameters.Add(":ActorType", OracleDbType.NVarchar2).Value = filter.ActorType;
-        }
-
-        if (filter.CompanyId.HasValue)
-        {
-            command.Parameters.Add(":CompanyId", OracleDbType.Int64).Value = filter.CompanyId.Value;
-        }
-
-        if (filter.BranchId.HasValue)
-        {
-            command.Parameters.Add(":BranchId", OracleDbType.Int64).Value = filter.BranchId.Value;
-        }
-
-        if (!string.IsNullOrEmpty(filter.EntityType))
-        {
-            command.Parameters.Add(":EntityType", OracleDbType.NVarchar2).Value = filter.EntityType;
-        }
-
-        if (filter.EntityId.HasValue)
-        {
-            command.Parameters.Add(":EntityId", OracleDbType.Int64).Value = filter.EntityId.Value;
-        }
-
-        if (!string.IsNullOrEmpty(filter.Action))
-        {
-            command.Parameters.Add(":Action", OracleDbType.NVarchar2).Value = filter.Action;
-        }
-
-        if (!string.IsNullOrEmpty(filter.IpAddress))
-        {
-            command.Parameters.Add(":IpAddress", OracleDbType.NVarchar2).Value = filter.IpAddress;
-        }
-
-        if (!string.IsNullOrEmpty(filter.CorrelationId))
-        {
-            command.Parameters.Add(":CorrelationId", OracleDbType.NVarchar2).Value = filter.CorrelationId;
-        }
-
-        if (!string.IsNullOrEmpty(filter.EventCategory))
-        {
-            command.Parameters.Add(":EventCategory", OracleDbType.NVarchar2).Value = filter.EventCategory;
-        }
-
-        if (!string.IsNullOrEmpty(filter.Severity))
-        {
-            command.Parameters.Add(":Severity", OracleDbType.NVarchar2).Value = filter.Severity;
-        }
-
-        if (!string.IsNullOrEmpty(filter.HttpMethod))
-        {
-            command.Parameters.Add(":HttpMethod", OracleDbType.NVarchar2).Value = filter.HttpMethod;
-        }
-
-        if (!string.IsNullOrEmpty(filter.EndpointPath))
-        {
-            command.Parameters.Add(":EndpointPath", OracleDbType.NVarchar2).Value = filter.EndpointPath;
-        }
-
-        if (!string.IsNullOrEmpty(filter.BusinessModule))
-        {
-            command.Parameters.Add(":BusinessModule", OracleDbType.NVarchar2).Value = filter.BusinessModule;
-        }
-
-        if (!string.IsNullOrEmpty(filter.ErrorCode))
-        {
-            command.Parameters.Add(":ErrorCode", OracleDbType.NVarchar2).Value = filter.ErrorCode;
-        }
-    }
-
-    /// <summary>
-    /// Map archived data reader to AuditLogEntry, decompressing CLOB fields if necessary
+    /// Map archived data entity to AuditLogEntry, decompressing CLOB fields if necessary
     /// </summary>
     private async Task<AuditLogEntry> MapArchivedDataToAuditLogEntryAsync(
-        OracleDataReader reader,
+        SysAuditLogArchive record,
         bool compressionEnabled,
         CancellationToken cancellationToken)
     {
-        // Read all fields from the archive
         var entry = new AuditLogEntry
         {
-            RowId = reader.GetInt64(reader.GetOrdinal("ROW_ID")),
-            ActorType = reader.GetString(reader.GetOrdinal("ACTOR_TYPE")),
-            ActorId = reader.GetInt64(reader.GetOrdinal("ACTOR_ID")),
-            CompanyId = reader.IsDBNull(reader.GetOrdinal("COMPANY_ID")) 
-                ? null 
-                : reader.GetInt64(reader.GetOrdinal("COMPANY_ID")),
-            BranchId = reader.IsDBNull(reader.GetOrdinal("BRANCH_ID")) 
-                ? null 
-                : reader.GetInt64(reader.GetOrdinal("BRANCH_ID")),
-            Action = reader.GetString(reader.GetOrdinal("ACTION")),
-            EntityType = reader.GetString(reader.GetOrdinal("ENTITY_TYPE")),
-            EntityId = reader.IsDBNull(reader.GetOrdinal("ENTITY_ID")) 
-                ? null 
-                : reader.GetInt64(reader.GetOrdinal("ENTITY_ID")),
-            IpAddress = reader.IsDBNull(reader.GetOrdinal("IP_ADDRESS")) 
-                ? null 
-                : reader.GetString(reader.GetOrdinal("IP_ADDRESS")),
-            UserAgent = reader.IsDBNull(reader.GetOrdinal("USER_AGENT")) 
-                ? null 
-                : reader.GetString(reader.GetOrdinal("USER_AGENT")),
-            CorrelationId = reader.IsDBNull(reader.GetOrdinal("CORRELATION_ID")) 
-                ? null 
-                : reader.GetString(reader.GetOrdinal("CORRELATION_ID")),
-            HttpMethod = reader.IsDBNull(reader.GetOrdinal("HTTP_METHOD")) 
-                ? null 
-                : reader.GetString(reader.GetOrdinal("HTTP_METHOD")),
-            EndpointPath = reader.IsDBNull(reader.GetOrdinal("ENDPOINT_PATH")) 
-                ? null 
-                : reader.GetString(reader.GetOrdinal("ENDPOINT_PATH")),
-            ExecutionTimeMs = reader.IsDBNull(reader.GetOrdinal("EXECUTION_TIME_MS")) 
-                ? null 
-                : reader.GetInt64(reader.GetOrdinal("EXECUTION_TIME_MS")),
-            StatusCode = reader.IsDBNull(reader.GetOrdinal("STATUS_CODE")) 
-                ? null 
-                : reader.GetInt32(reader.GetOrdinal("STATUS_CODE")),
-            ExceptionType = reader.IsDBNull(reader.GetOrdinal("EXCEPTION_TYPE")) 
-                ? null 
-                : reader.GetString(reader.GetOrdinal("EXCEPTION_TYPE")),
-            ExceptionMessage = reader.IsDBNull(reader.GetOrdinal("EXCEPTION_MESSAGE")) 
-                ? null 
-                : reader.GetString(reader.GetOrdinal("EXCEPTION_MESSAGE")),
-            Severity = reader.GetString(reader.GetOrdinal("SEVERITY")),
-            EventCategory = reader.GetString(reader.GetOrdinal("EVENT_CATEGORY")),
-            BusinessModule = reader.IsDBNull(reader.GetOrdinal("BUSINESS_MODULE")) 
-                ? null 
-                : reader.GetString(reader.GetOrdinal("BUSINESS_MODULE")),
-            DeviceIdentifier = reader.IsDBNull(reader.GetOrdinal("DEVICE_IDENTIFIER")) 
-                ? null 
-                : reader.GetString(reader.GetOrdinal("DEVICE_IDENTIFIER")),
-            ErrorCode = reader.IsDBNull(reader.GetOrdinal("ERROR_CODE")) 
-                ? null 
-                : reader.GetString(reader.GetOrdinal("ERROR_CODE")),
-            BusinessDescription = reader.IsDBNull(reader.GetOrdinal("BUSINESS_DESCRIPTION")) 
-                ? null 
-                : reader.GetString(reader.GetOrdinal("BUSINESS_DESCRIPTION")),
-            CreationDate = reader.GetDateTime(reader.GetOrdinal("CREATION_DATE"))
+            RowId = record.Id,
+            ActorType = record.ActorType,
+            ActorId = record.ActorId,
+            CompanyId = record.CompanyId,
+            BranchId = record.BranchId,
+            Action = record.Action,
+            EntityType = record.EntityType,
+            EntityId = record.EntityId,
+            IpAddress = record.IpAddress,
+            UserAgent = record.UserAgent,
+            CorrelationId = record.CorrelationId,
+            HttpMethod = record.HttpMethod,
+            EndpointPath = record.EndpointPath,
+            ExecutionTimeMs = record.ExecutionTimeMs,
+            StatusCode = record.StatusCode,
+            ExceptionType = record.ExceptionType,
+            ExceptionMessage = record.ExceptionMessage,
+            Severity = record.Severity ?? "Info",
+            EventCategory = record.EventCategory ?? "DataChange",
+            BusinessModule = record.BusinessModule,
+            DeviceIdentifier = record.DeviceIdentifier,
+            ErrorCode = record.ErrorCode,
+            BusinessDescription = record.BusinessDescription,
+            CreationDate = record.CreationDate
         };
 
         // Decompress CLOB fields if compression is enabled
         if (compressionEnabled)
         {
-            entry.OldValue = await DecompressClobFieldAsync(reader, "OLD_VALUE", cancellationToken);
-            entry.NewValue = await DecompressClobFieldAsync(reader, "NEW_VALUE", cancellationToken);
-            entry.RequestPayload = await DecompressClobFieldAsync(reader, "REQUEST_PAYLOAD", cancellationToken);
-            entry.ResponsePayload = await DecompressClobFieldAsync(reader, "RESPONSE_PAYLOAD", cancellationToken);
-            entry.StackTrace = await DecompressClobFieldAsync(reader, "STACK_TRACE", cancellationToken);
-            entry.Metadata = await DecompressClobFieldAsync(reader, "METADATA", cancellationToken);
+            entry.OldValue = await DecompressClobFieldAsync(record.OldValue, cancellationToken);
+            entry.NewValue = await DecompressClobFieldAsync(record.NewValue, cancellationToken);
+            entry.RequestPayload = await DecompressClobFieldAsync(record.RequestPayload, cancellationToken);
+            entry.ResponsePayload = await DecompressClobFieldAsync(record.ResponsePayload, cancellationToken);
+            entry.StackTrace = await DecompressClobFieldAsync(record.StackTrace, cancellationToken);
+            entry.Metadata = await DecompressClobFieldAsync(record.Metadata, cancellationToken);
         }
         else
         {
-            // Read CLOB fields directly without decompression
-            entry.OldValue = await ReadClobFieldAsync(reader, "OLD_VALUE", cancellationToken);
-            entry.NewValue = await ReadClobFieldAsync(reader, "NEW_VALUE", cancellationToken);
-            entry.RequestPayload = await ReadClobFieldAsync(reader, "REQUEST_PAYLOAD", cancellationToken);
-            entry.ResponsePayload = await ReadClobFieldAsync(reader, "RESPONSE_PAYLOAD", cancellationToken);
-            entry.StackTrace = await ReadClobFieldAsync(reader, "STACK_TRACE", cancellationToken);
-            entry.Metadata = await ReadClobFieldAsync(reader, "METADATA", cancellationToken);
-        }
-
-        // Verify checksum if integrity verification is enabled
-        if (_options.VerifyIntegrity)
-        {
-            var storedChecksum = reader.IsDBNull(reader.GetOrdinal("CHECKSUM")) 
-                ? null 
-                : reader.GetString(reader.GetOrdinal("CHECKSUM"));
-            
-            if (!string.IsNullOrEmpty(storedChecksum))
-            {
-                var archiveBatchId = reader.GetInt64(reader.GetOrdinal("ARCHIVE_BATCH_ID"));
-                
-                // Note: Full checksum verification would require recalculating the entire batch checksum
-                // For performance, we log a warning if checksum exists but skip full verification during retrieval
-                _logger.LogDebug(
-                    "Retrieved archived record {RowId} from batch {ArchiveBatchId} with checksum {Checksum}",
-                    entry.RowId,
-                    archiveBatchId,
-                    storedChecksum);
-            }
+            entry.OldValue = record.OldValue;
+            entry.NewValue = record.NewValue;
+            entry.RequestPayload = record.RequestPayload;
+            entry.ResponsePayload = record.ResponsePayload;
+            entry.StackTrace = record.StackTrace;
+            entry.Metadata = record.Metadata;
         }
 
         return entry;
     }
 
     /// <summary>
-    /// Decompress a CLOB field from the archived data
+    /// Decompress a CLOB field value
     /// </summary>
     private async Task<string?> DecompressClobFieldAsync(
-        OracleDataReader reader,
-        string fieldName,
+        string? fieldValue,
         CancellationToken cancellationToken)
     {
         try
         {
-            var ordinal = reader.GetOrdinal(fieldName);
-            if (reader.IsDBNull(ordinal))
-            {
-                return null;
-            }
-
-            // Read the compressed CLOB data
-            var compressedData = await ReadClobFieldAsync(reader, fieldName, cancellationToken);
-            
-            if (string.IsNullOrEmpty(compressedData))
+            if (string.IsNullOrEmpty(fieldValue))
             {
                 return null;
             }
 
             // Decompress using the compression service
-            var decompressedData = _compressionService.Decompress(compressedData);
-            
+            var decompressedData = _compressionService.Decompress(fieldValue);
+
             return decompressedData;
         }
         catch (Exception ex)
         {
             _logger.LogError(
                 ex,
-                "Error decompressing CLOB field '{FieldName}' during archived data retrieval",
-                fieldName);
-            
+                "Error decompressing CLOB field during archived data retrieval");
+
             // Return null on decompression error to avoid breaking the entire retrieval
-            return null;
-        }
-    }
-
-    /// <summary>
-    /// Read a CLOB field from the Oracle data reader
-    /// </summary>
-    private async Task<string?> ReadClobFieldAsync(
-        OracleDataReader reader,
-        string fieldName,
-        CancellationToken cancellationToken)
-    {
-        try
-        {
-            var ordinal = reader.GetOrdinal(fieldName);
-            if (reader.IsDBNull(ordinal))
-            {
-                return null;
-            }
-
-            // Oracle CLOB fields can be read as strings
-            var value = reader.GetString(ordinal);
-            return value;
-        }
-        catch (Exception ex)
-        {
-            _logger.LogWarning(
-                ex,
-                "Error reading CLOB field '{FieldName}' from archived data",
-                fieldName);
             return null;
         }
     }
@@ -1226,41 +926,27 @@ public class ArchivalService : IArchivalService
         CancellationToken cancellationToken = default)
     {
         _logger.LogInformation("Verifying integrity of archive {ArchiveId}", archiveId);
-        
+
         try
         {
-            using var connection = _dbContext.CreateConnection();
-            await connection.OpenAsync(cancellationToken);
+            // Step 1: Check if archive batch exists
+            var archiveExists = await _dbContext.SysAuditLogArchives
+                .AnyAsync(a => a.ArchiveBatchId == archiveId, cancellationToken);
 
-            // Step 1: Get the stored checksum for this archive batch
-            var getChecksumSql = @"
-                SELECT DISTINCT CHECKSUM, ARCHIVE_BATCH_ID
-                FROM SYS_AUDIT_LOG_ARCHIVE
-                WHERE ARCHIVE_BATCH_ID = :ArchiveBatchId";
-
-            string? storedChecksum = null;
-            long? archiveBatchId = null;
-
-            using (var getCmd = new OracleCommand(getChecksumSql, connection))
-            {
-                getCmd.Parameters.Add(":ArchiveBatchId", OracleDbType.Int64).Value = archiveId;
-
-                using var reader = await getCmd.ExecuteReaderAsync(cancellationToken);
-                if (await reader.ReadAsync(cancellationToken))
-                {
-                    storedChecksum = reader.IsDBNull(reader.GetOrdinal("CHECKSUM"))
-                        ? null
-                        : reader.GetString(reader.GetOrdinal("CHECKSUM"));
-                    archiveBatchId = reader.GetInt64(reader.GetOrdinal("ARCHIVE_BATCH_ID"));
-                }
-            }
-
-            // Step 2: Check if archive exists
-            if (!archiveBatchId.HasValue)
+            if (!archiveExists)
             {
                 _logger.LogWarning("Archive batch {ArchiveId} not found", archiveId);
                 return false;
             }
+
+            // Step 2: Get stored checksum using raw SQL since CHECKSUM is not mapped in entity
+            string? storedChecksum = null;
+            var checksumResult = await _dbContext.Database
+                .SqlQueryRaw<string>(
+                    "SELECT CHECKSUM FROM SYS_AUDIT_LOG_ARCHIVE WHERE ARCHIVE_BATCH_ID = {0} AND ROWNUM = 1",
+                    archiveId)
+                .FirstOrDefaultAsync(cancellationToken);
+            storedChecksum = checksumResult;
 
             // Step 3: Check if checksum was stored
             if (string.IsNullOrEmpty(storedChecksum))
@@ -1272,7 +958,7 @@ public class ArchivalService : IArchivalService
             }
 
             // Step 4: Recalculate the checksum from current archive data
-            var recalculatedChecksum = await CalculateArchiveChecksumAsync(connection, archiveId, cancellationToken);
+            var recalculatedChecksum = await CalculateArchiveChecksumAsync(archiveId, cancellationToken);
 
             // Step 5: Compare checksums
             var isValid = string.Equals(storedChecksum, recalculatedChecksum, StringComparison.OrdinalIgnoreCase);
@@ -1312,25 +998,15 @@ public class ArchivalService : IArchivalService
     {
         try
         {
-            using var connection = _dbContext.CreateConnection();
-            await connection.OpenAsync(cancellationToken);
+            var policy = await _dbContext.SysRetentionPolicies
+                .FirstOrDefaultAsync(p => p.EventCategory == eventType, cancellationToken);
 
-            var sql = @"
-                SELECT ROW_ID, EVENT_CATEGORY, RETENTION_DAYS, ARCHIVE_ENABLED, 
-                       DESCRIPTION, LAST_MODIFIED_DATE, LAST_MODIFIED_BY
-                FROM SYS_RETENTION_POLICIES
-                WHERE EVENT_CATEGORY = :EventType";
-
-            using var command = new OracleCommand(sql, connection);
-            command.Parameters.Add(":EventType", OracleDbType.NVarchar2).Value = eventType;
-
-            using var reader = await command.ExecuteReaderAsync(cancellationToken);
-            if (await reader.ReadAsync(cancellationToken))
+            if (policy == null)
             {
-                return MapRetentionPolicyFromReader(reader);
+                return null;
             }
 
-            return null;
+            return MapRetentionPolicyFromEntity(policy);
         }
         catch (Exception ex)
         {
@@ -1349,26 +1025,13 @@ public class ArchivalService : IArchivalService
 
         try
         {
-            using var connection = _dbContext.CreateConnection();
-            await connection.OpenAsync(cancellationToken);
+            var entities = await _dbContext.SysRetentionPolicies
+                .Where(p => p.ArchiveEnabled)
+                .OrderBy(p => p.EventCategory)
+                .ToListAsync(cancellationToken);
 
-            var sql = @"
-                SELECT ROW_ID, EVENT_CATEGORY, RETENTION_DAYS, ARCHIVE_ENABLED, 
-                       DESCRIPTION, LAST_MODIFIED_DATE, LAST_MODIFIED_BY
-                FROM SYS_RETENTION_POLICIES
-                WHERE ARCHIVE_ENABLED = 1
-                ORDER BY EVENT_CATEGORY";
-
-            using var command = new OracleCommand(sql, connection);
-            using var reader = await command.ExecuteReaderAsync(cancellationToken);
-
-            while (await reader.ReadAsync(cancellationToken))
-            {
-                policies.Add(MapRetentionPolicyFromReader(reader));
-            }
-
-            _logger.LogInformation("Retrieved {PolicyCount} active retention policies", policies.Count);
-            return policies;
+            _logger.LogInformation("Retrieved {PolicyCount} active retention policies", entities.Count);
+            return entities.Select(MapRetentionPolicyFromEntity);
         }
         catch (Exception ex)
         {
@@ -1378,25 +1041,19 @@ public class ArchivalService : IArchivalService
     }
 
     /// <summary>
-    /// Map database reader to RetentionPolicy model
+    /// Map SysRetentionPolicy entity to RetentionPolicy model
     /// </summary>
-    private RetentionPolicy MapRetentionPolicyFromReader(OracleDataReader reader)
+    private static RetentionPolicy MapRetentionPolicyFromEntity(SysRetentionPolicy policy)
     {
         return new RetentionPolicy
         {
-            PolicyId = reader.GetInt64(reader.GetOrdinal("ROW_ID")),
-            EventType = reader.GetString(reader.GetOrdinal("EVENT_CATEGORY")),
-            RetentionDays = reader.GetInt32(reader.GetOrdinal("RETENTION_DAYS")),
-            IsActive = reader.GetInt32(reader.GetOrdinal("ARCHIVE_ENABLED")) == 1,
-            Description = reader.IsDBNull(reader.GetOrdinal("DESCRIPTION")) 
-                ? null 
-                : reader.GetString(reader.GetOrdinal("DESCRIPTION")),
-            ModifiedDate = reader.IsDBNull(reader.GetOrdinal("LAST_MODIFIED_DATE"))
-                ? null
-                : reader.GetDateTime(reader.GetOrdinal("LAST_MODIFIED_DATE")),
-            ModifiedBy = reader.IsDBNull(reader.GetOrdinal("LAST_MODIFIED_BY"))
-                ? null
-                : reader.GetInt64(reader.GetOrdinal("LAST_MODIFIED_BY")),
+            PolicyId = policy.Id,
+            EventType = policy.EventCategory,
+            RetentionDays = policy.RetentionDays,
+            IsActive = policy.ArchiveEnabled,
+            Description = policy.Description,
+            ModifiedDate = policy.LastModifiedDate,
+            ModifiedBy = policy.LastModifiedBy,
             ArchiveRetentionDays = -1, // Indefinite retention by default
             CreatedDate = DateTime.UtcNow, // Not stored in current schema
             CreatedBy = 0 // Not stored in current schema
@@ -1408,7 +1065,7 @@ public class ArchivalService : IArchivalService
         CancellationToken cancellationToken = default)
     {
         _logger.LogInformation("Updating retention policy for event type '{EventType}'", policy.EventType);
-        
+
         // Implementation for updating retention policies
         throw new NotImplementedException("Retention policy updates will be implemented in a future task");
     }
@@ -1417,7 +1074,7 @@ public class ArchivalService : IArchivalService
         CancellationToken cancellationToken = default)
     {
         _logger.LogInformation("Retrieving archival statistics");
-        
+
         // Implementation for archival statistics
         throw new NotImplementedException("Archival statistics will be implemented in a future task");
     }
@@ -1427,7 +1084,7 @@ public class ArchivalService : IArchivalService
         CancellationToken cancellationToken = default)
     {
         _logger.LogInformation("Deleting expired archive {ArchiveId}", archiveId);
-        
+
         // Implementation for deleting expired archives
         throw new NotImplementedException("Archive deletion will be implemented in a future task");
     }
@@ -1437,7 +1094,7 @@ public class ArchivalService : IArchivalService
         CancellationToken cancellationToken = default)
     {
         _logger.LogInformation("Restoring archived data from archive {ArchiveId}", archiveId);
-        
+
         // Implementation for restoring archived data
         throw new NotImplementedException("Archive restoration will be implemented in a future task");
     }
@@ -1446,14 +1103,8 @@ public class ArchivalService : IArchivalService
     {
         try
         {
-            using var connection = _dbContext.CreateConnection();
-            await connection.OpenAsync(cancellationToken);
-
             // Check if we can query the retention policies table
-            var sql = "SELECT COUNT(*) FROM SYS_RETENTION_POLICIES";
-            using var command = new OracleCommand(sql, connection);
-            await command.ExecuteScalarAsync(cancellationToken);
-
+            await _dbContext.SysRetentionPolicies.CountAsync(cancellationToken);
             return true;
         }
         catch (Exception ex)
@@ -1489,11 +1140,8 @@ public class ArchivalService : IArchivalService
 
         try
         {
-            using var connection = _dbContext.CreateConnection();
-            await connection.OpenAsync(cancellationToken);
-
             // Step 1: Retrieve archived data from database
-            var archivedData = await RetrieveArchivedDataForExportAsync(connection, archiveId, cancellationToken);
+            var archivedData = await RetrieveArchivedDataForExportAsync(archiveId, cancellationToken);
 
             if (archivedData.Count == 0)
             {
@@ -1523,6 +1171,7 @@ public class ArchivalService : IArchivalService
             };
 
             // Add checksum from first record (all records in batch have same checksum)
+            // Note: CHECKSUM column is not mapped in the entity, so it's not included in the export data
             if (archivedData.Count > 0 && archivedData[0].ContainsKey("CHECKSUM"))
             {
                 var checksum = archivedData[0]["CHECKSUM"]?.ToString();
@@ -1545,7 +1194,7 @@ public class ArchivalService : IArchivalService
                 storageLocation);
 
             // Step 5: Update archive record with storage location
-            await UpdateArchiveStorageLocationAsync(connection, archiveId, storageLocation, cancellationToken);
+            await UpdateArchiveStorageLocationAsync(archiveId, storageLocation, cancellationToken);
 
             return storageLocation;
         }
@@ -1599,10 +1248,7 @@ public class ArchivalService : IArchivalService
                 archivedData.Count);
 
             // Step 3: Insert data into archive table
-            using var connection = _dbContext.CreateConnection();
-            await connection.OpenAsync(cancellationToken);
-
-            var importedCount = await InsertArchivedDataAsync(connection, archivedData, cancellationToken);
+            var importedCount = await InsertArchivedDataAsync(archivedData, cancellationToken);
 
             _logger.LogInformation(
                 "Successfully imported {RecordCount} records from external storage: {StorageLocation}",
@@ -1644,43 +1290,49 @@ public class ArchivalService : IArchivalService
     /// Retrieve archived data from database for export to external storage
     /// </summary>
     private async Task<List<Dictionary<string, object?>>> RetrieveArchivedDataForExportAsync(
-        OracleConnection connection,
         long archiveId,
         CancellationToken cancellationToken)
     {
-        var sql = @"
-            SELECT 
-                ROW_ID, ACTOR_TYPE, ACTOR_ID, COMPANY_ID, BRANCH_ID,
-                ACTION, ENTITY_TYPE, ENTITY_ID, OLD_VALUE, NEW_VALUE,
-                IP_ADDRESS, USER_AGENT, CORRELATION_ID, HTTP_METHOD, ENDPOINT_PATH,
-                REQUEST_PAYLOAD, RESPONSE_PAYLOAD, EXECUTION_TIME_MS, STATUS_CODE,
-                EXCEPTION_TYPE, EXCEPTION_MESSAGE, STACK_TRACE, SEVERITY,
-                EVENT_CATEGORY, METADATA, BUSINESS_MODULE, DEVICE_IDENTIFIER,
-                ERROR_CODE, BUSINESS_DESCRIPTION, CREATION_DATE, ARCHIVED_DATE,
-                ARCHIVE_BATCH_ID, CHECKSUM
-            FROM SYS_AUDIT_LOG_ARCHIVE
-            WHERE ARCHIVE_BATCH_ID = :ArchiveBatchId
-            ORDER BY ROW_ID";
+        var records = await _dbContext.SysAuditLogArchives
+            .Where(a => a.ArchiveBatchId == archiveId)
+            .OrderBy(a => a.Id)
+            .ToListAsync(cancellationToken);
 
-        var records = new List<Dictionary<string, object?>>();
-
-        using var command = new OracleCommand(sql, connection);
-        command.Parameters.Add(":ArchiveBatchId", OracleDbType.Int64).Value = archiveId;
-
-        using var reader = await command.ExecuteReaderAsync(cancellationToken);
-        while (await reader.ReadAsync(cancellationToken))
+        return records.Select(record => new Dictionary<string, object?>
         {
-            var record = new Dictionary<string, object?>();
-            for (int i = 0; i < reader.FieldCount; i++)
-            {
-                var fieldName = reader.GetName(i);
-                var value = reader.IsDBNull(i) ? null : reader.GetValue(i);
-                record[fieldName] = value;
-            }
-            records.Add(record);
-        }
-
-        return records;
+            ["ROW_ID"] = record.Id,
+            ["ACTOR_TYPE"] = record.ActorType,
+            ["ACTOR_ID"] = record.ActorId,
+            ["COMPANY_ID"] = record.CompanyId,
+            ["BRANCH_ID"] = record.BranchId,
+            ["ACTION"] = record.Action,
+            ["ENTITY_TYPE"] = record.EntityType,
+            ["ENTITY_ID"] = record.EntityId,
+            ["OLD_VALUE"] = record.OldValue,
+            ["NEW_VALUE"] = record.NewValue,
+            ["IP_ADDRESS"] = record.IpAddress,
+            ["USER_AGENT"] = record.UserAgent,
+            ["CORRELATION_ID"] = record.CorrelationId,
+            ["HTTP_METHOD"] = record.HttpMethod,
+            ["ENDPOINT_PATH"] = record.EndpointPath,
+            ["REQUEST_PAYLOAD"] = record.RequestPayload,
+            ["RESPONSE_PAYLOAD"] = record.ResponsePayload,
+            ["EXECUTION_TIME_MS"] = record.ExecutionTimeMs,
+            ["STATUS_CODE"] = record.StatusCode,
+            ["EXCEPTION_TYPE"] = record.ExceptionType,
+            ["EXCEPTION_MESSAGE"] = record.ExceptionMessage,
+            ["STACK_TRACE"] = record.StackTrace,
+            ["SEVERITY"] = record.Severity,
+            ["EVENT_CATEGORY"] = record.EventCategory,
+            ["METADATA"] = record.Metadata,
+            ["BUSINESS_MODULE"] = record.BusinessModule,
+            ["DEVICE_IDENTIFIER"] = record.DeviceIdentifier,
+            ["ERROR_CODE"] = record.ErrorCode,
+            ["BUSINESS_DESCRIPTION"] = record.BusinessDescription,
+            ["CREATION_DATE"] = record.CreationDate,
+            ["ARCHIVED_DATE"] = record.ArchivedDate,
+            ["ARCHIVE_BATCH_ID"] = record.ArchiveBatchId
+        }).ToList();
     }
 
     /// <summary>
@@ -1725,99 +1377,70 @@ public class ArchivalService : IArchivalService
     /// Insert archived data into the archive table
     /// </summary>
     private async Task<int> InsertArchivedDataAsync(
-        OracleConnection connection,
         List<Dictionary<string, object?>> archivedData,
         CancellationToken cancellationToken)
     {
-        var insertSql = @"
-            INSERT INTO SYS_AUDIT_LOG_ARCHIVE (
-                ROW_ID, ACTOR_TYPE, ACTOR_ID, COMPANY_ID, BRANCH_ID,
-                ACTION, ENTITY_TYPE, ENTITY_ID, OLD_VALUE, NEW_VALUE,
-                IP_ADDRESS, USER_AGENT, CORRELATION_ID, HTTP_METHOD, ENDPOINT_PATH,
-                REQUEST_PAYLOAD, RESPONSE_PAYLOAD, EXECUTION_TIME_MS, STATUS_CODE,
-                EXCEPTION_TYPE, EXCEPTION_MESSAGE, STACK_TRACE, SEVERITY,
-                EVENT_CATEGORY, METADATA, BUSINESS_MODULE, DEVICE_IDENTIFIER,
-                ERROR_CODE, BUSINESS_DESCRIPTION, CREATION_DATE, ARCHIVED_DATE,
-                ARCHIVE_BATCH_ID, CHECKSUM
-            ) VALUES (
-                :ROW_ID, :ACTOR_TYPE, :ACTOR_ID, :COMPANY_ID, :BRANCH_ID,
-                :ACTION, :ENTITY_TYPE, :ENTITY_ID, :OLD_VALUE, :NEW_VALUE,
-                :IP_ADDRESS, :USER_AGENT, :CORRELATION_ID, :HTTP_METHOD, :ENDPOINT_PATH,
-                :REQUEST_PAYLOAD, :RESPONSE_PAYLOAD, :EXECUTION_TIME_MS, :STATUS_CODE,
-                :EXCEPTION_TYPE, :EXCEPTION_MESSAGE, :STACK_TRACE, :SEVERITY,
-                :EVENT_CATEGORY, :METADATA, :BUSINESS_MODULE, :DEVICE_IDENTIFIER,
-                :ERROR_CODE, :BUSINESS_DESCRIPTION, :CREATION_DATE, :ARCHIVED_DATE,
-                :ARCHIVE_BATCH_ID, :CHECKSUM
-            )";
-
-        var insertedCount = 0;
-
-        foreach (var record in archivedData)
+        var archiveEntities = archivedData.Select(d => new SysAuditLogArchive
         {
-            using var command = new OracleCommand(insertSql, connection);
+            Id = Convert.ToInt64(d["ROW_ID"]),
+            ActorType = d["ACTOR_TYPE"]?.ToString() ?? string.Empty,
+            ActorId = Convert.ToInt64(d["ACTOR_ID"]),
+            CompanyId = d.TryGetValue("COMPANY_ID", out var companyId) && companyId != null ? Convert.ToInt64(companyId) : null,
+            BranchId = d.TryGetValue("BRANCH_ID", out var branchId) && branchId != null ? Convert.ToInt64(branchId) : null,
+            Action = d["ACTION"]?.ToString() ?? string.Empty,
+            EntityType = d["ENTITY_TYPE"]?.ToString() ?? string.Empty,
+            EntityId = d.TryGetValue("ENTITY_ID", out var entityId) && entityId != null ? Convert.ToInt64(entityId) : null,
+            OldValue = d.TryGetValue("OLD_VALUE", out var oldValue) ? oldValue?.ToString() : null,
+            NewValue = d.TryGetValue("NEW_VALUE", out var newValue) ? newValue?.ToString() : null,
+            IpAddress = d.TryGetValue("IP_ADDRESS", out var ipAddress) ? ipAddress?.ToString() : null,
+            UserAgent = d.TryGetValue("USER_AGENT", out var userAgent) ? userAgent?.ToString() : null,
+            CorrelationId = d.TryGetValue("CORRELATION_ID", out var correlationId) ? correlationId?.ToString() : null,
+            HttpMethod = d.TryGetValue("HTTP_METHOD", out var httpMethod) ? httpMethod?.ToString() : null,
+            EndpointPath = d.TryGetValue("ENDPOINT_PATH", out var endpointPath) ? endpointPath?.ToString() : null,
+            RequestPayload = d.TryGetValue("REQUEST_PAYLOAD", out var requestPayload) ? requestPayload?.ToString() : null,
+            ResponsePayload = d.TryGetValue("RESPONSE_PAYLOAD", out var responsePayload) ? responsePayload?.ToString() : null,
+            ExecutionTimeMs = d.TryGetValue("EXECUTION_TIME_MS", out var executionTimeMs) && executionTimeMs != null ? Convert.ToInt64(executionTimeMs) : null,
+            StatusCode = d.TryGetValue("STATUS_CODE", out var statusCode) && statusCode != null ? Convert.ToInt32(statusCode) : null,
+            ExceptionType = d.TryGetValue("EXCEPTION_TYPE", out var exceptionType) ? exceptionType?.ToString() : null,
+            ExceptionMessage = d.TryGetValue("EXCEPTION_MESSAGE", out var exceptionMessage) ? exceptionMessage?.ToString() : null,
+            StackTrace = d.TryGetValue("STACK_TRACE", out var stackTrace) ? stackTrace?.ToString() : null,
+            Severity = d.TryGetValue("SEVERITY", out var severity) ? severity?.ToString() : null,
+            EventCategory = d.TryGetValue("EVENT_CATEGORY", out var eventCategory) ? eventCategory?.ToString() : null,
+            Metadata = d.TryGetValue("METADATA", out var metadata) ? metadata?.ToString() : null,
+            BusinessModule = d.TryGetValue("BUSINESS_MODULE", out var businessModule) ? businessModule?.ToString() : null,
+            DeviceIdentifier = d.TryGetValue("DEVICE_IDENTIFIER", out var deviceIdentifier) ? deviceIdentifier?.ToString() : null,
+            ErrorCode = d.TryGetValue("ERROR_CODE", out var errorCode) ? errorCode?.ToString() : null,
+            BusinessDescription = d.TryGetValue("BUSINESS_DESCRIPTION", out var businessDescription) ? businessDescription?.ToString() : null,
+            CreationDate = Convert.ToDateTime(d["CREATION_DATE"]),
+            ArchivedDate = d.TryGetValue("ARCHIVED_DATE", out var archivedDate) && archivedDate != null ? Convert.ToDateTime(archivedDate) : DateTime.UtcNow,
+            ArchiveBatchId = Convert.ToInt64(d["ARCHIVE_BATCH_ID"])
+        }).ToList();
 
-            // Add all parameters
-            command.Parameters.Add(":ROW_ID", OracleDbType.Int64).Value = record["ROW_ID"] ?? DBNull.Value;
-            command.Parameters.Add(":ACTOR_TYPE", OracleDbType.NVarchar2).Value = record["ACTOR_TYPE"] ?? DBNull.Value;
-            command.Parameters.Add(":ACTOR_ID", OracleDbType.Int64).Value = record["ACTOR_ID"] ?? DBNull.Value;
-            command.Parameters.Add(":COMPANY_ID", OracleDbType.Int64).Value = record["COMPANY_ID"] ?? DBNull.Value;
-            command.Parameters.Add(":BRANCH_ID", OracleDbType.Int64).Value = record["BRANCH_ID"] ?? DBNull.Value;
-            command.Parameters.Add(":ACTION", OracleDbType.NVarchar2).Value = record["ACTION"] ?? DBNull.Value;
-            command.Parameters.Add(":ENTITY_TYPE", OracleDbType.NVarchar2).Value = record["ENTITY_TYPE"] ?? DBNull.Value;
-            command.Parameters.Add(":ENTITY_ID", OracleDbType.Int64).Value = record["ENTITY_ID"] ?? DBNull.Value;
-            command.Parameters.Add(":OLD_VALUE", OracleDbType.Clob).Value = record["OLD_VALUE"] ?? DBNull.Value;
-            command.Parameters.Add(":NEW_VALUE", OracleDbType.Clob).Value = record["NEW_VALUE"] ?? DBNull.Value;
-            command.Parameters.Add(":IP_ADDRESS", OracleDbType.NVarchar2).Value = record["IP_ADDRESS"] ?? DBNull.Value;
-            command.Parameters.Add(":USER_AGENT", OracleDbType.NVarchar2).Value = record["USER_AGENT"] ?? DBNull.Value;
-            command.Parameters.Add(":CORRELATION_ID", OracleDbType.NVarchar2).Value = record["CORRELATION_ID"] ?? DBNull.Value;
-            command.Parameters.Add(":HTTP_METHOD", OracleDbType.NVarchar2).Value = record["HTTP_METHOD"] ?? DBNull.Value;
-            command.Parameters.Add(":ENDPOINT_PATH", OracleDbType.NVarchar2).Value = record["ENDPOINT_PATH"] ?? DBNull.Value;
-            command.Parameters.Add(":REQUEST_PAYLOAD", OracleDbType.Clob).Value = record["REQUEST_PAYLOAD"] ?? DBNull.Value;
-            command.Parameters.Add(":RESPONSE_PAYLOAD", OracleDbType.Clob).Value = record["RESPONSE_PAYLOAD"] ?? DBNull.Value;
-            command.Parameters.Add(":EXECUTION_TIME_MS", OracleDbType.Int64).Value = record["EXECUTION_TIME_MS"] ?? DBNull.Value;
-            command.Parameters.Add(":STATUS_CODE", OracleDbType.Int32).Value = record["STATUS_CODE"] ?? DBNull.Value;
-            command.Parameters.Add(":EXCEPTION_TYPE", OracleDbType.NVarchar2).Value = record["EXCEPTION_TYPE"] ?? DBNull.Value;
-            command.Parameters.Add(":EXCEPTION_MESSAGE", OracleDbType.NVarchar2).Value = record["EXCEPTION_MESSAGE"] ?? DBNull.Value;
-            command.Parameters.Add(":STACK_TRACE", OracleDbType.Clob).Value = record["STACK_TRACE"] ?? DBNull.Value;
-            command.Parameters.Add(":SEVERITY", OracleDbType.NVarchar2).Value = record["SEVERITY"] ?? DBNull.Value;
-            command.Parameters.Add(":EVENT_CATEGORY", OracleDbType.NVarchar2).Value = record["EVENT_CATEGORY"] ?? DBNull.Value;
-            command.Parameters.Add(":METADATA", OracleDbType.Clob).Value = record["METADATA"] ?? DBNull.Value;
-            command.Parameters.Add(":BUSINESS_MODULE", OracleDbType.NVarchar2).Value = record["BUSINESS_MODULE"] ?? DBNull.Value;
-            command.Parameters.Add(":DEVICE_IDENTIFIER", OracleDbType.NVarchar2).Value = record["DEVICE_IDENTIFIER"] ?? DBNull.Value;
-            command.Parameters.Add(":ERROR_CODE", OracleDbType.NVarchar2).Value = record["ERROR_CODE"] ?? DBNull.Value;
-            command.Parameters.Add(":BUSINESS_DESCRIPTION", OracleDbType.NVarchar2).Value = record["BUSINESS_DESCRIPTION"] ?? DBNull.Value;
-            command.Parameters.Add(":CREATION_DATE", OracleDbType.Date).Value = record["CREATION_DATE"] ?? DBNull.Value;
-            command.Parameters.Add(":ARCHIVED_DATE", OracleDbType.Date).Value = record["ARCHIVED_DATE"] ?? DBNull.Value;
-            command.Parameters.Add(":ARCHIVE_BATCH_ID", OracleDbType.Int64).Value = record["ARCHIVE_BATCH_ID"] ?? DBNull.Value;
-            command.Parameters.Add(":CHECKSUM", OracleDbType.NVarchar2).Value = record["CHECKSUM"] ?? DBNull.Value;
+        await _dbContext.SysAuditLogArchives.AddRangeAsync(archiveEntities, cancellationToken);
+        await _dbContext.SaveChangesAsync(cancellationToken);
 
-            await command.ExecuteNonQueryAsync(cancellationToken);
-            insertedCount++;
-        }
-
-        return insertedCount;
+        return archiveEntities.Count;
     }
 
     /// <summary>
     /// Update archive record with external storage location
     /// </summary>
     private async Task UpdateArchiveStorageLocationAsync(
-        OracleConnection connection,
         long archiveId,
         string storageLocation,
         CancellationToken cancellationToken)
     {
         // Note: This would require adding a STORAGE_LOCATION column to SYS_AUDIT_LOG_ARCHIVE table
         // For now, we'll store it in the METADATA column as JSON
-        var updateSql = @"
-            UPDATE SYS_AUDIT_LOG_ARCHIVE 
-            SET METADATA = JSON_OBJECT('StorageLocation' VALUE :StorageLocation)
-            WHERE ARCHIVE_BATCH_ID = :ArchiveBatchId";
+        var archives = await _dbContext.SysAuditLogArchives
+            .Where(a => a.ArchiveBatchId == archiveId)
+            .ToListAsync(cancellationToken);
 
-        using var command = new OracleCommand(updateSql, connection);
-        command.Parameters.Add(":StorageLocation", OracleDbType.NVarchar2).Value = storageLocation;
-        command.Parameters.Add(":ArchiveBatchId", OracleDbType.Int64).Value = archiveId;
+        foreach (var archive in archives)
+        {
+            archive.Metadata = $$"""{"StorageLocation": "{{storageLocation}}"}""";
+        }
 
-        await command.ExecuteNonQueryAsync(cancellationToken);
+        await _dbContext.SaveChangesAsync(cancellationToken);
     }
 }

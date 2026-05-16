@@ -1,4 +1,4 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using ThinkOnErp.Domain.Entities;
 using ThinkOnErp.Domain.Interfaces;
 using ThinkOnErp.Infrastructure.Data;
@@ -7,8 +7,8 @@ namespace ThinkOnErp.Infrastructure.Repositories;
 
 public class FiscalYearRepository : IFiscalYearRepository
 {
-    private readonly ThinkOnErpDbContext _context;
-    public FiscalYearRepository(ThinkOnErpDbContext context) => _context = context;
+    private readonly OracleDbContext _context;
+    public FiscalYearRepository(OracleDbContext context) => _context = context;
 
     public async Task<List<SysFiscalYear>> GetAllAsync() =>
         await _context.SysFiscalYears.Where(f => f.IsActive).ToListAsync();

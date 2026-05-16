@@ -1,4 +1,4 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using ThinkOnErp.Domain.Entities;
 using ThinkOnErp.Domain.Interfaces;
 using ThinkOnErp.Infrastructure.Data;
@@ -7,8 +7,8 @@ namespace ThinkOnErp.Infrastructure.Repositories;
 
 public class ScreenRepository : IScreenRepository
 {
-    private readonly ThinkOnErpDbContext _context;
-    public ScreenRepository(ThinkOnErpDbContext context) => _context = context;
+    private readonly OracleDbContext _context;
+    public ScreenRepository(OracleDbContext context) => _context = context;
 
     public async Task<List<SysScreen>> GetAllScreensAsync() =>
         await _context.SysScreens.Where(s => s.IsActive).ToListAsync();

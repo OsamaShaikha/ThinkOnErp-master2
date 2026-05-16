@@ -1,4 +1,4 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using ThinkOnErp.Domain.Entities;
 using ThinkOnErp.Domain.Interfaces;
 using ThinkOnErp.Infrastructure.Data;
@@ -7,8 +7,8 @@ namespace ThinkOnErp.Infrastructure.Repositories;
 
 public class TicketStatusRepository : ITicketStatusRepository
 {
-    private readonly ThinkOnErpDbContext _context;
-    public TicketStatusRepository(ThinkOnErpDbContext context) => _context = context;
+    private readonly OracleDbContext _context;
+    public TicketStatusRepository(OracleDbContext context) => _context = context;
 
     public async Task<List<SysTicketStatus>> GetAllAsync() =>
         await _context.SysTicketStatuses.Where(s => s.IsActive).OrderBy(s => s.DisplayOrder).ToListAsync();

@@ -6,8 +6,8 @@ using ThinkOnErp.Domain.Interfaces;
 using ThinkOnErp.Domain.Models;
 using ThinkOnErp.Infrastructure.Configuration;
 using ThinkOnErp.Infrastructure.Data;
-using Oracle.ManagedDataAccess.Client;
-using System.Data;
+using Microsoft.EntityFrameworkCore;
+using ThinkOnErp.Domain.Entities;
 
 namespace ThinkOnErp.Infrastructure.Services;
 
@@ -221,22 +221,9 @@ public class SecurityMonitor : ISecurityMonitor
     /// </summary>
     private async Task<int> DetectFailedLoginPatternWithDatabaseAsync(string ipAddress)
     {
-        using var connection = _dbContext.CreateConnection();
-        await connection.OpenAsync();
-
-        // Query failed login attempts from the configured time window
-        var sql = @"
-            SELECT COUNT(*) 
-            FROM SYS_FAILED_LOGINS 
-            WHERE IP_ADDRESS = :IpAddress 
-            AND ATTEMPT_DATE >= SYSDATE - INTERVAL ':WindowMinutes' MINUTE";
-
-        using var command = connection.CreateCommand();
-        command.CommandText = sql.Replace(":WindowMinutes", _options.FailedLoginWindowMinutes.ToString());
-        command.Parameters.Add(new OracleParameter("IpAddress", OracleDbType.NVarchar2) { Value = ipAddress });
-
-        var result = await command.ExecuteScalarAsync();
-        return Convert.ToInt32(result);
+        var cutoff = DateTime.UtcNow.AddMinutes(-_options.FailedLoginWindowMinutes);
+        return await _dbContext.SysFailedLogins
+            .CountAsync(f => f.IpAddress == ipAddress && f.AttemptDate >= cutoff);
     }
 
     /// <summary>
@@ -326,23 +313,15 @@ public class SecurityMonitor : ISecurityMonitor
     /// </summary>
     private async Task TrackFailedLoginInDatabaseAsync(string ipAddress, string? username, string? failureReason)
     {
-        using var connection = _dbContext.CreateConnection();
-        await connection.OpenAsync();
-
-        var sql = @"
-            INSERT INTO SYS_FAILED_LOGINS (
-                ROW_ID, IP_ADDRESS, USERNAME, FAILURE_REASON, ATTEMPT_DATE
-            ) VALUES (
-                SEQ_SYS_FAILED_LOGIN.NEXTVAL, :IpAddress, :Username, :FailureReason, SYSDATE
-            )";
-
-        using var command = connection.CreateCommand();
-        command.CommandText = sql;
-        command.Parameters.Add(new OracleParameter("IpAddress", OracleDbType.NVarchar2) { Value = ipAddress });
-        command.Parameters.Add(new OracleParameter("Username", OracleDbType.NVarchar2) { Value = (object?)username ?? DBNull.Value });
-        command.Parameters.Add(new OracleParameter("FailureReason", OracleDbType.NVarchar2) { Value = (object?)failureReason ?? DBNull.Value });
-
-        await command.ExecuteNonQueryAsync();
+        var entity = new SysFailedLogin
+        {
+            IpAddress = ipAddress,
+            Username = username,
+            FailureReason = failureReason,
+            AttemptDate = DateTime.UtcNow
+        };
+        _dbContext.SysFailedLogins.Add(entity);
+        await _dbContext.SaveChangesAsync();
     }
 
     /// <summary>
@@ -383,21 +362,9 @@ public class SecurityMonitor : ISecurityMonitor
             else
             {
                 // Fallback to database
-                using var connection = _dbContext.CreateConnection();
-                await connection.OpenAsync();
-
-                var sql = @"
-                    SELECT COUNT(*) 
-                    FROM SYS_FAILED_LOGINS 
-                    WHERE USERNAME = :Username 
-                    AND ATTEMPT_DATE >= SYSDATE - INTERVAL ':WindowMinutes' MINUTE";
-
-                using var command = connection.CreateCommand();
-                command.CommandText = sql.Replace(":WindowMinutes", _options.FailedLoginWindowMinutes.ToString());
-                command.Parameters.Add(new OracleParameter("Username", OracleDbType.NVarchar2) { Value = username });
-
-                var result = await command.ExecuteScalarAsync();
-                return Convert.ToInt32(result);
+                var cutoff = DateTime.UtcNow.AddMinutes(-_options.FailedLoginWindowMinutes);
+                return await _dbContext.SysFailedLogins
+                    .CountAsync(f => f.Username == username && f.AttemptDate >= cutoff);
             }
         }
         catch (Exception ex)
@@ -414,26 +381,12 @@ public class SecurityMonitor : ISecurityMonitor
     {
         try
         {
-            using var connection = _dbContext.CreateConnection();
-            await connection.OpenAsync();
-
             // Check if user has access to the specified company and branch
-            var sql = @"
-                SELECT COUNT(*) 
-                FROM SYS_USERS 
-                WHERE ROW_ID = :UserId 
-                AND COMPANY_ID = :CompanyId 
-                AND (BRANCH_ID = :BranchId OR BRANCH_ID IS NULL)
-                AND IS_ACTIVE = 1";
-
-            using var command = connection.CreateCommand();
-            command.CommandText = sql;
-            command.Parameters.Add(new OracleParameter("UserId", OracleDbType.Decimal) { Value = userId });
-            command.Parameters.Add(new OracleParameter("CompanyId", OracleDbType.Decimal) { Value = companyId });
-            command.Parameters.Add(new OracleParameter("BranchId", OracleDbType.Decimal) { Value = branchId });
-
-            var result = await command.ExecuteScalarAsync();
-            var hasAccess = Convert.ToInt32(result);
+            var hasAccess = await _dbContext.SysUsers
+                .CountAsync(u => u.Id == userId
+                    && u.CompanyId == companyId
+                    && (u.BranchId == branchId || u.BranchId == null)
+                    && u.IsActive);
 
             if (hasAccess == 0)
             {
@@ -442,13 +395,10 @@ public class SecurityMonitor : ISecurityMonitor
                     userId, companyId, branchId);
 
                 // Get user details for better logging
-                var userSql = "SELECT USERNAME FROM SYS_USERS WHERE ROW_ID = :UserId";
-                using var userCommand = connection.CreateCommand();
-                userCommand.CommandText = userSql;
-                userCommand.Parameters.Add(new OracleParameter("UserId", OracleDbType.Decimal) { Value = userId });
-
-                var usernameResult = await userCommand.ExecuteScalarAsync();
-                var username = usernameResult?.ToString();
+                var username = await _dbContext.SysUsers
+                    .Where(u => u.Id == userId)
+                    .Select(u => u.UserName)
+                    .FirstOrDefaultAsync();
 
                 var threat = new SecurityThreat
                 {
@@ -689,23 +639,13 @@ public class SecurityMonitor : ISecurityMonitor
     {
         try
         {
-            using var connection = _dbContext.CreateConnection();
-            await connection.OpenAsync();
+            var cutoff = DateTime.UtcNow.AddHours(-1);
 
             // Check for unusually high request volume in the last hour
-            var requestVolumeSql = @"
-                SELECT COUNT(*) 
-                FROM SYS_AUDIT_LOG 
-                WHERE ACTOR_ID = :UserId 
-                AND CREATION_DATE >= SYSDATE - INTERVAL '1' HOUR
-                AND EVENT_CATEGORY = 'Request'";
-
-            using var command = connection.CreateCommand();
-            command.CommandText = requestVolumeSql;
-            command.Parameters.Add(new OracleParameter("UserId", OracleDbType.Decimal) { Value = userId });
-
-            var result = await command.ExecuteScalarAsync();
-            var requestCount = Convert.ToInt32(result);
+            var requestCount = await _dbContext.SysAuditLogs
+                .CountAsync(a => a.ActorId == userId
+                    && a.CreationDate >= cutoff
+                    && a.EventCategory == "Request");
 
             _logger.LogDebug(
                 "Anomalous activity check for User {UserId}: {RequestCount} requests in last hour",
@@ -719,13 +659,10 @@ public class SecurityMonitor : ISecurityMonitor
                     userId, requestCount);
 
                 // Get user details
-                var userSql = "SELECT USERNAME FROM SYS_USERS WHERE ROW_ID = :UserId";
-                using var userCommand = connection.CreateCommand();
-                userCommand.CommandText = userSql;
-                userCommand.Parameters.Add(new OracleParameter("UserId", OracleDbType.Decimal) { Value = userId });
-
-                var usernameResult = await userCommand.ExecuteScalarAsync();
-                var username = usernameResult?.ToString();
+                var username = await _dbContext.SysUsers
+                    .Where(u => u.Id == userId)
+                    .Select(u => u.UserName)
+                    .FirstOrDefaultAsync();
 
                 var threat = new SecurityThreat
                 {
@@ -772,42 +709,25 @@ public class SecurityMonitor : ISecurityMonitor
 
         try
         {
-            using var connection = _dbContext.CreateConnection();
-            await connection.OpenAsync();
-
-            // Insert threat into database
-            var sql = @"
-                INSERT INTO SYS_SECURITY_THREATS (
-                    ROW_ID, THREAT_TYPE, SEVERITY, IP_ADDRESS, USER_ID, COMPANY_ID,
-                    DESCRIPTION, DETECTION_DATE, STATUS, METADATA
-                ) VALUES (
-                    SEQ_SYS_SECURITY_THREAT.NEXTVAL, :ThreatType, :Severity, :IpAddress, :UserId, :CompanyId,
-                    :Description, :DetectionDate, 'Active', :Metadata
-                )";
-
-            using var command = connection.CreateCommand();
-            command.CommandText = sql;
-            command.Parameters.Add(new OracleParameter("ThreatType", OracleDbType.NVarchar2) { Value = threat.ThreatType.ToString() });
-            command.Parameters.Add(new OracleParameter("Severity", OracleDbType.NVarchar2) { Value = threat.Severity.ToString() });
-            command.Parameters.Add(new OracleParameter("IpAddress", OracleDbType.NVarchar2) { Value = (object?)threat.IpAddress ?? DBNull.Value });
-            command.Parameters.Add(new OracleParameter("UserId", OracleDbType.Decimal) { Value = (object?)threat.UserId ?? DBNull.Value });
-            command.Parameters.Add(new OracleParameter("CompanyId", OracleDbType.Decimal) { Value = (object?)threat.CompanyId ?? DBNull.Value });
-            command.Parameters.Add(new OracleParameter("Description", OracleDbType.NVarchar2) { Value = threat.Description });
-            command.Parameters.Add(new OracleParameter("DetectionDate", OracleDbType.Date) { Value = threat.DetectedAt });
-            command.Parameters.Add(new OracleParameter("Metadata", OracleDbType.Clob) { Value = (object?)threat.Metadata ?? DBNull.Value });
-
-            var rowsAffected = await command.ExecuteNonQueryAsync();
-
-            if (rowsAffected > 0)
+            var entity = new SysSecurityThreat
             {
-                _logger.LogInformation(
-                    "Security threat persisted: Type={ThreatType}, Severity={Severity}, Description={Description}",
-                    threat.ThreatType, threat.Severity, threat.Description);
-            }
-            else
-            {
-                _logger.LogWarning("Failed to persist security threat to database");
-            }
+                ThreatType = threat.ThreatType.ToString(),
+                Severity = threat.Severity.ToString(),
+                IpAddress = threat.IpAddress,
+                UserId = threat.UserId,
+                CompanyId = threat.CompanyId,
+                Description = threat.Description,
+                DetectionDate = threat.DetectedAt,
+                Status = "Active",
+                Metadata = threat.Metadata
+            };
+
+            _dbContext.SysSecurityThreats.Add(entity);
+            await _dbContext.SaveChangesAsync();
+
+            _logger.LogInformation(
+                "Security threat persisted: Type={ThreatType}, Severity={Severity}, Description={Description}",
+                threat.ThreatType, threat.Severity, threat.Description);
         }
         catch (Exception ex)
         {
@@ -824,82 +744,35 @@ public class SecurityMonitor : ISecurityMonitor
     {
         try
         {
-            using var connection = _dbContext.CreateConnection();
-            await connection.OpenAsync();
-
             // First, get the total count
-            var countSql = @"
-                SELECT COUNT(*)
-                FROM SYS_SECURITY_THREATS
-                WHERE STATUS = 'Active'";
-
-            using var countCommand = connection.CreateCommand();
-            countCommand.CommandText = countSql;
-            var totalCount = Convert.ToInt32(await countCommand.ExecuteScalarAsync());
+            var totalCount = await _dbContext.SysSecurityThreats
+                .CountAsync(t => t.Status == "Active");
 
             // Then get the paged results
-            var sql = @"
-                SELECT * FROM (
-                    SELECT 
-                        ROW_ID,
-                        THREAT_TYPE,
-                        SEVERITY,
-                        DESCRIPTION,
-                        IP_ADDRESS,
-                        USER_ID,
-                        COMPANY_ID,
-                        DETECTION_DATE,
-                        STATUS,
-                        METADATA,
-                        ROW_NUMBER() OVER (
-                            ORDER BY 
-                                CASE SEVERITY
-                                    WHEN 'Critical' THEN 1
-                                    WHEN 'High' THEN 2
-                                    WHEN 'Medium' THEN 3
-                                    WHEN 'Low' THEN 4
-                                END,
-                                DETECTION_DATE DESC
-                        ) AS RN
-                    FROM SYS_SECURITY_THREATS
-                    WHERE STATUS = 'Active'
-                )
-                WHERE RN > :Offset AND RN <= :OffsetPlusPageSize";
+            var entities = await _dbContext.SysSecurityThreats
+                .Where(t => t.Status == "Active")
+                .OrderBy(t => t.Severity == "Critical" ? 1
+                    : t.Severity == "High" ? 2
+                    : t.Severity == "Medium" ? 3
+                    : 4)
+                .ThenByDescending(t => t.DetectionDate)
+                .Skip(pagination.Skip)
+                .Take(pagination.PageSize)
+                .ToListAsync();
 
-            using var command = connection.CreateCommand();
-            command.CommandText = sql;
-            
-            var offsetParam = command.CreateParameter();
-            offsetParam.ParameterName = "Offset";
-            offsetParam.Value = pagination.Skip;
-            command.Parameters.Add(offsetParam);
-
-            var offsetPlusPageSizeParam = command.CreateParameter();
-            offsetPlusPageSizeParam.ParameterName = "OffsetPlusPageSize";
-            offsetPlusPageSizeParam.Value = pagination.Skip + pagination.PageSize;
-            command.Parameters.Add(offsetPlusPageSizeParam);
-
-            var threats = new List<SecurityThreat>();
-
-            using var reader = await command.ExecuteReaderAsync();
-            while (await reader.ReadAsync())
+            var threats = entities.Select(e => new SecurityThreat
             {
-                var threat = new SecurityThreat
-                {
-                    Id = reader.GetInt64(reader.GetOrdinal("ROW_ID")),
-                    ThreatType = Enum.Parse<ThreatType>(reader.GetString(reader.GetOrdinal("THREAT_TYPE"))),
-                    Severity = Enum.Parse<ThreatSeverity>(reader.GetString(reader.GetOrdinal("SEVERITY"))),
-                    Description = reader.GetString(reader.GetOrdinal("DESCRIPTION")),
-                    IpAddress = reader.IsDBNull(reader.GetOrdinal("IP_ADDRESS")) ? null : reader.GetString(reader.GetOrdinal("IP_ADDRESS")),
-                    UserId = reader.IsDBNull(reader.GetOrdinal("USER_ID")) ? null : reader.GetInt64(reader.GetOrdinal("USER_ID")),
-                    CompanyId = reader.IsDBNull(reader.GetOrdinal("COMPANY_ID")) ? null : reader.GetInt64(reader.GetOrdinal("COMPANY_ID")),
-                    DetectedAt = reader.GetDateTime(reader.GetOrdinal("DETECTION_DATE")),
-                    IsActive = reader.GetString(reader.GetOrdinal("STATUS")) == "Active",
-                    Metadata = reader.IsDBNull(reader.GetOrdinal("METADATA")) ? null : reader.GetString(reader.GetOrdinal("METADATA"))
-                };
-
-                threats.Add(threat);
-            }
+                Id = e.Id,
+                ThreatType = Enum.Parse<ThreatType>(e.ThreatType),
+                Severity = Enum.Parse<ThreatSeverity>(e.Severity),
+                Description = e.Description,
+                IpAddress = e.IpAddress,
+                UserId = e.UserId,
+                CompanyId = e.CompanyId,
+                DetectedAt = e.DetectionDate,
+                IsActive = e.Status == "Active",
+                Metadata = e.Metadata
+            }).ToList();
 
             return new PagedResult<SecurityThreat>
             {
@@ -929,9 +802,6 @@ public class SecurityMonitor : ISecurityMonitor
     {
         try
         {
-            using var connection = _dbContext.CreateConnection();
-            await connection.OpenAsync();
-
             var startDate = date.Date;
             var endDate = startDate.AddDays(1);
 
@@ -942,97 +812,57 @@ public class SecurityMonitor : ISecurityMonitor
                 GeneratedAt = DateTime.UtcNow
             };
 
-            // Get total threat count and counts by severity
-            var severitySql = @"
-                SELECT 
-                    SEVERITY,
-                    COUNT(*) as CNT
-                FROM SYS_SECURITY_THREATS
-                WHERE DETECTION_DATE >= :StartDate AND DETECTION_DATE < :EndDate
-                GROUP BY SEVERITY";
+            // Get counts by severity
+            var severityGroups = await _dbContext.SysSecurityThreats
+                .Where(t => t.DetectionDate >= startDate && t.DetectionDate < endDate)
+                .GroupBy(t => t.Severity)
+                .Select(g => new { Severity = g.Key, Count = g.Count() })
+                .ToListAsync();
 
-            using var severityCommand = connection.CreateCommand();
-            severityCommand.CommandText = severitySql;
-            severityCommand.Parameters.Add(new OracleParameter("StartDate", OracleDbType.Date) { Value = startDate });
-            severityCommand.Parameters.Add(new OracleParameter("EndDate", OracleDbType.Date) { Value = endDate });
-
-            using var severityReader = await severityCommand.ExecuteReaderAsync();
-            while (await severityReader.ReadAsync())
+            foreach (var group in severityGroups)
             {
-                var severity = severityReader.GetString(0);
-                var count = Convert.ToInt32(severityReader.GetDecimal(1));
+                report.TotalThreatsDetected += group.Count;
 
-                report.TotalThreatsDetected += count;
-
-                switch (severity)
+                switch (group.Severity)
                 {
                     case "Critical":
-                        report.CriticalThreats = count;
+                        report.CriticalThreats = group.Count;
                         break;
                     case "High":
-                        report.HighThreats = count;
+                        report.HighThreats = group.Count;
                         break;
                     case "Medium":
-                        report.MediumThreats = count;
+                        report.MediumThreats = group.Count;
                         break;
                     case "Low":
-                        report.LowThreats = count;
+                        report.LowThreats = group.Count;
                         break;
                 }
             }
 
             // Get failed login count
-            var failedLoginSql = @"
-                SELECT COUNT(*) 
-                FROM SYS_FAILED_LOGINS
-                WHERE ATTEMPT_DATE >= :StartDate AND ATTEMPT_DATE < :EndDate";
-
-            using var failedLoginCommand = connection.CreateCommand();
-            failedLoginCommand.CommandText = failedLoginSql;
-            failedLoginCommand.Parameters.Add(new OracleParameter("StartDate", OracleDbType.Date) { Value = startDate });
-            failedLoginCommand.Parameters.Add(new OracleParameter("EndDate", OracleDbType.Date) { Value = endDate });
-
-            var failedLoginResult = await failedLoginCommand.ExecuteScalarAsync();
-            report.TotalFailedLogins = Convert.ToInt32(failedLoginResult);
+            report.TotalFailedLogins = await _dbContext.SysFailedLogins
+                .CountAsync(f => f.AttemptDate >= startDate && f.AttemptDate < endDate);
 
             // Get unique suspicious IPs
-            var suspiciousIpSql = @"
-                SELECT COUNT(DISTINCT IP_ADDRESS)
-                FROM SYS_SECURITY_THREATS
-                WHERE DETECTION_DATE >= :StartDate AND DETECTION_DATE < :EndDate
-                AND IP_ADDRESS IS NOT NULL";
-
-            using var suspiciousIpCommand = connection.CreateCommand();
-            suspiciousIpCommand.CommandText = suspiciousIpSql;
-            suspiciousIpCommand.Parameters.Add(new OracleParameter("StartDate", OracleDbType.Date) { Value = startDate });
-            suspiciousIpCommand.Parameters.Add(new OracleParameter("EndDate", OracleDbType.Date) { Value = endDate });
-
-            var suspiciousIpResult = await suspiciousIpCommand.ExecuteScalarAsync();
-            report.SuspiciousIpAddresses = Convert.ToInt32(suspiciousIpResult);
+            report.SuspiciousIpAddresses = await _dbContext.SysSecurityThreats
+                .Where(t => t.DetectionDate >= startDate && t.DetectionDate < endDate && t.IpAddress != null)
+                .Select(t => t.IpAddress)
+                .Distinct()
+                .CountAsync();
 
             // Get threat counts by type
-            var typeSql = @"
-                SELECT 
-                    THREAT_TYPE,
-                    COUNT(*) as CNT
-                FROM SYS_SECURITY_THREATS
-                WHERE DETECTION_DATE >= :StartDate AND DETECTION_DATE < :EndDate
-                GROUP BY THREAT_TYPE";
+            var typeGroups = await _dbContext.SysSecurityThreats
+                .Where(t => t.DetectionDate >= startDate && t.DetectionDate < endDate)
+                .GroupBy(t => t.ThreatType)
+                .Select(g => new { ThreatType = g.Key, Count = g.Count() })
+                .ToListAsync();
 
-            using var typeCommand = connection.CreateCommand();
-            typeCommand.CommandText = typeSql;
-            typeCommand.Parameters.Add(new OracleParameter("StartDate", OracleDbType.Date) { Value = startDate });
-            typeCommand.Parameters.Add(new OracleParameter("EndDate", OracleDbType.Date) { Value = endDate });
-
-            using var typeReader = await typeCommand.ExecuteReaderAsync();
-            while (await typeReader.ReadAsync())
+            foreach (var group in typeGroups)
             {
-                var threatTypeStr = typeReader.GetString(0);
-                var count = Convert.ToInt32(typeReader.GetDecimal(1));
-
-                if (Enum.TryParse<ThreatType>(threatTypeStr, out var threatType))
+                if (Enum.TryParse<ThreatType>(group.ThreatType, out var threatType))
                 {
-                    report.ThreatsByType[threatType] = count;
+                    report.ThreatsByType[threatType] = group.Count;
                 }
             }
 
@@ -1043,38 +873,23 @@ public class SecurityMonitor : ISecurityMonitor
             report.AnomalousActivityUsers = report.ThreatsByType.GetValueOrDefault(ThreatType.AnomalousActivity, 0);
 
             // Get resolved and active threat counts
-            var statusSql = @"
-                SELECT 
-                    STATUS,
-                    COUNT(*) as CNT
-                FROM SYS_SECURITY_THREATS
-                WHERE DETECTION_DATE >= :StartDate AND DETECTION_DATE < :EndDate
-                GROUP BY STATUS";
+            var statusGroups = await _dbContext.SysSecurityThreats
+                .Where(t => t.DetectionDate >= startDate && t.DetectionDate < endDate)
+                .GroupBy(t => t.Status)
+                .Select(g => new { Status = g.Key, Count = g.Count() })
+                .ToListAsync();
 
-            using var statusCommand = connection.CreateCommand();
-            statusCommand.CommandText = statusSql;
-            statusCommand.Parameters.Add(new OracleParameter("StartDate", OracleDbType.Date) { Value = startDate });
-            statusCommand.Parameters.Add(new OracleParameter("EndDate", OracleDbType.Date) { Value = endDate });
-
-            using var statusReader = await statusCommand.ExecuteReaderAsync();
-            while (await statusReader.ReadAsync())
+            foreach (var group in statusGroups)
             {
-                var status = statusReader.GetString(0);
-                var count = Convert.ToInt32(statusReader.GetDecimal(1));
-
-                if (status == "Resolved")
+                if (group.Status == "Resolved")
                 {
-                    report.ResolvedThreats = count;
+                    report.ResolvedThreats = group.Count;
                 }
-                else if (status == "Active")
+                else if (group.Status == "Active")
                 {
-                    report.ActiveThreats = count;
+                    report.ActiveThreats = group.Count;
                 }
             }
-
-            // Note: Top IPs and Top Users lists are left empty for now
-            // These would require more complex queries with ADO.NET
-            // TODO: Implement top IPs and top users queries
 
             _logger.LogInformation(
                 "Generated daily security summary for {Date}: {TotalThreats} threats detected",
