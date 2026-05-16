@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using ThinkOnErp.Domain.Interfaces;
 using ThinkOnErp.Domain.Models;
+using ThinkOnErp.Infrastructure.Services;
 
 namespace ThinkOnErp.API.Controllers;
 
@@ -20,6 +21,7 @@ public class MonitoringController : ControllerBase
     private readonly IAuditLogger _auditLogger;
     private readonly IAlertManager _alertManager;
     private readonly ILogger<MonitoringController> _logger;
+    private readonly EfCoreConnectionPoolMonitor? _efCoreConnectionPoolMonitor;
 
     public MonitoringController(
         IPerformanceMonitor performanceMonitor,
@@ -27,7 +29,8 @@ public class MonitoringController : ControllerBase
         ISecurityMonitor securityMonitor,
         IAuditLogger auditLogger,
         IAlertManager alertManager,
-        ILogger<MonitoringController> logger)
+        ILogger<MonitoringController> logger,
+        EfCoreConnectionPoolMonitor? efCoreConnectionPoolMonitor = null)
     {
         _performanceMonitor = performanceMonitor;
         _memoryMonitor = memoryMonitor;
@@ -35,6 +38,7 @@ public class MonitoringController : ControllerBase
         _auditLogger = auditLogger;
         _alertManager = alertManager;
         _logger = logger;
+        _efCoreConnectionPoolMonitor = efCoreConnectionPoolMonitor;
     }
 
     /// <summary>
@@ -1057,5 +1061,153 @@ public class MonitoringController : ControllerBase
             _logger.LogError(ex, "Failed to check and trigger audit alerts");
         }
     }
-}
 
+    /// <summary>
+    /// Get EF Core DbContext connection pool metrics and diagnostics.
+    /// </summary>
+    /// <remarks>
+    /// Returns comprehensive EF Core connection pool information including:
+    /// - Connection pool configuration (min/max pool size)
+    /// - Connection timeout settings
+    /// - Pooling enabled status
+    /// - Database connectivity test results
+    /// - Connection and query execution times
+    /// 
+    /// Implements REQ-21: Monitoring and Observability - Connection Pool Metrics
+    /// </remarks>
+    [HttpGet("efcore/connection-pool")]
+    [ProducesResponseType(typeof(object), StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetEfCoreConnectionPoolMetrics()
+    {
+        try
+        {
+            if (_efCoreConnectionPoolMonitor == null)
+            {
+                return StatusCode(503, new { error = "EF Core connection pool monitor is not available" });
+            }
+
+            var metrics = await _efCoreConnectionPoolMonitor.GetConnectionPoolMetricsAsync();
+            var diagnostics = await _efCoreConnectionPoolMonitor.GetConnectionDiagnosticsAsync();
+            var isHealthy = await _efCoreConnectionPoolMonitor.IsHealthyAsync();
+
+            var response = new
+            {
+                poolMetrics = new
+                {
+                    minPoolSize = metrics.MinPoolSize,
+                    maxPoolSize = metrics.MaxPoolSize,
+                    totalConnections = metrics.TotalConnections,
+                    activeConnections = metrics.ActiveConnections,
+                    idleConnections = metrics.IdleConnections,
+                    utilizationPercent = metrics.UtilizationPercent,
+                    activeUtilizationPercent = metrics.ActiveUtilizationPercent,
+                    availableConnections = metrics.AvailableConnections,
+                    isNearExhaustion = metrics.IsNearExhaustion,
+                    isExhausted = metrics.IsExhausted,
+                    connectionTimeoutSeconds = metrics.ConnectionTimeoutSeconds,
+                    connectionLifetimeSeconds = metrics.ConnectionLifetimeSeconds,
+                    validateConnection = metrics.ValidateConnection,
+                    healthStatus = metrics.HealthStatus.ToString(),
+                    recommendations = metrics.Recommendations,
+                    timestamp = metrics.Timestamp
+                },
+                diagnostics = new
+                {
+                    connectionType = diagnostics.ConnectionType,
+                    connectionState = diagnostics.ConnectionState,
+                    database = diagnostics.Database,
+                    dataSource = diagnostics.DataSource,
+                    serverVersion = diagnostics.ServerVersion,
+                    canConnect = diagnostics.CanConnect,
+                    connectionTestDurationMs = diagnostics.ConnectionTestDurationMs,
+                    queryTestDurationMs = diagnostics.QueryTestDurationMs,
+                    errorMessage = diagnostics.ErrorMessage,
+                    timestamp = diagnostics.Timestamp
+                },
+                health = new
+                {
+                    isHealthy,
+                    status = isHealthy ? "Healthy" : "Unhealthy",
+                    message = isHealthy 
+                        ? "EF Core DbContext connection pool is healthy" 
+                        : "EF Core DbContext connection pool has issues"
+                }
+            };
+
+            _logger.LogInformation(
+                "EF Core connection pool metrics retrieved. Healthy: {IsHealthy}, HealthStatus: {HealthStatus}",
+                isHealthy,
+                metrics.HealthStatus);
+
+            return Ok(response);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to get EF Core connection pool metrics");
+            return StatusCode(500, new { error = "Failed to retrieve EF Core connection pool metrics" });
+        }
+    }
+
+    /// <summary>
+    /// Get EF Core DbContext health status.
+    /// </summary>
+    /// <remarks>
+    /// Performs a quick health check on the EF Core DbContext including:
+    /// - Database connectivity test
+    /// - Simple query execution test
+    /// - Connection pool availability
+    /// 
+    /// Implements REQ-21: Monitoring and Observability - Health Check Endpoints
+    /// </remarks>
+    [HttpGet("efcore/health")]
+    [AllowAnonymous]
+    [ProducesResponseType(typeof(object), StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetEfCoreHealth()
+    {
+        try
+        {
+            if (_efCoreConnectionPoolMonitor == null)
+            {
+                return StatusCode(503, new { 
+                    status = "Unavailable",
+                    message = "EF Core connection pool monitor is not available" 
+                });
+            }
+
+            var isHealthy = await _efCoreConnectionPoolMonitor.IsHealthyAsync();
+            var diagnostics = await _efCoreConnectionPoolMonitor.GetConnectionDiagnosticsAsync();
+
+            var response = new
+            {
+                status = isHealthy ? "Healthy" : "Unhealthy",
+                canConnect = diagnostics.CanConnect,
+                connectionTestDurationMs = diagnostics.ConnectionTestDurationMs,
+                queryTestDurationMs = diagnostics.QueryTestDurationMs,
+                database = diagnostics.Database,
+                dataSource = diagnostics.DataSource,
+                timestamp = DateTime.UtcNow,
+                message = isHealthy 
+                    ? "EF Core DbContext is healthy and can connect to database" 
+                    : $"EF Core DbContext health check failed: {diagnostics.ErrorMessage}"
+            };
+
+            if (isHealthy)
+            {
+                return Ok(response);
+            }
+            else
+            {
+                return StatusCode(503, response);
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to check EF Core health");
+            return StatusCode(503, new { 
+                status = "Unhealthy",
+                message = $"Health check failed: {ex.Message}",
+                timestamp = DateTime.UtcNow
+            });
+        }
+    }
+}

@@ -11,7 +11,33 @@ This directory contains Grafana dashboard JSON files for monitoring the ThinkOnE
 
 ## Dashboard Files
 
-### 1. audit-system-health.json
+### 1. efcore-monitoring.json
+**Purpose**: Monitor Entity Framework Core performance, query execution, and connection pool metrics
+
+**Key Metrics**:
+- EF Core query execution time percentiles (p50, p95, p99)
+- Slow queries count (>1 second)
+- Connection pool utilization gauge
+- Connection pool size (active, idle, min, max)
+- Query failure rate
+- EF Core health status
+- Database connectivity status
+- Average query execution time
+- Total queries executed
+- Query rate (queries per second)
+- Connection timeout events
+- Top 10 slowest query types
+
+**Alerts Configured**:
+- High EF Core query latency (p99 >1s)
+- High slow query rate (>10 per minute)
+- High connection pool utilization (>80%)
+- High query failure rate (>5 per minute)
+- Connection timeout events
+
+**Implements**: REQ-21: Monitoring and Observability
+
+### 2. audit-system-health.json
 **Purpose**: Monitor the health and performance of the audit logging system
 
 **Key Metrics**:
@@ -28,7 +54,7 @@ This directory contains Grafana dashboard JSON files for monitoring the ThinkOnE
 - High audit write latency (p95 >50ms)
 - High connection pool utilization (>90%)
 
-### 2. request-tracing-performance.json
+### 3. request-tracing-performance.json
 **Purpose**: Monitor API performance and request tracing metrics
 
 **Key Metrics**:

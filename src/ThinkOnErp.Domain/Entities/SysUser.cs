@@ -105,4 +105,21 @@ public class SysUser
     /// Date when user was force logged out. Tokens issued before this date are invalid.
     /// </summary>
     public DateTime? ForceLogoutDate { get; set; }
+
+    // Navigation properties
+    /// <summary>
+    /// Navigation property to the branch this user belongs to
+    /// </summary>
+    public SysBranch? Branch { get; set; }
+
+    /// <summary>
+    /// Navigation property to the company this user belongs to (through branch)
+    /// </summary>
+    public SysCompany? Company { get; set; }
+
+    // Computed properties
+    /// <summary>
+    /// Full name of the user (uses RowDesc as the full name)
+    /// </summary>
+    public string FullName => RowDesc;
 }

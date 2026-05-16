@@ -1,9 +1,12 @@
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Logging;
 using System.Threading.Channels;
 using ThinkOnErp.Domain.Interfaces;
 using ThinkOnErp.Infrastructure.Data;
+using ThinkOnErp.Infrastructure.Interceptors;
 using ThinkOnErp.Infrastructure.Repositories;
 using ThinkOnErp.Infrastructure.Services;
 using ThinkOnErp.Infrastructure.Resilience;
@@ -55,11 +58,90 @@ public static class DependencyInjection
             });
         }
 
-        // Register OracleDbContext as Scoped
+        // Register OracleDbContext as Scoped (legacy ADO.NET)
         services.AddScoped<OracleDbContext>();
 
-        // Register audit command interceptor for database operation auditing
+        // Register EF Core DbContext with Oracle provider
+        var isDevelopment = configuration.GetValue<bool>("IsDevelopment", false);
+        services.AddDbContext<ThinkOnErpDbContext>((serviceProvider, options) =>
+        {
+            var connectionString = configuration.GetConnectionString("OracleDb");
+            if (string.IsNullOrWhiteSpace(connectionString))
+            {
+                throw new InvalidOperationException("Oracle connection string 'OracleDb' is not configured.");
+            }
+
+            options.UseOracle(connectionString, oracleOptions =>
+            {
+                // Configure Oracle-specific options
+                // oracleOptions.UseOracleSQLCompatibility("11"); // Commented out due to type mismatch - needs investigation
+                oracleOptions.CommandTimeout(30);
+                
+                // Performance Optimization: Enable connection pooling
+                // Oracle connection pooling is enabled by default in Oracle.EntityFrameworkCore
+                // Pool size is controlled by connection string parameters:
+                // - Min Pool Size: Minimum number of connections in the pool (default: 1)
+                // - Max Pool Size: Maximum number of connections in the pool (default: 100)
+                // - Connection Lifetime: Maximum lifetime of a connection in seconds (default: 0 = no limit)
+                // - Incr Pool Size: Number of connections to add when pool is exhausted (default: 5)
+                // - Decr Pool Size: Number of connections to remove when pool is idle (default: 1)
+                // These are configured in the connection string in appsettings.json
+                
+                // Performance Optimization: Configure query splitting strategy
+                // UseQuerySplittingBehavior.SplitQuery prevents cartesian explosion in joins
+                // by splitting queries with multiple Include() into separate SQL queries
+                oracleOptions.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery);
+            })
+            .EnableSensitiveDataLogging(isDevelopment)
+            .EnableDetailedErrors(isDevelopment);
+
+            // Register EF Core audit interceptor
+            var efCoreAuditInterceptor = serviceProvider.GetService<EfCoreAuditInterceptor>();
+            if (efCoreAuditInterceptor != null)
+            {
+                options.AddInterceptors(efCoreAuditInterceptor);
+            }
+
+            // Register EF Core performance interceptor for monitoring and observability (REQ-21)
+            var efCorePerformanceInterceptor = serviceProvider.GetService<EfCorePerformanceInterceptor>();
+            if (efCorePerformanceInterceptor != null)
+            {
+                options.AddInterceptors(efCorePerformanceInterceptor);
+            }
+        }, ServiceLifetime.Scoped);
+
+        // Register audit command interceptor for database operation auditing (legacy ADO.NET)
         services.AddScoped<AuditCommandInterceptor>();
+        
+        // Register EF Core audit interceptor for EF Core operations
+        services.AddScoped<EfCoreAuditInterceptor>();
+
+        // Register EF Core performance interceptor for monitoring and observability (REQ-21)
+        services.AddScoped<EfCorePerformanceInterceptor>(sp =>
+        {
+            var logger = sp.GetRequiredService<ILogger<EfCorePerformanceInterceptor>>();
+            var slowQueryRepository = sp.GetService<ISlowQueryRepository>();
+            
+            // Get performance monitoring options from configuration
+            var perfOptions = new PerformanceMonitoringOptions();
+            configuration.GetSection(PerformanceMonitoringOptions.SectionName).Bind(perfOptions);
+            
+            // Get EF Core logging options from configuration
+            var efCoreLoggingEnabled = configuration.GetValue<bool>("EfCore:Logging:Enabled", true);
+            var logSqlQueries = configuration.GetValue<bool>("EfCore:Logging:LogSqlQueries", true);
+            var logQueryExecutionTime = configuration.GetValue<bool>("EfCore:Logging:LogQueryExecutionTime", true);
+            var slowQueryThresholdMs = configuration.GetValue<int>("EfCore:Logging:SlowQueryThresholdMs", 500);
+            
+            return new EfCorePerformanceInterceptor(
+                logger,
+                slowQueryRepository,
+                slowQueryThresholdMs,
+                logSqlQueries && efCoreLoggingEnabled,
+                logQueryExecutionTime && efCoreLoggingEnabled);
+        });
+
+        // Register EF Core connection pool monitor for monitoring connection pool usage (REQ-21)
+        services.AddScoped<EfCoreConnectionPoolMonitor>();
 
         // Register resilience services as Singleton
         services.AddSingleton<CircuitBreakerRegistry>(sp =>
@@ -99,30 +181,234 @@ public static class DependencyInjection
         services.AddScoped<ResilientDatabaseExecutor>();
 
         // Register all repositories as Scoped
-        services.AddScoped<IRoleRepository, RoleRepository>();
-        services.AddScoped<ICurrencyRepository, CurrencyRepository>();
-        services.AddScoped<ICompanyRepository, CompanyRepository>();
-        services.AddScoped<IBranchRepository, BranchRepository>();
-        services.AddScoped<IUserRepository, UserRepository>();
+        // Feature flag support for gradual migration (UseEfCore:RepositoryName)
+        // When UseEfCore:CurrencyRepository is true, use EF Core implementation
+        // Otherwise, use legacy ADO.NET implementation
+        
+        // RoleRepository - Feature flag: UseEfCore:RoleRepository
+        if (configuration.GetValue<bool>("UseEfCore:RoleRepository", false))
+        {
+            services.AddScoped<IRoleRepository, ThinkOnErp.Infrastructure.Repositories.EfCore.RoleRepository>();
+        }
+        else
+        {
+            services.AddScoped<IRoleRepository, RoleRepository>();
+        }
+        
+        // Pilot repositories with EF Core migration support
+        // CurrencyRepository - Feature flag: UseEfCore:CurrencyRepository
+        if (configuration.GetValue<bool>("UseEfCore:CurrencyRepository", false))
+        {
+            services.AddScoped<ICurrencyRepository, ThinkOnErp.Infrastructure.Repositories.EfCore.CurrencyRepository>();
+        }
+        else
+        {
+            services.AddScoped<ICurrencyRepository, CurrencyRepository>();
+        }
+        
+        // CompanyRepository - Feature flag: UseEfCore:CompanyRepository
+        if (configuration.GetValue<bool>("UseEfCore:CompanyRepository", false))
+        {
+            services.AddScoped<ICompanyRepository, ThinkOnErp.Infrastructure.Repositories.EfCore.CompanyRepository>();
+        }
+        else
+        {
+            services.AddScoped<ICompanyRepository, CompanyRepository>();
+        }
+        
+        // BranchRepository - Feature flag: UseEfCore:BranchRepository
+        if (configuration.GetValue<bool>("UseEfCore:BranchRepository", false))
+        {
+            services.AddScoped<IBranchRepository, ThinkOnErp.Infrastructure.Repositories.EfCore.BranchRepository>();
+        }
+        else
+        {
+            services.AddScoped<IBranchRepository, BranchRepository>();
+        }
+        
+        // UserRepository - Feature flag: UseEfCore:UserRepository
+        if (configuration.GetValue<bool>("UseEfCore:UserRepository", false))
+        {
+            services.AddScoped<IUserRepository, ThinkOnErp.Infrastructure.Repositories.EfCore.UserRepository>();
+        }
+        else
+        {
+            services.AddScoped<IUserRepository, UserRepository>();
+        }
+        
         services.AddScoped<IAuthRepository, AuthRepository>();
-        services.AddScoped<IFiscalYearRepository, FiscalYearRepository>();
+        
+        // FiscalYearRepository - Feature flag: UseEfCore:FiscalYearRepository
+        if (configuration.GetValue<bool>("UseEfCore:FiscalYearRepository", false))
+        {
+            services.AddScoped<IFiscalYearRepository, ThinkOnErp.Infrastructure.Repositories.EfCore.FiscalYearRepository>();
+        }
+        else
+        {
+            services.AddScoped<IFiscalYearRepository, FiscalYearRepository>();
+        }
         
         // Register permission system repositories
-        services.AddScoped<ISuperAdminRepository, SuperAdminRepository>();
-        services.AddScoped<ISystemRepository, SystemRepository>();
-        services.AddScoped<IScreenRepository, ScreenRepository>();
+        // SuperAdminRepository - Feature flag: UseEfCore:SuperAdminRepository
+        if (configuration.GetValue<bool>("UseEfCore:SuperAdminRepository", false))
+        {
+            services.AddScoped<ISuperAdminRepository, ThinkOnErp.Infrastructure.Repositories.EfCore.SuperAdminRepository>();
+        }
+        else
+        {
+            services.AddScoped<ISuperAdminRepository, SuperAdminRepository>();
+        }
+        
+        // SystemRepository - Feature flag: UseEfCore:SystemRepository
+        if (configuration.GetValue<bool>("UseEfCore:SystemRepository", false))
+        {
+            services.AddScoped<ISystemRepository, ThinkOnErp.Infrastructure.Repositories.EfCore.SystemRepository>();
+        }
+        else
+        {
+            services.AddScoped<ISystemRepository, SystemRepository>();
+        }
+        
+        // ScreenRepository - Feature flag: UseEfCore:ScreenRepository
+        if (configuration.GetValue<bool>("UseEfCore:ScreenRepository", false))
+        {
+            services.AddScoped<IScreenRepository, ThinkOnErp.Infrastructure.Repositories.EfCore.ScreenRepository>();
+        }
+        else
+        {
+            services.AddScoped<IScreenRepository, ScreenRepository>();
+        }
+        
         services.AddScoped<IPermissionRepository, PermissionRepository>();
         
+        // RoleScreenPermissionRepository - Feature flag: UseEfCore:RoleScreenPermissionRepository
+        // Note: This repository doesn't have an interface, registered as concrete class
+        if (configuration.GetValue<bool>("UseEfCore:RoleScreenPermissionRepository", false))
+        {
+            services.AddScoped<ThinkOnErp.Infrastructure.Repositories.EfCore.RoleScreenPermissionRepository>();
+        }
+        
+        // UserScreenPermissionRepository - Feature flag: UseEfCore:UserScreenPermissionRepository
+        // Note: This repository doesn't have an interface, registered as concrete class
+        if (configuration.GetValue<bool>("UseEfCore:UserScreenPermissionRepository", false))
+        {
+            services.AddScoped<ThinkOnErp.Infrastructure.Repositories.EfCore.UserScreenPermissionRepository>();
+        }
+        
+        // UserRoleRepository - Feature flag: UseEfCore:UserRoleRepository
+        // Note: This repository doesn't have an interface, registered as concrete class
+        if (configuration.GetValue<bool>("UseEfCore:UserRoleRepository", false))
+        {
+            services.AddScoped<ThinkOnErp.Infrastructure.Repositories.EfCore.UserRoleRepository>();
+        }
+        
+        // CompanySystemRepository - Feature flag: UseEfCore:CompanySystemRepository
+        // Note: This repository doesn't have an interface, registered as concrete class
+        if (configuration.GetValue<bool>("UseEfCore:CompanySystemRepository", false))
+        {
+            services.AddScoped<ThinkOnErp.Infrastructure.Repositories.EfCore.CompanySystemRepository>();
+        }
+        
         // Register ticket system repositories
-        services.AddScoped<ITicketRepository, TicketRepository>();
-        services.AddScoped<ITicketTypeRepository, TicketTypeRepository>();
-        services.AddScoped<ITicketPriorityRepository, TicketPriorityRepository>();
-        services.AddScoped<ITicketStatusRepository, TicketStatusRepository>();
-        services.AddScoped<ITicketCommentRepository, TicketCommentRepository>();
-        services.AddScoped<ITicketAttachmentRepository, TicketAttachmentRepository>();
-        services.AddScoped<ISavedSearchRepository, SavedSearchRepository>();
-        services.AddScoped<ISearchAnalyticsRepository, SearchAnalyticsRepository>();
-        services.AddScoped<ITicketConfigRepository, TicketConfigRepository>();
+        // TicketRepository - Feature flag: UseEfCore:TicketRepository
+        if (configuration.GetValue<bool>("UseEfCore:TicketRepository", false))
+        {
+            services.AddScoped<ITicketRepository, ThinkOnErp.Infrastructure.Repositories.EfCore.TicketRepository>();
+        }
+        else
+        {
+            services.AddScoped<ITicketRepository, TicketRepository>();
+        }
+        
+        // TicketTypeRepository - Feature flag: UseEfCore:TicketTypeRepository
+        if (configuration.GetValue<bool>("UseEfCore:TicketTypeRepository", false))
+        {
+            services.AddScoped<ITicketTypeRepository, ThinkOnErp.Infrastructure.Repositories.EfCore.TicketTypeRepository>();
+        }
+        else
+        {
+            services.AddScoped<ITicketTypeRepository, TicketTypeRepository>();
+        }
+        
+        // TicketPriorityRepository - Feature flag: UseEfCore:TicketPriorityRepository
+        if (configuration.GetValue<bool>("UseEfCore:TicketPriorityRepository", false))
+        {
+            services.AddScoped<ITicketPriorityRepository, ThinkOnErp.Infrastructure.Repositories.EfCore.TicketPriorityRepository>();
+        }
+        else
+        {
+            services.AddScoped<ITicketPriorityRepository, TicketPriorityRepository>();
+        }
+        
+        // TicketStatusRepository - Feature flag: UseEfCore:TicketStatusRepository
+        if (configuration.GetValue<bool>("UseEfCore:TicketStatusRepository", false))
+        {
+            services.AddScoped<ITicketStatusRepository, ThinkOnErp.Infrastructure.Repositories.EfCore.TicketStatusRepository>();
+        }
+        else
+        {
+            services.AddScoped<ITicketStatusRepository, TicketStatusRepository>();
+        }
+        
+        // TicketCategoryRepository - Feature flag: UseEfCore:TicketCategoryRepository
+        if (configuration.GetValue<bool>("UseEfCore:TicketCategoryRepository", false))
+        {
+            services.AddScoped<ITicketCategoryRepository, ThinkOnErp.Infrastructure.Repositories.EfCore.TicketCategoryRepository>();
+        }
+        else
+        {
+            services.AddScoped<ITicketCategoryRepository, ThinkOnErp.Infrastructure.Repositories.EfCore.TicketCategoryRepository>();
+        }
+        
+        // TicketCommentRepository - Feature flag: UseEfCore:TicketCommentRepository
+        if (configuration.GetValue<bool>("UseEfCore:TicketCommentRepository", false))
+        {
+            services.AddScoped<ITicketCommentRepository, ThinkOnErp.Infrastructure.Repositories.EfCore.TicketCommentRepository>();
+        }
+        else
+        {
+            services.AddScoped<ITicketCommentRepository, TicketCommentRepository>();
+        }
+        
+        // TicketAttachmentRepository - Feature flag: UseEfCore:TicketAttachmentRepository
+        if (configuration.GetValue<bool>("UseEfCore:TicketAttachmentRepository", false))
+        {
+            services.AddScoped<ITicketAttachmentRepository, ThinkOnErp.Infrastructure.Repositories.EfCore.TicketAttachmentRepository>();
+        }
+        else
+        {
+            services.AddScoped<ITicketAttachmentRepository, TicketAttachmentRepository>();
+        }
+        
+        // TicketConfigRepository - Feature flag: UseEfCore:TicketConfigRepository
+        if (configuration.GetValue<bool>("UseEfCore:TicketConfigRepository", false))
+        {
+            services.AddScoped<ITicketConfigRepository, ThinkOnErp.Infrastructure.Repositories.EfCore.TicketConfigRepository>();
+        }
+        else
+        {
+            services.AddScoped<ITicketConfigRepository, TicketConfigRepository>();
+        }
+        
+        // SavedSearchRepository - Feature flag: UseEfCore:SavedSearchRepository
+        if (configuration.GetValue<bool>("UseEfCore:SavedSearchRepository", false))
+        {
+            services.AddScoped<ISavedSearchRepository, ThinkOnErp.Infrastructure.Repositories.EfCore.SavedSearchRepository>();
+        }
+        else
+        {
+            services.AddScoped<ISavedSearchRepository, SavedSearchRepository>();
+        }
+        
+        // SearchAnalyticsRepository - Feature flag: UseEfCore:SearchAnalyticsRepository
+        if (configuration.GetValue<bool>("UseEfCore:SearchAnalyticsRepository", false))
+        {
+            services.AddScoped<ISearchAnalyticsRepository, ThinkOnErp.Infrastructure.Repositories.EfCore.SearchAnalyticsRepository>();
+        }
+        else
+        {
+            services.AddScoped<ISearchAnalyticsRepository, SearchAnalyticsRepository>();
+        }
 
         // Register infrastructure services as Scoped
         services.AddScoped<PasswordHashingService>();
@@ -135,7 +421,15 @@ public static class DependencyInjection
         services.AddScoped<ILegacyAuditService, LegacyAuditService>();
 
         // Register audit logging services
-        services.AddScoped<IAuditRepository, AuditRepository>();
+        // AuditRepository - Feature flag: UseEfCore:AuditRepository
+        if (configuration.GetValue<bool>("UseEfCore:AuditRepository", false))
+        {
+            services.AddScoped<IAuditRepository, ThinkOnErp.Infrastructure.Repositories.EfCore.AuditLogRepository>();
+        }
+        else
+        {
+            services.AddScoped<IAuditRepository, AuditRepository>();
+        }
         services.AddScoped<ISensitiveDataMasker, SensitiveDataMasker>();
         services.AddSingleton<IAuditDataEncryption, AuditDataEncryption>();
         services.AddScoped<IAuditLogIntegrityService, AuditLogIntegrityService>();
@@ -207,6 +501,23 @@ public static class DependencyInjection
         services.AddHostedService<ArchivalBackgroundService>();
         services.AddHostedService<KeyRotationBackgroundService>();
 
+        // Register health checks for monitoring system components (REQ-21)
+        var healthChecksBuilder = services.AddHealthChecks();
+        
+        // Add EF Core DbContext health check
+        var efCoreHealthCheckEnabled = configuration.GetValue<bool>("HealthChecks:EfCoreDbContext:Enabled", true);
+        if (efCoreHealthCheckEnabled)
+        {
+            var testQuery = configuration.GetValue<string>("HealthChecks:EfCoreDbContext:TestQuery", "SELECT 1 FROM DUAL");
+            var checkConnectionPool = configuration.GetValue<bool>("HealthChecks:EfCoreDbContext:CheckConnectionPool", true);
+            var timeoutSeconds = configuration.GetValue<int>("HealthChecks:EfCoreDbContext:TimeoutSeconds", 10);
+            
+            healthChecksBuilder.AddCheck<ThinkOnErp.Infrastructure.HealthChecks.EfCoreDbContextHealthCheck>(
+                "efcore_dbcontext",
+                failureStatus: HealthStatus.Unhealthy,
+                tags: new[] { "db", "efcore", "oracle", "ready" });
+        }
+
         return services;
     }
 
@@ -226,7 +537,15 @@ public static class DependencyInjection
         services.AddHostedService<AuditLogger>(provider => provider.GetRequiredService<AuditLogger>());
         
         // Audit repository for database operations
-        services.AddScoped<IAuditRepository, AuditRepository>();
+        // AuditRepository - Feature flag: UseEfCore:AuditRepository
+        if (configuration.GetValue<bool>("UseEfCore:AuditRepository", false))
+        {
+            services.AddScoped<IAuditRepository, ThinkOnErp.Infrastructure.Repositories.EfCore.AuditLogRepository>();
+        }
+        else
+        {
+            services.AddScoped<IAuditRepository, AuditRepository>();
+        }
         
         // Legacy audit service for backward compatibility
         services.AddScoped<ILegacyAuditService, LegacyAuditService>();

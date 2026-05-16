@@ -29,6 +29,11 @@ public class SysTicketPriority
     public int PriorityLevel { get; set; }
 
     /// <summary>
+    /// Display order for UI sorting (same as PriorityLevel)
+    /// </summary>
+    public int DisplayOrder => PriorityLevel;
+
+    /// <summary>
     /// SLA target hours for resolution of tickets with this priority
     /// </summary>
     public decimal SlaTargetHours { get; set; }

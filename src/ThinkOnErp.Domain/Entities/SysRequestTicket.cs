@@ -119,6 +119,11 @@ public class SysRequestTicket
     public SysUser? Requester { get; set; }
 
     /// <summary>
+    /// Navigation property to the user who submitted the ticket (alias for Requester)
+    /// </summary>
+    public SysUser? CreatedByUser => Requester;
+
+    /// <summary>
     /// Navigation property to the support staff assigned to the ticket
     /// </summary>
     public SysUser? Assignee { get; set; }

@@ -104,6 +104,11 @@ public class SysBranch
 
     // Navigation properties
     /// <summary>
+    /// Navigation property to the parent company
+    /// </summary>
+    public SysCompany? Company { get; set; }
+
+    /// <summary>
     /// Navigation property to the base currency
     /// </summary>
     public SysCurrency? BaseCurrency { get; set; }
