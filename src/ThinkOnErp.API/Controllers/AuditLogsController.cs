@@ -473,12 +473,16 @@ public class AuditLogsController : ControllerBase
                 UserAgent = log.UserAgent,
                 HttpMethod = log.HttpMethod,
                 EndpointPath = log.EndpointPath,
+                RequestPayload = log.RequestPayload,
+                ResponsePayload = log.ResponsePayload,
                 ExecutionTimeMs = log.ExecutionTimeMs,
                 StatusCode = log.StatusCode,
                 ExceptionType = log.ExceptionType,
                 ExceptionMessage = log.ExceptionMessage,
+                StackTrace = log.StackTrace,
                 Severity = log.Severity,
                 EventCategory = log.EventCategory,
+                Metadata = log.Metadata,
                 Timestamp = log.CreationDate
             }).ToList();
 
@@ -569,12 +573,16 @@ public class AuditLogsController : ControllerBase
                 UserAgent = log.UserAgent,
                 HttpMethod = log.HttpMethod,
                 EndpointPath = log.EndpointPath,
+                RequestPayload = log.RequestPayload,
+                ResponsePayload = log.ResponsePayload,
                 ExecutionTimeMs = log.ExecutionTimeMs,
                 StatusCode = log.StatusCode,
                 ExceptionType = log.ExceptionType,
                 ExceptionMessage = log.ExceptionMessage,
+                StackTrace = log.StackTrace,
                 Severity = log.Severity,
                 EventCategory = log.EventCategory,
+                Metadata = log.Metadata,
                 Timestamp = log.CreationDate
             }).ToList();
 
@@ -836,12 +844,16 @@ public class AuditLogsController : ControllerBase
                 UserAgent = log.UserAgent,
                 HttpMethod = log.HttpMethod,
                 EndpointPath = log.EndpointPath,
+                RequestPayload = log.RequestPayload,
+                ResponsePayload = log.ResponsePayload,
                 ExecutionTimeMs = log.ExecutionTimeMs,
                 StatusCode = log.StatusCode,
                 ExceptionType = log.ExceptionType,
                 ExceptionMessage = log.ExceptionMessage,
+                StackTrace = log.StackTrace,
                 Severity = log.Severity,
                 EventCategory = log.EventCategory,
+                Metadata = log.Metadata,
                 Timestamp = log.CreationDate
             }).ToList();
 
@@ -965,12 +977,16 @@ public class AuditLogsController : ControllerBase
                 UserAgent = log.UserAgent,
                 HttpMethod = log.HttpMethod,
                 EndpointPath = log.EndpointPath,
+                RequestPayload = log.RequestPayload,
+                ResponsePayload = log.ResponsePayload,
                 ExecutionTimeMs = log.ExecutionTimeMs,
                 StatusCode = log.StatusCode,
                 ExceptionType = log.ExceptionType,
                 ExceptionMessage = log.ExceptionMessage,
+                StackTrace = log.StackTrace,
                 Severity = log.Severity,
                 EventCategory = log.EventCategory,
+                Metadata = log.Metadata,
                 Timestamp = log.CreationDate
             }).ToList();
 

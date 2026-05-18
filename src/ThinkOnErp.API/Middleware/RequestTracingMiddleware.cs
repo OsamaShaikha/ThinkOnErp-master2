@@ -227,6 +227,12 @@ public class RequestTracingMiddleware
             {
                 requestContext.CompanyId = companyId;
             }
+
+            var branchIdClaim = user.FindFirst("branchId");
+            if (branchIdClaim != null && long.TryParse(branchIdClaim.Value, out var branchId))
+            {
+                requestContext.BranchId = branchId;
+            }
         }
 
         // Capture request headers (excluding sensitive headers)
@@ -416,6 +422,7 @@ public class RequestTracingMiddleware
                 ActorType = requestContext.UserId.HasValue ? "USER" : "ANONYMOUS",
                 ActorId = requestContext.UserId ?? 0,
                 CompanyId = requestContext.CompanyId,
+                BranchId = requestContext.BranchId,
                 Action = "REQUEST",
                 EntityType = "HttpRequest",
                 EntityId = null,
@@ -475,6 +482,7 @@ public class RequestTracingMiddleware
                 ActorType = requestContext.UserId.HasValue ? "USER" : "ANONYMOUS",
                 ActorId = requestContext.UserId ?? 0,
                 CompanyId = requestContext.CompanyId,
+                BranchId = requestContext.BranchId,
                 Action = "EXCEPTION",
                 EntityType = "HttpRequest",
                 EntityId = null,

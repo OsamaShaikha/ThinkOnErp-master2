@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Scrutor;
 using System.Threading.Channels;
 using ThinkOnErp.Domain.Interfaces;
 using ThinkOnErp.Infrastructure.Resilience;
@@ -77,7 +78,7 @@ public static class DependencyInjection
                 TimeSpan.FromSeconds(auditOptions.CircuitBreakerTimeoutSeconds));
         });
         
-        services.AddScoped<RetryPolicy>(sp =>
+        services.AddSingleton<RetryPolicy>(sp =>
         {
             var logger = sp.GetRequiredService<ILogger<RetryPolicy>>();
             var configuration = sp.GetRequiredService<IConfiguration>();
@@ -88,7 +89,7 @@ public static class DependencyInjection
             return RetryPolicy.FromOptions(logger, auditOptions);
         });
         
-        services.AddScoped<CircuitBreaker>(sp =>
+        services.AddSingleton<CircuitBreaker>(sp =>
         {
             var loggerFactory = sp.GetRequiredService<ILoggerFactory>();
             var logger = loggerFactory.CreateLogger<CircuitBreaker>();
@@ -199,6 +200,27 @@ public static class DependencyInjection
         services.AddSingleton<AuditLogger>();
         services.AddSingleton<IAuditLogger>(provider => provider.GetRequiredService<AuditLogger>());
         services.AddHostedService<AuditLogger>(provider => provider.GetRequiredService<AuditLogger>());
+
+        // Wrap with ResilientAuditLogger decorator that adds circuit breaker, retry, and file fallback
+        services.Decorate<IAuditLogger>((inner, sp) =>
+        {
+            var circuitBreaker = sp.GetRequiredService<CircuitBreaker>();
+            var retryPolicy = sp.GetRequiredService<RetryPolicy>();
+            var logger = sp.GetRequiredService<ILogger<ResilientAuditLogger>>();
+            var options = new ResilientAuditLoggerOptions();
+            sp.GetRequiredService<IConfiguration>().GetSection("ResilientAuditLogger").Bind(options);
+            var fileFallback = sp.GetService<FileSystemAuditFallback>();
+            return new ResilientAuditLogger(inner, circuitBreaker, retryPolicy, logger, options, fileFallback);
+        });
+        
+        // Register FileSystemAuditFallback for fallback storage when DB is down
+        services.AddSingleton<FileSystemAuditFallback>(sp =>
+        {
+            var logger = sp.GetRequiredService<ILogger<FileSystemAuditFallback>>();
+            var options = new FileSystemAuditFallbackOptions();
+            sp.GetRequiredService<IConfiguration>().GetSection("FileSystemAuditFallback").Bind(options);
+            return new FileSystemAuditFallback(logger, options);
+        });
         
         services.AddHostedService<MetricsAggregationBackgroundService>();
         services.AddHostedService<AlertProcessingBackgroundService>();

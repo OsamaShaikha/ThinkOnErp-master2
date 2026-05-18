@@ -3,6 +3,7 @@ using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using ThinkOnErp.Domain.Entities;
+using ThinkOnErp.Domain.Entities.Audit;
 using ThinkOnErp.Domain.Interfaces;
 using ThinkOnErp.Infrastructure.Data;
 
@@ -12,11 +13,16 @@ public class AuditTrailService : IAuditTrailService
 {
     private readonly OracleDbContext _context;
     private readonly ILogger<AuditTrailService> _logger;
+    private readonly IAuditLogger _auditLogger;
 
-    public AuditTrailService(OracleDbContext context, ILogger<AuditTrailService> logger)
+    public AuditTrailService(
+        OracleDbContext context,
+        ILogger<AuditTrailService> logger,
+        IAuditLogger auditLogger)
     {
         _context = context ?? throw new ArgumentNullException(nameof(context));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        _auditLogger = auditLogger ?? throw new ArgumentNullException(nameof(auditLogger));
     }
 
     public async Task LogTicketCreationAsync(
@@ -32,7 +38,7 @@ public class AuditTrailService : IAuditTrailService
     {
         try
         {
-            await LogAuditEventAsync(new SysAuditLog
+            var auditEvent = new DataChangeAuditEvent
             {
                 CorrelationId = correlationId,
                 ActorType = "USER",
@@ -44,8 +50,7 @@ public class AuditTrailService : IAuditTrailService
                 EntityId = ticketId,
                 IpAddress = ipAddress,
                 UserAgent = userAgent,
-                Severity = "Info",
-                EventCategory = "DataChange",
+                Timestamp = DateTime.UtcNow,
                 Metadata = JsonSerializer.Serialize(new
                 {
                     Action = "TicketCreated",
@@ -53,7 +58,9 @@ public class AuditTrailService : IAuditTrailService
                     CreatedBy = userName,
                     TicketData = ticketData
                 })
-            });
+            };
+
+            await _auditLogger.LogDataChangeAsync(auditEvent);
 
             _logger.LogInformation("Audit: Ticket {TicketId} created by user {UserName} (ID: {UserId})",
                 ticketId, userName, userId);
@@ -79,7 +86,7 @@ public class AuditTrailService : IAuditTrailService
     {
         try
         {
-            await LogAuditEventAsync(new SysAuditLog
+            var auditEvent = new DataChangeAuditEvent
             {
                 CorrelationId = correlationId,
                 ActorType = "USER",
@@ -91,8 +98,10 @@ public class AuditTrailService : IAuditTrailService
                 EntityId = ticketId,
                 IpAddress = ipAddress,
                 UserAgent = userAgent,
-                Severity = "Info",
-                EventCategory = "DataChange",
+                OldValue = oldValue,
+                NewValue = newValue,
+                ChangedFields = changedFields,
+                Timestamp = DateTime.UtcNow,
                 Metadata = JsonSerializer.Serialize(new
                 {
                     Action = "TicketModified",
@@ -102,7 +111,9 @@ public class AuditTrailService : IAuditTrailService
                     NewValue = newValue,
                     ChangedFields = changedFields
                 })
-            });
+            };
+
+            await _auditLogger.LogDataChangeAsync(auditEvent);
 
             _logger.LogInformation("Audit: Ticket {TicketId} modified by user {UserName} (ID: {UserId})",
                 ticketId, userName, userId);
@@ -126,7 +137,7 @@ public class AuditTrailService : IAuditTrailService
     {
         try
         {
-            await LogAuditEventAsync(new SysAuditLog
+            var auditEvent = new DataChangeAuditEvent
             {
                 CorrelationId = correlationId,
                 ActorType = "USER",
@@ -138,8 +149,7 @@ public class AuditTrailService : IAuditTrailService
                 EntityId = ticketId,
                 IpAddress = ipAddress,
                 UserAgent = userAgent,
-                Severity = "Warning",
-                EventCategory = "DataChange",
+                Timestamp = DateTime.UtcNow,
                 Metadata = JsonSerializer.Serialize(new
                 {
                     Action = "TicketDeleted",
@@ -147,7 +157,9 @@ public class AuditTrailService : IAuditTrailService
                     DeletedBy = userName,
                     TicketData = ticketData
                 })
-            });
+            };
+
+            await _auditLogger.LogDataChangeAsync(auditEvent);
 
             _logger.LogWarning("Audit: Ticket {TicketId} deleted by user {UserName} (ID: {UserId})",
                 ticketId, userName, userId);
@@ -175,7 +187,7 @@ public class AuditTrailService : IAuditTrailService
     {
         try
         {
-            await LogAuditEventAsync(new SysAuditLog
+            var auditEvent = new DataChangeAuditEvent
             {
                 CorrelationId = correlationId,
                 ActorType = "USER",
@@ -187,8 +199,7 @@ public class AuditTrailService : IAuditTrailService
                 EntityId = ticketId,
                 IpAddress = ipAddress,
                 UserAgent = userAgent,
-                Severity = "Info",
-                EventCategory = "DataChange",
+                Timestamp = DateTime.UtcNow,
                 Metadata = JsonSerializer.Serialize(new
                 {
                     Action = "StatusChanged",
@@ -200,7 +211,9 @@ public class AuditTrailService : IAuditTrailService
                     NewStatusName = newStatusName,
                     Reason = statusChangeReason
                 })
-            });
+            };
+
+            await _auditLogger.LogDataChangeAsync(auditEvent);
 
             _logger.LogInformation("Audit: Ticket {TicketId} status changed from {OldStatus} to {NewStatus} by {UserName}",
                 ticketId, previousStatusName, newStatusName, userName);
@@ -227,7 +240,7 @@ public class AuditTrailService : IAuditTrailService
     {
         try
         {
-            await LogAuditEventAsync(new SysAuditLog
+            var auditEvent = new DataChangeAuditEvent
             {
                 CorrelationId = correlationId,
                 ActorType = "USER",
@@ -239,8 +252,7 @@ public class AuditTrailService : IAuditTrailService
                 EntityId = ticketId,
                 IpAddress = ipAddress,
                 UserAgent = userAgent,
-                Severity = "Info",
-                EventCategory = "DataChange",
+                Timestamp = DateTime.UtcNow,
                 Metadata = JsonSerializer.Serialize(new
                 {
                     Action = "AssignmentChanged",
@@ -251,7 +263,9 @@ public class AuditTrailService : IAuditTrailService
                     NewAssigneeId = newAssigneeId,
                     NewAssigneeName = newAssigneeName ?? "Unassigned"
                 })
-            });
+            };
+
+            await _auditLogger.LogDataChangeAsync(auditEvent);
 
             _logger.LogInformation("Audit: Ticket {TicketId} reassigned from {OldAssignee} to {NewAssignee} by {UserName}",
                 ticketId, previousAssigneeName ?? "Unassigned", newAssigneeName ?? "Unassigned", userName);
@@ -281,7 +295,7 @@ public class AuditTrailService : IAuditTrailService
                 ? commentText.Substring(0, 200) + "..."
                 : commentText;
 
-            await LogAuditEventAsync(new SysAuditLog
+            var auditEvent = new DataChangeAuditEvent
             {
                 CorrelationId = correlationId,
                 ActorType = "USER",
@@ -293,8 +307,7 @@ public class AuditTrailService : IAuditTrailService
                 EntityId = commentId,
                 IpAddress = ipAddress,
                 UserAgent = userAgent,
-                Severity = "Info",
-                EventCategory = "DataChange",
+                Timestamp = DateTime.UtcNow,
                 Metadata = JsonSerializer.Serialize(new
                 {
                     Action = "CommentAdded",
@@ -304,7 +317,9 @@ public class AuditTrailService : IAuditTrailService
                     IsInternal = isInternal,
                     CommentPreview = truncatedComment
                 })
-            });
+            };
+
+            await _auditLogger.LogDataChangeAsync(auditEvent);
 
             _logger.LogInformation("Audit: Comment {CommentId} added to ticket {TicketId} by {UserName}",
                 commentId, ticketId, userName);
@@ -331,7 +346,7 @@ public class AuditTrailService : IAuditTrailService
     {
         try
         {
-            await LogAuditEventAsync(new SysAuditLog
+            var auditEvent = new DataChangeAuditEvent
             {
                 CorrelationId = correlationId,
                 ActorType = "USER",
@@ -343,8 +358,7 @@ public class AuditTrailService : IAuditTrailService
                 EntityId = attachmentId,
                 IpAddress = ipAddress,
                 UserAgent = userAgent,
-                Severity = "Info",
-                EventCategory = "DataChange",
+                Timestamp = DateTime.UtcNow,
                 Metadata = JsonSerializer.Serialize(new
                 {
                     Action = "AttachmentUploaded",
@@ -355,7 +369,9 @@ public class AuditTrailService : IAuditTrailService
                     MimeType = mimeType,
                     UploadedBy = userName
                 })
-            });
+            };
+
+            await _auditLogger.LogDataChangeAsync(auditEvent);
 
             _logger.LogInformation("Audit: Attachment {FileName} uploaded to ticket {TicketId} by {UserName}",
                 fileName, ticketId, userName);
@@ -380,7 +396,7 @@ public class AuditTrailService : IAuditTrailService
     {
         try
         {
-            await LogAuditEventAsync(new SysAuditLog
+            var auditEvent = new DataChangeAuditEvent
             {
                 CorrelationId = correlationId,
                 ActorType = "USER",
@@ -392,7 +408,7 @@ public class AuditTrailService : IAuditTrailService
                 EntityId = attachmentId,
                 IpAddress = ipAddress,
                 UserAgent = userAgent,
-                Severity = "Info",
+                Timestamp = DateTime.UtcNow,
                 EventCategory = "Request",
                 Metadata = JsonSerializer.Serialize(new
                 {
@@ -402,7 +418,9 @@ public class AuditTrailService : IAuditTrailService
                     FileName = fileName,
                     DownloadedBy = userName
                 })
-            });
+            };
+
+            await _auditLogger.LogDataChangeAsync(auditEvent);
 
             _logger.LogInformation("Audit: Attachment {FileName} downloaded from ticket {TicketId} by {UserName}",
                 fileName, ticketId, userName);
@@ -427,7 +445,7 @@ public class AuditTrailService : IAuditTrailService
     {
         try
         {
-            await LogAuditEventAsync(new SysAuditLog
+            var auditEvent = new DataChangeAuditEvent
             {
                 CorrelationId = correlationId,
                 ActorType = "USER",
@@ -438,7 +456,7 @@ public class AuditTrailService : IAuditTrailService
                 EntityType = "Ticket",
                 IpAddress = ipAddress,
                 UserAgent = userAgent,
-                Severity = "Info",
+                Timestamp = DateTime.UtcNow,
                 EventCategory = "Request",
                 Metadata = JsonSerializer.Serialize(new
                 {
@@ -448,7 +466,9 @@ public class AuditTrailService : IAuditTrailService
                     ResultCount = resultCount,
                     SearchedBy = userName
                 })
-            });
+            };
+
+            await _auditLogger.LogDataChangeAsync(auditEvent);
 
             _logger.LogInformation("Audit: Ticket search performed by {UserName}, returned {Count} results",
                 userName, resultCount);
@@ -471,7 +491,7 @@ public class AuditTrailService : IAuditTrailService
     {
         try
         {
-            await LogAuditEventAsync(new SysAuditLog
+            var auditEvent = new DataChangeAuditEvent
             {
                 CorrelationId = correlationId,
                 ActorType = "USER",
@@ -483,7 +503,7 @@ public class AuditTrailService : IAuditTrailService
                 EntityId = ticketId,
                 IpAddress = ipAddress,
                 UserAgent = userAgent,
-                Severity = "Info",
+                Timestamp = DateTime.UtcNow,
                 EventCategory = "Request",
                 Metadata = JsonSerializer.Serialize(new
                 {
@@ -491,7 +511,9 @@ public class AuditTrailService : IAuditTrailService
                     TicketId = ticketId,
                     AccessedBy = userName
                 })
-            });
+            };
+
+            await _auditLogger.LogDataChangeAsync(auditEvent);
 
             _logger.LogDebug("Audit: Ticket {TicketId} accessed by {UserName}", ticketId, userName);
         }
@@ -516,7 +538,7 @@ public class AuditTrailService : IAuditTrailService
     {
         try
         {
-            await LogAuditEventAsync(new SysAuditLog
+            var auditEvent = new DataChangeAuditEvent
             {
                 CorrelationId = correlationId,
                 ActorType = userId.HasValue ? "USER" : "ANONYMOUS",
@@ -528,7 +550,7 @@ public class AuditTrailService : IAuditTrailService
                 EntityId = entityId,
                 IpAddress = ipAddress,
                 UserAgent = userAgent,
-                Severity = "Warning",
+                Timestamp = DateTime.UtcNow,
                 EventCategory = "Permission",
                 Metadata = JsonSerializer.Serialize(new
                 {
@@ -540,7 +562,9 @@ public class AuditTrailService : IAuditTrailService
                     UserName = userName ?? "Anonymous",
                     FailureReason = failureReason
                 })
-            });
+            };
+
+            await _auditLogger.LogDataChangeAsync(auditEvent);
 
             _logger.LogWarning("Audit: Authorization failure - User {UserName} attempted {Action} on {EntityType} {EntityId}: {Reason}",
                 userName ?? "Anonymous", action, entityType, entityId, failureReason);
@@ -566,7 +590,7 @@ public class AuditTrailService : IAuditTrailService
     {
         try
         {
-            await LogAuditEventAsync(new SysAuditLog
+            var auditEvent = new DataChangeAuditEvent
             {
                 CorrelationId = correlationId,
                 ActorType = "ADMIN",
@@ -578,7 +602,7 @@ public class AuditTrailService : IAuditTrailService
                 EntityId = entityId,
                 IpAddress = ipAddress,
                 UserAgent = userAgent,
-                Severity = "Info",
+                Timestamp = DateTime.UtcNow,
                 EventCategory = "Configuration",
                 Metadata = JsonSerializer.Serialize(new
                 {
@@ -589,7 +613,9 @@ public class AuditTrailService : IAuditTrailService
                     PerformedBy = userName,
                     ChangeDetails = changeDetails
                 })
-            });
+            };
+
+            await _auditLogger.LogDataChangeAsync(auditEvent);
 
             _logger.LogInformation("Audit: Administrative action {Action} performed on {EntityType} by {UserName}",
                 action, entityType, userName);
@@ -727,13 +753,6 @@ public class AuditTrailService : IAuditTrailService
         }
     }
 
-    private async Task LogAuditEventAsync(SysAuditLog auditLog)
-    {
-        auditLog.CreationDate = DateTime.Now;
-        _context.SysAuditLogs.Add(auditLog);
-        await _context.SaveChangesAsync();
-    }
-
     private static Dictionary<string, object> MapToDictionary(SysAuditLog log)
     {
         return new Dictionary<string, object>
@@ -756,7 +775,7 @@ public class AuditTrailService : IAuditTrailService
         };
     }
 
-    private static object CoalesceNull<T>(T value) => value is null ? DBNull.Value : (object)value;
+    private static object CoalesceNull<T>(T value) => value is null ? DBNull.Value : (object)value!;
 
     private byte[] ExportToCsv(List<Dictionary<string, object>> auditEvents)
     {

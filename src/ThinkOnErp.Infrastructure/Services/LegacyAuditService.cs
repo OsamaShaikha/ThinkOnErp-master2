@@ -158,9 +158,9 @@ public class LegacyAuditService : ILegacyAuditService
         }
     }
 
-    private static AuditLogEntry MapToAuditLogEntry(SysAuditLog log)
+    private AuditLogEntry MapToAuditLogEntry(SysAuditLog log)
     {
-        return new AuditLogEntry
+        var entry = new AuditLogEntry
         {
             Id = log.Id,
             CorrelationId = log.CorrelationId,
@@ -191,8 +191,57 @@ public class LegacyAuditService : ILegacyAuditService
             BusinessModule = log.BusinessModule,
             BusinessDescription = log.BusinessDescription,
             DeviceIdentifier = log.DeviceIdentifier,
-            ErrorCode = log.ErrorCode
+            ErrorCode = log.ErrorCode,
+            CompanyName = null,
+            BranchName = null,
+            ActorName = null
         };
+
+        // Resolve company and branch names from the database
+        try
+        {
+            if (log.CompanyId.HasValue)
+            {
+                var company = _dbContext.SysCompanies
+                    .Where(c => c.Id == log.CompanyId.Value)
+                    .Select(c => c.CompanyNameEn ?? c.CompanyNameAr)
+                    .FirstOrDefault();
+                entry.CompanyName = company;
+            }
+
+            if (log.BranchId.HasValue)
+            {
+                var branch = _dbContext.SysBranches
+                    .Where(b => b.Id == log.BranchId.Value)
+                    .Select(b => b.BranchNameEn ?? b.BranchNameAr)
+                    .FirstOrDefault();
+                entry.BranchName = branch;
+            }
+
+            if (log.ActorId > 0)
+            {
+                if (string.Equals(log.ActorType, "SUPER_ADMIN", StringComparison.OrdinalIgnoreCase))
+                {
+                    entry.ActorName = _dbContext.SysSuperAdmins
+                        .Where(u => u.Id == log.ActorId)
+                        .Select(u => u.NameEn ?? u.NameAr ?? u.UserName)
+                        .FirstOrDefault();
+                }
+                else
+                {
+                    entry.ActorName = _dbContext.SysUsers
+                        .Where(u => u.Id == log.ActorId)
+                        .Select(u => u.FullNameEn ?? u.FullNameAr ?? u.UserName)
+                        .FirstOrDefault();
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Failed to resolve company/branch/user names for audit log {AuditLogId}", log.Id);
+        }
+
+        return entry;
     }
 
     /// <inheritdoc/>

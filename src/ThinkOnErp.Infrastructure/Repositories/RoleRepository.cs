@@ -35,8 +35,15 @@ public class RoleRepository : IRoleRepository
 
     public async Task<long> UpdateAsync(SysRole role)
     {
-        role.UpdateDate = DateTime.Now;
-        _context.SysRoles.Update(role);
+        var existingRole = await _context.SysRoles.FindAsync(role.Id);
+        if (existingRole == null) return 0;
+
+        existingRole.RoleNameAr = role.RoleNameAr;
+        existingRole.RoleNameEn = role.RoleNameEn;
+        existingRole.Note = role.Note;
+        existingRole.UpdateUser = role.UpdateUser;
+        existingRole.UpdateDate = DateTime.Now;
+
         return await _context.SaveChangesAsync();
     }
 

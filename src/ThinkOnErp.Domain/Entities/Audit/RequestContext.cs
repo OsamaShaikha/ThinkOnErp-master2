@@ -47,6 +47,11 @@ public class RequestContext
     public long? CompanyId { get; set; }
 
     /// <summary>
+    /// Branch ID of the authenticated user
+    /// </summary>
+    public long? BranchId { get; set; }
+
+    /// <summary>
     /// IP address of the client
     /// </summary>
     public string? IpAddress { get; set; }

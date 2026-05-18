@@ -1004,7 +1004,7 @@ public class AuditQueryService : IAuditQueryService
     /// </summary>
     private AuditLogEntry MapToAuditLogEntry(Domain.Entities.SysAuditLog sysAuditLog)
     {
-        return new AuditLogEntry
+        var entry = new AuditLogEntry
         {
             Id = sysAuditLog.Id,
             ActorType = sysAuditLog.ActorType,
@@ -1037,6 +1037,48 @@ public class AuditQueryService : IAuditQueryService
             BusinessDescription = sysAuditLog.BusinessDescription,
             CreationDate = sysAuditLog.CreationDate
         };
+
+        PopulateDisplayNames(entry);
+        return entry;
+    }
+
+    private void PopulateDisplayNames(AuditLogEntry entry)
+    {
+        try
+        {
+            if (entry.CompanyId.HasValue)
+            {
+                entry.CompanyName = _dbContext.SysCompanies
+                    .Where(c => c.Id == entry.CompanyId.Value)
+                    .Select(c => c.CompanyNameEn ?? c.CompanyNameAr)
+                    .FirstOrDefault();
+            }
+
+            if (entry.BranchId.HasValue)
+            {
+                entry.BranchName = _dbContext.SysBranches
+                    .Where(b => b.Id == entry.BranchId.Value)
+                    .Select(b => b.BranchNameEn ?? b.BranchNameAr)
+                    .FirstOrDefault();
+            }
+
+            if (entry.ActorId > 0)
+            {
+                entry.ActorName = string.Equals(entry.ActorType, "SUPER_ADMIN", StringComparison.OrdinalIgnoreCase)
+                    ? _dbContext.SysSuperAdmins
+                        .Where(u => u.Id == entry.ActorId)
+                        .Select(u => u.NameEn ?? u.NameAr ?? u.UserName)
+                        .FirstOrDefault()
+                    : _dbContext.SysUsers
+                        .Where(u => u.Id == entry.ActorId)
+                        .Select(u => u.FullNameEn ?? u.FullNameAr ?? u.UserName)
+                        .FirstOrDefault();
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Failed to resolve audit display names for audit log {AuditLogId}", entry.Id);
+        }
     }
 
     /// <summary>

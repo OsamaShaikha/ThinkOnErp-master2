@@ -94,6 +94,10 @@ try
         options.AddPolicy("MultiTenantAccess", policy =>
             policy.Requirements.Add(new ThinkOnErp.Infrastructure.Authorization.MultiTenantAccessRequirement()));
         
+        // Add SuperAdminOnly policy for super admin endpoints
+        options.AddPolicy("SuperAdminOnly", policy =>
+            policy.RequireClaim("isSuperAdmin", "true"));
+        
         // Add audit data access control policies
         options.AddPolicy("AuditDataAccess", policy =>
             policy.Requirements.Add(new ThinkOnErp.Infrastructure.Authorization.AuditDataAccessRequirement(allowSelfAccess: true)));
@@ -392,10 +396,7 @@ Example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...'
         await ThinkOnErp.Infrastructure.Data.SeedData.InitializeAsync(dbContext);
     }
 
-    // Add request tracing middleware (must be early in pipeline to capture all requests and generate correlation IDs)
-    app.UseMiddleware<ThinkOnErp.API.Middleware.RequestTracingMiddleware>();
-
-    // Add global exception handling middleware (must be after request tracing to capture exceptions with correlation ID)
+    // Add global exception handling middleware early so it wraps the request pipeline.
     app.UseMiddleware<ThinkOnErp.API.Middleware.ExceptionHandlingMiddleware>();
 
     // Configure the HTTP request pipeline.
@@ -419,6 +420,9 @@ Example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...'
 
     // Add authentication and authorization middleware
     app.UseAuthentication();
+
+    // Add request tracing after authentication so user/company/branch claims are available.
+    app.UseMiddleware<ThinkOnErp.API.Middleware.RequestTracingMiddleware>();
     
     // Add force logout check middleware (after authentication, before authorization)
     app.UseMiddleware<ThinkOnErp.API.Middleware.ForceLogoutMiddleware>();

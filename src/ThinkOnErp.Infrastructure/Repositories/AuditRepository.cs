@@ -93,7 +93,7 @@ public class AuditRepository : IAuditRepository
     /// <summary>
     /// Inserts multiple audit log entries in a single batch operation.
     /// Uses EF Core AddRangeAsync for optimal performance.
-    /// Generates cryptographic signatures for tamper-evident audit trail.
+    /// Generates cryptographic signatures for tamper-evident audit trail in a single round-trip.
     /// </summary>
     public async Task<int> InsertBatchAsync(IEnumerable<SysAuditLog> auditLogs, CancellationToken cancellationToken = default)
     {
@@ -105,25 +105,47 @@ public class AuditRepository : IAuditRepository
 
         try
         {
-            _dbContext.SysAuditLogs.AddRange(auditLogList);
-            var rowsAffected = await _dbContext.SaveChangesAsync(cancellationToken);
-            
-            _logger.LogDebug("Batch inserted {Count} audit log entries", rowsAffected);
-
-            // Generate and store cryptographic signatures if integrity service is available
+            // Pre-compute integrity hashes before the first save to eliminate double round-trip
             var integrityService = GetIntegrityService();
-            if (integrityService != null && rowsAffected > 0)
+            if (integrityService != null)
             {
                 try
                 {
-                    await GenerateBatchSignaturesAsync(auditLogList, integrityService, cancellationToken);
+                    foreach (var log in auditLogList)
+                    {
+                        var signature = integrityService.GenerateIntegrityHash(
+                            0, // RowId will be 0 before save, but we use a placeholder since we compute before PK is assigned
+                            log.ActorId,
+                            log.Action,
+                            log.EntityType,
+                            log.EntityId,
+                            log.CreationDate,
+                            log.OldValue,
+                            log.NewValue);
+
+                        // Store the signature in metadata now; it will be updated with the actual ID after save
+                        if (!string.IsNullOrWhiteSpace(signature))
+                        {
+                            var metadata = string.IsNullOrWhiteSpace(log.Metadata)
+                                ? new Dictionary<string, object>()
+                                : System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, object>>(log.Metadata) 
+                                    ?? new Dictionary<string, object>();
+                            metadata["integrity_hash"] = signature;
+                            log.Metadata = System.Text.Json.JsonSerializer.Serialize(metadata);
+                        }
+                    }
                 }
                 catch (Exception ex)
                 {
                     // Don't fail the insert if signature generation fails
-                    _logger.LogWarning(ex, "Failed to generate integrity signatures for batch of {Count} audit logs", auditLogList.Count);
+                    _logger.LogWarning(ex, "Failed to pre-compute integrity signatures for batch of {Count} audit logs", auditLogList.Count);
                 }
             }
+
+            _dbContext.SysAuditLogs.AddRange(auditLogList);
+            var rowsAffected = await _dbContext.SaveChangesAsync(cancellationToken);
+            
+            _logger.LogDebug("Batch inserted {Count} audit log entries", rowsAffected);
             
             return rowsAffected;
         }

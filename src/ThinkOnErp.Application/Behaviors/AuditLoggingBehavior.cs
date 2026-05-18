@@ -150,8 +150,10 @@ public class AuditLoggingBehavior<TRequest, TResponse> : IPipelineBehavior<TRequ
             // Extract actor information from audit context provider
             var actorId = _auditContextProvider.GetActorId();
             var actorType = _auditContextProvider.GetActorType();
-            var companyId = _auditContextProvider.GetCompanyId();
-            var branchId = _auditContextProvider.GetBranchId();
+            var companyId = NormalizeTenantId(_auditContextProvider.GetCompanyId())
+                ?? ExtractLongProperty(requestState, "companyId");
+            var branchId = NormalizeTenantId(_auditContextProvider.GetBranchId())
+                ?? ExtractLongProperty(requestState, "branchId");
             var ipAddress = _auditContextProvider.GetIpAddress();
             var userAgent = _auditContextProvider.GetUserAgent();
 
@@ -180,7 +182,12 @@ public class AuditLoggingBehavior<TRequest, TResponse> : IPipelineBehavior<TRequ
                     ExceptionMessage = exception.Message,
                     StackTrace = exception.StackTrace,
                     InnerException = exception.InnerException?.Message,
-                    Severity = _exceptionCategorization.DetermineSeverity(exception)
+                    Severity = _exceptionCategorization.DetermineSeverity(exception),
+                    Metadata = JsonSerializer.Serialize(new
+                    {
+                        RequestState = requestState,
+                        ResponseState = responseState
+                    })
                 };
 
                 await _auditLogger.LogExceptionAsync(exceptionEvent, cancellationToken);
@@ -272,6 +279,35 @@ public class AuditLoggingBehavior<TRequest, TResponse> : IPipelineBehavior<TRequ
         {
             return null;
         }
+    }
+
+    private long? ExtractLongProperty(string? jsonState, string propertyName)
+    {
+        if (string.IsNullOrEmpty(jsonState))
+        {
+            return null;
+        }
+
+        try
+        {
+            using var doc = JsonDocument.Parse(jsonState);
+            if (doc.RootElement.TryGetProperty(propertyName, out var property) &&
+                property.TryGetInt64(out var value))
+            {
+                return NormalizeTenantId(value);
+            }
+        }
+        catch
+        {
+            return null;
+        }
+
+        return null;
+    }
+
+    private long? NormalizeTenantId(long? tenantId)
+    {
+        return tenantId.HasValue && tenantId.Value > 0 ? tenantId.Value : null;
     }
 
     /// <summary>

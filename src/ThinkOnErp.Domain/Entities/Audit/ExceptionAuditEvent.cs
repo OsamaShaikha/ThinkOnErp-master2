@@ -30,4 +30,9 @@ public class ExceptionAuditEvent : AuditEvent
     /// Severity level: Critical, Error, Warning, Info
     /// </summary>
     public string Severity { get; set; } = "Error";
+
+    /// <summary>
+    /// Additional structured context for the exception.
+    /// </summary>
+    public string? Metadata { get; set; }
 }

@@ -206,6 +206,7 @@ public class ExceptionHandlingMiddleware
             // Extract user information from claims
             var userId = GetUserIdFromClaims(context.User);
             var companyId = GetCompanyIdFromClaims(context.User);
+            var branchId = GetBranchIdFromClaims(context.User);
             var actorType = GetActorTypeFromClaims(context.User);
 
             // Get correlation ID from context
@@ -217,7 +218,7 @@ public class ExceptionHandlingMiddleware
             var endpoint = $"{context.Request.Method} {context.Request.Path}";
 
             // Determine entity type and action from exception
-            var (entityType, entityId) = ExtractEntityInfoFromException(exception);
+            var (entityType, entityId) = ExtractEntityInfoFromException(exception, context);
             var action = DetermineActionFromException(exception);
 
             // Resolve scoped service to determine severity
@@ -235,7 +236,7 @@ public class ExceptionHandlingMiddleware
                 ActorType = actorType,
                 ActorId = userId,
                 CompanyId = companyId,
-                BranchId = null, // Branch ID not available in claims, could be added if needed
+                BranchId = branchId,
                 Action = action,
                 EntityType = entityType,
                 EntityId = entityId,
@@ -277,7 +278,16 @@ public class ExceptionHandlingMiddleware
     private long? GetCompanyIdFromClaims(ClaimsPrincipal user)
     {
         var companyIdClaim = user.FindFirst("companyId")?.Value;
-        return long.TryParse(companyIdClaim, out var companyId) ? companyId : null;
+        return long.TryParse(companyIdClaim, out var companyId) && companyId > 0 ? companyId : null;
+    }
+
+    /// <summary>
+    /// Extracts branch ID from JWT claims
+    /// </summary>
+    private long? GetBranchIdFromClaims(ClaimsPrincipal user)
+    {
+        var branchIdClaim = user.FindFirst("branchId")?.Value;
+        return long.TryParse(branchIdClaim, out var branchId) && branchId > 0 ? branchId : null;
     }
 
     /// <summary>
@@ -317,15 +327,47 @@ public class ExceptionHandlingMiddleware
     /// <summary>
     /// Extracts entity information from exception if available
     /// </summary>
-    private (string entityType, long? entityId) ExtractEntityInfoFromException(Exception exception)
+    private (string entityType, long? entityId) ExtractEntityInfoFromException(Exception exception, HttpContext context)
     {
-        return exception switch
+        (string entityType, long? entityId) exceptionEntity = exception switch
         {
-            TicketNotFoundException ticketEx => ("Ticket", ticketEx.TicketId),
-            UnauthorizedTicketAccessException ticketAccessEx => ("Ticket", ticketAccessEx.TicketId),
+            TicketNotFoundException ticketEx => ("Ticket", (long?)ticketEx.TicketId),
+            UnauthorizedTicketAccessException ticketAccessEx => ("Ticket", (long?)ticketAccessEx.TicketId),
             ConcurrentModificationException concurrencyEx => (concurrencyEx.EntityType, concurrencyEx.EntityId),
-            _ => ("Unknown", null)
+            _ => ("Unknown", (long?)null)
         };
+
+        if (exceptionEntity.Item1 != "Unknown")
+        {
+            return exceptionEntity;
+        }
+
+        return InferEntityInfoFromRequestPath(context.Request.Path);
+    }
+
+    private (string entityType, long? entityId) InferEntityInfoFromRequestPath(PathString path)
+    {
+        var segments = path.Value?
+            .Split('/', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            ?? Array.Empty<string>();
+
+        if (segments.Length < 2 || !string.Equals(segments[0], "api", StringComparison.OrdinalIgnoreCase))
+        {
+            return ("Unknown", null);
+        }
+
+        var entityType = segments[1].TrimEnd('s');
+        entityType = string.IsNullOrWhiteSpace(entityType)
+            ? "Unknown"
+            : char.ToUpperInvariant(entityType[0]) + entityType[1..];
+
+        long? entityId = null;
+        if (segments.Length > 2 && long.TryParse(segments[2], out var parsedId))
+        {
+            entityId = parsedId;
+        }
+
+        return (entityType, entityId);
     }
 
     /// <summary>

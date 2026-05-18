@@ -87,6 +87,16 @@ public class AuditLogDto
     public string? EndpointPath { get; set; }
 
     /// <summary>
+    /// Gets or sets the captured request payload/body.
+    /// </summary>
+    public string? RequestPayload { get; set; }
+
+    /// <summary>
+    /// Gets or sets the captured response payload/body.
+    /// </summary>
+    public string? ResponsePayload { get; set; }
+
+    /// <summary>
     /// Gets or sets the execution time of the request in milliseconds.
     /// </summary>
     public long? ExecutionTimeMs { get; set; }
@@ -107,6 +117,11 @@ public class AuditLogDto
     public string? ExceptionMessage { get; set; }
 
     /// <summary>
+    /// Gets or sets the stack trace if an error occurred.
+    /// </summary>
+    public string? StackTrace { get; set; }
+
+    /// <summary>
     /// Gets or sets the severity level (Critical, Error, Warning, Info).
     /// </summary>
     public string Severity { get; set; } = "Info";
@@ -115,6 +130,11 @@ public class AuditLogDto
     /// Gets or sets the event category (DataChange, Authentication, Permission, Exception, Configuration, Request).
     /// </summary>
     public string EventCategory { get; set; } = "DataChange";
+
+    /// <summary>
+    /// Gets or sets additional metadata captured for the audit event.
+    /// </summary>
+    public string? Metadata { get; set; }
 
     /// <summary>
     /// Gets or sets the timestamp when the audit log entry was created.

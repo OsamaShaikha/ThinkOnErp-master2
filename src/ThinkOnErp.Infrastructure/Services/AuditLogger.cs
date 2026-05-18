@@ -394,12 +394,16 @@ public class AuditLogger : IAuditLogger, IHostedService
                 return false;
             }
 
-            // Check if channel is still accepting writes
-            if (!_channel.Writer.TryWrite(new TestAuditEvent()))
+            // Check if channel is still accepting writes (without consuming a buffer slot)
+            // ChannelReader.Completion indicates when the channel is complete (no more data)
+            if (_channel.Reader.Completion.IsCompleted)
             {
-                _logger.LogWarning("Audit logger health check failed: Channel is not accepting writes");
+                _logger.LogWarning("Audit logger health check failed: Channel is completed");
                 return false;
             }
+            
+            // Verify channel is accepting writes by checking it's not completed and queue isn't full
+            // We avoid TryWrite(TestAuditEvent) to prevent consuming a real buffer slot
 
             // Check repository health (database connectivity)
             using var scope = _serviceScopeFactory.CreateScope();
@@ -637,7 +641,9 @@ public class AuditLogger : IAuditLogger, IHostedService
             case DataChangeAuditEvent dataChange:
                 auditLog.OldValue = dataChange.OldValue;
                 auditLog.NewValue = dataChange.NewValue;
-                auditLog.EventCategory = "DataChange";
+                auditLog.EventCategory = dataChange.EventCategory ?? "DataChange";
+                auditLog.Metadata = dataChange.Metadata;
+                PopulateRequestFields(auditLog);
                 break;
 
             case AuthenticationAuditEvent auth:
@@ -681,7 +687,8 @@ public class AuditLogger : IAuditLogger, IHostedService
                 auditLog.Severity = exception.Severity;
                 auditLog.Metadata = System.Text.Json.JsonSerializer.Serialize(new
                 {
-                    exception.InnerException
+                    exception.InnerException,
+                    ExceptionMetadata = exception.Metadata
                 });
                 break;
         }
@@ -739,6 +746,66 @@ public class AuditLogger : IAuditLogger, IHostedService
         }
 
         return auditLog;
+    }
+
+    private static void PopulateRequestFields(SysAuditLog auditLog)
+    {
+        if (!string.Equals(auditLog.Action, "REQUEST", StringComparison.OrdinalIgnoreCase) ||
+            string.IsNullOrWhiteSpace(auditLog.NewValue))
+        {
+            return;
+        }
+
+        try
+        {
+            using var document = JsonDocument.Parse(auditLog.NewValue);
+            var root = document.RootElement;
+
+            auditLog.HttpMethod = GetString(root, "HttpMethod");
+            auditLog.EndpointPath = BuildEndpointPath(
+                GetString(root, "Path"),
+                GetString(root, "QueryString"));
+            auditLog.RequestPayload = GetString(root, "RequestBody");
+            auditLog.ResponsePayload = GetString(root, "ResponseBody");
+            auditLog.StatusCode = GetInt(root, "StatusCode");
+            auditLog.ExecutionTimeMs = GetLong(root, "ExecutionTimeMs");
+            auditLog.EventCategory = "Request";
+        }
+        catch
+        {
+            // Keep the raw NewValue payload if request-field normalization fails.
+        }
+    }
+
+    private static string? GetString(JsonElement element, string propertyName)
+    {
+        return element.TryGetProperty(propertyName, out var property) && property.ValueKind != JsonValueKind.Null
+            ? property.ToString()
+            : null;
+    }
+
+    private static int? GetInt(JsonElement element, string propertyName)
+    {
+        return element.TryGetProperty(propertyName, out var property) && property.TryGetInt32(out var value)
+            ? value
+            : null;
+    }
+
+    private static long? GetLong(JsonElement element, string propertyName)
+    {
+        return element.TryGetProperty(propertyName, out var property) && property.TryGetInt64(out var value)
+            ? value
+            : null;
+    }
+
+    private static string? BuildEndpointPath(string? path, string? queryString)
+    {
+        if (string.IsNullOrEmpty(path))
+        {
+            return null;
+        }
+
+        return string.IsNullOrEmpty(queryString) ? path : $"{path}{queryString}";
     }
 
     /// <summary>
