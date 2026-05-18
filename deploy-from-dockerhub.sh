@@ -91,7 +91,7 @@ services:
       - thinkonerp-network
     restart: unless-stopped
     healthcheck:
-      test: ["CMD-SHELL", "echo 'SELECT 1 FROM DUAL;' | sqlplus -s THINKON_ERP/THINKON_ERP@//localhost:1521/XEPDB1 || exit 1"]
+      test: ["CMD-SHELL", "echo 'SELECT 1 FROM DUAL;' | sqlplus -s THINKON_ERP2/THINKON_ERP2@//localhost:1521/XEPDB1 || exit 1"]
       interval: 30s
       timeout: 10s
       retries: 5
@@ -106,7 +106,7 @@ services:
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
       - ASPNETCORE_URLS=http://+:8080
-      - ConnectionStrings__OracleDb=User Id=THINKON_ERP;Password=THINKON_ERP;Data Source=oracle-db:1521/XEPDB1
+      - ConnectionStrings__OracleDb=User Id=THINKON_ERP2;Password=THINKON_ERP2;Data Source=oracle-db:1521/XEPDB1
       - JwtSettings__SecretKey=\${JWT_SECRET_KEY}
       - JwtSettings__Issuer=\${JWT_ISSUER}
       - JwtSettings__Audience=\${JWT_AUDIENCE}

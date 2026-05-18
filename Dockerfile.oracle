@@ -25,7 +25,7 @@ EXPOSE 1521 5500
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=10s --retries=5 --start-period=120s \
-    CMD echo "SELECT 1 FROM DUAL;" | sqlplus -s THINKON_ERP/THINKON_ERP@//localhost:1521/XEPDB1 || exit 1
+    CMD echo "SELECT 1 FROM DUAL;" | sqlplus -s THINKON_ERP2/THINKON_ERP2@//localhost:1521/XEPDB1 || exit 1
 
 # Use Oracle's default entrypoint
 # The startup scripts in /opt/oracle/scripts/startup/ will run automatically
