@@ -1,26 +1,25 @@
 version: '3.8'
 
 # Simple deployment - API only (external Oracle database)
+# Usage on server: docker compose -f docker-compose.simple.yml up -d
 services:
   thinkonerp-api:
-    build:
-      context: .
-      dockerfile: Dockerfile
+    image: devosamaarori/thinkonerp-api:latest
+    # Uncomment below to build locally instead of pulling from Docker Hub:
+    # build:
+    #   context: .
+    #   dockerfile: Dockerfile
     container_name: thinkonerp-api
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
-      - ASPNETCORE_URLS=http://+:8080
+      - ASPNETCORE_URLS=http://+:5000
       - ConnectionStrings__OracleDb=${ORACLE_CONNECTION_STRING}
-      - JwtSettings__SecretKey=${JWT_SECRET_KEY}
-      - JwtSettings__Issuer=${JWT_ISSUER:-ThinkOnErpAPI}
-      - JwtSettings__Audience=${JWT_AUDIENCE:-ThinkOnErpClient}
-      - JwtSettings__ExpiryInMinutes=${JWT_EXPIRY_MINUTES:-60}
       - Serilog__MinimumLevel__Default=${LOG_LEVEL:-Information}
     ports:
-      - "${API_PORT:-5000}:8080"
+      - "5000:5000"
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
       interval: 30s
       timeout: 3s
       retries: 3

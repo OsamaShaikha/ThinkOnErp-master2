@@ -44,7 +44,7 @@ EOF
 
 # Switch to XEPDB1 and run the consolidated script
 echo "Running consolidated database scripts..."
-sqlplus THINKON_ERP2/THINKON_ERP2@//localhost:1521/XEPDB1 <<EOF
+sqlplus THINKON_ERP/THINKON_ERP@//localhost:1521/XEPDB1 <<EOF
 SET SERVEROUTPUT ON SIZE UNLIMITED
 SET ECHO ON
 SET FEEDBACK ON

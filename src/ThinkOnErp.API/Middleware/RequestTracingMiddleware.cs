@@ -213,6 +213,9 @@ public class RequestTracingMiddleware
             StartTime = DateTime.UtcNow
         };
 
+        // Track local IP (server-side network interface)
+        requestContext.Metadata["LocalIp"] = context.Connection.LocalIpAddress?.ToString();
+
         // Extract user information from JWT claims
         if (user.Identity?.IsAuthenticated == true)
         {
@@ -232,6 +235,13 @@ public class RequestTracingMiddleware
             if (branchIdClaim != null && long.TryParse(branchIdClaim.Value, out var branchId))
             {
                 requestContext.BranchId = branchId;
+            }
+
+            // Capture username from JWT claims
+            var userNameClaim = user.FindFirst("name") ?? user.FindFirst("preferred_username") ?? user.FindFirst("sub");
+            if (userNameClaim != null)
+            {
+                requestContext.Metadata["UserName"] = userNameClaim.Value;
             }
         }
 
@@ -416,6 +426,16 @@ public class RequestTracingMiddleware
     {
         try
         {
+            var endpointName = ExtractEndpointName(requestContext.Path);
+            var isError = responseContext.StatusCode >= 400;
+            var severity = responseContext.StatusCode >= 500 ? "Error"
+                : responseContext.StatusCode >= 400 ? "Warning"
+                : "Info";
+
+            // Extract metadata fields
+            requestContext.Metadata.TryGetValue("UserName", out var userName);
+            requestContext.Metadata.TryGetValue("LocalIp", out var localIp);
+
             var auditEvent = new DataChangeAuditEvent
             {
                 CorrelationId = requestContext.CorrelationId,
@@ -424,12 +444,19 @@ public class RequestTracingMiddleware
                 CompanyId = requestContext.CompanyId,
                 BranchId = requestContext.BranchId,
                 Action = "REQUEST",
-                EntityType = "HttpRequest",
+                EntityType = endpointName,
                 EntityId = null,
                 IpAddress = requestContext.IpAddress,
                 UserAgent = requestContext.UserAgent,
                 Timestamp = requestContext.StartTime,
-                OldValue = null, // Not applicable for requests
+                OldValue = null,
+                EventCategory = "Request",
+                Metadata = System.Text.Json.JsonSerializer.Serialize(new
+                {
+                    UserName = userName,
+                    LocalIpAddress = localIp,
+                    WanIpAddress = requestContext.IpAddress
+                }),
                 NewValue = System.Text.Json.JsonSerializer.Serialize(new
                 {
                     requestContext.HttpMethod,
@@ -438,9 +465,25 @@ public class RequestTracingMiddleware
                     requestContext.RequestBody,
                     responseContext.StatusCode,
                     responseContext.ResponseBody,
-                    responseContext.ExecutionTimeMs
+                    responseContext.ExecutionTimeMs,
+                    Severity = severity,
+                    UserName = userName,
+                    LocalIp = localIp,
+                    WanIp = requestContext.IpAddress
                 })
             };
+
+            // Set status for error tracking
+            if (isError)
+            {
+                auditEvent.Metadata = System.Text.Json.JsonSerializer.Serialize(new
+                {
+                    UserName = userName,
+                    LocalIpAddress = localIp,
+                    WanIpAddress = requestContext.IpAddress,
+                    Status = "Unresolved"
+                });
+            }
 
             await _auditLogger.LogDataChangeAsync(auditEvent);
 
@@ -476,6 +519,12 @@ public class RequestTracingMiddleware
                 severity = exceptionCategorization.DetermineSeverity(exception);
             }
 
+            var endpointName = ExtractEndpointName(requestContext.Path);
+
+            // Extract metadata fields
+            requestContext.Metadata.TryGetValue("UserName", out var userName);
+            requestContext.Metadata.TryGetValue("LocalIp", out var localIp);
+
             var auditEvent = new ExceptionAuditEvent
             {
                 CorrelationId = requestContext.CorrelationId,
@@ -484,7 +533,7 @@ public class RequestTracingMiddleware
                 CompanyId = requestContext.CompanyId,
                 BranchId = requestContext.BranchId,
                 Action = "EXCEPTION",
-                EntityType = "HttpRequest",
+                EntityType = endpointName,
                 EntityId = null,
                 IpAddress = requestContext.IpAddress,
                 UserAgent = requestContext.UserAgent,
@@ -493,7 +542,17 @@ public class RequestTracingMiddleware
                 ExceptionMessage = exception.Message,
                 StackTrace = exception.StackTrace ?? string.Empty,
                 InnerException = exception.InnerException?.ToString(),
-                Severity = severity
+                Severity = severity,
+                Metadata = System.Text.Json.JsonSerializer.Serialize(new
+                {
+                    UserName = userName,
+                    LocalIpAddress = localIp,
+                    WanIpAddress = requestContext.IpAddress,
+                    Status = "Unresolved",
+                    HttpMethod = requestContext.HttpMethod,
+                    EndpointPath = requestContext.Path,
+                    RequestBody = requestContext.RequestBody
+                })
             };
 
             await _auditLogger.LogExceptionAsync(auditEvent);
@@ -511,5 +570,35 @@ public class RequestTracingMiddleware
             _logger.LogError(ex, "Failed to log request exception. CorrelationId: {CorrelationId}",
                 requestContext.CorrelationId);
         }
+    }
+
+    /// <summary>
+    /// Extract a meaningful endpoint entity type from the request path.
+    /// e.g., /api/Auth/superadmin/login -> Auth.Login
+    /// e.g., /api/Company -> Company.List
+    /// </summary>
+    private static string ExtractEndpointName(string path)
+    {
+        if (string.IsNullOrWhiteSpace(path))
+            return "Unknown";
+
+        var segments = path.Split('/',
+            StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+
+        // Skip leading "api" segment if present
+        int start = segments.Length > 0
+            && string.Equals(segments[0], "api", StringComparison.OrdinalIgnoreCase) ? 1 : 0;
+
+        if (segments.Length - start >= 2)
+        {
+            var controller = segments[start];
+            var action = segments[^1];
+            return $"{controller}.{action}";
+        }
+
+        if (segments.Length > start)
+            return segments[start];
+
+        return path;
     }
 }

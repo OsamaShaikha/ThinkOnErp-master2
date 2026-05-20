@@ -685,11 +685,14 @@ public class AuditLogger : IAuditLogger, IHostedService
                 auditLog.ExceptionMessage = exception.ExceptionMessage;
                 auditLog.StackTrace = exception.StackTrace;
                 auditLog.Severity = exception.Severity;
-                auditLog.Metadata = System.Text.Json.JsonSerializer.Serialize(new
-                {
-                    exception.InnerException,
-                    ExceptionMetadata = exception.Metadata
-                });
+                auditLog.Status = "Unresolved";
+                // Use Metadata as-is if already JSON, otherwise wrap with InnerException
+                auditLog.Metadata = !string.IsNullOrEmpty(exception.Metadata)
+                    ? exception.Metadata
+                    : System.Text.Json.JsonSerializer.Serialize(new
+                    {
+                        exception.InnerException
+                    });
                 break;
         }
 
@@ -770,6 +773,19 @@ public class AuditLogger : IAuditLogger, IHostedService
             auditLog.StatusCode = GetInt(root, "StatusCode");
             auditLog.ExecutionTimeMs = GetLong(root, "ExecutionTimeMs");
             auditLog.EventCategory = "Request";
+
+            // Set severity from NewValue if present
+            var severity = GetString(root, "Severity");
+            if (!string.IsNullOrEmpty(severity))
+            {
+                auditLog.Severity = severity;
+            }
+
+            // Set status for error tracking based on status code
+            if (auditLog.StatusCode >= 500)
+                auditLog.Status = "Critical";
+            else if (auditLog.StatusCode >= 400)
+                auditLog.Status = "Unresolved";
         }
         catch
         {

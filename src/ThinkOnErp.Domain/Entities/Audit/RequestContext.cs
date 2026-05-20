@@ -65,4 +65,9 @@ public class RequestContext
     /// Timestamp when the request started
     /// </summary>
     public DateTime StartTime { get; set; } = DateTime.UtcNow;
+
+    /// <summary>
+    /// Additional metadata that can be added during request processing
+    /// </summary>
+    public Dictionary<string, object> Metadata { get; set; } = new();
 }
