@@ -59,11 +59,30 @@ ORACLE_CONNECTION_STRING="User Id=${ORACLE_USER};Password=${ORACLE_PASSWORD};Dat
 echo ""
 echo "Using connection: ${ORACLE_USER}@${ORACLE_HOST}:${ORACLE_PORT}/${ORACLE_SERVICE}"
 
+# Ask for JWT secret
+echo ""
+echo "=========================================="
+echo "JWT Settings"
+echo "=========================================="
+read -sp "JWT Secret Key (press Enter for random): " JWT_INPUT
+echo ""
+if [ -z "$JWT_INPUT" ]; then
+    JWT_SECRET_KEY=$(openssl rand -base64 32 2>/dev/null || echo "ChangeMeToARandomSecretKeyForJWT!")
+else
+    JWT_SECRET_KEY="$JWT_INPUT"
+fi
+
 # Create .env file
 echo "Creating .env file..."
 cat > .env << EOF
 # Oracle Database Connection
 ORACLE_CONNECTION_STRING=${ORACLE_CONNECTION_STRING}
+
+# JWT Settings
+JWT_SECRET_KEY=${JWT_SECRET_KEY}
+JWT_ISSUER=ThinkOnErpAPI
+JWT_AUDIENCE=ThinkOnErpClient
+JWT_EXPIRY_MINUTES=60
 
 # Logging
 LOG_LEVEL=Information
@@ -86,6 +105,10 @@ services:
       - ASPNETCORE_ENVIRONMENT=Production
       - ASPNETCORE_URLS=http://+:5000
       - ConnectionStrings__OracleDb=${ORACLE_CONNECTION_STRING}
+      - JwtSettings__SecretKey=${JWT_SECRET_KEY}
+      - JwtSettings__Issuer=${JWT_ISSUER:-ThinkOnErpAPI}
+      - JwtSettings__Audience=${JWT_AUDIENCE:-ThinkOnErpClient}
+      - JwtSettings__ExpiryInMinutes=${JWT_EXPIRY_MINUTES:-60}
       - Serilog__MinimumLevel__Default=${LOG_LEVEL:-Information}
     ports:
       - "5000:5000"
