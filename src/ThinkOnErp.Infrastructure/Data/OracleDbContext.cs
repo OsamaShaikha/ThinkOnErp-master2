@@ -43,6 +43,9 @@ public class OracleDbContext : DbContext
     public DbSet<SysSavedSearch> SysSavedSearches => Set<SysSavedSearch>();
     public DbSet<SysSearchAnalytics> SysSearchAnalytics => Set<SysSearchAnalytics>();
 
+    // Document management
+    public DbSet<SysDocument> SysDocuments => Set<SysDocument>();
+
     // Audit log
     public DbSet<SysAuditLog> SysAuditLogs => Set<SysAuditLog>();
 
@@ -92,6 +95,7 @@ public class OracleDbContext : DbContext
         modelBuilder.ApplyConfiguration(new SysTicketConfigConfiguration());
         modelBuilder.ApplyConfiguration(new SysSavedSearchConfiguration());
         modelBuilder.ApplyConfiguration(new SysSearchAnalyticsConfiguration());
+        modelBuilder.ApplyConfiguration(new SysDocumentConfiguration());
         modelBuilder.ApplyConfiguration(new SysAuditLogConfiguration());
         modelBuilder.ApplyConfiguration(new SysSecurityThreatConfiguration());
         modelBuilder.ApplyConfiguration(new SysFailedLoginConfiguration());

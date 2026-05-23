@@ -185,6 +185,10 @@ public static class DependencyInjection
         services.AddSingleton<IExternalStorageProviderFactory, ExternalStorageProviderFactory>();
         services.AddScoped<IArchivalService, ArchivalService>();
 
+        // Register document management services
+        services.AddScoped<IDocumentRepository, DocumentRepository>();
+        services.AddScoped<IDocumentStorageService, DocumentStorageService>();
+
         // Register multi-tenant access control services
         services.AddScoped<IMultiTenantAccessService, MultiTenantAccessService>();
 
