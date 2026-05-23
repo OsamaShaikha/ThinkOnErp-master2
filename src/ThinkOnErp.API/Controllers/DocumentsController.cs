@@ -102,6 +102,87 @@ public class DocumentsController : ControllerBase
         }
     }
 
+    [HttpPost("upload-bulk")]
+    [ProducesResponseType(typeof(ApiResponse<List<DocumentUploadResult>>), StatusCodes.Status201Created)]
+    [ProducesResponseType(typeof(ApiResponse<List<DocumentUploadResult>>), StatusCodes.Status400BadRequest)]
+    public async Task<ActionResult<ApiResponse<List<DocumentUploadResult>>>> UploadBulk(
+        [FromForm] string ownerType,
+        [FromForm] long ownerId,
+        [FromForm] string? description,
+        [FromForm] string? category,
+        [FromForm] string? tags)
+    {
+        try
+        {
+            var files = Request.Form.Files;
+            if (files == null || files.Count == 0)
+            {
+                return BadRequest(ApiResponse<List<DocumentUploadResult>>.CreateFailure("No files uploaded."));
+            }
+
+            _logger.LogInformation("Uploading {FileCount} document(s) for {OwnerType} {OwnerId}",
+                files.Count, ownerType, ownerId);
+
+            var results = new List<DocumentUploadResult>();
+            var errors = new List<string>();
+
+            foreach (var file in files)
+            {
+                try
+                {
+                    var command = new UploadDocumentCommand
+                    {
+                        FileStream = file.OpenReadStream(),
+                        FileName = file.FileName,
+                        FileSize = file.Length,
+                        ContentType = file.ContentType,
+                        Description = description,
+                        Category = category,
+                        Tags = tags,
+                        OwnerType = ownerType,
+                        OwnerId = ownerId,
+                        CreationUser = User.Identity?.Name ?? "system"
+                    };
+
+                    var result = await _mediator.Send(command);
+
+                    if (result.Success)
+                    {
+                        results.Add(result.Data!);
+                    }
+                    else
+                    {
+                        errors.Add($"{file.FileName}: {result.Message}");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Error uploading file {FileName} in bulk", file.FileName);
+                    errors.Add($"{file.FileName}: {ex.Message}");
+                }
+            }
+
+            if (results.Count == 0)
+            {
+                return BadRequest(ApiResponse<List<DocumentUploadResult>>.CreateFailure(
+                    "All uploads failed.", errors));
+            }
+
+            var response = ApiResponse<List<DocumentUploadResult>>.CreateSuccess(
+                results,
+                $"{results.Count} document(s) uploaded successfully. {errors.Count} failure(s).",
+                201);
+            response.Errors = errors.Count > 0 ? errors : null;
+
+            return CreatedAtAction(nameof(GetList), null, response);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error in bulk document upload");
+            throw;
+        }
+    }
+
     [HttpGet]
     [ProducesResponseType(typeof(ApiResponse<PagedResult<DocumentDto>>), StatusCodes.Status200OK)]
     public async Task<ActionResult<ApiResponse<PagedResult<DocumentDto>>>> GetList(
