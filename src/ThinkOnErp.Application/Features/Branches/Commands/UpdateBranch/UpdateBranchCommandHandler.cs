@@ -25,6 +25,7 @@ public class UpdateBranchCommandHandler : IRequestHandler<UpdateBranchCommand, I
             Mobile = request.Mobile,
             Fax = request.Fax,
             Email = request.Email,
+            TaxNumber = request.TaxNumber,
             IsHeadBranch = request.IsHeadBranch,
             DefaultLang = request.DefaultLang,
             BaseCurrencyId = request.BaseCurrencyId,

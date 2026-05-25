@@ -78,7 +78,7 @@ public class CompanyRepository : ICompanyRepository
         byte[]? companyLogo, string? branchNameAr, string? branchNameEn,
         string? branchPhone, string? branchMobile,
         string? branchFax, string? branchEmail,
-        byte[]? branchLogo, string? defaultLang,
+        byte[]? branchLogo, int? defaultLang,
         long? baseCurrencyId, int? roundingRules,
         string creationUser)
     {
@@ -94,7 +94,6 @@ public class CompanyRepository : ICompanyRepository
                 LegalName = legalNameAr,
                 LegalNameE = legalNameEn,
                 CompanyCode = companyCode,
-                TaxNumber = taxNumber,
                 CountryId = countryId,
                 CurrId = currId,
                 CompanyLogo = companyLogo,
@@ -116,7 +115,8 @@ public class CompanyRepository : ICompanyRepository
                 Fax = branchFax,
                 Email = branchEmail,
                 IsHeadBranch = true,
-                DefaultLang = defaultLang ?? "ar",
+                TaxNumber = taxNumber,
+                DefaultLang = defaultLang ?? 1,
                 BaseCurrencyId = baseCurrencyId,
                 RoundingRules = roundingRules ?? 1,
                 BranchLogo = branchLogo,

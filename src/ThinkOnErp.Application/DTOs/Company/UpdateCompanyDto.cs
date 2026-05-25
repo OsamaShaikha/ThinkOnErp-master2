@@ -42,11 +42,6 @@ public class UpdateCompanyDto
     public string? CompanyCode { get; set; }
 
     /// <summary>
-    /// Tax registration number (optional)
-    /// </summary>
-    public string? TaxNumber { get; set; }
-
-    /// <summary>
     /// Foreign key to SYS_BRANCH table - references the default/head branch for this company (optional)
     /// </summary>
     public Int64? DefaultBranchId { get; set; }

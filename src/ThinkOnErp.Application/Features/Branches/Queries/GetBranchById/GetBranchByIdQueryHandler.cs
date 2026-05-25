@@ -30,6 +30,7 @@ public class GetBranchByIdQueryHandler : IRequestHandler<GetBranchByIdQuery, Bra
             Mobile = branch.Mobile,
             Fax = branch.Fax,
             Email = branch.Email,
+            TaxNumber = branch.TaxNumber,
             IsHeadBranch = branch.IsHeadBranch,
             DefaultLang = branch.DefaultLang,
             BaseCurrencyId = branch.BaseCurrencyId,

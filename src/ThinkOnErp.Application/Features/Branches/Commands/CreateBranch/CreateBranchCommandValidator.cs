@@ -9,6 +9,7 @@ public class CreateBranchCommandValidator : AbstractValidator<CreateBranchComman
         RuleFor(x => x.BranchNameAr).NotEmpty().MaximumLength(100);
         RuleFor(x => x.BranchNameEn).NotEmpty().MaximumLength(100);
         RuleFor(x => x.Email).EmailAddress().When(x => !string.IsNullOrEmpty(x.Email));
+        RuleFor(x => x.TaxNumber).MaximumLength(50).When(x => !string.IsNullOrEmpty(x.TaxNumber));
         RuleFor(x => x.CreationUser).NotEmpty();
 
         // Base64 Logo Validation

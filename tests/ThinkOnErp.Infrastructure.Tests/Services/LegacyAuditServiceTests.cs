@@ -105,7 +105,7 @@ public class LegacyAuditServiceTests
         // Arrange
         var auditEntry = new AuditLogEntry
         {
-            RowId = 1,
+            Id = 1,
             Action = "INSERT",
             EntityType = "Ticket",
             ActorName = "John Doe",
@@ -125,7 +125,7 @@ public class LegacyAuditServiceTests
         // Arrange
         var auditEntry = new AuditLogEntry
         {
-            RowId = 1,
+            Id = 1,
             Action = "UPDATE",
             EntityType = "User",
             ActorName = "Jane Smith",
@@ -145,7 +145,7 @@ public class LegacyAuditServiceTests
         // Arrange
         var auditEntry = new AuditLogEntry
         {
-            RowId = 1,
+            Id = 1,
             Action = "EXCEPTION",
             EntityType = "System",
             ExceptionMessage = "Connection timeout occurred",
@@ -166,7 +166,7 @@ public class LegacyAuditServiceTests
         var longMessage = new string('A', 150); // 150 characters
         var auditEntry = new AuditLogEntry
         {
-            RowId = 1,
+            Id = 1,
             Action = "EXCEPTION",
             EntityType = "System",
             ExceptionMessage = longMessage,
@@ -187,7 +187,7 @@ public class LegacyAuditServiceTests
         // Arrange
         var auditEntry = new AuditLogEntry
         {
-            RowId = 123,
+            Id = 123,
             Action = "INSERT",
             EntityType = "Ticket",
             ActorName = "John Doe",
@@ -223,7 +223,7 @@ public class LegacyAuditServiceTests
         // Arrange
         var auditEntry = new AuditLogEntry
         {
-            RowId = 456,
+            Id = 456,
             Action = "SYSTEM",
             EntityType = "Unknown",
             ActorName = null,

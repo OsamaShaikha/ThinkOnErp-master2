@@ -136,7 +136,7 @@ public class RedisCachingIntegrationTests : IDisposable
         {
             new SysAuditLog
             {
-                RowId = 1,
+                Id = 1,
                 ActorType = "USER",
                 ActorId = 1,
                 CompanyId = 1,

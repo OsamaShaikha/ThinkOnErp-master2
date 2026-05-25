@@ -54,7 +54,7 @@ public class TicketNotificationServiceTests
 
         var ticket = new SysRequestTicket
         {
-            RowId = 123,
+            Id = 123,
             TitleEn = "Test Ticket",
             Description = "Test Description",
             RequesterId = 1,
@@ -84,7 +84,7 @@ public class TicketNotificationServiceTests
         _mockConfiguration.Setup(c => c.GetValue<bool>("Notifications:Enabled", true))
             .Returns(false);
 
-        var ticket = new SysRequestTicket { RowId = 123 };
+        var ticket = new SysRequestTicket { Id = 123 };
 
         // Act
         await _service.SendTicketCreatedNotificationAsync(ticket);
@@ -113,7 +113,7 @@ public class TicketNotificationServiceTests
 
         var ticket = new SysRequestTicket
         {
-            RowId = 123,
+            Id = 123,
             TitleEn = "Test Ticket",
             Description = "Test Description",
             AssigneeId = 2,
@@ -144,7 +144,7 @@ public class TicketNotificationServiceTests
         // Arrange
         var ticket = new SysRequestTicket
         {
-            RowId = 123,
+            Id = 123,
             AssigneeId = null
         };
 
@@ -175,7 +175,7 @@ public class TicketNotificationServiceTests
 
         var ticket = new SysRequestTicket
         {
-            RowId = 123,
+            Id = 123,
             TitleEn = "Test Ticket",
             RequesterId = 1,
             TicketStatusId = 2,
@@ -213,7 +213,7 @@ public class TicketNotificationServiceTests
 
         var ticket = new SysRequestTicket
         {
-            RowId = 123,
+            Id = 123,
             TitleEn = "Test Ticket",
             RequesterId = 1,
             Requester = requester
@@ -221,7 +221,7 @@ public class TicketNotificationServiceTests
 
         var comment = new SysTicketComment
         {
-            RowId = 1,
+            Id = 1,
             CommentText = "Test comment",
             CreationUser = "admin",
             CreationDate = DateTime.UtcNow
@@ -257,7 +257,7 @@ public class TicketNotificationServiceTests
 
         var ticket = new SysRequestTicket
         {
-            RowId = 123,
+            Id = 123,
             TitleEn = "Test Ticket",
             ExpectedResolutionDate = DateTime.UtcNow.AddHours(-1),
             CreationDate = DateTime.UtcNow.AddDays(-1),
@@ -296,7 +296,7 @@ public class TicketNotificationServiceTests
 
         var ticket = new SysRequestTicket
         {
-            RowId = 123,
+            Id = 123,
             TitleEn = "Test Ticket",
             RequesterId = 1,
             Requester = requester
@@ -304,7 +304,7 @@ public class TicketNotificationServiceTests
 
         var attachment = new SysTicketAttachment
         {
-            RowId = 1,
+            Id = 1,
             FileName = "test.pdf",
             FileSize = 1024,
             CreationUser = "admin",
@@ -339,7 +339,7 @@ public class TicketNotificationServiceTests
         // by checking that no exceptions are thrown during notification sending
         var ticket = new SysRequestTicket
         {
-            RowId = 123,
+            Id = 123,
             TitleEn = "Test",
             Description = input ?? "",
             Requester = new SysUser { Email = "test@test.com", FullNameEn = "Test User" }
@@ -356,7 +356,7 @@ public class TicketNotificationServiceTests
         // Arrange
         var ticket = new SysRequestTicket
         {
-            RowId = 123,
+            Id = 123,
             TitleEn = "Test Ticket",
             Requester = new SysUser { Email = "test@test.com", Id = 0 }
         };

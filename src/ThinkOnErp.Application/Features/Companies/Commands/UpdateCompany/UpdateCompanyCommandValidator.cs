@@ -19,8 +19,6 @@ public class UpdateCompanyCommandValidator : AbstractValidator<UpdateCompanyComm
             .MaximumLength(50)
             .When(x => !string.IsNullOrEmpty(x.CompanyCode));
 
-        RuleFor(x => x.TaxNumber).MaximumLength(50).When(x => !string.IsNullOrEmpty(x.TaxNumber));
-
         // Base64 Logo Validation
         RuleFor(x => x.CompanyLogoBase64)
             .Must(BeValidBase64)

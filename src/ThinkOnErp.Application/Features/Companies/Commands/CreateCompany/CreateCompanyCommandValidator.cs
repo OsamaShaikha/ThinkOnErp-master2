@@ -18,11 +18,6 @@ public class CreateCompanyCommandValidator : AbstractValidator<CreateCompanyComm
             .MaximumLength(50)
             .When(x => !string.IsNullOrEmpty(x.CompanyCode));
 
-        RuleFor(x => x.DefaultLang)
-            .Must(lang => lang == "ar" || lang == "en")
-            .WithMessage("Default language must be 'ar' or 'en'")
-            .When(x => !string.IsNullOrEmpty(x.DefaultLang));
-
-        RuleFor(x => x.TaxNumber).MaximumLength(50).When(x => !string.IsNullOrEmpty(x.TaxNumber));
+        RuleFor(x => x.DefaultLang).GreaterThan(0).When(x => x.DefaultLang.HasValue);
     }
 }

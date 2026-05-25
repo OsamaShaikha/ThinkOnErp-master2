@@ -299,7 +299,7 @@ public class ComplianceReporterTests
         
         var mockUser = new ThinkOnErp.Domain.Entities.SysUser
         {
-            RowId = userId,
+            Id = userId,
             UserName = "testuser",
             Email = "testuser@example.com"
         };
@@ -351,7 +351,7 @@ public class ComplianceReporterTests
         {
             new AuditLogEntry
             {
-                RowId = 1,
+                Id = 1,
                 ActorId = userId,
                 Action = "INSERT",
                 EntityType = "SysUser",
@@ -362,7 +362,7 @@ public class ComplianceReporterTests
             },
             new AuditLogEntry
             {
-                RowId = 2,
+                Id = 2,
                 ActorId = userId,
                 Action = "UPDATE",
                 EntityType = "SysCompany",
@@ -373,7 +373,7 @@ public class ComplianceReporterTests
             },
             new AuditLogEntry
             {
-                RowId = 3,
+                Id = 3,
                 ActorId = userId,
                 Action = "LOGIN",
                 EntityType = "System",
@@ -506,7 +506,7 @@ public class ComplianceReporterTests
         {
             new AuditLogEntry
             {
-                RowId = 1,
+                Id = 1,
                 ActorId = 100,
                 ActorName = "Admin User",
                 Action = "INSERT",
@@ -519,7 +519,7 @@ public class ComplianceReporterTests
             },
             new AuditLogEntry
             {
-                RowId = 2,
+                Id = 2,
                 ActorId = 101,
                 ActorName = "Manager User",
                 Action = "UPDATE",
@@ -533,7 +533,7 @@ public class ComplianceReporterTests
             },
             new AuditLogEntry
             {
-                RowId = 3,
+                Id = 3,
                 ActorId = 100,
                 ActorName = "Admin User",
                 Action = "DELETE",
@@ -674,7 +674,7 @@ public class ComplianceReporterTests
         {
             new AuditLogEntry
             {
-                RowId = 1,
+                Id = 1,
                 ActorId = 100,
                 ActorName = null, // Null actor name
                 Action = "INSERT",
@@ -1781,7 +1781,7 @@ public class ComplianceReporterTests
         {
             new AuditLogEntry
             {
-                RowId = 1,
+                Id = 1,
                 ActorId = 100,
                 ActorName = "Admin User",
                 Action = "UPDATE",

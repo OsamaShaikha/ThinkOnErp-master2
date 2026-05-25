@@ -5,6 +5,8 @@ using ThinkOnErp.Application.Common;
 using ThinkOnErp.Application.DTOs.BranchPermission;
 using ThinkOnErp.Application.Features.BranchPermissions.Commands.GrantSystemAccess;
 using ThinkOnErp.Application.Features.BranchPermissions.Commands.RevokeSystemAccess;
+using ThinkOnErp.Application.Features.BranchPermissions.Commands.GrantSystemWithScreens;
+using ThinkOnErp.Application.Features.BranchPermissions.Commands.RevokeSystemWithScreens;
 using ThinkOnErp.Application.Features.BranchPermissions.Commands.GrantScreenAccess;
 using ThinkOnErp.Application.Features.BranchPermissions.Commands.RevokeScreenAccess;
 using ThinkOnErp.Application.Features.BranchPermissions.Queries.GetBranchSystems;
@@ -150,6 +152,101 @@ public class BranchPermissionsController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error revoking system access - BranchId: {BranchId}, SystemId: {SystemId}",
+                branchId, systemId);
+            throw;
+        }
+    }
+
+    /// <summary>
+    /// Grant system access with all its screens to a branch.
+    /// </summary>
+    [HttpPost("{branchId}/systems/{systemId}/grant-with-screens")]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status403Forbidden)]
+    public async Task<ActionResult<ApiResponse<object>>> GrantSystemWithScreens(
+        long branchId,
+        long systemId,
+        [FromBody] GrantSystemAccessDto dto)
+    {
+        try
+        {
+            _logger.LogInformation(
+                "Super admin granting system (with all screens) - BranchId: {BranchId}, SystemId: {SystemId}",
+                branchId, systemId);
+
+            var command = new GrantSystemWithScreensCommand
+            {
+                BranchId = branchId,
+                SystemId = systemId,
+                GrantedBy = dto.GrantedBy,
+                CreationUser = User.Identity?.Name ?? "superadmin"
+            };
+
+            await _mediator.Send(command);
+
+            _logger.LogInformation(
+                "System (with all screens) granted successfully - BranchId: {BranchId}, SystemId: {SystemId}",
+                branchId, systemId);
+
+            return Ok(ApiResponse<object>.CreateSuccess(
+                new { },
+                "System and all its screens granted successfully",
+                200));
+        }
+        catch (ArgumentException ex)
+        {
+            _logger.LogWarning("Validation error granting system with screens: {ErrorMessage}", ex.Message);
+            return BadRequest(ApiResponse<object>.CreateFailure(ex.Message, statusCode: 400));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error granting system with screens - BranchId: {BranchId}, SystemId: {SystemId}",
+                branchId, systemId);
+            throw;
+        }
+    }
+
+    /// <summary>
+    /// Revoke system access with all its screens from a branch.
+    /// </summary>
+    [HttpPost("{branchId}/systems/{systemId}/revoke-with-screens")]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status403Forbidden)]
+    public async Task<ActionResult<ApiResponse<object>>> RevokeSystemWithScreens(
+        long branchId,
+        long systemId)
+    {
+        try
+        {
+            _logger.LogInformation(
+                "Super admin revoking system (with all screens) - BranchId: {BranchId}, SystemId: {SystemId}",
+                branchId, systemId);
+
+            var command = new RevokeSystemWithScreensCommand
+            {
+                BranchId = branchId,
+                SystemId = systemId,
+                UpdateUser = User.Identity?.Name ?? "superadmin"
+            };
+
+            await _mediator.Send(command);
+
+            _logger.LogInformation(
+                "System (with all screens) revoked successfully - BranchId: {BranchId}, SystemId: {SystemId}",
+                branchId, systemId);
+
+            return Ok(ApiResponse<object>.CreateSuccess(
+                new { },
+                "System and all its screens revoked successfully",
+                200));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error revoking system with screens - BranchId: {BranchId}, SystemId: {SystemId}",
                 branchId, systemId);
             throw;
         }

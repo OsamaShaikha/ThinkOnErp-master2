@@ -74,7 +74,7 @@ public interface ICompanyRepository
     /// <param name="legalNameAr">Legal name in Arabic</param>
     /// <param name="legalNameEn">Legal name in English (required)</param>
     /// <param name="companyCode">Unique company code (required)</param>
-    /// <param name="taxNumber">Tax registration number</param>
+    /// <param name="taxNumber">Tax registration number (applied to default branch)</param>
     /// <param name="countryId">Country ID</param>
     /// <param name="currId">Currency ID (legacy)</param>
     /// <param name="companyLogo">Company logo as byte array</param>
@@ -85,7 +85,7 @@ public interface ICompanyRepository
     /// <param name="branchFax">Branch fax number</param>
     /// <param name="branchEmail">Branch email address</param>
     /// <param name="branchLogo">Branch logo as byte array</param>
-    /// <param name="defaultLang">Default language for the branch (ar/en)</param>
+    /// <param name="defaultLang">Default language code (CODE_MNR from SYS_CODE where CODE_MGR=14)</param>
     /// <param name="baseCurrencyId">Base currency ID for the branch</param>
     /// <param name="roundingRules">Rounding rules for the branch</param>
     /// <param name="creationUser">Username of the user creating the records</param>
@@ -107,7 +107,7 @@ public interface ICompanyRepository
         string? branchFax,
         string? branchEmail,
         byte[]? branchLogo,
-        string? defaultLang,
+        int? defaultLang,
         Int64? baseCurrencyId,
         int? roundingRules,
         string creationUser);

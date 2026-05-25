@@ -76,7 +76,7 @@ public class AuditLogIntegrityService : IAuditLogIntegrityService
     /// The hash is computed over critical fields to detect any tampering.
     /// </summary>
     public string GenerateIntegrityHash(
-        long rowId,
+        long id,
         long actorId,
         string action,
         string entityType,
@@ -100,8 +100,8 @@ public class AuditLogIntegrityService : IAuditLogIntegrityService
         try
         {
             // Create canonical representation of audit entry
-            // Format: rowId|actorId|action|entityType|entityId|creationDate|oldValue|newValue
-            var canonical = $"{rowId}|{actorId}|{action}|{entityType}|{entityId?.ToString() ?? "NULL"}|" +
+            // Format: id|actorId|action|entityType|entityId|creationDate|oldValue|newValue
+            var canonical = $"{id}|{actorId}|{action}|{entityType}|{entityId?.ToString() ?? "NULL"}|" +
                            $"{creationDate:O}|{oldValue ?? "NULL"}|{newValue ?? "NULL"}";
 
             byte[] hash;
@@ -115,17 +115,17 @@ public class AuditLogIntegrityService : IAuditLogIntegrityService
             if (_options.LogIntegrityOperations)
             {
                 _logger.LogDebug(
-                    "Generated integrity hash for audit log {RowId}. Canonical length: {Length}, Hash: {Hash}",
-                    rowId, canonical.Length, hashString);
+                    "Generated integrity hash for audit log {Id}. Canonical length: {Length}, Hash: {Hash}",
+                    id, canonical.Length, hashString);
             }
 
             return hashString;
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to generate integrity hash for audit log {RowId}", rowId);
+            _logger.LogError(ex, "Failed to generate integrity hash for audit log {Id}", id);
             throw new InvalidOperationException(
-                $"Integrity hash generation failed for audit log {rowId}. See inner exception for details.", ex);
+                $"Integrity hash generation failed for audit log {id}. See inner exception for details.", ex);
         }
     }
 
@@ -134,7 +134,7 @@ public class AuditLogIntegrityService : IAuditLogIntegrityService
     /// with a newly computed hash. Returns true if hashes match (no tampering detected).
     /// </summary>
     public bool VerifyIntegrityHash(
-        long rowId,
+        long id,
         long actorId,
         string action,
         string entityType,
@@ -146,7 +146,7 @@ public class AuditLogIntegrityService : IAuditLogIntegrityService
     {
         if (string.IsNullOrWhiteSpace(storedHash))
         {
-            _logger.LogWarning("Stored hash is empty for audit log {RowId}. Cannot verify integrity.", rowId);
+            _logger.LogWarning("Stored hash is empty for audit log {Id}. Cannot verify integrity.", id);
             return false;
         }
 
@@ -159,30 +159,30 @@ public class AuditLogIntegrityService : IAuditLogIntegrityService
         try
         {
             var computedHash = GenerateIntegrityHash(
-                rowId, actorId, action, entityType, entityId, creationDate, oldValue, newValue);
+                id, actorId, action, entityType, entityId, creationDate, oldValue, newValue);
 
             var isValid = storedHash == computedHash;
 
             if (_options.LogIntegrityOperations)
             {
                 _logger.LogDebug(
-                    "Integrity verification for audit log {RowId}: {Result}. Stored: {StoredHash}, Computed: {ComputedHash}",
-                    rowId, isValid ? "VALID" : "TAMPERED", storedHash, computedHash);
+                    "Integrity verification for audit log {Id}: {Result}. Stored: {StoredHash}, Computed: {ComputedHash}",
+                    id, isValid ? "VALID" : "TAMPERED", storedHash, computedHash);
             }
 
             if (!isValid)
             {
                 _logger.LogWarning(
-                    "TAMPERING DETECTED: Audit log {RowId} integrity verification failed. " +
+                    "TAMPERING DETECTED: Audit log {Id} integrity verification failed. " +
                     "Stored hash does not match computed hash.",
-                    rowId);
+                    id);
             }
 
             return isValid;
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to verify integrity hash for audit log {RowId}", rowId);
+            _logger.LogError(ex, "Failed to verify integrity hash for audit log {Id}", id);
             return false; // Consider invalid on verification error
         }
     }

@@ -18,6 +18,14 @@ public class BranchPermissionRepository : IBranchPermissionRepository
         _dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
     }
 
+    private async Task<long> GetCompanyIdAsync(long branchId)
+    {
+        return await _dbContext.SysBranches
+            .Where(b => b.Id == branchId)
+            .Select(b => b.CompanyId ?? 0)
+            .FirstOrDefaultAsync();
+    }
+
     #region Branch System Permissions
 
     public async Task<List<SysBranchSystem>> GetBranchSystemsAsync(long branchId)
@@ -35,8 +43,10 @@ public class BranchPermissionRepository : IBranchPermissionRepository
 
     public async Task<long> GrantSystemAccessAsync(long branchId, long systemId, long grantedBy, string? notes, string creationUser)
     {
+        var companyId = await GetCompanyIdAsync(branchId);
         var entity = new SysBranchSystem
         {
+            CompanyId = companyId,
             BranchId = branchId,
             SystemId = systemId,
             IsAllowed = true,
@@ -117,8 +127,10 @@ public class BranchPermissionRepository : IBranchPermissionRepository
 
     public async Task<long> GrantScreenAccessAsync(long branchId, long screenId, long grantedBy, string? notes, string creationUser)
     {
+        var companyId = await GetCompanyIdAsync(branchId);
         var entity = new SysBranchScreenPermission
         {
+            CompanyId = companyId,
             BranchId = branchId,
             ScreenId = screenId,
             CanView = true,
@@ -157,10 +169,12 @@ public class BranchPermissionRepository : IBranchPermissionRepository
 
     public async Task<int> GrantMultipleSystemsAsync(long branchId, List<long> systemIds, long grantedBy, string creationUser)
     {
+        var companyId = await GetCompanyIdAsync(branchId);
         foreach (var systemId in systemIds)
         {
             _dbContext.SysBranchSystems.Add(new SysBranchSystem
             {
+                CompanyId = companyId,
                 BranchId = branchId,
                 SystemId = systemId,
                 IsAllowed = true,
@@ -175,10 +189,12 @@ public class BranchPermissionRepository : IBranchPermissionRepository
 
     public async Task<int> GrantMultipleScreensAsync(long branchId, List<long> screenIds, long grantedBy, string creationUser)
     {
+        var companyId = await GetCompanyIdAsync(branchId);
         foreach (var screenId in screenIds)
         {
             _dbContext.SysBranchScreenPermissions.Add(new SysBranchScreenPermission
             {
+                CompanyId = companyId,
                 BranchId = branchId,
                 ScreenId = screenId,
                 CanView = true,
@@ -192,6 +208,97 @@ public class BranchPermissionRepository : IBranchPermissionRepository
             });
         }
         return await _dbContext.SaveChangesAsync();
+    }
+
+    #endregion
+
+    #region System + All Screens
+
+    public async Task GrantSystemWithAllScreensAsync(long branchId, long systemId, long grantedBy, string creationUser)
+    {
+        var now = DateTime.UtcNow;
+        var companyId = await GetCompanyIdAsync(branchId);
+
+        // Grant the system
+        var existingSystem = await _dbContext.SysBranchSystems
+            .FirstOrDefaultAsync(s => s.BranchId == branchId && s.SystemId == systemId);
+        if (existingSystem == null)
+        {
+            _dbContext.SysBranchSystems.Add(new SysBranchSystem
+            {
+                CompanyId = companyId,
+                BranchId = branchId,
+                SystemId = systemId,
+                IsAllowed = true,
+                GrantedBy = grantedBy,
+                GrantedDate = now,
+                CreationUser = creationUser,
+                CreationDate = now
+            });
+        }
+
+        // Grant all screens of that system (skip already-existing entries)
+        var screens = await _dbContext.SysScreens
+            .Where(s => s.SystemId == systemId)
+            .ToListAsync();
+
+        var existingScreenIds = await _dbContext.SysBranchScreenPermissions
+            .Where(p => p.BranchId == branchId)
+            .Select(p => p.ScreenId)
+            .ToListAsync();
+
+        foreach (var screen in screens)
+        {
+            if (!existingScreenIds.Contains(screen.Id))
+            {
+                _dbContext.SysBranchScreenPermissions.Add(new SysBranchScreenPermission
+                {
+                    CompanyId = companyId,
+                    BranchId = branchId,
+                    ScreenId = screen.Id,
+                    CanView = true,
+                    CanInsert = true,
+                    CanUpdate = true,
+                    CanDelete = true,
+                    GrantedBy = grantedBy,
+                    GrantedDate = now,
+                    CreationUser = creationUser,
+                    CreationDate = now
+                });
+            }
+        }
+
+        await _dbContext.SaveChangesAsync();
+    }
+
+    public async Task RevokeSystemWithAllScreensAsync(long branchId, long systemId, string updateUser)
+    {
+        var now = DateTime.UtcNow;
+
+        // Revoke the system
+        var existingSystem = await _dbContext.SysBranchSystems
+            .FirstOrDefaultAsync(s => s.BranchId == branchId && s.SystemId == systemId);
+        if (existingSystem != null)
+        {
+            existingSystem.IsAllowed = false;
+            existingSystem.RevokedDate = now;
+            existingSystem.UpdateUser = updateUser;
+            existingSystem.UpdateDate = now;
+        }
+
+        // Remove all screen permissions for screens belonging to this system
+        var systemScreenIds = await _dbContext.SysScreens
+            .Where(s => s.SystemId == systemId)
+            .Select(s => s.Id)
+            .ToListAsync();
+
+        var screenPermissions = await _dbContext.SysBranchScreenPermissions
+            .Where(p => p.BranchId == branchId && systemScreenIds.Contains(p.ScreenId))
+            .ToListAsync();
+
+        _dbContext.SysBranchScreenPermissions.RemoveRange(screenPermissions);
+
+        await _dbContext.SaveChangesAsync();
     }
 
     #endregion

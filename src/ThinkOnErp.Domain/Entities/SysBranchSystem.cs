@@ -6,6 +6,7 @@ namespace ThinkOnErp.Domain.Entities;
 public class SysBranchSystem
 {
     public long Id { get; set; }
+    public long CompanyId { get; set; }
     public long BranchId { get; set; }
     public long SystemId { get; set; }
     public bool IsAllowed { get; set; }
@@ -19,6 +20,7 @@ public class SysBranchSystem
     public DateTime? UpdateDate { get; set; }
 
     // Navigation properties
+    public SysCompany? Company { get; set; }
     public SysBranch? Branch { get; set; }
     public SysSystem? System { get; set; }
     public SysSuperAdmin? Granter { get; set; }

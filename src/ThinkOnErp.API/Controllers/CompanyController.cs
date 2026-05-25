@@ -145,12 +145,11 @@ public class CompanyController : ControllerBase
                 LegalNameAr = dto.LegalNameAr,
                 LegalNameEn = dto.LegalNameEn,
                 CompanyCode = dto.CompanyCode,
-                TaxNumber = dto.TaxNumber,
                 CompanyLogoBase64 = dto.CompanyLogoBase64,
                 BranchLogoBase64 = dto.BranchLogoBase64,
                 
                 // Branch fields (migrated from company level)
-                DefaultLang = dto.BranchDefaultLang ?? "ar",
+                DefaultLang = dto.BranchDefaultLang ?? 1,
                 BranchBaseCurrencyId = dto.BranchBaseCurrencyId,
                 BranchRoundingRules = dto.BranchRoundingRules,
                 Systems = dto.Systems,
@@ -238,7 +237,6 @@ public class CompanyController : ControllerBase
                 LegalNameAr = dto.LegalNameAr,
                 LegalNameEn = dto.LegalNameEn,
                 CompanyCode = dto.CompanyCode,
-                TaxNumber = dto.TaxNumber,
                 DefaultBranchId = dto.DefaultBranchId,
                 CompanyLogoBase64 = dto.CompanyLogoBase64,
                 UpdateUser = User.Identity?.Name ?? "system"

@@ -330,7 +330,7 @@ public class AuditQueryServiceRoleBasedFilteringTests
         {
             new SysAuditLog
             {
-                RowId = 1,
+                Id = 1,
                 ActorId = targetActorId,
                 ActorType = "USER",
                 Action = "LOGIN",
@@ -378,7 +378,7 @@ public class AuditQueryServiceRoleBasedFilteringTests
         {
             new SysAuditLog
             {
-                RowId = 1,
+                Id = 1,
                 ActorId = 5L,
                 ActorType = "USER",
                 CompanyId = companyId,

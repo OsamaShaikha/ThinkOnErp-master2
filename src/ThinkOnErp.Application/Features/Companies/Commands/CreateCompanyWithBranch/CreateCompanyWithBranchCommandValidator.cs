@@ -44,10 +44,7 @@ public class CreateCompanyWithBranchCommandValidator : AbstractValidator<CreateC
             .WithMessage("Company code can only contain uppercase letters, numbers, underscores, and hyphens");
 
         // Language Validation
-        RuleFor(x => x.DefaultLang)
-            .Must(lang => lang == "ar" || lang == "en")
-            .WithMessage("Default language must be 'ar' or 'en'")
-            .When(x => !string.IsNullOrEmpty(x.DefaultLang));
+        RuleFor(x => x.DefaultLang).GreaterThan(0);
 
         // Tax Number Validation
         RuleFor(x => x.TaxNumber)

@@ -114,7 +114,7 @@ public class AuditRepository : IAuditRepository
                     foreach (var log in auditLogList)
                     {
                         var signature = integrityService.GenerateIntegrityHash(
-                            0, // RowId will be 0 before save, but we use a placeholder since we compute before PK is assigned
+                            0, // Id will be 0 before save, but we use a placeholder since we compute before PK is assigned
                             log.ActorId,
                             log.Action,
                             log.EntityType,
@@ -320,7 +320,7 @@ public class AuditRepository : IAuditRepository
             }
             catch (Exception ex)
             {
-                _logger.LogWarning(ex, "Failed to generate signature for audit log {RowId}", log.Id);
+                _logger.LogWarning(ex, "Failed to generate signature for audit log {Id}", log.Id);
             }
         }
 

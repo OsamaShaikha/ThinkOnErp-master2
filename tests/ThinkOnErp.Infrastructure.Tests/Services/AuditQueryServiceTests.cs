@@ -143,7 +143,7 @@ public class AuditQueryServiceTests
         var correlationId = "test-correlation-id";
         var sysAuditLog = new SysAuditLog
         {
-            RowId = 1,
+            Id = 1,
             ActorType = "USER",
             ActorId = 100,
             CompanyId = 10,
@@ -184,7 +184,7 @@ public class AuditQueryServiceTests
 
         // Assert
         var auditLogEntry = result.First();
-        Assert.Equal(sysAuditLog.RowId, auditLogEntry.RowId);
+        Assert.Equal(sysAuditLog.Id, auditLogEntry.Id);
         Assert.Equal(sysAuditLog.ActorType, auditLogEntry.ActorType);
         Assert.Equal(sysAuditLog.ActorId, auditLogEntry.ActorId);
         Assert.Equal(sysAuditLog.CompanyId, auditLogEntry.CompanyId);
@@ -350,7 +350,7 @@ public class AuditQueryServiceTests
     {
         return new SysAuditLog
         {
-            RowId = id,
+            Id = id,
             ActorType = "USER",
             ActorId = 1,
             CompanyId = 1,

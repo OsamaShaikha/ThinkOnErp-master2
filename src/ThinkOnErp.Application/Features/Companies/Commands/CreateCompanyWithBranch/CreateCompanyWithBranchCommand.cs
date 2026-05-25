@@ -37,7 +37,7 @@ public class CreateCompanyWithBranchCommand : IRequest<CreateCompanyWithBranchRe
     /// <summary>
     /// Default language for the company (ar/en)
     /// </summary>
-    public string DefaultLang { get; set; } = "ar";
+    public int DefaultLang { get; set; } = 1;
 
     /// <summary>
     /// Tax registration number

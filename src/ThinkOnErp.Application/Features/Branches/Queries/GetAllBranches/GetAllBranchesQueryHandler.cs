@@ -27,6 +27,7 @@ public class GetAllBranchesQueryHandler : IRequestHandler<GetAllBranchesQuery, L
             Mobile = b.Mobile,
             Fax = b.Fax,
             Email = b.Email,
+            TaxNumber = b.TaxNumber,
             IsHeadBranch = b.IsHeadBranch,
             DefaultLang = b.DefaultLang,
             BaseCurrencyId = b.BaseCurrencyId,

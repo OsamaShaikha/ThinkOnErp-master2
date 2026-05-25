@@ -32,7 +32,7 @@ public class SlaCalculationServiceTests
         var creationDate = new DateTime(2024, 1, 15, 10, 0, 0); // Monday 10 AM
         var priority = new SysTicketPriority
         {
-            RowId = priorityId,
+            Id = priorityId,
             SlaTargetHours = 24m, // 24 business hours = 3 business days (9 hours per day)
             PriorityLevel = 2
         };
@@ -60,7 +60,7 @@ public class SlaCalculationServiceTests
         var creationDate = new DateTime(2024, 1, 19, 10, 0, 0); // Friday 10 AM
         var priority = new SysTicketPriority
         {
-            RowId = priorityId,
+            Id = priorityId,
             SlaTargetHours = 18m, // 18 hours = 2 business days
             PriorityLevel = 2
         };
@@ -99,7 +99,7 @@ public class SlaCalculationServiceTests
         var creationDate = new DateTime(2024, 1, 15, 10, 0, 0);
         var priority = new SysTicketPriority
         {
-            RowId = priorityId,
+            Id = priorityId,
             EscalationThresholdHours = 4m,
             PriorityLevel = 1
         };
@@ -201,7 +201,7 @@ public class SlaCalculationServiceTests
         var creationDate = DateTime.Now.Date.AddDays(-5).AddHours(10);
         var priority = new SysTicketPriority
         {
-            RowId = priorityId,
+            Id = priorityId,
             EscalationThresholdHours = 4m, // 4 business hours
             PriorityLevel = 1
         };

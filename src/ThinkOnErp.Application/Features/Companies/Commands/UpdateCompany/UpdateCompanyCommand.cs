@@ -10,7 +10,6 @@ public class UpdateCompanyCommand : IRequest<Int64>
     public string? LegalNameAr { get; set; }
     public string? LegalNameEn { get; set; }
     public string? CompanyCode { get; set; }
-    public string? TaxNumber { get; set; }
     public Int64? CountryId { get; set; }
     public Int64? CurrId { get; set; }
     public Int64? DefaultBranchId { get; set; }

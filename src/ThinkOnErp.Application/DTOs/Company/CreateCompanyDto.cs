@@ -90,7 +90,7 @@ public class CreateCompanyDto
     /// <summary>
     /// Default language for the branch (ar/en) (optional, defaults to 'ar')
     /// </summary>
-    public string? BranchDefaultLang { get; set; }
+    public int? BranchDefaultLang { get; set; }
 
     /// <summary>
     /// Base currency ID for the branch (optional)
