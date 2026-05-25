@@ -8,11 +8,14 @@ public class CreateBranchCommandHandler : IRequestHandler<CreateBranchCommand, I
 {
     private readonly IBranchRepository _branchRepository;
     private readonly IPermissionRepository _permissionRepository;
+    private readonly ILogoStorageService _logoStorageService;
 
-    public CreateBranchCommandHandler(IBranchRepository branchRepository, IPermissionRepository permissionRepository)
+    public CreateBranchCommandHandler(IBranchRepository branchRepository, IPermissionRepository permissionRepository,
+        ILogoStorageService logoStorageService)
     {
         _branchRepository = branchRepository;
         _permissionRepository = permissionRepository;
+        _logoStorageService = logoStorageService;
     }
 
     public async Task<Int64> Handle(CreateBranchCommand request, CancellationToken cancellationToken)
@@ -26,6 +29,7 @@ public class CreateBranchCommandHandler : IRequestHandler<CreateBranchCommand, I
             Mobile = request.Mobile,
             Fax = request.Fax,
             Email = request.Email,
+            TaxNumber = request.TaxNumber,
             IsHeadBranch = request.IsHeadBranch,
             DefaultLang = request.DefaultLang,
             BaseCurrencyId = request.BaseCurrencyId,
@@ -35,13 +39,25 @@ public class CreateBranchCommandHandler : IRequestHandler<CreateBranchCommand, I
             CreationDate = DateTime.UtcNow
         };
 
-        // Convert Base64 logo to byte array if provided
-        if (!string.IsNullOrEmpty(request.BranchLogoBase64))
+        if (request.BranchLogo != null)
         {
-            branch.BranchLogo = ConvertBase64ToBytes(request.BranchLogoBase64);
+            var branchIdTmp = 0L;
+            branch.BranchLogoPath = await _logoStorageService.SaveLogoAsync(request.BranchLogo, "branches", branchIdTmp);
         }
 
         var branchId = await _branchRepository.CreateAsync(branch);
+
+        // Update the saved file with correct ID
+        if (request.BranchLogo != null && branch.BranchLogoPath != null)
+        {
+            var oldPath = branch.BranchLogoPath;
+            branch.BranchLogoPath = await _logoStorageService.SaveLogoAsync(request.BranchLogo, "branches", branchId);
+            branch.Id = branchId;
+            branch.UpdateUser = request.CreationUser;
+            branch.UpdateDate = DateTime.UtcNow;
+            await _branchRepository.UpdateAsync(branch);
+            await _logoStorageService.DeleteLogoAsync(oldPath);
+        }
 
         // Grant systems and auto-grant all their screens if specified
         if (request.Systems?.Count > 0)
@@ -63,17 +79,5 @@ public class CreateBranchCommandHandler : IRequestHandler<CreateBranchCommand, I
         }
 
         return branchId;
-    }
-
-    private static byte[] ConvertBase64ToBytes(string base64String)
-    {
-        // Remove data URL prefix if present (e.g., "data:image/jpeg;base64,")
-        var base64Data = base64String;
-        if (base64String.Contains(','))
-        {
-            base64Data = base64String.Split(',')[1];
-        }
-
-        return Convert.FromBase64String(base64Data);
     }
 }

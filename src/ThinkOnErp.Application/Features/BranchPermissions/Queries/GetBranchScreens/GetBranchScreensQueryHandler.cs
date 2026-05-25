@@ -19,7 +19,7 @@ public class GetBranchScreensQueryHandler : IRequestHandler<GetBranchScreensQuer
 
         return branchScreens.Select(bs => new BranchScreenDto
         {
-            RowId = bs.Id,
+            Id = bs.Id,
             BranchId = bs.BranchId,
             ScreenId = bs.ScreenId,
             IsAllowed = bs.IsAllowed,

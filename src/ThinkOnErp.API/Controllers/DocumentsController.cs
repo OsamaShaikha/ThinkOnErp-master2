@@ -11,6 +11,7 @@ using ThinkOnErp.Application.Features.Documents.Commands.UpdateDocument;
 using ThinkOnErp.Application.Features.Documents.Queries.GetDocument;
 using ThinkOnErp.Application.Features.Documents.Queries.GetDocuments;
 using ThinkOnErp.Application.Features.Documents.Queries.DownloadDocument;
+using ThinkOnErp.Domain.Interfaces;
 
 namespace ThinkOnErp.API.Controllers;
 
@@ -20,19 +21,31 @@ namespace ThinkOnErp.API.Controllers;
 public class DocumentsController : ControllerBase
 {
     private readonly IMediator _mediator;
+    private readonly ISysSettingRepository _settingRepo;
     private readonly ILogger<DocumentsController> _logger;
 
-    public DocumentsController(IMediator mediator, ILogger<DocumentsController> logger)
+    public DocumentsController(IMediator mediator, ISysSettingRepository settingRepo,
+        ILogger<DocumentsController> logger)
     {
         _mediator = mediator ?? throw new ArgumentNullException(nameof(mediator));
+        _settingRepo = settingRepo ?? throw new ArgumentNullException(nameof(settingRepo));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
     [HttpGet("metadata")]
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status200OK)]
     [AllowAnonymous]
-    public ActionResult<ApiResponse<object>> GetMetadata()
+    public async Task<ActionResult<ApiResponse<object>>> GetMetadata()
     {
+        var extSetting = await _settingRepo.GetByCodeAsync(3);
+        var sizeSetting = await _settingRepo.GetByCodeAsync(2);
+
+        var allowedExtensions = extSetting?.SettingValue?.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            ?? SysDocument.AllowedFileExtensions;
+        var maxSizeMB = sizeSetting != null && long.TryParse(sizeSetting.SettingValue, out var bytes)
+            ? bytes / (1024 * 1024)
+            : SysDocument.MaxFileSizeBytes / (1024 * 1024);
+
         var metadata = new
         {
             ownerTypes = new[]
@@ -46,8 +59,8 @@ public class DocumentsController : ControllerBase
                 value = c,
                 label = c
             }),
-            allowedExtensions = SysDocument.AllowedFileExtensions,
-            maxFileSizeMB = SysDocument.MaxFileSizeBytes / (1024 * 1024)
+            allowedExtensions,
+            maxFileSizeMB = maxSizeMB
         };
 
         return Ok(ApiResponse<object>.CreateSuccess(metadata, "Document metadata retrieved successfully"));

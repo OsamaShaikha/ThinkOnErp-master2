@@ -47,11 +47,6 @@ public class CompanyDto
     public string? CompanyCode { get; set; }
 
     /// <summary>
-    /// Tax registration number
-    /// </summary>
-    public string? TaxNumber { get; set; }
-
-    /// <summary>
     /// Default branch ID for this company
     /// </summary>
     public Int64? DefaultBranchId { get; set; }

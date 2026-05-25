@@ -55,20 +55,18 @@ public interface IBranchRepository
     Task<List<SysBranch>> GetByCompanyIdAsync(Int64 companyId);
 
     /// <summary>
-    /// Updates the branch logo.
-    /// Calls SP_SYS_BRANCH_UPDATE_LOGO stored procedure.
+    /// Updates the branch logo path.
     /// </summary>
     /// <param name="rowId">The unique identifier of the branch</param>
-    /// <param name="logo">The logo image as byte array</param>
+    /// <param name="logoPath">The relative path to the logo file</param>
     /// <param name="userName">The username of the user updating the logo</param>
     /// <returns>The number of rows affected</returns>
-    Task<Int64> UpdateLogoAsync(Int64 rowId, byte[] logo, string userName);
+    Task<Int64> UpdateLogoPathAsync(Int64 rowId, string? logoPath, string userName);
 
     /// <summary>
-    /// Retrieves the branch logo.
-    /// Calls SP_SYS_BRANCH_GET_LOGO stored procedure.
+    /// Retrieves the branch logo path.
     /// </summary>
     /// <param name="rowId">The unique identifier of the branch</param>
-    /// <returns>The logo image as byte array, null if not found</returns>
-    Task<byte[]?> GetLogoAsync(Int64 rowId);
+    /// <returns>The logo path, null if not found</returns>
+    Task<string?> GetLogoPathAsync(Int64 rowId);
 }

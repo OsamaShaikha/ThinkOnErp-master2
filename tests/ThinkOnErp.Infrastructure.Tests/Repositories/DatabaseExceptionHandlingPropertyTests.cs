@@ -57,7 +57,7 @@ public class DatabaseExceptionHandlingPropertyTests
                     CreationDate = DateTime.Now
                 };
 
-                // Since we can't set RowId manually with EF Core, just verify the repo pattern works
+                // Since we can't set Id manually with EF Core, just verify the repo pattern works
                 var createResult = repository.CreateAsync(role).GetAwaiter().GetResult();
                 Assert.True(createResult > 0);
 

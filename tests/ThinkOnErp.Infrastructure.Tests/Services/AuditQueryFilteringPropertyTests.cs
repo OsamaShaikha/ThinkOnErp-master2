@@ -92,7 +92,7 @@ public class AuditQueryFilteringPropertyTests
             
             return false
                 .Label("All entries match filter: false")
-                .Label($"Found mismatched entry: {mismatchedEntry?.RowId}");
+                .Label($"Found mismatched entry: {mismatchedEntry?.Id}");
         }
 
         // Property 2: No matching entries should be excluded
@@ -104,7 +104,7 @@ public class AuditQueryFilteringPropertyTests
         // Property 3: Results should be deterministic (same filter = same results)
         var filteredLogs2 = ApplyFilters(testData.AllLogs, testData.Filter);
         var resultsAreDeterministic = filteredLogs.Count == filteredLogs2.Count &&
-            filteredLogs.Select(l => l.RowId).SequenceEqual(filteredLogs2.Select(l => l.RowId));
+            filteredLogs.Select(l => l.Id).SequenceEqual(filteredLogs2.Select(l => l.Id));
 
         // Property 4: Verify specific filter criteria
         var dateRangeCorrect = VerifyDateRangeFilter(filteredLogs, testData.Filter);
@@ -285,7 +285,7 @@ public class AuditQueryFilteringPropertyTests
     {
         return new SysAuditLog
         {
-            RowId = entry.RowId,
+            Id = entry.Id,
             ActorType = entry.ActorType,
             ActorId = entry.ActorId,
             CompanyId = entry.CompanyId,
@@ -401,7 +401,7 @@ public class AuditQueryFilteringPropertyTests
             {
                 var log = new SysAuditLog
                 {
-                    RowId = i + 1,
+                    Id = i + 1,
                     ActorType = actorTypes[random.Next(actorTypes.Length)],
                     ActorId = actorIds[random.Next(actorIds.Length)],
                     CompanyId = companyIds[random.Next(companyIds.Length)],

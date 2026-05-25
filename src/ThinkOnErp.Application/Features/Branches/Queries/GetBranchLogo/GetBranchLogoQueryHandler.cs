@@ -4,20 +4,19 @@ using ThinkOnErp.Domain.Interfaces;
 
 namespace ThinkOnErp.Application.Features.Branches.Queries.GetBranchLogo;
 
-/// <summary>
-/// Handler for retrieving branch logos.
-/// Uses repository pattern to maintain clean architecture separation.
-/// </summary>
 public class GetBranchLogoQueryHandler : IRequestHandler<GetBranchLogoQuery, byte[]?>
 {
     private readonly IBranchRepository _branchRepository;
+    private readonly ILogoStorageService _logoStorageService;
     private readonly ILogger<GetBranchLogoQueryHandler> _logger;
 
     public GetBranchLogoQueryHandler(
         IBranchRepository branchRepository,
+        ILogoStorageService logoStorageService,
         ILogger<GetBranchLogoQueryHandler> logger)
     {
         _branchRepository = branchRepository ?? throw new ArgumentNullException(nameof(branchRepository));
+        _logoStorageService = logoStorageService ?? throw new ArgumentNullException(nameof(logoStorageService));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
@@ -27,11 +26,17 @@ public class GetBranchLogoQueryHandler : IRequestHandler<GetBranchLogoQuery, byt
 
         try
         {
-            var logo = await _branchRepository.GetLogoAsync(request.BranchId);
+            var path = await _branchRepository.GetLogoPathAsync(request.BranchId);
+            if (path == null)
+            {
+                _logger.LogInformation("No logo path found for branch ID: {BranchId}", request.BranchId);
+                return null;
+            }
 
+            var logo = await _logoStorageService.GetLogoAsync(path);
             if (logo == null || logo.Length == 0)
             {
-                _logger.LogInformation("No logo found for branch ID: {BranchId}", request.BranchId);
+                _logger.LogInformation("No logo file found for branch ID: {BranchId}", request.BranchId);
                 return null;
             }
 

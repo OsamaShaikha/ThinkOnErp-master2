@@ -44,10 +44,7 @@ public class CreateCompanyWithBranchCommandValidator : AbstractValidator<CreateC
             .WithMessage("Company code can only contain uppercase letters, numbers, underscores, and hyphens");
 
         // Language Validation
-        RuleFor(x => x.DefaultLang)
-            .Must(lang => lang == "ar" || lang == "en")
-            .WithMessage("Default language must be 'ar' or 'en'")
-            .When(x => !string.IsNullOrEmpty(x.DefaultLang));
+        RuleFor(x => x.DefaultLang).GreaterThan(0);
 
         // Tax Number Validation
         RuleFor(x => x.TaxNumber)
@@ -122,72 +119,15 @@ public class CreateCompanyWithBranchCommandValidator : AbstractValidator<CreateC
             .WithMessage("Branch rounding rules must be between 1 and 6")
             .When(x => x.BranchRoundingRules.HasValue);
 
-        // Base64 Logo Validation
-        RuleFor(x => x.CompanyLogoBase64)
-            .Must(BeValidBase64)
-            .WithMessage("Company logo must be a valid Base64 string")
-            .Must(BeValidBase64Size)
-            .WithMessage("Company logo size cannot exceed 5MB when decoded")
-            .When(x => !string.IsNullOrEmpty(x.CompanyLogoBase64));
+        // Logo size validation
+        RuleFor(x => x.CompanyLogo)
+            .Must(l => l == null || l.Length <= 5 * 1024 * 1024)
+            .WithMessage("Company logo size cannot exceed 5MB")
+            .When(x => x.CompanyLogo != null);
 
-        RuleFor(x => x.BranchLogoBase64)
-            .Must(BeValidBase64)
-            .WithMessage("Branch logo must be a valid Base64 string")
-            .Must(BeValidBase64Size)
-            .WithMessage("Branch logo size cannot exceed 5MB when decoded")
-            .When(x => !string.IsNullOrEmpty(x.BranchLogoBase64));
-    }
-
-    /// <summary>
-    /// Validates if a string is a valid Base64 format
-    /// </summary>
-    private static bool BeValidBase64(string? base64String)
-    {
-        if (string.IsNullOrEmpty(base64String))
-            return true;
-
-        try
-        {
-            // Remove data URL prefix if present (e.g., "data:image/jpeg;base64,")
-            var base64Data = base64String;
-            if (base64String.Contains(','))
-            {
-                base64Data = base64String.Split(',')[1];
-            }
-
-            Convert.FromBase64String(base64Data);
-            return true;
-        }
-        catch
-        {
-            return false;
-        }
-    }
-
-    /// <summary>
-    /// Validates if Base64 decoded size is within 5MB limit
-    /// </summary>
-    private static bool BeValidBase64Size(string? base64String)
-    {
-        if (string.IsNullOrEmpty(base64String))
-            return true;
-
-        try
-        {
-            // Remove data URL prefix if present
-            var base64Data = base64String;
-            if (base64String.Contains(','))
-            {
-                base64Data = base64String.Split(',')[1];
-            }
-
-            var bytes = Convert.FromBase64String(base64Data);
-            const int maxSize = 5 * 1024 * 1024; // 5MB
-            return bytes.Length <= maxSize;
-        }
-        catch
-        {
-            return false;
-        }
+        RuleFor(x => x.BranchLogo)
+            .Must(l => l == null || l.Length <= 5 * 1024 * 1024)
+            .WithMessage("Branch logo size cannot exceed 5MB")
+            .When(x => x.BranchLogo != null);
     }
 }

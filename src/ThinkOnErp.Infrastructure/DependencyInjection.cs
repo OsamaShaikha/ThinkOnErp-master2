@@ -112,6 +112,8 @@ public static class DependencyInjection
         services.AddScoped<IScreenRepository, ScreenRepository>();
         services.AddScoped<IPermissionRepository, PermissionRepository>();
         services.AddScoped<IBranchPermissionRepository, BranchPermissionRepository>();
+        services.AddScoped<ISysCodeRepository, SysCodeRepository>();
+        services.AddScoped<ISysSettingRepository, SysSettingRepository>();
         
         // Register ticket system repositories
         services.AddScoped<ITicketRepository, TicketRepository>();
@@ -189,6 +191,29 @@ public static class DependencyInjection
         services.AddScoped<IDocumentRepository, DocumentRepository>();
         services.AddScoped<IDocumentStorageService, DocumentStorageService>();
 
+        // Register logo storage service (singleton, but resolves ISysSettingRepository via scope at startup)
+        services.AddSingleton<ILogoStorageService>(sp =>
+        {
+            var logger = sp.GetRequiredService<ILogger<LogoStorageService>>();
+            var configuration = sp.GetRequiredService<IConfiguration>();
+
+            string? basePath = null;
+            try
+            {
+                using var scope = sp.CreateScope();
+                var settingRepo = scope.ServiceProvider.GetRequiredService<ISysSettingRepository>();
+                var setting = settingRepo.GetByCodeAsync(6).GetAwaiter().GetResult();
+                if (setting != null && !string.IsNullOrEmpty(setting.SettingValue))
+                    basePath = setting.SettingValue;
+            }
+            catch { }
+
+            basePath ??= configuration.GetValue<string>("LogoStorage:BasePath");
+            basePath ??= "/THINKON_FILES/LOGOS";
+
+            return new LogoStorageService(logger, basePath);
+        });
+
         // Register multi-tenant access control services
         services.AddScoped<IMultiTenantAccessService, MultiTenantAccessService>();
 
@@ -223,6 +248,16 @@ public static class DependencyInjection
             var logger = sp.GetRequiredService<ILogger<FileSystemAuditFallback>>();
             var options = new FileSystemAuditFallbackOptions();
             sp.GetRequiredService<IConfiguration>().GetSection("FileSystemAuditFallback").Bind(options);
+            // Read fallback path from SYS_SETTINGS (CODE 5), override config/default
+            try
+            {
+                using var scope = sp.CreateScope();
+                var settingRepo = scope.ServiceProvider.GetRequiredService<ISysSettingRepository>();
+                var setting = settingRepo.GetByCodeAsync(5).GetAwaiter().GetResult();
+                if (setting != null && !string.IsNullOrEmpty(setting.SettingValue))
+                    options.FallbackPath = setting.SettingValue;
+            }
+            catch { /* fallback to default or config value */ }
             return new FileSystemAuditFallback(logger, options);
         });
         

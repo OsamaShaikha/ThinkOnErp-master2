@@ -297,7 +297,7 @@ public class RedisCacheInvalidationIntegrationTests : IDisposable
         {
             largeResultSet.Add(new SysAuditLog
             {
-                RowId = i,
+                Id = i,
                 ActorType = "USER",
                 ActorId = i,
                 CompanyId = 1,

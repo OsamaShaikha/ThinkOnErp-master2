@@ -37,7 +37,7 @@ public class CreateCompanyWithBranchCommand : IRequest<CreateCompanyWithBranchRe
     /// <summary>
     /// Default language for the company (ar/en)
     /// </summary>
-    public string DefaultLang { get; set; } = "ar";
+    public int DefaultLang { get; set; } = 1;
 
     /// <summary>
     /// Tax registration number
@@ -86,19 +86,14 @@ public class CreateCompanyWithBranchCommand : IRequest<CreateCompanyWithBranchRe
     public string? BranchEmail { get; set; }
 
     /// <summary>
-    /// Logo for the default branch (optional)
+    /// Company logo bytes (optional)
+    /// </summary>
+    public byte[]? CompanyLogo { get; set; }
+
+    /// <summary>
+    /// Branch logo bytes (optional)
     /// </summary>
     public byte[]? BranchLogo { get; set; }
-
-    /// <summary>
-    /// Company logo as Base64 string (optional)
-    /// </summary>
-    public string? CompanyLogoBase64 { get; set; }
-
-    /// <summary>
-    /// Branch logo as Base64 string (optional)
-    /// </summary>
-    public string? BranchLogoBase64 { get; set; }
 
     /// <summary>
     /// Base currency ID for the branch (optional)

@@ -7,6 +7,7 @@ namespace ThinkOnErp.Domain.Entities;
 public class SysBranchScreenPermission
 {
     public Int64 Id { get; set; }
+    public Int64 CompanyId { get; set; }
     public Int64 BranchId { get; set; }
     public Int64 ScreenId { get; set; }
     public bool CanView { get; set; }
@@ -22,6 +23,7 @@ public class SysBranchScreenPermission
     public DateTime? UpdateDate { get; set; }
 
     // Navigation properties
+    public SysCompany? Company { get; set; }
     public SysBranch? Branch { get; set; }
     public SysScreen? Screen { get; set; }
     public SysSuperAdmin? Granter { get; set; }

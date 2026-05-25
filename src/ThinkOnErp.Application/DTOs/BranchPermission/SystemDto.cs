@@ -2,7 +2,7 @@ namespace ThinkOnErp.Application.DTOs.BranchPermission;
 
 public class SystemDto
 {
-    public long RowId { get; set; }
+    public long Id { get; set; }
     public string? SystemCode { get; set; }
     public string? SystemName { get; set; }
     public string? SystemNameE { get; set; }

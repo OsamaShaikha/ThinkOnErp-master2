@@ -125,7 +125,7 @@ services:
         max-size: "10m"
         max-file: "3"
     volumes:
-      - ./logs:/app/logs
+      - /THINKON_FILES/LOGS:/THINKON_FILES/LOGS
 EOF
 
 echo "docker-compose.yml created"

@@ -10,6 +10,14 @@ public class PermissionRepository : IPermissionRepository
     private readonly OracleDbContext _context;
     public PermissionRepository(OracleDbContext context) => _context = context;
 
+    private async Task<long> GetCompanyIdForBranchAsync(long branchId)
+    {
+        return await _context.SysBranches
+            .Where(b => b.Id == branchId)
+            .Select(b => b.CompanyId ?? 0)
+            .FirstOrDefaultAsync();
+    }
+
     public async Task<bool> CheckUserPermissionAsync(long userId, string screenCode, string action)
     {
         var user = await _context.SysUsers.FirstOrDefaultAsync(u => u.Id == userId);
@@ -238,8 +246,10 @@ public class PermissionRepository : IPermissionRepository
         }
         else
         {
+            var companyId = await GetCompanyIdForBranchAsync(branchId);
             _context.SysBranchSystems.Add(new SysBranchSystem
             {
+                CompanyId = companyId,
                 BranchId = branchId,
                 SystemId = systemId,
                 IsAllowed = isAllowed,
@@ -258,6 +268,7 @@ public class PermissionRepository : IPermissionRepository
 
     public async Task GrantSystemScreensToBranchAsync(long branchId, long systemId, long? grantedBy, string creationUser)
     {
+        var companyId = await GetCompanyIdForBranchAsync(branchId);
         var screens = await _context.SysScreens
             .Where(s => s.SystemId == systemId && s.IsActive)
             .ToListAsync();
@@ -269,6 +280,7 @@ public class PermissionRepository : IPermissionRepository
 
             if (existing != null)
             {
+                existing.CompanyId = companyId;
                 existing.CanView = true;
                 existing.CanInsert = true;
                 existing.CanUpdate = true;
@@ -282,6 +294,7 @@ public class PermissionRepository : IPermissionRepository
             {
                 _context.SysBranchScreenPermissions.Add(new SysBranchScreenPermission
                 {
+                    CompanyId = companyId,
                     BranchId = branchId,
                     ScreenId = screen.Id,
                     CanView = true,

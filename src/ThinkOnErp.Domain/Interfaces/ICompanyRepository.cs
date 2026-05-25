@@ -48,22 +48,20 @@ public interface ICompanyRepository
     Task<Int64> DeleteAsync(Int64 rowId);
 
     /// <summary>
-    /// Updates the company logo.
-    /// Calls SP_SYS_COMPANY_UPDATE_LOGO stored procedure.
+    /// Updates the company logo path.
     /// </summary>
     /// <param name="rowId">The unique identifier of the company</param>
-    /// <param name="logo">The logo image as byte array</param>
+    /// <param name="logoPath">The relative path to the logo file</param>
     /// <param name="userName">The username of the user updating the logo</param>
     /// <returns>The number of rows affected</returns>
-    Task<Int64> UpdateLogoAsync(Int64 rowId, byte[] logo, string userName);
+    Task<Int64> UpdateLogoPathAsync(Int64 rowId, string? logoPath, string userName);
 
     /// <summary>
-    /// Retrieves the company logo.
-    /// Calls SP_SYS_COMPANY_GET_LOGO stored procedure.
+    /// Retrieves the company logo path.
     /// </summary>
     /// <param name="rowId">The unique identifier of the company</param>
-    /// <returns>The logo image as byte array, null if not found</returns>
-    Task<byte[]?> GetLogoAsync(Int64 rowId);
+    /// <returns>The logo path, null if not found</returns>
+    Task<string?> GetLogoPathAsync(Int64 rowId);
 
     /// <summary>
     /// Creates a new company with an automatic default branch in a single transaction.
@@ -74,18 +72,18 @@ public interface ICompanyRepository
     /// <param name="legalNameAr">Legal name in Arabic</param>
     /// <param name="legalNameEn">Legal name in English (required)</param>
     /// <param name="companyCode">Unique company code (required)</param>
-    /// <param name="taxNumber">Tax registration number</param>
+    /// <param name="taxNumber">Tax registration number (applied to default branch)</param>
     /// <param name="countryId">Country ID</param>
     /// <param name="currId">Currency ID (legacy)</param>
-    /// <param name="companyLogo">Company logo as byte array</param>
+    /// <param name="companyLogoPath">Company logo file path</param>
     /// <param name="branchNameAr">Arabic name for the default branch</param>
     /// <param name="branchNameEn">English name for the default branch</param>
     /// <param name="branchPhone">Branch phone number</param>
     /// <param name="branchMobile">Branch mobile number</param>
     /// <param name="branchFax">Branch fax number</param>
     /// <param name="branchEmail">Branch email address</param>
-    /// <param name="branchLogo">Branch logo as byte array</param>
-    /// <param name="defaultLang">Default language for the branch (ar/en)</param>
+    /// <param name="branchLogoPath">Branch logo file path</param>
+    /// <param name="defaultLang">Default language code (CODE_MNR from SYS_CODE where CODE_MGR=14)</param>
     /// <param name="baseCurrencyId">Base currency ID for the branch</param>
     /// <param name="roundingRules">Rounding rules for the branch</param>
     /// <param name="creationUser">Username of the user creating the records</param>
@@ -99,15 +97,15 @@ public interface ICompanyRepository
         string? taxNumber,
         Int64? countryId,
         Int64? currId,
-        byte[]? companyLogo,
+        string? companyLogoPath,
         string? branchNameAr,
         string? branchNameEn,
         string? branchPhone,
         string? branchMobile,
         string? branchFax,
         string? branchEmail,
-        byte[]? branchLogo,
-        string? defaultLang,
+        string? branchLogoPath,
+        int? defaultLang,
         Int64? baseCurrencyId,
         int? roundingRules,
         string creationUser);

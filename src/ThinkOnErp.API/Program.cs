@@ -6,6 +6,9 @@ using System.Text;
 using ThinkOnErp.Application;
 using ThinkOnErp.Infrastructure;
 using ThinkOnErp.Infrastructure.Logging;
+using ThinkOnErp.Infrastructure.Data;
+using Microsoft.EntityFrameworkCore;
+using Oracle.EntityFrameworkCore;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
 using OpenTelemetry.Metrics;
@@ -40,6 +43,28 @@ try
     // Override minimum level based on environment
     if (builder.Environment.IsProduction())
     {
+        // Read log path from SYS_SETTINGS (SETTING_CODE=4), fallback to default
+        var logPath = "logs/log-.txt";
+        try
+        {
+            var connString = builder.Configuration.GetConnectionString("OracleDb");
+            if (!string.IsNullOrEmpty(connString))
+            {
+                var optionsBuilder = new DbContextOptionsBuilder<OracleDbContext>();
+                optionsBuilder.UseOracle(connString);
+                using var tempContext = new OracleDbContext(optionsBuilder.Options);
+                var setting = tempContext.SysSettings
+                    .AsNoTracking()
+                    .FirstOrDefault(s => s.SettingCode == 4);
+                if (setting != null && !string.IsNullOrEmpty(setting.SettingValue))
+                    logPath = Path.Combine(setting.SettingValue.TrimEnd('/'), "log-.txt");
+            }
+        }
+        catch
+        {
+            // Fallback to default path if DB read fails
+        }
+
         Log.Logger = new LoggerConfiguration()
             .MinimumLevel.Information()
             .MinimumLevel.Override("Microsoft", LogEventLevel.Warning)
@@ -51,8 +76,11 @@ try
             .WriteTo.Console(
                 outputTemplate: "[{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz}] [{Level:u3}] [{SourceContext}] [{CorrelationId}] {Message:lj}{NewLine}{Exception}")
             .WriteTo.File(
-                path: "logs/log-.txt",
+                path: logPath,
                 rollingInterval: RollingInterval.Day,
+                fileSizeLimitBytes: 104857600,
+                rollOnFileSizeLimit: true,
+                retainedFileCountLimit: 90,
                 outputTemplate: "[{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz}] [{Level:u3}] [{SourceContext}] [{MachineName}] [{ThreadId}] [{CorrelationId}] {Message:lj}{NewLine}{Exception}")
             .CreateLogger();
     }

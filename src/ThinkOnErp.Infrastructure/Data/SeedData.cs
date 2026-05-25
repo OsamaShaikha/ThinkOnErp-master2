@@ -68,7 +68,6 @@ public static class SeedData
             LegalName = "Tech Company For Information Technology",
             LegalNameE = "Tech Company For Information Technology",
             CompanyCode = "TECH01",
-            TaxNumber = "300123456700003",
             IsActive = true,
             CreationUser = seedUser,
             CreationDate = now
@@ -85,6 +84,7 @@ public static class SeedData
             Phone = "+966112345678",
             Mobile = "+966501234567",
             Email = "hq@techcompany.com",
+            TaxNumber = "300123456700003",
             IsHeadBranch = true,
             BaseCurrencyId = sar.Id,
             IsActive = true,
@@ -968,6 +968,85 @@ public static class SeedData
             CreatedByUserId = user1.Id,
             CreatedAt = now
         });
+        await context.SaveChangesAsync();
+
+        // 33. SysCode lookup values (replaces all static enums/constants)
+        // Each code has two rows: CODE_LANG=1 (Arabic), CODE_LANG=2 (English)
+        var sysCodes = new List<SysCode>();
+        int mgr = 0;
+
+        // Helper to add a code value in both languages
+        void AddCode(int codeMnr, string nameAr, string nameEn)
+        {
+            sysCodes.Add(new SysCode { CodeMgr = mgr, CodeMnr = codeMnr, CodeLang = 1, CodeDesc = nameAr, IsActive = 1, CreationUser = seedUser, CreationDate = now });
+            sysCodes.Add(new SysCode { CodeMgr = mgr, CodeMnr = codeMnr, CodeLang = 2, CodeDesc = nameEn, IsActive = 1, CreationUser = seedUser, CreationDate = now });
+        }
+
+        // Document Categories (mgr=1)
+        mgr = 1; AddCode(1, "عقود", "Contracts"); AddCode(2, "تقارير", "Reports"); AddCode(3, "فواتير", "Invoices");
+        AddCode(4, "إيصالات", "Receipts"); AddCode(5, "هوية شخصية", "Identification"); AddCode(6, "شهادات", "Certificates");
+        AddCode(7, "مالية", "Financial"); AddCode(8, "موارد بشرية", "HR"); AddCode(9, "قانونية", "Legal");
+        AddCode(10, "فنية", "Technical"); AddCode(11, "تسويق", "Marketing"); AddCode(12, "أخرى", "Other");
+
+        // Owner Types (mgr=2)
+        mgr = 2; AddCode(1, "شركة", "Company"); AddCode(2, "فرع", "Branch"); AddCode(3, "مدير النظام", "Super Admin");
+
+        // Threat Types (mgr=3)
+        mgr = 3; AddCode(1, "هجوم تخمين كلمة المرور", "Brute Force Attack"); AddCode(2, "حقن SQL", "SQL Injection");
+        AddCode(3, "برمجة عبر المواقع", "Cross-Site Scripting"); AddCode(4, "هجوم حجب الخدمة", "Denial of Service");
+        AddCode(5, "محاولة دخول مشبوهة", "Suspicious Login"); AddCode(6, "وصول غير مصرح", "Unauthorized Access");
+        AddCode(7, "تسريب بيانات", "Data Exfiltration"); AddCode(8, "برمجيات خبيثة", "Malware Detected");
+
+        // Threat Severity (mgr=4)
+        mgr = 4; AddCode(1, "منخفض", "Low"); AddCode(2, "متوسط", "Medium"); AddCode(3, "عالي", "High"); AddCode(4, "حرج", "Critical");
+
+        // Audit Severity (mgr=5)
+        mgr = 5; AddCode(1, "معلومات", "Info"); AddCode(2, "تحذير", "Warning"); AddCode(3, "خطأ", "Error"); AddCode(4, "حرج", "Critical");
+
+        // Event Categories (mgr=6)
+        mgr = 6; AddCode(1, "مصادقة", "Authentication"); AddCode(2, "تفويض", "Authorization"); AddCode(3, "تغيير بيانات", "Data Change");
+        AddCode(4, "إعدادات", "Configuration"); AddCode(5, "أمان", "Security"); AddCode(6, "نظام", "System"); AddCode(7, "تكامل", "Integration");
+
+        // Actor Types (mgr=7)
+        mgr = 7; AddCode(1, "مستخدم", "User"); AddCode(2, "مدير النظام", "Super Admin"); AddCode(3, "النظام", "System"); AddCode(4, "مجهول", "Anonymous");
+
+        // Audit Event Types (mgr=8)
+        mgr = 8; AddCode(1, "طلب", "Request"); AddCode(2, "استثناء", "Exception"); AddCode(3, "أمني", "Security");
+
+        // Payload Logging Levels (mgr=9)
+        mgr = 9; AddCode(1, "لا شيء", "None"); AddCode(2, "البيانات الوصفية فقط", "Metadata Only"); AddCode(3, "كامل", "Full");
+
+        // System Health Status (mgr=10)
+        mgr = 10; AddCode(1, "سليم", "Healthy"); AddCode(2, "متدهور", "Degraded"); AddCode(3, "غير سليم", "Unhealthy"); AddCode(4, "غير مستجيب", "Unresponsive");
+
+        // Memory Pressure Severity (mgr=11)
+        mgr = 11; AddCode(1, "طبيعي", "Normal"); AddCode(2, "تحذير", "Warning"); AddCode(3, "حرج", "Critical"); AddCode(4, "شديد", "Severe"); AddCode(5, "غير معروف", "Unknown");
+
+        // Key Types (mgr=12)
+        mgr = 12; AddCode(1, "مفتاح API", "API Key"); AddCode(2, "مفتاح توقيع", "Signing Key"); AddCode(3, "مفتاح تشفير", "Encryption Key");
+        AddCode(4, "مفتاح داخلي", "Internal Key"); AddCode(5, "مفتاح خارجي", "External Key");
+
+        // Alert Types (mgr=13)
+        mgr = 13; AddCode(1, "تنبيه أمني", "Security Alert"); AddCode(2, "تنبيه أداء", "Performance Alert"); AddCode(3, "تنبيه نظام", "System Alert");
+        AddCode(4, "تنبيه أعمال", "Business Alert");
+
+        // Languages (mgr=14)
+        mgr = 14; AddCode(1, "العربية", "Arabic"); AddCode(2, "الإنجليزية", "English");
+
+        context.SysCodes.AddRange(sysCodes);
+        await context.SaveChangesAsync();
+
+        // 34. System Settings
+        var settings = new List<SysSetting>
+        {
+            new() { SettingCode = 1, SettingDesc = "Upload files path", SettingValue = "/THINKON_FILES/UPLOADS/" },
+            new() { SettingCode = 2, SettingDesc = "Maximum file size (bytes)", SettingValue = "52428800" },
+            new() { SettingCode = 3, SettingDesc = "Allowed file extensions", SettingValue = ".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv,.jpg,.jpeg,.png,.gif,.zip,.rar,.7z" },
+            new() { SettingCode = 4, SettingDesc = "Logs path", SettingValue = "/THINKON_FILES/LOGS/" },
+            new() { SettingCode = 5, SettingDesc = "Audit fallback path", SettingValue = "/THINKON_FILES/LOGS/audit-fallback/" },
+            new() { SettingCode = 6, SettingDesc = "Logos path", SettingValue = "/THINKON_FILES/LOGOS/" },
+        };
+        context.SysSettings.AddRange(settings);
         await context.SaveChangesAsync();
     }
 }

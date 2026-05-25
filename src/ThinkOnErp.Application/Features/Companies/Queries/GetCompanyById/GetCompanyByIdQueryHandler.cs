@@ -7,10 +7,12 @@ namespace ThinkOnErp.Application.Features.Companies.Queries.GetCompanyById;
 public class GetCompanyByIdQueryHandler : IRequestHandler<GetCompanyByIdQuery, CompanyDto?>
 {
     private readonly ICompanyRepository _companyRepository;
+    private readonly ILogoStorageService _logoStorageService;
 
-    public GetCompanyByIdQueryHandler(ICompanyRepository companyRepository)
+    public GetCompanyByIdQueryHandler(ICompanyRepository companyRepository, ILogoStorageService logoStorageService)
     {
         _companyRepository = companyRepository;
+        _logoStorageService = logoStorageService;
     }
 
     public async Task<CompanyDto?> Handle(GetCompanyByIdQuery request, CancellationToken cancellationToken)
@@ -19,6 +21,14 @@ public class GetCompanyByIdQueryHandler : IRequestHandler<GetCompanyByIdQuery, C
 
         if (company == null)
             return null;
+
+        string? companyLogoBase64 = null;
+        if (company.CompanyLogoPath != null)
+        {
+            var logoBytes = await _logoStorageService.GetLogoAsync(company.CompanyLogoPath);
+            if (logoBytes != null)
+                companyLogoBase64 = Convert.ToBase64String(logoBytes);
+        }
 
         var dto = new CompanyDto
         {
@@ -30,34 +40,17 @@ public class GetCompanyByIdQueryHandler : IRequestHandler<GetCompanyByIdQuery, C
             LegalNameAr = company.LegalName,
             LegalNameEn = company.LegalNameE,
             CompanyCode = company.CompanyCode,
-            TaxNumber = company.TaxNumber,
             DefaultBranchId = company.DefaultBranchId,
             DefaultBranchName = company.DefaultBranch?.BranchNameEn,
-            HasLogo = company.HasLogo,
+            HasLogo = company.CompanyLogoPath != null,
+            CompanyLogoBase64 = companyLogoBase64,
+            DefaultBranchLogoBase64 = null,
             IsActive = company.IsActive,
             CreationUser = company.CreationUser,
             CreationDate = company.CreationDate,
             UpdateUser = company.UpdateUser,
             UpdateDate = company.UpdateDate
         };
-
-        // Load company logo if it exists
-        if (company.HasLogo)
-        {
-            var companyLogo = await _companyRepository.GetLogoAsync(company.Id);
-            if (companyLogo != null)
-            {
-                dto.CompanyLogoBase64 = Convert.ToBase64String(companyLogo);
-            }
-        }
-
-        // Load default branch logo if it exists
-        if (company.DefaultBranchId.HasValue && company.DefaultBranch?.HasLogo == true)
-        {
-            // Note: We would need IBranchRepository here to get branch logo
-            // For now, we'll leave this as null and implement it when needed
-            dto.DefaultBranchLogoBase64 = null;
-        }
 
         return dto;
     }

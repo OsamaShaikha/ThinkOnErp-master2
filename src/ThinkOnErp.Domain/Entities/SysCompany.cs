@@ -10,10 +10,8 @@ public class SysCompany
     public string? LegalName { get; set; }
     public string? LegalNameE { get; set; }
     public string? CompanyCode { get; set; }
-    public string? TaxNumber { get; set; }
     public Int64? DefaultBranchId { get; set; }
-    public byte[]? CompanyLogo { get; set; }
-    public bool HasLogo => CompanyLogo != null && CompanyLogo.Length > 0;
+    public string? CompanyLogoPath { get; set; }
     public bool IsActive { get; set; }
     public string CreationUser { get; set; } = string.Empty;
     public DateTime? CreationDate { get; set; }
@@ -23,4 +21,6 @@ public class SysCompany
     public SysBranch? DefaultBranch { get; set; }
     public ICollection<SysBranch> Branches { get; set; } = new List<SysBranch>();
     public ICollection<SysCompanyScreenPermission> ScreenPermissions { get; set; } = new List<SysCompanyScreenPermission>();
+    public ICollection<SysBranchSystem> BranchSystemAccess { get; set; } = new List<SysBranchSystem>();
+    public ICollection<SysBranchScreenPermission> BranchScreenPermissions { get; set; } = new List<SysBranchScreenPermission>();
 }

@@ -10,12 +10,12 @@ public class SysBranch
     public string? Mobile { get; set; }
     public string? Fax { get; set; }
     public string? Email { get; set; }
+    public string? TaxNumber { get; set; }
     public bool IsHeadBranch { get; set; }
-    public string? DefaultLang { get; set; }
+    public int? DefaultLang { get; set; }
     public Int64? BaseCurrencyId { get; set; }
     public int? RoundingRules { get; set; }
-    public byte[]? BranchLogo { get; set; }
-    public bool HasLogo => BranchLogo != null && BranchLogo.Length > 0;
+    public string? BranchLogoPath { get; set; }
     public bool IsActive { get; set; }
     public string CreationUser { get; set; } = string.Empty;
     public DateTime? CreationDate { get; set; }

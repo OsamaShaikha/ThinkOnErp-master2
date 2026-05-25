@@ -522,13 +522,13 @@ public class MultiTenantContextCapturePropertyTests : IDisposable
                 AllLogs = new List<SysAuditLog>()
             };
 
-            var rowId = 1L;
+            var id = 1L;
 
             // Create audit logs for Company 1, Branch 1
             for (int i = 0; i < company1LogCount / 2; i++)
             {
                 dataSet.AllLogs.Add(CreateAuditLog(
-                    rowId++,
+                    id++,
                     company1Id,
                     company1Branch1Id,
                     $"Entity_C{company1Id}_B{company1Branch1Id}_{i}",
@@ -539,7 +539,7 @@ public class MultiTenantContextCapturePropertyTests : IDisposable
             for (int i = 0; i < company1LogCount / 2; i++)
             {
                 dataSet.AllLogs.Add(CreateAuditLog(
-                    rowId++,
+                    id++,
                     company1Id,
                     company1Branch2Id,
                     $"Entity_C{company1Id}_B{company1Branch2Id}_{i}",
@@ -550,7 +550,7 @@ public class MultiTenantContextCapturePropertyTests : IDisposable
             for (int i = 0; i < company2LogCount; i++)
             {
                 dataSet.AllLogs.Add(CreateAuditLog(
-                    rowId++,
+                    id++,
                     company2Id,
                     company2Branch1Id,
                     $"Entity_C{company2Id}_B{company2Branch1Id}_{i}",
@@ -561,7 +561,7 @@ public class MultiTenantContextCapturePropertyTests : IDisposable
         }
 
         private static SysAuditLog CreateAuditLog(
-            long rowId,
+            long id,
             long companyId,
             long branchId,
             string entityType,
@@ -569,7 +569,7 @@ public class MultiTenantContextCapturePropertyTests : IDisposable
         {
             return new SysAuditLog
             {
-                RowId = rowId,
+                Id = id,
                 ActorType = "USER",
                 ActorId = 1,
                 CompanyId = companyId,

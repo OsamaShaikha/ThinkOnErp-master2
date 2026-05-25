@@ -345,9 +345,10 @@ namespace ThinkOnErp.Infrastructure.Migrations
                         .HasColumnType("NUMBER(19)")
                         .HasColumnName("BASE_CURRENCY_ID");
 
-                    b.Property<string>("BranchLogo")
-                        .HasColumnType("CLOB")
-                        .HasColumnName("BRANCH_LOGO");
+                    b.Property<string>("BranchLogoPath")
+                        .HasMaxLength(500)
+                        .HasColumnType("NVARCHAR2(500)")
+                        .HasColumnName("BRANCH_LOGO_PATH");
 
                     b.Property<string>("BranchNameAr")
                         .IsRequired()
@@ -375,9 +376,8 @@ namespace ThinkOnErp.Infrastructure.Migrations
                         .HasColumnType("NVARCHAR2(100)")
                         .HasColumnName("CREATION_USER");
 
-                    b.Property<string>("DefaultLang")
-                        .HasMaxLength(10)
-                        .HasColumnType("NVARCHAR2(10)")
+                    b.Property<int?>("DefaultLang")
+                        .HasColumnType("NUMBER(10)")
                         .HasColumnName("DEFAULT_LANG");
 
                     b.Property<string>("Email")
@@ -413,6 +413,11 @@ namespace ThinkOnErp.Infrastructure.Migrations
                     b.Property<int?>("RoundingRules")
                         .HasColumnType("NUMBER(10)")
                         .HasColumnName("ROUNDING_RULES");
+
+                    b.Property<string>("TaxNumber")
+                        .HasMaxLength(50)
+                        .HasColumnType("NVARCHAR2(50)")
+                        .HasColumnName("TAX_NUMBER");
 
                     b.Property<DateTime?>("UpdateDate")
                         .HasColumnType("TIMESTAMP(7)")
@@ -464,6 +469,10 @@ namespace ThinkOnErp.Infrastructure.Migrations
                         .HasColumnType("NUMBER(1)")
                         .HasColumnName("CAN_VIEW");
 
+                    b.Property<long>("CompanyId")
+                        .HasColumnType("NUMBER(19)")
+                        .HasColumnName("COMPANY_ID");
+
                     b.Property<DateTime?>("CreationDate")
                         .HasColumnType("TIMESTAMP(7)")
                         .HasColumnName("CREATION_DATE");
@@ -504,6 +513,8 @@ namespace ThinkOnErp.Infrastructure.Migrations
 
                     b.HasIndex("BranchId");
 
+                    b.HasIndex("CompanyId");
+
                     b.HasIndex("GrantedBy");
 
                     b.HasIndex("ScreenId");
@@ -522,6 +533,10 @@ namespace ThinkOnErp.Infrastructure.Migrations
                     b.Property<long>("BranchId")
                         .HasColumnType("NUMBER(19)")
                         .HasColumnName("BRANCH_ID");
+
+                    b.Property<long>("CompanyId")
+                        .HasColumnType("NUMBER(19)")
+                        .HasColumnName("COMPANY_ID");
 
                     b.Property<DateTime?>("CreationDate")
                         .HasColumnType("TIMESTAMP(7)")
@@ -572,11 +587,63 @@ namespace ThinkOnErp.Infrastructure.Migrations
 
                     b.HasIndex("BranchId");
 
+                    b.HasIndex("CompanyId");
+
                     b.HasIndex("GrantedBy");
 
                     b.HasIndex("SystemId");
 
                     b.ToTable("SYS_BRANCH_SYSTEMS", (string)null);
+                });
+
+            modelBuilder.Entity("ThinkOnErp.Domain.Entities.SysCode", b =>
+                {
+                    b.Property<int>("CodeMgr")
+                        .HasColumnType("NUMBER(10)")
+                        .HasColumnName("CODE_MGR");
+
+                    b.Property<int>("CodeMnr")
+                        .HasColumnType("NUMBER(10)")
+                        .HasColumnName("CODE_MNR");
+
+                    b.Property<int>("CodeLang")
+                        .HasColumnType("NUMBER(10)")
+                        .HasColumnName("CODE_LANG");
+
+                    b.Property<string>("CodeDesc")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("NVARCHAR2(1000)")
+                        .HasColumnName("CODE_DESC");
+
+                    b.Property<DateTime?>("CreationDate")
+                        .HasColumnType("TIMESTAMP(7)")
+                        .HasColumnName("CREATION_DATE");
+
+                    b.Property<string>("CreationUser")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("NVARCHAR2(100)")
+                        .HasColumnName("CREATION_USER");
+
+                    b.Property<int>("IsActive")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("NUMBER(10)")
+                        .HasDefaultValue(1)
+                        .HasColumnName("IS_ACTIVE");
+
+                    b.Property<DateTime?>("UpdateDate")
+                        .HasColumnType("TIMESTAMP(7)")
+                        .HasColumnName("UPDATE_DATE");
+
+                    b.Property<string>("UpdateUser")
+                        .HasMaxLength(100)
+                        .HasColumnType("NVARCHAR2(100)")
+                        .HasColumnName("UPDATE_USER");
+
+                    b.HasKey("CodeMgr", "CodeMnr", "CodeLang");
+
+                    b.ToTable("SYS_CODE", (string)null);
                 });
 
             modelBuilder.Entity("ThinkOnErp.Domain.Entities.SysCompany", b =>
@@ -592,9 +659,10 @@ namespace ThinkOnErp.Infrastructure.Migrations
                         .HasColumnType("NVARCHAR2(50)")
                         .HasColumnName("COMPANY_CODE");
 
-                    b.Property<string>("CompanyLogo")
-                        .HasColumnType("CLOB")
-                        .HasColumnName("COMPANY_LOGO");
+                    b.Property<string>("CompanyLogoPath")
+                        .HasMaxLength(500)
+                        .HasColumnType("NVARCHAR2(500)")
+                        .HasColumnName("COMPANY_LOGO_PATH");
 
                     b.Property<string>("CompanyNameAr")
                         .IsRequired()
@@ -644,11 +712,6 @@ namespace ThinkOnErp.Infrastructure.Migrations
                         .HasMaxLength(300)
                         .HasColumnType("NVARCHAR2(300)")
                         .HasColumnName("LEGAL_NAME_E");
-
-                    b.Property<string>("TaxNumber")
-                        .HasMaxLength(50)
-                        .HasColumnType("NVARCHAR2(50)")
-                        .HasColumnName("TAX_NUMBER");
 
                     b.Property<DateTime?>("UpdateDate")
                         .HasColumnType("TIMESTAMP(7)")
@@ -1844,6 +1907,29 @@ namespace ThinkOnErp.Infrastructure.Migrations
                     b.ToTable("SYS_SECURITY_THREATS", (string)null);
                 });
 
+            modelBuilder.Entity("ThinkOnErp.Domain.Entities.SysSetting", b =>
+                {
+                    b.Property<int>("SettingCode")
+                        .HasColumnType("NUMBER(10)")
+                        .HasColumnName("SETTING_CODE");
+
+                    b.Property<string>("SettingDesc")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("NVARCHAR2(500)")
+                        .HasColumnName("SETTING_DESC");
+
+                    b.Property<string>("SettingValue")
+                        .IsRequired()
+                        .HasMaxLength(2000)
+                        .HasColumnType("NVARCHAR2(2000)")
+                        .HasColumnName("SETTING_VALUE");
+
+                    b.HasKey("SettingCode");
+
+                    b.ToTable("SYS_SETTINGS", (string)null);
+                });
+
             modelBuilder.Entity("ThinkOnErp.Domain.Entities.SysSlowQuery", b =>
                 {
                     b.Property<long>("Id")
@@ -2719,6 +2805,12 @@ namespace ThinkOnErp.Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("ThinkOnErp.Domain.Entities.SysCompany", "Company")
+                        .WithMany("BranchScreenPermissions")
+                        .HasForeignKey("CompanyId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
                     b.HasOne("ThinkOnErp.Domain.Entities.SysSuperAdmin", "Granter")
                         .WithMany()
                         .HasForeignKey("GrantedBy")
@@ -2732,6 +2824,8 @@ namespace ThinkOnErp.Infrastructure.Migrations
 
                     b.Navigation("Branch");
 
+                    b.Navigation("Company");
+
                     b.Navigation("Granter");
 
                     b.Navigation("Screen");
@@ -2742,6 +2836,12 @@ namespace ThinkOnErp.Infrastructure.Migrations
                     b.HasOne("ThinkOnErp.Domain.Entities.SysBranch", "Branch")
                         .WithMany("SystemAccess")
                         .HasForeignKey("BranchId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("ThinkOnErp.Domain.Entities.SysCompany", "Company")
+                        .WithMany("BranchSystemAccess")
+                        .HasForeignKey("CompanyId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
@@ -2757,6 +2857,8 @@ namespace ThinkOnErp.Infrastructure.Migrations
                         .IsRequired();
 
                     b.Navigation("Branch");
+
+                    b.Navigation("Company");
 
                     b.Navigation("Granter");
 
@@ -3041,6 +3143,10 @@ namespace ThinkOnErp.Infrastructure.Migrations
 
             modelBuilder.Entity("ThinkOnErp.Domain.Entities.SysCompany", b =>
                 {
+                    b.Navigation("BranchScreenPermissions");
+
+                    b.Navigation("BranchSystemAccess");
+
                     b.Navigation("Branches");
 
                     b.Navigation("ScreenPermissions");

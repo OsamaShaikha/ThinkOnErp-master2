@@ -11,15 +11,18 @@ public class UploadDocumentCommandHandler : IRequestHandler<UploadDocumentComman
 {
     private readonly IDocumentRepository _documentRepository;
     private readonly IDocumentStorageService _storageService;
+    private readonly ISysSettingRepository _settingRepo;
     private readonly ILogger<UploadDocumentCommandHandler> _logger;
 
     public UploadDocumentCommandHandler(
         IDocumentRepository documentRepository,
         IDocumentStorageService storageService,
+        ISysSettingRepository settingRepo,
         ILogger<UploadDocumentCommandHandler> logger)
     {
         _documentRepository = documentRepository;
         _storageService = storageService;
+        _settingRepo = settingRepo;
         _logger = logger;
     }
 
@@ -32,18 +35,25 @@ public class UploadDocumentCommandHandler : IRequestHandler<UploadDocumentComman
         {
             var fileExtension = Path.GetExtension(request.FileName).ToLowerInvariant();
 
-            // Validate extension
-            if (!SysDocument.AllowedFileExtensions.Contains(fileExtension))
+            // Read allowed extensions from SYS_SETTINGS (CODE 3), fallback to default
+            var extSetting = await _settingRepo.GetByCodeAsync(3);
+            var allowedExtensions = extSetting?.SettingValue?.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+                ?? SysDocument.AllowedFileExtensions;
+
+            if (!allowedExtensions.Contains(fileExtension, StringComparer.OrdinalIgnoreCase))
             {
                 return ApiResponse<DocumentUploadResult>.CreateFailure(
-                    $"File type '{fileExtension}' is not allowed. Allowed: {string.Join(", ", SysDocument.AllowedFileExtensions)}");
+                    $"File type '{fileExtension}' is not allowed. Allowed: {string.Join(", ", allowedExtensions)}");
             }
 
-            // Validate size
-            if (request.FileSize > SysDocument.MaxFileSizeBytes)
+            // Read max file size from SYS_SETTINGS (CODE 2), fallback to default
+            var sizeSetting = await _settingRepo.GetByCodeAsync(2);
+            var maxSize = sizeSetting != null && long.TryParse(sizeSetting.SettingValue, out var parsed) ? parsed : SysDocument.MaxFileSizeBytes;
+
+            if (request.FileSize > maxSize)
             {
                 return ApiResponse<DocumentUploadResult>.CreateFailure(
-                    $"File size exceeds maximum allowed size of {SysDocument.MaxFileSizeBytes / (1024 * 1024)} MB");
+                    $"File size exceeds maximum allowed size of {maxSize / (1024 * 1024)} MB");
             }
 
             // Save file to disk

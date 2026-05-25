@@ -18,6 +18,7 @@ public class FileSystemAuditFallback
     private readonly FileSystemAuditFallbackOptions _options;
     private readonly SemaphoreSlim _writeLock = new(1, 1);
     private readonly SemaphoreSlim _replayLock = new(1, 1);
+    private bool _directoryAvailable;
 
     // Metrics
     private long _totalEventsWritten = 0;
@@ -46,6 +47,12 @@ public class FileSystemAuditFallback
         if (auditEvent == null)
         {
             _logger.LogWarning("Attempted to write null audit event to fallback storage");
+            return;
+        }
+
+        if (!_directoryAvailable)
+        {
+            _logger.LogWarning("Fallback path is not available, skipping write");
             return;
         }
 
@@ -109,6 +116,12 @@ public class FileSystemAuditFallback
         if (auditEvents == null || !auditEvents.Any())
         {
             _logger.LogWarning("Attempted to write null or empty batch to fallback storage");
+            return;
+        }
+
+        if (!_directoryAvailable)
+        {
+            _logger.LogWarning("Fallback path is not available, skipping batch write");
             return;
         }
 
@@ -179,6 +192,12 @@ public class FileSystemAuditFallback
         if (!await _replayLock.WaitAsync(0, cancellationToken))
         {
             _logger.LogWarning("Replay operation already in progress, skipping");
+            return 0;
+        }
+
+        if (!_directoryAvailable)
+        {
+            _logger.LogWarning("Fallback path is not available, cannot replay");
             return 0;
         }
 
@@ -329,6 +348,7 @@ public class FileSystemAuditFallback
     /// </summary>
     private async Task RotateFilesIfNeededAsync(CancellationToken cancellationToken)
     {
+        if (!_directoryAvailable) return;
         try
         {
             var directory = new DirectoryInfo(_fallbackPath);
@@ -463,16 +483,17 @@ public class FileSystemAuditFallback
     {
         try
         {
-            if (!Directory.Exists(_fallbackPath))
+            if (!string.IsNullOrEmpty(_fallbackPath) && !Directory.Exists(_fallbackPath))
             {
                 Directory.CreateDirectory(_fallbackPath);
                 _logger.LogInformation("Created fallback directory: {Path}", _fallbackPath);
             }
+            _directoryAvailable = true;
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to create fallback directory: {Path}", _fallbackPath);
-            throw;
+            _logger.LogError(ex, "Failed to create fallback directory: {Path}. Fallback writes will be disabled.", _fallbackPath);
+            _directoryAvailable = false;
         }
     }
 
@@ -511,9 +532,15 @@ public class FileSystemAuditFallback
     /// </summary>
     public FileSystemAuditFallbackMetrics GetMetrics()
     {
-        var directory = new DirectoryInfo(_fallbackPath);
-        var files = directory.Exists ? directory.GetFiles("audit_fallback_*.json") : Array.Empty<FileInfo>();
-        var totalSize = files.Sum(f => f.Length);
+        var pendingFiles = 0;
+        long totalSize = 0;
+        if (!string.IsNullOrEmpty(_fallbackPath))
+        {
+            var directory = new DirectoryInfo(_fallbackPath);
+            var files = directory.Exists ? directory.GetFiles("audit_fallback_*.json") : Array.Empty<FileInfo>();
+            totalSize = files.Sum(f => f.Length);
+            pendingFiles = files.Length;
+        }
 
         return new FileSystemAuditFallbackMetrics
         {
@@ -521,9 +548,9 @@ public class FileSystemAuditFallback
             TotalEventsReplayed = _totalEventsReplayed,
             FailedWrites = _failedWrites,
             FailedReplays = _failedReplays,
-            PendingFiles = files.Length,
+            PendingFiles = pendingFiles,
             TotalSizeBytes = totalSize,
-            FallbackPath = _fallbackPath
+            FallbackPath = _fallbackPath ?? string.Empty
         };
     }
 
@@ -547,6 +574,7 @@ public class FileSystemAuditFallback
     /// </summary>
     public async Task ClearAllAsync(CancellationToken cancellationToken = default)
     {
+        if (!_directoryAvailable) return;
         await _writeLock.WaitAsync(cancellationToken);
         try
         {

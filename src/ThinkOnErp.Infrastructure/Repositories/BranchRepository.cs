@@ -43,16 +43,16 @@ public class BranchRepository : IBranchRepository
     public async Task<List<SysBranch>> GetByCompanyIdAsync(long companyId) =>
         await _context.SysBranches.Where(b => b.CompanyId == companyId && b.IsActive).ToListAsync();
 
-    public async Task<long> UpdateLogoAsync(long rowId, byte[] logo, string userName)
+    public async Task<long> UpdateLogoPathAsync(long rowId, string? logoPath, string userName)
     {
         var branch = await _context.SysBranches.FindAsync(rowId);
         if (branch == null) return 0;
-        branch.BranchLogo = logo;
+        branch.BranchLogoPath = logoPath;
         branch.UpdateUser = userName;
         branch.UpdateDate = DateTime.Now;
         return await _context.SaveChangesAsync();
     }
 
-    public async Task<byte[]?> GetLogoAsync(long rowId) =>
-        await _context.SysBranches.Where(b => b.Id == rowId).Select(b => b.BranchLogo).FirstOrDefaultAsync();
+    public async Task<string?> GetLogoPathAsync(long rowId) =>
+        await _context.SysBranches.Where(b => b.Id == rowId).Select(b => b.BranchLogoPath).FirstOrDefaultAsync();
 }

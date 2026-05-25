@@ -584,7 +584,7 @@ public class AuditQueryPerformanceTests : IDisposable
             
             logs.Add(new SysAuditLog
             {
-                RowId = i + 1,
+                Id = i + 1,
                 ActorType = random.Next(0, 3) switch
                 {
                     0 => "USER",
@@ -631,7 +631,7 @@ public class AuditQueryPerformanceTests : IDisposable
         {
             logs.Add(new SysAuditLog
             {
-                RowId = i + 1,
+                Id = i + 1,
                 ActorType = "USER",
                 ActorId = Random.Shared.Next(1, 100),
                 CompanyId = 1,
@@ -662,7 +662,7 @@ public class AuditQueryPerformanceTests : IDisposable
             
             logs.Add(new SysAuditLog
             {
-                RowId = i + 1,
+                Id = i + 1,
                 ActorType = "USER",
                 ActorId = actorId,
                 CompanyId = 1,
@@ -691,7 +691,7 @@ public class AuditQueryPerformanceTests : IDisposable
         {
             logs.Add(new SysAuditLog
             {
-                RowId = i + 1,
+                Id = i + 1,
                 ActorType = "USER",
                 ActorId = 100,
                 CompanyId = 1,

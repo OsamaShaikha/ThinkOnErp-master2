@@ -63,6 +63,8 @@ public class OracleDbContext : DbContext
     // Archival
     public DbSet<SysAuditLogArchive> SysAuditLogArchives => Set<SysAuditLogArchive>();
     public DbSet<SysRetentionPolicy> SysRetentionPolicies => Set<SysRetentionPolicy>();
+    public DbSet<SysCode> SysCodes => Set<SysCode>();
+    public DbSet<SysSetting> SysSettings => Set<SysSetting>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -104,6 +106,8 @@ public class OracleDbContext : DbContext
         modelBuilder.ApplyConfiguration(new SysReportScheduleConfiguration());
         modelBuilder.ApplyConfiguration(new SysAuditLogArchiveConfiguration());
         modelBuilder.ApplyConfiguration(new SysRetentionPolicyConfiguration());
+        modelBuilder.ApplyConfiguration(new SysCodeConfiguration());
+        modelBuilder.ApplyConfiguration(new SysSettingConfiguration());
 
         // Oracle doesn't support BOOLEAN as a SQL column type; map all bool to NUMBER(1)
         // Clear HasConversion<string> from individual configs — Oracle provider handles

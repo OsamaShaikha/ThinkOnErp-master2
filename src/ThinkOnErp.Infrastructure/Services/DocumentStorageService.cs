@@ -7,12 +7,35 @@ namespace ThinkOnErp.Infrastructure.Services;
 
 public class DocumentStorageService : IDocumentStorageService
 {
+    private static string? _cachedBasePath;
+    private static readonly object _cacheLock = new();
     private readonly string _basePath;
     private readonly ILogger<DocumentStorageService> _logger;
 
-    public DocumentStorageService(IConfiguration configuration, ILogger<DocumentStorageService> logger)
+    public DocumentStorageService(IConfiguration configuration, ILogger<DocumentStorageService> logger,
+        ISysSettingRepository settingRepo)
     {
-        _basePath = configuration.GetValue<string>("DocumentStorage:BasePath") ?? "uploads";
+        if (_cachedBasePath == null)
+        {
+            lock (_cacheLock)
+            {
+                if (_cachedBasePath == null)
+                {
+                    try
+                    {
+                        var setting = settingRepo.GetByCodeAsync(1).GetAwaiter().GetResult();
+                        _cachedBasePath = setting?.SettingValue;
+                    }
+                    catch
+                    {
+                        _cachedBasePath = null;
+                    }
+                }
+            }
+        }
+        _basePath = _cachedBasePath
+            ?? configuration.GetValue<string>("DocumentStorage:BasePath")
+            ?? "uploads";
         _logger = logger;
 
         if (!Path.IsPathRooted(_basePath))

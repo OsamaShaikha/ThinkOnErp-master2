@@ -444,7 +444,7 @@ public class RedisCachePerformanceIntegrationTests : IDisposable
         {
             results.Add(new SysAuditLog
             {
-                RowId = i + 1,
+                Id = i + 1,
                 ActorType = "USER",
                 ActorId = i + 1,
                 CompanyId = 1,

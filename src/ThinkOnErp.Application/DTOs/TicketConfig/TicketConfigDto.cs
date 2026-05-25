@@ -5,7 +5,7 @@ namespace ThinkOnErp.Application.DTOs.TicketConfig;
 /// </summary>
 public class TicketConfigDto
 {
-    public Int64 RowId { get; set; }
+    public Int64 Id { get; set; }
     public string ConfigKey { get; set; } = string.Empty;
     public string ConfigValue { get; set; } = string.Empty;
     public string ConfigType { get; set; } = string.Empty;

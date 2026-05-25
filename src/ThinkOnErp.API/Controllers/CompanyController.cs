@@ -11,11 +11,6 @@ using ThinkOnErp.Application.Features.Companies.Queries.GetCompanyById;
 
 namespace ThinkOnErp.API.Controllers;
 
-/// <summary>
-/// Simplified controller for company management operations with Base64 logo support.
-/// Provides exactly 4 endpoints: POST (create with logos), PUT (update with logo), DELETE, GET (with logos).
-/// All logo operations are handled via Base64 strings in JSON requests/responses.
-/// </summary>
 [ApiController]
 [Route("api/companies")]
 [Authorize]
@@ -24,24 +19,12 @@ public class CompanyController : ControllerBase
     private readonly IMediator _mediator;
     private readonly ILogger<CompanyController> _logger;
 
-    /// <summary>
-    /// Initializes a new instance of the CompanyController class.
-    /// </summary>
-    /// <param name="mediator">MediatR instance for sending commands and queries</param>
-    /// <param name="logger">Logger for controller operations</param>
     public CompanyController(IMediator mediator, ILogger<CompanyController> logger)
     {
         _mediator = mediator ?? throw new ArgumentNullException(nameof(mediator));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
-    /// <summary>
-    /// Retrieves all active companies from the system with Base64 logos included in response.
-    /// Requires authentication.
-    /// </summary>
-    /// <returns>ApiResponse containing list of CompanyDto objects with Base64 logos</returns>
-    /// <response code="200">Returns the list of all active companies with logos</response>
-    /// <response code="401">User is not authenticated</response>
     [HttpGet]
     [ProducesResponseType(typeof(ApiResponse<List<CompanyDto>>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiResponse<List<CompanyDto>>), StatusCodes.Status401Unauthorized)]
@@ -49,7 +32,7 @@ public class CompanyController : ControllerBase
     {
         try
         {
-            _logger.LogInformation("Retrieving all companies with Base64 logos");
+            _logger.LogInformation("Retrieving all companies with logos");
 
             var query = new GetAllCompaniesQuery();
             var companies = await _mediator.Send(query);
@@ -68,15 +51,6 @@ public class CompanyController : ControllerBase
         }
     }
 
-    /// <summary>
-    /// Retrieves a specific company by its ID with Base64 logo included in response.
-    /// Requires authentication.
-    /// </summary>
-    /// <param name="id">Unique identifier of the company</param>
-    /// <returns>ApiResponse containing CompanyDto object with Base64 logo</returns>
-    /// <response code="200">Returns the requested company with logo</response>
-    /// <response code="404">Company not found with the specified ID</response>
-    /// <response code="401">User is not authenticated</response>
     [HttpGet("{id}")]
     [ProducesResponseType(typeof(ApiResponse<CompanyDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiResponse<CompanyDto>), StatusCodes.Status404NotFound)]
@@ -85,7 +59,7 @@ public class CompanyController : ControllerBase
     {
         try
         {
-            _logger.LogInformation("Retrieving company with ID: {CompanyId} including Base64 logo", id);
+            _logger.LogInformation("Retrieving company with ID: {CompanyId} including logo", id);
 
             var query = new GetCompanyByIdQuery { CompanyId = id };
             var company = await _mediator.Send(query);
@@ -112,30 +86,21 @@ public class CompanyController : ControllerBase
         }
     }
 
-    /// <summary>
-    /// Creates a new company with default branch and optional Base64 logos in a single API call.
-    /// Supports both company and branch logo creation via Base64 strings in the JSON request.
-    /// Requires AdminOnly authorization.
-    /// </summary>
-    /// <param name="dto">DTO containing company data, branch data, and optional Base64 logos</param>
-    /// <returns>ApiResponse containing the newly created company and branch IDs</returns>
-    /// <response code="201">Company and branch created successfully with logos</response>
-    /// <response code="400">Validation errors in the request</response>
-    /// <response code="401">User is not authenticated</response>
-    /// <response code="403">User does not have admin privileges</response>
     [HttpPost]
     [Authorize(Policy = "AdminOnly")]
     [ProducesResponseType(typeof(ApiResponse<CreateCompanyWithBranchResult>), StatusCodes.Status201Created)]
     [ProducesResponseType(typeof(ApiResponse<CreateCompanyWithBranchResult>), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ApiResponse<CreateCompanyWithBranchResult>), StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(typeof(ApiResponse<CreateCompanyWithBranchResult>), StatusCodes.Status403Forbidden)]
-    public async Task<ActionResult<ApiResponse<CreateCompanyWithBranchResult>>> CreateCompany([FromBody] CreateCompanyDto dto)
+    public async Task<ActionResult<ApiResponse<CreateCompanyWithBranchResult>>> CreateCompany(
+        [FromForm] CreateCompanyDto dto,
+        IFormFile? companyLogo,
+        IFormFile? branchLogo)
     {
         try
         {
-            _logger.LogInformation("Creating new company with default branch and Base64 logos: {CompanyCode}", dto.CompanyCode);
+            _logger.LogInformation("Creating new company with default branch and logo files: {CompanyCode}", dto.CompanyCode);
 
-            // Map DTO to command
             var command = new CreateCompanyWithBranchCommand
             {
                 CompanyNameAr = dto.CompanyNameAr,
@@ -145,17 +110,14 @@ public class CompanyController : ControllerBase
                 LegalNameAr = dto.LegalNameAr,
                 LegalNameEn = dto.LegalNameEn,
                 CompanyCode = dto.CompanyCode,
-                TaxNumber = dto.TaxNumber,
-                CompanyLogoBase64 = dto.CompanyLogoBase64,
-                BranchLogoBase64 = dto.BranchLogoBase64,
+                CompanyLogo = companyLogo != null ? await ReadFileBytesAsync(companyLogo) : null,
+                BranchLogo = branchLogo != null ? await ReadFileBytesAsync(branchLogo) : null,
                 
-                // Branch fields (migrated from company level)
-                DefaultLang = dto.BranchDefaultLang ?? "ar",
+                DefaultLang = dto.BranchDefaultLang ?? 1,
                 BranchBaseCurrencyId = dto.BranchBaseCurrencyId,
                 BranchRoundingRules = dto.BranchRoundingRules,
                 Systems = dto.Systems,
                 
-                // Branch contact fields
                 BranchNameAr = dto.BranchNameAr ?? dto.CompanyNameAr ?? "Default Branch",
                 BranchNameEn = dto.BranchNameEn ?? dto.CompanyNameEn ?? "Default Branch",
                 BranchPhone = dto.BranchPhone,
@@ -201,19 +163,6 @@ public class CompanyController : ControllerBase
         }
     }
 
-    /// <summary>
-    /// Updates an existing company with optional Base64 logo in a single API call.
-    /// Supports company logo update via Base64 string in the JSON request.
-    /// Requires AdminOnly authorization.
-    /// </summary>
-    /// <param name="id">Unique identifier of the company to update</param>
-    /// <param name="dto">DTO containing updated company data and optional Base64 logo</param>
-    /// <returns>ApiResponse containing the number of rows affected</returns>
-    /// <response code="200">Company updated successfully with logo</response>
-    /// <response code="400">Validation errors or ID mismatch</response>
-    /// <response code="404">Company not found with the specified ID</response>
-    /// <response code="401">User is not authenticated</response>
-    /// <response code="403">User does not have admin privileges</response>
     [HttpPut("{id}")]
     [Authorize(Policy = "AdminOnly")]
     [ProducesResponseType(typeof(ApiResponse<Int64>), StatusCodes.Status200OK)]
@@ -221,13 +170,15 @@ public class CompanyController : ControllerBase
     [ProducesResponseType(typeof(ApiResponse<Int64>), StatusCodes.Status404NotFound)]
     [ProducesResponseType(typeof(ApiResponse<Int64>), StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(typeof(ApiResponse<Int64>), StatusCodes.Status403Forbidden)]
-    public async Task<ActionResult<ApiResponse<Int64>>> UpdateCompany(Int64 id, [FromBody] UpdateCompanyDto dto)
+    public async Task<ActionResult<ApiResponse<Int64>>> UpdateCompany(
+        Int64 id,
+        [FromForm] UpdateCompanyDto dto,
+        IFormFile? companyLogo)
     {
         try
         {
-            _logger.LogInformation("Updating company with ID: {CompanyId} including Base64 logo", id);
+            _logger.LogInformation("Updating company with ID: {CompanyId} including logo file", id);
 
-            // Map DTO to command
             var command = new UpdateCompanyCommand
             {
                 CompanyId = id,
@@ -238,9 +189,8 @@ public class CompanyController : ControllerBase
                 LegalNameAr = dto.LegalNameAr,
                 LegalNameEn = dto.LegalNameEn,
                 CompanyCode = dto.CompanyCode,
-                TaxNumber = dto.TaxNumber,
                 DefaultBranchId = dto.DefaultBranchId,
-                CompanyLogoBase64 = dto.CompanyLogoBase64,
+                CompanyLogo = companyLogo != null ? await ReadFileBytesAsync(companyLogo) : null,
                 UpdateUser = User.Identity?.Name ?? "system"
             };
 
@@ -268,16 +218,6 @@ public class CompanyController : ControllerBase
         }
     }
 
-    /// <summary>
-    /// Deletes (soft delete) a company from the system.
-    /// Requires AdminOnly authorization.
-    /// </summary>
-    /// <param name="id">Unique identifier of the company to delete</param>
-    /// <returns>ApiResponse containing the number of rows affected</returns>
-    /// <response code="200">Company deleted successfully</response>
-    /// <response code="404">Company not found with the specified ID</response>
-    /// <response code="401">User is not authenticated</response>
-    /// <response code="403">User does not have admin privileges</response>
     [HttpDelete("{id}")]
     [Authorize(Policy = "AdminOnly")]
     [ProducesResponseType(typeof(ApiResponse<Int64>), StatusCodes.Status200OK)]
@@ -313,5 +253,12 @@ public class CompanyController : ControllerBase
             _logger.LogError(ex, "Error deleting company with ID: {CompanyId}", id);
             throw;
         }
+    }
+
+    private static async Task<byte[]> ReadFileBytesAsync(IFormFile file)
+    {
+        using var ms = new MemoryStream();
+        await file.CopyToAsync(ms);
+        return ms.ToArray();
     }
 }

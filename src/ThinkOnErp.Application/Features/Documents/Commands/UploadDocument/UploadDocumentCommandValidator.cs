@@ -14,9 +14,7 @@ public class UploadDocumentCommandValidator : AbstractValidator<UploadDocumentCo
             .NotEmpty().WithMessage("File name is required.");
 
         RuleFor(x => x.FileSize)
-            .GreaterThan(0).WithMessage("File cannot be empty.")
-            .LessThanOrEqualTo(SysDocument.MaxFileSizeBytes)
-            .WithMessage($"File size must not exceed {SysDocument.MaxFileSizeBytes / (1024 * 1024)} MB.");
+            .GreaterThan(0).WithMessage("File cannot be empty.");
 
         RuleFor(x => x.OwnerType)
             .NotEmpty().WithMessage("Owner type is required.")

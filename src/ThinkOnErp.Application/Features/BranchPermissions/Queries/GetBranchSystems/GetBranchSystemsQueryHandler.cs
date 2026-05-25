@@ -19,7 +19,7 @@ public class GetBranchSystemsQueryHandler : IRequestHandler<GetBranchSystemsQuer
 
         return branchSystems.Select(bs => new BranchSystemDto
         {
-            RowId = bs.Id,
+            Id = bs.Id,
             BranchId = bs.BranchId,
             SystemId = bs.SystemId,
             IsAllowed = bs.IsAllowed,

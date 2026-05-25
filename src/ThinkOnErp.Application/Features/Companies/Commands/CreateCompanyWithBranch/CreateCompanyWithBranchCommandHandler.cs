@@ -4,23 +4,25 @@ using ThinkOnErp.Domain.Interfaces;
 
 namespace ThinkOnErp.Application.Features.Companies.Commands.CreateCompanyWithBranch;
 
-/// <summary>
-/// Handler for creating a company with an automatic default branch.
-/// Uses repository pattern to maintain clean architecture separation.
-/// </summary>
 public class CreateCompanyWithBranchCommandHandler : IRequestHandler<CreateCompanyWithBranchCommand, CreateCompanyWithBranchResult>
 {
     private readonly ICompanyRepository _companyRepository;
+    private readonly IBranchRepository _branchRepository;
     private readonly IPermissionRepository _permissionRepository;
+    private readonly ILogoStorageService _logoStorageService;
     private readonly ILogger<CreateCompanyWithBranchCommandHandler> _logger;
 
     public CreateCompanyWithBranchCommandHandler(
         ICompanyRepository companyRepository,
+        IBranchRepository branchRepository,
         IPermissionRepository permissionRepository,
+        ILogoStorageService logoStorageService,
         ILogger<CreateCompanyWithBranchCommandHandler> logger)
     {
         _companyRepository = companyRepository ?? throw new ArgumentNullException(nameof(companyRepository));
+        _branchRepository = branchRepository ?? throw new ArgumentNullException(nameof(branchRepository));
         _permissionRepository = permissionRepository ?? throw new ArgumentNullException(nameof(permissionRepository));
+        _logoStorageService = logoStorageService ?? throw new ArgumentNullException(nameof(logoStorageService));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
@@ -30,34 +32,19 @@ public class CreateCompanyWithBranchCommandHandler : IRequestHandler<CreateCompa
 
         try
         {
-            // Convert Base64 logos to byte arrays if provided
-            byte[]? companyLogo = null;
-            byte[]? branchLogo = null;
+            // Save logos to disk first (use temp ID 0, will update after creation)
+            string? companyLogoPath = null;
+            string? branchLogoPath = null;
 
-            if (!string.IsNullOrEmpty(request.CompanyLogoBase64))
+            if (request.CompanyLogo != null)
             {
-                try
-                {
-                    companyLogo = Convert.FromBase64String(request.CompanyLogoBase64);
-                    _logger.LogInformation("Company logo converted from Base64, size: {Size} bytes", companyLogo.Length);
-                }
-                catch (FormatException)
-                {
-                    throw new ArgumentException("Invalid Base64 format for company logo");
-                }
+                companyLogoPath = await _logoStorageService.SaveLogoAsync(request.CompanyLogo, "companies", 0);
+                _logger.LogInformation("Company logo saved to disk, size: {Size} bytes", request.CompanyLogo.Length);
             }
-
-            if (!string.IsNullOrEmpty(request.BranchLogoBase64))
+            if (request.BranchLogo != null)
             {
-                try
-                {
-                    branchLogo = Convert.FromBase64String(request.BranchLogoBase64);
-                    _logger.LogInformation("Branch logo converted from Base64, size: {Size} bytes", branchLogo.Length);
-                }
-                catch (FormatException)
-                {
-                    throw new ArgumentException("Invalid Base64 format for branch logo");
-                }
+                branchLogoPath = await _logoStorageService.SaveLogoAsync(request.BranchLogo, "branches", 0);
+                _logger.LogInformation("Branch logo saved to disk, size: {Size} bytes", request.BranchLogo.Length);
             }
 
             // Use the repository method to create company with branch and fiscal year
@@ -70,18 +57,34 @@ public class CreateCompanyWithBranchCommandHandler : IRequestHandler<CreateCompa
                 taxNumber: request.TaxNumber,
                 countryId: request.CountryId,
                 currId: request.CurrId,
-                companyLogo: companyLogo, // Pass company logo directly
+                companyLogoPath: companyLogoPath,
                 branchNameAr: request.BranchNameAr,
                 branchNameEn: request.BranchNameEn,
                 branchPhone: request.BranchPhone,
                 branchMobile: request.BranchMobile,
                 branchFax: request.BranchFax,
                 branchEmail: request.BranchEmail,
-                branchLogo: branchLogo, // Use converted byte array
+                branchLogoPath: branchLogoPath,
                 defaultLang: request.DefaultLang,
                 baseCurrencyId: request.BranchBaseCurrencyId,
                 roundingRules: request.BranchRoundingRules ?? 1,
                 creationUser: request.CreationUser);
+
+            // Rename logo files with correct IDs
+            if (request.CompanyLogo != null)
+            {
+                var oldPath = companyLogoPath;
+                companyLogoPath = await _logoStorageService.SaveLogoAsync(request.CompanyLogo, "companies", result.CompanyId);
+                await _companyRepository.UpdateLogoPathAsync(result.CompanyId, companyLogoPath, request.CreationUser);
+                if (oldPath != null) await _logoStorageService.DeleteLogoAsync(oldPath);
+            }
+            if (request.BranchLogo != null)
+            {
+                var oldPath = branchLogoPath;
+                branchLogoPath = await _logoStorageService.SaveLogoAsync(request.BranchLogo, "branches", result.BranchId);
+                await _branchRepository.UpdateLogoPathAsync(result.BranchId, branchLogoPath, request.CreationUser);
+                if (oldPath != null) await _logoStorageService.DeleteLogoAsync(oldPath);
+            }
 
             _logger.LogInformation(
                 "Company created successfully with ID: {CompanyId}, Default branch created with ID: {BranchId}, Default fiscal year created with ID: {FiscalYearId}",

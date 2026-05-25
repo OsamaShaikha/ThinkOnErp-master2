@@ -967,6 +967,11 @@ public enum ReportExportFormat
     CSV,
     
     /// <summary>
+    /// Export as Excel file
+    /// </summary>
+    Excel,
+    
+    /// <summary>
     /// Export as JSON document
     /// </summary>
     JSON

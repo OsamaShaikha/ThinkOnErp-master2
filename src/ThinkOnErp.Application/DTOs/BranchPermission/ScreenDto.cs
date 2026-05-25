@@ -2,7 +2,7 @@ namespace ThinkOnErp.Application.DTOs.BranchPermission;
 
 public class ScreenDto
 {
-    public long RowId { get; set; }
+    public long Id { get; set; }
     public long? SystemId { get; set; }
     public string? SystemName { get; set; }
     public string? ScreenCode { get; set; }

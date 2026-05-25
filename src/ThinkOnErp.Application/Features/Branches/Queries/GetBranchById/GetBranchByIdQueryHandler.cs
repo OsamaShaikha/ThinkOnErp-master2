@@ -7,10 +7,12 @@ namespace ThinkOnErp.Application.Features.Branches.Queries.GetBranchById;
 public class GetBranchByIdQueryHandler : IRequestHandler<GetBranchByIdQuery, BranchDto?>
 {
     private readonly IBranchRepository _branchRepository;
+    private readonly ILogoStorageService _logoStorageService;
 
-    public GetBranchByIdQueryHandler(IBranchRepository branchRepository)
+    public GetBranchByIdQueryHandler(IBranchRepository branchRepository, ILogoStorageService logoStorageService)
     {
         _branchRepository = branchRepository;
+        _logoStorageService = logoStorageService;
     }
 
     public async Task<BranchDto?> Handle(GetBranchByIdQuery request, CancellationToken cancellationToken)
@@ -19,6 +21,13 @@ public class GetBranchByIdQueryHandler : IRequestHandler<GetBranchByIdQuery, Bra
 
         if (branch == null)
             return null;
+
+        string? logoBase64 = null;
+        if (branch.BranchLogoPath != null)
+        {
+            var logoBytes = await _logoStorageService.GetLogoAsync(branch.BranchLogoPath);
+            logoBase64 = ConvertBytesToBase64(logoBytes);
+        }
 
         return new BranchDto
         {
@@ -30,12 +39,13 @@ public class GetBranchByIdQueryHandler : IRequestHandler<GetBranchByIdQuery, Bra
             Mobile = branch.Mobile,
             Fax = branch.Fax,
             Email = branch.Email,
+            TaxNumber = branch.TaxNumber,
             IsHeadBranch = branch.IsHeadBranch,
             DefaultLang = branch.DefaultLang,
             BaseCurrencyId = branch.BaseCurrencyId,
             RoundingRules = branch.RoundingRules,
-            HasLogo = branch.HasLogo,
-            BranchLogoBase64 = ConvertBytesToBase64(branch.BranchLogo),
+            HasLogo = branch.BranchLogoPath != null,
+            BranchLogoBase64 = logoBase64,
             IsActive = branch.IsActive,
             CreationUser = branch.CreationUser,
             CreationDate = branch.CreationDate,

@@ -24,7 +24,11 @@ public interface IBranchPermissionRepository
     // Bulk Operations
     Task<int> GrantMultipleSystemsAsync(long branchId, List<long> systemIds, long grantedBy, string creationUser);
     Task<int> GrantMultipleScreensAsync(long branchId, List<long> screenIds, long grantedBy, string creationUser);
-    
+
+    // System + All Its Screens Operations
+    Task GrantSystemWithAllScreensAsync(long branchId, long systemId, long grantedBy, string creationUser);
+    Task RevokeSystemWithAllScreensAsync(long branchId, long systemId, string updateUser);
+
     // Get all systems/screens
     Task<List<SysSystem>> GetAllSystemsAsync();
     Task<List<SysScreen>> GetAllScreensAsync();

@@ -49,6 +49,11 @@ public class BranchDto
     public string? Email { get; set; }
 
     /// <summary>
+    /// Tax registration number
+    /// </summary>
+    public string? TaxNumber { get; set; }
+
+    /// <summary>
     /// Indicates if this is the head/main branch of the company
     /// </summary>
     public bool IsHeadBranch { get; set; }
@@ -56,7 +61,7 @@ public class BranchDto
     /// <summary>
     /// Default language for the branch (ar/en)
     /// </summary>
-    public string? DefaultLang { get; set; }
+    public int? DefaultLang { get; set; }
 
     /// <summary>
     /// Foreign key to SYS_CURRENCY table - base currency for branch operations

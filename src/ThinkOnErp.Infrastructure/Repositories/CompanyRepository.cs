@@ -50,24 +50,23 @@ public class CompanyRepository : ICompanyRepository
         return await _context.SaveChangesAsync();
     }
 
-    public async Task<long> UpdateLogoAsync(long rowId, byte[] logo, string userName)
+    public async Task<long> UpdateLogoPathAsync(long rowId, string? logoPath, string userName)
     {
         var company = await _context.SysCompanies.FindAsync(rowId);
         if (company == null) return 0;
-        
-        company.CompanyLogo = logo;
+
+        company.CompanyLogoPath = logoPath;
         company.UpdateUser = userName;
         company.UpdateDate = DateTime.Now;
         return await _context.SaveChangesAsync();
     }
 
-    public async Task<byte[]?> GetLogoAsync(long rowId)
+    public async Task<string?> GetLogoPathAsync(long rowId)
     {
-        var company = await _context.SysCompanies
+        return await _context.SysCompanies
             .Where(c => c.Id == rowId)
-            .Select(c => c.CompanyLogo)
+            .Select(c => c.CompanyLogoPath)
             .FirstOrDefaultAsync();
-        return company;
     }
 
     public async Task<(long CompanyId, long BranchId, long FiscalYearId)> CreateWithBranchAsync(
@@ -75,10 +74,10 @@ public class CompanyRepository : ICompanyRepository
         string? legalNameAr, string legalNameEn,
         string companyCode, string? taxNumber,
         long? countryId, long? currId,
-        byte[]? companyLogo, string? branchNameAr, string? branchNameEn,
+        string? companyLogoPath, string? branchNameAr, string? branchNameEn,
         string? branchPhone, string? branchMobile,
         string? branchFax, string? branchEmail,
-        byte[]? branchLogo, string? defaultLang,
+        string? branchLogoPath, int? defaultLang,
         long? baseCurrencyId, int? roundingRules,
         string creationUser)
     {
@@ -94,10 +93,9 @@ public class CompanyRepository : ICompanyRepository
                 LegalName = legalNameAr,
                 LegalNameE = legalNameEn,
                 CompanyCode = companyCode,
-                TaxNumber = taxNumber,
                 CountryId = countryId,
                 CurrId = currId,
-                CompanyLogo = companyLogo,
+                CompanyLogoPath = companyLogoPath,
                 IsActive = true,
                 CreationUser = creationUser,
                 CreationDate = DateTime.Now
@@ -116,10 +114,11 @@ public class CompanyRepository : ICompanyRepository
                 Fax = branchFax,
                 Email = branchEmail,
                 IsHeadBranch = true,
-                DefaultLang = defaultLang ?? "ar",
+                TaxNumber = taxNumber,
+                DefaultLang = defaultLang ?? 1,
                 BaseCurrencyId = baseCurrencyId,
                 RoundingRules = roundingRules ?? 1,
-                BranchLogo = branchLogo,
+                BranchLogoPath = branchLogoPath,
                 IsActive = true,
                 CreationUser = creationUser,
                 CreationDate = DateTime.Now
