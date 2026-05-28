@@ -9,9 +9,25 @@ public class CreateBranchDto
     public string? Mobile { get; set; }
     public string? Fax { get; set; }
     public string? Email { get; set; }
+
+    /// <summary>
+    /// Tax registration number (optional)
+    /// </summary>
     public string? TaxNumber { get; set; }
+
+    /// <summary>
+    /// Indicates if this is the head/main branch of the company
+    /// </summary>
     public bool IsHeadBranch { get; set; }
+
+    /// <summary>
+    /// Default language for the branch (ar/en)
+    /// </summary>
     public int? DefaultLang { get; set; } = 1;
+
+    /// <summary>
+    /// Foreign key to SYS_CURRENCY table - base currency for branch operations
+    /// </summary>
     public Int64? BaseCurrencyId { get; set; }
     public int? RoundingRules { get; set; }
     public List<long>? Systems { get; set; }

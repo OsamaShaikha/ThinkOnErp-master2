@@ -16,7 +16,15 @@ public class CreateCompanyDto
     public string? BranchMobile { get; set; }
     public string? BranchFax { get; set; }
     public string? BranchEmail { get; set; }
+
+    /// <summary>
+    /// Default language for the branch (ar/en) (optional, defaults to 'ar')
+    /// </summary>
     public int? BranchDefaultLang { get; set; }
+
+    /// <summary>
+    /// Base currency ID for the branch (optional)
+    /// </summary>
     public Int64? BranchBaseCurrencyId { get; set; }
     public int? BranchRoundingRules { get; set; }
     public List<long>? Systems { get; set; }
