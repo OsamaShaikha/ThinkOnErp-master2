@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Oracle.EntityFrameworkCore.Metadata;
 using ThinkOnErp.Infrastructure.Data;
@@ -11,9 +12,11 @@ using ThinkOnErp.Infrastructure.Data;
 namespace ThinkOnErp.Infrastructure.Migrations
 {
     [DbContext(typeof(OracleDbContext))]
-    partial class OracleDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260528211052_AddCodeValueToSysCode")]
+    partial class AddCodeValueToSysCode
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -54,6 +57,11 @@ namespace ThinkOnErp.Infrastructure.Migrations
                         .HasMaxLength(500)
                         .HasColumnType("NVARCHAR2(500)")
                         .HasColumnName("BUSINESS_DESCRIPTION");
+
+                    b.Property<string>("BusinessModule")
+                        .HasMaxLength(100)
+                        .HasColumnType("NVARCHAR2(100)")
+                        .HasColumnName("BUSINESS_MODULE");
 
                     b.Property<long?>("CompanyId")
                         .HasColumnType("NUMBER(19)")
@@ -162,18 +170,12 @@ namespace ThinkOnErp.Infrastructure.Migrations
                         .HasColumnType("NUMBER(10)")
                         .HasColumnName("STATUS_CODE");
 
-                    b.Property<long?>("SystemId")
-                        .HasColumnType("NUMBER(19)")
-                        .HasColumnName("BUSINESS_MODULE");
-
                     b.Property<string>("UserAgent")
                         .HasMaxLength(500)
                         .HasColumnType("NVARCHAR2(500)")
                         .HasColumnName("USER_AGENT");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("SystemId");
 
                     b.ToTable("SYS_AUDIT_LOG", (string)null);
                 });
@@ -218,6 +220,11 @@ namespace ThinkOnErp.Infrastructure.Migrations
                         .HasMaxLength(500)
                         .HasColumnType("NVARCHAR2(500)")
                         .HasColumnName("BUSINESS_DESCRIPTION");
+
+                    b.Property<string>("BusinessModule")
+                        .HasMaxLength(100)
+                        .HasColumnType("NVARCHAR2(100)")
+                        .HasColumnName("BUSINESS_MODULE");
 
                     b.Property<long?>("CompanyId")
                         .HasColumnType("NUMBER(19)")
@@ -318,10 +325,6 @@ namespace ThinkOnErp.Infrastructure.Migrations
                     b.Property<int?>("StatusCode")
                         .HasColumnType("NUMBER(10)")
                         .HasColumnName("STATUS_CODE");
-
-                    b.Property<long?>("SystemId")
-                        .HasColumnType("NUMBER(19)")
-                        .HasColumnName("BUSINESS_MODULE");
 
                     b.Property<string>("UserAgent")
                         .HasMaxLength(500)
@@ -2784,17 +2787,6 @@ namespace ThinkOnErp.Infrastructure.Migrations
                     b.HasIndex("UserId");
 
                     b.ToTable("SYS_USER_SCREEN_PERMISSIONS", (string)null);
-                });
-
-            modelBuilder.Entity("ThinkOnErp.Domain.Entities.SysAuditLog", b =>
-                {
-                    b.HasOne("ThinkOnErp.Domain.Entities.SysSystem", "System")
-                        .WithMany()
-                        .HasForeignKey("SystemId")
-                        .OnDelete(DeleteBehavior.SetNull)
-                        .HasConstraintName("FK_SYS_AUDIT_LOG_SYSTEM");
-
-                    b.Navigation("System");
                 });
 
             modelBuilder.Entity("ThinkOnErp.Domain.Entities.SysBranch", b =>

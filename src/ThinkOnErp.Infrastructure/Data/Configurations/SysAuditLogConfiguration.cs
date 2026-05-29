@@ -37,9 +37,15 @@ public class SysAuditLogConfiguration : IEntityTypeConfiguration<SysAuditLog>
         builder.Property(e => e.Metadata).HasColumnName("METADATA").HasColumnType("CLOB");
         builder.Property(e => e.Status).HasColumnName("STATUS").HasMaxLength(20);
         builder.Property(e => e.CreationDate).HasColumnName("CREATION_DATE");
-        builder.Property(e => e.BusinessModule).HasColumnName("BUSINESS_MODULE").HasMaxLength(100);
+        builder.Property(e => e.SystemId).HasColumnName("BUSINESS_MODULE");
         builder.Property(e => e.DeviceIdentifier).HasColumnName("DEVICE_IDENTIFIER").HasMaxLength(100);
         builder.Property(e => e.ErrorCode).HasColumnName("ERROR_CODE").HasMaxLength(100);
         builder.Property(e => e.BusinessDescription).HasColumnName("BUSINESS_DESCRIPTION").HasMaxLength(500);
+
+        builder.HasOne(e => e.System)
+            .WithMany()
+            .HasForeignKey(e => e.SystemId)
+            .HasConstraintName("FK_SYS_AUDIT_LOG_SYSTEM")
+            .OnDelete(DeleteBehavior.SetNull);
     }
 }

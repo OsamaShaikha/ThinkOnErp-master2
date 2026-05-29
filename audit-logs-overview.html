@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ThinkOnErp - Audit Log System</title>
+<style>
+  :root {
+    --bg: #0f172a;
+    --surface: #1e293b;
+    --surface2: #334155;
+    --border: #475569;
+    --text: #e2e8f0;
+    --muted: #94a3b8;
+    --accent: #38bdf8;
+    --green: #4ade80;
+    --red: #f87171;
+    --yellow: #facc15;
+    --purple: #a78bfa;
+    --pink: #f472b6;
+    --orange: #fb923c;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.6;
+    padding: 0;
+  }
+  .container { max-width: 1100px; margin: 0 auto; padding: 2rem; }
+
+  /* Header */
+  header {
+    background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+    border-bottom: 1px solid var(--border);
+    padding: 3rem 2rem;
+    text-align: center;
+  }
+  header h1 {
+    font-size: 2.5rem;
+    font-weight: 700;
+    background: linear-gradient(135deg, var(--accent), var(--purple));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  header p { color: var(--muted); margin-top: .5rem; font-size: 1.1rem; }
+
+  /* Cards */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+    transition: box-shadow .2s;
+  }
+  .card:hover { box-shadow: 0 4px 24px rgba(56,189,248,.08); }
+  .card h2 {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+    padding-bottom: .5rem;
+    border-bottom: 1px solid var(--border);
+    color: var(--accent);
+  }
+  .card h3 {
+    font-size: 1rem;
+    font-weight: 600;
+    margin: 1rem 0 .5rem;
+    color: var(--yellow);
+  }
+
+  /* Grid */
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+  .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1.5rem; }
+  @media (max-width: 768px) {
+    .grid-2, .grid-3 { grid-template-columns: 1fr; }
+  }
+
+  /* Badges */
+  .badge {
+    display: inline-block;
+    padding: .15rem .55rem;
+    border-radius: 9999px;
+    font-size: .75rem;
+    font-weight: 600;
+    letter-spacing: .025em;
+  }
+  .badge-blue { background: rgba(56,189,248,.15); color: var(--accent); }
+  .badge-green { background: rgba(74,222,128,.15); color: var(--green); }
+  .badge-red { background: rgba(248,113,113,.15); color: var(--red); }
+  .badge-yellow { background: rgba(250,204,21,.15); color: var(--yellow); }
+  .badge-purple { background: rgba(167,139,250,.15); color: var(--purple); }
+  .badge-pink { background: rgba(244,114,182,.15); color: var(--pink); }
+  .badge-orange { background: rgba(251,146,60,.15); color: var(--orange); }
+
+  /* Architecture diagram */
+  .arch {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: .4rem;
+    padding: 1rem 0;
+  }
+  .arch-box {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: .6rem 1.2rem;
+    font-size: .85rem;
+    font-weight: 500;
+    text-align: center;
+    min-width: 160px;
+  }
+  .arch-box.accent { border-color: var(--accent); color: var(--accent); }
+  .arch-box.green { border-color: var(--green); color: var(--green); }
+  .arch-box.purple { border-color: var(--purple); color: var(--purple); }
+  .arch-box.pink { border-color: var(--pink); color: var(--pink); }
+  .arch-box.orange { border-color: var(--orange); color: var(--orange); }
+  .arch-box.yellow { border-color: var(--yellow); color: var(--yellow); }
+  .arch-arrow { color: var(--muted); font-size: .8rem; }
+  .arch-split {
+    display: flex; gap: 2rem; justify-content: center; flex-wrap: wrap;
+  }
+  .arch-side-label { font-size: .75rem; color: var(--muted); text-align: center; margin-top: .25rem; }
+
+  /* Table */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: .85rem;
+  }
+  th, td {
+    text-align: left;
+    padding: .5rem .75rem;
+    border-bottom: 1px solid var(--border);
+  }
+  th { color: var(--accent); font-weight: 600; font-size: .75rem; text-transform: uppercase; letter-spacing: .05em; }
+  td { color: var(--text); }
+  tr:hover td { background: rgba(56,189,248,.04); }
+  .mono { font-family: 'JetBrains Mono', 'Fira Code', monospace; font-size: .8rem; color: var(--yellow); }
+
+  /* List */
+  ul, ol { padding-left: 1.25rem; }
+  li { margin-bottom: .35rem; color: var(--muted); }
+  li strong { color: var(--text); }
+
+  /* Code */
+  code {
+    font-family: 'JetBrains Mono', 'Fira Code', monospace;
+    font-size: .8rem;
+    background: var(--bg);
+    padding: .1rem .35rem;
+    border-radius: 4px;
+    color: var(--yellow);
+  }
+
+  /* Section toggle */
+  .section-link {
+    color: var(--accent);
+    text-decoration: none;
+    font-size: .8rem;
+    float: right;
+    opacity: .7;
+    transition: opacity .2s;
+  }
+  .section-link:hover { opacity: 1; }
+
+  footer {
+    text-align: center;
+    padding: 2rem;
+    color: var(--muted);
+    font-size: .85rem;
+    border-top: 1px solid var(--border);
+    margin-top: 2rem;
+  }
+
+  /* Feature list */
+  .feature-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: .75rem;
+  }
+  @media (max-width: 768px) { .feature-grid { grid-template-columns: 1fr; } }
+  .feature-item {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: .75rem 1rem;
+  }
+  .feature-item .label { font-size: .7rem; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); }
+  .feature-item .value { font-size: .9rem; font-weight: 500; color: var(--text); margin-top: .15rem; }
+
+  .endpoint-list { list-style: none; padding: 0; }
+  .endpoint-list li {
+    display: flex;
+    align-items: baseline;
+    gap: .5rem;
+    padding: .3rem 0;
+    border-bottom: 1px solid rgba(71,85,105,.4);
+  }
+  .endpoint-list li:last-child { border-bottom: none; }
+  .method {
+    font-size: .7rem;
+    font-weight: 700;
+    padding: .1rem .4rem;
+    border-radius: 4px;
+    min-width: 40px;
+    text-align: center;
+  }
+  .method.get { background: rgba(56,189,248,.15); color: var(--accent); }
+  .method.post { background: rgba(74,222,128,.15); color: var(--green); }
+  .method.put { background: rgba(250,204,21,.15); color: var(--yellow); }
+
+  .mt-1 { margin-top: 1rem; }
+  .mb-1 { margin-bottom: 1rem; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Audit Log System</h1>
+  <p>ThinkOnErp &mdash; Comprehensive event auditing with defense in depth</p>
+</header>
+
+<div class="container">
+
+  <!-- Architecture -->
+  <div class="card">
+    <h2>&#9654; Architecture Overview</h2>
+    <p style="color:var(--muted);margin-bottom:1.5rem;">
+      The audit system captures every state-changing operation through a layered pipeline:
+      MediatR behaviors intercept CQRS commands, an ADO.NET interceptor catches raw SQL,
+      events flow through a resilient channel-based logger, and fallback to the filesystem
+      when the database is unavailable.
+    </p>
+
+    <div class="arch">
+      <div class="arch-box accent">HTTP Request</div>
+      <div class="arch-arrow">&#8595;</div>
+      <div class="arch-box">Controllers<br><span style="font-size:.7rem;color:var(--muted)">AuditLogs &bull; AuditTrail &bull; AuditHealth</span></div>
+      <div class="arch-arrow">&#8595;</div>
+      <div class="arch-box" style="border-style:dashed;">MediatR Pipeline</div>
+      <div class="arch-arrow">&#8595;</div>
+      <div class="arch-box green">AuditLoggingBehavior<br><span style="font-size:.7rem;color:var(--muted)">Auto-captures all Commands</span></div>
+      <div class="arch-arrow">&#8595;</div>
+      <div class="arch-box purple">ResilientAuditLogger (Decorator)</div>
+      <div class="arch-arrow">&#8595;</div>
+      <div class="arch-split">
+        <div style="display:flex;flex-direction:column;align-items:center;">
+          <div class="arch-box pink">AuditLogger<br><span style="font-size:.7rem;color:var(--muted)">Channel + Batch Writer</span></div>
+          <div class="arch-arrow">&#8595;</div>
+          <div class="arch-box orange">AuditRepository<br><span style="font-size:.7rem;color:var(--muted)">EF Core + HMAC Integrity</span></div>
+          <div class="arch-arrow">&#8595;</div>
+          <div class="arch-box yellow">Oracle DB<br><span style="font-size:.7rem;color:var(--muted)">SYS_AUDIT_LOG</span></div>
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:center;">
+          <div class="arch-box pink" style="border-color:var(--red);color:var(--red);">FileSystemAuditFallback<br><span style="font-size:.7rem;color:var(--muted)">JSON files on disk</span></div>
+          <div class="arch-side-label">Circuit breaker open &#8594; fallback</div>
+        </div>
+      </div>
+      <div style="margin-top:.5rem;display:flex;gap:.5rem;flex-wrap:wrap;justify-content:center;">
+        <span class="badge badge-blue">ADO.NET Interceptor</span>
+        <span class="badge badge-green">Redis Cache</span>
+        <span class="badge badge-purple">HMAC-SHA256 Integrity</span>
+        <span class="badge badge-yellow">AES-256-GCM Encryption</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Event Types -->
+  <div class="card">
+    <h2>&#9654; Event Categories</h2>
+    <div class="grid-3">
+      <div class="feature-item">
+        <div class="label">DataChange</div>
+        <div class="value">INSERT / UPDATE / DELETE</div>
+        <div style="font-size:.75rem;color:var(--muted);margin-top:.25rem;">Captures OldValue / NewValue (JSON), changed fields</div>
+      </div>
+      <div class="feature-item">
+        <div class="label">Authentication</div>
+        <div class="value">Login / Logout / Token</div>
+        <div style="font-size:.75rem;color:var(--muted);margin-top:.25rem;">Success flag, failure reason, session duration</div>
+      </div>
+      <div class="feature-item">
+        <div class="label">PermissionChange</div>
+        <div class="value">Role / Permission</div>
+        <div style="font-size:.75rem;color:var(--muted);margin-top:.25rem;">Before / After snapshots of permission set</div>
+      </div>
+      <div class="feature-item">
+        <div class="label">ConfigurationChange</div>
+        <div class="value">Settings &amp; Feature Flags</div>
+        <div style="font-size:.75rem;color:var(--muted);margin-top:.25rem;">Setting name, old/new values, change source</div>
+      </div>
+      <div class="feature-item">
+        <div class="label">Exception</div>
+        <div class="value">Errors &amp; Failures</div>
+        <div style="font-size:.75rem;color:var(--muted);margin-top:.25rem;">Full stack trace, severity, inner exception</div>
+      </div>
+      <div class="feature-item">
+        <div class="label">Ticket Events</div>
+        <div class="value">Creation / Status / Assignment / Comment / Attachment</div>
+        <div style="font-size:.75rem;color:var(--muted);margin-top:.25rem;">13 specialized ticket audit methods</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Database Schema -->
+  <div class="card">
+    <h2>&#9654; SYS_AUDIT_LOG Table <span class="badge badge-blue">Oracle</span></h2>
+    <div style="overflow-x:auto;">
+      <table>
+        <thead>
+          <tr><th>Column</th><th>Type</th><th>Description</th></tr>
+        </thead>
+        <tbody>
+          <tr><td class="mono">ID</td><td>NUMBER (PK)</td><td>Auto-generated primary key</td></tr>
+          <tr><td class="mono">ACTOR_TYPE</td><td>VARCHAR2(50)</td><td>SUPER_ADMIN / COMPANY_ADMIN / USER / SYSTEM</td></tr>
+          <tr><td class="mono">ACTOR_ID</td><td>NUMBER</td><td>User or system component ID</td></tr>
+          <tr><td class="mono">COMPANY_ID</td><td>NUMBER?</td><td>Multi-tenant context</td></tr>
+          <tr><td class="mono">BRANCH_ID</td><td>NUMBER?</td><td>Multi-tenant context</td></tr>
+          <tr><td class="mono">ACTION</td><td>VARCHAR2(100)</td><td>INSERT / UPDATE / DELETE / LOGIN / LOGOUT / etc.</td></tr>
+          <tr><td class="mono">ENTITY_TYPE</td><td>VARCHAR2(100)</td><td>SysUser / SysCompany / SysBranch / etc.</td></tr>
+          <tr><td class="mono">ENTITY_ID</td><td>NUMBER?</td><td>Affected entity ID</td></tr>
+          <tr><td class="mono">OLD_VALUE</td><td>CLOB</td><td>Previous state (JSON)</td></tr>
+          <tr><td class="mono">NEW_VALUE</td><td>CLOB</td><td>New state (JSON)</td></tr>
+          <tr><td class="mono">IP_ADDRESS</td><td>VARCHAR2(50)?</td><td>Client IP</td></tr>
+          <tr><td class="mono">USER_AGENT</td><td>VARCHAR2(500)?</td><td>HTTP User-Agent</td></tr>
+          <tr><td class="mono">CORRELATION_ID</td><td>VARCHAR2(100)?</td><td>Request tracing ID</td></tr>
+          <tr><td class="mono">HTTP_METHOD</td><td>VARCHAR2(10)?</td><td>GET / POST / PUT / DELETE</td></tr>
+          <tr><td class="mono">ENDPOINT_PATH</td><td>VARCHAR2(500)?</td><td>API route</td></tr>
+          <tr><td class="mono">REQUEST_PAYLOAD</td><td>CLOB</td><td>Request body (JSON)</td></tr>
+          <tr><td class="mono">RESPONSE_PAYLOAD</td><td>CLOB</td><td>Response body (JSON)</td></tr>
+          <tr><td class="mono">EXECUTION_TIME_MS</td><td>NUMBER?</td><td>Request duration</td></tr>
+          <tr><td class="mono">STATUS_CODE</td><td>NUMBER?</td><td>HTTP status code</td></tr>
+          <tr><td class="mono">EXCEPTION_TYPE</td><td>VARCHAR2(200)?</td><td>Exception class name</td></tr>
+          <tr><td class="mono">EXCEPTION_MESSAGE</td><td>VARCHAR2(2000)?</td><td>Error message</td></tr>
+          <tr><td class="mono">STACK_TRACE</td><td>CLOB</td><td>Full stack trace</td></tr>
+          <tr><td class="mono">SEVERITY</td><td>VARCHAR2(20)</td><td>Critical / Error / Warning / Info</td></tr>
+          <tr><td class="mono">EVENT_CATEGORY</td><td>VARCHAR2(50)</td><td>DataChange / Authentication / Permission / Exception / Configuration / Request</td></tr>
+          <tr><td class="mono">STATUS</td><td>VARCHAR2(20)?</td><td>Unresolved / InProgress / Resolved / Critical</td></tr>
+          <tr><td class="mono">METADATA</td><td>CLOB</td><td>Extensible JSON (includes integrity hash)</td></tr>
+          <tr><td class="mono">BUSINESS_MODULE</td><td>VARCHAR2(100)?</td><td>POS / HR / Accounting (legacy compat)</td></tr>
+          <tr><td class="mono">DEVICE_IDENTIFIER</td><td>VARCHAR2(100)?</td><td>POS Terminal 03 (legacy compat)</td></tr>
+          <tr><td class="mono">ERROR_CODE</td><td>VARCHAR2(100)?</td><td>DB_TIMEOUT_001 (legacy compat)</td></tr>
+          <tr><td class="mono">BUSINESS_DESCRIPTION</td><td>VARCHAR2(500)?</td><td>Human-readable description (legacy compat)</td></tr>
+          <tr><td class="mono">CREATION_DATE</td><td>TIMESTAMP</td><td>UTC timestamp</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Service Interfaces -->
+  <div class="card">
+    <h2>&#9654; Service Interfaces</h2>
+    <div class="grid-2">
+      <div>
+        <h3>Logging &amp; Persistence</h3>
+        <ul>
+          <li><strong>IAuditLogger</strong> &mdash; Core audit methods: <code>LogDataChangeAsync</code>, <code>LogAuthenticationAsync</code>, <code>LogPermissionChangeAsync</code>, <code>LogConfigurationChangeAsync</code>, <code>LogExceptionAsync</code>, <code>LogBatchAsync</code>, <code>IsHealthyAsync</code></li>
+          <li><strong>IAuditRepository</strong> &mdash; EF Core persistence: <code>InsertAsync</code>, <code>InsertBatchAsync</code>, <code>GetByCorrelationIdAsync</code>, <code>GetByEntityAsync</code>, HMAC integrity hash generation</li>
+        </ul>
+      </div>
+      <div>
+        <h3>Querying &amp; Export</h3>
+        <ul>
+          <li><strong>IAuditQueryService</strong> &mdash; <code>QueryAsync</code> (17 filters), <code>SearchAsync</code> (full-text), <code>GetUserActionReplayAsync</code>, <code>ExportToCsvAsync</code>, <code>ExportToJsonAsync</code></li>
+          <li><strong>IAuditTrailService</strong> &mdash; 13 ticket-specific methods: creation, modification, status/assignment changes, comment, attachment, search, access, auth failure, admin action</li>
+        </ul>
+      </div>
+      <div>
+        <h3>Security &amp; Integrity</h3>
+        <ul>
+          <li><strong>IAuditLogIntegrityService</strong> &mdash; HMAC-SHA256 hash generation/verification, batch tampering detection</li>
+          <li><strong>IAuditDataEncryption</strong> &mdash; AES-256-GCM field-level encrypt/decrypt</li>
+        </ul>
+      </div>
+      <div>
+        <h3>Context &amp; Legacy</h3>
+        <ul>
+          <li><strong>IAuditContextProvider</strong> &mdash; Extracts actor, tenant, IP, User-Agent from JWT / HTTP context</li>
+          <li><strong>ILegacyAuditService</strong> &mdash; Legacy dashboard counters, status workflow, business description generation</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- Pipeline Details -->
+  <div class="card">
+    <h2>&#9654; Auto-Capture Pipeline</h2>
+    <div class="feature-grid">
+      <div class="feature-item">
+        <div class="label">MediatR PipelineBehavior</div>
+        <div class="value"><code>AuditLoggingBehavior&lt;TRequest, TResponse&gt;</code></div>
+        <div style="font-size:.75rem;color:var(--muted);margin-top:.25rem;">
+          Intercepts all commands (name ends with &ldquo;Command&rdquo;). Captures request state before execution
+          and response/exception after. Runs fire-and-forget to never block the pipeline.
+          Extracts entity type from command name (<code>CreateUserCommand</code> &#8594; <code>User</code>)
+          and determines action: Create/Add &#8594; INSERT, Update/Change/Assign &#8594; UPDATE, Delete/Remove &#8594; DELETE.
+        </div>
+      </div>
+      <div class="feature-item">
+        <div class="label">ADO.NET Interceptor</div>
+        <div class="value"><code>AuditCommandInterceptor</code></div>
+        <div style="font-size:.75rem;color:var(--muted);margin-top:.25rem;">
+          Wraps <code>AuditableOracleConnection</code> / <code>AuditableOracleCommand</code> to intercept
+          raw SQL INSERT / UPDATE / DELETE. Extracts table name and action type.
+          Skips audit tables (<code>SYS_AUDIT_LOG</code>, <code>SYS_AUDIT_LOG_ARCHIVE</code>)
+          to prevent infinite recursion.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- API Endpoints -->
+  <div class="card">
+    <h2>&#9654; API Endpoints</h2>
+
+    <h3 style="margin-top:0;"><code>AuditLogsController</code> &mdash; <span class="badge badge-blue">/api/auditlogs</span> <span class="badge badge-yellow">AdminOnly</span></h3>
+    <ul class="endpoint-list">
+      <li><span class="method get">GET</span> <code>/api/auditlogs/legacy</code> &mdash; Legacy-format audit logs (logs.png compatible)</li>
+      <li><span class="method get">GET</span> <code>/api/auditlogs/dashboard</code> &mdash; Dashboard counters (unresolved / in-progress / resolved / critical)</li>
+      <li><span class="method put">PUT</span> <code>/api/auditlogs/legacy/{id}/status</code> &mdash; Update audit log status with resolution notes</li>
+      <li><span class="method get">GET</span> <code>/api/auditlogs/{id}/status</code> &mdash; Get current status</li>
+      <li><span class="method post">POST</span> <code>/api/auditlogs/transform</code> &mdash; Transform entry to legacy format</li>
+      <li><span class="method get">GET</span> <code>/api/auditlogs/correlation/{correlationId}</code> &mdash; Get logs by correlation ID</li>
+      <li><span class="method get">GET</span> <code>/api/auditlogs/entity/{entityType}/{entityId}</code> &mdash; Entity change history</li>
+      <li><span class="method get">GET</span> <code>/api/auditlogs/replay/user/{userId}</code> &mdash; User action replay (max 30 days)</li>
+      <li><span class="method get">GET</span> <code>/api/auditlogs/query</code> &mdash; Query with 17 filter parameters + pagination</li>
+      <li><span class="method get">GET</span> <code>/api/auditlogs/search</code> &mdash; Full-text search (Oracle Text)</li>
+      <li><span class="method get">GET</span> <code>/api/auditlogs/export/csv</code> &mdash; Export to CSV (max 90 days)</li>
+    </ul>
+
+    <h3><code>AuditTrailController</code> &mdash; <span class="badge badge-blue">/api/audit-trail</span> <span class="badge badge-yellow">AdminOnly</span></h3>
+    <ul class="endpoint-list">
+      <li><span class="method get">GET</span> <code>/api/audit-trail/tickets/{ticketId}</code> &mdash; Ticket audit trail with filters</li>
+      <li><span class="method post">POST</span> <code>/api/audit-trail/search</code> &mdash; Advanced search with pagination</li>
+      <li><span class="method post">POST</span> <code>/api/audit-trail/export</code> &mdash; Export (CSV or JSON, max 1 year)</li>
+      <li><span class="method get">GET</span> <code>/api/audit-trail/statistics</code> &mdash; Statistics by entity type, action, severity</li>
+    </ul>
+
+    <h3><code>AuditHealthController</code> &mdash; <span class="badge badge-blue">/api/AuditHealth</span> <span class="badge badge-green">AllowAnonymous</span></h3>
+    <ul class="endpoint-list">
+      <li><span class="method get">GET</span> <code>/api/AuditHealth/status</code> &mdash; Health check (200=healthy, 503=degraded)</li>
+      <li><span class="method get">GET</span> <code>/api/AuditHealth/metrics</code> &mdash; Detailed metrics (circuit state, queue depth, fallback count) <span class="badge badge-yellow">AdminOnly</span></li>
+      <li><span class="method post">POST</span> <code>/api/AuditHealth/replay-fallback</code> &mdash; Manually trigger fallback replay <span class="badge badge-yellow">AdminOnly</span></li>
+    </ul>
+  </div>
+
+  <!-- FileSystem Fallback -->
+  <div class="card">
+    <h2>&#9654; FileSystemAuditFallback</h2>
+    <p style="color:var(--muted);margin-bottom:1rem;">
+      When the database is unavailable (circuit breaker open), audit events are written to
+      JSON files on disk and replayed when the DB recovers.
+    </p>
+    <div class="feature-grid">
+      <div class="feature-item">
+        <div class="label">Storage Path</div>
+        <div class="value"><code>logs/audit-fallback/</code></div>
+        <div style="font-size:.75rem;color:var(--muted);margin-top:.25rem;">Configurable via SYS_SETTINGS CODE 5 or appsettings</div>
+      </div>
+      <div class="feature-item">
+        <div class="label">File Naming</div>
+        <div class="value"><code>audit_fallback_{yyyyMMdd_HHmmss}_{guid}.json</code></div>
+        <div style="font-size:.75rem;color:var(--muted);margin-top:.25rem;">Single or batch files</div>
+      </div>
+      <div class="feature-item">
+        <div class="label">Rotation</div>
+        <div class="value">Max 100 MB total</div>
+        <div style="font-size:.75rem;color:var(--muted);margin-top:.25rem;">Oldest files &#8594; <code>archive/</code> subdirectory, 20% buffer maintained</div>
+      </div>
+      <div class="feature-item">
+        <div class="label">Replay</div>
+        <div class="value">Max 3 attempts</div>
+        <div style="font-size:.75rem;color:var(--muted);margin-top:.25rem;">Failed files &#8594; <code>error/</code> subdirectory</div>
+      </div>
+      <div class="feature-item">
+        <div class="label">Concurrency</div>
+        <div class="value">SemaphoreSlim (singleton)</div>
+        <div style="font-size:.75rem;color:var(--muted);margin-top:.25rem;">Separate locks for write and replay</div>
+      </div>
+      <div class="feature-item">
+        <div class="label">Last Resort</div>
+        <div class="value">Windows Event Log / stderr</div>
+        <div style="font-size:.75rem;color:var(--muted);margin-top:.25rem;">If even file write fails</div>
+      </div>
+    </div>
+    <h3 class="mt-1">Write Flow</h3>
+    <ol style="font-size:.85rem;color:var(--muted);">
+      <li>Acquire write <code>SemaphoreSlim</code> (singleton lock)</li>
+      <li>Check directory availability (falls back gracefully if unavailable)</li>
+      <li>Trigger file rotation if total size exceeds 100 MB</li>
+      <li>Create <code>FallbackAuditEntry</code> or <code>FallbackAuditBatch</code> wrapper (includes <code>EventType</code>, <code>WrittenAt</code>, <code>ReplayAttempts</code>)</li>
+      <li>Serialize to indented JSON and write to disk</li>
+      <li>Update metrics (<code>_totalEventsWritten</code>)</li>
+      <li>On failure: log error, increment <code>_failedWrites</code>, attempt <code>TryWriteToSystemLog</code></li>
+      <li>Release lock</li>
+    </ol>
+  </div>
+
+  <!-- Security Features -->
+  <div class="card">
+    <h2>&#9654; Security &amp; Integrity</h2>
+    <div class="grid-2">
+      <div>
+        <h3>Tamper Detection</h3>
+        <ul>
+          <li><strong>HMAC-SHA256</strong> integrity hash stored in <code>Metadata.integrity_hash</code></li>
+          <li>Hash covers all audit fields + a secret key</li>
+          <li><code>IAuditLogIntegrityService</code> verifies individual entries and batches</li>
+          <li><code>DetectTamperingAsync</code> scans date ranges and triggers alerts</li>
+        </ul>
+      </div>
+      <div>
+        <h3>Field-Level Encryption</h3>
+        <ul>
+          <li><strong>AES-256-GCM</strong> (authenticated encryption)</li>
+          <li>Thread-safe via <code>SemaphoreSlim</code></li>
+          <li>Encrypts sensitive fields before storage</li>
+          <li>Decrypts on read for authorized users</li>
+        </ul>
+      </div>
+      <div>
+        <h3>Data Masking</h3>
+        <ul>
+          <li>Sensitive fields masked before logging (passwords, tokens, PII)</li>
+          <li>Masking happens in the <code>AuditLogger</code> before enqueueing</li>
+        </ul>
+      </div>
+      <div>
+        <h3>RBAC Filtering</h3>
+        <ul>
+          <li>SuperAdmin: sees all audit logs across all tenants</li>
+          <li>CompanyAdmin: sees logs for their company only</li>
+          <li>User: sees logs for their own actions only</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- Metrics & Health -->
+  <div class="card">
+    <h2>&#9654; Monitoring &amp; Health</h2>
+    <div class="feature-grid">
+      <div class="feature-item">
+        <div class="label">Health endpoint</div>
+        <div class="value"><code>GET /api/AuditHealth/status</code></div>
+        <div style="font-size:.75rem;color:var(--muted);margin-top:.25rem;">Anonymous access; reports 200 or 503</div>
+      </div>
+      <div class="feature-item">
+        <div class="label">Metrics exposed</div>
+        <div class="value">Total/Successful/Failed requests, circuit breaker state, queue depth, fallback count</div>
+        <div style="font-size:.75rem;color:var(--muted);margin-top:.25rem;">Success rate, failure rate, rejection rate</div>
+      </div>
+      <div class="feature-item">
+        <div class="label">Circuit Breaker</div>
+        <div class="value">Closed / Open / HalfOpen</div>
+        <div style="font-size:.75rem;color:var(--muted);margin-top:.25rem;">Exponential backoff retry; opens after repeated failures</div>
+      </div>
+      <div class="feature-item">
+        <div class="label">Background Writer</div>
+        <div class="value"><code>System.Threading.Channels</code></div>
+        <div style="font-size:.75rem;color:var(--muted);margin-top:.25rem;">Batch size: 50, window: 100ms; backpressure when channel full</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<footer>
+  ThinkOnErp &mdash; Audit Log System &middot; Generated from source code
+</footer>
+
+</body>
+</html>

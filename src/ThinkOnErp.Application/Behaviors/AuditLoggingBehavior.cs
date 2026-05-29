@@ -1,5 +1,7 @@
+using System.Diagnostics;
 using MediatR;
 using Microsoft.Extensions.Logging;
+using System.Reflection;
 using System.Text.Json;
 using ThinkOnErp.Domain.Entities.Audit;
 using ThinkOnErp.Domain.Interfaces;
@@ -19,17 +21,20 @@ public class AuditLoggingBehavior<TRequest, TResponse> : IPipelineBehavior<TRequ
     private readonly IAuditLogger _auditLogger;
     private readonly IAuditContextProvider _auditContextProvider;
     private readonly IExceptionCategorizationService _exceptionCategorization;
+    private readonly IEntityStateProvider _entityStateProvider;
     private readonly ILogger<AuditLoggingBehavior<TRequest, TResponse>> _logger;
 
     public AuditLoggingBehavior(
         IAuditLogger auditLogger,
         IAuditContextProvider auditContextProvider,
         IExceptionCategorizationService exceptionCategorization,
+        IEntityStateProvider entityStateProvider,
         ILogger<AuditLoggingBehavior<TRequest, TResponse>> logger)
     {
         _auditLogger = auditLogger;
         _auditContextProvider = auditContextProvider;
         _exceptionCategorization = exceptionCategorization;
+        _entityStateProvider = entityStateProvider;
         _logger = logger;
     }
 
@@ -48,29 +53,47 @@ public class AuditLoggingBehavior<TRequest, TResponse> : IPipelineBehavior<TRequ
         // Capture request state before execution
         var requestState = CaptureRequestState(request);
         var correlationId = _auditContextProvider.GetCorrelationId();
+        var httpMethod = _auditContextProvider.GetHttpMethod();
+        var endpointPath = _auditContextProvider.GetEndpointPath();
+
+        // Capture old entity state before changes (for UPDATE/DELETE)
+        var action = DetermineAction(requestName);
+        var entityType = ExtractEntityType(requestName);
+        string? oldState = null;
+        if (action == "UPDATE" || action == "DELETE")
+        {
+            var entityId = ExtractEntityIdFromRequest(request, entityType);
+            if (entityId.HasValue)
+            {
+                oldState = await _entityStateProvider.GetEntityStateAsync(entityType, entityId.Value);
+            }
+        }
 
         TResponse? response = default;
         Exception? exception = null;
+        var stopwatch = Stopwatch.StartNew();
 
         try
         {
             // Execute the command
             response = await next();
+            stopwatch.Stop();
 
             // Capture response state after execution
             var responseState = CaptureResponseState(response);
 
             // Log audit event asynchronously (fire-and-forget)
-            _ = LogAuditEventAsync(requestName, requestState, responseState, correlationId, null, cancellationToken);
+            _ = LogAuditEventAsync(requestName, requestState, responseState, correlationId, null, oldState, httpMethod, endpointPath, stopwatch.ElapsedMilliseconds, 200, cancellationToken);
 
             return response;
         }
         catch (Exception ex)
         {
+            stopwatch.Stop();
             exception = ex;
 
             // Log audit event with exception (fire-and-forget)
-            _ = LogAuditEventAsync(requestName, requestState, null, correlationId, ex, cancellationToken);
+            _ = LogAuditEventAsync(requestName, requestState, null, correlationId, ex, oldState, httpMethod, endpointPath, stopwatch.ElapsedMilliseconds, 500, cancellationToken);
 
             throw; // Re-throw to maintain exception flow
         }
@@ -143,7 +166,12 @@ public class AuditLoggingBehavior<TRequest, TResponse> : IPipelineBehavior<TRequ
         string? responseState,
         string correlationId,
         Exception? exception,
-        CancellationToken cancellationToken)
+        string? oldState = null,
+        string? httpMethod = null,
+        string? endpointPath = null,
+        long? executionTimeMs = null,
+        int? statusCode = null,
+        CancellationToken cancellationToken = default)
     {
         try
         {
@@ -178,6 +206,12 @@ public class AuditLoggingBehavior<TRequest, TResponse> : IPipelineBehavior<TRequ
                     IpAddress = ipAddress,
                     UserAgent = userAgent,
                     Timestamp = DateTime.UtcNow,
+                    HttpMethod = httpMethod,
+                    EndpointPath = endpointPath,
+                    RequestPayload = action == "DELETE" ? oldState : requestState,
+                    ResponsePayload = responseState,
+                    ExecutionTimeMs = executionTimeMs,
+                    StatusCode = statusCode,
                     ExceptionType = exception.GetType().Name,
                     ExceptionMessage = exception.Message,
                     StackTrace = exception.StackTrace,
@@ -207,8 +241,14 @@ public class AuditLoggingBehavior<TRequest, TResponse> : IPipelineBehavior<TRequ
                     IpAddress = ipAddress,
                     UserAgent = userAgent,
                     Timestamp = DateTime.UtcNow,
-                    OldValue = action == "UPDATE" ? requestState : null,
-                    NewValue = action == "DELETE" ? null : responseState
+                    HttpMethod = httpMethod,
+                    EndpointPath = endpointPath,
+                    RequestPayload = requestState,
+                    ResponsePayload = responseState,
+                    ExecutionTimeMs = executionTimeMs,
+                    StatusCode = statusCode,
+                    OldValue = action == "DELETE" ? (oldState ?? requestState) : (action == "UPDATE" ? oldState : null),
+                    NewValue = (action == "INSERT" || action == "UPDATE") ? requestState : null
                 };
 
                 await _auditLogger.LogDataChangeAsync(dataChangeEvent, cancellationToken);
@@ -300,6 +340,34 @@ public class AuditLoggingBehavior<TRequest, TResponse> : IPipelineBehavior<TRequ
         catch
         {
             return null;
+        }
+
+        return null;
+    }
+
+    private long? ExtractEntityIdFromRequest(TRequest request, string entityType)
+    {
+        try
+        {
+            // Try {EntityType}Id first (e.g., RoleId, UserId, CompanyId)
+            var idPropertyName = entityType + "Id";
+            var prop = typeof(TRequest).GetProperty(idPropertyName, BindingFlags.Public | BindingFlags.Instance);
+            if (prop != null && prop.GetValue(request) is long id && id > 0)
+                return id;
+
+            // Try "Id"
+            prop = typeof(TRequest).GetProperty("Id", BindingFlags.Public | BindingFlags.Instance);
+            if (prop != null && prop.GetValue(request) is long id2 && id2 > 0)
+                return id2;
+
+            // Try "id" (camelCase JSON property sometimes maps to lowercase)
+            prop = typeof(TRequest).GetProperty("id", BindingFlags.Public | BindingFlags.Instance);
+            if (prop != null && prop.GetValue(request) is long id3 && id3 > 0)
+                return id3;
+        }
+        catch
+        {
+            // Ignore reflection errors
         }
 
         return null;

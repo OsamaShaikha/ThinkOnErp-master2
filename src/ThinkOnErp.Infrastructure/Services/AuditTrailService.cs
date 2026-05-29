@@ -2,6 +2,7 @@
 using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using ThinkOnErp.Domain.Constants;
 using ThinkOnErp.Domain.Entities;
 using ThinkOnErp.Domain.Entities.Audit;
 using ThinkOnErp.Domain.Interfaces;
@@ -14,15 +15,18 @@ public class AuditTrailService : IAuditTrailService
     private readonly OracleDbContext _context;
     private readonly ILogger<AuditTrailService> _logger;
     private readonly IAuditLogger _auditLogger;
+    private readonly ISysCodeService _sysCodeService;
 
     public AuditTrailService(
         OracleDbContext context,
         ILogger<AuditTrailService> logger,
-        IAuditLogger auditLogger)
+        IAuditLogger auditLogger,
+        ISysCodeService sysCodeService)
     {
         _context = context ?? throw new ArgumentNullException(nameof(context));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _auditLogger = auditLogger ?? throw new ArgumentNullException(nameof(auditLogger));
+        _sysCodeService = sysCodeService ?? throw new ArgumentNullException(nameof(sysCodeService));
     }
 
     public async Task LogTicketCreationAsync(
@@ -41,7 +45,7 @@ public class AuditTrailService : IAuditTrailService
             var auditEvent = new DataChangeAuditEvent
             {
                 CorrelationId = correlationId,
-                ActorType = "USER",
+                ActorType = _sysCodeService.GetCodeValue(SysCodeKeys.ActorTypes.Mgr, SysCodeKeys.ActorTypes.User),
                 ActorId = userId,
                 CompanyId = companyId,
                 BranchId = branchId,
@@ -89,7 +93,7 @@ public class AuditTrailService : IAuditTrailService
             var auditEvent = new DataChangeAuditEvent
             {
                 CorrelationId = correlationId,
-                ActorType = "USER",
+                ActorType = _sysCodeService.GetCodeValue(SysCodeKeys.ActorTypes.Mgr, SysCodeKeys.ActorTypes.User),
                 ActorId = userId,
                 CompanyId = companyId,
                 BranchId = branchId,
@@ -140,7 +144,7 @@ public class AuditTrailService : IAuditTrailService
             var auditEvent = new DataChangeAuditEvent
             {
                 CorrelationId = correlationId,
-                ActorType = "USER",
+                ActorType = _sysCodeService.GetCodeValue(SysCodeKeys.ActorTypes.Mgr, SysCodeKeys.ActorTypes.User),
                 ActorId = userId,
                 CompanyId = companyId,
                 BranchId = branchId,
@@ -190,7 +194,7 @@ public class AuditTrailService : IAuditTrailService
             var auditEvent = new DataChangeAuditEvent
             {
                 CorrelationId = correlationId,
-                ActorType = "USER",
+                ActorType = _sysCodeService.GetCodeValue(SysCodeKeys.ActorTypes.Mgr, SysCodeKeys.ActorTypes.User),
                 ActorId = userId,
                 CompanyId = companyId,
                 BranchId = branchId,
@@ -243,7 +247,7 @@ public class AuditTrailService : IAuditTrailService
             var auditEvent = new DataChangeAuditEvent
             {
                 CorrelationId = correlationId,
-                ActorType = "USER",
+                ActorType = _sysCodeService.GetCodeValue(SysCodeKeys.ActorTypes.Mgr, SysCodeKeys.ActorTypes.User),
                 ActorId = userId,
                 CompanyId = companyId,
                 BranchId = branchId,
@@ -298,7 +302,7 @@ public class AuditTrailService : IAuditTrailService
             var auditEvent = new DataChangeAuditEvent
             {
                 CorrelationId = correlationId,
-                ActorType = "USER",
+                ActorType = _sysCodeService.GetCodeValue(SysCodeKeys.ActorTypes.Mgr, SysCodeKeys.ActorTypes.User),
                 ActorId = userId,
                 CompanyId = companyId,
                 BranchId = branchId,
@@ -349,7 +353,7 @@ public class AuditTrailService : IAuditTrailService
             var auditEvent = new DataChangeAuditEvent
             {
                 CorrelationId = correlationId,
-                ActorType = "USER",
+                ActorType = _sysCodeService.GetCodeValue(SysCodeKeys.ActorTypes.Mgr, SysCodeKeys.ActorTypes.User),
                 ActorId = userId,
                 CompanyId = companyId,
                 BranchId = branchId,
@@ -399,7 +403,7 @@ public class AuditTrailService : IAuditTrailService
             var auditEvent = new DataChangeAuditEvent
             {
                 CorrelationId = correlationId,
-                ActorType = "USER",
+                ActorType = _sysCodeService.GetCodeValue(SysCodeKeys.ActorTypes.Mgr, SysCodeKeys.ActorTypes.User),
                 ActorId = userId,
                 CompanyId = companyId,
                 BranchId = branchId,
@@ -409,7 +413,7 @@ public class AuditTrailService : IAuditTrailService
                 IpAddress = ipAddress,
                 UserAgent = userAgent,
                 Timestamp = DateTime.UtcNow,
-                EventCategory = "Request",
+                EventCategory = _sysCodeService.GetCodeValue(SysCodeKeys.EventCategories.Mgr, SysCodeKeys.EventCategories.Request),
                 Metadata = JsonSerializer.Serialize(new
                 {
                     Action = "AttachmentDownloaded",
@@ -448,7 +452,7 @@ public class AuditTrailService : IAuditTrailService
             var auditEvent = new DataChangeAuditEvent
             {
                 CorrelationId = correlationId,
-                ActorType = "USER",
+                ActorType = _sysCodeService.GetCodeValue(SysCodeKeys.ActorTypes.Mgr, SysCodeKeys.ActorTypes.User),
                 ActorId = userId,
                 CompanyId = companyId,
                 BranchId = branchId,
@@ -457,7 +461,7 @@ public class AuditTrailService : IAuditTrailService
                 IpAddress = ipAddress,
                 UserAgent = userAgent,
                 Timestamp = DateTime.UtcNow,
-                EventCategory = "Request",
+                EventCategory = _sysCodeService.GetCodeValue(SysCodeKeys.EventCategories.Mgr, SysCodeKeys.EventCategories.Request),
                 Metadata = JsonSerializer.Serialize(new
                 {
                     Action = "TicketSearch",
@@ -494,7 +498,7 @@ public class AuditTrailService : IAuditTrailService
             var auditEvent = new DataChangeAuditEvent
             {
                 CorrelationId = correlationId,
-                ActorType = "USER",
+                ActorType = _sysCodeService.GetCodeValue(SysCodeKeys.ActorTypes.Mgr, SysCodeKeys.ActorTypes.User),
                 ActorId = userId,
                 CompanyId = companyId,
                 BranchId = branchId,
@@ -504,7 +508,7 @@ public class AuditTrailService : IAuditTrailService
                 IpAddress = ipAddress,
                 UserAgent = userAgent,
                 Timestamp = DateTime.UtcNow,
-                EventCategory = "Request",
+                EventCategory = _sysCodeService.GetCodeValue(SysCodeKeys.EventCategories.Mgr, SysCodeKeys.EventCategories.Request),
                 Metadata = JsonSerializer.Serialize(new
                 {
                     Action = "TicketAccessed",
@@ -541,7 +545,9 @@ public class AuditTrailService : IAuditTrailService
             var auditEvent = new DataChangeAuditEvent
             {
                 CorrelationId = correlationId,
-                ActorType = userId.HasValue ? "USER" : "ANONYMOUS",
+                ActorType = userId.HasValue
+                    ? _sysCodeService.GetCodeValue(SysCodeKeys.ActorTypes.Mgr, SysCodeKeys.ActorTypes.User)
+                    : _sysCodeService.GetCodeValue(SysCodeKeys.ActorTypes.Mgr, SysCodeKeys.ActorTypes.Anonymous),
                 ActorId = userId ?? 0,
                 CompanyId = companyId,
                 BranchId = branchId,
@@ -551,7 +557,7 @@ public class AuditTrailService : IAuditTrailService
                 IpAddress = ipAddress,
                 UserAgent = userAgent,
                 Timestamp = DateTime.UtcNow,
-                EventCategory = "Permission",
+                EventCategory = _sysCodeService.GetCodeValue(SysCodeKeys.EventCategories.Mgr, SysCodeKeys.EventCategories.Permission),
                 Metadata = JsonSerializer.Serialize(new
                 {
                     Action = "AuthorizationFailure",
@@ -603,7 +609,7 @@ public class AuditTrailService : IAuditTrailService
                 IpAddress = ipAddress,
                 UserAgent = userAgent,
                 Timestamp = DateTime.UtcNow,
-                EventCategory = "Configuration",
+                EventCategory = _sysCodeService.GetCodeValue(SysCodeKeys.EventCategories.Mgr, SysCodeKeys.EventCategories.Configuration),
                 Metadata = JsonSerializer.Serialize(new
                 {
                     Action = "AdministrativeAction",

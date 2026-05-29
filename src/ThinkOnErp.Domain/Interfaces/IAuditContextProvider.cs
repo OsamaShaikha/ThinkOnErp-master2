@@ -13,7 +13,6 @@ public interface IAuditContextProvider
 
     /// <summary>
     /// Gets the actor ID (user ID) for the current request.
-    /// Returns 0 if not authenticated.
     /// </summary>
     long GetActorId();
 
@@ -24,25 +23,31 @@ public interface IAuditContextProvider
 
     /// <summary>
     /// Gets the company ID for the current request.
-    /// Returns null if not available.
     /// </summary>
     long? GetCompanyId();
 
     /// <summary>
     /// Gets the branch ID for the current request.
-    /// Returns null if not available.
     /// </summary>
     long? GetBranchId();
 
     /// <summary>
     /// Gets the IP address for the current request.
-    /// Returns null if not available.
     /// </summary>
     string? GetIpAddress();
 
     /// <summary>
     /// Gets the user agent for the current request.
-    /// Returns null if not available.
     /// </summary>
     string? GetUserAgent();
+
+    /// <summary>
+    /// Gets the HTTP method (GET, POST, PUT, DELETE, etc.) for the current request.
+    /// </summary>
+    string? GetHttpMethod();
+
+    /// <summary>
+    /// Gets the endpoint path for the current request, including query string if present.
+    /// </summary>
+    string? GetEndpointPath();
 }

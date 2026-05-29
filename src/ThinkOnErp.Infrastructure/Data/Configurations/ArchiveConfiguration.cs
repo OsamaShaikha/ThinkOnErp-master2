@@ -35,7 +35,7 @@ public class SysAuditLogArchiveConfiguration : IEntityTypeConfiguration<SysAudit
         builder.Property(e => e.Severity).HasColumnName("SEVERITY").HasMaxLength(20);
         builder.Property(e => e.EventCategory).HasColumnName("EVENT_CATEGORY").HasMaxLength(50);
         builder.Property(e => e.Metadata).HasColumnName("METADATA").HasColumnType("CLOB");
-        builder.Property(e => e.BusinessModule).HasColumnName("BUSINESS_MODULE").HasMaxLength(100);
+        builder.Property(e => e.SystemId).HasColumnName("BUSINESS_MODULE");
         builder.Property(e => e.DeviceIdentifier).HasColumnName("DEVICE_IDENTIFIER").HasMaxLength(100);
         builder.Property(e => e.ErrorCode).HasColumnName("ERROR_CODE").HasMaxLength(100);
         builder.Property(e => e.BusinessDescription).HasColumnName("BUSINESS_DESCRIPTION").HasMaxLength(500);

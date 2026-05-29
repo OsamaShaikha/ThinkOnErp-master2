@@ -57,6 +57,36 @@ public abstract class AuditEvent
     public string? UserAgent { get; set; }
 
     /// <summary>
+    /// HTTP method (GET, POST, PUT, DELETE, etc.)
+    /// </summary>
+    public string? HttpMethod { get; set; }
+
+    /// <summary>
+    /// API endpoint path including query string
+    /// </summary>
+    public string? EndpointPath { get; set; }
+
+    /// <summary>
+    /// Request payload (JSON format, may be truncated for large payloads)
+    /// </summary>
+    public string? RequestPayload { get; set; }
+
+    /// <summary>
+    /// Response payload (JSON format, may be truncated for large payloads)
+    /// </summary>
+    public string? ResponsePayload { get; set; }
+
+    /// <summary>
+    /// Request execution time in milliseconds
+    /// </summary>
+    public long? ExecutionTimeMs { get; set; }
+
+    /// <summary>
+    /// HTTP status code
+    /// </summary>
+    public int? StatusCode { get; set; }
+
+    /// <summary>
     /// Timestamp when the event occurred (UTC)
     /// </summary>
     public DateTime Timestamp { get; set; } = DateTime.UtcNow;

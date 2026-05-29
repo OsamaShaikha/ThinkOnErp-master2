@@ -59,6 +59,11 @@ public class LegacyAuditLogDto
     public string Status { get; set; } = null!;
     
     /// <summary>
+    /// Matches "Action" column - what operation was performed (INSERT, UPDATE, DELETE, etc.)
+    /// </summary>
+    public string Action { get; set; } = null!;
+
+    /// <summary>
     /// For the Actions column functionality - indicates if user can resolve this entry
     /// </summary>
     public bool CanResolve { get; set; }
@@ -246,8 +251,14 @@ public class AuditLogEntry
     public string? StackTrace { get; set; }
     public string Severity { get; set; } = "Info";
     public string EventCategory { get; set; } = "DataChange";
+    public string? Status { get; set; }
     public string? Metadata { get; set; }
-    public string? BusinessModule { get; set; }
+    public long? SystemId { get; set; }
+    public string? SystemName { get; set; }
+    public string? ActorTypeDisplay { get; set; }
+    public string? EventCategoryDisplay { get; set; }
+    public string? SeverityDisplay { get; set; }
+    public string? StatusDisplay { get; set; }
     public string? DeviceIdentifier { get; set; }
     public string? ErrorCode { get; set; }
     public string? BusinessDescription { get; set; }
@@ -337,9 +348,9 @@ public class AuditQueryFilter
     public string? EndpointPath { get; set; }
     
     /// <summary>
-    /// Filter by business module (e.g., "POS", "HR", "Accounting") for legacy compatibility.
+    /// Filter by business module (FK to SYS_SYSTEM).
     /// </summary>
-    public string? BusinessModule { get; set; }
+    public long? SystemId { get; set; }
     
     /// <summary>
     /// Filter by error code (e.g., "DB_TIMEOUT_001", "API_HR_045") for legacy compatibility.

@@ -4,6 +4,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using ThinkOnErp.Domain.Constants;
 using ThinkOnErp.Domain.Entities;
 using ThinkOnErp.Domain.Entities.Audit;
 using ThinkOnErp.Domain.Interfaces;
@@ -568,12 +569,13 @@ public class AuditLogger : IAuditLogger, IHostedService
             var repository = scope.ServiceProvider.GetRequiredService<IAuditRepository>();
             var dataMasker = scope.ServiceProvider.GetRequiredService<ISensitiveDataMasker>();
             var legacyAuditService = scope.ServiceProvider.GetRequiredService<ILegacyAuditService>();
+            var sysCodeService = scope.ServiceProvider.GetRequiredService<ISysCodeService>();
             
             // Convert AuditEvent objects to SysAuditLog entities
             var auditLogs = new List<SysAuditLog>(batch.Count);
             foreach (var e in batch)
             {
-                auditLogs.Add(await MapToSysAuditLogAsync(e, dataMasker, legacyAuditService));
+                auditLogs.Add(await MapToSysAuditLogAsync(e, dataMasker, legacyAuditService, sysCodeService));
             }
             
             int insertedCount;
@@ -618,8 +620,10 @@ public class AuditLogger : IAuditLogger, IHostedService
     /// <summary>
     /// Map an AuditEvent to a SysAuditLog entity for database persistence.
     /// </summary>
-    private async Task<SysAuditLog> MapToSysAuditLogAsync(AuditEvent auditEvent, ISensitiveDataMasker dataMasker, ILegacyAuditService legacyAuditService)
+    private async Task<SysAuditLog> MapToSysAuditLogAsync(AuditEvent auditEvent, ISensitiveDataMasker dataMasker, ILegacyAuditService legacyAuditService, ISysCodeService sysCodeService)
     {
+        // Auto-resolve non-error events; overridden to "Unresolved" for ExceptionAuditEvent below
+        var isErrorEvent = auditEvent is ExceptionAuditEvent;
         var auditLog = new SysAuditLog
         {
             ActorType = auditEvent.ActorType,
@@ -632,7 +636,14 @@ public class AuditLogger : IAuditLogger, IHostedService
             IpAddress = auditEvent.IpAddress,
             UserAgent = auditEvent.UserAgent,
             CorrelationId = auditEvent.CorrelationId,
-            CreationDate = auditEvent.Timestamp
+            HttpMethod = auditEvent.HttpMethod,
+            EndpointPath = auditEvent.EndpointPath,
+            RequestPayload = auditEvent.RequestPayload,
+            ResponsePayload = auditEvent.ResponsePayload,
+            ExecutionTimeMs = auditEvent.ExecutionTimeMs,
+            StatusCode = auditEvent.StatusCode,
+            CreationDate = auditEvent.Timestamp,
+            Status = isErrorEvent ? null : sysCodeService.GetCodeValue(SysCodeKeys.AuditStatus.Mgr, SysCodeKeys.AuditStatus.Resolved)
         };
 
         // Map specific event types to their additional properties
@@ -641,13 +652,18 @@ public class AuditLogger : IAuditLogger, IHostedService
             case DataChangeAuditEvent dataChange:
                 auditLog.OldValue = dataChange.OldValue;
                 auditLog.NewValue = dataChange.NewValue;
-                auditLog.EventCategory = dataChange.EventCategory ?? "DataChange";
+                auditLog.EventCategory = dataChange.EventCategory ?? sysCodeService.GetCodeValue(SysCodeKeys.EventCategories.Mgr, SysCodeKeys.EventCategories.DataChange);
                 auditLog.Metadata = dataChange.Metadata;
-                PopulateRequestFields(auditLog);
+                auditLog.Severity = sysCodeService.GetCodeValue(SysCodeKeys.AuditSeverity.Mgr, SysCodeKeys.AuditSeverity.Info);
+                // For REQUEST events, parse embedded HTTP context from NewValue (backward compat)
+                if (string.Equals(dataChange.Action, "REQUEST", StringComparison.OrdinalIgnoreCase) && !string.IsNullOrWhiteSpace(dataChange.NewValue))
+                {
+                    PopulateRequestFields(auditLog, sysCodeService);
+                }
                 break;
 
             case AuthenticationAuditEvent auth:
-                auditLog.EventCategory = "Authentication";
+                auditLog.EventCategory = sysCodeService.GetCodeValue(SysCodeKeys.EventCategories.Mgr, SysCodeKeys.EventCategories.Authentication);
                 auditLog.Metadata = System.Text.Json.JsonSerializer.Serialize(new
                 {
                     auth.Success,
@@ -660,7 +676,7 @@ public class AuditLogger : IAuditLogger, IHostedService
             case PermissionChangeAuditEvent permission:
                 auditLog.OldValue = permission.PermissionBefore;
                 auditLog.NewValue = permission.PermissionAfter;
-                auditLog.EventCategory = "Permission";
+                auditLog.EventCategory = sysCodeService.GetCodeValue(SysCodeKeys.EventCategories.Mgr, SysCodeKeys.EventCategories.Permission);
                 auditLog.Metadata = System.Text.Json.JsonSerializer.Serialize(new
                 {
                     permission.RoleId,
@@ -671,7 +687,7 @@ public class AuditLogger : IAuditLogger, IHostedService
             case ConfigurationChangeAuditEvent config:
                 auditLog.OldValue = config.OldValue;
                 auditLog.NewValue = config.NewValue;
-                auditLog.EventCategory = "Configuration";
+                auditLog.EventCategory = sysCodeService.GetCodeValue(SysCodeKeys.EventCategories.Mgr, SysCodeKeys.EventCategories.Configuration);
                 auditLog.Metadata = System.Text.Json.JsonSerializer.Serialize(new
                 {
                     config.SettingName,
@@ -680,12 +696,12 @@ public class AuditLogger : IAuditLogger, IHostedService
                 break;
 
             case ExceptionAuditEvent exception:
-                auditLog.EventCategory = "Exception";
+                auditLog.EventCategory = sysCodeService.GetCodeValue(SysCodeKeys.EventCategories.Mgr, SysCodeKeys.EventCategories.Exception);
                 auditLog.ExceptionType = exception.ExceptionType;
                 auditLog.ExceptionMessage = exception.ExceptionMessage;
                 auditLog.StackTrace = exception.StackTrace;
-                auditLog.Severity = exception.Severity;
-                auditLog.Status = "Unresolved";
+                auditLog.Severity = !string.IsNullOrEmpty(exception.Severity) ? exception.Severity : sysCodeService.GetCodeValue(SysCodeKeys.AuditSeverity.Mgr, SysCodeKeys.AuditSeverity.Error);
+                auditLog.Status = sysCodeService.GetCodeValue(SysCodeKeys.AuditStatus.Mgr, SysCodeKeys.AuditStatus.Unresolved);
                 // Use Metadata as-is if already JSON, otherwise wrap with InnerException
                 auditLog.Metadata = !string.IsNullOrEmpty(exception.Metadata)
                     ? exception.Metadata
@@ -699,8 +715,8 @@ public class AuditLogger : IAuditLogger, IHostedService
         // Automatically populate legacy fields for backward compatibility
         try
         {
-            // BUSINESS_MODULE: Map endpoints to business modules (POS, HR, Accounting, etc.)
-            auditLog.BusinessModule = await legacyAuditService.DetermineBusinessModuleAsync(
+            // BUSINESS_MODULE: Map endpoints to SYS_SYSTEM ID
+            auditLog.SystemId = await legacyAuditService.DetermineBusinessModuleAsync(
                 auditEvent.EntityType, 
                 null);
 
@@ -751,7 +767,7 @@ public class AuditLogger : IAuditLogger, IHostedService
         return auditLog;
     }
 
-    private static void PopulateRequestFields(SysAuditLog auditLog)
+    private void PopulateRequestFields(SysAuditLog auditLog, ISysCodeService sysCodeService)
     {
         if (!string.Equals(auditLog.Action, "REQUEST", StringComparison.OrdinalIgnoreCase) ||
             string.IsNullOrWhiteSpace(auditLog.NewValue))
@@ -772,7 +788,7 @@ public class AuditLogger : IAuditLogger, IHostedService
             auditLog.ResponsePayload = GetString(root, "ResponseBody");
             auditLog.StatusCode = GetInt(root, "StatusCode");
             auditLog.ExecutionTimeMs = GetLong(root, "ExecutionTimeMs");
-            auditLog.EventCategory = "Request";
+            auditLog.EventCategory = sysCodeService.GetCodeValue(SysCodeKeys.EventCategories.Mgr, SysCodeKeys.EventCategories.Request);
 
             // Set severity from NewValue if present
             var severity = GetString(root, "Severity");
@@ -783,9 +799,9 @@ public class AuditLogger : IAuditLogger, IHostedService
 
             // Set status for error tracking based on status code
             if (auditLog.StatusCode >= 500)
-                auditLog.Status = "Critical";
+                auditLog.Status = sysCodeService.GetCodeValue(SysCodeKeys.AuditStatus.Mgr, SysCodeKeys.AuditStatus.Critical);
             else if (auditLog.StatusCode >= 400)
-                auditLog.Status = "Unresolved";
+                auditLog.Status = sysCodeService.GetCodeValue(SysCodeKeys.AuditStatus.Mgr, SysCodeKeys.AuditStatus.Unresolved);
         }
         catch
         {
