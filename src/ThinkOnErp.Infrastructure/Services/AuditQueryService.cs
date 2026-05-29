@@ -307,7 +307,6 @@ public class AuditQueryService : IAuditQueryService
                     a.Action.ToUpper().Contains(searchPattern) ||
                     a.ActorType.ToUpper().Contains(searchPattern) ||
                     a.ErrorCode!.ToUpper().Contains(searchPattern) ||
-                    a.BusinessModule!.ToUpper().Contains(searchPattern) ||
                     a.EndpointPath!.ToUpper().Contains(searchPattern) ||
                     a.CorrelationId!.ToUpper().Contains(searchPattern));
             }
@@ -451,8 +450,8 @@ public class AuditQueryService : IAuditQueryService
                               $"{record.ExecutionTimeMs?.ToString() ?? ""}," +
                               $"\"{EscapeCsv(record.IpAddress)}\"," +
                               $"\"{EscapeCsv(record.CorrelationId)}\"," +
-                              $"\"{EscapeCsv(record.BusinessModule)}\"," +
-                              $"\"{EscapeCsv(record.ErrorCode)}\"," +
+                               $"{record.SystemId?.ToString() ?? ""}," +
+                               $"\"{EscapeCsv(record.ErrorCode)}\"," +
                               $"\"{EscapeCsv(record.BusinessDescription)}\"");
             }
 
@@ -808,7 +807,7 @@ public class AuditQueryService : IAuditQueryService
             Severity = filter.Severity,
             HttpMethod = filter.HttpMethod,
             EndpointPath = filter.EndpointPath,
-            BusinessModule = filter.BusinessModule,
+            SystemId = filter.SystemId,
             ErrorCode = filter.ErrorCode
         };
     }
@@ -974,8 +973,8 @@ public class AuditQueryService : IAuditQueryService
         if (!string.IsNullOrWhiteSpace(filter.EndpointPath))
             query = query.Where(a => a.EndpointPath == filter.EndpointPath);
 
-        if (!string.IsNullOrWhiteSpace(filter.BusinessModule))
-            query = query.Where(a => a.BusinessModule == filter.BusinessModule);
+        if (filter.SystemId.HasValue)
+            query = query.Where(a => a.SystemId == filter.SystemId.Value);
 
         if (!string.IsNullOrWhiteSpace(filter.ErrorCode))
             query = query.Where(a => a.ErrorCode == filter.ErrorCode);
@@ -1031,7 +1030,7 @@ public class AuditQueryService : IAuditQueryService
             Severity = sysAuditLog.Severity,
             EventCategory = sysAuditLog.EventCategory,
             Metadata = sysAuditLog.Metadata,
-            BusinessModule = sysAuditLog.BusinessModule,
+            SystemId = sysAuditLog.SystemId,
             DeviceIdentifier = sysAuditLog.DeviceIdentifier,
             ErrorCode = sysAuditLog.ErrorCode,
             BusinessDescription = sysAuditLog.BusinessDescription,

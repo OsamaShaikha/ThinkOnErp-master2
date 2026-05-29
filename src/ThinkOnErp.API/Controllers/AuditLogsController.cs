@@ -207,6 +207,58 @@ public class AuditLogsController : ControllerBase
     }
 
     /// <summary>
+    /// Gets a single audit log entry with full detail.
+    /// </summary>
+    /// <param name="id">The audit log entry ID</param>
+    /// <returns>ApiResponse containing the full audit log entry</returns>
+    /// <response code="200">Returns the audit log entry</response>
+    /// <response code="401">User is not authenticated</response>
+    /// <response code="403">User does not have admin privileges</response>
+    /// <response code="404">Audit log entry not found</response>
+    [HttpGet("{id}")]
+    [ProducesResponseType(typeof(ApiResponse<DomainModels.AuditLogEntry>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<ApiResponse<DomainModels.AuditLogEntry>>> GetAuditLogEntry(
+        long id)
+    {
+        try
+        {
+            if (id <= 0)
+            {
+                _logger.LogWarning("Invalid audit log ID: {Id}", id);
+                return BadRequest(ApiResponse<object>.CreateFailure(
+                    "Audit log ID must be greater than 0",
+                    statusCode: 400));
+            }
+
+            _logger.LogInformation(
+                "Retrieving audit log entry {Id} by admin user: {User}",
+                id,
+                User.Identity?.Name ?? "unknown");
+
+            var entry = await _legacyAuditService.GetAuditLogEntryByIdAsync(id);
+            if (entry == null)
+            {
+                return NotFound(ApiResponse<object>.CreateFailure(
+                    $"Audit log entry with ID {id} not found",
+                    statusCode: 404));
+            }
+
+            return Ok(ApiResponse<DomainModels.AuditLogEntry>.CreateSuccess(
+                entry,
+                "Audit log entry retrieved successfully",
+                200));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error retrieving audit log entry {Id}", id);
+            throw;
+        }
+    }
+
+    /// <summary>
     /// Updates status of audit log entry (for error resolution workflow).
     /// Updates status: Unresolved -> In Progress -> Resolved
     /// Requires AdminOnly authorization.
@@ -710,7 +762,7 @@ public class AuditLogsController : ControllerBase
     /// <param name="severity">Filter by severity level (e.g., "Critical", "Error", "Warning", "Info")</param>
     /// <param name="httpMethod">Filter by HTTP method (e.g., "GET", "POST", "PUT", "DELETE")</param>
     /// <param name="endpointPath">Filter by endpoint path (e.g., "/api/users")</param>
-    /// <param name="businessModule">Filter by business module (e.g., "POS", "HR", "Accounting")</param>
+    /// <param name="businessModule">Filter by SYS_SYSTEM ID</param>
     /// <param name="errorCode">Filter by error code (e.g., "DB_TIMEOUT_001")</param>
     /// <param name="pageNumber">Page number (1-based, default: 1)</param>
     /// <param name="pageSize">Number of items per page (default: 50, max: 100)</param>
@@ -740,7 +792,7 @@ public class AuditLogsController : ControllerBase
         [FromQuery] string? severity = null,
         [FromQuery] string? httpMethod = null,
         [FromQuery] string? endpointPath = null,
-        [FromQuery] string? businessModule = null,
+        [FromQuery] long? businessModule = null,
         [FromQuery] string? errorCode = null,
         [FromQuery] int pageNumber = 1,
         [FromQuery] int pageSize = 50)
@@ -813,7 +865,7 @@ public class AuditLogsController : ControllerBase
                 Severity = severity,
                 HttpMethod = httpMethod,
                 EndpointPath = endpointPath,
-                BusinessModule = businessModule,
+                SystemId = businessModule,
                 ErrorCode = errorCode
             };
 
@@ -1038,7 +1090,7 @@ public class AuditLogsController : ControllerBase
     /// <param name="severity">Filter by severity level</param>
     /// <param name="httpMethod">Filter by HTTP method</param>
     /// <param name="endpointPath">Filter by endpoint path</param>
-    /// <param name="businessModule">Filter by business module</param>
+    /// <param name="businessModule">Filter by SYS_SYSTEM ID</param>
     /// <param name="errorCode">Filter by error code</param>
     /// <returns>CSV file containing filtered audit logs</returns>
     /// <response code="200">Returns CSV file with audit logs</response>
@@ -1066,7 +1118,7 @@ public class AuditLogsController : ControllerBase
         [FromQuery] string? severity = null,
         [FromQuery] string? httpMethod = null,
         [FromQuery] string? endpointPath = null,
-        [FromQuery] string? businessModule = null,
+        [FromQuery] long? businessModule = null,
         [FromQuery] string? errorCode = null)
     {
         try
@@ -1117,7 +1169,7 @@ public class AuditLogsController : ControllerBase
                 Severity = severity,
                 HttpMethod = httpMethod,
                 EndpointPath = endpointPath,
-                BusinessModule = businessModule,
+                SystemId = businessModule,
                 ErrorCode = errorCode
             };
 
@@ -1134,6 +1186,47 @@ public class AuditLogsController : ControllerBase
         {
             _logger.LogError(ex, "Error exporting audit logs to CSV");
             throw;
+        }
+    }
+
+    /// <summary>
+    /// Exports audit logs to CSV using legacy filters (matching the dashboard filter fields).
+    /// </summary>
+    [HttpGet("legacy/export/csv")]
+    [ProducesResponseType(typeof(FileContentResult), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> ExportLegacyToCsv(
+        [FromQuery] string? company = null,
+        [FromQuery] string? module = null,
+        [FromQuery] string? branch = null,
+        [FromQuery] string? status = null,
+        [FromQuery] DateTime? startDate = null,
+        [FromQuery] DateTime? endDate = null,
+        [FromQuery] string? searchTerm = null)
+    {
+        try
+        {
+            var filter = new DomainModels.LegacyAuditLogFilter
+            {
+                Company = company,
+                Module = module,
+                Branch = branch,
+                Status = status,
+                StartDate = startDate,
+                EndDate = endDate,
+                SearchTerm = searchTerm
+            };
+
+            var csvBytes = await _legacyAuditService.ExportToCsvAsync(filter);
+            var fileName = $"audit_logs_{DateTime.UtcNow:yyyyMMdd_HHmmss}.csv";
+            return File(csvBytes, "text/csv", fileName);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error exporting legacy audit logs to CSV");
+            return BadRequest(ApiResponse<object>.CreateFailure(
+                "Failed to export audit logs: " + ex.Message,
+                statusCode: 400));
         }
     }
 
@@ -1158,7 +1251,7 @@ public class AuditLogsController : ControllerBase
     /// <param name="severity">Filter by severity level</param>
     /// <param name="httpMethod">Filter by HTTP method</param>
     /// <param name="endpointPath">Filter by endpoint path</param>
-    /// <param name="businessModule">Filter by business module</param>
+    /// <param name="businessModule">Filter by SYS_SYSTEM ID</param>
     /// <param name="errorCode">Filter by error code</param>
     /// <returns>JSON file containing filtered audit logs</returns>
     /// <response code="200">Returns JSON file with audit logs</response>
@@ -1186,7 +1279,7 @@ public class AuditLogsController : ControllerBase
         [FromQuery] string? severity = null,
         [FromQuery] string? httpMethod = null,
         [FromQuery] string? endpointPath = null,
-        [FromQuery] string? businessModule = null,
+        [FromQuery] long? businessModule = null,
         [FromQuery] string? errorCode = null)
     {
         try
@@ -1237,7 +1330,7 @@ public class AuditLogsController : ControllerBase
                 Severity = severity,
                 HttpMethod = httpMethod,
                 EndpointPath = endpointPath,
-                BusinessModule = businessModule,
+                SystemId = businessModule,
                 ErrorCode = errorCode
             };
 

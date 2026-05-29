@@ -113,6 +113,7 @@ public static class DependencyInjection
         services.AddScoped<IPermissionRepository, PermissionRepository>();
         services.AddScoped<IBranchPermissionRepository, BranchPermissionRepository>();
         services.AddScoped<ISysCodeRepository, SysCodeRepository>();
+        services.AddScoped<ISysCodeService, SysCodeService>();
         services.AddScoped<ISysSettingRepository, SysSettingRepository>();
         
         // Register ticket system repositories
@@ -144,6 +145,7 @@ public static class DependencyInjection
         services.AddScoped<IAuditQueryService, AuditQueryService>();
         services.AddScoped<IAuditContextProvider, AuditContextProvider>();
         services.AddScoped<IExceptionCategorizationService, ExceptionCategorizationService>();
+        services.AddScoped<IEntityStateProvider, EntityStateProvider>();
         
         // Register compliance reporting services
         services.AddScoped<IComplianceReporter, ComplianceReporter>();

@@ -138,9 +138,14 @@ public class SysAuditLog
     public string? Metadata { get; set; }
 
     /// <summary>
-    /// Business module (POS, HR, Accounting, etc.) - for legacy compatibility
+    /// Business module — FK to SYS_SYSTEM.ID
     /// </summary>
-    public string? BusinessModule { get; set; }
+    public long? SystemId { get; set; }
+
+    /// <summary>
+    /// Navigation property to SysSystem
+    /// </summary>
+    public SysSystem? System { get; set; }
 
     /// <summary>
     /// Device identifier (POS Terminal 03, Desktop-HR-02, etc.) - for legacy compatibility

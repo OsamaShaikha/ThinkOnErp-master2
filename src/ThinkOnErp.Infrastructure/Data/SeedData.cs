@@ -161,6 +161,127 @@ public static class SeedData
             CreationDate = now
         };
         context.SysSystems.Add(sysHr);
+
+        var sysAdmin = new SysSystem
+        {
+            SystemCode = "administration",
+            SystemName = "الإدارة العامة",
+            SystemNameE = "Administration",
+            Description = "نظام الإدارة العامة للشركة",
+            DescriptionE = "General administration system",
+            Icon = "building",
+            DisplayOrder = 3,
+            IsActive = true,
+            CreationUser = seedUser,
+            CreationDate = now
+        };
+        context.SysSystems.Add(sysAdmin);
+
+        var sysSecurity = new SysSystem
+        {
+            SystemCode = "security",
+            SystemName = "الأمان",
+            SystemNameE = "Security",
+            Description = "نظام إدارة الأمان والصلاحيات",
+            DescriptionE = "Security and permissions management",
+            Icon = "shield",
+            DisplayOrder = 4,
+            IsActive = true,
+            CreationUser = seedUser,
+            CreationDate = now
+        };
+        context.SysSystems.Add(sysSecurity);
+
+        var sysAccounting = new SysSystem
+        {
+            SystemCode = "accounting",
+            SystemName = "المحاسبة",
+            SystemNameE = "Accounting",
+            Description = "نظام المحاسبة والمالية",
+            DescriptionE = "Accounting and finance system",
+            Icon = "calculator",
+            DisplayOrder = 5,
+            IsActive = true,
+            CreationUser = seedUser,
+            CreationDate = now
+        };
+        context.SysSystems.Add(sysAccounting);
+
+        var sysInventory = new SysSystem
+        {
+            SystemCode = "inventory",
+            SystemName = "المخزون",
+            SystemNameE = "Inventory",
+            Description = "نظام إدارة المخزون",
+            DescriptionE = "Inventory management system",
+            Icon = "box",
+            DisplayOrder = 6,
+            IsActive = true,
+            CreationUser = seedUser,
+            CreationDate = now
+        };
+        context.SysSystems.Add(sysInventory);
+
+        var sysPos = new SysSystem
+        {
+            SystemCode = "pos",
+            SystemName = "نقاط البيع",
+            SystemNameE = "POS",
+            Description = "نظام نقاط البيع",
+            DescriptionE = "Point of sale system",
+            Icon = "cash-register",
+            DisplayOrder = 7,
+            IsActive = true,
+            CreationUser = seedUser,
+            CreationDate = now
+        };
+        context.SysSystems.Add(sysPos);
+
+        var sysCrm = new SysSystem
+        {
+            SystemCode = "crm",
+            SystemName = "إدارة العملاء",
+            SystemNameE = "CRM",
+            Description = "نظام إدارة علاقات العملاء",
+            DescriptionE = "Customer relationship management",
+            Icon = "users",
+            DisplayOrder = 8,
+            IsActive = true,
+            CreationUser = seedUser,
+            CreationDate = now
+        };
+        context.SysSystems.Add(sysCrm);
+
+        var sysProcurement = new SysSystem
+        {
+            SystemCode = "procurement",
+            SystemName = "المشتريات",
+            SystemNameE = "Procurement",
+            Description = "نظام إدارة المشتريات",
+            DescriptionE = "Procurement management system",
+            Icon = "shopping-cart",
+            DisplayOrder = 9,
+            IsActive = true,
+            CreationUser = seedUser,
+            CreationDate = now
+        };
+        context.SysSystems.Add(sysProcurement);
+
+        var sysSystem = new SysSystem
+        {
+            SystemCode = "system",
+            SystemName = "النظام",
+            SystemNameE = "System",
+            Description = "نظام إدارة النظام الأساسي",
+            DescriptionE = "Core system management",
+            Icon = "cog",
+            DisplayOrder = 10,
+            IsActive = true,
+            CreationUser = seedUser,
+            CreationDate = now
+        };
+        context.SysSystems.Add(sysSystem);
+
         await context.SaveChangesAsync();
 
         // 6. Screens
@@ -976,62 +1097,68 @@ public static class SeedData
         int mgr = 0;
 
         // Helper to add a code value in both languages
-        void AddCode(int codeMnr, string nameAr, string nameEn)
+        void AddCode(int codeMnr, string nameAr, string nameEn, string codeValue)
         {
-            sysCodes.Add(new SysCode { CodeMgr = mgr, CodeMnr = codeMnr, CodeLang = 1, CodeDesc = nameAr, IsActive = 1, CreationUser = seedUser, CreationDate = now });
-            sysCodes.Add(new SysCode { CodeMgr = mgr, CodeMnr = codeMnr, CodeLang = 2, CodeDesc = nameEn, IsActive = 1, CreationUser = seedUser, CreationDate = now });
+            sysCodes.Add(new SysCode { CodeMgr = mgr, CodeMnr = codeMnr, CodeLang = 1, CodeDesc = nameAr, CodeValue = codeValue, IsActive = 1, CreationUser = seedUser, CreationDate = now });
+            sysCodes.Add(new SysCode { CodeMgr = mgr, CodeMnr = codeMnr, CodeLang = 2, CodeDesc = nameEn, CodeValue = codeValue, IsActive = 1, CreationUser = seedUser, CreationDate = now });
         }
 
         // Document Categories (mgr=1)
-        mgr = 1; AddCode(1, "عقود", "Contracts"); AddCode(2, "تقارير", "Reports"); AddCode(3, "فواتير", "Invoices");
-        AddCode(4, "إيصالات", "Receipts"); AddCode(5, "هوية شخصية", "Identification"); AddCode(6, "شهادات", "Certificates");
-        AddCode(7, "مالية", "Financial"); AddCode(8, "موارد بشرية", "HR"); AddCode(9, "قانونية", "Legal");
-        AddCode(10, "فنية", "Technical"); AddCode(11, "تسويق", "Marketing"); AddCode(12, "أخرى", "Other");
+        mgr = 1; AddCode(1, "عقود", "Contracts", "Contracts"); AddCode(2, "تقارير", "Reports", "Reports"); AddCode(3, "فواتير", "Invoices", "Invoices");
+        AddCode(4, "إيصالات", "Receipts", "Receipts"); AddCode(5, "هوية شخصية", "Identification", "Identification"); AddCode(6, "شهادات", "Certificates", "Certificates");
+        AddCode(7, "مالية", "Financial", "Financial"); AddCode(8, "موارد بشرية", "HR", "HR"); AddCode(9, "قانونية", "Legal", "Legal");
+        AddCode(10, "فنية", "Technical", "Technical"); AddCode(11, "تسويق", "Marketing", "Marketing"); AddCode(12, "أخرى", "Other", "Other");
 
         // Owner Types (mgr=2)
-        mgr = 2; AddCode(1, "شركة", "Company"); AddCode(2, "فرع", "Branch"); AddCode(3, "مدير النظام", "Super Admin");
+        mgr = 2; AddCode(1, "شركة", "Company", "Company"); AddCode(2, "فرع", "Branch", "Branch"); AddCode(3, "مدير النظام", "Super Admin", "Super Admin");
 
         // Threat Types (mgr=3)
-        mgr = 3; AddCode(1, "هجوم تخمين كلمة المرور", "Brute Force Attack"); AddCode(2, "حقن SQL", "SQL Injection");
-        AddCode(3, "برمجة عبر المواقع", "Cross-Site Scripting"); AddCode(4, "هجوم حجب الخدمة", "Denial of Service");
-        AddCode(5, "محاولة دخول مشبوهة", "Suspicious Login"); AddCode(6, "وصول غير مصرح", "Unauthorized Access");
-        AddCode(7, "تسريب بيانات", "Data Exfiltration"); AddCode(8, "برمجيات خبيثة", "Malware Detected");
+        mgr = 3; AddCode(1, "هجوم تخمين كلمة المرور", "Brute Force Attack", "Brute Force Attack"); AddCode(2, "حقن SQL", "SQL Injection", "SQL Injection");
+        AddCode(3, "برمجة عبر المواقع", "Cross-Site Scripting", "Cross-Site Scripting"); AddCode(4, "هجوم حجب الخدمة", "Denial of Service", "Denial of Service");
+        AddCode(5, "محاولة دخول مشبوهة", "Suspicious Login", "Suspicious Login"); AddCode(6, "وصول غير مصرح", "Unauthorized Access", "Unauthorized Access");
+        AddCode(7, "تسريب بيانات", "Data Exfiltration", "Data Exfiltration"); AddCode(8, "برمجيات خبيثة", "Malware Detected", "Malware Detected");
 
         // Threat Severity (mgr=4)
-        mgr = 4; AddCode(1, "منخفض", "Low"); AddCode(2, "متوسط", "Medium"); AddCode(3, "عالي", "High"); AddCode(4, "حرج", "Critical");
+        mgr = 4; AddCode(1, "منخفض", "Low", "Low"); AddCode(2, "متوسط", "Medium", "Medium"); AddCode(3, "عالي", "High", "High"); AddCode(4, "حرج", "Critical", "Critical");
 
         // Audit Severity (mgr=5)
-        mgr = 5; AddCode(1, "معلومات", "Info"); AddCode(2, "تحذير", "Warning"); AddCode(3, "خطأ", "Error"); AddCode(4, "حرج", "Critical");
+        mgr = 5; AddCode(1, "معلومات", "Info", "Info"); AddCode(2, "تحذير", "Warning", "Warning"); AddCode(3, "خطأ", "Error", "Error"); AddCode(4, "حرج", "Critical", "Critical");
 
         // Event Categories (mgr=6)
-        mgr = 6; AddCode(1, "مصادقة", "Authentication"); AddCode(2, "تفويض", "Authorization"); AddCode(3, "تغيير بيانات", "Data Change");
-        AddCode(4, "إعدادات", "Configuration"); AddCode(5, "أمان", "Security"); AddCode(6, "نظام", "System"); AddCode(7, "تكامل", "Integration");
+        mgr = 6; AddCode(1, "مصادقة", "Authentication", "Authentication"); AddCode(2, "تفويض", "Authorization", "Authorization"); AddCode(3, "تغيير بيانات", "Data Change", "DataChange");
+        AddCode(4, "إعدادات", "Configuration", "Configuration"); AddCode(5, "أمان", "Security", "Security"); AddCode(6, "نظام", "System", "System"); AddCode(7, "تكامل", "Integration", "Integration");
+        AddCode(8, "صلاحيات", "Permission", "Permission"); AddCode(9, "استثناء", "Exception", "Exception"); AddCode(10, "طلب", "Request", "Request");
 
         // Actor Types (mgr=7)
-        mgr = 7; AddCode(1, "مستخدم", "User"); AddCode(2, "مدير النظام", "Super Admin"); AddCode(3, "النظام", "System"); AddCode(4, "مجهول", "Anonymous");
-
+        mgr = 7; AddCode(1, "مستخدم", "User", "USER"); AddCode(2, "مدير النظام", "Super Admin", "SUPER_ADMIN"); AddCode(3, "النظام", "System", "SYSTEM"); AddCode(4, "مجهول", "Anonymous", "ANONYMOUS");
+        AddCode(5, "مدير الشركة", "Company Admin", "COMPANY_ADMIN");
+        AddCode(6, "مسؤول", "Admin", "ADMIN");
+ 
         // Audit Event Types (mgr=8)
-        mgr = 8; AddCode(1, "طلب", "Request"); AddCode(2, "استثناء", "Exception"); AddCode(3, "أمني", "Security");
+        mgr = 8; AddCode(1, "طلب", "Request", "Request"); AddCode(2, "استثناء", "Exception", "Exception"); AddCode(3, "أمني", "Security", "Security");
 
         // Payload Logging Levels (mgr=9)
-        mgr = 9; AddCode(1, "لا شيء", "None"); AddCode(2, "البيانات الوصفية فقط", "Metadata Only"); AddCode(3, "كامل", "Full");
+        mgr = 9; AddCode(1, "لا شيء", "None", "None"); AddCode(2, "البيانات الوصفية فقط", "Metadata Only", "Metadata Only"); AddCode(3, "كامل", "Full", "Full");
 
         // System Health Status (mgr=10)
-        mgr = 10; AddCode(1, "سليم", "Healthy"); AddCode(2, "متدهور", "Degraded"); AddCode(3, "غير سليم", "Unhealthy"); AddCode(4, "غير مستجيب", "Unresponsive");
+        mgr = 10; AddCode(1, "سليم", "Healthy", "Healthy"); AddCode(2, "متدهور", "Degraded", "Degraded"); AddCode(3, "غير سليم", "Unhealthy", "Unhealthy"); AddCode(4, "غير مستجيب", "Unresponsive", "Unresponsive");
 
         // Memory Pressure Severity (mgr=11)
-        mgr = 11; AddCode(1, "طبيعي", "Normal"); AddCode(2, "تحذير", "Warning"); AddCode(3, "حرج", "Critical"); AddCode(4, "شديد", "Severe"); AddCode(5, "غير معروف", "Unknown");
+        mgr = 11; AddCode(1, "طبيعي", "Normal", "Normal"); AddCode(2, "تحذير", "Warning", "Warning"); AddCode(3, "حرج", "Critical", "Critical"); AddCode(4, "شديد", "Severe", "Severe"); AddCode(5, "غير معروف", "Unknown", "Unknown");
 
         // Key Types (mgr=12)
-        mgr = 12; AddCode(1, "مفتاح API", "API Key"); AddCode(2, "مفتاح توقيع", "Signing Key"); AddCode(3, "مفتاح تشفير", "Encryption Key");
-        AddCode(4, "مفتاح داخلي", "Internal Key"); AddCode(5, "مفتاح خارجي", "External Key");
+        mgr = 12; AddCode(1, "مفتاح API", "API Key", "API Key"); AddCode(2, "مفتاح توقيع", "Signing Key", "Signing Key"); AddCode(3, "مفتاح تشفير", "Encryption Key", "Encryption Key");
+        AddCode(4, "مفتاح داخلي", "Internal Key", "Internal Key"); AddCode(5, "مفتاح خارجي", "External Key", "External Key");
 
         // Alert Types (mgr=13)
-        mgr = 13; AddCode(1, "تنبيه أمني", "Security Alert"); AddCode(2, "تنبيه أداء", "Performance Alert"); AddCode(3, "تنبيه نظام", "System Alert");
-        AddCode(4, "تنبيه أعمال", "Business Alert");
+        mgr = 13; AddCode(1, "تنبيه أمني", "Security Alert", "Security Alert"); AddCode(2, "تنبيه أداء", "Performance Alert", "Performance Alert"); AddCode(3, "تنبيه نظام", "System Alert", "System Alert");
+        AddCode(4, "تنبيه أعمال", "Business Alert", "Business Alert");
 
         // Languages (mgr=14)
-        mgr = 14; AddCode(1, "العربية", "Arabic"); AddCode(2, "الإنجليزية", "English");
+        mgr = 14; AddCode(1, "العربية", "Arabic", "Arabic"); AddCode(2, "الإنجليزية", "English", "English");
+
+        // Audit Status (mgr=15)
+        mgr = 15; AddCode(1, "غير محلول", "Unresolved", "Unresolved"); AddCode(2, "قيد المعالجة", "In Progress", "In Progress"); AddCode(3, "تم الحل", "Resolved", "Resolved"); AddCode(4, "حرج", "Critical", "Critical");
 
         context.SysCodes.AddRange(sysCodes);
         await context.SaveChangesAsync();

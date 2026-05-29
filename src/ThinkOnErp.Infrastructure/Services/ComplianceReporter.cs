@@ -1443,8 +1443,7 @@ public class ComplianceReporter : IComplianceReporter
                                || al.EntityType.ToUpper().Contains("EXPENSE")
                                || al.EntityType.ToUpper().Contains("ASSET")
                                || al.EntityType.ToUpper().Contains("LIABILITY")
-                               || (al.BusinessModule ?? string.Empty).ToUpper() == "ACCOUNTING"
-                               || (al.BusinessModule ?? string.Empty).ToUpper() == "FINANCE")
+                               || _dbContext.SysSystems.Any(s => s.Id == al.SystemId && (s.SystemCode == "accounting" || s.SystemCode == "finance")))
                         orderby al.CreationDate ascending
                         select new { al, u, r };
 

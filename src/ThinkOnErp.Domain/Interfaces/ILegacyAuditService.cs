@@ -75,9 +75,23 @@ public interface ILegacyAuditService
     /// </summary>
     /// <param name="entityType">The type of entity being accessed</param>
     /// <param name="endpointPath">Optional endpoint path for additional context</param>
-    /// <returns>Business module name</returns>
-    Task<string> DetermineBusinessModuleAsync(string entityType, string? endpointPath);
+    /// <returns>SysSystem ID or null</returns>
+    Task<long?> DetermineBusinessModuleAsync(string entityType, string? endpointPath);
     
+    /// <summary>
+    /// Get a single audit log entry by ID with full detail.
+    /// </summary>
+    /// <param name="id">The audit log entry ID</param>
+    /// <returns>Full AuditLogEntry or null if not found</returns>
+    Task<AuditLogEntry?> GetAuditLogEntryByIdAsync(long id);
+
+    /// <summary>
+    /// Export audit logs to CSV using legacy format filters.
+    /// </summary>
+    /// <param name="filter">Filter criteria matching the dashboard filters</param>
+    /// <returns>CSV file bytes</returns>
+    Task<byte[]> ExportToCsvAsync(LegacyAuditLogFilter filter);
+
     /// <summary>
     /// Generate standardized error codes for different exception types.
     /// Creates error codes like "DB_TIMEOUT_001", "API_HR_045", etc.

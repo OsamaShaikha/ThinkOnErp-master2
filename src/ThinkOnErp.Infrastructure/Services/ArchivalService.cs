@@ -343,7 +343,7 @@ public class ArchivalService : IArchivalService
                         Severity = record.Severity,
                         EventCategory = record.EventCategory,
                         Metadata = record.Metadata,
-                        BusinessModule = record.BusinessModule,
+                        SystemId = record.SystemId,
                         DeviceIdentifier = record.DeviceIdentifier,
                         ErrorCode = record.ErrorCode,
                         BusinessDescription = record.BusinessDescription,
@@ -625,7 +625,7 @@ public class ArchivalService : IArchivalService
             GetFieldValue(record.Severity),
             GetFieldValue(record.EventCategory),
             GetFieldValue(record.Metadata),
-            GetFieldValue(record.BusinessModule),
+            GetFieldValue(record.SystemId),
             GetFieldValue(record.DeviceIdentifier),
             GetFieldValue(record.ErrorCode),
             GetFieldValue(record.BusinessDescription),
@@ -777,10 +777,10 @@ public class ArchivalService : IArchivalService
                 query = query.Where(a => a.EndpointPath == endpointPath);
             }
 
-            if (!string.IsNullOrEmpty(filter.BusinessModule))
+            if (filter.SystemId.HasValue)
             {
-                var businessModule = filter.BusinessModule;
-                query = query.Where(a => a.BusinessModule == businessModule);
+                var systemId = filter.SystemId.Value;
+                query = query.Where(a => a.SystemId == systemId);
             }
 
             if (!string.IsNullOrEmpty(filter.ErrorCode))
@@ -861,7 +861,7 @@ public class ArchivalService : IArchivalService
             ExceptionMessage = record.ExceptionMessage,
             Severity = record.Severity ?? "Info",
             EventCategory = record.EventCategory ?? "DataChange",
-            BusinessModule = record.BusinessModule,
+            SystemId = record.SystemId,
             DeviceIdentifier = record.DeviceIdentifier,
             ErrorCode = record.ErrorCode,
             BusinessDescription = record.BusinessDescription,
@@ -1325,7 +1325,7 @@ public class ArchivalService : IArchivalService
             ["SEVERITY"] = record.Severity,
             ["EVENT_CATEGORY"] = record.EventCategory,
             ["METADATA"] = record.Metadata,
-            ["BUSINESS_MODULE"] = record.BusinessModule,
+            ["BUSINESS_MODULE"] = record.SystemId,
             ["DEVICE_IDENTIFIER"] = record.DeviceIdentifier,
             ["ERROR_CODE"] = record.ErrorCode,
             ["BUSINESS_DESCRIPTION"] = record.BusinessDescription,
@@ -1407,7 +1407,7 @@ public class ArchivalService : IArchivalService
             Severity = d.TryGetValue("SEVERITY", out var severity) ? severity?.ToString() : null,
             EventCategory = d.TryGetValue("EVENT_CATEGORY", out var eventCategory) ? eventCategory?.ToString() : null,
             Metadata = d.TryGetValue("METADATA", out var metadata) ? metadata?.ToString() : null,
-            BusinessModule = d.TryGetValue("BUSINESS_MODULE", out var businessModule) ? businessModule?.ToString() : null,
+            SystemId = d.TryGetValue("BUSINESS_MODULE", out var businessModule) && businessModule != null ? Convert.ToInt64(businessModule) : null,
             DeviceIdentifier = d.TryGetValue("DEVICE_IDENTIFIER", out var deviceIdentifier) ? deviceIdentifier?.ToString() : null,
             ErrorCode = d.TryGetValue("ERROR_CODE", out var errorCode) ? errorCode?.ToString() : null,
             BusinessDescription = d.TryGetValue("BUSINESS_DESCRIPTION", out var businessDescription) ? businessDescription?.ToString() : null,

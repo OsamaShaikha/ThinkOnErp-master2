@@ -4,6 +4,7 @@ using System.Text.Json;
 using FluentValidation;
 using Microsoft.Extensions.DependencyInjection;
 using ThinkOnErp.Application.Common;
+using ThinkOnErp.Domain.Constants;
 using ThinkOnErp.Domain.Entities.Audit;
 using ThinkOnErp.Domain.Exceptions;
 using ThinkOnErp.Domain.Interfaces;
@@ -24,16 +25,20 @@ public class ExceptionHandlingMiddleware
     private readonly IAuditLogger _auditLogger;
     private readonly IServiceScopeFactory _serviceScopeFactory;
 
+    private readonly ISysCodeService _sysCodeService;
+
     public ExceptionHandlingMiddleware(
         RequestDelegate next,
         ILogger<ExceptionHandlingMiddleware> logger,
         IAuditLogger auditLogger,
-        IServiceScopeFactory serviceScopeFactory)
+        IServiceScopeFactory serviceScopeFactory,
+        ISysCodeService sysCodeService)
     {
         _next = next;
         _logger = logger;
         _auditLogger = auditLogger;
         _serviceScopeFactory = serviceScopeFactory;
+        _sysCodeService = sysCodeService;
     }
 
     public async Task InvokeAsync(HttpContext context)
@@ -297,14 +302,13 @@ public class ExceptionHandlingMiddleware
     {
         if (!user.Identity?.IsAuthenticated ?? true)
         {
-            return "ANONYMOUS";
+            return _sysCodeService.GetCodeValue(SysCodeKeys.ActorTypes.Mgr, SysCodeKeys.ActorTypes.Anonymous);
         }
 
-        // Check for super admin first (uses userType claim)
         var userType = user.FindFirst("userType")?.Value;
         if (string.Equals(userType, "SuperAdmin", StringComparison.OrdinalIgnoreCase))
         {
-            return "SUPER_ADMIN";
+            return _sysCodeService.GetCodeValue(SysCodeKeys.ActorTypes.Mgr, SysCodeKeys.ActorTypes.SuperAdmin);
         }
 
         var roleClaim = user.FindFirst(ClaimTypes.Role)?.Value
@@ -312,15 +316,15 @@ public class ExceptionHandlingMiddleware
 
         if (string.IsNullOrEmpty(roleClaim))
         {
-            return "USER";
+            return _sysCodeService.GetCodeValue(SysCodeKeys.ActorTypes.Mgr, SysCodeKeys.ActorTypes.User);
         }
 
         return roleClaim.ToUpperInvariant() switch
         {
-            "SUPERADMIN" => "SUPER_ADMIN",
-            "COMPANYADMIN" => "COMPANY_ADMIN",
-            "USER" => "USER",
-            _ => "USER"
+            "SUPERADMIN" => _sysCodeService.GetCodeValue(SysCodeKeys.ActorTypes.Mgr, SysCodeKeys.ActorTypes.SuperAdmin),
+            "COMPANYADMIN" => _sysCodeService.GetCodeValue(SysCodeKeys.ActorTypes.Mgr, SysCodeKeys.ActorTypes.CompanyAdmin),
+            "USER" => _sysCodeService.GetCodeValue(SysCodeKeys.ActorTypes.Mgr, SysCodeKeys.ActorTypes.User),
+            _ => _sysCodeService.GetCodeValue(SysCodeKeys.ActorTypes.Mgr, SysCodeKeys.ActorTypes.User)
         };
     }
 

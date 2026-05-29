@@ -1,8 +1,10 @@
+using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using ThinkOnErp.Domain.Constants;
 using ThinkOnErp.Domain.Entities;
 using ThinkOnErp.Domain.Interfaces;
 using ThinkOnErp.Domain.Models;
@@ -19,6 +21,7 @@ public class LegacyAuditService : ILegacyAuditService
 {
     private readonly OracleDbContext _dbContext;
     private readonly ILogger<LegacyAuditService> _logger;
+    private readonly ISysCodeService _sysCodeService;
 
     // Device type mappings for User-Agent parsing
     private static readonly Dictionary<string, string> DeviceTypeMappings = new()
@@ -37,40 +40,48 @@ public class LegacyAuditService : ILegacyAuditService
         { "ipad", "Tablet" }
     };
 
-    // Business module mappings
+    // Business module mappings — value is the SYS_SYSTEM.SYSTEM_CODE
     private static readonly Dictionary<string, string> ModuleMappings = new()
     {
         // Entity type mappings
-        { "ticket", "Support" },
-        { "user", "HR" },
-        { "company", "Administration" },
-        { "branch", "Administration" },
-        { "role", "Security" },
-        { "permission", "Security" },
-        { "currency", "Accounting" },
-        { "fiscalyear", "Accounting" },
-        { "invoice", "Accounting" },
-        { "payment", "Accounting" },
-        { "product", "Inventory" },
-        { "sale", "POS" },
-        { "customer", "CRM" },
-        { "supplier", "Procurement" },
+        { "ticket", "support" },
+        { "user", "hr" },
+        { "employee", "hr" },
+        { "company", "administration" },
+        { "branch", "administration" },
+        { "role", "security" },
+        { "permission", "security" },
+        { "auth", "security" },
+        { "currency", "accounting" },
+        { "fiscalyear", "accounting" },
+        { "invoice", "accounting" },
+        { "payment", "accounting" },
+        { "product", "inventory" },
+        { "sale", "pos" },
+        { "customer", "crm" },
+        { "supplier", "procurement" },
         
         // Endpoint path mappings
-        { "/api/auth", "Security" },
-        { "/api/users", "HR" },
-        { "/api/companies", "Administration" },
-        { "/api/branches", "Administration" },
-        { "/api/roles", "Security" },
-        { "/api/permissions", "Security" },
-        { "/api/currencies", "Accounting" },
-        { "/api/tickets", "Support" },
-        { "/api/pos", "POS" },
-        { "/api/inventory", "Inventory" },
-        { "/api/accounting", "Accounting" },
-        { "/api/crm", "CRM" },
-        { "/api/hr", "HR" }
+        { "/api/auth", "security" },
+        { "/api/users", "hr" },
+        { "/api/companies", "administration" },
+        { "/api/branches", "administration" },
+        { "/api/roles", "security" },
+        { "/api/permissions", "security" },
+        { "/api/currencies", "accounting" },
+        { "/api/tickets", "support" },
+        { "/api/pos", "pos" },
+        { "/api/inventory", "inventory" },
+        { "/api/accounting", "accounting" },
+        { "/api/crm", "crm" },
+        { "/api/hr", "hr" }
     };
+
+    // Cache: system code → system ID
+    private Dictionary<string, long>? _systemIdCache;
+    private Dictionary<string, string>? _systemNameCache;
+    private DateTime _systemCacheLoaded = DateTime.MinValue;
+    private static readonly TimeSpan SystemCacheTtl = TimeSpan.FromMinutes(30);
 
     // Error code prefixes by exception type
     private static readonly Dictionary<string, string> ErrorCodePrefixes = new()
@@ -98,10 +109,11 @@ public class LegacyAuditService : ILegacyAuditService
         { "CryptographicException", "CRYPTO" }
     };
 
-    public LegacyAuditService(OracleDbContext dbContext, ILogger<LegacyAuditService> logger)
+    public LegacyAuditService(OracleDbContext dbContext, ILogger<LegacyAuditService> logger, ISysCodeService sysCodeService)
     {
         _dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        _sysCodeService = sysCodeService ?? throw new ArgumentNullException(nameof(sysCodeService));
     }
 
     /// <inheritdoc/>
@@ -116,7 +128,10 @@ public class LegacyAuditService : ILegacyAuditService
             if (!string.IsNullOrWhiteSpace(filter.Company))
                 query = query.Where(a => a.CompanyId.HasValue && _dbContext.SysCompanies.Any(c => c.Id == a.CompanyId.Value && c.CompanyNameEn!.Contains(filter.Company)));
             if (!string.IsNullOrWhiteSpace(filter.Module))
-                query = query.Where(a => a.BusinessModule != null && a.BusinessModule.Contains(filter.Module));
+            {
+                var moduleFilter = filter.Module.ToLowerInvariant();
+                query = query.Where(a => a.SystemId.HasValue && _dbContext.SysSystems.Any(s => s.Id == a.SystemId.Value && (s.SystemCode.ToLower().Contains(moduleFilter) || s.SystemNameE.ToLower().Contains(moduleFilter))));
+            }
             if (!string.IsNullOrWhiteSpace(filter.Branch))
                 query = query.Where(a => a.BranchId.HasValue && _dbContext.SysBranches.Any(b => b.Id == a.BranchId.Value && b.BranchNameEn!.Contains(filter.Branch)));
             if (!string.IsNullOrWhiteSpace(filter.Status))
@@ -158,6 +173,74 @@ public class LegacyAuditService : ILegacyAuditService
         }
     }
 
+    /// <inheritdoc/>
+    public async Task<byte[]> ExportToCsvAsync(LegacyAuditLogFilter filter)
+    {
+        try
+        {
+            var query = _dbContext.SysAuditLogs.AsQueryable();
+
+            if (!string.IsNullOrWhiteSpace(filter.Company))
+                query = query.Where(a => a.CompanyId.HasValue && _dbContext.SysCompanies.Any(c => c.Id == a.CompanyId.Value && c.CompanyNameEn!.Contains(filter.Company)));
+            if (!string.IsNullOrWhiteSpace(filter.Module))
+            {
+                var moduleFilter = filter.Module.ToLowerInvariant();
+                query = query.Where(a => a.SystemId.HasValue && _dbContext.SysSystems.Any(s => s.Id == a.SystemId.Value && (s.SystemCode.ToLower().Contains(moduleFilter) || s.SystemNameE.ToLower().Contains(moduleFilter))));
+            }
+            if (!string.IsNullOrWhiteSpace(filter.Branch))
+                query = query.Where(a => a.BranchId.HasValue && _dbContext.SysBranches.Any(b => b.Id == a.BranchId.Value && b.BranchNameEn!.Contains(filter.Branch)));
+            if (!string.IsNullOrWhiteSpace(filter.Status))
+                query = query.Where(a => a.Status == filter.Status);
+            if (filter.StartDate.HasValue)
+                query = query.Where(a => a.CreationDate >= filter.StartDate.Value);
+            if (filter.EndDate.HasValue)
+                query = query.Where(a => a.CreationDate <= filter.EndDate.Value);
+            if (!string.IsNullOrWhiteSpace(filter.SearchTerm))
+                query = query.Where(a => a.Action.Contains(filter.SearchTerm) || a.EntityType.Contains(filter.SearchTerm) || (a.BusinessDescription != null && a.BusinessDescription.Contains(filter.SearchTerm)));
+
+            var auditLogs = await query
+                .OrderByDescending(a => a.CreationDate)
+                .ToListAsync();
+
+            var csv = new StringBuilder();
+            csv.AppendLine("ID,Date & Time,Description,Module,Company,Branch,User,Device,Status,Error Code,Action,Severity,Category,IP Address,Correlation ID");
+
+            foreach (var log in auditLogs)
+            {
+                var entry = MapToAuditLogEntry(log);
+                var legacy = await TransformToLegacyFormatAsync(entry);
+                csv.AppendLine($"{legacy.Id}," +
+                    $"\"{legacy.DateTime:yyyy-MM-dd HH:mm:ss}\"," +
+                    $"\"{EscapeCsv(legacy.ErrorDescription)}\"," +
+                    $"\"{EscapeCsv(legacy.Module)}\"," +
+                    $"\"{EscapeCsv(legacy.Company)}\"," +
+                    $"\"{EscapeCsv(legacy.Branch)}\"," +
+                    $"\"{EscapeCsv(legacy.User)}\"," +
+                    $"\"{EscapeCsv(legacy.Device)}\"," +
+                    $"\"{EscapeCsv(legacy.Status)}\"," +
+                    $"\"{EscapeCsv(legacy.ErrorCode)}\"," +
+                    $"\"{EscapeCsv(entry.Action)}\"," +
+                    $"\"{EscapeCsv(entry.Severity)}\"," +
+                    $"\"{EscapeCsv(entry.EventCategory)}\"," +
+                    $"\"{EscapeCsv(entry.IpAddress)}\"," +
+                    $"\"{EscapeCsv(entry.CorrelationId)}\"");
+            }
+
+            return Encoding.UTF8.GetBytes(csv.ToString());
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to export audit logs to CSV with filter: {@Filter}", filter);
+            throw;
+        }
+    }
+
+    private static string EscapeCsv(string? value)
+    {
+        if (string.IsNullOrEmpty(value)) return "";
+        return value.Replace("\"", "\"\"");
+    }
+
     private AuditLogEntry MapToAuditLogEntry(SysAuditLog log)
     {
         var entry = new AuditLogEntry
@@ -186,9 +269,10 @@ public class LegacyAuditService : ILegacyAuditService
             StackTrace = log.StackTrace,
             Severity = log.Severity ?? "Info",
             EventCategory = log.EventCategory ?? "DataChange",
+            Status = log.Status,
             Metadata = log.Metadata,
             CreationDate = log.CreationDate,
-            BusinessModule = log.BusinessModule,
+            SystemId = log.SystemId,
             BusinessDescription = log.BusinessDescription,
             DeviceIdentifier = log.DeviceIdentifier,
             ErrorCode = log.ErrorCode,
@@ -235,6 +319,14 @@ public class LegacyAuditService : ILegacyAuditService
                         .FirstOrDefault();
                 }
             }
+
+            if (log.SystemId.HasValue)
+            {
+                entry.SystemName = _dbContext.SysSystems
+                    .Where(s => s.Id == log.SystemId.Value)
+                    .Select(s => s.SystemNameE ?? s.SystemName)
+                    .FirstOrDefault();
+            }
         }
         catch (Exception ex)
         {
@@ -250,10 +342,14 @@ public class LegacyAuditService : ILegacyAuditService
         try
         {
             var allLogs = _dbContext.SysAuditLogs;
-            var unresolvedCount = await allLogs.CountAsync(a => a.Status == null || a.Status == "Unresolved");
-            var inProgressCount = await allLogs.CountAsync(a => a.Status == "InProgress");
-            var resolvedCount = await allLogs.CountAsync(a => a.Status == "Resolved");
-            var criticalCount = await allLogs.CountAsync(a => a.Severity == "Critical" || a.Severity == "High");
+            var statusUnresolved = _sysCodeService.GetCodeValue(SysCodeKeys.AuditStatus.Mgr, SysCodeKeys.AuditStatus.Unresolved);
+            var statusInProgress = _sysCodeService.GetCodeValue(SysCodeKeys.AuditStatus.Mgr, SysCodeKeys.AuditStatus.InProgress);
+            var statusResolved = _sysCodeService.GetCodeValue(SysCodeKeys.AuditStatus.Mgr, SysCodeKeys.AuditStatus.Resolved);
+            var statusCritical = _sysCodeService.GetCodeValue(SysCodeKeys.AuditStatus.Mgr, SysCodeKeys.AuditStatus.Critical);
+            var unresolvedCount = await allLogs.CountAsync(a => a.Status == null || a.Status == statusUnresolved);
+            var inProgressCount = await allLogs.CountAsync(a => a.Status == statusInProgress);
+            var resolvedCount = await allLogs.CountAsync(a => a.Status == statusResolved);
+            var criticalCount = await allLogs.CountAsync(a => a.Status == statusCritical);
 
             return new LegacyDashboardCounters
             {
@@ -306,13 +402,56 @@ public class LegacyAuditService : ILegacyAuditService
                 .Where(a => a.Id == auditLogId)
                 .Select(a => a.Status)
                 .FirstOrDefaultAsync();
-            return auditLog ?? "Unresolved";
+            return auditLog ?? _sysCodeService.GetCodeValue(SysCodeKeys.AuditStatus.Mgr, SysCodeKeys.AuditStatus.Unresolved);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to get current status for audit log {AuditLogId}", auditLogId);
             return "Unresolved";
         }
+    }
+
+    /// <inheritdoc/>
+    public async Task<AuditLogEntry?> GetAuditLogEntryByIdAsync(long id)
+    {
+        try
+        {
+            var log = await _dbContext.SysAuditLogs.FindAsync(id);
+            if (log == null) return null;
+            var entry = MapToAuditLogEntry(log);
+
+            // Resolve SysCode display names for detail view
+            try
+            {
+                entry.ActorTypeDisplay = ResolveSysCodeDescByValue(SysCodeKeys.ActorTypes.Mgr, entry.ActorType);
+                entry.EventCategoryDisplay = ResolveSysCodeDescByValue(SysCodeKeys.EventCategories.Mgr, entry.EventCategory);
+                if (!string.IsNullOrEmpty(entry.Severity))
+                    entry.SeverityDisplay = ResolveSysCodeDescByValue(SysCodeKeys.AuditSeverity.Mgr, entry.Severity);
+                if (!string.IsNullOrEmpty(entry.Status))
+                    entry.StatusDisplay = ResolveSysCodeDescByValue(SysCodeKeys.AuditStatus.Mgr, entry.Status);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Failed to resolve SysCode display names for audit log {AuditLogId}", id);
+            }
+
+            return entry;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to retrieve audit log entry {AuditLogId}", id);
+            return null;
+        }
+    }
+
+    private string? ResolveSysCodeDescByValue(int mgr, string codeValue)
+    {
+        if (string.IsNullOrEmpty(codeValue)) return null;
+        var code = _dbContext.SysCodes
+            .Where(c => c.CodeMgr == mgr && c.CodeValue == codeValue && c.CodeLang == 2)
+            .Select(c => c.CodeDesc)
+            .FirstOrDefault();
+        return code ?? codeValue;
     }
 
     /// <inheritdoc/>
@@ -323,8 +462,9 @@ public class LegacyAuditService : ILegacyAuditService
             return new LegacyAuditLogDto
             {
                 Id = auditEntry.Id,
+                Action = auditEntry.Action,
                 ErrorDescription = await GenerateBusinessDescriptionAsync(auditEntry),
-                Module = await DetermineBusinessModuleAsync(auditEntry.EntityType, auditEntry.EndpointPath),
+                Module = await GetSystemNameAsync(ResolveSystemCode(auditEntry.EntityType, auditEntry.EndpointPath)) ?? "System",
                 Company = auditEntry.CompanyName ?? "Unknown",
                 Branch = auditEntry.BranchName ?? "Unknown",
                 User = auditEntry.ActorName ?? "System",
@@ -883,50 +1023,87 @@ public class LegacyAuditService : ILegacyAuditService
     }
 
     /// <inheritdoc/>
-    public async Task<string> DetermineBusinessModuleAsync(string entityType, string? endpointPath)
+    public async Task<long?> DetermineBusinessModuleAsync(string entityType, string? endpointPath)
     {
         try
         {
-            // First try to match by entity type
-            var entityTypeLower = entityType.ToLowerInvariant();
-            if (ModuleMappings.TryGetValue(entityTypeLower, out var moduleFromEntity))
-            {
-                return moduleFromEntity;
-            }
+            var systemCode = ResolveSystemCode(entityType, endpointPath);
+            if (systemCode == null) return null;
 
-            // Then try to match by endpoint path
-            if (!string.IsNullOrEmpty(endpointPath))
-            {
-                var endpointLower = endpointPath.ToLowerInvariant();
-                foreach (var (pathPattern, module) in ModuleMappings)
-                {
-                    if (endpointLower.Contains(pathPattern))
-                    {
-                        return module;
-                    }
-                }
-            }
-
-            // Fallback based on common patterns
-            return entityTypeLower switch
-            {
-                var e when e.Contains("user") || e.Contains("employee") => "HR",
-                var e when e.Contains("company") || e.Contains("branch") || e.Contains("system") => "Administration",
-                var e when e.Contains("role") || e.Contains("permission") || e.Contains("auth") => "Security",
-                var e when e.Contains("currency") || e.Contains("fiscal") || e.Contains("accounting") => "Accounting",
-                var e when e.Contains("ticket") || e.Contains("support") => "Support",
-                var e when e.Contains("pos") || e.Contains("sale") => "POS",
-                var e when e.Contains("inventory") || e.Contains("product") => "Inventory",
-                var e when e.Contains("customer") || e.Contains("crm") => "CRM",
-                _ => "System"
-            };
+            return await GetSystemIdAsync(systemCode);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to determine business module for entity type: {EntityType}, endpoint: {EndpointPath}", 
                 entityType, endpointPath);
-            return await Task.FromResult("System");
+            return null;
         }
+    }
+
+    /// <summary>
+    /// Resolve the SYS_SYSTEM.SYSTEM_CODE from entity type / endpoint.
+    /// </summary>
+    private static string? ResolveSystemCode(string entityType, string? endpointPath)
+    {
+        var entityTypeLower = entityType.ToLowerInvariant();
+        if (ModuleMappings.TryGetValue(entityTypeLower, out var code))
+            return code;
+
+        if (!string.IsNullOrEmpty(endpointPath))
+        {
+            var endpointLower = endpointPath.ToLowerInvariant();
+            foreach (var (pathPattern, module) in ModuleMappings)
+            {
+                if (endpointLower.Contains(pathPattern))
+                    return module;
+            }
+        }
+
+        return entityTypeLower switch
+        {
+            var e when e.Contains("user") || e.Contains("employee") => "hr",
+            var e when e.Contains("company") || e.Contains("branch") || e.Contains("system") => "administration",
+            var e when e.Contains("role") || e.Contains("permission") || e.Contains("auth") => "security",
+            var e when e.Contains("currency") || e.Contains("fiscal") || e.Contains("accounting") => "accounting",
+            var e when e.Contains("ticket") || e.Contains("support") => "support",
+            var e when e.Contains("pos") || e.Contains("sale") => "pos",
+            var e when e.Contains("inventory") || e.Contains("product") => "inventory",
+            var e when e.Contains("customer") || e.Contains("crm") => "crm",
+            _ => "system"
+        };
+    }
+
+    /// <summary>
+    /// Get SYS_SYSTEM.ID by system code with caching.
+    /// </summary>
+    private async Task<long?> GetSystemIdAsync(string systemCode)
+    {
+        await EnsureSystemCacheAsync();
+        return _systemIdCache!.TryGetValue(systemCode.ToLowerInvariant(), out var id) ? id : null;
+    }
+
+    /// <summary>
+    /// Get SYS_SYSTEM English name by system code.
+    /// </summary>
+    private async Task<string?> GetSystemNameAsync(string? systemCode)
+    {
+        if (string.IsNullOrEmpty(systemCode)) return null;
+        await EnsureSystemCacheAsync();
+        return _systemNameCache!.TryGetValue(systemCode.ToLowerInvariant(), out var name) ? name : null;
+    }
+
+    private async Task EnsureSystemCacheAsync()
+    {
+        if (_systemIdCache != null && DateTime.UtcNow - _systemCacheLoaded <= SystemCacheTtl)
+            return;
+
+        var systems = await _dbContext.SysSystems
+            .Where(s => s.IsActive)
+            .ToListAsync();
+
+        _systemIdCache = systems.ToDictionary(s => s.SystemCode.ToLowerInvariant(), s => s.Id);
+        _systemNameCache = systems.ToDictionary(s => s.SystemCode.ToLowerInvariant(), s => s.SystemNameE);
+        _systemCacheLoaded = DateTime.UtcNow;
     }
 
     /// <inheritdoc/>
@@ -951,8 +1128,8 @@ public class LegacyAuditService : ILegacyAuditService
             }
 
             // Get module suffix from entity type
-            var module = await DetermineBusinessModuleAsync(entityType, null);
-            var moduleSuffix = module.ToUpperInvariant() switch
+            var moduleCode = ResolveSystemCode(entityType, null) ?? "system";
+            var moduleSuffix = moduleCode.ToUpperInvariant() switch
             {
                 "HR" => "HR",
                 "ADMINISTRATION" => "ADMIN",
@@ -1049,7 +1226,8 @@ public class LegacyAuditService : ILegacyAuditService
             // Convert technical exception to business-friendly message
             var message = auditEntry.ExceptionMessage.ToLowerInvariant();
             var entityName = GetFriendlyEntityName(auditEntry.EntityType);
-            var businessModule = await DetermineBusinessModuleAsync(auditEntry.EntityType, auditEntry.EndpointPath);
+            var moduleCode = ResolveSystemCode(auditEntry.EntityType, auditEntry.EndpointPath);
+            var businessModule = await GetSystemNameAsync(moduleCode) ?? moduleCode ?? "System";
             
             // Database-related errors
             if (message.Contains("timeout") || message.Contains("ora-00942") || message.Contains("ora-12170"))

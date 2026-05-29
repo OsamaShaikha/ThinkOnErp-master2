@@ -2,6 +2,7 @@ using System.Diagnostics;
 using System.Text;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
+using ThinkOnErp.Domain.Constants;
 using ThinkOnErp.Domain.Entities.Audit;
 using ThinkOnErp.Domain.Interfaces;
 using ThinkOnErp.Infrastructure.Configuration;
@@ -426,20 +427,26 @@ public class RequestTracingMiddleware
     {
         try
         {
+            using var scope = _serviceScopeFactory.CreateScope();
+            var sysCodeService = scope.ServiceProvider.GetRequiredService<ISysCodeService>();
+
             var endpointName = ExtractEndpointName(requestContext.Path);
             var isError = responseContext.StatusCode >= 400;
-            var severity = responseContext.StatusCode >= 500 ? "Error"
-                : responseContext.StatusCode >= 400 ? "Warning"
-                : "Info";
+            var severity = responseContext.StatusCode >= 500
+                ? sysCodeService.GetCodeValue(SysCodeKeys.AuditSeverity.Mgr, SysCodeKeys.AuditSeverity.Error)
+                : responseContext.StatusCode >= 400
+                    ? sysCodeService.GetCodeValue(SysCodeKeys.AuditSeverity.Mgr, SysCodeKeys.AuditSeverity.Warning)
+                    : sysCodeService.GetCodeValue(SysCodeKeys.AuditSeverity.Mgr, SysCodeKeys.AuditSeverity.Info);
 
-            // Extract metadata fields
             requestContext.Metadata.TryGetValue("UserName", out var userName);
             requestContext.Metadata.TryGetValue("LocalIp", out var localIp);
 
             var auditEvent = new DataChangeAuditEvent
             {
                 CorrelationId = requestContext.CorrelationId,
-                ActorType = requestContext.UserId.HasValue ? "USER" : "ANONYMOUS",
+                ActorType = requestContext.UserId.HasValue
+                    ? sysCodeService.GetCodeValue(SysCodeKeys.ActorTypes.Mgr, SysCodeKeys.ActorTypes.User)
+                    : sysCodeService.GetCodeValue(SysCodeKeys.ActorTypes.Mgr, SysCodeKeys.ActorTypes.Anonymous),
                 ActorId = requestContext.UserId ?? 0,
                 CompanyId = requestContext.CompanyId,
                 BranchId = requestContext.BranchId,
@@ -450,7 +457,7 @@ public class RequestTracingMiddleware
                 UserAgent = requestContext.UserAgent,
                 Timestamp = requestContext.StartTime,
                 OldValue = null,
-                EventCategory = "Request",
+                EventCategory = sysCodeService.GetCodeValue(SysCodeKeys.EventCategories.Mgr, SysCodeKeys.EventCategories.Request),
                 Metadata = System.Text.Json.JsonSerializer.Serialize(new
                 {
                     UserName = userName,
@@ -481,7 +488,7 @@ public class RequestTracingMiddleware
                     UserName = userName,
                     LocalIpAddress = localIp,
                     WanIpAddress = requestContext.IpAddress,
-                    Status = "Unresolved"
+                    Status = sysCodeService.GetCodeValue(SysCodeKeys.AuditStatus.Mgr, SysCodeKeys.AuditStatus.Unresolved)
                 });
             }
 
@@ -513,10 +520,12 @@ public class RequestTracingMiddleware
         {
             // Resolve scoped service to determine severity
             string severity;
+            ISysCodeService sysCodeService;
             using (var scope = _serviceScopeFactory.CreateScope())
             {
                 var exceptionCategorization = scope.ServiceProvider.GetRequiredService<IExceptionCategorizationService>();
                 severity = exceptionCategorization.DetermineSeverity(exception);
+                sysCodeService = scope.ServiceProvider.GetRequiredService<ISysCodeService>();
             }
 
             var endpointName = ExtractEndpointName(requestContext.Path);
@@ -528,7 +537,9 @@ public class RequestTracingMiddleware
             var auditEvent = new ExceptionAuditEvent
             {
                 CorrelationId = requestContext.CorrelationId,
-                ActorType = requestContext.UserId.HasValue ? "USER" : "ANONYMOUS",
+                ActorType = requestContext.UserId.HasValue
+                    ? sysCodeService.GetCodeValue(SysCodeKeys.ActorTypes.Mgr, SysCodeKeys.ActorTypes.User)
+                    : sysCodeService.GetCodeValue(SysCodeKeys.ActorTypes.Mgr, SysCodeKeys.ActorTypes.Anonymous),
                 ActorId = requestContext.UserId ?? 0,
                 CompanyId = requestContext.CompanyId,
                 BranchId = requestContext.BranchId,
@@ -548,7 +559,7 @@ public class RequestTracingMiddleware
                     UserName = userName,
                     LocalIpAddress = localIp,
                     WanIpAddress = requestContext.IpAddress,
-                    Status = "Unresolved",
+                    Status = sysCodeService.GetCodeValue(SysCodeKeys.AuditStatus.Mgr, SysCodeKeys.AuditStatus.Unresolved),
                     HttpMethod = requestContext.HttpMethod,
                     EndpointPath = requestContext.Path,
                     RequestBody = requestContext.RequestBody

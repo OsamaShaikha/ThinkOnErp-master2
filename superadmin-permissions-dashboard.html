@@ -1,0 +1,1378 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ThinkOnErp - SuperAdmin Permissions Dashboard</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, sans-serif; background: #f1f5f9; color: #1e293b; line-height: 1.5; }
+  .app { display: flex; min-height: 100vh; }
+  .sidebar { width: 250px; background: #0f172a; color: #e2e8f0; padding: 1.5rem 0; display: flex; flex-direction: column; flex-shrink: 0; position: sticky; top: 0; height: 100vh; }
+  .sidebar .logo { padding: 0 1.5rem 1.5rem; border-bottom: 1px solid #1e293b; margin-bottom: 1rem; }
+  .sidebar .logo h1 { font-size: 1.15rem; font-weight: 700; }
+  .sidebar .logo span { color: #38bdf8; }
+  .sidebar .logo small { display: block; font-size: .7rem; color: #64748b; font-weight: 400; }
+  .nav-item { display: flex; align-items: center; gap: .75rem; padding: .7rem 1.5rem; color: #94a3b8; text-decoration: none; font-size: .875rem; border-left: 3px solid transparent; cursor: pointer; }
+  .nav-item:hover { color: #e2e8f0; background: #1e293b; }
+  .nav-item.active { color: #38bdf8; background: #1e293b; border-left-color: #38bdf8; font-weight: 600; }
+  .nav-icon { font-size: 1.1rem; width: 20px; text-align: center; }
+  .nav-section { font-size: .65rem; text-transform: uppercase; letter-spacing: .08em; color: #475569; padding: 1rem 1.5rem .4rem; }
+  .main { flex: 1; min-width: 0; }
+  .topbar { background: #fff; border-bottom: 1px solid #e2e8f0; padding: 0 2rem; height: 60px; display: flex; align-items: center; justify-content: space-between; }
+  .topbar h2 { font-size: 1.1rem; font-weight: 600; }
+  .topbar-right { display: flex; align-items: center; gap: 1rem; }
+  .admin-badge { display: flex; align-items: center; gap: .5rem; background: #f1f5f9; padding: .35rem .75rem; border-radius: 999px; font-size: .8rem; font-weight: 500; }
+  .admin-avatar { width: 28px; height: 28px; border-radius: 50%; background: linear-gradient(135deg, #38bdf8, #818cf8); display: flex; align-items: center; justify-content: center; color: #fff; font-size: .75rem; font-weight: 600; }
+  .online-dot { width: 8px; height: 8px; border-radius: 50%; background: #22c55e; display: inline-block; }
+  .content { padding: 1.5rem 2rem 2rem; display: none; }
+  .content.active { display: block; }
+  .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin-bottom: 1.5rem; }
+  .stat-card { background: #fff; border-radius: 10px; padding: 1.25rem; border: 1px solid #e2e8f0; }
+  .stat-card .stat-label { font-size: .75rem; font-weight: 500; color: #64748b; text-transform: uppercase; letter-spacing: .04em; }
+  .stat-card .stat-number { font-size: 2rem; font-weight: 700; margin-top: .25rem; color: #0f172a; }
+  .stat-card .stat-number.green { color: #22c55e; }
+  .stat-card .stat-number.blue { color: #3b82f6; }
+  .stat-card .stat-number.amber { color: #f59e0b; }
+  .stat-card .stat-number.purple { color: #818cf8; }
+  .stat-card .stat-sub { font-size: .75rem; color: #94a3b8; margin-top: .15rem; }
+  .filters-bar { background: #fff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 1rem 1.25rem; margin-bottom: 1rem; display: flex; flex-wrap: wrap; align-items: center; gap: .75rem; }
+  .filters-bar input, .filters-bar select { padding: .45rem .75rem; border: 1px solid #e2e8f0; border-radius: 6px; font-size: .8rem; background: #fff; color: #1e293b; outline: none; }
+  .filters-bar input:focus, .filters-bar select:focus { border-color: #38bdf8; }
+  .filters-bar input[type="text"] { width: 200px; }
+  .btn { padding: .45rem 1rem; border: none; border-radius: 6px; font-size: .8rem; font-weight: 500; cursor: pointer; transition: all .15s; }
+  .btn-primary { background: #3b82f6; color: #fff; }
+  .btn-primary:hover { background: #2563eb; }
+  .btn-success { background: #22c55e; color: #fff; }
+  .btn-success:hover { background: #16a34a; }
+  .btn-danger { background: #ef4444; color: #fff; }
+  .btn-danger:hover { background: #dc2626; }
+  .btn-warning { background: #f59e0b; color: #fff; }
+  .btn-outline { background: transparent; border: 1px solid #e2e8f0; color: #64748b; }
+  .btn-outline:hover { background: #f1f5f9; }
+  .btn-sm { padding: .3rem .65rem; font-size: .75rem; }
+  .btn-xs { padding: .15rem .4rem; font-size: .68rem; }
+  .table-wrap { background: #fff; border: 1px solid #e2e8f0; border-radius: 10px; overflow: hidden; margin-bottom: 1.5rem; }
+  .table-wrap .th-actions { display: flex; align-items: center; justify-content: space-between; padding: .75rem 1.25rem; background: #f8fafc; border-bottom: 1px solid #e2e8f0; flex-wrap: wrap; gap: .5rem; }
+  .table-wrap .th-actions h3 { font-size: .9rem; font-weight: 600; }
+  table { width: 100%; border-collapse: collapse; font-size: .8rem; }
+  thead { background: #f8fafc; }
+  th { text-align: left; padding: .6rem .75rem; font-size: .68rem; font-weight: 600; text-transform: uppercase; letter-spacing: .05em; color: #64748b; border-bottom: 1px solid #e2e8f0; white-space: nowrap; }
+  td { padding: .6rem .75rem; border-bottom: 1px solid #f1f5f9; color: #475569; vertical-align: middle; }
+  tr:hover td { background: #f8fafc; }
+  .status-badge { display: inline-block; padding: .12rem .5rem; border-radius: 9999px; font-size: .68rem; font-weight: 600; white-space: nowrap; }
+  .status-badge.active { background: #dcfce7; color: #166534; }
+  .status-badge.inactive { background: #fee2e2; color: #991b1b; }
+  .status-badge.allowed { background: #dcfce7; color: #166534; }
+  .status-badge.blocked { background: #fee2e2; color: #991b1b; }
+  .action-cell { display: flex; gap: .35rem; flex-wrap: wrap; }
+  .pagination { display: flex; align-items: center; justify-content: space-between; padding: .75rem 1.25rem; border-top: 1px solid #e2e8f0; font-size: .8rem; color: #64748b; }
+  .pagination .pages { display: flex; gap: .25rem; }
+  .pagination .pages span { width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; border-radius: 6px; cursor: pointer; font-size: .78rem; }
+  .pagination .pages span:hover { background: #f1f5f9; }
+  .pagination .pages span.active { background: #3b82f6; color: #fff; }
+  .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.4); z-index: 1000; align-items: center; justify-content: center; }
+  .modal-overlay.show { display: flex; }
+  .modal { background: #fff; border-radius: 12px; width: 640px; max-height: 90vh; overflow-y: auto; box-shadow: 0 12px 48px rgba(0,0,0,.2); }
+  .modal.wide { width: 860px; }
+  .modal-header { display: flex; align-items: center; justify-content: space-between; padding: 1rem 1.25rem; border-bottom: 1px solid #e2e8f0; }
+  .modal-header h3 { font-size: 1rem; font-weight: 600; }
+  .modal-close { width: 28px; height: 28px; border-radius: 6px; border: none; background: #f1f5f9; cursor: pointer; font-size: 1rem; display: flex; align-items: center; justify-content: center; color: #64748b; }
+  .modal-body { padding: 1.25rem; }
+  .modal-body label { display: block; font-size: .78rem; font-weight: 500; color: #475569; margin-bottom: .25rem; margin-top: .75rem; }
+  .modal-body label:first-child { margin-top: 0; }
+  .modal-body input, .modal-body select, .modal-body textarea { width: 100%; padding: .45rem .65rem; border: 1px solid #e2e8f0; border-radius: 6px; font-size: .8rem; outline: none; }
+  .modal-body input:focus, .modal-body select:focus { border-color: #38bdf8; }
+  .modal-body textarea { resize: vertical; min-height: 60px; font-family: inherit; }
+  .modal-footer { display: flex; gap: .5rem; justify-content: flex-end; padding: 1rem 1.25rem; border-top: 1px solid #e2e8f0; }
+  .form-row { display: flex; gap: .75rem; }
+  .form-row > * { flex: 1; }
+  .toggle-wrap { display: flex; align-items: center; gap: .5rem; margin-top: .5rem; }
+  .toggle { width: 36px; height: 20px; background: #cbd5e1; border-radius: 10px; cursor: pointer; position: relative; transition: background .2s; flex-shrink: 0; }
+  .toggle.on { background: #22c55e; }
+  .toggle::after { content: ''; width: 16px; height: 16px; background: #fff; border-radius: 50%; position: absolute; top: 2px; left: 2px; transition: left .2s; }
+  .toggle.on::after { left: 18px; }
+  .perm-grid { display: grid; grid-template-columns: repeat(4, auto); gap: .5rem; align-items: center; margin: .5rem 0; }
+  .perm-grid label { font-weight: 400; font-size: .78rem; margin: 0; cursor: pointer; display: flex; align-items: center; gap: .35rem; }
+  .perm-grid input[type="checkbox"] { width: auto; }
+  .toast { position: fixed; bottom: 1.5rem; right: 1.5rem; background: #1e293b; color: #e2e8f0; padding: .75rem 1.25rem; border-radius: 8px; font-size: .85rem; display: none; align-items: center; gap: .5rem; z-index: 2000; }
+  .toast.show { display: flex; }
+  .toast.success { border-left: 3px solid #22c55e; }
+  .toast.error { border-left: 3px solid #ef4444; }
+  .login-overlay { display: flex; position: fixed; inset: 0; background: rgba(0,0,0,.6); z-index: 3000; align-items: center; justify-content: center; }
+  .login-overlay.hidden { display: none; }
+  .login-box { background: #fff; border-radius: 12px; padding: 2rem; width: 380px; box-shadow: 0 12px 48px rgba(0,0,0,.3); }
+  .login-box h2 { margin-bottom: .25rem; }
+  .login-box p { color: #64748b; font-size: .85rem; margin-bottom: 1.25rem; }
+  .login-box label { display: block; font-size: .8rem; font-weight: 500; color: #475569; margin-bottom: .3rem; }
+  .login-box input { width: 100%; padding: .5rem .75rem; border: 1px solid #e2e8f0; border-radius: 6px; font-size: .85rem; margin-bottom: .75rem; outline: none; }
+  .login-box input:focus { border-color: #38bdf8; }
+  .login-box .btn { width: 100%; padding: .6rem; font-size: .9rem; }
+  .empty-state { text-align: center; padding: 2rem; color: #94a3b8; }
+  .empty-state strong { display: block; font-size: .9rem; margin-bottom: .25rem; color: #64748b; }
+  .taskbar { background: #fff; border: 1px solid #e2e8f0; border-radius: 10px; padding: .75rem 1.25rem; margin-bottom: 1rem; display: flex; flex-wrap: wrap; align-items: center; gap: .75rem; }
+  @media (max-width: 768px) {
+    .stats { grid-template-columns: repeat(2,1fr); }
+    .sidebar { width: 60px; overflow: hidden; }
+    .sidebar .logo h1, .sidebar .logo small, .nav-item span, .nav-section { display: none; }
+    .nav-item { justify-content: center; padding: .7rem; }
+    .filters-bar input[type="text"] { width: 100%; }
+    .modal.wide { width: 95%; }
+    .form-row { flex-direction: column; }
+  }
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div class="login-overlay" id="loginOverlay">
+  <div class="login-box">
+    <h2>ThinkOnErp</h2>
+    <p>Sign in to the SuperAdmin Permissions Dashboard</p>
+    <form id="loginForm" onsubmit="return doLogin(event)">
+      <label>API Base URL</label>
+      <input type="text" id="apiBase" value="http://178.104.126.99:5000">
+      <label>Username</label>
+      <input type="text" id="username" value="superadmin">
+      <label>Password</label>
+      <input type="password" id="password" value="P@ssw0rd@2026!">
+      <button type="submit" class="btn btn-primary" id="loginBtn">Sign In</button>
+      <div id="loginError" style="color:#ef4444;font-size:.8rem;margin-top:.5rem;display:none;"></div>
+    </form>
+  </div>
+</div>
+
+<!-- MAIN LAYOUT -->
+<div class="app">
+  <nav class="sidebar">
+    <div class="logo">
+      <h1>ThinkOn<span>Erp</span></h1>
+      <small>Super Admin</small>
+    </div>
+    <div class="nav-section">Main</div>
+    <div class="nav-item active" data-tab="dashboard" onclick="switchTab('dashboard')"><span class="nav-icon">&#9632;</span><span>Dashboard</span></div>
+    <div class="nav-item" data-tab="companies" onclick="switchTab('companies')"><span class="nav-icon">&#9776;</span><span>Companies</span></div>
+    <div class="nav-item" data-tab="branches" onclick="switchTab('branches')"><span class="nav-icon">&#9678;</span><span>Branches</span></div>
+    <div class="nav-item" data-tab="roles" onclick="switchTab('roles')"><span class="nav-icon">&#9783;</span><span>Roles</span></div>
+    <div class="nav-item" data-tab="users" onclick="switchTab('users')"><span class="nav-icon">&#128101;</span><span>Users</span></div>
+    <div class="nav-item" data-tab="superadmins" onclick="switchTab('superadmins')"><span class="nav-icon">&#9881;</span><span>Super Admins</span></div>
+    <div class="nav-item" style="margin-top:auto;border-top:1px solid #1e293b;padding-top:1rem;cursor:default;" onclick="doLogout()">
+      <span class="nav-icon">&#8592;</span><span id="logoutLabel">Logout</span>
+    </div>
+  </nav>
+
+  <div class="main">
+    <div class="topbar">
+      <h2 id="pageTitle">Dashboard</h2>
+      <div class="topbar-right">
+        <span style="font-size:.78rem;color:#64748b;" id="lastLoginLabel"></span>
+        <div class="admin-badge">
+          <div class="admin-avatar" id="avatarLabel">SA</div>
+          <span id="userLabel">Super Admin</span>
+          <span class="online-dot"></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB: DASHBOARD -->
+    <div class="content active" id="tab-dashboard">
+      <div class="stats" id="dashStats">
+        <div class="stat-card"><div class="stat-label">Companies</div><div class="stat-number green" id="statCompanies">--</div><div class="stat-sub">Total registered</div></div>
+        <div class="stat-card"><div class="stat-label">Active Companies</div><div class="stat-number blue" id="statActiveCompanies">--</div><div class="stat-sub">Including inactive: <span id="statInactiveCompanies">--</span></div></div>
+        <div class="stat-card"><div class="stat-label">Branches</div><div class="stat-number amber" id="statBranches">--</div><div class="stat-sub">Active: <span id="statActiveBranches">--</span></div></div>
+        <div class="stat-card"><div class="stat-label">Super Admins</div><div class="stat-number purple" id="statAdmins">--</div><div class="stat-sub">System administrators</div></div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1.5rem;">
+        <div class="table-wrap">
+          <div class="th-actions"><h3>Recent Companies</h3></div>
+          <table><thead><tr><th>Name (EN)</th><th>Status</th><th>Created</th></tr></thead><tbody id="recentCompanies"><tr><td colspan="3" class="empty-state">No data</td></tr></tbody></table>
+        </div>
+        <div class="table-wrap">
+          <div class="th-actions"><h3>Recent Branch Activity</h3></div>
+          <table><thead><tr><th>Branch</th><th>Company</th><th>Activity</th><th>Date</th></tr></thead><tbody id="recentBranches"><tr><td colspan="4" class="empty-state">No data</td></tr></tbody></table>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <div class="th-actions"><h3>System Alerts</h3></div>
+        <table><thead><tr><th style="width:40px;">#</th><th>Alert</th></tr></thead><tbody id="alertsBody"><tr><td colspan="2" class="empty-state">No alerts</td></tr></tbody></table>
+      </div>
+    </div>
+
+    <!-- TAB: COMPANIES -->
+    <div class="content" id="tab-companies">
+      <div class="taskbar">
+        <span style="font-weight:500;">Manage Companies</span>
+        <input type="text" id="companySearch" placeholder="Search..." style="margin-left:auto;width:180px;padding:.35rem .6rem;border:1px solid #e2e8f0;border-radius:6px;font-size:.8rem;">
+        <button class="btn btn-primary btn-sm" onclick="openCompanyModal()">+ New Company</button>
+      </div>
+      <div class="table-wrap">
+        <div class="th-actions"><h3>All Companies</h3><span style="font-size:.75rem;color:#94a3b8;" id="companyCount"></span></div>
+        <table><thead><tr><th>ID</th><th>Name (EN)</th><th>Name (AR)</th><th>Code</th><th>Status</th><th style="width:200px;">Actions</th></tr></thead><tbody id="companiesBody"></tbody></table>
+      </div>
+    </div>
+
+    <!-- TAB: BRANCHES -->
+    <div class="content" id="tab-branches">
+      <div class="taskbar">
+        <span style="font-weight:500;">Manage Branches</span>
+        <select id="branchCompanyFilter" style="margin-left:auto;padding:.35rem .6rem;border:1px solid #e2e8f0;border-radius:6px;font-size:.8rem;" onchange="loadBranches()"><option value="">All Companies</option></select>
+        <input type="text" id="branchSearch" placeholder="Search..." style="width:180px;padding:.35rem .6rem;border:1px solid #e2e8f0;border-radius:6px;font-size:.8rem;">
+        <button class="btn btn-primary btn-sm" onclick="openBranchModal()">+ New Branch</button>
+      </div>
+      <div class="table-wrap">
+        <div class="th-actions"><h3>All Branches</h3><span style="font-size:.75rem;color:#94a3b8;" id="branchCount"></span></div>
+        <table><thead><tr><th>ID</th><th>Name (EN)</th><th>Company</th><th>Phone</th><th>Head</th><th>Status</th><th style="width:200px;">Actions</th></tr></thead><tbody id="branchesBody"></tbody></table>
+      </div>
+    </div>
+
+    <!-- TAB: ROLES -->
+    <div class="content" id="tab-roles">
+      <div class="taskbar">
+        <span style="font-weight:500;">Manage Roles</span>
+        <button class="btn btn-primary btn-sm" onclick="openRoleModal()" style="margin-left:auto;">+ New Role</button>
+      </div>
+      <div class="table-wrap">
+        <div class="th-actions"><h3>All Roles</h3><span style="font-size:.75rem;color:#94a3b8;" id="roleCount"></span></div>
+        <table><thead><tr><th>ID</th><th>Name (EN)</th><th>Name (AR)</th><th>Note</th><th>Status</th><th style="width:200px;">Actions</th></tr></thead><tbody id="rolesBody"></tbody></table>
+      </div>
+    </div>
+
+    <!-- TAB: USERS -->
+    <div class="content" id="tab-users">
+      <div class="taskbar">
+        <span style="font-weight:500;">Manage Users</span>
+        <select id="userCompanyFilter" style="margin-left:auto;padding:.35rem .6rem;border:1px solid #e2e8f0;border-radius:6px;font-size:.8rem;" onchange="loadUsers()"><option value="">All Companies</option></select>
+        <select id="userBranchFilter" style="padding:.35rem .6rem;border:1px solid #e2e8f0;border-radius:6px;font-size:.8rem;" onchange="loadUsers()"><option value="">All Branches</option></select>
+        <input type="text" id="userSearch" placeholder="Search..." style="width:150px;padding:.35rem .6rem;border:1px solid #e2e8f0;border-radius:6px;font-size:.8rem;">
+        <button class="btn btn-primary btn-sm" onclick="openUserModal()">+ New User</button>
+      </div>
+      <div class="table-wrap">
+        <div class="th-actions"><h3>All Users</h3><span style="font-size:.75rem;color:#94a3b8;" id="userCount"></span></div>
+        <table><thead><tr><th>ID</th><th>Username</th><th>Name (EN)</th><th>Role</th><th>Branch</th><th>Company</th><th>Status</th><th style="width:200px;">Actions</th></tr></thead><tbody id="usersBody"></tbody></table>
+      </div>
+    </div>
+
+    <!-- TAB: SUPER ADMINS -->
+    <div class="content" id="tab-superadmins">
+      <div class="taskbar">
+        <span style="font-weight:500;">Manage Super Admin Accounts</span>
+        <button class="btn btn-primary btn-sm" onclick="openSuperAdminModal()" style="margin-left:auto;">+ New Super Admin</button>
+      </div>
+      <div class="table-wrap">
+        <div class="th-actions"><h3>All Super Admins</h3><span style="font-size:.75rem;color:#94a3b8;" id="superAdminCount"></span></div>
+        <table><thead><tr><th>ID</th><th>Username</th><th>Name (EN)</th><th>Email</th><th>Phone</th><th>2FA</th><th>Status</th><th style="width:200px;">Actions</th></tr></thead><tbody id="superAdminsBody"></tbody></table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- GENERIC MODAL -->
+<div class="modal-overlay" id="genericModal">
+  <div class="modal" id="genericModalInner">
+    <div class="modal-header">
+      <h3 id="modalTitle">Title</h3>
+      <button class="modal-close" onclick="closeGenericModal()">&times;</button>
+    </div>
+    <div class="modal-body" id="modalBody"></div>
+    <div class="modal-footer" id="modalFooter"></div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ============================================================
+// STATE
+// ============================================================
+const STATE = {
+  token: null,
+  apiBase: '',
+  currentTab: 'dashboard',
+  allCompanies: [],
+  allBranches: [],
+  allRoles: [],
+  allUsers: [],
+  allSuperAdmins: [],
+  allSystems: [],
+  allScreens: [],
+};
+
+// ============================================================
+// API CLIENT
+// ============================================================
+async function api(path, options = {}) {
+  const url = STATE.apiBase + path;
+  const headers = { 'Content-Type': 'application/json', ...options.headers };
+  if (STATE.token) headers['Authorization'] = 'Bearer ' + STATE.token;
+  const res = await fetch(url, { ...options, headers });
+  const contentType = res.headers.get('content-type') || '';
+  if (!contentType.includes('application/json')) {
+    const text = await res.text();
+    if (!res.ok) throw new Error(text.slice(0, 200) || 'HTTP ' + res.status);
+    return null;
+  }
+  let body;
+  try { body = await res.json(); } catch (e) {
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    return null;
+  }
+  if (!res.ok) throw new Error(body?.message || body?.title || 'API error: ' + res.status);
+  return body?.data ?? body ?? null;
+}
+
+// ============================================================
+// LOGIN
+// ============================================================
+async function doLogin(e) {
+  e.preventDefault();
+  const btn = document.getElementById('loginBtn');
+  const errEl = document.getElementById('loginError');
+  btn.disabled = true; btn.textContent = 'Signing in...';
+  errEl.style.display = 'none';
+  const base = document.getElementById('apiBase').value.replace(/\/+$/, '');
+  STATE.apiBase = base;
+  try {
+    const res = await fetch(base + '/api/Auth/superadmin/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username: document.getElementById('username').value, password: document.getElementById('password').value })
+    });
+    const body = await res.json();
+    if (!res.ok) throw new Error(body.message || body.title || 'Login failed');
+    const tokenDto = body.data || body;
+    STATE.token = tokenDto.accessToken || tokenDto.AccessToken;
+    if (!STATE.token) throw new Error('No accessToken in response');
+    document.getElementById('loginOverlay').classList.add('hidden');
+    document.getElementById('userLabel').textContent = document.getElementById('username').value;
+    document.getElementById('avatarLabel').textContent = document.getElementById('username').value.charAt(0).toUpperCase();
+    document.getElementById('lastLoginLabel').textContent = 'Logged in at ' + new Date().toLocaleString();
+    await loadAllData();
+  } catch (err) {
+    errEl.textContent = err.message;
+    errEl.style.display = 'block';
+  } finally {
+    btn.disabled = false; btn.textContent = 'Sign In';
+  }
+}
+
+function doLogout() {
+  STATE.token = null;
+  document.getElementById('loginOverlay').classList.remove('hidden');
+}
+
+// ============================================================
+// TAB SWITCHING
+// ============================================================
+function switchTab(tab) {
+  STATE.currentTab = tab;
+  document.querySelectorAll('.content').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+  document.getElementById('tab-' + tab).classList.add('active');
+  document.querySelector(`.nav-item[data-tab="${tab}"]`).classList.add('active');
+  const titles = { dashboard:'Dashboard', companies:'Companies', branches:'Branches', roles:'Roles', users:'Users', superadmins:'Super Admins' };
+  document.getElementById('pageTitle').textContent = titles[tab] || 'Dashboard';
+  loadTabData(tab);
+}
+
+async function loadTabData(tab) {
+  if (!STATE.token) return;
+  try {
+    if (tab === 'dashboard') await loadDashboard();
+    else if (tab === 'companies') await loadCompanies();
+    else if (tab === 'branches') await loadBranches();
+    else if (tab === 'roles') await loadRoles();
+    else if (tab === 'users') await loadUsers();
+    else if (tab === 'superadmins') await loadSuperAdmins();
+  } catch (err) { showToast(err.message, 'error'); }
+}
+
+async function loadAllData() {
+  try {
+    await Promise.all([loadSystems(), loadScreens()]);
+    await loadDashboard();
+  } catch (err) { showToast(err.message, 'error'); }
+}
+
+// ============================================================
+// SYSTEMS & SCREENS (cached)
+// ============================================================
+async function loadSystems() {
+  try {
+    STATE.allSystems = await api('/api/permissions/systems') || [];
+  } catch (e) { STATE.allSystems = []; }
+}
+async function loadScreens() {
+  try {
+    STATE.allScreens = await api('/api/superadmin/branches/screens') || [];
+  } catch (e) { STATE.allScreens = []; }
+}
+
+// ============================================================
+// DASHBOARD
+// ============================================================
+async function loadDashboard() {
+  const data = await api('/api/superadmins/dashboard');
+  const d = data?.data || data || {};
+  const stats = d.stats || d.Stats || {};
+  document.getElementById('statCompanies').textContent = stats.totalCompanies ?? stats.TotalCompanies ?? '--';
+  document.getElementById('statActiveCompanies').textContent = stats.activeCompanies ?? stats.ActiveCompanies ?? '--';
+  document.getElementById('statInactiveCompanies').textContent = stats.inactiveCompanies ?? stats.InactiveCompanies ?? '--';
+  document.getElementById('statBranches').textContent = stats.totalBranches ?? stats.TotalBranches ?? '--';
+  document.getElementById('statActiveBranches').textContent = stats.activeBranches ?? stats.ActiveBranches ?? '--';
+  document.getElementById('statAdmins').textContent = stats.totalSystemAdmins ?? stats.TotalSystemAdmins ?? '--';
+
+  const companies = d.recentCompanies || d.RecentCompanies || [];
+  const tbody1 = document.getElementById('recentCompanies');
+  if (companies.length === 0) { tbody1.innerHTML = '<tr><td colspan="3" class="empty-state">No recent companies</td></tr>'; }
+  else {
+    tbody1.innerHTML = companies.map(c => `<tr>
+      <td><strong>${c.nameEn || c.NameEn || '-'}</strong></td>
+      <td><span class="status-badge ${(c.status || c.Status || 'Active').toLowerCase() === 'active' ? 'active' : 'inactive'}">${c.status || c.Status || 'Active'}</span></td>
+      <td style="white-space:nowrap;">${c.createdDate || c.CreatedDate ? new Date(c.createdDate || c.CreatedDate).toLocaleDateString() : '-'}</td>
+    </tr>`).join('');
+  }
+
+  const branches = d.recentBranches || d.RecentBranches || [];
+  const tbody2 = document.getElementById('recentBranches');
+  if (branches.length === 0) { tbody2.innerHTML = '<tr><td colspan="4" class="empty-state">No recent activity</td></tr>'; }
+  else {
+    tbody2.innerHTML = branches.map(b => `<tr>
+      <td><strong>${b.branchNameEn || b.BranchNameEn || '-'}</strong></td>
+      <td>${b.companyNameEn || b.CompanyNameEn || '-'}</td>
+      <td><span class="status-badge ${(b.activityType || b.ActivityType || 'New') === 'New' ? 'allowed' : 'active'}">${b.activityType || b.ActivityType || '-'}</span></td>
+      <td style="white-space:nowrap;">${b.activityDate || b.ActivityDate ? new Date(b.activityDate || b.ActivityDate).toLocaleDateString() : '-'}</td>
+    </tr>`).join('');
+  }
+
+  const alerts = d.alerts || d.Alerts || [];
+  const tbody3 = document.getElementById('alertsBody');
+  if (alerts.length === 0) { tbody3.innerHTML = '<tr><td colspan="2" class="empty-state">No alerts</td></tr>'; }
+  else {
+    tbody3.innerHTML = alerts.map((a, i) => `<tr><td style="color:#94a3b8;">${i+1}</td><td>${a}</td></tr>`).join('');
+  }
+}
+
+// ============================================================
+// COMPANIES
+// ============================================================
+async function loadCompanies() {
+  const data = await api('/api/companies');
+  const list = data?.data || data || [];
+  STATE.allCompanies = Array.isArray(list) ? list : [];
+  applyCompanyFilter();
+}
+
+function applyCompanyFilter() {
+  const search = (document.getElementById('companySearch').value || '').toLowerCase();
+  const filtered = STATE.allCompanies.filter(c =>
+    !search || (c.companyNameEn || '').toLowerCase().includes(search) || (c.companyNameAr || '').toLowerCase().includes(search) || (c.companyCode || '').toLowerCase().includes(search)
+  );
+  document.getElementById('companyCount').textContent = filtered.length + ' companies';
+  const tbody = document.getElementById('companiesBody');
+  if (filtered.length === 0) { tbody.innerHTML = '<tr><td colspan="6" class="empty-state">No companies found</td></tr>'; return; }
+  tbody.innerHTML = filtered.map(c => `<tr>
+    <td style="color:#94a3b8;">${c.companyId || c.CompanyId || '-'}</td>
+    <td><strong>${c.companyNameEn || c.CompanyNameEn || '-'}</strong></td>
+    <td>${c.companyNameAr || c.CompanyNameAr || '-'}</td>
+    <td>${c.companyCode || c.CompanyCode || '-'}</td>
+    <td><span class="status-badge ${c.isActive || c.IsActive ? 'active' : 'inactive'}">${c.isActive || c.IsActive ? 'Active' : 'Inactive'}</span></td>
+    <td><div class="action-cell">
+      <button class="btn btn-sm btn-outline" onclick="openCompanySystems(${c.companyId || c.CompanyId})">Systems</button>
+      <button class="btn btn-sm btn-outline" onclick="editCompany(${c.companyId || c.CompanyId})">Edit</button>
+    </div></td>
+  </tr>`).join('');
+}
+
+// Company Systems Modal
+async function openCompanySystems(companyId) {
+  const company = STATE.allCompanies.find(c => (c.companyId || c.CompanyId) === companyId);
+  if (!company) return showToast('Company not found', 'error');
+
+  let systems = STATE.allSystems;
+  if (systems.length === 0) {
+    try { systems = await api('/api/permissions/systems') || []; STATE.allSystems = systems; } catch (e) { systems = []; }
+  }
+
+  const companyName = company.companyNameEn || company.CompanyNameEn || 'Company #' + companyId;
+  let html = `<p style="margin-bottom:1rem;color:#64748b;">Manage system access for <strong>${companyName}</strong></p>
+  <table style="font-size:.8rem;"><thead><tr><th>System</th><th>Status</th><th>Action</th></tr></thead><tbody>`;
+
+  for (const sys of systems) {
+    const sysId = sys.systemId || sys.SystemId || sys.id || sys.Id;
+    if (!sysId) continue;
+    const sysName = sys.systemNameEn || sys.SystemNameEn || sys.systemName || sys.SystemName || 'System #' + sysId;
+    // Check current status by fetching company systems from the permission controller
+    let isAllowed = null;
+    html += `<tr>
+      <td><strong>${sysName}</strong></td>
+      <td id="cs_${companyId}_${sysId}"><span class="status-badge" style="background:#e2e8f0;color:#64748b;">Loading...</span></td>
+      <td>
+        <button class="btn btn-sm btn-success" onclick="setCompanySystem(${companyId},${sysId},true,this)" id="cg_${companyId}_${sysId}" style="display:none;">Grant</button>
+        <button class="btn btn-sm btn-danger" onclick="setCompanySystem(${companyId},${sysId},false,this)" id="cr_${companyId}_${sysId}" style="display:none;">Revoke</button>
+      </td>
+    </tr>`;
+  }
+  html += '</tbody></table>';
+  html += `<p style="margin-top:.75rem;font-size:.75rem;color:#94a3b8;">Note: Granting system access at company level does not auto-grant to branches. Use Branches tab for branch-level access.</p>`;
+
+  showModal('Company Systems - ' + companyName, html, '');
+  // Fetch status for each system
+  for (const sys of systems) {
+    const sysId = sys.systemId || sys.SystemId || sys.id || sys.Id;
+    if (!sysId) continue;
+    fetchCompanySystemStatus(companyId, sysId);
+  }
+}
+
+async function fetchCompanySystemStatus(companyId, systemId) {
+  // We can't directly query company systems, so we assume not granted unless told otherwise
+  // The PUT endpoint toggles, so we show grant/revoke buttons based on current assumption
+  const statusEl = document.getElementById(`cs_${companyId}_${systemId}`);
+  const grantBtn = document.getElementById(`cg_${companyId}_${systemId}`);
+  const revokeBtn = document.getElementById(`cr_${companyId}_${systemId}`);
+  if (statusEl && grantBtn && revokeBtn) {
+    statusEl.innerHTML = '<span class="status-badge blocked">Unknown</span>';
+    grantBtn.style.display = 'inline-block';
+  }
+}
+
+async function setCompanySystem(companyId, systemId, isAllowed, btn) {
+  const label = isAllowed ? 'Grant' : 'Revoke';
+  btn.disabled = true; btn.textContent = label + 'ing...';
+  try {
+    await api(`/api/permissions/companies/${companyId}/systems/${systemId}?isAllowed=${isAllowed}`, { method: 'PUT' });
+    const statusEl = document.getElementById(`cs_${companyId}_${systemId}`);
+    const grantBtn = document.getElementById(`cg_${companyId}_${systemId}`);
+    const revokeBtn = document.getElementById(`cr_${companyId}_${systemId}`);
+    if (statusEl) statusEl.innerHTML = `<span class="status-badge ${isAllowed ? 'allowed' : 'blocked'}">${isAllowed ? 'Allowed' : 'Blocked'}</span>`;
+    if (grantBtn) grantBtn.style.display = isAllowed ? 'none' : 'inline-block';
+    if (revokeBtn) revokeBtn.style.display = isAllowed ? 'inline-block' : 'none';
+    showToast(`System ${label}ed for company`, 'success');
+  } catch (err) { showToast(err.message, 'error'); }
+  finally { if (btn) { btn.disabled = false; btn.textContent = label; } }
+}
+
+async function editCompany(companyId) {
+  const c = STATE.allCompanies.find(x => (x.companyId || x.CompanyId) === companyId);
+  if (!c) return;
+  const html = `
+    <div class="form-row">
+      <div><label>Name (AR)</label><input type="text" id="ec_nameAr" value="${c.companyNameAr || c.CompanyNameAr || ''}"></div>
+      <div><label>Name (EN)</label><input type="text" id="ec_nameEn" value="${c.companyNameEn || c.CompanyNameEn || ''}"></div>
+    </div>
+    <div class="form-row">
+      <div><label>Code</label><input type="text" id="ec_code" value="${c.companyCode || c.CompanyCode || ''}"></div>
+      <div><label>Status</label><select id="ec_active"><option value="true" ${c.isActive || c.IsActive ? 'selected' : ''}>Active</option><option value="false" ${!c.isActive && !c.IsActive ? 'selected' : ''}>Inactive</option></select></div>
+    </div>`;
+  showModal('Edit Company', html, `<button class="btn btn-outline btn-sm" onclick="closeGenericModal()">Cancel</button><button class="btn btn-primary btn-sm" onclick="saveCompany(${companyId})">Save</button>`);
+}
+
+async function saveCompany(id) {
+  const dto = {
+    companyNameAr: document.getElementById('ec_nameAr').value,
+    companyNameEn: document.getElementById('ec_nameEn').value,
+    companyCode: document.getElementById('ec_code').value,
+  };
+  try {
+    await api(`/api/companies/${id}`, { method: 'PUT', body: JSON.stringify(dto) });
+    showToast('Company updated', 'success');
+    closeGenericModal();
+    loadCompanies();
+  } catch (err) { showToast(err.message, 'error'); }
+}
+
+function openCompanyModal() {
+  const html = `
+    <div class="form-row">
+      <div><label>Name (AR)</label><input type="text" id="nc_nameAr"></div>
+      <div><label>Name (EN)</label><input type="text" id="nc_nameEn"></div>
+    </div>
+    <div class="form-row">
+      <div><label>Code</label><input type="text" id="nc_code"></div>
+      <div><label>Currency ID</label><input type="number" id="nc_currId"></div>
+    </div>
+    <label>Branch Name (EN)</label><input type="text" id="nc_brNameEn" placeholder="Default Branch">
+    <label>Branch Name (AR)</label><input type="text" id="nc_brNameAr" placeholder="Default Branch">
+    <div class="form-row">
+      <div><label>Branch Phone</label><input type="text" id="nc_brPhone"></div>
+      <div><label>Branch Email</label><input type="email" id="nc_brEmail"></div>
+    </div>`;
+  showModal('New Company', html, `<button class="btn btn-outline btn-sm" onclick="closeGenericModal()">Cancel</button><button class="btn btn-primary btn-sm" onclick="createCompany()">Create</button>`);
+}
+
+async function createCompany() {
+  const dto = {
+    companyNameAr: document.getElementById('nc_nameAr').value,
+    companyNameEn: document.getElementById('nc_nameEn').value,
+    companyCode: document.getElementById('nc_code').value,
+    currId: parseInt(document.getElementById('nc_currId').value) || null,
+    branchNameEn: document.getElementById('nc_brNameEn').value || 'Default Branch',
+    branchNameAr: document.getElementById('nc_brNameAr').value || 'Default Branch',
+    branchPhone: document.getElementById('nc_brPhone').value || null,
+    branchEmail: document.getElementById('nc_brEmail').value || null,
+  };
+  try {
+    await api('/api/companies', { method: 'POST', body: JSON.stringify(dto) });
+    showToast('Company created', 'success');
+    closeGenericModal();
+    loadCompanies();
+  } catch (err) { showToast(err.message, 'error'); }
+}
+
+// ============================================================
+// BRANCHES
+// ============================================================
+async function loadBranches() {
+  const data = await api('/api/branches');
+  const list = data?.data || data || [];
+  STATE.allBranches = Array.isArray(list) ? list : [];
+
+  // Populate company filter
+  const sel = document.getElementById('branchCompanyFilter');
+  const companies = STATE.allCompanies;
+  const currentVal = sel.value;
+  sel.innerHTML = '<option value="">All Companies</option>' + companies.map(c => `<option value="${c.companyId || c.CompanyId}">${c.companyNameEn || c.CompanyNameEn || ''}</option>`).join('');
+  sel.value = currentVal;
+
+  applyBranchFilter();
+}
+
+function applyBranchFilter() {
+  const search = (document.getElementById('branchSearch').value || '').toLowerCase();
+  const companyId = document.getElementById('branchCompanyFilter').value;
+  let filtered = STATE.allBranches;
+  if (companyId) filtered = filtered.filter(b => (b.companyId || b.CompanyId) == companyId);
+  if (search) filtered = filtered.filter(b => (b.branchNameEn || '').toLowerCase().includes(search) || (b.branchNameAr || '').toLowerCase().includes(search));
+
+  document.getElementById('branchCount').textContent = filtered.length + ' branches';
+  const tbody = document.getElementById('branchesBody');
+  if (filtered.length === 0) { tbody.innerHTML = '<tr><td colspan="7" class="empty-state">No branches found</td></tr>'; return; }
+  tbody.innerHTML = filtered.map(b => {
+    const comp = STATE.allCompanies.find(c => (c.companyId || c.CompanyId) === (b.companyId || b.CompanyId));
+    return `<tr>
+      <td style="color:#94a3b8;">${b.branchId || b.BranchId || '-'}</td>
+      <td><strong>${b.branchNameEn || b.BranchNameEn || '-'}</strong></td>
+      <td>${comp ? (comp.companyNameEn || comp.CompanyNameEn) : (b.companyId || b.CompanyId) || '-'}</td>
+      <td>${b.phone || b.Phone || '-'}</td>
+      <td>${b.isHeadBranch || b.IsHeadBranch ? '<span class="status-badge active">Yes</span>' : 'No'}</td>
+      <td><span class="status-badge ${b.isActive || b.IsActive ? 'active' : 'inactive'}">${b.isActive || b.IsActive ? 'Active' : 'Inactive'}</span></td>
+      <td><div class="action-cell">
+        <button class="btn btn-sm btn-outline" onclick="openBranchSystems(${b.branchId || b.BranchId})">Systems</button>
+        <button class="btn btn-sm btn-outline" onclick="editBranch(${b.branchId || b.BranchId})">Edit</button>
+      </div></td>
+    </tr>`;
+  }).join('');
+}
+
+// Branch Systems Modal
+async function openBranchSystems(branchId) {
+  const branch = STATE.allBranches.find(b => (b.branchId || b.BranchId) === branchId);
+  if (!branch) return showToast('Branch not found', 'error');
+
+  const branchName = branch.branchNameEn || b.BranchNameEn || 'Branch #' + branchId;
+  let html = `<p style="margin-bottom:1rem;color:#64748b;">Manage system & screen access for <strong>${branchName}</strong></p>`;
+
+  // Systems section
+  html += `<h4 style="font-size:.85rem;margin-bottom:.5rem;">System Access</h4>
+  <table style="font-size:.8rem;margin-bottom:1rem;"><thead><tr><th>System</th><th>Status</th><th>Action</th></tr></thead><tbody id="branchSysBody_${branchId}">
+    <tr><td colspan="3" class="empty-state">Loading...</td></tr>
+  </tbody></table>`;
+
+  // Screens section
+  html += `<h4 style="font-size:.85rem;margin-bottom:.5rem;">Screen Permissions</h4>
+  <table style="font-size:.8rem;"><thead><tr><th>Screen</th><th>System</th><th>Status</th><th>Action</th></tr></thead><tbody id="branchScrBody_${branchId}">
+    <tr><td colspan="4" class="empty-state">Loading...</td></tr>
+  </tbody></table>`;
+
+  showModal('Branch Access - ' + branchName, html, `<button class="btn btn-outline btn-sm" onclick="closeGenericModal()">Close</button>`);
+
+  // Fetch systems
+  try {
+    const sysData = await api(`/api/superadmin/branches/${branchId}/systems`);
+    const sysList = sysData?.data || sysData || [];
+    const tbody1 = document.getElementById('branchSysBody_' + branchId);
+    const allSys = STATE.allSystems;
+    if (allSys.length === 0) {
+      const s = await api('/api/superadmin/branches/systems') || [];
+      STATE.allSystems = s;
+    }
+    const systems = allSys.length > 0 ? allSys : sysList;
+
+    tbody1.innerHTML = systems.map(sys => {
+      const sysId = sys.systemId || sys.SystemId || sys.id || sys.Id;
+      const sysName = sys.systemNameEn || sys.SystemNameEn || sys.systemName || sys.SystemName || '#' + sysId;
+      const perm = sysList.find(p => (p.systemId || p.SystemId) === sysId);
+      const isAllowed = perm ? (perm.isAllowed !== false) : false;
+      return `<tr>
+        <td><strong>${sysName}</strong></td>
+        <td><span class="status-badge ${isAllowed ? 'allowed' : 'blocked'}">${isAllowed ? 'Allowed' : 'Blocked'}</span></td>
+        <td>
+          <button class="btn btn-xs ${isAllowed ? 'btn-danger' : 'btn-success'}" onclick="${isAllowed ? `revokeBranchSystem(${branchId},${sysId})` : `grantBranchSystem(${branchId},${sysId})`}">${isAllowed ? 'Revoke' : 'Grant'}</button>
+          <button class="btn btn-xs btn-outline" onclick="grantBranchSystemWithScreens(${branchId},${sysId})" ${isAllowed ? 'disabled' : ''}>Grant + Screens</button>
+        </td>
+      </tr>`;
+    }).join('');
+
+    // Fetch screens
+    const scrData = await api(`/api/superadmin/branches/${branchId}/screens`);
+    const scrList = scrData?.data || scrData || [];
+    const tbody2 = document.getElementById('branchScrBody_' + branchId);
+    const allScr = STATE.allScreens;
+    if (allScr.length === 0) {
+      const s = await api('/api/superadmin/branches/screens') || [];
+      STATE.allScreens = s;
+    }
+    const screens = allScr.length > 0 ? allScr : scrList;
+
+    tbody2.innerHTML = screens.map(scr => {
+      const scrId = scr.screenId || scr.ScreenId || scr.id || scr.Id;
+      const scrName = scr.screenName || scr.ScreenName || scr.screenNameEn || scr.ScreenNameE || '#' + scrId;
+      const sysName = scr.systemName || scr.SystemName || '-';
+      const perm = scrList.find(p => (p.screenId || p.ScreenId || p.id || p.Id) === scrId);
+      const isAllowed = perm ? (perm.isAllowed !== false) : false;
+      return `<tr>
+        <td><strong>${scrName}</strong></td>
+        <td>${sysName}</td>
+        <td><span class="status-badge ${isAllowed ? 'allowed' : 'blocked'}">${isAllowed ? 'Allowed' : 'Blocked'}</span></td>
+        <td>
+          <button class="btn btn-xs ${isAllowed ? 'btn-danger' : 'btn-success'}" onclick="${isAllowed ? `revokeBranchScreen(${branchId},${scrId})` : `grantBranchScreen(${branchId},${scrId})`}">${isAllowed ? 'Revoke' : 'Grant'}</button>
+        </td>
+      </tr>`;
+    }).join('');
+  } catch (err) { showToast(err.message, 'error'); }
+}
+
+async function grantBranchSystem(branchId, systemId) {
+  try {
+    await api(`/api/superadmin/branches/${branchId}/systems/${systemId}/grant`, { method: 'POST', body: JSON.stringify({ grantedBy: 0, notes: 'Granted via dashboard' }) });
+    showToast('System granted', 'success');
+    openBranchSystems(branchId);
+  } catch (err) { showToast(err.message, 'error'); }
+}
+async function revokeBranchSystem(branchId, systemId) {
+  try {
+    await api(`/api/superadmin/branches/${branchId}/systems/${systemId}/revoke`, { method: 'POST' });
+    showToast('System revoked', 'success');
+    openBranchSystems(branchId);
+  } catch (err) { showToast(err.message, 'error'); }
+}
+async function grantBranchSystemWithScreens(branchId, systemId) {
+  try {
+    await api(`/api/superadmin/branches/${branchId}/systems/${systemId}/grant-with-screens`, { method: 'POST', body: JSON.stringify({ grantedBy: 0, notes: 'Granted via dashboard' }) });
+    showToast('System + screens granted', 'success');
+    openBranchSystems(branchId);
+  } catch (err) { showToast(err.message, 'error'); }
+}
+async function grantBranchScreen(branchId, screenId) {
+  try {
+    await api(`/api/superadmin/branches/${branchId}/screens/${screenId}/grant`, { method: 'POST', body: JSON.stringify({ grantedBy: 0, notes: 'Granted via dashboard' }) });
+    showToast('Screen granted', 'success');
+    openBranchSystems(branchId);
+  } catch (err) { showToast(err.message, 'error'); }
+}
+async function revokeBranchScreen(branchId, screenId) {
+  try {
+    await api(`/api/superadmin/branches/${branchId}/screens/${screenId}/revoke`, { method: 'POST' });
+    showToast('Screen revoked', 'success');
+    openBranchSystems(branchId);
+  } catch (err) { showToast(err.message, 'error'); }
+}
+
+async function editBranch(branchId) {
+  const b = STATE.allBranches.find(x => (x.branchId || x.BranchId) === branchId);
+  if (!b) return;
+  const compOpts = STATE.allCompanies.map(c => `<option value="${c.companyId || c.CompanyId}" ${(c.companyId || c.CompanyId) === (b.companyId || b.CompanyId) ? 'selected' : ''}>${c.companyNameEn || c.CompanyNameEn || ''}</option>`).join('');
+  const html = `
+    <div class="form-row">
+      <div><label>Name (AR)</label><input type="text" id="eb_nameAr" value="${b.branchNameAr || b.BranchNameAr || ''}"></div>
+      <div><label>Name (EN)</label><input type="text" id="eb_nameEn" value="${b.branchNameEn || b.BranchNameEn || ''}"></div>
+    </div>
+    <div class="form-row">
+      <div><label>Company</label><select id="eb_companyId">${compOpts}</select></div>
+      <div><label>Phone</label><input type="text" id="eb_phone" value="${b.phone || b.Phone || ''}"></div>
+    </div>`;
+  showModal('Edit Branch', html, `<button class="btn btn-outline btn-sm" onclick="closeGenericModal()">Cancel</button><button class="btn btn-primary btn-sm" onclick="saveBranch(${branchId})">Save</button>`);
+}
+
+async function saveBranch(id) {
+  const dto = {
+    branchNameAr: document.getElementById('eb_nameAr').value,
+    branchNameEn: document.getElementById('eb_nameEn').value,
+    companyId: parseInt(document.getElementById('eb_companyId').value) || null,
+    phone: document.getElementById('eb_phone').value || null,
+  };
+  try {
+    await api(`/api/branches/${id}`, { method: 'PUT', body: JSON.stringify(dto) });
+    showToast('Branch updated', 'success');
+    closeGenericModal();
+    loadBranches();
+  } catch (err) { showToast(err.message, 'error'); }
+}
+
+function openBranchModal() {
+  const compOpts = STATE.allCompanies.map(c => `<option value="${c.companyId || c.CompanyId}">${c.companyNameEn || c.CompanyNameEn || ''}</option>`).join('');
+  const html = `
+    <div class="form-row">
+      <div><label>Name (AR)</label><input type="text" id="nb_nameAr"></div>
+      <div><label>Name (EN)</label><input type="text" id="nb_nameEn"></div>
+    </div>
+    <div class="form-row">
+      <div><label>Company</label><select id="nb_companyId">${compOpts}</select></div>
+      <div><label>Phone</label><input type="text" id="nb_phone"></div>
+    </div>
+    <div class="form-row">
+      <div><label>Email</label><input type="email" id="nb_email"></div>
+      <div><label>Mobile</label><input type="text" id="nb_mobile"></div>
+    </div>`;
+  showModal('New Branch', html, `<button class="btn btn-outline btn-sm" onclick="closeGenericModal()">Cancel</button><button class="btn btn-primary btn-sm" onclick="createBranch()">Create</button>`);
+}
+
+async function createBranch() {
+  const dto = {
+    branchNameAr: document.getElementById('nb_nameAr').value,
+    branchNameEn: document.getElementById('nb_nameEn').value,
+    companyId: parseInt(document.getElementById('nb_companyId').value) || null,
+    phone: document.getElementById('nb_phone').value || null,
+    email: document.getElementById('nb_email').value || null,
+    mobile: document.getElementById('nb_mobile').value || null,
+  };
+  try {
+    await api('/api/branches', { method: 'POST', body: JSON.stringify(dto) });
+    showToast('Branch created', 'success');
+    closeGenericModal();
+    loadBranches();
+  } catch (err) { showToast(err.message, 'error'); }
+}
+
+// ============================================================
+// ROLES
+// ============================================================
+async function loadRoles() {
+  const data = await api('/api/roles');
+  const list = data?.data || data || [];
+  STATE.allRoles = Array.isArray(list) ? list : [];
+  applyRoleFilter();
+}
+
+function applyRoleFilter() {
+  const list = STATE.allRoles;
+  document.getElementById('roleCount').textContent = list.length + ' roles';
+  const tbody = document.getElementById('rolesBody');
+  if (list.length === 0) { tbody.innerHTML = '<tr><td colspan="6" class="empty-state">No roles found</td></tr>'; return; }
+  tbody.innerHTML = list.map(r => `<tr>
+    <td style="color:#94a3b8;">${r.roleId || r.RoleId || '-'}</td>
+    <td><strong>${r.roleNameEn || r.RoleNameEn || '-'}</strong></td>
+    <td>${r.roleNameAr || r.RoleNameAr || '-'}</td>
+    <td>${r.note || r.Note || '-'}</td>
+    <td><span class="status-badge ${r.isActive || r.IsActive ? 'active' : 'inactive'}">${r.isActive || r.IsActive ? 'Active' : 'Inactive'}</span></td>
+    <td><div class="action-cell">
+      <button class="btn btn-sm btn-outline" onclick="openRolePermissions(${r.roleId || r.RoleId})">Permissions</button>
+      <button class="btn btn-sm btn-outline" onclick="editRole(${r.roleId || r.RoleId})">Edit</button>
+      <button class="btn btn-sm btn-danger" onclick="deleteRole(${r.roleId || r.RoleId})">Delete</button>
+    </div></td>
+  </tr>`).join('');
+}
+
+async function openRolePermissions(roleId) {
+  const role = STATE.allRoles.find(r => (r.roleId || r.RoleId) === roleId);
+  const roleName = role ? (role.roleNameEn || role.RoleNameEn) : 'Role #' + roleId;
+
+  let systems = STATE.allSystems;
+  if (systems.length === 0) { try { systems = await api('/api/permissions/systems') || []; STATE.allSystems = systems; } catch (e) { systems = []; } }
+
+  let html = `<p style="margin-bottom:1rem;color:#64748b;">Set screen permissions for <strong>${roleName}</strong></p>`;
+
+  for (const sys of systems) {
+    const sysId = sys.systemId || sys.SystemId || sys.id || sys.Id;
+    const sysName = sys.systemNameEn || sys.SystemNameEn || sys.systemName || sys.SystemName || '#' + sysId;
+
+    // Fetch screens
+    let screens = [];
+    try { screens = await api(`/api/permissions/systems/${sysId}/screens`) || []; } catch (e) { screens = []; }
+    let screenData = screens?.data || screens || [];
+
+    // Fetch current permissions
+    let perms = [];
+    try { perms = await api(`/api/permissions/roles/${roleId}/permissions`) || []; } catch (e) { perms = []; }
+    const permList = perms?.data || perms || [];
+
+    if (screenData.length === 0) continue;
+    html += `<h4 style="font-size:.82rem;margin:.75rem 0 .35rem;padding-bottom:.25rem;border-bottom:1px solid #e2e8f0;">${sysName}</h4>`;
+    html += `<table style="font-size:.78rem;"><thead><tr><th>Screen</th><th>View</th><th>Insert</th><th>Update</th><th>Delete</th></tr></thead><tbody>`;
+    for (const scr of screenData) {
+      const scrId = scr.screenId || scr.ScreenId;
+      const scrName = scr.screenNameEn || scr.ScreenNameEn || scr.screenCode || scr.ScreenCode || '#' + scrId;
+      const p = permList.find(x => (x.screenId || x.ScreenId) === scrId);
+      html += `<tr>
+        <td><strong>${scrName}</strong></td>
+        <td><input type="checkbox" class="rp_${roleId}" data-screen="${scrId}" data-perm="canView" ${p?.canView ? 'checked' : ''}></td>
+        <td><input type="checkbox" class="rp_${roleId}" data-screen="${scrId}" data-perm="canInsert" ${p?.canInsert ? 'checked' : ''}></td>
+        <td><input type="checkbox" class="rp_${roleId}" data-screen="${scrId}" data-perm="canUpdate" ${p?.canUpdate ? 'checked' : ''}></td>
+        <td><input type="checkbox" class="rp_${roleId}" data-screen="${scrId}" data-perm="canDelete" ${p?.canDelete ? 'checked' : ''}></td>
+      </tr>`;
+    }
+    html += '</tbody></table>';
+  }
+
+  html += `<div style="margin-top:1rem;padding-top:1rem;border-top:1px solid #e2e8f0;">
+    <button class="btn btn-primary btn-sm" onclick="saveRolePermissions(${roleId})">Save All Permissions</button>
+    <span style="font-size:.75rem;color:#94a3b8;margin-left:.5rem;">Changes are saved per-screen individually</span>
+  </div>`;
+
+  showModal('Role Permissions - ' + roleName, html, `<button class="btn btn-outline btn-sm" onclick="closeGenericModal()">Close</button>`);
+}
+
+async function saveRolePermissions(roleId) {
+  const checkboxes = document.querySelectorAll(`.rp_${roleId}`);
+  const screens = new Map();
+  checkboxes.forEach(cb => {
+    const screenId = parseInt(cb.dataset.screen);
+    const perm = cb.dataset.perm;
+    if (!screens.has(screenId)) screens.set(screenId, {});
+    screens.get(screenId)[perm] = cb.checked;
+  });
+
+  let success = 0;
+  let errors = 0;
+  for (const [screenId, perms] of screens) {
+    try {
+      await api(`/api/permissions/roles/${roleId}/permissions`, {
+        method: 'PUT',
+        body: JSON.stringify({ roleId, screenId, canView: !!perms.canView, canInsert: !!perms.canInsert, canUpdate: !!perms.canUpdate, canDelete: !!perms.canDelete })
+      });
+      success++;
+    } catch (e) { errors++; }
+  }
+  showToast(`Permissions saved: ${success} screens updated, ${errors} errors`, errors > 0 ? 'error' : 'success');
+}
+
+function openRoleModal() {
+  const html = `
+    <div class="form-row">
+      <div><label>Name (AR)</label><input type="text" id="nr_nameAr"></div>
+      <div><label>Name (EN)</label><input type="text" id="nr_nameEn"></div>
+    </div>
+    <label>Note</label><textarea id="nr_note" rows="2"></textarea>`;
+  showModal('New Role', html, `<button class="btn btn-outline btn-sm" onclick="closeGenericModal()">Cancel</button><button class="btn btn-primary btn-sm" onclick="createRole()">Create</button>`);
+}
+
+async function createRole() {
+  const dto = {
+    roleNameAr: document.getElementById('nr_nameAr').value,
+    roleNameEn: document.getElementById('nr_nameEn').value,
+    note: document.getElementById('nr_note').value || null,
+  };
+  try {
+    await api('/api/roles', { method: 'POST', body: JSON.stringify(dto) });
+    showToast('Role created', 'success');
+    closeGenericModal();
+    loadRoles();
+  } catch (err) { showToast(err.message, 'error'); }
+}
+
+async function editRole(roleId) {
+  const r = STATE.allRoles.find(x => (x.roleId || x.RoleId) === roleId);
+  if (!r) return;
+  const html = `
+    <div class="form-row">
+      <div><label>Name (AR)</label><input type="text" id="er_nameAr" value="${r.roleNameAr || r.RoleNameAr || ''}"></div>
+      <div><label>Name (EN)</label><input type="text" id="er_nameEn" value="${r.roleNameEn || r.RoleNameEn || ''}"></div>
+    </div>
+    <label>Note</label><textarea id="er_note" rows="2">${r.note || r.Note || ''}</textarea>`;
+  showModal('Edit Role', html, `<button class="btn btn-outline btn-sm" onclick="closeGenericModal()">Cancel</button><button class="btn btn-primary btn-sm" onclick="saveRole(${roleId})">Save</button>`);
+}
+
+async function saveRole(id) {
+  const dto = {
+    roleNameAr: document.getElementById('er_nameAr').value,
+    roleNameEn: document.getElementById('er_nameEn').value,
+    note: document.getElementById('er_note').value || null,
+  };
+  try {
+    await api(`/api/roles/${id}`, { method: 'PUT', body: JSON.stringify(dto) });
+    showToast('Role updated', 'success');
+    closeGenericModal();
+    loadRoles();
+  } catch (err) { showToast(err.message, 'error'); }
+}
+
+async function deleteRole(id) {
+  if (!confirm('Delete this role?')) return;
+  try {
+    await api(`/api/roles/${id}`, { method: 'DELETE' });
+    showToast('Role deleted', 'success');
+    loadRoles();
+  } catch (err) { showToast(err.message, 'error'); }
+}
+
+// ============================================================
+// USERS
+// ============================================================
+async function loadUsers() {
+  const data = await api('/api/users');
+  const list = data?.data || data || [];
+  STATE.allUsers = Array.isArray(list) ? list : [];
+
+  // Populate company filter for users (via allCompanies)
+  const sel = document.getElementById('userCompanyFilter');
+  const currentVal = sel.value;
+  sel.innerHTML = '<option value="">All Companies</option>' + STATE.allCompanies.map(c => `<option value="${c.companyId || c.CompanyId}">${c.companyNameEn || c.CompanyNameEn || ''}</option>`).join('');
+  sel.value = currentVal;
+
+  applyUserFilter();
+}
+
+function applyUserFilter() {
+  const search = (document.getElementById('userSearch').value || '').toLowerCase();
+  const companyId = document.getElementById('userCompanyFilter').value;
+  const branchId = document.getElementById('userBranchFilter').value;
+  let filtered = STATE.allUsers;
+  if (companyId) {
+    const compBranches = STATE.allBranches.filter(b => (b.companyId || b.CompanyId) == companyId).map(b => b.branchId || b.BranchId);
+    filtered = filtered.filter(u => compBranches.includes(u.branchId || u.BranchId));
+  }
+  if (branchId) filtered = filtered.filter(u => (u.branchId || u.BranchId) == branchId);
+  if (search) filtered = filtered.filter(u => (u.userName || '').toLowerCase().includes(search) || (u.nameEn || u.NameEn || '').toLowerCase().includes(search) || (u.nameAr || u.NameAr || '').toLowerCase().includes(search));
+
+  document.getElementById('userCount').textContent = filtered.length + ' users';
+  const tbody = document.getElementById('usersBody');
+  if (filtered.length === 0) { tbody.innerHTML = '<tr><td colspan="8" class="empty-state">No users found</td></tr>'; return; }
+
+  // Find role names and branch names
+  tbody.innerHTML = filtered.map(u => {
+    const role = STATE.allRoles.find(r => (r.roleId || r.RoleId) === (u.roleId || u.RoleId));
+    const branch = STATE.allBranches.find(b => (b.branchId || b.BranchId) === (u.branchId || u.BranchId));
+    const company = branch ? STATE.allCompanies.find(c => (c.companyId || c.CompanyId) === (branch.companyId || b.CompanyId)) : null;
+    return `<tr>
+      <td style="color:#94a3b8;">${u.userId || u.UserId || '-'}</td>
+      <td><strong>${u.userName || u.UserName || '-'}</strong></td>
+      <td>${u.nameEn || u.NameEn || '-'}</td>
+      <td>${role ? (role.roleNameEn || role.RoleNameEn) : (u.roleId || u.RoleId) || '-'}</td>
+      <td>${branch ? (branch.branchNameEn || branch.BranchNameEn) : (u.branchId || u.BranchId) || '-'}</td>
+      <td>${company ? (company.companyNameEn || company.CompanyNameEn) : '-'}</td>
+      <td><span class="status-badge ${u.isActive || u.IsActive ? 'active' : 'inactive'}">${u.isActive || u.IsActive ? 'Active' : 'Inactive'}</span></td>
+      <td><div class="action-cell">
+        <button class="btn btn-sm btn-outline" onclick="openUserRoles(${u.userId || u.UserId})">Roles</button>
+        <button class="btn btn-sm btn-outline" onclick="editUser(${u.userId || u.UserId})">Edit</button>
+        <button class="btn btn-sm btn-danger" onclick="deleteUser(${u.userId || u.UserId})">Delete</button>
+        <button class="btn btn-sm btn-outline" onclick="resetUserPassword(${u.userId || u.UserId})">Reset Pwd</button>
+      </div></td>
+    </tr>`;
+  }).join('');
+}
+
+// User Roles Modal
+async function openUserRoles(userId) {
+  const user = STATE.allUsers.find(u => (u.userId || u.UserId) === userId);
+  const userName = user ? (user.userName || user.UserName) : 'User #' + userId;
+
+  let html = `<p style="margin-bottom:.75rem;color:#64748b;">Manage role assignments for <strong>${userName}</strong></p>`;
+
+  // Existing roles
+  let userRoles = [];
+  try { userRoles = await api(`/api/permissions/users/${userId}/roles`) || []; } catch (e) { userRoles = []; }
+  const roleList = userRoles?.data || userRoles || [];
+
+  html += `<h4 style="font-size:.82rem;margin-bottom:.5rem;">Assigned Roles</h4>
+  <table style="font-size:.8rem;margin-bottom:1rem;"><thead><tr><th>Role</th><th>Assigned Date</th><th>Action</th></tr></thead><tbody id="userRolesBody_${userId}">`;
+  if (roleList.length === 0) {
+    html += `<tr><td colspan="3" class="empty-state">No roles assigned</td></tr>`;
+  } else {
+    roleList.forEach(r => {
+      html += `<tr>
+        <td><strong>${r.roleNameEn || r.RoleNameEn || '#' + r.roleId}</strong></td>
+        <td style="white-space:nowrap;">${r.assignedDate || r.AssignedDate ? new Date(r.assignedDate || r.AssignedDate).toLocaleDateString() : '-'}</td>
+        <td><button class="btn btn-xs btn-danger" onclick="removeUserRole(${userId},${r.roleId || r.RoleId})">Remove</button></td>
+      </tr>`;
+    });
+  }
+  html += '</tbody></table>';
+
+  // Available roles
+  const available = STATE.allRoles.filter(role => !roleList.find(r => (r.roleId || r.RoleId) === (role.roleId || role.RoleId)));
+  html += `<h4 style="font-size:.82rem;margin-bottom:.5rem;">Available Roles</h4>
+  <div style="display:flex;gap:.5rem;margin-bottom:.75rem;">
+    <select id="availRole_${userId}" style="flex:1;padding:.4rem .6rem;border:1px solid #e2e8f0;border-radius:6px;font-size:.8rem;">
+      <option value="">-- Select Role --</option>
+      ${available.map(r => `<option value="${r.roleId || r.RoleId}">${r.roleNameEn || r.RoleNameEn || ''}</option>`).join('')}
+    </select>
+    <button class="btn btn-primary btn-sm" onclick="assignUserRole(${userId})">Assign</button>
+  </div>`;
+
+  showModal('User Roles - ' + userName, html, `<button class="btn btn-outline btn-sm" onclick="closeGenericModal()">Close</button>`);
+}
+
+async function assignUserRole(userId) {
+  const roleId = document.getElementById('availRole_' + userId).value;
+  if (!roleId) return showToast('Select a role', 'error');
+  try {
+    await api(`/api/permissions/users/${userId}/roles/${roleId}`, { method: 'POST' });
+    showToast('Role assigned', 'success');
+    openUserRoles(userId);
+  } catch (err) { showToast(err.message, 'error'); }
+}
+
+async function removeUserRole(userId, roleId) {
+  if (!confirm('Remove this role from user?')) return;
+  try {
+    await api(`/api/permissions/users/${userId}/roles/${roleId}`, { method: 'DELETE' });
+    showToast('Role removed', 'success');
+    openUserRoles(userId);
+  } catch (err) { showToast(err.message, 'error'); }
+}
+
+function openUserModal() {
+  const branchOpts = STATE.allBranches.map(b => {
+    const comp = STATE.allCompanies.find(c => (c.companyId || c.CompanyId) === (b.companyId || b.CompanyId));
+    return `<option value="${b.branchId || b.BranchId}">${b.branchNameEn || b.BranchNameEn || ''}${comp ? ' (' + (comp.companyNameEn || comp.CompanyNameEn) + ')' : ''}</option>`;
+  }).join('');
+  const roleOpts = STATE.allRoles.map(r => `<option value="${r.roleId || r.RoleId}">${r.roleNameEn || r.RoleNameEn || ''}</option>`).join('');
+  const html = `
+    <div class="form-row">
+      <div><label>Username</label><input type="text" id="nu_userName"></div>
+      <div><label>Password</label><input type="password" id="nu_password"></div>
+    </div>
+    <div class="form-row">
+      <div><label>Name (AR)</label><input type="text" id="nu_nameAr"></div>
+      <div><label>Name (EN)</label><input type="text" id="nu_nameEn"></div>
+    </div>
+    <div class="form-row">
+      <div><label>Branch</label><select id="nu_branchId">${branchOpts}</select></div>
+      <div><label>Role</label><select id="nu_roleId">${roleOpts}</select></div>
+    </div>
+    <div class="form-row">
+      <div><label>Email</label><input type="email" id="nu_email"></div>
+      <div><label>Phone</label><input type="text" id="nu_phone"></div>
+    </div>`;
+  showModal('New User', html, `<button class="btn btn-outline btn-sm" onclick="closeGenericModal()">Cancel</button><button class="btn btn-primary btn-sm" onclick="createUser()">Create</button>`);
+}
+
+async function createUser() {
+  const dto = {
+    userName: document.getElementById('nu_userName').value,
+    password: document.getElementById('nu_password').value,
+    nameAr: document.getElementById('nu_nameAr').value,
+    nameEn: document.getElementById('nu_nameEn').value,
+    branchId: parseInt(document.getElementById('nu_branchId').value) || null,
+    roleId: parseInt(document.getElementById('nu_roleId').value) || null,
+    email: document.getElementById('nu_email').value || null,
+    phone: document.getElementById('nu_phone').value || null,
+  };
+  try {
+    await api('/api/users', { method: 'POST', body: JSON.stringify(dto) });
+    showToast('User created', 'success');
+    closeGenericModal();
+    loadUsers();
+  } catch (err) { showToast(err.message, 'error'); }
+}
+
+async function editUser(userId) {
+  const u = STATE.allUsers.find(x => (x.userId || x.UserId) === userId);
+  if (!u) return;
+  const branchOpts = STATE.allBranches.map(b => `<option value="${b.branchId || b.BranchId}" ${(b.branchId || b.BranchId) === (u.branchId || u.BranchId) ? 'selected' : ''}>${b.branchNameEn || b.BranchNameEn || ''}</option>`).join('');
+  const roleOpts = STATE.allRoles.map(r => `<option value="${r.roleId || r.RoleId}" ${(r.roleId || r.RoleId) === (u.roleId || u.RoleId) ? 'selected' : ''}>${r.roleNameEn || r.RoleNameEn || ''}</option>`).join('');
+  const html = `
+    <div class="form-row">
+      <div><label>Username</label><input type="text" id="eu_userName" value="${u.userName || u.UserName || ''}"></div>
+    </div>
+    <div class="form-row">
+      <div><label>Name (AR)</label><input type="text" id="eu_nameAr" value="${u.nameAr || u.NameAr || ''}"></div>
+      <div><label>Name (EN)</label><input type="text" id="eu_nameEn" value="${u.nameEn || u.NameEn || ''}"></div>
+    </div>
+    <div class="form-row">
+      <div><label>Branch</label><select id="eu_branchId">${branchOpts}</select></div>
+      <div><label>Role</label><select id="eu_roleId">${roleOpts}</select></div>
+    </div>
+    <div class="form-row">
+      <div><label>Email</label><input type="email" id="eu_email" value="${u.email || u.Email || ''}"></div>
+      <div><label>Phone</label><input type="text" id="eu_phone" value="${u.phone || u.Phone || ''}"></div>
+    </div>`;
+  showModal('Edit User', html, `<button class="btn btn-outline btn-sm" onclick="closeGenericModal()">Cancel</button><button class="btn btn-primary btn-sm" onclick="saveUser(${userId})">Save</button>`);
+}
+
+async function saveUser(id) {
+  const dto = {
+    userName: document.getElementById('eu_userName').value,
+    nameAr: document.getElementById('eu_nameAr').value,
+    nameEn: document.getElementById('eu_nameEn').value,
+    branchId: parseInt(document.getElementById('eu_branchId').value) || null,
+    roleId: parseInt(document.getElementById('eu_roleId').value) || null,
+    email: document.getElementById('eu_email').value || null,
+    phone: document.getElementById('eu_phone').value || null,
+  };
+  try {
+    await api(`/api/users/${id}`, { method: 'PUT', body: JSON.stringify(dto) });
+    showToast('User updated', 'success');
+    closeGenericModal();
+    loadUsers();
+  } catch (err) { showToast(err.message, 'error'); }
+}
+
+async function deleteUser(id) {
+  if (!confirm('Delete this user?')) return;
+  try {
+    await api(`/api/users/${id}`, { method: 'DELETE' });
+    showToast('User deleted', 'success');
+    loadUsers();
+  } catch (err) { showToast(err.message, 'error'); }
+}
+
+async function resetUserPassword(id) {
+  if (!confirm('Reset password for this user?')) return;
+  try {
+    const data = await api(`/api/users/${id}/reset-password`, { method: 'POST' });
+    const result = data?.data || data || {};
+    const tempPwd = result.temporaryPassword || result.TemporaryPassword || 'N/A';
+    alert('Temporary Password: ' + tempPwd + '\n\n' + (result.message || result.Message || ''));
+    showToast('Password reset successfully', 'success');
+  } catch (err) { showToast(err.message, 'error'); }
+}
+
+// ============================================================
+// SUPER ADMINS
+// ============================================================
+async function loadSuperAdmins() {
+  const data = await api('/api/superadmins');
+  const list = data?.data || data || [];
+  STATE.allSuperAdmins = Array.isArray(list) ? list : [];
+  document.getElementById('superAdminCount').textContent = list.length + ' super admins';
+  const tbody = document.getElementById('superAdminsBody');
+  if (list.length === 0) { tbody.innerHTML = '<tr><td colspan="8" class="empty-state">No super admins found</td></tr>'; return; }
+  tbody.innerHTML = list.map(s => `<tr>
+    <td style="color:#94a3b8;">${s.superAdminId || s.SuperAdminId || '-'}</td>
+    <td><strong>${s.userName || s.UserName || '-'}</strong></td>
+    <td>${s.nameEn || s.NameEn || '-'}</td>
+    <td>${s.email || s.Email || '-'}</td>
+    <td>${s.phone || s.Phone || '-'}</td>
+    <td>${s.twoFaEnabled || s.TwoFaEnabled ? '<span class="status-badge active">ON</span>' : '<span class="status-badge inactive">OFF</span>'}</td>
+    <td><span class="status-badge ${s.isActive || s.IsActive ? 'active' : 'inactive'}">${s.isActive || s.IsActive ? 'Active' : 'Inactive'}</span></td>
+    <td><div class="action-cell">
+      <button class="btn btn-sm btn-outline" onclick="editSuperAdmin(${s.superAdminId || s.SuperAdminId})">Edit</button>
+      <button class="btn btn-sm btn-danger" onclick="deleteSuperAdmin(${s.superAdminId || s.SuperAdminId})">Delete</button>
+      <button class="btn btn-sm btn-outline" onclick="resetSuperAdminPassword(${s.superAdminId || s.SuperAdminId})">Reset Pwd</button>
+    </div></td>
+  </tr>`).join('');
+}
+
+function openSuperAdminModal() {
+  const html = `
+    <div class="form-row">
+      <div><label>Username</label><input type="text" id="nsa_userName"></div>
+      <div><label>Password</label><input type="password" id="nsa_password"></div>
+    </div>
+    <div class="form-row">
+      <div><label>Name (AR)</label><input type="text" id="nsa_nameAr"></div>
+      <div><label>Name (EN)</label><input type="text" id="nsa_nameEn"></div>
+    </div>
+    <div class="form-row">
+      <div><label>Email</label><input type="email" id="nsa_email"></div>
+      <div><label>Phone</label><input type="text" id="nsa_phone"></div>
+    </div>`;
+  showModal('New Super Admin', html, `<button class="btn btn-outline btn-sm" onclick="closeGenericModal()">Cancel</button><button class="btn btn-primary btn-sm" onclick="createSuperAdmin()">Create</button>`);
+}
+
+async function createSuperAdmin() {
+  const dto = {
+    userName: document.getElementById('nsa_userName').value,
+    password: document.getElementById('nsa_password').value,
+    nameAr: document.getElementById('nsa_nameAr').value,
+    nameEn: document.getElementById('nsa_nameEn').value,
+    email: document.getElementById('nsa_email').value || null,
+    phone: document.getElementById('nsa_phone').value || null,
+  };
+  try {
+    await api('/api/superadmins', { method: 'POST', body: JSON.stringify(dto) });
+    showToast('Super admin created', 'success');
+    closeGenericModal();
+    loadSuperAdmins();
+  } catch (err) { showToast(err.message, 'error'); }
+}
+
+async function editSuperAdmin(id) {
+  const s = STATE.allSuperAdmins.find(x => (x.superAdminId || x.SuperAdminId) === id);
+  if (!s) return;
+  const html = `
+    <div class="form-row">
+      <div><label>Name (AR)</label><input type="text" id="esa_nameAr" value="${s.nameAr || s.NameAr || ''}"></div>
+      <div><label>Name (EN)</label><input type="text" id="esa_nameEn" value="${s.nameEn || s.NameEn || ''}"></div>
+    </div>
+    <div class="form-row">
+      <div><label>Email</label><input type="email" id="esa_email" value="${s.email || s.Email || ''}"></div>
+      <div><label>Phone</label><input type="text" id="esa_phone" value="${s.phone || s.Phone || ''}"></div>
+    </div>`;
+  showModal('Edit Super Admin', html, `<button class="btn btn-outline btn-sm" onclick="closeGenericModal()">Cancel</button><button class="btn btn-primary btn-sm" onclick="saveSuperAdmin(${id})">Save</button>`);
+}
+
+async function saveSuperAdmin(id) {
+  const dto = {
+    nameAr: document.getElementById('esa_nameAr').value,
+    nameEn: document.getElementById('esa_nameEn').value,
+    email: document.getElementById('esa_email').value || null,
+    phone: document.getElementById('esa_phone').value || null,
+  };
+  try {
+    await api(`/api/superadmins/${id}`, { method: 'PUT', body: JSON.stringify(dto) });
+    showToast('Super admin updated', 'success');
+    closeGenericModal();
+    loadSuperAdmins();
+  } catch (err) { showToast(err.message, 'error'); }
+}
+
+async function deleteSuperAdmin(id) {
+  if (!confirm('Delete this super admin?')) return;
+  try {
+    await api(`/api/superadmins/${id}`, { method: 'DELETE' });
+    showToast('Super admin deleted', 'success');
+    loadSuperAdmins();
+  } catch (err) { showToast(err.message, 'error'); }
+}
+
+async function resetSuperAdminPassword(id) {
+  if (!confirm('Reset password for this super admin?')) return;
+  try {
+    const data = await api(`/api/superadmins/${id}/reset-password`, { method: 'POST' });
+    const result = data?.data || data || {};
+    const tempPwd = result.temporaryPassword || result.TemporaryPassword || 'N/A';
+    alert('Temporary Password: ' + tempPwd + '\n\n' + (result.message || result.Message || ''));
+    showToast('Password reset successfully', 'success');
+  } catch (err) { showToast(err.message, 'error'); }
+}
+
+// ============================================================
+// MODAL HELPERS
+// ============================================================
+function showModal(title, bodyHtml, footerHtml) {
+  document.getElementById('modalTitle').textContent = title;
+  document.getElementById('modalBody').innerHTML = bodyHtml;
+  document.getElementById('modalFooter').innerHTML = footerHtml || '';
+  document.getElementById('genericModal').classList.add('show');
+}
+
+function closeGenericModal() {
+  document.getElementById('genericModal').classList.remove('show');
+}
+document.getElementById('genericModal').addEventListener('click', function(e) {
+  if (e.target === this) closeGenericModal();
+});
+
+// ============================================================
+// TOAST
+// ============================================================
+function showToast(msg, type) {
+  const t = document.getElementById('toast');
+  t.textContent = (type === 'error' ? '\u2717 ' : '\u2713 ') + msg;
+  t.className = 'toast show ' + (type === 'error' ? 'error' : 'success');
+  clearTimeout(t._timeout);
+  t._timeout = setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+// ============================================================
+// SEARCH / FILTER EVENTS
+// ============================================================
+document.getElementById('companySearch').addEventListener('input', applyCompanyFilter);
+document.getElementById('branchSearch').addEventListener('input', applyBranchFilter);
+document.getElementById('userSearch').addEventListener('input', applyUserFilter);
+</script>
+</body>
+</html>

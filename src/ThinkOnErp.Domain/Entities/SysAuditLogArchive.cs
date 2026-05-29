@@ -27,7 +27,7 @@ public class SysAuditLogArchive
     public string? Severity { get; set; }
     public string? EventCategory { get; set; }
     public string? Metadata { get; set; }
-    public string? BusinessModule { get; set; }
+    public long? SystemId { get; set; }
     public string? DeviceIdentifier { get; set; }
     public string? ErrorCode { get; set; }
     public string? BusinessDescription { get; set; }

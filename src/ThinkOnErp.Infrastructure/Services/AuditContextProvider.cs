@@ -1,19 +1,18 @@
 using Microsoft.AspNetCore.Http;
+using ThinkOnErp.Domain.Constants;
 using ThinkOnErp.Domain.Interfaces;
 
 namespace ThinkOnErp.Infrastructure.Services;
 
-/// <summary>
-/// Provides audit context information from the current HTTP request.
-/// Extracts user identity, company/branch context, and request metadata from JWT claims and HTTP context.
-/// </summary>
 public class AuditContextProvider : IAuditContextProvider
 {
     private readonly IHttpContextAccessor _httpContextAccessor;
+    private readonly ISysCodeService _sysCodeService;
 
-    public AuditContextProvider(IHttpContextAccessor httpContextAccessor)
+    public AuditContextProvider(IHttpContextAccessor httpContextAccessor, ISysCodeService sysCodeService)
     {
         _httpContextAccessor = httpContextAccessor;
+        _sysCodeService = sysCodeService;
     }
 
     /// <summary>
@@ -51,7 +50,7 @@ public class AuditContextProvider : IAuditContextProvider
         var httpContext = _httpContextAccessor.HttpContext;
         if (httpContext == null)
         {
-            return "SYSTEM";
+            return _sysCodeService.GetCodeValue(SysCodeKeys.ActorTypes.Mgr, SysCodeKeys.ActorTypes.System);
         }
 
         var isAdmin = httpContext.User?.FindFirst("isAdmin")?.Value;
@@ -59,15 +58,17 @@ public class AuditContextProvider : IAuditContextProvider
 
         if (bool.TryParse(isSuperAdmin, out var superAdmin) && superAdmin)
         {
-            return "SUPER_ADMIN";
+            return _sysCodeService.GetCodeValue(SysCodeKeys.ActorTypes.Mgr, SysCodeKeys.ActorTypes.SuperAdmin);
         }
 
         if (bool.TryParse(isAdmin, out var admin) && admin)
         {
-            return "COMPANY_ADMIN";
+            return _sysCodeService.GetCodeValue(SysCodeKeys.ActorTypes.Mgr, SysCodeKeys.ActorTypes.CompanyAdmin);
         }
 
-        return httpContext.User?.Identity?.IsAuthenticated == true ? "USER" : "SYSTEM";
+        return httpContext.User?.Identity?.IsAuthenticated == true
+            ? _sysCodeService.GetCodeValue(SysCodeKeys.ActorTypes.Mgr, SysCodeKeys.ActorTypes.User)
+            : _sysCodeService.GetCodeValue(SysCodeKeys.ActorTypes.Mgr, SysCodeKeys.ActorTypes.System);
     }
 
     /// <summary>
@@ -120,5 +121,26 @@ public class AuditContextProvider : IAuditContextProvider
     {
         var httpContext = _httpContextAccessor.HttpContext;
         return httpContext?.Request.Headers["User-Agent"].ToString();
+    }
+
+    /// <summary>
+    /// Gets the HTTP method (GET, POST, PUT, DELETE, etc.) for the current request.
+    /// </summary>
+    public string? GetHttpMethod()
+    {
+        var httpContext = _httpContextAccessor.HttpContext;
+        return httpContext?.Request.Method;
+    }
+
+    /// <summary>
+    /// Gets the endpoint path including query string for the current request.
+    /// </summary>
+    public string? GetEndpointPath()
+    {
+        var httpContext = _httpContextAccessor.HttpContext;
+        if (httpContext == null) return null;
+        var path = httpContext.Request.Path.ToString();
+        var query = httpContext.Request.QueryString.ToString();
+        return string.IsNullOrEmpty(query) ? path : $"{path}{query}";
     }
 }

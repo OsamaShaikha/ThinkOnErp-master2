@@ -14,6 +14,15 @@ public class SysCodeRepository : ISysCodeRepository
         _context = context;
     }
 
+    public async Task<List<SysCode>> GetAllAsync()
+    {
+        return await _context.SysCodes
+            .OrderBy(c => c.CodeMgr)
+            .ThenBy(c => c.CodeMnr)
+            .ThenBy(c => c.CodeLang)
+            .ToListAsync();
+    }
+
     public async Task<List<SysCode>> GetByCodeMgrAsync(int codeMgr)
     {
         return await _context.SysCodes

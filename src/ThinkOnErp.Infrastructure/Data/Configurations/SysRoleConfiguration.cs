@@ -424,6 +424,7 @@ public class SysCodeConfiguration : IEntityTypeConfiguration<SysCode>
         builder.Property(e => e.CodeMnr).HasColumnName("CODE_MNR").IsRequired();
         builder.Property(e => e.CodeLang).HasColumnName("CODE_LANG").IsRequired();
         builder.Property(e => e.CodeDesc).HasColumnName("CODE_DESC").HasMaxLength(1000);
+        builder.Property(e => e.CodeValue).HasColumnName("CODE_VALUE").HasMaxLength(200);
         builder.Property(e => e.IsActive).HasColumnName("IS_ACTIVE").HasConversion<int>().HasDefaultValue(1);
         builder.Property(e => e.CreationUser).HasColumnName("CREATION_USER").HasMaxLength(100).IsRequired();
         builder.Property(e => e.CreationDate).HasColumnName("CREATION_DATE");
