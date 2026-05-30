@@ -86,13 +86,6 @@ public interface ILegacyAuditService
     Task<AuditLogEntry?> GetAuditLogEntryByIdAsync(long id);
 
     /// <summary>
-    /// Export audit logs to CSV using legacy format filters.
-    /// </summary>
-    /// <param name="filter">Filter criteria matching the dashboard filters</param>
-    /// <returns>CSV file bytes</returns>
-    Task<byte[]> ExportToCsvAsync(LegacyAuditLogFilter filter);
-
-    /// <summary>
     /// Generate standardized error codes for different exception types.
     /// Creates error codes like "DB_TIMEOUT_001", "API_HR_045", etc.
     /// </summary>

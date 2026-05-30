@@ -632,11 +632,11 @@ async function openDetail(id, currentStatus) {
     document.getElementById('mExType').textContent = fmt(entry.exceptionType);
     document.getElementById('mExMsg').textContent = fmt(entry.exceptionMessage);
     document.getElementById('mStackTrace').textContent = fmt(entry.stackTrace);
-    document.getElementById('mReqPayload').textContent = entry.requestPayload ? formatJson(entry.requestPayload) : '-';
-    document.getElementById('mResPayload').textContent = entry.responsePayload ? formatJson(entry.responsePayload) : '-';
-    document.getElementById('mMetadata').textContent = entry.metadata ? formatJson(entry.metadata) : '-';
-    document.getElementById('mOld').textContent = entry.oldValue ? formatJson(entry.oldValue) : '-';
-    document.getElementById('mNew').textContent = entry.newValue ? formatJson(entry.newValue) : '-';
+    document.getElementById('mReqPayload').textContent = fmt(entry.requestPayload);
+    document.getElementById('mResPayload').textContent = fmt(entry.responsePayload);
+    document.getElementById('mMetadata').textContent = fmt(entry.metadata);
+    document.getElementById('mOld').textContent = fmt(entry.oldValue);
+    document.getElementById('mNew').textContent = fmt(entry.newValue);
 
     // Update status select after fetch if the fetched status differs from pre-selected
     const fetchedStatus = entry.status || entry.statusDisplay || currentStatus;
@@ -681,24 +681,15 @@ async function updateStatus() {
 async function exportCSV() {
   if (!STATE.token) return;
   const params = new URLSearchParams();
-  const search = document.getElementById('filterSearch').value;
-  const module = document.getElementById('filterModule').value;
-  const company = document.getElementById('filterCompany').value;
-  const status = document.getElementById('filterStatus').value;
-  let start = document.getElementById('filterStart').value;
-  let end = document.getElementById('filterEnd').value;
-
+  const start = document.getElementById('filterStart').value;
+  const end = document.getElementById('filterEnd').value;
   if (start) params.set('startDate', start);
   if (end) params.set('endDate', end);
 
   try {
-    const url = STATE.apiBase + '/api/auditlogs/legacy/export/csv?' + params.toString();
+    const url = STATE.apiBase + '/api/auditlogs/export/csv?' + params.toString();
     const res = await fetch(url, { headers: { Authorization: 'Bearer ' + STATE.token } });
-    if (!res.ok) {
-      let msg = 'Export failed';
-      try { const errBody = await res.json(); msg = errBody?.message || errBody?.data?.message || msg; } catch (e) { try { msg = await res.text(); } catch {} }
-      throw new Error(msg + ' (HTTP ' + res.status + ')');
-    }
+    if (!res.ok) throw new Error('Export failed');
     const blob = await res.blob();
     const link = document.createElement('a');
     link.href = URL.createObjectURL(blob);
