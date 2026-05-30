@@ -93,4 +93,11 @@ public interface ILegacyAuditService
     /// <param name="entityType">The entity type involved in the error</param>
     /// <returns>Standardized error code</returns>
     Task<string> GenerateErrorCodeAsync(string exceptionType, string entityType);
+
+    /// <summary>
+    /// Export audit logs to CSV format using legacy filter parameters.
+    /// </summary>
+    /// <param name="filter">Legacy audit log filter</param>
+    /// <returns>CSV file as byte array</returns>
+    Task<byte[]> ExportToCsvAsync(LegacyAuditLogFilter filter);
 }

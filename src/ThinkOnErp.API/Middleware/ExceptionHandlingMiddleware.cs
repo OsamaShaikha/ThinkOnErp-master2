@@ -25,20 +25,16 @@ public class ExceptionHandlingMiddleware
     private readonly IAuditLogger _auditLogger;
     private readonly IServiceScopeFactory _serviceScopeFactory;
 
-    private readonly ISysCodeService _sysCodeService;
-
     public ExceptionHandlingMiddleware(
         RequestDelegate next,
         ILogger<ExceptionHandlingMiddleware> logger,
         IAuditLogger auditLogger,
-        IServiceScopeFactory serviceScopeFactory,
-        ISysCodeService sysCodeService)
+        IServiceScopeFactory serviceScopeFactory)
     {
         _next = next;
         _logger = logger;
         _auditLogger = auditLogger;
         _serviceScopeFactory = serviceScopeFactory;
-        _sysCodeService = sysCodeService;
     }
 
     public async Task InvokeAsync(HttpContext context)
@@ -212,7 +208,6 @@ public class ExceptionHandlingMiddleware
             var userId = GetUserIdFromClaims(context.User);
             var companyId = GetCompanyIdFromClaims(context.User);
             var branchId = GetBranchIdFromClaims(context.User);
-            var actorType = GetActorTypeFromClaims(context.User);
 
             // Get correlation ID from context
             var correlationId = CorrelationContext.Current ?? Guid.NewGuid().ToString();
@@ -226,12 +221,15 @@ public class ExceptionHandlingMiddleware
             var (entityType, entityId) = ExtractEntityInfoFromException(exception, context);
             var action = DetermineActionFromException(exception);
 
-            // Resolve scoped service to determine severity
+            // Resolve scoped services
             string severity;
+            string actorType;
             using (var scope = _serviceScopeFactory.CreateScope())
             {
                 var exceptionCategorization = scope.ServiceProvider.GetRequiredService<IExceptionCategorizationService>();
                 severity = exceptionCategorization.DetermineSeverity(exception);
+                var sysCodeService = scope.ServiceProvider.GetRequiredService<ISysCodeService>();
+                actorType = GetActorTypeFromClaims(context.User, sysCodeService);
             }
 
             // Create exception audit event
@@ -298,17 +296,17 @@ public class ExceptionHandlingMiddleware
     /// <summary>
     /// Extracts actor type from JWT claims
     /// </summary>
-    private string GetActorTypeFromClaims(ClaimsPrincipal user)
+    private string GetActorTypeFromClaims(ClaimsPrincipal user, ISysCodeService sysCodeService)
     {
         if (!user.Identity?.IsAuthenticated ?? true)
         {
-            return _sysCodeService.GetCodeValue(SysCodeKeys.ActorTypes.Mgr, SysCodeKeys.ActorTypes.Anonymous);
+            return sysCodeService.GetCodeValue(SysCodeKeys.ActorTypes.Mgr, SysCodeKeys.ActorTypes.Anonymous);
         }
 
         var userType = user.FindFirst("userType")?.Value;
         if (string.Equals(userType, "SuperAdmin", StringComparison.OrdinalIgnoreCase))
         {
-            return _sysCodeService.GetCodeValue(SysCodeKeys.ActorTypes.Mgr, SysCodeKeys.ActorTypes.SuperAdmin);
+            return sysCodeService.GetCodeValue(SysCodeKeys.ActorTypes.Mgr, SysCodeKeys.ActorTypes.SuperAdmin);
         }
 
         var roleClaim = user.FindFirst(ClaimTypes.Role)?.Value
@@ -316,15 +314,15 @@ public class ExceptionHandlingMiddleware
 
         if (string.IsNullOrEmpty(roleClaim))
         {
-            return _sysCodeService.GetCodeValue(SysCodeKeys.ActorTypes.Mgr, SysCodeKeys.ActorTypes.User);
+            return sysCodeService.GetCodeValue(SysCodeKeys.ActorTypes.Mgr, SysCodeKeys.ActorTypes.User);
         }
 
         return roleClaim.ToUpperInvariant() switch
         {
-            "SUPERADMIN" => _sysCodeService.GetCodeValue(SysCodeKeys.ActorTypes.Mgr, SysCodeKeys.ActorTypes.SuperAdmin),
-            "COMPANYADMIN" => _sysCodeService.GetCodeValue(SysCodeKeys.ActorTypes.Mgr, SysCodeKeys.ActorTypes.CompanyAdmin),
-            "USER" => _sysCodeService.GetCodeValue(SysCodeKeys.ActorTypes.Mgr, SysCodeKeys.ActorTypes.User),
-            _ => _sysCodeService.GetCodeValue(SysCodeKeys.ActorTypes.Mgr, SysCodeKeys.ActorTypes.User)
+            "SUPERADMIN" => sysCodeService.GetCodeValue(SysCodeKeys.ActorTypes.Mgr, SysCodeKeys.ActorTypes.SuperAdmin),
+            "COMPANYADMIN" => sysCodeService.GetCodeValue(SysCodeKeys.ActorTypes.Mgr, SysCodeKeys.ActorTypes.CompanyAdmin),
+            "USER" => sysCodeService.GetCodeValue(SysCodeKeys.ActorTypes.Mgr, SysCodeKeys.ActorTypes.User),
+            _ => sysCodeService.GetCodeValue(SysCodeKeys.ActorTypes.Mgr, SysCodeKeys.ActorTypes.User)
         };
     }
 
