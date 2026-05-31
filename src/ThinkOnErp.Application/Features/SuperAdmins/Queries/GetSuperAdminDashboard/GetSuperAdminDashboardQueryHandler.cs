@@ -15,17 +15,20 @@ public class GetSuperAdminDashboardQueryHandler : IRequestHandler<GetSuperAdminD
     private readonly ICompanyRepository _companyRepository;
     private readonly IBranchRepository _branchRepository;
     private readonly IUserRepository _userRepository;
+    private readonly ITicketRepository _ticketRepository;
     private readonly ILogger<GetSuperAdminDashboardQueryHandler> _logger;
 
     public GetSuperAdminDashboardQueryHandler(
         ICompanyRepository companyRepository,
         IBranchRepository branchRepository,
         IUserRepository userRepository,
+        ITicketRepository ticketRepository,
         ILogger<GetSuperAdminDashboardQueryHandler> logger)
     {
         _companyRepository = companyRepository;
         _branchRepository = branchRepository;
         _userRepository = userRepository;
+        _ticketRepository = ticketRepository;
         _logger = logger;
     }
 
@@ -33,35 +36,12 @@ public class GetSuperAdminDashboardQueryHandler : IRequestHandler<GetSuperAdminD
     {
         try
         {
-            // Parallel repository calls with error handling
-            // Validates Requirements: 1.3, 13.1, 13.5
-            var companiesTask = _companyRepository.GetAllAsync();
-            var branchesTask = _branchRepository.GetAllAsync();
-            var usersTask = _userRepository.GetAllAsync();
-            // Get pending tickets (unresolved) with pagination
-            var ticketTask = _ticketRepository.GetAllAsync();
-
-            await Task.WhenAll(companiesTask, branchesTask, usersTask);
-
-            if (companiesTask.IsFaulted || branchesTask.IsFaulted || usersTask.IsFaulted)
-            {
-                var exceptions = new List<Exception>();
-                if (companiesTask.Exception != null) exceptions.Add(companiesTask.Exception);
-                if (branchesTask.Exception != null) exceptions.Add(branchesTask.Exception);
-                if (usersTask.Exception != null) exceptions.Add(usersTask.Exception);
-
-                _logger.LogError(new AggregateException(exceptions), 
-                    "Error retrieving data from repositories");
-                throw new ApplicationException(
-                    "Failed to retrieve dashboard data", 
-                    new AggregateException(exceptions));
-            }
-
-            // Null safety checks with warning logs for empty data
-            // Validates Requirements: 11.5
-            var companies = await companiesTask ?? new List<Domain.Entities.SysCompany>();
-            var branches = await branchesTask ?? new List<Domain.Entities.SysBranch>();
-            var users = await usersTask ?? new List<Domain.Entities.SysUser>();
+            // Sequential repository calls to avoid DbContext concurrency issues (DbContext is not thread-safe)
+            var companies = (await _companyRepository.GetAllAsync()) ?? new List<Domain.Entities.SysCompany>();
+            var branches = (await _branchRepository.GetAllAsync()) ?? new List<Domain.Entities.SysBranch>();
+            var users = (await _userRepository.GetAllAsync()) ?? new List<Domain.Entities.SysUser>();
+            var ticketResult = await _ticketRepository.GetAllAsync();
+            var tickets = ticketResult.Tickets ?? new List<Domain.Entities.SysRequestTicket>();
 
             // Log warnings for empty data
             if (companies.Count == 0)
@@ -76,9 +56,15 @@ public class GetSuperAdminDashboardQueryHandler : IRequestHandler<GetSuperAdminD
             {
                 _logger.LogWarning("No users found in the system");
             }
+            if (tickets.Count == 0)
+            {
+                _logger.LogWarning("No tickets found in the system");
+            }
 
             // Calculate metrics using LINQ
             // Validates Requirements: 1.4, 4.1, 4.2, 4.3, 4.4, 5.1, 5.2, 6.1, 6.2
+            var pendingTicketsCount = tickets.Count(t => t.IsActive && !t.IsResolved);
+
             var stats = new DashboardStatsDto
             {
                 TotalCompanies = companies.Count,
@@ -86,7 +72,8 @@ public class GetSuperAdminDashboardQueryHandler : IRequestHandler<GetSuperAdminD
                 InactiveCompanies = companies.Count(c => !c.IsActive),
                 TotalBranches = branches.Count,
                 ActiveBranches = branches.Count(b => b.IsActive),
-                TotalSystemAdmins = users.Count(u => u.IsAdmin)
+                TotalSystemAdmins = users.Count(u => u.IsAdmin),
+                PendingRequests = pendingTicketsCount
             };
 
             // Get recent companies
@@ -124,6 +111,26 @@ public class GetSuperAdminDashboardQueryHandler : IRequestHandler<GetSuperAdminD
                     };
                 })
                 .ToList();
+            var recentTickets = tickets
+                .Where(t => t.IsActive && !t.IsResolved) // Only active and unresolved tickets
+                .OrderByDescending(t => t.CreationDate)
+                .Take(8) // Get top 8 pending requests
+                .Select(t => new PendingRequestDto
+                {
+                    TicketId = t.Id,
+                    CompanyNameAr = t.Company?.CompanyNameAr ?? "",
+                    CompanyNameEn = t.Company?.CompanyNameEn ?? "",
+                    RequestTypeAr = t.TitleAr,
+                    RequestTypeEn = t.TitleEn,
+                    Description = t.Description,
+                    Priority = t.TicketPriority?.PriorityNameAr ?? "?????",
+                    PriorityCode = GetPriorityCode(t.TicketPriority?.PriorityNameEn ?? "Medium"),
+                    RequestDate = t.CreationDate ?? DateTime.MinValue,
+                    BranchNameAr = t.Branch?.BranchNameAr ?? "",
+                    BranchNameEn = t.Branch?.BranchNameEn ?? "",
+                    Status = t.TicketStatus?.StatusNameAr ?? "??? ????????"
+                })
+                .ToList();
 
             // Generate system alerts
             // Validates Requirements: 1.7, 3.1, 3.2, 3.3, 3.4
@@ -132,14 +139,17 @@ public class GetSuperAdminDashboardQueryHandler : IRequestHandler<GetSuperAdminD
             {
                 alerts.Add($"{stats.InactiveCompanies} companies are currently inactive");
             }
-            // Future: Add pending requests alerts when feature is implemented
+            if (pendingTicketsCount > 0)
+            {
+                alerts.Add($"{pendingTicketsCount} pending requests require Super Admin action");
+            }
 
             return new SuperAdminDashboardDto
             {
                 Stats = stats,
                 RecentCompanies = recentCompanies,
                 RecentBranches = recentBranches,
-                PendingRequests = new List<PendingRequestDto>(),
+                PendingRequests = recentTickets,
                 Alerts = alerts
             };
         }
@@ -152,8 +162,21 @@ public class GetSuperAdminDashboardQueryHandler : IRequestHandler<GetSuperAdminD
         {
             _logger.LogCritical(ex, "Unexpected error in dashboard query handler");
             throw new ApplicationException(
-                "An unexpected error occurred while processing dashboard data", 
+                "An unexpected error occurred while processing dashboard data",
                 ex);
         }
+    }
+
+    /// <summary>
+    /// Maps priority name to priority code for UI styling
+    /// </summary>
+    private static string GetPriorityCode(string priorityName)
+    {
+        return priorityName?.ToLower() switch
+        {
+            "high" or "urgent" or "critical" => "high",
+            "low" => "low",
+            _ => "medium"
+        };
     }
 }
