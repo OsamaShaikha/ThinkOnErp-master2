@@ -35,4 +35,6 @@ public class DashboardStatsDto
     /// Total number of system administrators
     /// </summary>
     public int TotalSystemAdmins { get; set; }
+
+    public int PendingRequests{ get; set; }
 }

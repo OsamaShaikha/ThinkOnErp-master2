@@ -38,6 +38,8 @@ public class GetSuperAdminDashboardQueryHandler : IRequestHandler<GetSuperAdminD
             var companiesTask = _companyRepository.GetAllAsync();
             var branchesTask = _branchRepository.GetAllAsync();
             var usersTask = _userRepository.GetAllAsync();
+            // Get pending tickets (unresolved) with pagination
+            var ticketTask = _ticketRepository.GetAllAsync();
 
             await Task.WhenAll(companiesTask, branchesTask, usersTask);
 
