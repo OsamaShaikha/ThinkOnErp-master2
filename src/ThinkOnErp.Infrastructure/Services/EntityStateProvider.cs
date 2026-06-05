@@ -37,12 +37,9 @@ public class EntityStateProvider : IEntityStateProvider
         { "Setting", typeof(SysSetting) },
         { "UserRole", typeof(SysUserRole) },
         { "BranchSystem", typeof(SysBranchSystem) },
-        { "CompanySystem", typeof(SysCompanySystem) },
-        { "BranchScreen", typeof(SysBranchScreen) },
         { "BranchScreenPermission", typeof(SysBranchScreenPermission) },
         { "UserScreenPermission", typeof(SysUserScreenPermission) },
         { "RoleScreenPermission", typeof(SysRoleScreenPermission) },
-        { "CompanyScreenPermission", typeof(SysCompanyScreenPermission) },
     };
 
     private readonly IServiceScopeFactory _scopeFactory;

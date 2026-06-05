@@ -15,8 +15,8 @@ public interface IBranchPermissionRepository
     Task<bool> IsBranchSystemAllowedAsync(long branchId, long systemId);
 
     // Branch Screen Permissions
-    Task<List<SysBranchScreen>> GetBranchScreensAsync(long branchId);
-    Task<SysBranchScreen?> GetBranchScreenAsync(long branchId, long screenId);
+    Task<List<SysBranchScreenPermission>> GetBranchScreensAsync(long branchId);
+    Task<SysBranchScreenPermission?> GetBranchScreenAsync(long branchId, long screenId);
     Task<long> GrantScreenAccessAsync(long branchId, long screenId, long grantedBy, string? notes, string creationUser);
     Task<long> RevokeScreenAccessAsync(long branchId, long screenId, string updateUser);
     Task<bool> IsBranchScreenAllowedAsync(long branchId, long screenId);

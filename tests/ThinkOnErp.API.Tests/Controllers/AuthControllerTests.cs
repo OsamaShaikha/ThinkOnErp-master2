@@ -59,7 +59,7 @@ public class AuthControllerTests
             Password = passwordHash,
             FullNameAr = "Test User",
             FullNameEn = "Test User",
-            Role = 1,
+            RoleId = 1,
             BranchId = 1,
             IsActive = true,
             IsAdmin = false,

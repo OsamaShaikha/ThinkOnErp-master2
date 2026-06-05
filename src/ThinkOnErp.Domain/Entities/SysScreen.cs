@@ -89,5 +89,4 @@ public class SysScreen
     public SysSystem? System { get; set; }
     public SysScreen? ParentScreen { get; set; }
     public ICollection<SysBranchScreenPermission> BranchPermissions { get; set; } = new List<SysBranchScreenPermission>();
-    public ICollection<SysCompanyScreenPermission> CompanyPermissions { get; set; } = new List<SysCompanyScreenPermission>();
 }

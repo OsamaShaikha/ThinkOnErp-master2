@@ -8,6 +8,7 @@ using ThinkOnErp.Application.Common;
 using ThinkOnErp.Application.DTOs.Audit;
 using ThinkOnErp.Domain.Interfaces;
 using ThinkOnErp.Domain.Models;
+using LegacyAuditLogDto = ThinkOnErp.Domain.Models.LegacyAuditLogDto;
 using Xunit;
 
 namespace ThinkOnErp.API.Tests.Controllers;

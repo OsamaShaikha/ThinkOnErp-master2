@@ -57,8 +57,8 @@ public class JwtTokenService
             new Claim("userId", user.Id.ToString()),
             new Claim("userName", user.UserName),
             new Claim(ClaimTypes.Name, user.UserName),
-            new Claim("role", user.Role?.ToString() ?? "0"),
-            new Claim(ClaimTypes.Role, user.Role?.ToString() ?? "0"),
+new Claim("role", user.RoleId?.ToString() ?? "0"),
+new Claim(ClaimTypes.Role, user.RoleId?.ToString() ?? "0"),
             new Claim("companyId", user.CompanyId?.ToString() ?? "0"),
             new Claim("branchId", user.BranchId?.ToString() ?? "0"),
             new Claim("isAdmin", user.IsAdmin.ToString().ToLower())

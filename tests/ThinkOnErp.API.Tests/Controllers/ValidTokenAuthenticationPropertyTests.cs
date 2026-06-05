@@ -179,7 +179,7 @@ public class ValidTokenAuthenticationPropertyTests
                                     FullNameAr = rowDesc,
                                     FullNameEn = rowDescE,
                                    Password = password,
-                                   Role = role,
+                                    RoleId = role,
                                    BranchId = branchId,
                                    IsAdmin = isAdmin,
                                    IsActive = true,

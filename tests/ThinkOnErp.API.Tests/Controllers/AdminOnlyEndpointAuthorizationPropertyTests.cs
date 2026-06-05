@@ -70,7 +70,7 @@ public class AdminOnlyEndpointAuthorizationPropertyTests : IClassFixture<WebAppl
             FullNameAr = "Non-Admin User",
             FullNameEn = "Non-Admin User",
             Password = "hash",
-            Role = request.RoleId,
+            RoleId = request.RoleId,
             BranchId = request.BranchId,
             IsAdmin = false, // Critical: This must be false
             IsActive = true,

@@ -61,7 +61,7 @@ public class JwtTokenServiceTests
 
         Assert.Contains(token.Claims, c => c.Type == "userId" && c.Value == user.Id.ToString());
         Assert.Contains(token.Claims, c => c.Type == "userName" && c.Value == user.UserName);
-        Assert.Contains(token.Claims, c => c.Type == "role" && c.Value == user.Role.ToString());
+        Assert.Contains(token.Claims, c => c.Type == "role" && c.Value == user.RoleId.ToString());
         Assert.Contains(token.Claims, c => c.Type == "branchId" && c.Value == user.BranchId.ToString());
         Assert.Contains(token.Claims, c => c.Type == "isAdmin" && c.Value == user.IsAdmin.ToString().ToLower());
     }
@@ -143,7 +143,7 @@ public class JwtTokenServiceTests
     {
         // Arrange
         var user = CreateTestUser();
-        user.Role = null;
+        user.RoleId = null;
 
         // Act
         var result = _service.GenerateToken(user);
@@ -234,7 +234,7 @@ public class JwtTokenServiceTests
             FullNameAr = "Test User Arabic",
             FullNameEn = "Test User English",
             Password = "hashedpassword",
-            Role = 5,
+            RoleId = 5,
             BranchId = 10,
             IsAdmin = false,
             IsActive = true,

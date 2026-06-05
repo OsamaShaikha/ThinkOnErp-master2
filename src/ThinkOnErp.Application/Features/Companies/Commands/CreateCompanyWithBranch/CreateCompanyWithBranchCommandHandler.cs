@@ -10,6 +10,7 @@ public class CreateCompanyWithBranchCommandHandler : IRequestHandler<CreateCompa
     private readonly IBranchRepository _branchRepository;
     private readonly IPermissionRepository _permissionRepository;
     private readonly ILogoStorageService _logoStorageService;
+    private readonly IOracleSchemaService _oracleSchemaService;
     private readonly ILogger<CreateCompanyWithBranchCommandHandler> _logger;
 
     public CreateCompanyWithBranchCommandHandler(
@@ -17,12 +18,14 @@ public class CreateCompanyWithBranchCommandHandler : IRequestHandler<CreateCompa
         IBranchRepository branchRepository,
         IPermissionRepository permissionRepository,
         ILogoStorageService logoStorageService,
+        IOracleSchemaService oracleSchemaService,
         ILogger<CreateCompanyWithBranchCommandHandler> logger)
     {
         _companyRepository = companyRepository ?? throw new ArgumentNullException(nameof(companyRepository));
         _branchRepository = branchRepository ?? throw new ArgumentNullException(nameof(branchRepository));
         _permissionRepository = permissionRepository ?? throw new ArgumentNullException(nameof(permissionRepository));
         _logoStorageService = logoStorageService ?? throw new ArgumentNullException(nameof(logoStorageService));
+        _oracleSchemaService = oracleSchemaService ?? throw new ArgumentNullException(nameof(oracleSchemaService));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
@@ -47,6 +50,9 @@ public class CreateCompanyWithBranchCommandHandler : IRequestHandler<CreateCompa
                 _logger.LogInformation("Branch logo saved to disk, size: {Size} bytes", request.BranchLogo.Length);
             }
 
+            // Generate Oracle schema name from company code
+            var companySchema = $"THINKONERP_{request.CompanyCode?.ToUpperInvariant()?.Replace("-", "_")?.Replace(" ", "_")}";
+
             // Use the repository method to create company with branch and fiscal year
             var result = await _companyRepository.CreateWithBranchAsync(
                 companyNameAr: request.CompanyNameAr,
@@ -68,6 +74,7 @@ public class CreateCompanyWithBranchCommandHandler : IRequestHandler<CreateCompa
                 defaultLang: request.DefaultLang,
                 baseCurrencyId: request.BranchBaseCurrencyId,
                 roundingRules: request.BranchRoundingRules ?? 1,
+                companySchema: companySchema,
                 creationUser: request.CreationUser);
 
             // Rename logo files with correct IDs
@@ -90,19 +97,23 @@ public class CreateCompanyWithBranchCommandHandler : IRequestHandler<CreateCompa
                 "Company created successfully with ID: {CompanyId}, Default branch created with ID: {BranchId}, Default fiscal year created with ID: {FiscalYearId}",
                 result.CompanyId, result.BranchId, result.FiscalYearId);
 
-            // Grant systems and auto-grant all their screens if specified
+            // Create the Oracle schema for this tenant (failures here will propagate up)
+            _logger.LogInformation("Creating Oracle schema {Schema} for company {CompanyCode}", companySchema, request.CompanyCode);
+            await _oracleSchemaService.CreateCompanySchemaAsync(companySchema, companySchema);
+
+            // Grant systems and auto-grant all their screens to the default branch
             if (request.Systems?.Count > 0)
             {
                 foreach (var systemId in request.Systems)
                 {
-                    await _permissionRepository.SetCompanySystemAsync(
-                        result.CompanyId, systemId, isAllowed: true,
+                    await _permissionRepository.SetBranchSystemAsync(
+                        result.BranchId, systemId, isAllowed: true,
                         grantedBy: null, notes: null,
                         creationUser: request.CreationUser
                     );
 
-                    await _permissionRepository.GrantSystemScreensToCompanyAsync(
-                        result.CompanyId, systemId,
+                    await _permissionRepository.GrantSystemScreensToBranchAsync(
+                        result.BranchId, systemId,
                         grantedBy: null,
                         creationUser: request.CreationUser
                     );

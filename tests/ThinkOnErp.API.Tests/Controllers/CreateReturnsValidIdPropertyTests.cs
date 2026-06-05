@@ -392,7 +392,7 @@ public class CreateReturnsValidIdPropertyTests
                         Password = password,
                         Phone = phone,
                         Email = email,
-                        Role = role,
+                        RoleId = role,
                         BranchId = branchId,
                         IsActive = true,
                         IsAdmin = isAdmin,

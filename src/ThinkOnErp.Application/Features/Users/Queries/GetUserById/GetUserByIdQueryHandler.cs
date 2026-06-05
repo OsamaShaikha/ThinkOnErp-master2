@@ -28,7 +28,7 @@ public class GetUserByIdQueryHandler : IRequestHandler<GetUserByIdQuery, UserDto
             UserName = user.UserName,
             Phone = user.Phone,
             Phone2 = user.Phone2,
-            RoleId = user.Role,
+            RoleId = user.RoleId,
             BranchId = user.BranchId,
             Email = user.Email,
             LastLoginDate = user.LastLoginDate,

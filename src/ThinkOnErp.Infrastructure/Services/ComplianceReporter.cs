@@ -1241,7 +1241,7 @@ public class ComplianceReporter : IComplianceReporter
                     u.Email,
                     u.Phone,
                     u.CompanyId,
-                    u.Role,
+                    u.RoleId,
                     u.IsActive,
                     u.CreationDate,
                     u.UpdateDate,
@@ -1260,7 +1260,7 @@ public class ComplianceReporter : IComplianceReporter
                     ["Email"] = user.Email,
                     ["PhoneNumber"] = user.Phone,
                     ["CompanyId"] = user.CompanyId,
-                    ["RoleId"] = user.Role,
+                    ["RoleId"] = user.RoleId,
                     ["IsActive"] = user.IsActive,
                     ["CreationDate"] = user.CreationDate,
                     ["LastModifiedDate"] = user.UpdateDate,
@@ -1427,7 +1427,7 @@ public class ComplianceReporter : IComplianceReporter
             var query = from al in _dbContext.SysAuditLogs
                         join u in _dbContext.SysUsers on al.ActorId equals u.Id into userJoin
                         from u in userJoin.DefaultIfEmpty()
-                        join r in _dbContext.SysRoles on u.Role equals r.Id into roleJoin
+                        join r in _dbContext.SysRoles on u.RoleId equals r.Id into roleJoin
                         from r in roleJoin.DefaultIfEmpty()
                         where al.CreationDate >= startDate
                            && al.CreationDate <= endDate

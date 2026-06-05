@@ -10,14 +10,6 @@ public class PermissionRepository : IPermissionRepository
     private readonly OracleDbContext _context;
     public PermissionRepository(OracleDbContext context) => _context = context;
 
-    private async Task<long> GetCompanyIdForBranchAsync(long branchId)
-    {
-        return await _context.SysBranches
-            .Where(b => b.Id == branchId)
-            .Select(b => b.CompanyId ?? 0)
-            .FirstOrDefaultAsync();
-    }
-
     public async Task<bool> CheckUserPermissionAsync(long userId, string screenCode, string action)
     {
         var user = await _context.SysUsers.FirstOrDefaultAsync(u => u.Id == userId);
@@ -193,40 +185,6 @@ public class PermissionRepository : IPermissionRepository
         }
     }
 
-    public async Task<List<SysCompanySystem>> GetCompanySystemsAsync(long companyId) =>
-        await _context.SysCompanySystems.Where(cs => cs.CompanyId == companyId).ToListAsync();
-
-    public async Task SetCompanySystemAsync(long companyId, long systemId, bool isAllowed, long? grantedBy, string? notes, string creationUser)
-    {
-        var existing = await _context.SysCompanySystems
-            .FirstOrDefaultAsync(cs => cs.CompanyId == companyId && cs.SystemId == systemId);
-        
-        if (existing != null)
-        {
-            existing.IsAllowed = isAllowed;
-            existing.GrantedBy = grantedBy;
-            existing.Notes = notes;
-            existing.GrantedDate = DateTime.Now;
-            existing.UpdateUser = creationUser;
-            existing.UpdateDate = DateTime.Now;
-        }
-        else
-        {
-            _context.SysCompanySystems.Add(new SysCompanySystem
-            {
-                CompanyId = companyId,
-                SystemId = systemId,
-                IsAllowed = isAllowed,
-                GrantedBy = grantedBy,
-                GrantedDate = DateTime.Now,
-                Notes = notes,
-                CreationUser = creationUser,
-                CreationDate = DateTime.Now
-            });
-        }
-        await _context.SaveChangesAsync();
-    }
-
     public async Task<List<SysBranchSystem>> GetBranchSystemsAsync(long branchId) =>
         await _context.SysBranchSystems.Where(bs => bs.BranchId == branchId).ToListAsync();
 
@@ -246,10 +204,8 @@ public class PermissionRepository : IPermissionRepository
         }
         else
         {
-            var companyId = await GetCompanyIdForBranchAsync(branchId);
             _context.SysBranchSystems.Add(new SysBranchSystem
             {
-                CompanyId = companyId,
                 BranchId = branchId,
                 SystemId = systemId,
                 IsAllowed = isAllowed,
@@ -268,7 +224,6 @@ public class PermissionRepository : IPermissionRepository
 
     public async Task GrantSystemScreensToBranchAsync(long branchId, long systemId, long? grantedBy, string creationUser)
     {
-        var companyId = await GetCompanyIdForBranchAsync(branchId);
         var screens = await _context.SysScreens
             .Where(s => s.SystemId == systemId && s.IsActive)
             .ToListAsync();
@@ -280,7 +235,6 @@ public class PermissionRepository : IPermissionRepository
 
             if (existing != null)
             {
-                existing.CompanyId = companyId;
                 existing.CanView = true;
                 existing.CanInsert = true;
                 existing.CanUpdate = true;
@@ -294,53 +248,7 @@ public class PermissionRepository : IPermissionRepository
             {
                 _context.SysBranchScreenPermissions.Add(new SysBranchScreenPermission
                 {
-                    CompanyId = companyId,
                     BranchId = branchId,
-                    ScreenId = screen.Id,
-                    CanView = true,
-                    CanInsert = true,
-                    CanUpdate = true,
-                    CanDelete = true,
-                    GrantedBy = grantedBy,
-                    GrantedDate = DateTime.Now,
-                    CreationUser = creationUser,
-                    CreationDate = DateTime.Now
-                });
-            }
-        }
-        await _context.SaveChangesAsync();
-    }
-
-    public async Task<List<SysCompanyScreenPermission>> GetCompanyScreenPermissionsAsync(long companyId) =>
-        await _context.SysCompanyScreenPermissions.Where(cp => cp.CompanyId == companyId).ToListAsync();
-
-    public async Task GrantSystemScreensToCompanyAsync(long companyId, long systemId, long? grantedBy, string creationUser)
-    {
-        var screens = await _context.SysScreens
-            .Where(s => s.SystemId == systemId && s.IsActive)
-            .ToListAsync();
-
-        foreach (var screen in screens)
-        {
-            var existing = await _context.SysCompanyScreenPermissions
-                .FirstOrDefaultAsync(cp => cp.CompanyId == companyId && cp.ScreenId == screen.Id);
-
-            if (existing != null)
-            {
-                existing.CanView = true;
-                existing.CanInsert = true;
-                existing.CanUpdate = true;
-                existing.CanDelete = true;
-                existing.GrantedBy = grantedBy;
-                existing.GrantedDate = DateTime.Now;
-                existing.UpdateUser = creationUser;
-                existing.UpdateDate = DateTime.Now;
-            }
-            else
-            {
-                _context.SysCompanyScreenPermissions.Add(new SysCompanyScreenPermission
-                {
-                    CompanyId = companyId,
                     ScreenId = screen.Id,
                     CanView = true,
                     CanInsert = true,

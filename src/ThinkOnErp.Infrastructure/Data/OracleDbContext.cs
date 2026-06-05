@@ -24,10 +24,8 @@ public class OracleDbContext : DbContext
     public DbSet<SysUserRole> SysUserRoles => Set<SysUserRole>();
     public DbSet<SysRoleScreenPermission> SysRoleScreenPermissions => Set<SysRoleScreenPermission>();
     public DbSet<SysUserScreenPermission> SysUserScreenPermissions => Set<SysUserScreenPermission>();
-    public DbSet<SysCompanySystem> SysCompanySystems => Set<SysCompanySystem>();
     public DbSet<SysBranchSystem> SysBranchSystems => Set<SysBranchSystem>();
     public DbSet<SysBranchScreenPermission> SysBranchScreenPermissions => Set<SysBranchScreenPermission>();
-    public DbSet<SysCompanyScreenPermission> SysCompanyScreenPermissions => Set<SysCompanyScreenPermission>();
 
     // Ticket system entities
     public DbSet<SysRequestTicket> SysRequestTickets => Set<SysRequestTicket>();
@@ -83,10 +81,8 @@ public class OracleDbContext : DbContext
         modelBuilder.ApplyConfiguration(new SysUserRoleConfiguration());
         modelBuilder.ApplyConfiguration(new SysRoleScreenPermissionConfiguration());
         modelBuilder.ApplyConfiguration(new SysUserScreenPermissionConfiguration());
-        modelBuilder.ApplyConfiguration(new SysCompanySystemConfiguration());
         modelBuilder.ApplyConfiguration(new SysBranchSystemConfiguration());
         modelBuilder.ApplyConfiguration(new SysBranchScreenPermissionConfiguration());
-        modelBuilder.ApplyConfiguration(new SysCompanyScreenPermissionConfiguration());
         modelBuilder.ApplyConfiguration(new SysRequestTicketConfiguration());
         modelBuilder.ApplyConfiguration(new SysTicketTypeConfiguration());
         modelBuilder.ApplyConfiguration(new SysTicketPriorityConfiguration());

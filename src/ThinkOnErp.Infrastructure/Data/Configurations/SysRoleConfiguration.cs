@@ -67,6 +67,8 @@ builder.Property(e => e.CompanyNameEn).HasColumnName("NAME_EN").HasMaxLength(200
         builder.Property(e => e.DefaultBranchId).HasColumnName("DEFAULT_BRANCH_ID");
         builder.Property(e => e.CompanyLogoPath).HasColumnName("COMPANY_LOGO_PATH").HasMaxLength(500);
         builder.Property(e => e.IsActive).HasColumnName("IS_ACTIVE").HasConversion<string>(v => v ? "Y" : "N", v => v == "Y").HasMaxLength(1);
+        builder.Property(e => e.CreatedBySuperAdminId).HasColumnName("CREATED_BY_SUPER_ADMIN_ID");
+        builder.Property(e => e.CompanySchema).HasColumnName("COMPANY_SCHEMA").HasMaxLength(100);
         builder.Property(e => e.CreationUser).HasColumnName("CREATION_USER").HasMaxLength(100).IsRequired();
         builder.Property(e => e.CreationDate).HasColumnName("CREATION_DATE");
         builder.Property(e => e.UpdateUser).HasColumnName("UPDATE_USER").HasMaxLength(100);
@@ -75,6 +77,7 @@ builder.Property(e => e.CompanyNameEn).HasColumnName("NAME_EN").HasMaxLength(200
         // Navigation
         builder.HasOne(e => e.Currency).WithMany().HasForeignKey(e => e.CurrId).OnDelete(DeleteBehavior.SetNull);
         builder.HasOne(e => e.DefaultBranch).WithMany().HasForeignKey(e => e.DefaultBranchId).OnDelete(DeleteBehavior.SetNull);
+        builder.HasOne(e => e.CreatedBySuperAdmin).WithMany().HasForeignKey(e => e.CreatedBySuperAdminId).OnDelete(DeleteBehavior.SetNull);
     }
 }
 
@@ -124,7 +127,7 @@ builder.Property(e => e.FullNameEn).HasColumnName("NAME_EN").HasMaxLength(200).I
         builder.Property(e => e.Password).HasColumnName("PASSWORD").HasMaxLength(500).IsRequired();
         builder.Property(e => e.Phone).HasColumnName("PHONE").HasMaxLength(50);
         builder.Property(e => e.Phone2).HasColumnName("PHONE2").HasMaxLength(50);
-        builder.Property(e => e.Role).HasColumnName("ROLE");
+        builder.Property(e => e.RoleId).HasColumnName("ROLE");
         builder.Property(e => e.BranchId).HasColumnName("BRANCH_ID");
         builder.Property(e => e.CompanyId).HasColumnName("COMPANY_ID");
         builder.Property(e => e.Email).HasColumnName("EMAIL").HasMaxLength(200);
@@ -317,7 +320,6 @@ public class SysBranchSystemConfiguration : IEntityTypeConfiguration<SysBranchSy
         builder.ToTable("SYS_BRANCH_SYSTEMS");
         builder.HasKey(e => e.Id);
         builder.Property(e => e.Id).ValueGeneratedOnAdd();
-        builder.Property(e => e.CompanyId).HasColumnName("COMPANY_ID").IsRequired();
         builder.Property(e => e.BranchId).HasColumnName("BRANCH_ID").IsRequired();
         builder.Property(e => e.SystemId).HasColumnName("SYSTEM_ID").IsRequired();
         builder.Property(e => e.IsAllowed).HasColumnName("IS_ALLOWED").HasConversion<string>(v => v ? "Y" : "N", v => v == "Y").HasMaxLength(1);
@@ -330,7 +332,6 @@ public class SysBranchSystemConfiguration : IEntityTypeConfiguration<SysBranchSy
         builder.Property(e => e.UpdateUser).HasColumnName("UPDATE_USER").HasMaxLength(100);
         builder.Property(e => e.UpdateDate).HasColumnName("UPDATE_DATE");
 
-        builder.HasOne(e => e.Company).WithMany(e => e.BranchSystemAccess).HasForeignKey(e => e.CompanyId).OnDelete(DeleteBehavior.Cascade);
         builder.HasOne(e => e.Branch).WithMany(e => e.SystemAccess).HasForeignKey(e => e.BranchId).OnDelete(DeleteBehavior.Cascade);
         builder.HasOne(e => e.System).WithMany(e => e.BranchAccess).HasForeignKey(e => e.SystemId).OnDelete(DeleteBehavior.Restrict);
         builder.HasOne(e => e.Granter).WithMany().HasForeignKey(e => e.GrantedBy).OnDelete(DeleteBehavior.SetNull);
@@ -344,7 +345,6 @@ public class SysBranchScreenPermissionConfiguration : IEntityTypeConfiguration<S
         builder.ToTable("SYS_BRANCH_SCREEN_PERMISSIONS");
         builder.HasKey(e => e.Id);
         builder.Property(e => e.Id).ValueGeneratedOnAdd();
-        builder.Property(e => e.CompanyId).HasColumnName("COMPANY_ID").IsRequired();
         builder.Property(e => e.BranchId).HasColumnName("BRANCH_ID").IsRequired();
         builder.Property(e => e.ScreenId).HasColumnName("SCREEN_ID").IsRequired();
         builder.Property(e => e.CanView).HasColumnName("CAN_VIEW").HasConversion<string>(v => v ? "Y" : "N", v => v == "Y").HasMaxLength(1);
@@ -359,58 +359,9 @@ public class SysBranchScreenPermissionConfiguration : IEntityTypeConfiguration<S
         builder.Property(e => e.UpdateUser).HasColumnName("UPDATE_USER").HasMaxLength(100);
         builder.Property(e => e.UpdateDate).HasColumnName("UPDATE_DATE");
 
-        builder.HasOne(e => e.Company).WithMany(e => e.BranchScreenPermissions).HasForeignKey(e => e.CompanyId).OnDelete(DeleteBehavior.Cascade);
         builder.HasOne(e => e.Branch).WithMany(e => e.ScreenPermissions).HasForeignKey(e => e.BranchId).OnDelete(DeleteBehavior.Cascade);
         builder.HasOne(e => e.Screen).WithMany(e => e.BranchPermissions).HasForeignKey(e => e.ScreenId).OnDelete(DeleteBehavior.Restrict);
         builder.HasOne(e => e.Granter).WithMany().HasForeignKey(e => e.GrantedBy).OnDelete(DeleteBehavior.SetNull);
-    }
-}
-
-public class SysCompanyScreenPermissionConfiguration : IEntityTypeConfiguration<SysCompanyScreenPermission>
-{
-    public void Configure(EntityTypeBuilder<SysCompanyScreenPermission> builder)
-    {
-        builder.ToTable("SYS_COMPANY_SCREEN_PERMISSIONS");
-        builder.HasKey(e => e.Id);
-        builder.Property(e => e.Id).ValueGeneratedOnAdd();
-        builder.Property(e => e.CompanyId).HasColumnName("COMPANY_ID").IsRequired();
-        builder.Property(e => e.ScreenId).HasColumnName("SCREEN_ID").IsRequired();
-        builder.Property(e => e.CanView).HasColumnName("CAN_VIEW").HasConversion<string>(v => v ? "Y" : "N", v => v == "Y").HasMaxLength(1);
-        builder.Property(e => e.CanInsert).HasColumnName("CAN_INSERT").HasConversion<string>(v => v ? "Y" : "N", v => v == "Y").HasMaxLength(1);
-        builder.Property(e => e.CanUpdate).HasColumnName("CAN_UPDATE").HasConversion<string>(v => v ? "Y" : "N", v => v == "Y").HasMaxLength(1);
-        builder.Property(e => e.CanDelete).HasColumnName("CAN_DELETE").HasConversion<string>(v => v ? "Y" : "N", v => v == "Y").HasMaxLength(1);
-        builder.Property(e => e.GrantedBy).HasColumnName("GRANTED_BY");
-        builder.Property(e => e.GrantedDate).HasColumnName("GRANTED_DATE");
-        builder.Property(e => e.Notes).HasColumnName("NOTES").HasMaxLength(500);
-        builder.Property(e => e.CreationUser).HasColumnName("CREATION_USER").HasMaxLength(100).IsRequired();
-        builder.Property(e => e.CreationDate).HasColumnName("CREATION_DATE");
-        builder.Property(e => e.UpdateUser).HasColumnName("UPDATE_USER").HasMaxLength(100);
-        builder.Property(e => e.UpdateDate).HasColumnName("UPDATE_DATE");
-
-        builder.HasOne(e => e.Company).WithMany(e => e.ScreenPermissions).HasForeignKey(e => e.CompanyId).OnDelete(DeleteBehavior.Cascade);
-        builder.HasOne(e => e.Screen).WithMany(e => e.CompanyPermissions).HasForeignKey(e => e.ScreenId).OnDelete(DeleteBehavior.Restrict);
-        builder.HasOne(e => e.Granter).WithMany().HasForeignKey(e => e.GrantedBy).OnDelete(DeleteBehavior.SetNull);
-    }
-}
-
-public class SysCompanySystemConfiguration : IEntityTypeConfiguration<SysCompanySystem>
-{
-    public void Configure(EntityTypeBuilder<SysCompanySystem> builder)
-    {
-        builder.ToTable("SYS_COMPANY_SYSTEMS");
-        builder.HasKey(e => e.Id);
-        builder.Property(e => e.Id).ValueGeneratedOnAdd();
-        builder.Property(e => e.CompanyId).HasColumnName("COMPANY_ID").IsRequired();
-        builder.Property(e => e.SystemId).HasColumnName("SYSTEM_ID").IsRequired();
-        builder.Property(e => e.IsAllowed).HasColumnName("IS_ALLOWED").HasConversion<string>(v => v ? "Y" : "N", v => v == "Y").HasMaxLength(1);
-        builder.Property(e => e.GrantedBy).HasColumnName("GRANTED_BY");
-        builder.Property(e => e.GrantedDate).HasColumnName("GRANTED_DATE");
-        builder.Property(e => e.RevokedDate).HasColumnName("REVOKED_DATE");
-        builder.Property(e => e.Notes).HasColumnName("NOTES").HasMaxLength(500);
-        builder.Property(e => e.CreationUser).HasColumnName("CREATION_USER").HasMaxLength(100).IsRequired();
-        builder.Property(e => e.CreationDate).HasColumnName("CREATION_DATE");
-        builder.Property(e => e.UpdateUser).HasColumnName("UPDATE_USER").HasMaxLength(100);
-        builder.Property(e => e.UpdateDate).HasColumnName("UPDATE_DATE");
     }
 }
 

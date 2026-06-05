@@ -22,10 +22,12 @@ public class GetBranchScreensQueryHandler : IRequestHandler<GetBranchScreensQuer
             Id = bs.Id,
             BranchId = bs.BranchId,
             ScreenId = bs.ScreenId,
-            IsAllowed = bs.IsAllowed,
+            CanView = bs.CanView,
+            CanInsert = bs.CanInsert,
+            CanUpdate = bs.CanUpdate,
+            CanDelete = bs.CanDelete,
             GrantedBy = bs.GrantedBy,
             GrantedDate = bs.GrantedDate,
-            RevokedDate = bs.RevokedDate,
             Notes = bs.Notes
         }).ToList();
     }

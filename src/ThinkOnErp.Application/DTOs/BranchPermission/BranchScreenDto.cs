@@ -10,10 +10,12 @@ public class BranchScreenDto
     public string? ScreenNameE { get; set; }
     public long? SystemId { get; set; }
     public string? SystemName { get; set; }
-    public bool IsAllowed { get; set; }
+    public bool CanView { get; set; }
+    public bool CanInsert { get; set; }
+    public bool CanUpdate { get; set; }
+    public bool CanDelete { get; set; }
     public long? GrantedBy { get; set; }
     public string? GrantedByName { get; set; }
     public DateTime? GrantedDate { get; set; }
-    public DateTime? RevokedDate { get; set; }
     public string? Notes { get; set; }
 }

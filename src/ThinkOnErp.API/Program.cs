@@ -273,42 +273,11 @@ try
     builder.Services.AddSwaggerGen(options =>
     {
         // API Information
-        options.SwaggerDoc("v1", new Microsoft.OpenApi.Models.OpenApiInfo
+        options.SwaggerDoc("superadmin", new Microsoft.OpenApi.Models.OpenApiInfo
         {
-            Title = "ThinkOnErp API - Full Traceability System",
+            Title = "ThinkOnErp SuperAdmin API",
             Version = "v1.0",
-            Description = @"
-# ThinkOnErp Enterprise Resource Planning API
-
-## Overview
-Enterprise Resource Planning API with comprehensive audit logging, request tracing, and compliance monitoring capabilities.
-
-## Features
-- **Full Audit Trail**: Complete tracking of all data modifications, authentication events, and API requests
-- **Compliance Reporting**: GDPR, SOX, and ISO 27001 compliance reports
-- **Performance Monitoring**: Real-time system health, performance metrics, and slow query detection
-- **Security Monitoring**: Threat detection, failed login tracking, and anomaly detection
-- **Alert Management**: Configurable alert rules with multiple notification channels (email, webhook, SMS)
-
-## Authentication
-All endpoints (except health checks) require JWT Bearer authentication. Use the `/api/auth/login` endpoint to obtain a token.
-
-## Authorization
-- **Admin-Only Endpoints**: Audit logs, compliance reports, monitoring, and alerts require admin privileges
-- **Multi-Tenant Access**: All data access is automatically filtered by user's company and branch permissions
-
-## Audit Trail API
-The audit trail system provides comprehensive logging and monitoring:
-- **AuditLogs**: Query audit logs, view entity history, trace requests by correlation ID
-- **Compliance**: Generate GDPR, SOX, and ISO 27001 compliance reports
-- **Monitoring**: System health, performance metrics, memory usage, security threats
-- **Alerts**: Configure alert rules, view alert history, acknowledge and resolve alerts
-
-## Rate Limiting
-API requests are subject to rate limiting to prevent abuse. Failed login attempts are tracked and blocked after 5 attempts within 5 minutes.
-
-## Support
-For API support, contact the development team or refer to the comprehensive documentation at /swagger.",
+            Description = "Endpoints for Super Admin management, branch permissions, and platform-wide configuration.",
             Contact = new Microsoft.OpenApi.Models.OpenApiContact
             {
                 Name = "ThinkOnErp Development Team",
@@ -319,6 +288,39 @@ For API support, contact the development team or refer to the comprehensive docu
                 Name = "Proprietary License",
                 Url = new Uri("https://thinkonerp.com/license")
             }
+        });
+
+        options.SwaggerDoc("company", new Microsoft.OpenApi.Models.OpenApiInfo
+        {
+            Title = "ThinkOnErp Company API",
+            Version = "v1.0",
+            Description = "Endpoints for company operations, user management, roles, permissions, audit, and business modules.",
+            Contact = new Microsoft.OpenApi.Models.OpenApiContact
+            {
+                Name = "ThinkOnErp Development Team",
+                Email = "support@thinkonerp.com"
+            },
+            License = new Microsoft.OpenApi.Models.OpenApiLicense
+            {
+                Name = "Proprietary License",
+                Url = new Uri("https://thinkonerp.com/license")
+            }
+        });
+
+        var superAdminControllers = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+        {
+            "Alerts", "AuditHealth", "AuditTrail", "Branch", "BranchPermissions",
+            "Company", "Compliance", "Configuration", "Documents", "Health",
+            "KeyManagement", "Monitoring", "SuperAdmin", "SuperAdminAuth",
+            "Tickets", "TicketTypes", "AuditLogs"
+        };
+
+        options.DocInclusionPredicate((docName, apiDesc) =>
+        {
+            var controller = apiDesc.ActionDescriptor.RouteValues["controller"];
+            if (docName == "superadmin")
+                return superAdminControllers.Contains(controller);
+            return !superAdminControllers.Contains(controller);
         });
 
         // Add JWT Bearer authentication to Swagger
@@ -439,7 +441,11 @@ Example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...'
     //if (app.Environment.IsDevelopment())
     //{
         app.UseSwagger();
-        app.UseSwaggerUI();
+        app.UseSwaggerUI(options =>
+        {
+            options.SwaggerEndpoint("/swagger/superadmin/swagger.json", "SuperAdmin API");
+            options.SwaggerEndpoint("/swagger/company/swagger.json", "Company API");
+        });
     //}
 
     // Disable HTTPS redirection for IP-based access

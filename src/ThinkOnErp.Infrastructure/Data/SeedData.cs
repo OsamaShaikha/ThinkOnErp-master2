@@ -68,6 +68,7 @@ public static class SeedData
             LegalName = "Tech Company For Information Technology",
             LegalNameE = "Tech Company For Information Technology",
             CompanyCode = "TECH01",
+            CompanySchema = "THINKONERP_TECH01",
             IsActive = true,
             CreationUser = seedUser,
             CreationDate = now
@@ -404,7 +405,7 @@ public static class SeedData
             UserName = "ahmed",
             Password = passwordHasher.HashPassword("User@123"),
             Phone = "+966500000002",
-            Role = roleAdmin.Id,
+            RoleId = roleAdmin.Id,
             BranchId = hqBranch.Id,
             CompanyId = company.Id,
             Email = "ahmed@techcompany.com",
@@ -422,7 +423,7 @@ public static class SeedData
             UserName = "sara",
             Password = passwordHasher.HashPassword("User@123"),
             Phone = "+966500000003",
-            Role = roleSupport.Id,
+            RoleId = roleSupport.Id,
             BranchId = hqBranch.Id,
             CompanyId = company.Id,
             Email = "sara@techcompany.com",
@@ -440,7 +441,7 @@ public static class SeedData
             UserName = "khaled",
             Password = passwordHasher.HashPassword("User@123"),
             Phone = "+966500000004",
-            Role = roleViewer.Id,
+            RoleId = roleViewer.Id,
             BranchId = branch2.Id,
             CompanyId = company.Id,
             Email = "khaled@techcompany.com",
@@ -578,23 +579,7 @@ public static class SeedData
         });
         await context.SaveChangesAsync();
 
-        // 13. Company System access
-        foreach (var sys in new[] { sysSupport, sysHr })
-        {
-            context.SysCompanySystems.Add(new SysCompanySystem
-            {
-                CompanyId = company.Id,
-                SystemId = sys.Id,
-                IsAllowed = true,
-                GrantedBy = admin.Id,
-                GrantedDate = now,
-                CreationUser = seedUser,
-                CreationDate = now
-            });
-        }
-        await context.SaveChangesAsync();
-
-        // 14. Branch System access
+        // 13. Branch System access
         foreach (var branch in new[] { hqBranch, branch2 })
         {
             foreach (var sys in new[] { sysSupport, sysHr })
@@ -613,7 +598,7 @@ public static class SeedData
         }
         await context.SaveChangesAsync();
 
-        // 15. Branch Screen Permissions
+        // 14. Branch Screen Permissions
         foreach (var screen in allScreens)
         {
             context.SysBranchScreenPermissions.Add(new SysBranchScreenPermission
@@ -632,26 +617,7 @@ public static class SeedData
         }
         await context.SaveChangesAsync();
 
-        // 16. Company Screen Permissions
-        foreach (var screen in allScreens)
-        {
-            context.SysCompanyScreenPermissions.Add(new SysCompanyScreenPermission
-            {
-                CompanyId = company.Id,
-                ScreenId = screen.Id,
-                CanView = true,
-                CanInsert = true,
-                CanUpdate = true,
-                CanDelete = true,
-                GrantedBy = admin.Id,
-                GrantedDate = now,
-                CreationUser = seedUser,
-                CreationDate = now
-            });
-        }
-        await context.SaveChangesAsync();
-
-        // 17. Ticket Priority
+        // 15. Ticket Priority
         var priorityCritical = new SysTicketPriority
         {
             PriorityNameAr = "حرج",

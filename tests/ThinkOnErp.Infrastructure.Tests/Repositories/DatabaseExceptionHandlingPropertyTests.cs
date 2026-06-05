@@ -14,12 +14,12 @@ namespace ThinkOnErp.Infrastructure.Tests.Repositories;
 /// </summary>
 public class DatabaseExceptionHandlingPropertyTests
 {
-    private static ThinkOnErpDbContext CreateInMemoryContext()
+    private static OracleDbContext CreateInMemoryContext()
     {
-        var options = new DbContextOptionsBuilder<ThinkOnErpDbContext>()
+        var options = new DbContextOptionsBuilder<OracleDbContext>()
             .UseInMemoryDatabase(databaseName: $"TestDb_{Guid.NewGuid()}")
             .Options;
-        return new ThinkOnErpDbContext(options);
+        return new OracleDbContext(options);
     }
 
     [Property(MaxTest = 50)]

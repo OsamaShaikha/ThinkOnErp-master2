@@ -25,7 +25,7 @@ public class GetUsersByCompanyIdQueryHandler : IRequestHandler<GetUsersByCompany
             UserName = u.UserName,
             Phone = u.Phone,
             Phone2 = u.Phone2,
-            RoleId = u.Role,
+            RoleId = u.RoleId,
             BranchId = u.BranchId,
             Email = u.Email,
             LastLoginDate = u.LastLoginDate,

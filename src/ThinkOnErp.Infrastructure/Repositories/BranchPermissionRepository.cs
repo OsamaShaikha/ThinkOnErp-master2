@@ -18,14 +18,6 @@ public class BranchPermissionRepository : IBranchPermissionRepository
         _dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
     }
 
-    private async Task<long> GetCompanyIdAsync(long branchId)
-    {
-        return await _dbContext.SysBranches
-            .Where(b => b.Id == branchId)
-            .Select(b => b.CompanyId ?? 0)
-            .FirstOrDefaultAsync();
-    }
-
     #region Branch System Permissions
 
     public async Task<List<SysBranchSystem>> GetBranchSystemsAsync(long branchId)
@@ -43,10 +35,8 @@ public class BranchPermissionRepository : IBranchPermissionRepository
 
     public async Task<long> GrantSystemAccessAsync(long branchId, long systemId, long grantedBy, string? notes, string creationUser)
     {
-        var companyId = await GetCompanyIdAsync(branchId);
         var entity = new SysBranchSystem
         {
-            CompanyId = companyId,
             BranchId = branchId,
             SystemId = systemId,
             IsAllowed = true,
@@ -83,54 +73,23 @@ public class BranchPermissionRepository : IBranchPermissionRepository
 
     #region Branch Screen Permissions
 
-    public async Task<List<SysBranchScreen>> GetBranchScreensAsync(long branchId)
+    public async Task<List<SysBranchScreenPermission>> GetBranchScreensAsync(long branchId)
     {
         return await _dbContext.SysBranchScreenPermissions
             .Where(p => p.BranchId == branchId)
-            .Select(p => new SysBranchScreen
-            {
-                Id = p.Id,
-                BranchId = p.BranchId,
-                ScreenId = p.ScreenId,
-                IsAllowed = true,
-                GrantedBy = p.GrantedBy,
-                GrantedDate = p.GrantedDate,
-                Notes = p.Notes,
-                CreationUser = p.CreationUser,
-                CreationDate = p.CreationDate,
-                UpdateUser = p.UpdateUser,
-                UpdateDate = p.UpdateDate
-            })
             .ToListAsync();
     }
 
-    public async Task<SysBranchScreen?> GetBranchScreenAsync(long branchId, long screenId)
+    public async Task<SysBranchScreenPermission?> GetBranchScreenAsync(long branchId, long screenId)
     {
         return await _dbContext.SysBranchScreenPermissions
-            .Where(p => p.BranchId == branchId && p.ScreenId == screenId)
-            .Select(p => new SysBranchScreen
-            {
-                Id = p.Id,
-                BranchId = p.BranchId,
-                ScreenId = p.ScreenId,
-                IsAllowed = true,
-                GrantedBy = p.GrantedBy,
-                GrantedDate = p.GrantedDate,
-                Notes = p.Notes,
-                CreationUser = p.CreationUser,
-                CreationDate = p.CreationDate,
-                UpdateUser = p.UpdateUser,
-                UpdateDate = p.UpdateDate
-            })
-            .FirstOrDefaultAsync();
+            .FirstOrDefaultAsync(p => p.BranchId == branchId && p.ScreenId == screenId);
     }
 
     public async Task<long> GrantScreenAccessAsync(long branchId, long screenId, long grantedBy, string? notes, string creationUser)
     {
-        var companyId = await GetCompanyIdAsync(branchId);
         var entity = new SysBranchScreenPermission
         {
-            CompanyId = companyId,
             BranchId = branchId,
             ScreenId = screenId,
             CanView = true,
@@ -169,12 +128,10 @@ public class BranchPermissionRepository : IBranchPermissionRepository
 
     public async Task<int> GrantMultipleSystemsAsync(long branchId, List<long> systemIds, long grantedBy, string creationUser)
     {
-        var companyId = await GetCompanyIdAsync(branchId);
         foreach (var systemId in systemIds)
         {
             _dbContext.SysBranchSystems.Add(new SysBranchSystem
             {
-                CompanyId = companyId,
                 BranchId = branchId,
                 SystemId = systemId,
                 IsAllowed = true,
@@ -189,12 +146,10 @@ public class BranchPermissionRepository : IBranchPermissionRepository
 
     public async Task<int> GrantMultipleScreensAsync(long branchId, List<long> screenIds, long grantedBy, string creationUser)
     {
-        var companyId = await GetCompanyIdAsync(branchId);
         foreach (var screenId in screenIds)
         {
             _dbContext.SysBranchScreenPermissions.Add(new SysBranchScreenPermission
             {
-                CompanyId = companyId,
                 BranchId = branchId,
                 ScreenId = screenId,
                 CanView = true,
@@ -217,7 +172,6 @@ public class BranchPermissionRepository : IBranchPermissionRepository
     public async Task GrantSystemWithAllScreensAsync(long branchId, long systemId, long grantedBy, string creationUser)
     {
         var now = DateTime.UtcNow;
-        var companyId = await GetCompanyIdAsync(branchId);
 
         // Grant the system
         var existingSystem = await _dbContext.SysBranchSystems
@@ -226,7 +180,6 @@ public class BranchPermissionRepository : IBranchPermissionRepository
         {
             _dbContext.SysBranchSystems.Add(new SysBranchSystem
             {
-                CompanyId = companyId,
                 BranchId = branchId,
                 SystemId = systemId,
                 IsAllowed = true,
@@ -253,7 +206,6 @@ public class BranchPermissionRepository : IBranchPermissionRepository
             {
                 _dbContext.SysBranchScreenPermissions.Add(new SysBranchScreenPermission
                 {
-                    CompanyId = companyId,
                     BranchId = branchId,
                     ScreenId = screen.Id,
                     CanView = true,

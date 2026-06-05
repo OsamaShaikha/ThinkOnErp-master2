@@ -13,14 +13,14 @@ public class SysCompany
     public Int64? DefaultBranchId { get; set; }
     public string? CompanyLogoPath { get; set; }
     public bool IsActive { get; set; }
+    public long? CreatedBySuperAdminId { get; set; }
+    public string? CompanySchema { get; set; }
     public string CreationUser { get; set; } = string.Empty;
     public DateTime? CreationDate { get; set; }
     public string? UpdateUser { get; set; }
     public DateTime? UpdateDate { get; set; }
     public SysCurrency? Currency { get; set; }
     public SysBranch? DefaultBranch { get; set; }
+    public SysSuperAdmin? CreatedBySuperAdmin { get; set; }
     public ICollection<SysBranch> Branches { get; set; } = new List<SysBranch>();
-    public ICollection<SysCompanyScreenPermission> ScreenPermissions { get; set; } = new List<SysCompanyScreenPermission>();
-    public ICollection<SysBranchSystem> BranchSystemAccess { get; set; } = new List<SysBranchSystem>();
-    public ICollection<SysBranchScreenPermission> BranchScreenPermissions { get; set; } = new List<SysBranchScreenPermission>();
 }

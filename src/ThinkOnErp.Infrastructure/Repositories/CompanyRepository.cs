@@ -79,6 +79,7 @@ public class CompanyRepository : ICompanyRepository
         string? branchFax, string? branchEmail,
         string? branchLogoPath, int? defaultLang,
         long? baseCurrencyId, int? roundingRules,
+        string? companySchema,
         string creationUser)
     {
         // Use a strategy pattern - create company, branch, and fiscal year in a transaction
@@ -93,6 +94,7 @@ public class CompanyRepository : ICompanyRepository
                 LegalName = legalNameAr,
                 LegalNameE = legalNameEn,
                 CompanyCode = companyCode,
+                CompanySchema = companySchema,
                 CountryId = countryId,
                 CurrId = currId,
                 CompanyLogoPath = companyLogoPath,

@@ -81,7 +81,7 @@ public class JwtTokenServicePropertyTests
             // Property 2: Claims must have correct values
             var claimsHaveCorrectValues = userIdClaim?.Value == user.Id.ToString()
                 && userNameClaim?.Value == user.UserName
-                && roleClaim?.Value == (user.Role?.ToString() ?? "0")
+                && roleClaim?.Value == (user.RoleId?.ToString() ?? "0")
                 && branchIdClaim?.Value == (user.BranchId?.ToString() ?? "0")
                 && isAdminClaim?.Value == user.IsAdmin.ToString().ToLower();
 
@@ -175,7 +175,7 @@ public class JwtTokenServicePropertyTests
                                    FullNameAr = rowDesc,
                                    FullNameEn = rowDescE,
                                    Password = password,
-                                   Role = role,
+                                    RoleId = role,
                                    BranchId = branchId,
                                    IsAdmin = isAdmin,
                                    IsActive = true,

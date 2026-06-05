@@ -162,7 +162,7 @@ public class PasswordHashingOnAuthenticationPropertyTests
                         FullNameAr = $"User {userName}",
                         FullNameEn = $"User {userName}",
                         Password = ComputeSHA256Hash(password), // Stored hash
-                        Role = roleId,
+                        RoleId = roleId,
                         BranchId = branchId,
                         IsAdmin = isAdmin,
                         IsActive = true,

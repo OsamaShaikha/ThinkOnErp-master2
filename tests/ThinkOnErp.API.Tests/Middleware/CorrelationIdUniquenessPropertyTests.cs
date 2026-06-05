@@ -54,7 +54,6 @@ public class CorrelationIdUniquenessPropertyTests
         // Create a mock middleware pipeline that captures correlation IDs
         var mockAuditLogger = new Mock<IAuditLogger>();
         var mockPerformanceMonitor = new Mock<IPerformanceMonitor>();
-        var mockExceptionCategorization = new Mock<IExceptionCategorizationService>();
         var mockLogger = new Mock<ILogger<API.Middleware.RequestTracingMiddleware>>();
         
         var services = new ServiceCollection();
@@ -105,7 +104,6 @@ public class CorrelationIdUniquenessPropertyTests
                     auditLogger: mockAuditLogger.Object,
                     performanceMonitor: mockPerformanceMonitor.Object,
                     serviceScopeFactory: serviceScopeFactory,
-                    exceptionCategorization: mockExceptionCategorization.Object,
                     logger: mockLogger.Object,
                     options: options
                 );
@@ -187,7 +185,6 @@ public class CorrelationIdUniquenessPropertyTests
 
         var mockAuditLogger = new Mock<IAuditLogger>();
         var mockPerformanceMonitor = new Mock<IPerformanceMonitor>();
-        var mockExceptionCategorization = new Mock<IExceptionCategorizationService>();
         var mockLogger = new Mock<ILogger<API.Middleware.RequestTracingMiddleware>>();
         
         var services = new ServiceCollection();
@@ -232,7 +229,6 @@ public class CorrelationIdUniquenessPropertyTests
                         auditLogger: mockAuditLogger.Object,
                         performanceMonitor: mockPerformanceMonitor.Object,
                         serviceScopeFactory: serviceScopeFactory,
-                        exceptionCategorization: mockExceptionCategorization.Object,
                         logger: mockLogger.Object,
                         options: options
                     );

@@ -86,6 +86,7 @@ public interface ICompanyRepository
     /// <param name="defaultLang">Default language code (CODE_MNR from SYS_CODE where CODE_MGR=14)</param>
     /// <param name="baseCurrencyId">Base currency ID for the branch</param>
     /// <param name="roundingRules">Rounding rules for the branch</param>
+    /// <param name="companySchema">Oracle schema name for this tenant (null for existing records)</param>
     /// <param name="creationUser">Username of the user creating the records</param>
     /// <returns>A tuple containing the new company ID, branch ID, and fiscal year ID</returns>
     Task<(Int64 CompanyId, Int64 BranchId, Int64 FiscalYearId)> CreateWithBranchAsync(
@@ -108,6 +109,7 @@ public interface ICompanyRepository
         int? defaultLang,
         Int64? baseCurrencyId,
         int? roundingRules,
+        string? companySchema,
         string creationUser);
 
     /// <summary>

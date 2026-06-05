@@ -112,28 +112,6 @@ public interface IPermissionRepository
     Task DeleteUserScreenPermissionAsync(long userId, long screenId);
 
     // =====================================================
-    // Company System Assignments
-    // =====================================================
-    
-    /// <summary>
-    /// Gets all system assignments for a company.
-    /// </summary>
-    /// <param name="companyId">Company ID</param>
-    /// <returns>List of company system assignments</returns>
-    Task<List<SysCompanySystem>> GetCompanySystemsAsync(long companyId);
-
-    /// <summary>
-    /// Sets system access for a company (allow or block).
-    /// </summary>
-    /// <param name="companyId">Company ID</param>
-    /// <param name="systemId">System ID</param>
-    /// <param name="isAllowed">True to allow, false to block</param>
-    /// <param name="grantedBy">Super Admin ID who is granting/revoking</param>
-    /// <param name="notes">Optional notes</param>
-    /// <param name="creationUser">Username for audit</param>
-    Task SetCompanySystemAsync(long companyId, long systemId, bool isAllowed, long? grantedBy, string? notes, string creationUser);
-
-    // =====================================================
     // Branch System Assignments
     // =====================================================
 
@@ -160,18 +138,4 @@ public interface IPermissionRepository
     /// Grants all screens of a system to a branch with full CRUD permissions.
     /// </summary>
     Task GrantSystemScreensToBranchAsync(long branchId, long systemId, long? grantedBy, string creationUser);
-
-    // =====================================================
-    // Company Screen Permissions
-    // =====================================================
-
-    /// <summary>
-    /// Gets all screen permissions for a company.
-    /// </summary>
-    Task<List<SysCompanyScreenPermission>> GetCompanyScreenPermissionsAsync(long companyId);
-
-    /// <summary>
-    /// Grants all screens of a system to a company with full CRUD permissions.
-    /// </summary>
-    Task GrantSystemScreensToCompanyAsync(long companyId, long systemId, long? grantedBy, string creationUser);
 }

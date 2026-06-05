@@ -23,7 +23,7 @@ public class UpdateUserCommandHandler : IRequestHandler<UpdateUserCommand, Int64
             UserName = request.UserName,
             Phone = request.Phone,
             Phone2 = request.Phone2,
-            Role = request.RoleId,
+            RoleId = request.RoleId,
             BranchId = request.BranchId,
             Email = request.Email,
             IsAdmin = request.IsAdmin,

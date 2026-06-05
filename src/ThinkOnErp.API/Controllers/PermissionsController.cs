@@ -6,8 +6,6 @@ using ThinkOnErp.Application.DTOs.Permissions;
 using ThinkOnErp.Application.Features.Permissions.Commands.AssignRoleToUser;
 using ThinkOnErp.Application.Features.Permissions.Commands.RemoveRoleFromUser;
 using ThinkOnErp.Application.Features.Permissions.Commands.GrantSystemToBranch;
-using ThinkOnErp.Application.Features.Permissions.Commands.GrantSystemToCompany;
-using ThinkOnErp.Application.Features.Permissions.Commands.SetCompanySystem;
 using ThinkOnErp.Application.Features.Permissions.Commands.SetRoleScreenPermission;
 using ThinkOnErp.Application.Features.Permissions.Commands.SetUserScreenPermission;
 using ThinkOnErp.Application.Features.Permissions.Queries.CheckPermission;
@@ -272,47 +270,6 @@ public class PermissionsController : ControllerBase
         }
     }
 
-    /// <summary>
-    /// Sets screen permission for a role.
-    /// Requires AdminOnly authorization.
-    /// </summary>
-    /// <param name="roleId">Role ID</param>
-    /// <param name="request">Permission settings</param>
-    /// <returns>Success response</returns>
-    [HttpPut("roles/{roleId}/permissions")]
-    [Authorize(Policy = "AdminOnly")]
-    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status200OK)]
-    public async Task<ActionResult<ApiResponse<object>>> SetRoleScreenPermission(long roleId, [FromBody] SetRoleScreenPermissionDto request)
-    {
-        try
-        {
-            _logger.LogInformation("Setting screen permission for role {RoleId} screen {ScreenId}", roleId, request.ScreenId);
-
-            var command = new SetRoleScreenPermissionCommand
-            {
-                RoleId = roleId,
-                ScreenId = request.ScreenId,
-                CanView = request.CanView,
-                CanInsert = request.CanInsert,
-                CanUpdate = request.CanUpdate,
-                CanDelete = request.CanDelete,
-                CreationUser = User.Identity?.Name ?? "system"
-            };
-
-            await _mediator.Send(command);
-
-            return Ok(ApiResponse<object>.CreateSuccess(
-                null,
-                "Role permission set successfully",
-                200));
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error setting permission for role {RoleId}", roleId);
-            throw;
-        }
-    }
-
     // =====================================================
     // User Screen Permission Overrides
     // =====================================================
@@ -361,52 +318,6 @@ public class PermissionsController : ControllerBase
     }
 
     // =====================================================
-    // Company System Assignments
-    // =====================================================
-
-    /// <summary>
-    /// Sets system access for a company (allow or block).
-    /// Requires AdminOnly authorization.
-    /// </summary>
-    /// <param name="companyId">Company ID</param>
-    /// <param name="systemId">System ID</param>
-    /// <param name="isAllowed">True to allow, false to block</param>
-    /// <returns>Success response</returns>
-    [HttpPut("companies/{companyId}/systems/{systemId}")]
-    [Authorize(Policy = "AdminOnly")]
-    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status200OK)]
-    public async Task<ActionResult<ApiResponse<object>>> SetCompanySystem(long companyId, long systemId, [FromQuery] bool isAllowed)
-    {
-        try
-        {
-            _logger.LogInformation("Setting system {SystemId} access for company {CompanyId}: {IsAllowed}",
-                systemId, companyId, isAllowed);
-
-            var command = new SetCompanySystemCommand
-            {
-                CompanyId = companyId,
-                SystemId = systemId,
-                IsAllowed = isAllowed,
-                GrantedBy = null, // TODO: Get from current user context
-                Notes = null,
-                CreationUser = User.Identity?.Name ?? "system"
-            };
-
-            await _mediator.Send(command);
-
-            return Ok(ApiResponse<object>.CreateSuccess(
-                null,
-                $"System access {(isAllowed ? "granted" : "revoked")} successfully",
-                200));
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error setting system access for company {CompanyId}", companyId);
-            throw;
-        }
-    }
-
-    // =====================================================
     // Branch System Assignments
     // =====================================================
 
@@ -448,45 +359,5 @@ public class PermissionsController : ControllerBase
         }
     }
 
-    // =====================================================
-    // Company Screen Assignments
-    // =====================================================
 
-    /// <summary>
-    /// Grants a system to a company with all its screens auto-granted with full CRUD.
-    /// </summary>
-    /// <param name="companyId">Company ID</param>
-    /// <param name="systemId">System ID</param>
-    /// <returns>Success response</returns>
-    [HttpPost("companies/{companyId}/systems/{systemId}")]
-    [Authorize(Policy = "AdminOnly")]
-    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status200OK)]
-    public async Task<ActionResult<ApiResponse<object>>> GrantSystemToCompany(long companyId, long systemId)
-    {
-        try
-        {
-            _logger.LogInformation("Granting system {SystemId} to company {CompanyId} with all screens", systemId, companyId);
-
-            var command = new GrantSystemToCompanyCommand
-            {
-                CompanyId = companyId,
-                SystemId = systemId,
-                GrantedBy = null,
-                Notes = null,
-                CreationUser = User.Identity?.Name ?? "system"
-            };
-
-            await _mediator.Send(command);
-
-            return Ok(ApiResponse<object>.CreateSuccess(
-                null,
-                "System granted to company with all screens successfully",
-                200));
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error granting system {SystemId} to company {CompanyId}", systemId, companyId);
-            throw;
-        }
-    }
 }

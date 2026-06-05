@@ -23,7 +23,7 @@ public class CreateUserCommandHandler : IRequestHandler<CreateUserCommand, Int64
             Password = request.Password, // Will be hashed in Infrastructure layer
             Phone = request.Phone,
             Phone2 = request.Phone2,
-            Role = request.RoleId,
+            RoleId = request.RoleId,
             BranchId = request.BranchId,
             Email = request.Email,
             IsAdmin = request.IsAdmin,
