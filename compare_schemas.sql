@@ -1,0 +1,5 @@
+SELECT '=== SUPERADMIN (THINKON_ERP) SCHEMA TABLES ===' AS info FROM DUAL;
+SELECT table_name FROM user_tables ORDER BY table_name;
+SELECT '=== TENANT SCHEMA (THINKONERP_NEW1) TABLES ===' AS info FROM DUAL;
+SELECT table_name FROM all_tables WHERE owner = 'THINKONERP_NEW1' ORDER BY table_name;
+EXIT;

@@ -14,6 +14,7 @@ public interface ICompanyRepository
     /// </summary>
     /// <returns>A list of all active SysCompany entities</returns>
     Task<List<SysCompany>> GetAllAsync();
+    Task<SysCompany?> GetBySchemaAsync(string companySchema);
 
     /// <summary>
     /// Retrieves a specific company by its ID.
@@ -87,6 +88,7 @@ public interface ICompanyRepository
     /// <param name="baseCurrencyId">Base currency ID for the branch</param>
     /// <param name="roundingRules">Rounding rules for the branch</param>
     /// <param name="companySchema">Oracle schema name for this tenant (null for existing records)</param>
+    /// <param name="createdBySuperAdminId">Super admin ID who creates this company</param>
     /// <param name="creationUser">Username of the user creating the records</param>
     /// <returns>A tuple containing the new company ID, branch ID, and fiscal year ID</returns>
     Task<(Int64 CompanyId, Int64 BranchId, Int64 FiscalYearId)> CreateWithBranchAsync(
@@ -110,6 +112,7 @@ public interface ICompanyRepository
         Int64? baseCurrencyId,
         int? roundingRules,
         string? companySchema,
+        long? createdBySuperAdminId,
         string creationUser);
 
     /// <summary>

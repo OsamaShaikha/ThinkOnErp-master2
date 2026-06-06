@@ -125,7 +125,10 @@ public class CompanyController : ControllerBase
                 BranchFax = dto.BranchFax,
                 BranchEmail = dto.BranchEmail,
                 
-                CreationUser = User.Identity?.Name ?? "system"
+                CreationUser = User.Identity?.Name ?? "system",
+                CreatedBySuperAdminId = User.FindFirst("userId") != null
+                    ? long.Parse(User.FindFirst("userId")!.Value)
+                    : null
             };
 
             var result = await _mediator.Send(command);

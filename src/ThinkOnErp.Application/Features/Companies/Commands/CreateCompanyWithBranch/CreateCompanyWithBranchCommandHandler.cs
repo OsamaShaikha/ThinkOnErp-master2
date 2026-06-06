@@ -53,6 +53,11 @@ public class CreateCompanyWithBranchCommandHandler : IRequestHandler<CreateCompa
             // Generate Oracle schema name from company code
             var companySchema = $"THINKONERP_{request.CompanyCode?.ToUpperInvariant()?.Replace("-", "_")?.Replace(" ", "_")}";
 
+            // Check if schema already exists in the database
+            var existingSchema = await _companyRepository.GetBySchemaAsync(companySchema);
+            if (existingSchema != null)
+                throw new InvalidOperationException($"Company schema '{companySchema}' already exists for company '{existingSchema.CompanyCode}'.");
+
             // Use the repository method to create company with branch and fiscal year
             var result = await _companyRepository.CreateWithBranchAsync(
                 companyNameAr: request.CompanyNameAr,
@@ -75,6 +80,7 @@ public class CreateCompanyWithBranchCommandHandler : IRequestHandler<CreateCompa
                 baseCurrencyId: request.BranchBaseCurrencyId,
                 roundingRules: request.BranchRoundingRules ?? 1,
                 companySchema: companySchema,
+                createdBySuperAdminId: request.CreatedBySuperAdminId,
                 creationUser: request.CreationUser);
 
             // Rename logo files with correct IDs

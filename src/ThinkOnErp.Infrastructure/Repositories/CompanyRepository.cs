@@ -14,6 +14,12 @@ public class CompanyRepository : ICompanyRepository
         _context = context;
     }
 
+    public async Task<SysCompany?> GetBySchemaAsync(string companySchema)
+    {
+        return await _context.SysCompanies
+            .FirstOrDefaultAsync(c => c.CompanySchema == companySchema);
+    }
+
     public async Task<List<SysCompany>> GetAllAsync()
     {
         return await _context.SysCompanies
@@ -80,6 +86,7 @@ public class CompanyRepository : ICompanyRepository
         string? branchLogoPath, int? defaultLang,
         long? baseCurrencyId, int? roundingRules,
         string? companySchema,
+        long? createdBySuperAdminId,
         string creationUser)
     {
         // Use a strategy pattern - create company, branch, and fiscal year in a transaction
@@ -99,6 +106,7 @@ public class CompanyRepository : ICompanyRepository
                 CurrId = currId,
                 CompanyLogoPath = companyLogoPath,
                 IsActive = true,
+                CreatedBySuperAdminId = createdBySuperAdminId,
                 CreationUser = creationUser,
                 CreationDate = DateTime.Now
             };

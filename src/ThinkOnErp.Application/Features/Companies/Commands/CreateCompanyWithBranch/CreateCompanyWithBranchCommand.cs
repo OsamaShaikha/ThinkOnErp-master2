@@ -121,6 +121,11 @@ public class CreateCompanyWithBranchCommand : IRequest<CreateCompanyWithBranchRe
     /// Username of the user creating the company and branch
     /// </summary>
     public string CreationUser { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Super admin ID who creates this company
+    /// </summary>
+    public long? CreatedBySuperAdminId { get; set; }
 }
 
 /// <summary>

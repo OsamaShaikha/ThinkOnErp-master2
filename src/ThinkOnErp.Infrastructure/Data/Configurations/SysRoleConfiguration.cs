@@ -69,6 +69,7 @@ builder.Property(e => e.CompanyNameEn).HasColumnName("NAME_EN").HasMaxLength(200
         builder.Property(e => e.IsActive).HasColumnName("IS_ACTIVE").HasConversion<string>(v => v ? "Y" : "N", v => v == "Y").HasMaxLength(1);
         builder.Property(e => e.CreatedBySuperAdminId).HasColumnName("CREATED_BY_SUPER_ADMIN_ID");
         builder.Property(e => e.CompanySchema).HasColumnName("COMPANY_SCHEMA").HasMaxLength(100);
+        builder.HasIndex(e => e.CompanySchema).IsUnique().HasDatabaseName("IX_SYS_COMPANY_SCHEMA");
         builder.Property(e => e.CreationUser).HasColumnName("CREATION_USER").HasMaxLength(100).IsRequired();
         builder.Property(e => e.CreationDate).HasColumnName("CREATION_DATE");
         builder.Property(e => e.UpdateUser).HasColumnName("UPDATE_USER").HasMaxLength(100);

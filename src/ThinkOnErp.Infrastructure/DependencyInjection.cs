@@ -63,13 +63,6 @@ public static class DependencyInjection
                 b.UseOracleSQLCompatibility(OracleSQLCompatibility.DatabaseVersion19);
             }));
 
-        services.AddDbContextFactory<OracleDbContext>(options =>
-            options.UseOracle(connectionString, b =>
-            {
-                b.MigrationsAssembly(typeof(OracleDbContext).Assembly.FullName);
-                b.UseOracleSQLCompatibility(OracleSQLCompatibility.DatabaseVersion19);
-            }));
-
         // Register resilience services as Singleton
         services.AddSingleton<CircuitBreakerRegistry>(sp =>
         {
