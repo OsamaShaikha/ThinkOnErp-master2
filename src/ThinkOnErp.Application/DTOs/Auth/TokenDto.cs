@@ -30,4 +30,14 @@ public class TokenDto
     /// Refresh token expiration timestamp (UTC)
     /// </summary>
     public DateTime RefreshTokenExpiresAt { get; set; }
+
+    /// <summary>
+    /// Company code the user belongs to
+    /// </summary>
+    public string? CompanyCode { get; set; }
+
+    /// <summary>
+    /// Oracle schema name for this tenant
+    /// </summary>
+    public string? CompanySchema { get; set; }
 }

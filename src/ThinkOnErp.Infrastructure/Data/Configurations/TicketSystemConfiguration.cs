@@ -189,7 +189,7 @@ public class SysSavedSearchConfiguration : IEntityTypeConfiguration<SysSavedSear
 {
     public void Configure(EntityTypeBuilder<SysSavedSearch> builder)
     {
-        builder.ToTable("SYS_SAVED_SEARCH");
+        builder.ToTable("SYS_SAVED_SEARCH", t => t.ExcludeFromMigrations());
         builder.HasKey(e => e.Id);
         builder.Property(e => e.Id).ValueGeneratedOnAdd();
         builder.Property(e => e.SearchName).HasColumnName("SEARCH_NAME").HasMaxLength(200).IsRequired();
@@ -212,7 +212,7 @@ public class SysSearchAnalyticsConfiguration : IEntityTypeConfiguration<SysSearc
 {
     public void Configure(EntityTypeBuilder<SysSearchAnalytics> builder)
     {
-        builder.ToTable("SYS_SEARCH_ANALYTICS");
+        builder.ToTable("SYS_SEARCH_ANALYTICS", t => t.ExcludeFromMigrations());
         builder.HasKey(e => e.Id);
         builder.Property(e => e.Id).ValueGeneratedOnAdd();
         builder.Property(e => e.UserId).HasColumnName("USER_ID").IsRequired();

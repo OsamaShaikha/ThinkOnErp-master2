@@ -16,26 +16,34 @@ namespace ThinkOnErp.API.Controllers;
 public class AuthController : ControllerBase
 {
     private readonly IAuthRepository _authRepository;
+    private readonly ICompanyRepository _companyRepository;
     private readonly PasswordHashingService _passwordHashingService;
     private readonly JwtTokenService _jwtTokenService;
+    private readonly IOracleSchemaService _oracleSchemaService;
     private readonly ILogger<AuthController> _logger;
 
     /// <summary>
     /// Initializes a new instance of the AuthController class.
     /// </summary>
     /// <param name="authRepository">Repository for authentication operations</param>
+    /// <param name="companyRepository">Repository for company lookup</param>
     /// <param name="passwordHashingService">Service for password hashing</param>
     /// <param name="jwtTokenService">Service for JWT token generation</param>
+    /// <param name="oracleSchemaService">Service for tenant schema operations</param>
     /// <param name="logger">Logger for controller operations</param>
     public AuthController(
         IAuthRepository authRepository,
+        ICompanyRepository companyRepository,
         PasswordHashingService passwordHashingService,
         JwtTokenService jwtTokenService,
+        IOracleSchemaService oracleSchemaService,
         ILogger<AuthController> logger)
     {
         _authRepository = authRepository ?? throw new ArgumentNullException(nameof(authRepository));
+        _companyRepository = companyRepository ?? throw new ArgumentNullException(nameof(companyRepository));
         _passwordHashingService = passwordHashingService ?? throw new ArgumentNullException(nameof(passwordHashingService));
         _jwtTokenService = jwtTokenService ?? throw new ArgumentNullException(nameof(jwtTokenService));
+        _oracleSchemaService = oracleSchemaService ?? throw new ArgumentNullException(nameof(oracleSchemaService));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
@@ -43,7 +51,7 @@ public class AuthController : ControllerBase
     /// Authenticates a user and generates a JWT token.
     /// This endpoint does not require authorization.
     /// </summary>
-    /// <param name="command">Login credentials containing username and password</param>
+    /// <param name="command">Login credentials containing username, password, and company code</param>
     /// <returns>ApiResponse containing TokenDto with JWT token on success, 401 on failure</returns>
     /// <response code="200">Returns the JWT token with expiration time</response>
     /// <response code="401">Invalid credentials or inactive user</response>
@@ -52,33 +60,55 @@ public class AuthController : ControllerBase
     [ProducesResponseType(typeof(ApiResponse<TokenDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiResponse<TokenDto>), StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(typeof(ApiResponse<TokenDto>), StatusCodes.Status400BadRequest)]
-    public async Task<ActionResult<ApiResponse<TokenDto>>> Login([FromBody] LoginCommand command)
+    public async Task<ActionResult<ApiResponse<TokenDto>>> Login([FromBody] CompanyLoginCommand command)
     {
         try
         {
-            _logger.LogInformation("Login attempt for user: {UserName}", command.UserName);
+            _logger.LogInformation("Login attempt for user: {UserName} company: {CompanyCode}", command.UserName, command.CompanyCode);
 
-            // Get user by username for PBKDF2 password verification
-            var user = await _authRepository.GetByUserNameAsync(command.UserName);
+            // Look up company by code
+            var company = await _companyRepository.GetByCodeAsync(command.CompanyCode);
+            if (company == null)
+            {
+                _logger.LogWarning("Company not found: {CompanyCode}", command.CompanyCode);
+                return Unauthorized(ApiResponse<TokenDto>.CreateFailure(
+                    "Invalid credentials. Please verify your username, password, and company code",
+                    statusCode: 401));
+            }
+
+            // Get user from tenant schema for PBKDF2 password verification
+            var user = await _oracleSchemaService.GetUserByUserNameAsync(company.CompanySchema!, company.CompanySchema!, command.UserName);
 
             if (user == null || !_passwordHashingService.VerifyPassword(command.Password, user.Password))
             {
                 _logger.LogWarning("Authentication failed for user: {UserName}", command.UserName);
                 return Unauthorized(ApiResponse<TokenDto>.CreateFailure(
-                    "Invalid credentials. Please verify your username and password",
+                    "Invalid credentials. Please verify your username, password, and company code",
                     statusCode: 401));
             }
 
-            // Generate JWT token
-            var tokenDto = _jwtTokenService.GenerateToken(user);
+            // Ensure user belongs to the specified company
+            if (user.CompanyId != company.Id)
+            {
+                _logger.LogWarning("User {UserName} does not belong to company {CompanyCode}", command.UserName, command.CompanyCode);
+                return Unauthorized(ApiResponse<TokenDto>.CreateFailure(
+                    "Invalid credentials. Please verify your username, password, and company code",
+                    statusCode: 401));
+            }
 
-            // Save refresh token to database
-            await _authRepository.SaveRefreshTokenAsync(
+            // Generate JWT token with company schema context
+            var tokenDto = _jwtTokenService.GenerateToken(user, company.CompanyCode, company.CompanySchema);
+
+            // Save refresh token to tenant schema
+            await _oracleSchemaService.SaveRefreshTokenAsync(
+                company.CompanySchema!,
+                company.CompanySchema!,
                 user.Id, 
                 tokenDto.RefreshToken, 
                 tokenDto.RefreshTokenExpiresAt);
 
-            _logger.LogInformation("User {UserName} authenticated successfully", command.UserName);
+            _logger.LogInformation("User {UserName} authenticated for company {CompanyCode} schema {Schema}", 
+                command.UserName, command.CompanyCode, company.CompanySchema);
 
             return Ok(ApiResponse<TokenDto>.CreateSuccess(
                 tokenDto,

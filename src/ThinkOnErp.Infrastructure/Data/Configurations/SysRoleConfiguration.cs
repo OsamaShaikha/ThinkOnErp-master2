@@ -8,7 +8,7 @@ public class SysRoleConfiguration : IEntityTypeConfiguration<SysRole>
 {
     public void Configure(EntityTypeBuilder<SysRole> builder)
     {
-        builder.ToTable("SYS_ROLE");
+        builder.ToTable("SYS_ROLE", t => t.ExcludeFromMigrations());
         builder.HasKey(e => e.Id);
         builder.Property(e => e.Id).ValueGeneratedOnAdd();
 builder.Property(e => e.RoleNameAr).HasColumnName("NAME_AR").HasMaxLength(200).IsRequired();
@@ -118,7 +118,7 @@ public class SysUserConfiguration : IEntityTypeConfiguration<SysUser>
 {
     public void Configure(EntityTypeBuilder<SysUser> builder)
     {
-        builder.ToTable("SYS_USERS");
+        builder.ToTable("SYS_USERS", t => t.ExcludeFromMigrations());
         builder.HasKey(e => e.Id);
         builder.Property(e => e.Id).ValueGeneratedOnAdd();
 builder.Property(e => e.FullNameAr).HasColumnName("NAME_AR").HasMaxLength(200).IsRequired();
@@ -149,7 +149,7 @@ public class SysFiscalYearConfiguration : IEntityTypeConfiguration<SysFiscalYear
 {
     public void Configure(EntityTypeBuilder<SysFiscalYear> builder)
     {
-        builder.ToTable("SYS_FISCAL_YEAR");
+        builder.ToTable("SYS_FISCAL_YEAR", t => t.ExcludeFromMigrations());
         builder.HasKey(e => e.Id);
         builder.Property(e => e.Id).ValueGeneratedOnAdd();
         builder.Property(e => e.CompanyId).HasColumnName("COMPANY_ID").IsRequired();
@@ -254,7 +254,7 @@ public class SysUserRoleConfiguration : IEntityTypeConfiguration<SysUserRole>
 {
     public void Configure(EntityTypeBuilder<SysUserRole> builder)
     {
-        builder.ToTable("SYS_USERS_ROLES");
+        builder.ToTable("SYS_USERS_ROLES", t => t.ExcludeFromMigrations());
         builder.HasKey(e => e.Id);
         builder.Property(e => e.Id).ValueGeneratedOnAdd();
         builder.Property(e => e.UserId).HasColumnName("USER_ID").IsRequired();
@@ -273,7 +273,7 @@ public class SysRoleScreenPermissionConfiguration : IEntityTypeConfiguration<Sys
 {
     public void Configure(EntityTypeBuilder<SysRoleScreenPermission> builder)
     {
-        builder.ToTable("SYS_ROLE_SCREEN_PERMISSIONS");
+        builder.ToTable("SYS_ROLE_SCREEN_PERMISSIONS", t => t.ExcludeFromMigrations());
         builder.HasKey(e => e.Id);
         builder.Property(e => e.Id).ValueGeneratedOnAdd();
         builder.Property(e => e.RoleId).HasColumnName("ROLE_ID").IsRequired();
@@ -296,7 +296,7 @@ public class SysUserScreenPermissionConfiguration : IEntityTypeConfiguration<Sys
 {
     public void Configure(EntityTypeBuilder<SysUserScreenPermission> builder)
     {
-        builder.ToTable("SYS_USER_SCREEN_PERMISSIONS");
+        builder.ToTable("SYS_USER_SCREEN_PERMISSIONS", t => t.ExcludeFromMigrations());
         builder.HasKey(e => e.Id);
         builder.Property(e => e.Id).ValueGeneratedOnAdd();
         builder.Property(e => e.UserId).HasColumnName("USER_ID").IsRequired();
@@ -343,7 +343,7 @@ public class SysBranchScreenPermissionConfiguration : IEntityTypeConfiguration<S
 {
     public void Configure(EntityTypeBuilder<SysBranchScreenPermission> builder)
     {
-        builder.ToTable("SYS_BRANCH_SCREEN_PERMISSIONS");
+        builder.ToTable("SYS_BRANCH_SCREEN_PERMISSIONS", t => t.ExcludeFromMigrations());
         builder.HasKey(e => e.Id);
         builder.Property(e => e.Id).ValueGeneratedOnAdd();
         builder.Property(e => e.BranchId).HasColumnName("BRANCH_ID").IsRequired();

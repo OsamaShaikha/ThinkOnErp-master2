@@ -20,6 +20,12 @@ public class CompanyRepository : ICompanyRepository
             .FirstOrDefaultAsync(c => c.CompanySchema == companySchema);
     }
 
+    public async Task<SysCompany?> GetByCodeAsync(string companyCode)
+    {
+        return await _context.SysCompanies
+            .FirstOrDefaultAsync(c => c.CompanyCode == companyCode && c.IsActive);
+    }
+
     public async Task<List<SysCompany>> GetAllAsync()
     {
         return await _context.SysCompanies

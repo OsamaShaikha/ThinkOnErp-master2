@@ -15,6 +15,7 @@ public interface ICompanyRepository
     /// <returns>A list of all active SysCompany entities</returns>
     Task<List<SysCompany>> GetAllAsync();
     Task<SysCompany?> GetBySchemaAsync(string companySchema);
+    Task<SysCompany?> GetByCodeAsync(string companyCode);
 
     /// <summary>
     /// Retrieves a specific company by its ID.

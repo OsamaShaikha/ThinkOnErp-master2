@@ -18,4 +18,6 @@ public class LoginCommand : IRequest<TokenDto?>
     /// Password for authentication (required)
     /// </summary>
     public string Password { get; set; } = string.Empty;
+
+
 }

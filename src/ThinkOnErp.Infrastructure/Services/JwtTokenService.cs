@@ -27,7 +27,7 @@ public class JwtTokenService
     /// </summary>
     /// <param name="user">The authenticated user</param>
     /// <returns>TokenDto containing the JWT token and expiration time</returns>
-    public virtual TokenDto GenerateToken(SysUser user)
+    public virtual TokenDto GenerateToken(SysUser user, string? companyCode = null, string? companySchema = null)
     {
         if (user == null)
         {
@@ -52,17 +52,22 @@ public class JwtTokenService
         var expiresAt = DateTime.UtcNow.AddMinutes(expiryInMinutes);
 
         // Create claims with user information
-        var claims = new[]
+        var claims = new List<Claim>
         {
-            new Claim("userId", user.Id.ToString()),
-            new Claim("userName", user.UserName),
-            new Claim(ClaimTypes.Name, user.UserName),
-new Claim("role", user.RoleId?.ToString() ?? "0"),
-new Claim(ClaimTypes.Role, user.RoleId?.ToString() ?? "0"),
-            new Claim("companyId", user.CompanyId?.ToString() ?? "0"),
-            new Claim("branchId", user.BranchId?.ToString() ?? "0"),
-            new Claim("isAdmin", user.IsAdmin.ToString().ToLower())
+            new("userId", user.Id.ToString()),
+            new("userName", user.UserName),
+            new(ClaimTypes.Name, user.UserName),
+            new("role", user.RoleId?.ToString() ?? "0"),
+            new(ClaimTypes.Role, user.RoleId?.ToString() ?? "0"),
+            new("companyId", user.CompanyId?.ToString() ?? "0"),
+            new("branchId", user.BranchId?.ToString() ?? "0"),
+            new("isAdmin", user.IsAdmin.ToString().ToLower())
         };
+
+        if (companyCode != null)
+            claims.Add(new Claim("companyCode", companyCode));
+        if (companySchema != null)
+            claims.Add(new Claim("companySchema", companySchema));
 
         // Create JWT token
         var token = new JwtSecurityToken(
@@ -84,7 +89,9 @@ new Claim(ClaimTypes.Role, user.RoleId?.ToString() ?? "0"),
             TokenType = "Bearer",
             RefreshToken = GenerateRefreshToken(),
             RefreshTokenExpiresAt = DateTime.UtcNow.AddDays(
-                int.Parse(_configuration["JwtSettings:RefreshTokenExpiryInDays"] ?? "7"))
+                int.Parse(_configuration["JwtSettings:RefreshTokenExpiryInDays"] ?? "7")),
+            CompanyCode = companyCode,
+            CompanySchema = companySchema
         };
     }
 

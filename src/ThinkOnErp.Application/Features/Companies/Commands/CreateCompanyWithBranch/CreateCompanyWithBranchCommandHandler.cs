@@ -107,6 +107,16 @@ public class CreateCompanyWithBranchCommandHandler : IRequestHandler<CreateCompa
             _logger.LogInformation("Creating Oracle schema {Schema} for company {CompanyCode}", companySchema, request.CompanyCode);
             await _oracleSchemaService.CreateCompanySchemaAsync(companySchema, companySchema);
 
+            // Seed default admin user in the tenant schema
+            _logger.LogInformation("Seeding default admin user in schema {Schema}", companySchema);
+            await _oracleSchemaService.SeedDefaultAdminAsync(
+                schemaName: companySchema,
+                schemaPassword: companySchema,
+                defaultPassword: "Admin@1234!",
+                companyId: result.CompanyId,
+                branchId: result.BranchId,
+                creationUser: request.CreationUser);
+
             // Grant systems and auto-grant all their screens to the default branch
             if (request.Systems?.Count > 0)
             {

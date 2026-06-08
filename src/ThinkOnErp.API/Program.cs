@@ -277,7 +277,7 @@ try
         {
             Title = "ThinkOnErp SuperAdmin API",
             Version = "v1.0",
-            Description = "Endpoints for Super Admin management, branch permissions, and platform-wide configuration.",
+            Description = "Platform-wide management: super admin accounts, company/branch registry, support ticketing, documents, audit logs, security monitoring, global settings, and compliance policies.",
             Contact = new Microsoft.OpenApi.Models.OpenApiContact
             {
                 Name = "ThinkOnErp Development Team",
@@ -294,7 +294,7 @@ try
         {
             Title = "ThinkOnErp Company API",
             Version = "v1.0",
-            Description = "Endpoints for company operations, user management, roles, permissions, audit, and business modules.",
+            Description = "Tenant-specific operations: user auth, role/permission management, users, fiscal years, saved searches, and reference data (currencies).",
             Contact = new Microsoft.OpenApi.Models.OpenApiContact
             {
                 Name = "ThinkOnErp Development Team",
@@ -309,9 +309,9 @@ try
 
         var superAdminControllers = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
         {
-            "Alerts", "AuditHealth", "AuditTrail", "Branch", "BranchPermissions",
+            "SuperAdminAuth", "Alerts", "AuditHealth", "AuditTrail", "Branch", "BranchPermissions",
             "Company", "Compliance", "Configuration", "Documents", "Health",
-            "KeyManagement", "Monitoring", "SuperAdmin", "SuperAdminAuth",
+            "KeyManagement", "Monitoring", "SuperAdmin", 
             "Tickets", "TicketTypes", "AuditLogs"
         };
 
@@ -469,6 +469,9 @@ Example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...'
     // Add force logout check middleware (after authentication, before authorization)
     app.UseMiddleware<ThinkOnErp.API.Middleware.ForceLogoutMiddleware>();
     
+    // Route requests to tenant schema based on companySchema JWT claim
+    app.UseMiddleware<ThinkOnErp.API.Middleware.SchemaRoutingMiddleware>();
+
     app.UseAuthorization();
 
     app.MapControllers();
