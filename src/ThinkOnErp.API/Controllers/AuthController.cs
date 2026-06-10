@@ -1,7 +1,9 @@
 using Microsoft.AspNetCore.Mvc;
+using Oracle.ManagedDataAccess.Client;
 using ThinkOnErp.Application.Common;
 using ThinkOnErp.Application.DTOs.Auth;
 using ThinkOnErp.Application.Features.Auth.Commands.Login;
+using ThinkOnErp.Domain.Entities;
 using ThinkOnErp.Domain.Interfaces;
 using ThinkOnErp.Infrastructure.Services;
 
@@ -76,8 +78,63 @@ public class AuthController : ControllerBase
                     statusCode: 401));
             }
 
+            // Ensure company has a tenant schema configured
+            if (string.IsNullOrEmpty(company.CompanySchema))
+            {
+                _logger.LogWarning("Company {CompanyCode} has no tenant schema configured", command.CompanyCode);
+                return Unauthorized(ApiResponse<TokenDto>.CreateFailure(
+                    "Invalid credentials. Please verify your username, password, and company code",
+                    statusCode: 401));
+            }
+
             // Get user from tenant schema for PBKDF2 password verification
-            var user = await _oracleSchemaService.GetUserByUserNameAsync(company.CompanySchema!, company.CompanySchema!, command.UserName);
+            SysUser? user = null;
+            try
+            {
+                user = await _oracleSchemaService.GetUserByUserNameAsync(company.CompanySchema!, company.CompanySchema!, command.UserName);
+            }
+            catch (OracleException ex) when (ex.Number == 28000)
+            {
+                _logger.LogWarning("Account {Schema} is locked, attempting to unlock", company.CompanySchema);
+                var unlocked = await _oracleSchemaService.UnlockUserAccountAsync(company.CompanySchema!);
+                if (unlocked)
+                    user = await _oracleSchemaService.GetUserByUserNameAsync(company.CompanySchema!, company.CompanySchema!, command.UserName);
+                if (!unlocked || user == null)
+                    return Unauthorized(ApiResponse<TokenDto>.CreateFailure(
+                        "Invalid credentials. Please verify your username, password, and company code",
+                        statusCode: 401));
+            }
+            catch (OracleException ex) when (ex.Number == 1435 || ex.Number == 65048)
+            {
+                _logger.LogError(ex, "Oracle user {Schema} does not exist for company {CompanyCode}", company.CompanySchema, command.CompanyCode);
+                return Unauthorized(ApiResponse<TokenDto>.CreateFailure(
+                    "Invalid credentials. Please verify your username, password, and company code",
+                    statusCode: 401));
+            }
+            catch (OracleException ex) when (ex.Number == 1045)
+            {
+                _logger.LogWarning("User {Schema} lacks privileges, attempting to grant", company.CompanySchema);
+                try
+                {
+                    await _oracleSchemaService.GrantUserPrivilegesAsync(company.CompanySchema!);
+                    user = await _oracleSchemaService.GetUserByUserNameAsync(company.CompanySchema!, company.CompanySchema!, command.UserName);
+                }
+                catch
+                {
+                    _logger.LogError(ex, "Failed to grant privileges to {Schema}", company.CompanySchema);
+                }
+                if (user == null || !_passwordHashingService.VerifyPassword(command.Password, user.Password))
+                    return Unauthorized(ApiResponse<TokenDto>.CreateFailure(
+                        "Invalid credentials. Please verify your username, password, and company code",
+                        statusCode: 401));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to connect to tenant schema {Schema} for user {UserName}", company.CompanySchema, command.UserName);
+                return Unauthorized(ApiResponse<TokenDto>.CreateFailure(
+                    "Invalid credentials. Please verify your username, password, and company code",
+                    statusCode: 401));
+            }
 
             if (user == null || !_passwordHashingService.VerifyPassword(command.Password, user.Password))
             {
@@ -100,12 +157,19 @@ public class AuthController : ControllerBase
             var tokenDto = _jwtTokenService.GenerateToken(user, company.CompanyCode, company.CompanySchema);
 
             // Save refresh token to tenant schema
-            await _oracleSchemaService.SaveRefreshTokenAsync(
-                company.CompanySchema!,
-                company.CompanySchema!,
-                user.Id, 
-                tokenDto.RefreshToken, 
-                tokenDto.RefreshTokenExpiresAt);
+            try
+            {
+                await _oracleSchemaService.SaveRefreshTokenAsync(
+                    company.CompanySchema!,
+                    company.CompanySchema!,
+                    user.Id, 
+                    tokenDto.RefreshToken, 
+                    tokenDto.RefreshTokenExpiresAt);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to save refresh token in tenant schema {Schema}", company.CompanySchema);
+            }
 
             _logger.LogInformation("User {UserName} authenticated for company {CompanyCode} schema {Schema}", 
                 command.UserName, command.CompanyCode, company.CompanySchema);

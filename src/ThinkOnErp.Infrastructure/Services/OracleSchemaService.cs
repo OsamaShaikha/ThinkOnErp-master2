@@ -15,6 +15,7 @@ public class OracleSchemaService : IOracleSchemaService
     private readonly IServiceScopeFactory _scopeFactory;
     private readonly ILogger<OracleSchemaService> _logger;
     private readonly string _masterConnectionString;
+    private readonly string _pdbConnectionString;
 
     private static readonly HashSet<string> GlobalTables = new(StringComparer.OrdinalIgnoreCase)
     {
@@ -39,6 +40,8 @@ public class OracleSchemaService : IOracleSchemaService
         _scopeFactory = scopeFactory;
         _masterConnectionString = configuration.GetConnectionString("OracleDb")
             ?? throw new InvalidOperationException("Connection string 'OracleDb' not found.");
+        _pdbConnectionString = _masterConnectionString.Replace(
+            "SERVICE_NAME=free)", "SERVICE_NAME=FREEPDB1)", StringComparison.OrdinalIgnoreCase);
         _logger = logger;
         _passwordHashingService = passwordHashingService;
     }
@@ -67,11 +70,13 @@ public class OracleSchemaService : IOracleSchemaService
             _logger.LogWarning("Schema already exists: {SchemaName}", schemaName);
         }
 
-        // 2. Grant necessary privileges and tablespace quota
+        // 2. Grant necessary privileges, tablespace quota, and ensure account is unlocked
         await ExecuteRawAsync(masterConn,
             $"GRANT CONNECT, RESOURCE, CREATE SESSION, CREATE TABLE, CREATE VIEW, CREATE SEQUENCE, CREATE PROCEDURE, CREATE TRIGGER, CREATE SYNONYM TO \"{schemaName}\"");
         await ExecuteRawAsync(masterConn,
             $"ALTER USER \"{schemaName}\" QUOTA UNLIMITED ON USERS");
+        await ExecuteRawAsync(masterConn,
+            $"ALTER USER \"{schemaName}\" ACCOUNT UNLOCK");
         _logger.LogInformation("Privileges and quota granted to: {SchemaName}", schemaName);
 
         // 3. Create tenant tables
@@ -91,14 +96,7 @@ public class OracleSchemaService : IOracleSchemaService
         schemaName = schemaName.ToUpperInvariant();
         _logger.LogInformation("Seeding default admin user in schema: {SchemaName}", schemaName);
 
-        var csb = new OracleConnectionStringBuilder(_masterConnectionString)
-        {
-            UserID = schemaName,
-            Password = schemaPassword
-        };
-
-        await using var tenantConn = new OracleConnection(csb.ConnectionString);
-        await tenantConn.OpenAsync();
+        await using var tenantConn = await OpenTenantConnectionAsync(schemaName, schemaPassword);
 
         var hashedPassword = _passwordHashingService.HashPassword(defaultPassword);
 
@@ -142,18 +140,93 @@ public class OracleSchemaService : IOracleSchemaService
         }
     }
 
-    public async Task SaveRefreshTokenAsync(string schemaName, string schemaPassword, long userId, string refreshToken, DateTime expiryDate)
+    private static string BuildTenantConnectionString(string baseConnectionString, string schemaName, string schemaPassword)
     {
-        schemaName = schemaName.ToUpperInvariant();
-
-        var csb = new OracleConnectionStringBuilder(_masterConnectionString)
+        var csb = new OracleConnectionStringBuilder(baseConnectionString)
         {
             UserID = schemaName,
             Password = schemaPassword
         };
+        return csb.ConnectionString;
+    }
 
-        await using var tenantConn = new OracleConnection(csb.ConnectionString);
-        await tenantConn.OpenAsync();
+    /// <summary>
+    /// Creates a tenant connection, trying PDB (FREEPDB1) first for manually-created schemas,
+    /// then falling back to CDB$ROOT for schemas created via the API.
+    /// </summary>
+    private async Task<OracleConnection> OpenTenantConnectionAsync(string schemaName, string schemaPassword)
+    {
+        // Try PDB first
+        var pdbCs = BuildTenantConnectionString(_pdbConnectionString, schemaName, schemaPassword);
+        try
+        {
+            var conn = new OracleConnection(pdbCs);
+            await conn.OpenAsync();
+            return conn;
+        }
+        catch (OracleException ex) when (ex.Number == 1017)
+        {
+            _logger.LogDebug("PDB connection failed for {Schema}, falling back to CDB", schemaName);
+        }
+
+        // Fallback to CDB$ROOT
+        var cdbCs = BuildTenantConnectionString(_masterConnectionString, schemaName, schemaPassword);
+        var cdbConn = new OracleConnection(cdbCs);
+        await cdbConn.OpenAsync();
+        return cdbConn;
+    }
+
+    /// <summary>
+    /// Opens a connection as the master user (THINKON_ERP), trying PDB first then CDB$ROOT.
+    /// </summary>
+    private async Task<OracleConnection> OpenMasterConnectionAsync()
+    {
+        // Try PDB first for environments where THINKON_ERP exists there
+        try
+        {
+            var conn = new OracleConnection(_pdbConnectionString);
+            await conn.OpenAsync();
+            return conn;
+        }
+        catch (OracleException ex) when (ex.Number == 1017)
+        {
+            _logger.LogDebug("PDB master connection failed, falling back to CDB");
+        }
+
+        var cdbConn = new OracleConnection(_masterConnectionString);
+        await cdbConn.OpenAsync();
+        return cdbConn;
+    }
+
+    public async Task GrantUserPrivilegesAsync(string schemaName)
+    {
+        schemaName = schemaName.ToUpperInvariant();
+        await using var conn = await OpenMasterConnectionAsync();
+        await ExecuteRawAsync(conn, $"GRANT CONNECT, RESOURCE, CREATE SESSION, CREATE TABLE, CREATE VIEW, CREATE SEQUENCE, CREATE PROCEDURE, CREATE TRIGGER, CREATE SYNONYM TO \"{schemaName}\"");
+        await ExecuteRawAsync(conn, $"ALTER USER \"{schemaName}\" QUOTA UNLIMITED ON USERS");
+    }
+
+    public async Task<bool> UnlockUserAccountAsync(string schemaName)
+    {
+        schemaName = schemaName.ToUpperInvariant();
+        try
+        {
+            await using var conn = await OpenMasterConnectionAsync();
+            await ExecuteRawAsync(conn, $"ALTER USER \"{schemaName}\" ACCOUNT UNLOCK");
+            return true;
+        }
+        catch (OracleException ex) when (ex.Number == 1435 || ex.Number == 65048)
+        {
+            _logger.LogWarning("Cannot unlock user {Schema}: user does not exist", schemaName);
+            return false;
+        }
+    }
+
+    public async Task SaveRefreshTokenAsync(string schemaName, string schemaPassword, long userId, string refreshToken, DateTime expiryDate)
+    {
+        schemaName = schemaName.ToUpperInvariant();
+
+        await using var tenantConn = await OpenTenantConnectionAsync(schemaName, schemaPassword);
 
         var sql = $"UPDATE \"{schemaName}\".\"SYS_USERS\" SET " +
                   $"\"REFRESH_TOKEN\" = :refreshToken, " +
@@ -173,14 +246,7 @@ public class OracleSchemaService : IOracleSchemaService
     {
         schemaName = schemaName.ToUpperInvariant();
 
-        var csb = new OracleConnectionStringBuilder(_masterConnectionString)
-        {
-            UserID = schemaName,
-            Password = schemaPassword
-        };
-
-        await using var tenantConn = new OracleConnection(csb.ConnectionString);
-        await tenantConn.OpenAsync();
+        await using var tenantConn = await OpenTenantConnectionAsync(schemaName, schemaPassword);
 
         var sql = $"SELECT \"Id\", \"NAME_AR\", \"NAME_EN\", \"USER_NAME\", \"PASSWORD\", \"ROLE\", \"BRANCH_ID\", \"COMPANY_ID\", " +
                   $"\"IS_ACTIVE\", \"IS_ADMIN\", \"CREATION_USER\", \"CREATION_DATE\", \"UPDATE_USER\", \"UPDATE_DATE\", " +
@@ -316,14 +382,7 @@ public class OracleSchemaService : IOracleSchemaService
 
     private async Task GrantTenantTableAccessAsync(string schemaName, string password)
     {
-        var csb = new OracleConnectionStringBuilder(_masterConnectionString)
-        {
-            UserID = schemaName,
-            Password = password
-        };
-
-        await using var tenantConn = new OracleConnection(csb.ConnectionString);
-        await tenantConn.OpenAsync();
+        await using var tenantConn = await OpenTenantConnectionAsync(schemaName, password);
 
         var masterUser = "THINKON_ERP";
         foreach (var table in TenantOnlyTables)
@@ -343,15 +402,7 @@ public class OracleSchemaService : IOracleSchemaService
 
     private async Task CreateGlobalSynonymsAsync(string schemaName, string password)
     {
-        // Build tenant connection string from master
-        var csb = new OracleConnectionStringBuilder(_masterConnectionString)
-        {
-            UserID = schemaName,
-            Password = password
-        };
-
-        await using var tenantConn = new OracleConnection(csb.ConnectionString);
-        await tenantConn.OpenAsync();
+        await using var tenantConn = await OpenTenantConnectionAsync(schemaName, password);
 
         // Create a synonym in the tenant schema for each global table
         foreach (var table in GlobalTables)

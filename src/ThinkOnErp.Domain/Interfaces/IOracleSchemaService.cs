@@ -11,4 +11,8 @@ public interface IOracleSchemaService
     Task<SysUser?> GetUserByUserNameAsync(string schemaName, string schemaPassword, string userName);
 
     Task SaveRefreshTokenAsync(string schemaName, string schemaPassword, long userId, string refreshToken, DateTime expiryDate);
+
+    Task<bool> UnlockUserAccountAsync(string schemaName);
+
+    Task GrantUserPrivilegesAsync(string schemaName);
 }
