@@ -1883,55 +1883,8 @@ public class ComplianceReporter : IComplianceReporter
     private async Task<List<SegregationViolation>> DetectDirectPermissionViolationsAsync(
         CancellationToken cancellationToken)
     {
-        var violations = new List<SegregationViolation>();
-
-        try
-        {
-            var rawData = await (from u in _dbContext.SysUsers
-                                 join usp in _dbContext.SysUserScreenPermissions on u.Id equals usp.UserId
-                                 join s in _dbContext.SysScreens on usp.ScreenId equals s.Id
-                                 where u.IsActive
-                                    && (usp.CanView || usp.CanInsert || usp.CanUpdate || usp.CanDelete)
-                                 select new { u.Id, u.UserName, usp.ScreenId, s.ScreenName })
-                                 .ToListAsync(cancellationToken);
-
-            var userGroups = rawData
-                .GroupBy(x => new { x.Id, x.UserName })
-                .Where(g => g.Select(x => x.ScreenId).Distinct().Count() > 5)
-                .ToList();
-
-            foreach (var group in userGroups)
-            {
-                var userId = group.Key.Id;
-                var userName = group.Key.UserName ?? "Unknown";
-                var permissionCount = group.Select(x => x.ScreenId).Distinct().Count();
-                var screenNames = string.Join(", ", group.Select(x => x.ScreenName).Distinct());
-
-                if (screenNames.Length > 200)
-                {
-                    screenNames = screenNames.Substring(0, 197) + "...";
-                }
-
-                violations.Add(new SegregationViolation
-                {
-                    UserId = userId,
-                    UserName = userName,
-                    Role1 = "Direct Permissions",
-                    Role2 = $"{permissionCount} screen overrides",
-                    ConflictDescription = $"User has {permissionCount} direct screen permission overrides, bypassing role-based access controls. Screens: {screenNames}",
-                    Severity = "High",
-                    Recommendation = "Review direct permissions and consolidate into appropriate roles to maintain proper segregation of duties"
-                });
-            }
-
-            _logger.LogDebug("Detected {Count} direct permission violations", violations.Count);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error detecting direct permission violations");
-        }
-
-        return violations;
+        // TODO: Reimplement when permission system is rebuilt
+        return new List<SegregationViolation>();
     }
 
     /// <summary>

@@ -437,7 +437,7 @@ namespace ThinkOnErp.Infrastructure.Migrations
                     b.ToTable("SYS_BRANCH", (string)null);
                 });
 
-            modelBuilder.Entity("ThinkOnErp.Domain.Entities.SysBranchScreenPermission", b =>
+            modelBuilder.Entity("ThinkOnErp.Domain.Entities.SysBranchFeature", b =>
                 {
                     b.Property<long>("Id")
                         .ValueGeneratedOnAdd()
@@ -449,26 +449,6 @@ namespace ThinkOnErp.Infrastructure.Migrations
                         .HasColumnType("NUMBER(19)")
                         .HasColumnName("BRANCH_ID");
 
-                    b.Property<bool>("CanDelete")
-                        .HasMaxLength(1)
-                        .HasColumnType("NUMBER(1)")
-                        .HasColumnName("CAN_DELETE");
-
-                    b.Property<bool>("CanInsert")
-                        .HasMaxLength(1)
-                        .HasColumnType("NUMBER(1)")
-                        .HasColumnName("CAN_INSERT");
-
-                    b.Property<bool>("CanUpdate")
-                        .HasMaxLength(1)
-                        .HasColumnType("NUMBER(1)")
-                        .HasColumnName("CAN_UPDATE");
-
-                    b.Property<bool>("CanView")
-                        .HasMaxLength(1)
-                        .HasColumnType("NUMBER(1)")
-                        .HasColumnName("CAN_VIEW");
-
                     b.Property<DateTime?>("CreationDate")
                         .HasColumnType("TIMESTAMP(7)")
                         .HasColumnName("CREATION_DATE");
@@ -479,18 +459,22 @@ namespace ThinkOnErp.Infrastructure.Migrations
                         .HasColumnType("NVARCHAR2(100)")
                         .HasColumnName("CREATION_USER");
 
-                    b.Property<long?>("GrantedBy")
+                    b.Property<long>("FeatureId")
                         .HasColumnType("NUMBER(19)")
-                        .HasColumnName("GRANTED_BY");
-
-                    b.Property<DateTime?>("GrantedDate")
-                        .HasColumnType("TIMESTAMP(7)")
-                        .HasColumnName("GRANTED_DATE");
+                        .HasColumnName("FEATURE_ID");
 
                     b.Property<string>("Notes")
                         .HasMaxLength(500)
                         .HasColumnType("NVARCHAR2(500)")
                         .HasColumnName("NOTES");
+
+                    b.Property<long?>("RevokedBy")
+                        .HasColumnType("NUMBER(19)")
+                        .HasColumnName("REVOKED_BY");
+
+                    b.Property<DateTime?>("RevokedDate")
+                        .HasColumnType("TIMESTAMP(7)")
+                        .HasColumnName("REVOKED_DATE");
 
                     b.Property<long>("ScreenId")
                         .HasColumnType("NUMBER(19)")
@@ -507,13 +491,78 @@ namespace ThinkOnErp.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("BranchId");
+                    b.HasIndex("FeatureId");
 
-                    b.HasIndex("GrantedBy");
+                    b.HasIndex("RevokedBy");
 
                     b.HasIndex("ScreenId");
 
-                    b.ToTable("SYS_BRANCH_SCREEN_PERMISSIONS", (string)null);
+                    b.HasIndex("BranchId", "ScreenId", "FeatureId")
+                        .IsUnique()
+                        .HasDatabaseName("IX_SYS_BRANCH_FEATURES_UK");
+
+                    b.ToTable("SYS_BRANCH_FEATURES", (string)null);
+                });
+
+            modelBuilder.Entity("ThinkOnErp.Domain.Entities.SysBranchScreen", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("NUMBER(19)");
+
+                    OraclePropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<long>("BranchId")
+                        .HasColumnType("NUMBER(19)")
+                        .HasColumnName("BRANCH_ID");
+
+                    b.Property<DateTime?>("CreationDate")
+                        .HasColumnType("TIMESTAMP(7)")
+                        .HasColumnName("CREATION_DATE");
+
+                    b.Property<string>("CreationUser")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("NVARCHAR2(100)")
+                        .HasColumnName("CREATION_USER");
+
+                    b.Property<string>("Notes")
+                        .HasMaxLength(500)
+                        .HasColumnType("NVARCHAR2(500)")
+                        .HasColumnName("NOTES");
+
+                    b.Property<long?>("RevokedBy")
+                        .HasColumnType("NUMBER(19)")
+                        .HasColumnName("REVOKED_BY");
+
+                    b.Property<DateTime?>("RevokedDate")
+                        .HasColumnType("TIMESTAMP(7)")
+                        .HasColumnName("REVOKED_DATE");
+
+                    b.Property<long>("ScreenId")
+                        .HasColumnType("NUMBER(19)")
+                        .HasColumnName("SCREEN_ID");
+
+                    b.Property<DateTime?>("UpdateDate")
+                        .HasColumnType("TIMESTAMP(7)")
+                        .HasColumnName("UPDATE_DATE");
+
+                    b.Property<string>("UpdateUser")
+                        .HasMaxLength(100)
+                        .HasColumnType("NVARCHAR2(100)")
+                        .HasColumnName("UPDATE_USER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("RevokedBy");
+
+                    b.HasIndex("ScreenId");
+
+                    b.HasIndex("BranchId", "ScreenId")
+                        .IsUnique()
+                        .HasDatabaseName("IX_SYS_BRANCH_SCREENS_UK");
+
+                    b.ToTable("SYS_BRANCH_SCREENS", (string)null);
                 });
 
             modelBuilder.Entity("ThinkOnErp.Domain.Entities.SysBranchSystem", b =>
@@ -546,11 +595,6 @@ namespace ThinkOnErp.Infrastructure.Migrations
                         .HasColumnType("TIMESTAMP(7)")
                         .HasColumnName("GRANTED_DATE");
 
-                    b.Property<bool>("IsAllowed")
-                        .HasMaxLength(1)
-                        .HasColumnType("NUMBER(1)")
-                        .HasColumnName("IS_ALLOWED");
-
                     b.Property<string>("Notes")
                         .HasMaxLength(500)
                         .HasColumnType("NVARCHAR2(500)")
@@ -575,11 +619,13 @@ namespace ThinkOnErp.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("BranchId");
-
                     b.HasIndex("GrantedBy");
 
                     b.HasIndex("SystemId");
+
+                    b.HasIndex("BranchId", "SystemId")
+                        .IsUnique()
+                        .HasDatabaseName("IX_SYS_BRANCH_SYSTEMS_UK");
 
                     b.ToTable("SYS_BRANCH_SYSTEMS", (string)null);
                 });
@@ -726,6 +772,11 @@ namespace ThinkOnErp.Infrastructure.Migrations
                         .HasColumnName("UPDATE_USER");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("CompanySchema")
+                        .IsUnique()
+                        .HasDatabaseName("IX_SYS_COMPANY_SCHEMA")
+                        .HasFilter("\"COMPANY_SCHEMA\" IS NOT NULL");
 
                     b.HasIndex("CreatedBySuperAdminId");
 
@@ -978,6 +1029,83 @@ namespace ThinkOnErp.Infrastructure.Migrations
                     b.ToTable("SYS_FAILED_LOGINS", (string)null);
                 });
 
+            modelBuilder.Entity("ThinkOnErp.Domain.Entities.SysFeature", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("NUMBER(19)");
+
+                    OraclePropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<DateTime?>("CreationDate")
+                        .HasColumnType("TIMESTAMP(7)")
+                        .HasColumnName("CREATION_DATE");
+
+                    b.Property<string>("CreationUser")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("NVARCHAR2(100)")
+                        .HasColumnName("CREATION_USER");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(500)
+                        .HasColumnType("NVARCHAR2(500)")
+                        .HasColumnName("DESCRIPTION");
+
+                    b.Property<string>("DescriptionE")
+                        .HasMaxLength(500)
+                        .HasColumnType("NVARCHAR2(500)")
+                        .HasColumnName("DESCRIPTION_E");
+
+                    b.Property<int>("DisplayOrder")
+                        .HasColumnType("NUMBER(10)")
+                        .HasColumnName("DISPLAY_ORDER");
+
+                    b.Property<string>("FeatureCode")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("NVARCHAR2(100)")
+                        .HasColumnName("FEATURE_CODE");
+
+                    b.Property<string>("FeatureName")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("NVARCHAR2(200)")
+                        .HasColumnName("FEATURE_NAME");
+
+                    b.Property<string>("FeatureNameE")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("NVARCHAR2(200)")
+                        .HasColumnName("FEATURE_NAME_E");
+
+                    b.Property<string>("Icon")
+                        .HasMaxLength(100)
+                        .HasColumnType("NVARCHAR2(100)")
+                        .HasColumnName("ICON");
+
+                    b.Property<bool>("IsActive")
+                        .HasMaxLength(1)
+                        .HasColumnType("NUMBER(1)")
+                        .HasColumnName("IS_ACTIVE");
+
+                    b.Property<DateTime?>("UpdateDate")
+                        .HasColumnType("TIMESTAMP(7)")
+                        .HasColumnName("UPDATE_DATE");
+
+                    b.Property<string>("UpdateUser")
+                        .HasMaxLength(100)
+                        .HasColumnType("NVARCHAR2(100)")
+                        .HasColumnName("UPDATE_USER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("FeatureCode")
+                        .IsUnique();
+
+                    b.ToTable("SYS_FEATURE", (string)null);
+                });
+
             modelBuilder.Entity("ThinkOnErp.Domain.Entities.SysFiscalYear", b =>
                 {
                     b.Property<long>("Id")
@@ -1053,7 +1181,10 @@ namespace ThinkOnErp.Infrastructure.Migrations
 
                     b.HasIndex("CompanyId");
 
-                    b.ToTable("SYS_FISCAL_YEAR", (string)null);
+                    b.ToTable("SYS_FISCAL_YEAR", null, t =>
+                        {
+                            t.ExcludeFromMigrations();
+                        });
                 });
 
             modelBuilder.Entity("ThinkOnErp.Domain.Entities.SysPerformanceMetric", b =>
@@ -1407,71 +1538,10 @@ namespace ThinkOnErp.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("SYS_ROLE", (string)null);
-                });
-
-            modelBuilder.Entity("ThinkOnErp.Domain.Entities.SysRoleScreenPermission", b =>
-                {
-                    b.Property<long>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("NUMBER(19)");
-
-                    OraclePropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
-
-                    b.Property<bool>("CanDelete")
-                        .HasMaxLength(1)
-                        .HasColumnType("NUMBER(1)")
-                        .HasColumnName("CAN_DELETE");
-
-                    b.Property<bool>("CanInsert")
-                        .HasMaxLength(1)
-                        .HasColumnType("NUMBER(1)")
-                        .HasColumnName("CAN_INSERT");
-
-                    b.Property<bool>("CanUpdate")
-                        .HasMaxLength(1)
-                        .HasColumnType("NUMBER(1)")
-                        .HasColumnName("CAN_UPDATE");
-
-                    b.Property<bool>("CanView")
-                        .HasMaxLength(1)
-                        .HasColumnType("NUMBER(1)")
-                        .HasColumnName("CAN_VIEW");
-
-                    b.Property<DateTime?>("CreationDate")
-                        .HasColumnType("TIMESTAMP(7)")
-                        .HasColumnName("CREATION_DATE");
-
-                    b.Property<string>("CreationUser")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("NVARCHAR2(100)")
-                        .HasColumnName("CREATION_USER");
-
-                    b.Property<long>("RoleId")
-                        .HasColumnType("NUMBER(19)")
-                        .HasColumnName("ROLE_ID");
-
-                    b.Property<long>("ScreenId")
-                        .HasColumnType("NUMBER(19)")
-                        .HasColumnName("SCREEN_ID");
-
-                    b.Property<DateTime?>("UpdateDate")
-                        .HasColumnType("TIMESTAMP(7)")
-                        .HasColumnName("UPDATE_DATE");
-
-                    b.Property<string>("UpdateUser")
-                        .HasMaxLength(100)
-                        .HasColumnType("NVARCHAR2(100)")
-                        .HasColumnName("UPDATE_USER");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("RoleId");
-
-                    b.HasIndex("ScreenId");
-
-                    b.ToTable("SYS_ROLE_SCREEN_PERMISSIONS", (string)null);
+                    b.ToTable("SYS_ROLE", null, t =>
+                        {
+                            t.ExcludeFromMigrations();
+                        });
                 });
 
             modelBuilder.Entity("ThinkOnErp.Domain.Entities.SysSavedSearch", b =>
@@ -1548,7 +1618,10 @@ namespace ThinkOnErp.Infrastructure.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("SYS_SAVED_SEARCH", (string)null);
+                    b.ToTable("SYS_SAVED_SEARCH", null, t =>
+                        {
+                            t.ExcludeFromMigrations();
+                        });
                 });
 
             modelBuilder.Entity("ThinkOnErp.Domain.Entities.SysScreen", b =>
@@ -1645,6 +1718,23 @@ namespace ThinkOnErp.Infrastructure.Migrations
                     b.ToTable("SYS_SCREEN", (string)null);
                 });
 
+            modelBuilder.Entity("ThinkOnErp.Domain.Entities.SysScreenFeature", b =>
+                {
+                    b.Property<long>("ScreenId")
+                        .HasColumnType("NUMBER(19)")
+                        .HasColumnName("SCREEN_ID");
+
+                    b.Property<long>("FeatureId")
+                        .HasColumnType("NUMBER(19)")
+                        .HasColumnName("FEATURE_ID");
+
+                    b.HasKey("ScreenId", "FeatureId");
+
+                    b.HasIndex("FeatureId");
+
+                    b.ToTable("SYS_SCREEN_FEATURE", (string)null);
+                });
+
             modelBuilder.Entity("ThinkOnErp.Domain.Entities.SysSearchAnalytics", b =>
                 {
                     b.Property<long>("Id")
@@ -1699,7 +1789,10 @@ namespace ThinkOnErp.Infrastructure.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("SYS_SEARCH_ANALYTICS", (string)null);
+                    b.ToTable("SYS_SEARCH_ANALYTICS", null, t =>
+                        {
+                            t.ExcludeFromMigrations();
+                        });
                 });
 
             modelBuilder.Entity("ThinkOnErp.Domain.Entities.SysSecurityThreat", b =>
@@ -2522,7 +2615,10 @@ namespace ThinkOnErp.Infrastructure.Migrations
                     b.HasIndex("UserName")
                         .IsUnique();
 
-                    b.ToTable("SYS_USERS", (string)null);
+                    b.ToTable("SYS_USERS", null, t =>
+                        {
+                            t.ExcludeFromMigrations();
+                        });
                 });
 
             modelBuilder.Entity("ThinkOnErp.Domain.Entities.SysUserRole", b =>
@@ -2565,83 +2661,10 @@ namespace ThinkOnErp.Infrastructure.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("SYS_USERS_ROLES", (string)null);
-                });
-
-            modelBuilder.Entity("ThinkOnErp.Domain.Entities.SysUserScreenPermission", b =>
-                {
-                    b.Property<long>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("NUMBER(19)");
-
-                    OraclePropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
-
-                    b.Property<long?>("AssignedBy")
-                        .HasColumnType("NUMBER(19)")
-                        .HasColumnName("ASSIGNED_BY");
-
-                    b.Property<DateTime?>("AssignedDate")
-                        .HasColumnType("TIMESTAMP(7)");
-
-                    b.Property<bool>("CanDelete")
-                        .HasMaxLength(1)
-                        .HasColumnType("NUMBER(1)")
-                        .HasColumnName("CAN_DELETE");
-
-                    b.Property<bool>("CanInsert")
-                        .HasMaxLength(1)
-                        .HasColumnType("NUMBER(1)")
-                        .HasColumnName("CAN_INSERT");
-
-                    b.Property<bool>("CanUpdate")
-                        .HasMaxLength(1)
-                        .HasColumnType("NUMBER(1)")
-                        .HasColumnName("CAN_UPDATE");
-
-                    b.Property<bool>("CanView")
-                        .HasMaxLength(1)
-                        .HasColumnType("NUMBER(1)")
-                        .HasColumnName("CAN_VIEW");
-
-                    b.Property<DateTime?>("CreationDate")
-                        .HasColumnType("TIMESTAMP(7)")
-                        .HasColumnName("CREATION_DATE");
-
-                    b.Property<string>("CreationUser")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("NVARCHAR2(100)")
-                        .HasColumnName("CREATION_USER");
-
-                    b.Property<string>("Notes")
-                        .HasMaxLength(500)
-                        .HasColumnType("NVARCHAR2(500)")
-                        .HasColumnName("NOTES");
-
-                    b.Property<long>("ScreenId")
-                        .HasColumnType("NUMBER(19)")
-                        .HasColumnName("SCREEN_ID");
-
-                    b.Property<DateTime?>("UpdateDate")
-                        .HasColumnType("TIMESTAMP(7)")
-                        .HasColumnName("UPDATE_DATE");
-
-                    b.Property<string>("UpdateUser")
-                        .HasMaxLength(100)
-                        .HasColumnType("NVARCHAR2(100)")
-                        .HasColumnName("UPDATE_USER");
-
-                    b.Property<long>("UserId")
-                        .HasColumnType("NUMBER(19)")
-                        .HasColumnName("USER_ID");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ScreenId");
-
-                    b.HasIndex("UserId");
-
-                    b.ToTable("SYS_USER_SCREEN_PERMISSIONS", (string)null);
+                    b.ToTable("SYS_USERS_ROLES", null, t =>
+                        {
+                            t.ExcludeFromMigrations();
+                        });
                 });
 
             modelBuilder.Entity("ThinkOnErp.Domain.Entities.SysAuditLog", b =>
@@ -2672,28 +2695,62 @@ namespace ThinkOnErp.Infrastructure.Migrations
                     b.Navigation("Company");
                 });
 
-            modelBuilder.Entity("ThinkOnErp.Domain.Entities.SysBranchScreenPermission", b =>
+            modelBuilder.Entity("ThinkOnErp.Domain.Entities.SysBranchFeature", b =>
                 {
                     b.HasOne("ThinkOnErp.Domain.Entities.SysBranch", "Branch")
-                        .WithMany("ScreenPermissions")
+                        .WithMany()
                         .HasForeignKey("BranchId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("ThinkOnErp.Domain.Entities.SysSuperAdmin", "Granter")
+                    b.HasOne("ThinkOnErp.Domain.Entities.SysFeature", "Feature")
                         .WithMany()
-                        .HasForeignKey("GrantedBy")
+                        .HasForeignKey("FeatureId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("ThinkOnErp.Domain.Entities.SysSuperAdmin", "RevokedBySuperAdmin")
+                        .WithMany()
+                        .HasForeignKey("RevokedBy")
                         .OnDelete(DeleteBehavior.SetNull);
 
                     b.HasOne("ThinkOnErp.Domain.Entities.SysScreen", "Screen")
-                        .WithMany("BranchPermissions")
+                        .WithMany()
                         .HasForeignKey("ScreenId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("Branch");
 
-                    b.Navigation("Granter");
+                    b.Navigation("Feature");
+
+                    b.Navigation("RevokedBySuperAdmin");
+
+                    b.Navigation("Screen");
+                });
+
+            modelBuilder.Entity("ThinkOnErp.Domain.Entities.SysBranchScreen", b =>
+                {
+                    b.HasOne("ThinkOnErp.Domain.Entities.SysBranch", "Branch")
+                        .WithMany()
+                        .HasForeignKey("BranchId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("ThinkOnErp.Domain.Entities.SysSuperAdmin", "RevokedBySuperAdmin")
+                        .WithMany()
+                        .HasForeignKey("RevokedBy")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("ThinkOnErp.Domain.Entities.SysScreen", "Screen")
+                        .WithMany()
+                        .HasForeignKey("ScreenId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Branch");
+
+                    b.Navigation("RevokedBySuperAdmin");
 
                     b.Navigation("Screen");
                 });
@@ -2701,25 +2758,25 @@ namespace ThinkOnErp.Infrastructure.Migrations
             modelBuilder.Entity("ThinkOnErp.Domain.Entities.SysBranchSystem", b =>
                 {
                     b.HasOne("ThinkOnErp.Domain.Entities.SysBranch", "Branch")
-                        .WithMany("SystemAccess")
+                        .WithMany()
                         .HasForeignKey("BranchId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("ThinkOnErp.Domain.Entities.SysSuperAdmin", "Granter")
+                    b.HasOne("ThinkOnErp.Domain.Entities.SysSuperAdmin", "GrantedBySuperAdmin")
                         .WithMany()
                         .HasForeignKey("GrantedBy")
                         .OnDelete(DeleteBehavior.SetNull);
 
                     b.HasOne("ThinkOnErp.Domain.Entities.SysSystem", "System")
-                        .WithMany("BranchAccess")
+                        .WithMany()
                         .HasForeignKey("SystemId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("Branch");
 
-                    b.Navigation("Granter");
+                    b.Navigation("GrantedBySuperAdmin");
 
                     b.Navigation("System");
                 });
@@ -2832,25 +2889,6 @@ namespace ThinkOnErp.Infrastructure.Migrations
                     b.Navigation("TicketType");
                 });
 
-            modelBuilder.Entity("ThinkOnErp.Domain.Entities.SysRoleScreenPermission", b =>
-                {
-                    b.HasOne("ThinkOnErp.Domain.Entities.SysRole", "Role")
-                        .WithMany()
-                        .HasForeignKey("RoleId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("ThinkOnErp.Domain.Entities.SysScreen", "Screen")
-                        .WithMany()
-                        .HasForeignKey("ScreenId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("Role");
-
-                    b.Navigation("Screen");
-                });
-
             modelBuilder.Entity("ThinkOnErp.Domain.Entities.SysSavedSearch", b =>
                 {
                     b.HasOne("ThinkOnErp.Domain.Entities.SysUser", "User")
@@ -2878,6 +2916,25 @@ namespace ThinkOnErp.Infrastructure.Migrations
                     b.Navigation("ParentScreen");
 
                     b.Navigation("System");
+                });
+
+            modelBuilder.Entity("ThinkOnErp.Domain.Entities.SysScreenFeature", b =>
+                {
+                    b.HasOne("ThinkOnErp.Domain.Entities.SysFeature", "Feature")
+                        .WithMany("ScreenFeatures")
+                        .HasForeignKey("FeatureId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("ThinkOnErp.Domain.Entities.SysScreen", "Screen")
+                        .WithMany("ScreenFeatures")
+                        .HasForeignKey("ScreenId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Feature");
+
+                    b.Navigation("Screen");
                 });
 
             modelBuilder.Entity("ThinkOnErp.Domain.Entities.SysSearchAnalytics", b =>
@@ -2955,35 +3012,14 @@ namespace ThinkOnErp.Infrastructure.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("ThinkOnErp.Domain.Entities.SysUserScreenPermission", b =>
-                {
-                    b.HasOne("ThinkOnErp.Domain.Entities.SysScreen", "Screen")
-                        .WithMany()
-                        .HasForeignKey("ScreenId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("ThinkOnErp.Domain.Entities.SysUser", "User")
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Screen");
-
-                    b.Navigation("User");
-                });
-
-            modelBuilder.Entity("ThinkOnErp.Domain.Entities.SysBranch", b =>
-                {
-                    b.Navigation("ScreenPermissions");
-
-                    b.Navigation("SystemAccess");
-                });
-
             modelBuilder.Entity("ThinkOnErp.Domain.Entities.SysCompany", b =>
                 {
                     b.Navigation("Branches");
+                });
+
+            modelBuilder.Entity("ThinkOnErp.Domain.Entities.SysFeature", b =>
+                {
+                    b.Navigation("ScreenFeatures");
                 });
 
             modelBuilder.Entity("ThinkOnErp.Domain.Entities.SysRequestTicket", b =>
@@ -2995,13 +3031,11 @@ namespace ThinkOnErp.Infrastructure.Migrations
 
             modelBuilder.Entity("ThinkOnErp.Domain.Entities.SysScreen", b =>
                 {
-                    b.Navigation("BranchPermissions");
+                    b.Navigation("ScreenFeatures");
                 });
 
             modelBuilder.Entity("ThinkOnErp.Domain.Entities.SysSystem", b =>
                 {
-                    b.Navigation("BranchAccess");
-
                     b.Navigation("Screens");
                 });
 

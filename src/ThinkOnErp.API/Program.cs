@@ -311,8 +311,9 @@ try
         {
             "SuperAdminAuth", "Alerts", "AuditHealth", "AuditTrail", "Branch", "BranchPermissions",
             "Company", "Compliance", "Configuration", "Documents", "Health",
-            "KeyManagement", "Monitoring", "SuperAdmin", 
-            "Tickets", "TicketTypes", "AuditLogs"
+            "Features", "KeyManagement", "Modules", "Monitoring", "Screens", "SuperAdmin", 
+            "Tickets", "TicketTypes", "AuditLogs", "BranchAccess",
+            "SysCodes", "SysSettings"
         };
 
         options.DocInclusionPredicate((docName, apiDesc) =>

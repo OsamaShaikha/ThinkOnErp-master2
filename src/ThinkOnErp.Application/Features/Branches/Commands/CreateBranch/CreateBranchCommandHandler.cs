@@ -7,14 +7,12 @@ namespace ThinkOnErp.Application.Features.Branches.Commands.CreateBranch;
 public class CreateBranchCommandHandler : IRequestHandler<CreateBranchCommand, Int64>
 {
     private readonly IBranchRepository _branchRepository;
-    private readonly IPermissionRepository _permissionRepository;
     private readonly ILogoStorageService _logoStorageService;
 
-    public CreateBranchCommandHandler(IBranchRepository branchRepository, IPermissionRepository permissionRepository,
+    public CreateBranchCommandHandler(IBranchRepository branchRepository,
         ILogoStorageService logoStorageService)
     {
         _branchRepository = branchRepository;
-        _permissionRepository = permissionRepository;
         _logoStorageService = logoStorageService;
     }
 
@@ -57,25 +55,6 @@ public class CreateBranchCommandHandler : IRequestHandler<CreateBranchCommand, I
             branch.UpdateDate = DateTime.UtcNow;
             await _branchRepository.UpdateAsync(branch);
             await _logoStorageService.DeleteLogoAsync(oldPath);
-        }
-
-        // Grant systems and auto-grant all their screens if specified
-        if (request.Systems?.Count > 0)
-        {
-            foreach (var systemId in request.Systems)
-            {
-                await _permissionRepository.SetBranchSystemAsync(
-                    branchId, systemId, isAllowed: true,
-                    grantedBy: null, notes: null,
-                    creationUser: request.CreationUser
-                );
-
-                await _permissionRepository.GrantSystemScreensToBranchAsync(
-                    branchId, systemId,
-                    grantedBy: null,
-                    creationUser: request.CreationUser
-                );
-            }
         }
 
         return branchId;

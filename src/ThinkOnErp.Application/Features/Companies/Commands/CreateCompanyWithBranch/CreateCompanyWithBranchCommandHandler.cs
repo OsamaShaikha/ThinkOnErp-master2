@@ -8,7 +8,6 @@ public class CreateCompanyWithBranchCommandHandler : IRequestHandler<CreateCompa
 {
     private readonly ICompanyRepository _companyRepository;
     private readonly IBranchRepository _branchRepository;
-    private readonly IPermissionRepository _permissionRepository;
     private readonly ILogoStorageService _logoStorageService;
     private readonly IOracleSchemaService _oracleSchemaService;
     private readonly ILogger<CreateCompanyWithBranchCommandHandler> _logger;
@@ -16,14 +15,12 @@ public class CreateCompanyWithBranchCommandHandler : IRequestHandler<CreateCompa
     public CreateCompanyWithBranchCommandHandler(
         ICompanyRepository companyRepository,
         IBranchRepository branchRepository,
-        IPermissionRepository permissionRepository,
         ILogoStorageService logoStorageService,
         IOracleSchemaService oracleSchemaService,
         ILogger<CreateCompanyWithBranchCommandHandler> logger)
     {
         _companyRepository = companyRepository ?? throw new ArgumentNullException(nameof(companyRepository));
         _branchRepository = branchRepository ?? throw new ArgumentNullException(nameof(branchRepository));
-        _permissionRepository = permissionRepository ?? throw new ArgumentNullException(nameof(permissionRepository));
         _logoStorageService = logoStorageService ?? throw new ArgumentNullException(nameof(logoStorageService));
         _oracleSchemaService = oracleSchemaService ?? throw new ArgumentNullException(nameof(oracleSchemaService));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
@@ -116,25 +113,6 @@ public class CreateCompanyWithBranchCommandHandler : IRequestHandler<CreateCompa
                 companyId: result.CompanyId,
                 branchId: result.BranchId,
                 creationUser: request.CreationUser);
-
-            // Grant systems and auto-grant all their screens to the default branch
-            if (request.Systems?.Count > 0)
-            {
-                foreach (var systemId in request.Systems)
-                {
-                    await _permissionRepository.SetBranchSystemAsync(
-                        result.BranchId, systemId, isAllowed: true,
-                        grantedBy: null, notes: null,
-                        creationUser: request.CreationUser
-                    );
-
-                    await _permissionRepository.GrantSystemScreensToBranchAsync(
-                        result.BranchId, systemId,
-                        grantedBy: null,
-                        creationUser: request.CreationUser
-                    );
-                }
-            }
 
             // Generate branch name for response (if not provided)
             var branchName = request.BranchNameEn ?? $"{request.CompanyNameEn} - Head Office";

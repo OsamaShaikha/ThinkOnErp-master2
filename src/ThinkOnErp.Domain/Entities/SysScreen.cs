@@ -88,5 +88,5 @@ public class SysScreen
     // Navigation properties
     public SysSystem? System { get; set; }
     public SysScreen? ParentScreen { get; set; }
-    public ICollection<SysBranchScreenPermission> BranchPermissions { get; set; } = new List<SysBranchScreenPermission>();
+    public ICollection<SysScreenFeature>? ScreenFeatures { get; set; }
 }

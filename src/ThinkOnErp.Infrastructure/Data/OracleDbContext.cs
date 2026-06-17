@@ -21,11 +21,13 @@ public class OracleDbContext : DbContext
     public DbSet<SysSuperAdmin> SysSuperAdmins => Set<SysSuperAdmin>();
     public DbSet<SysSystem> SysSystems => Set<SysSystem>();
     public DbSet<SysScreen> SysScreens => Set<SysScreen>();
+    public DbSet<SysFeature> SysFeatures => Set<SysFeature>();
     public DbSet<SysUserRole> SysUserRoles => Set<SysUserRole>();
-    public DbSet<SysRoleScreenPermission> SysRoleScreenPermissions => Set<SysRoleScreenPermission>();
-    public DbSet<SysUserScreenPermission> SysUserScreenPermissions => Set<SysUserScreenPermission>();
+
+    // Branch-system provisioning
     public DbSet<SysBranchSystem> SysBranchSystems => Set<SysBranchSystem>();
-    public DbSet<SysBranchScreenPermission> SysBranchScreenPermissions => Set<SysBranchScreenPermission>();
+    public DbSet<SysBranchScreen> SysBranchScreens => Set<SysBranchScreen>();
+    public DbSet<SysBranchFeature> SysBranchFeatures => Set<SysBranchFeature>();
 
     // Ticket system entities
     public DbSet<SysRequestTicket> SysRequestTickets => Set<SysRequestTicket>();
@@ -78,11 +80,9 @@ public class OracleDbContext : DbContext
         modelBuilder.ApplyConfiguration(new SysSuperAdminConfiguration());
         modelBuilder.ApplyConfiguration(new SysSystemConfiguration());
         modelBuilder.ApplyConfiguration(new SysScreenConfiguration());
+        modelBuilder.ApplyConfiguration(new SysFeatureConfiguration());
+        modelBuilder.ApplyConfiguration(new SysScreenFeatureConfiguration());
         modelBuilder.ApplyConfiguration(new SysUserRoleConfiguration());
-        modelBuilder.ApplyConfiguration(new SysRoleScreenPermissionConfiguration());
-        modelBuilder.ApplyConfiguration(new SysUserScreenPermissionConfiguration());
-        modelBuilder.ApplyConfiguration(new SysBranchSystemConfiguration());
-        modelBuilder.ApplyConfiguration(new SysBranchScreenPermissionConfiguration());
         modelBuilder.ApplyConfiguration(new SysRequestTicketConfiguration());
         modelBuilder.ApplyConfiguration(new SysTicketTypeConfiguration());
         modelBuilder.ApplyConfiguration(new SysTicketPriorityConfiguration());
@@ -104,6 +104,9 @@ public class OracleDbContext : DbContext
         modelBuilder.ApplyConfiguration(new SysRetentionPolicyConfiguration());
         modelBuilder.ApplyConfiguration(new SysCodeConfiguration());
         modelBuilder.ApplyConfiguration(new SysSettingConfiguration());
+        modelBuilder.ApplyConfiguration(new SysBranchSystemConfiguration());
+        modelBuilder.ApplyConfiguration(new SysBranchScreenConfiguration());
+        modelBuilder.ApplyConfiguration(new SysBranchFeatureConfiguration());
 
         // Oracle doesn't support BOOLEAN as a SQL column type; map all bool to NUMBER(1)
         // Clear HasConversion<string> from individual configs — Oracle provider handles

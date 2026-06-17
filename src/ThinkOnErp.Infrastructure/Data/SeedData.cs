@@ -517,107 +517,7 @@ public static class SeedData
         });
         await context.SaveChangesAsync();
 
-        // 11. Role Screen Permissions
-        var allScreens = new[] { screenDashboard, screenTickets, screenReports, screenEmployees, screenAttendance };
-        foreach (var screen in allScreens)
-        {
-            context.SysRoleScreenPermissions.Add(new SysRoleScreenPermission
-            {
-                RoleId = roleAdmin.Id,
-                ScreenId = screen.Id,
-                CanView = true,
-                CanInsert = true,
-                CanUpdate = true,
-                CanDelete = true,
-                CreationUser = seedUser,
-                CreationDate = now
-            });
-        }
-
-        foreach (var screen in new[] { screenDashboard, screenTickets })
-        {
-            context.SysRoleScreenPermissions.Add(new SysRoleScreenPermission
-            {
-                RoleId = roleSupport.Id,
-                ScreenId = screen.Id,
-                CanView = true,
-                CanInsert = true,
-                CanUpdate = true,
-                CanDelete = false,
-                CreationUser = seedUser,
-                CreationDate = now
-            });
-        }
-
-        context.SysRoleScreenPermissions.Add(new SysRoleScreenPermission
-        {
-            RoleId = roleViewer.Id,
-            ScreenId = screenDashboard.Id,
-            CanView = true,
-            CanInsert = false,
-            CanUpdate = false,
-            CanDelete = false,
-            CreationUser = seedUser,
-            CreationDate = now
-        });
-        await context.SaveChangesAsync();
-
-        // 12. User Screen Permissions
-        context.SysUserScreenPermissions.Add(new SysUserScreenPermission
-        {
-            UserId = user2.Id,
-            ScreenId = screenReports.Id,
-            CanView = true,
-            CanInsert = false,
-            CanUpdate = false,
-            CanDelete = false,
-            AssignedBy = admin.Id,
-            AssignedDate = now,
-            Notes = "Additional read access to reports",
-            CreationUser = seedUser,
-            CreationDate = now
-        });
-        await context.SaveChangesAsync();
-
-        // 13. Branch System access
-        foreach (var branch in new[] { hqBranch, branch2 })
-        {
-            foreach (var sys in new[] { sysSupport, sysHr })
-            {
-                context.SysBranchSystems.Add(new SysBranchSystem
-                {
-                    BranchId = branch.Id,
-                    SystemId = sys.Id,
-                    IsAllowed = true,
-                    GrantedBy = admin.Id,
-                    GrantedDate = now,
-                    CreationUser = seedUser,
-                    CreationDate = now
-                });
-            }
-        }
-        await context.SaveChangesAsync();
-
-        // 14. Branch Screen Permissions
-        foreach (var screen in allScreens)
-        {
-            context.SysBranchScreenPermissions.Add(new SysBranchScreenPermission
-            {
-                BranchId = hqBranch.Id,
-                ScreenId = screen.Id,
-                CanView = true,
-                CanInsert = true,
-                CanUpdate = true,
-                CanDelete = true,
-                GrantedBy = admin.Id,
-                GrantedDate = now,
-                CreationUser = seedUser,
-                CreationDate = now
-            });
-        }
-        await context.SaveChangesAsync();
-
-        // 15. Ticket Priority
+        // 11. Ticket Priority
         var priorityCritical = new SysTicketPriority
         {
             PriorityNameAr = "حرج",
@@ -1138,8 +1038,135 @@ public static class SeedData
             new() { SettingCode = 4, SettingDesc = "Logs path", SettingValue = "/THINKON_FILES/LOGS/" },
             new() { SettingCode = 5, SettingDesc = "Audit fallback path", SettingValue = "/THINKON_FILES/LOGS/audit-fallback/" },
             new() { SettingCode = 6, SettingDesc = "Logos path", SettingValue = "/THINKON_FILES/LOGOS/" },
+            new() { SettingCode = 7, SettingDesc = "Icons path", SettingValue = "/THINKON_FILES/ICONS/" },
         };
         context.SysSettings.AddRange(settings);
+        await context.SaveChangesAsync();
+
+        // 35. Generic Features (reusable permission actions across screens)
+        var featView = new SysFeature
+        {
+            FeatureCode = "view",
+            FeatureName = "عرض",
+            FeatureNameE = "View",
+            Description = "Ability to view records",
+            DescriptionE = "Ability to view records",
+            DisplayOrder = 1,
+            IsActive = true,
+            CreationUser = seedUser,
+            CreationDate = now
+        };
+        var featCreate = new SysFeature
+        {
+            FeatureCode = "create",
+            FeatureName = "إنشاء",
+            FeatureNameE = "Create",
+            Description = "Ability to create new records",
+            DescriptionE = "Ability to create new records",
+            DisplayOrder = 2,
+            IsActive = true,
+            CreationUser = seedUser,
+            CreationDate = now
+        };
+        var featEdit = new SysFeature
+        {
+            FeatureCode = "edit",
+            FeatureName = "تعديل",
+            FeatureNameE = "Edit",
+            Description = "Ability to edit existing records",
+            DescriptionE = "Ability to edit existing records",
+            DisplayOrder = 3,
+            IsActive = true,
+            CreationUser = seedUser,
+            CreationDate = now
+        };
+        var featDelete = new SysFeature
+        {
+            FeatureCode = "delete",
+            FeatureName = "حذف",
+            FeatureNameE = "Delete",
+            Description = "Ability to delete records",
+            DescriptionE = "Ability to delete records",
+            DisplayOrder = 4,
+            IsActive = true,
+            CreationUser = seedUser,
+            CreationDate = now
+        };
+        var featApprove = new SysFeature
+        {
+            FeatureCode = "approve",
+            FeatureName = "اعتماد",
+            FeatureNameE = "Approve",
+            Description = "Ability to approve records",
+            DescriptionE = "Ability to approve records",
+            DisplayOrder = 5,
+            IsActive = true,
+            CreationUser = seedUser,
+            CreationDate = now
+        };
+        var featReject = new SysFeature
+        {
+            FeatureCode = "reject",
+            FeatureName = "رفض",
+            FeatureNameE = "Reject",
+            Description = "Ability to reject records",
+            DescriptionE = "Ability to reject records",
+            DisplayOrder = 6,
+            IsActive = true,
+            CreationUser = seedUser,
+            CreationDate = now
+        };
+        var featExport = new SysFeature
+        {
+            FeatureCode = "export",
+            FeatureName = "تصدير",
+            FeatureNameE = "Export",
+            Description = "Ability to export records",
+            DescriptionE = "Ability to export records",
+            DisplayOrder = 7,
+            IsActive = true,
+            CreationUser = seedUser,
+            CreationDate = now
+        };
+        var featPrint = new SysFeature
+        {
+            FeatureCode = "print",
+            FeatureName = "طباعة",
+            FeatureNameE = "Print",
+            Description = "Ability to print records",
+            DescriptionE = "Ability to print records",
+            DisplayOrder = 8,
+            IsActive = true,
+            CreationUser = seedUser,
+            CreationDate = now
+        };
+        context.SysFeatures.AddRange(
+            featView, featCreate, featEdit, featDelete,
+            featApprove, featReject, featExport, featPrint
+        );
+        await context.SaveChangesAsync();
+
+        // 36. Screen-Feature assignments (map generic features to screens)
+        context.Set<SysScreenFeature>().AddRange(
+            // Tickets screen
+            new SysScreenFeature { ScreenId = screenTickets.Id, FeatureId = featView.Id },
+            new SysScreenFeature { ScreenId = screenTickets.Id, FeatureId = featCreate.Id },
+            new SysScreenFeature { ScreenId = screenTickets.Id, FeatureId = featEdit.Id },
+            new SysScreenFeature { ScreenId = screenTickets.Id, FeatureId = featDelete.Id },
+            // Reports screen
+            new SysScreenFeature { ScreenId = screenReports.Id, FeatureId = featView.Id },
+            new SysScreenFeature { ScreenId = screenReports.Id, FeatureId = featExport.Id },
+            new SysScreenFeature { ScreenId = screenReports.Id, FeatureId = featPrint.Id },
+            // Employees screen
+            new SysScreenFeature { ScreenId = screenEmployees.Id, FeatureId = featView.Id },
+            new SysScreenFeature { ScreenId = screenEmployees.Id, FeatureId = featCreate.Id },
+            new SysScreenFeature { ScreenId = screenEmployees.Id, FeatureId = featEdit.Id },
+            new SysScreenFeature { ScreenId = screenEmployees.Id, FeatureId = featDelete.Id },
+            // Attendance screen
+            new SysScreenFeature { ScreenId = screenAttendance.Id, FeatureId = featView.Id },
+            new SysScreenFeature { ScreenId = screenAttendance.Id, FeatureId = featApprove.Id },
+            new SysScreenFeature { ScreenId = screenAttendance.Id, FeatureId = featReject.Id }
+        );
         await context.SaveChangesAsync();
     }
 }

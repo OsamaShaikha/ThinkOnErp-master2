@@ -74,5 +74,4 @@ public class SysSystem
     /// Screens belonging to this system
     /// </summary>
     public ICollection<SysScreen> Screens { get; set; } = new List<SysScreen>();
-    public ICollection<SysBranchSystem> BranchAccess { get; set; } = new List<SysBranchSystem>();
 }

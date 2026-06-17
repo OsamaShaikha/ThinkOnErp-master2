@@ -110,8 +110,11 @@ public static class DependencyInjection
         services.AddScoped<ISuperAdminRepository, SuperAdminRepository>();
         services.AddScoped<ISystemRepository, SystemRepository>();
         services.AddScoped<IScreenRepository, ScreenRepository>();
-        services.AddScoped<IPermissionRepository, PermissionRepository>();
-        services.AddScoped<IBranchPermissionRepository, BranchPermissionRepository>();
+        services.AddScoped<ISysFeatureRepository, SysFeatureRepository>();
+        services.AddScoped<ISysScreenFeatureRepository, SysScreenFeatureRepository>();
+        services.AddScoped<IBranchSystemRepository, BranchSystemRepository>();
+        services.AddScoped<IBranchScreenRepository, BranchScreenRepository>();
+        services.AddScoped<IBranchFeatureRepository, BranchFeatureRepository>();
         services.AddScoped<ISysCodeRepository, SysCodeRepository>();
         services.AddScoped<ISysCodeService, SysCodeService>();
         services.AddScoped<ISysSettingRepository, SysSettingRepository>();

@@ -23,6 +23,4 @@ public class SysBranch
     public DateTime? UpdateDate { get; set; }
     public SysCurrency? BaseCurrency { get; set; }
     public SysCompany? Company { get; set; }
-    public ICollection<SysBranchSystem> SystemAccess { get; set; } = new List<SysBranchSystem>();
-    public ICollection<SysBranchScreenPermission> ScreenPermissions { get; set; } = new List<SysBranchScreenPermission>();
 }

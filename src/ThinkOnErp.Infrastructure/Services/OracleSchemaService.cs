@@ -20,14 +20,16 @@ public class OracleSchemaService : IOracleSchemaService
     private static readonly HashSet<string> GlobalTables = new(StringComparer.OrdinalIgnoreCase)
     {
         "SYS_SUPER_ADMIN", "SYS_COMPANY", "SYS_SYSTEM", "SYS_SCREEN",
-        "SYS_CURRENCY", "SYS_SETTING", "SYS_CODE",
+        "SYS_CURRENCY", "SYS_SETTINGS", "SYS_CODE",
         "SYS_AUDIT_LOG", "SYS_AUDIT_LOG_ARCHIVE", "SYS_RETENTION_POLICIES",
-        "SYS_BRANCH", "SYS_BRANCH_SYSTEMS",
+        "SYS_BRANCH",
         "SYS_DOCUMENT", "SYS_REQUEST_TICKET",
         "SYS_TICKET_ATTACHMENT", "SYS_TICKET_CATEGORY", "SYS_TICKET_COMMENT",
         "SYS_TICKET_CONFIG", "SYS_TICKET_PRIORITY", "SYS_TICKET_STATUS", "SYS_TICKET_TYPE",
         "SYS_SECURITY_THREATS", "SYS_FAILED_LOGINS",
         "SYS_PERFORMANCE_METRICS", "SYS_SLOW_QUERIES", "SYS_REPORT_SCHEDULE",
+        "SYS_FEATURE", "SYS_SCREEN_FEATURE", "SYS_BRANCH_SYSTEMS",
+        "SYS_BRANCH_SCREENS", "SYS_BRANCH_FEATURES",
         "__EFMigrationsHistory"
     };
 
@@ -375,8 +377,7 @@ public class OracleSchemaService : IOracleSchemaService
 
     private static readonly HashSet<string> TenantOnlyTables = new(StringComparer.OrdinalIgnoreCase)
     {
-        "SYS_BRANCH_SCREEN_PERMISSIONS", "SYS_ROLE", "SYS_ROLE_SCREEN_PERMISSIONS",
-        "SYS_USERS", "SYS_USERS_ROLES", "SYS_USER_SCREEN_PERMISSIONS",
+        "SYS_ROLE", "SYS_USERS", "SYS_USERS_ROLES",
         "SYS_FISCAL_YEAR", "SYS_SAVED_SEARCH", "SYS_SEARCH_ANALYTICS"
     };
 

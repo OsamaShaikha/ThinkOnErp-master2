@@ -46,4 +46,37 @@ public class SysCodeRepository : ISysCodeRepository
             .ThenBy(c => c.CodeLang)
             .ToListAsync();
     }
+
+    public async Task<List<int>> GetDistinctCodeMgrsAsync()
+    {
+        return await _context.SysCodes
+            .Select(c => c.CodeMgr)
+            .Distinct()
+            .OrderBy(m => m)
+            .ToListAsync();
+    }
+
+    public async Task<SysCode> AddAsync(SysCode code)
+    {
+        _context.SysCodes.Add(code);
+        await _context.SaveChangesAsync();
+        return code;
+    }
+
+    public async Task UpdateAsync(SysCode code)
+    {
+        _context.SysCodes.Update(code);
+        await _context.SaveChangesAsync();
+    }
+
+    public async Task DeleteAsync(int codeMgr, int codeMnr, int codeLang)
+    {
+        var code = await _context.SysCodes
+            .FirstOrDefaultAsync(c => c.CodeMgr == codeMgr && c.CodeMnr == codeMnr && c.CodeLang == codeLang);
+        if (code != null)
+        {
+            _context.SysCodes.Remove(code);
+            await _context.SaveChangesAsync();
+        }
+    }
 }
