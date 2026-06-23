@@ -420,21 +420,6 @@ Example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...'
 
     var app = builder.Build();
 
-    // Seed test data on startup (wrap in try-catch to allow EF tooling to work)
-    try
-    {
-        using (var scope = app.Services.CreateScope())
-        {
-            var dbContext = scope.ServiceProvider.GetRequiredService<ThinkOnErp.Infrastructure.Data.OracleDbContext>();
-            await ThinkOnErp.Infrastructure.Data.SeedData.InitializeAsync(dbContext);
-        }
-    }
-    catch (Exception ex)
-    {
-        var logger = app.Services.GetRequiredService<ILogger<Program>>();
-        logger.LogWarning(ex, "Seed data initialization skipped (tables may not exist yet)");
-    }
-
     // Add global exception handling middleware early so it wraps the request pipeline.
     app.UseMiddleware<ThinkOnErp.API.Middleware.ExceptionHandlingMiddleware>();
 

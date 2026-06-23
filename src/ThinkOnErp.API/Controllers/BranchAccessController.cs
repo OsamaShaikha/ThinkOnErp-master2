@@ -5,6 +5,7 @@ using ThinkOnErp.Application.DTOs.BranchProvisioning;
 using ThinkOnErp.Application.DTOs.Feature;
 using ThinkOnErp.Application.DTOs.Module;
 using ThinkOnErp.Application.DTOs.Screen;
+using ThinkOnErp.Domain.Entities;
 using ThinkOnErp.Domain.Interfaces;
 
 namespace ThinkOnErp.API.Controllers;
@@ -34,6 +35,45 @@ public class BranchAccessController : ControllerBase
         _logger = logger;
     }
 
+    private bool IsSuperAdmin() =>
+        string.Equals(User.FindFirst("isSuperAdmin")?.Value, "true", StringComparison.OrdinalIgnoreCase);
+
+    private long? GetCurrentCompanyId()
+    {
+        var claim = User.FindFirst("companyId")?.Value;
+        return long.TryParse(claim, out var companyId) && companyId > 0 ? companyId : null;
+    }
+
+    private bool CanAccessBranch(SysBranch branch)
+    {
+        if (IsSuperAdmin())
+            return true;
+
+        var currentCompanyId = GetCurrentCompanyId();
+        return currentCompanyId.HasValue
+            && branch.CompanyId.HasValue
+            && currentCompanyId.Value == branch.CompanyId.Value;
+    }
+
+    private async Task<(SysBranch? Branch, ActionResult? Error)> GetAccessibleBranchOrErrorAsync(long branchId)
+    {
+        var branch = await _branchRepo.GetByIdAsync(branchId);
+        if (branch == null)
+            return (null, NotFound(ApiResponse<object>.CreateFailure("Branch not found", statusCode: 404)));
+
+        if (!CanAccessBranch(branch))
+        {
+            _logger.LogWarning(
+                "Branch access denied. User company {UserCompanyId} attempted to access branch {BranchId} company {BranchCompanyId}",
+                GetCurrentCompanyId(),
+                branchId,
+                branch.CompanyId);
+            return (branch, Forbid());
+        }
+
+        return (branch, null);
+    }
+
     [HttpGet("state")]
     [ProducesResponseType(typeof(ApiResponse<BranchProvisioningStateDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -41,9 +81,9 @@ public class BranchAccessController : ControllerBase
     {
         try
         {
-            var branch = await _branchRepo.GetByIdAsync(branchId);
-            if (branch == null)
-                return NotFound(ApiResponse<BranchProvisioningStateDto>.CreateFailure("Branch not found", statusCode: 404));
+            var (_, branchError) = await GetAccessibleBranchOrErrorAsync(branchId);
+            if (branchError != null)
+                return branchError;
 
             var systems = await _branchSystemRepo.GetSystemsByBranchIdAsync(branchId);
             var screens = await _branchScreenRepo.GetAvailableScreensAsync(branchId);
@@ -111,9 +151,9 @@ public class BranchAccessController : ControllerBase
     {
         try
         {
-            var branch = await _branchRepo.GetByIdAsync(branchId);
-            if (branch == null)
-                return NotFound(ApiResponse<List<ModuleDto>>.CreateFailure("Branch not found", statusCode: 404));
+            var (_, branchError) = await GetAccessibleBranchOrErrorAsync(branchId);
+            if (branchError != null)
+                return branchError;
 
             var systems = await _branchSystemRepo.GetSystemsByBranchIdAsync(branchId);
             var dtos = systems.Select(s => new ModuleDto
@@ -150,9 +190,9 @@ public class BranchAccessController : ControllerBase
     {
         try
         {
-            var branch = await _branchRepo.GetByIdAsync(branchId);
-            if (branch == null)
-                return NotFound(ApiResponse<object>.CreateFailure("Branch not found", statusCode: 404));
+            var (_, branchError) = await GetAccessibleBranchOrErrorAsync(branchId);
+            if (branchError != null)
+                return branchError;
 
             var userIdStr = User.FindFirst("userId")?.Value;
             long? grantedBy = userIdStr != null ? long.Parse(userIdStr) : null;
@@ -176,9 +216,9 @@ public class BranchAccessController : ControllerBase
     {
         try
         {
-            var branch = await _branchRepo.GetByIdAsync(branchId);
-            if (branch == null)
-                return NotFound(ApiResponse<List<ScreenDto>>.CreateFailure("Branch not found", statusCode: 404));
+            var (_, branchError) = await GetAccessibleBranchOrErrorAsync(branchId);
+            if (branchError != null)
+                return branchError;
 
             var screens = await _branchScreenRepo.GetAvailableScreensAsync(branchId);
             var dtos = screens.Select(s => new ScreenDto
@@ -217,9 +257,9 @@ public class BranchAccessController : ControllerBase
     {
         try
         {
-            var branch = await _branchRepo.GetByIdAsync(branchId);
-            if (branch == null)
-                return NotFound(ApiResponse<List<long>>.CreateFailure("Branch not found", statusCode: 404));
+            var (_, branchError) = await GetAccessibleBranchOrErrorAsync(branchId);
+            if (branchError != null)
+                return branchError;
 
             var ids = await _branchScreenRepo.GetRevokedScreenIdsAsync(branchId);
             return Ok(ApiResponse<List<long>>.CreateSuccess(ids, "Revoked screen IDs retrieved successfully", 200));
@@ -238,9 +278,9 @@ public class BranchAccessController : ControllerBase
     {
         try
         {
-            var branch = await _branchRepo.GetByIdAsync(branchId);
-            if (branch == null)
-                return NotFound(ApiResponse<object>.CreateFailure("Branch not found", statusCode: 404));
+            var (_, branchError) = await GetAccessibleBranchOrErrorAsync(branchId);
+            if (branchError != null)
+                return branchError;
 
             var userIdStr = User.FindFirst("userId")?.Value;
             long? revokedBy = userIdStr != null ? long.Parse(userIdStr) : null;
@@ -264,9 +304,9 @@ public class BranchAccessController : ControllerBase
     {
         try
         {
-            var branch = await _branchRepo.GetByIdAsync(branchId);
-            if (branch == null)
-                return NotFound(ApiResponse<object>.CreateFailure("Branch not found", statusCode: 404));
+            var (_, branchError) = await GetAccessibleBranchOrErrorAsync(branchId);
+            if (branchError != null)
+                return branchError;
 
             await _branchScreenRepo.AllowScreenAsync(branchId, screenId);
             _logger.LogInformation("Screen {ScreenId} re-allowed for branch {BranchId}", screenId, branchId);
@@ -287,9 +327,9 @@ public class BranchAccessController : ControllerBase
     {
         try
         {
-            var branch = await _branchRepo.GetByIdAsync(branchId);
-            if (branch == null)
-                return NotFound(ApiResponse<List<FeatureDto>>.CreateFailure("Branch not found", statusCode: 404));
+            var (_, branchError) = await GetAccessibleBranchOrErrorAsync(branchId);
+            if (branchError != null)
+                return branchError;
 
             var features = await _branchFeatureRepo.GetAvailableFeaturesAsync(branchId, screenId);
             var dtos = features.Select(f => new FeatureDto
@@ -325,9 +365,9 @@ public class BranchAccessController : ControllerBase
     {
         try
         {
-            var branch = await _branchRepo.GetByIdAsync(branchId);
-            if (branch == null)
-                return NotFound(ApiResponse<List<RevokedFeatureDto>>.CreateFailure("Branch not found", statusCode: 404));
+            var (_, branchError) = await GetAccessibleBranchOrErrorAsync(branchId);
+            if (branchError != null)
+                return branchError;
 
             var revoked = await _branchFeatureRepo.GetRevokedScreenFeaturesAsync(branchId);
             var dtos = revoked.Select(r => new RevokedFeatureDto
@@ -352,9 +392,9 @@ public class BranchAccessController : ControllerBase
     {
         try
         {
-            var branch = await _branchRepo.GetByIdAsync(branchId);
-            if (branch == null)
-                return NotFound(ApiResponse<object>.CreateFailure("Branch not found", statusCode: 404));
+            var (_, branchError) = await GetAccessibleBranchOrErrorAsync(branchId);
+            if (branchError != null)
+                return branchError;
 
             var userIdStr = User.FindFirst("userId")?.Value;
             long? revokedBy = userIdStr != null ? long.Parse(userIdStr) : null;
@@ -378,9 +418,9 @@ public class BranchAccessController : ControllerBase
     {
         try
         {
-            var branch = await _branchRepo.GetByIdAsync(branchId);
-            if (branch == null)
-                return NotFound(ApiResponse<object>.CreateFailure("Branch not found", statusCode: 404));
+            var (_, branchError) = await GetAccessibleBranchOrErrorAsync(branchId);
+            if (branchError != null)
+                return branchError;
 
             await _branchFeatureRepo.AllowFeatureAsync(branchId, screenId, featureId);
             _logger.LogInformation("Feature {FeatureId} on screen {ScreenId} re-allowed for branch {BranchId}", featureId, screenId, branchId);

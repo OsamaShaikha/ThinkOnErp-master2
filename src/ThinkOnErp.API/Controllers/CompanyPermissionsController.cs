@@ -1,0 +1,217 @@
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using ThinkOnErp.API.Authorization;
+using ThinkOnErp.Application.Common;
+using ThinkOnErp.Domain.Entities;
+using ThinkOnErp.Domain.Interfaces;
+using ThinkOnErp.Infrastructure.Data;
+
+namespace ThinkOnErp.API.Controllers;
+
+[ApiController]
+[Route("api/branches/{branchId:long}/permissions")]
+[Authorize(Policy = "AdminOnly")]
+public class CompanyPermissionsController : ControllerBase
+{
+    private readonly IRoleScreenPermissionRepository _rolePermRepo;
+    private readonly IUserScreenPermissionRepository _userPermRepo;
+    private readonly IBranchSystemRepository _branchSystemRepo;
+    private readonly IBranchScreenRepository _branchScreenRepo;
+    private readonly IBranchFeatureRepository _branchFeatureRepo;
+    private readonly IScreenRepository _screenRepo;
+    private readonly ISysFeatureRepository _featureRepo;
+    private readonly IUserRepository _userRepo;
+    private readonly IPermissionService _permissionService;
+    private readonly OracleDbContext _context;
+    private readonly ILogger<CompanyPermissionsController> _logger;
+
+    public CompanyPermissionsController(
+        IRoleScreenPermissionRepository rolePermRepo,
+        IUserScreenPermissionRepository userPermRepo,
+        IBranchSystemRepository branchSystemRepo,
+        IBranchScreenRepository branchScreenRepo,
+        IBranchFeatureRepository branchFeatureRepo,
+        IScreenRepository screenRepo,
+        ISysFeatureRepository featureRepo,
+        IUserRepository userRepo,
+        IPermissionService permissionService,
+        OracleDbContext context,
+        ILogger<CompanyPermissionsController> logger)
+    {
+        _rolePermRepo = rolePermRepo;
+        _userPermRepo = userPermRepo;
+        _branchSystemRepo = branchSystemRepo;
+        _branchScreenRepo = branchScreenRepo;
+        _branchFeatureRepo = branchFeatureRepo;
+        _screenRepo = screenRepo;
+        _featureRepo = featureRepo;
+        _userRepo = userRepo;
+        _permissionService = permissionService;
+        _context = context;
+        _logger = logger;
+    }
+
+    private long GetCurrentUserId()
+    {
+        var claim = User.FindFirst("userId")?.Value;
+        return long.TryParse(claim, out var id) ? id : 0;
+    }
+
+    private bool IsSuperAdmin() =>
+        string.Equals(User.FindFirst("isSuperAdmin")?.Value, "true", StringComparison.OrdinalIgnoreCase);
+
+    private long? GetCurrentCompanyId()
+    {
+        var claim = User.FindFirst("companyId")?.Value;
+        return long.TryParse(claim, out var companyId) && companyId > 0 ? companyId : null;
+    }
+
+    private async Task<ActionResult?> EnsureCanAccessBranchAsync(long branchId)
+    {
+        var branch = await _context.SysBranches
+            .Where(b => b.Id == branchId && b.IsActive)
+            .Select(b => new { b.Id, b.CompanyId })
+            .FirstOrDefaultAsync();
+
+        if (branch == null)
+            return NotFound(ApiResponse<object>.CreateFailure("Branch not found", statusCode: 404));
+
+        if (IsSuperAdmin())
+            return null;
+
+        var currentCompanyId = GetCurrentCompanyId();
+        if (!currentCompanyId.HasValue || !branch.CompanyId.HasValue || currentCompanyId.Value != branch.CompanyId.Value)
+        {
+            _logger.LogWarning(
+                "Permission branch access denied. User company {UserCompanyId} attempted to access branch {BranchId} company {BranchCompanyId}",
+                currentCompanyId,
+                branchId,
+                branch.CompanyId);
+            return Forbid();
+        }
+
+        return null;
+    }
+
+    // ─────────────── Role permissions ───────────────
+
+    [HttpGet("roles/{roleId:long}")]
+    public async Task<ActionResult<ApiResponse<List<object>>>> GetRolePermissions(long branchId, long roleId)
+    {
+        var branchError = await EnsureCanAccessBranchAsync(branchId);
+        if (branchError != null)
+            return branchError;
+
+        var perms = await _rolePermRepo.GetByBranchAndRoleAsync(branchId, roleId);
+        var result = perms.Select(p => new
+        {
+            p.ScreenId,
+            p.FeatureId,
+            p.IsGranted
+        }).ToList<object>();
+        return Ok(ApiResponse<List<object>>.CreateSuccess(result, "Role permissions retrieved", 200));
+    }
+
+    [HttpPut("roles/{roleId:long}")]
+    public async Task<ActionResult<ApiResponse<object>>> SetRolePermissions(
+        long branchId, long roleId, [FromBody] List<BulkPermissionDto> dtos)
+    {
+        var branchError = await EnsureCanAccessBranchAsync(branchId);
+        if (branchError != null)
+            return branchError;
+
+        var userName = User.Identity?.Name ?? "system";
+        var now = DateTime.UtcNow;
+
+        var permissions = dtos.Select(d => new SysRoleScreenPermission
+        {
+            BranchId = branchId,
+            RoleId = roleId,
+            ScreenId = d.ScreenId,
+            FeatureId = d.FeatureId,
+            IsGranted = d.IsGranted,
+            CreationUser = userName,
+            CreationDate = now
+        }).ToList();
+
+        await _rolePermRepo.BulkSetAsync(branchId, roleId, permissions);
+        return Ok(ApiResponse<object>.CreateSuccess(new { }, "Role permissions updated", 200));
+    }
+
+    [HttpDelete("roles/{roleId:long}/screens/{screenId:long}/features/{featureId:long}")]
+    public async Task<ActionResult<ApiResponse<object>>> DeleteRolePermission(
+        long branchId, long roleId, long screenId, long featureId)
+    {
+        var branchError = await EnsureCanAccessBranchAsync(branchId);
+        if (branchError != null)
+            return branchError;
+
+        await _rolePermRepo.DeleteAsync(branchId, roleId, screenId, featureId);
+        return Ok(ApiResponse<object>.CreateSuccess(new { }, "Role permission entry removed", 200));
+    }
+
+    // ─────────────── User permission overrides ───────────────
+
+    [HttpGet("users/{userId:long}")]
+    public async Task<ActionResult<ApiResponse<List<object>>>> GetUserPermissions(long branchId, long userId)
+    {
+        var branchError = await EnsureCanAccessBranchAsync(branchId);
+        if (branchError != null)
+            return branchError;
+
+        var perms = await _userPermRepo.GetByBranchAndUserAsync(branchId, userId);
+        var result = perms.Select(p => new
+        {
+            p.ScreenId,
+            p.FeatureId,
+            p.IsGranted
+        }).ToList<object>();
+        return Ok(ApiResponse<List<object>>.CreateSuccess(result, "User permissions retrieved", 200));
+    }
+
+    [HttpPut("users/{userId:long}")]
+    public async Task<ActionResult<ApiResponse<object>>> SetUserPermissions(
+        long branchId, long userId, [FromBody] List<BulkPermissionDto> dtos)
+    {
+        var branchError = await EnsureCanAccessBranchAsync(branchId);
+        if (branchError != null)
+            return branchError;
+
+        var userName = User.Identity?.Name ?? "system";
+        var now = DateTime.UtcNow;
+
+        var permissions = dtos.Select(d => new SysUserScreenPermission
+        {
+            BranchId = branchId,
+            UserId = userId,
+            ScreenId = d.ScreenId,
+            FeatureId = d.FeatureId,
+            IsGranted = d.IsGranted,
+            CreationUser = userName,
+            CreationDate = now
+        }).ToList();
+
+        await _userPermRepo.BulkSetAsync(branchId, userId, permissions);
+        return Ok(ApiResponse<object>.CreateSuccess(new { }, "User permissions updated", 200));
+    }
+
+    [HttpDelete("users/{userId:long}/screens/{screenId:long}/features/{featureId:long}")]
+    public async Task<ActionResult<ApiResponse<object>>> DeleteUserPermission(
+        long branchId, long userId, long screenId, long featureId)
+    {
+        var branchError = await EnsureCanAccessBranchAsync(branchId);
+        if (branchError != null)
+            return branchError;
+
+        await _userPermRepo.DeleteAsync(branchId, userId, screenId, featureId);
+        return Ok(ApiResponse<object>.CreateSuccess(new { }, "User permission override removed", 200));
+    }
+}
+
+public class BulkPermissionDto
+{
+    public long ScreenId { get; set; }
+    public long FeatureId { get; set; }
+    public bool IsGranted { get; set; }
+}

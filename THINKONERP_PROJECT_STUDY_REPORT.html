@@ -1,0 +1,684 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ThinkOnERP Project Study Report</title>
+  <style>
+    :root {
+      --navy: #10233f;
+      --blue: #2563eb;
+      --cyan: #0891b2;
+      --green: #15803d;
+      --amber: #b45309;
+      --red: #b91c1c;
+      --ink: #172033;
+      --muted: #64748b;
+      --line: #dbe3ef;
+      --surface: #ffffff;
+      --soft: #f5f7fb;
+    }
+
+    * { box-sizing: border-box; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      margin: 0;
+      color: var(--ink);
+      background: var(--soft);
+      font-family: Inter, "Segoe UI", Arial, sans-serif;
+      line-height: 1.6;
+    }
+
+    .hero {
+      color: white;
+      padding: 70px 24px 58px;
+      background:
+        radial-gradient(circle at 85% 20%, rgba(34, 211, 238, .22), transparent 28%),
+        radial-gradient(circle at 10% 90%, rgba(37, 99, 235, .30), transparent 35%),
+        linear-gradient(135deg, #0b172a, #15325c 65%, #164e63);
+    }
+
+    .wrap {
+      width: min(1180px, calc(100% - 40px));
+      margin: 0 auto;
+    }
+
+    .eyebrow {
+      display: inline-block;
+      padding: 5px 10px;
+      border: 1px solid rgba(255,255,255,.28);
+      border-radius: 999px;
+      color: #bae6fd;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      max-width: 850px;
+      margin: 18px 0 10px;
+      font-size: clamp(38px, 6vw, 68px);
+      line-height: 1.04;
+      letter-spacing: -.035em;
+    }
+
+    .subtitle {
+      max-width: 800px;
+      margin: 0;
+      color: #dbeafe;
+      font-size: 19px;
+    }
+
+    .meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px 24px;
+      margin-top: 30px;
+      color: #bae6fd;
+      font-size: 14px;
+    }
+
+    nav {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      overflow-x: auto;
+      border-bottom: 1px solid var(--line);
+      background: rgba(255,255,255,.95);
+      backdrop-filter: blur(12px);
+    }
+
+    nav .wrap {
+      display: flex;
+      gap: 22px;
+      padding: 13px 0;
+      white-space: nowrap;
+    }
+
+    nav a {
+      color: #334155;
+      font-size: 14px;
+      font-weight: 650;
+      text-decoration: none;
+    }
+
+    nav a:hover { color: var(--blue); }
+
+    main { padding: 38px 0 70px; }
+
+    section {
+      margin: 0 0 34px;
+      padding: 30px;
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      background: var(--surface);
+      box-shadow: 0 8px 30px rgba(15, 23, 42, .05);
+    }
+
+    h2 {
+      margin: 0 0 18px;
+      color: var(--navy);
+      font-size: 27px;
+      letter-spacing: -.02em;
+    }
+
+    h3 {
+      margin: 24px 0 9px;
+      color: #1e3a5f;
+      font-size: 18px;
+    }
+
+    p { margin: 9px 0; }
+
+    .lead {
+      color: #334155;
+      font-size: 18px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(12, 1fr);
+      gap: 16px;
+    }
+
+    .metric {
+      grid-column: span 3;
+      min-height: 126px;
+      padding: 20px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: linear-gradient(145deg, #fff, #f8fafc);
+    }
+
+    .metric strong {
+      display: block;
+      color: var(--blue);
+      font-size: 32px;
+      line-height: 1.1;
+    }
+
+    .metric span {
+      display: block;
+      margin-top: 8px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .card {
+      grid-column: span 4;
+      padding: 20px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: #fff;
+    }
+
+    .card h3 { margin-top: 0; }
+
+    .architecture {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      margin: 24px 0;
+    }
+
+    .layer {
+      position: relative;
+      padding: 20px 16px;
+      border-radius: 12px;
+      color: white;
+      text-align: center;
+      background: linear-gradient(145deg, #1d4ed8, #0e7490);
+      box-shadow: 0 8px 18px rgba(37, 99, 235, .16);
+    }
+
+    .layer:not(:last-child)::after {
+      position: absolute;
+      top: 50%;
+      right: -14px;
+      z-index: 2;
+      content: "›";
+      color: #64748b;
+      font-size: 28px;
+      transform: translateY(-53%);
+    }
+
+    .layer b { display: block; }
+    .layer small { color: #dbeafe; }
+
+    table {
+      width: 100%;
+      margin: 18px 0;
+      border-collapse: collapse;
+      font-size: 14px;
+    }
+
+    th, td {
+      padding: 12px 14px;
+      border-bottom: 1px solid var(--line);
+      text-align: left;
+      vertical-align: top;
+    }
+
+    th {
+      color: #334155;
+      background: #f1f5f9;
+      font-size: 12px;
+      letter-spacing: .04em;
+      text-transform: uppercase;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 3px 9px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 750;
+    }
+
+    .good { color: var(--green); background: #dcfce7; }
+    .warn { color: var(--amber); background: #fef3c7; }
+    .risk { color: var(--red); background: #fee2e2; }
+    .info { color: #1d4ed8; background: #dbeafe; }
+
+    .finding {
+      display: grid;
+      grid-template-columns: 48px 1fr;
+      gap: 14px;
+      margin: 13px 0;
+      padding: 17px;
+      border: 1px solid var(--line);
+      border-radius: 13px;
+      background: #fff;
+    }
+
+    .finding .rank {
+      display: grid;
+      width: 42px;
+      height: 42px;
+      place-items: center;
+      border-radius: 11px;
+      color: white;
+      font-weight: 800;
+      background: var(--red);
+    }
+
+    .finding.medium .rank { background: var(--amber); }
+    .finding.low .rank { background: var(--blue); }
+    .finding h3 { margin: 0 0 4px; }
+    .finding p { margin: 0; color: #475569; }
+
+    .flow {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 9px;
+      margin: 18px 0;
+    }
+
+    .flow span {
+      padding: 10px 13px;
+      border: 1px solid #bfdbfe;
+      border-radius: 10px;
+      color: #1e3a8a;
+      background: #eff6ff;
+      font-size: 13px;
+      font-weight: 650;
+    }
+
+    .flow i {
+      color: #94a3b8;
+      font-style: normal;
+      font-weight: 800;
+    }
+
+    code {
+      padding: 2px 6px;
+      border-radius: 5px;
+      color: #9f1239;
+      background: #fff1f2;
+      font-family: Consolas, monospace;
+      font-size: .92em;
+    }
+
+    ul, ol { padding-left: 22px; }
+    li { margin: 7px 0; }
+
+    .roadmap {
+      counter-reset: phase;
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 16px;
+    }
+
+    .phase {
+      padding: 20px;
+      border-left: 5px solid var(--blue);
+      border-radius: 8px 14px 14px 8px;
+      background: #f8fafc;
+    }
+
+    .phase h3 { margin-top: 0; }
+
+    .note {
+      padding: 16px 18px;
+      border-left: 4px solid var(--cyan);
+      border-radius: 6px;
+      color: #164e63;
+      background: #ecfeff;
+    }
+
+    footer {
+      padding: 26px 20px 40px;
+      color: var(--muted);
+      text-align: center;
+      font-size: 13px;
+    }
+
+    @media (max-width: 850px) {
+      .metric { grid-column: span 6; }
+      .card { grid-column: span 6; }
+      .architecture { grid-template-columns: 1fr 1fr; }
+      .layer::after { display: none; }
+      .roadmap { grid-template-columns: 1fr; }
+    }
+
+    @media (max-width: 560px) {
+      .wrap { width: min(100% - 24px, 1180px); }
+      section { padding: 21px; }
+      .metric, .card { grid-column: span 12; }
+      .architecture { grid-template-columns: 1fr; }
+    }
+
+    @media print {
+      nav { display: none; }
+      body { background: white; }
+      .hero { padding: 35px 24px; }
+      main { padding-top: 20px; }
+      section {
+        break-inside: avoid;
+        box-shadow: none;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header class="hero">
+    <div class="wrap">
+      <span class="eyebrow">Technical Assessment</span>
+      <h1>ThinkOnERP Project Study Report</h1>
+      <p class="subtitle">
+        Architecture map, implementation health, operational risks, and a practical stabilization roadmap for the current repository.
+      </p>
+      <div class="meta">
+        <span>Repository: D:\ThinkOnErp</span>
+        <span>Assessment date: June 21, 2026</span>
+        <span>Platform: ASP.NET Core 8 + Oracle</span>
+      </div>
+    </div>
+  </header>
+
+  <nav>
+    <div class="wrap">
+      <a href="#summary">Summary</a>
+      <a href="#metrics">Metrics</a>
+      <a href="#architecture">Architecture</a>
+      <a href="#capabilities">Capabilities</a>
+      <a href="#health">Health</a>
+      <a href="#risks">Risks</a>
+      <a href="#roadmap">Roadmap</a>
+    </div>
+  </nav>
+
+  <main class="wrap">
+    <section id="summary">
+      <h2>Executive summary</h2>
+      <p class="lead">
+        ThinkOnERP is a substantial multi-tenant ERP backend with platform administration, tenant operations, branch provisioning, support ticketing, document storage, and a particularly ambitious audit and compliance system.
+      </p>
+      <p>
+        The production application currently compiles, and its architecture has clear separation between API, application, domain, and infrastructure concerns. The most important weakness is engineering drift: the full solution fails because much of the test suite no longer matches the production interfaces. Several production-hardening concerns also deserve attention before the system is treated as reliably deployable.
+      </p>
+      <div class="note">
+        No source files were modified during the assessment. Existing uncommitted permission-system work was preserved.
+      </div>
+    </section>
+
+    <section id="metrics">
+      <h2>Repository at a glance</h2>
+      <div class="grid">
+        <div class="metric"><strong>1,562</strong><span>Repository files discovered</span></div>
+        <div class="metric"><strong>723</strong><span>Production C# source files</span></div>
+        <div class="metric"><strong>178</strong><span>Test C# files</span></div>
+        <div class="metric"><strong>211</strong><span>HTTP route declarations</span></div>
+        <div class="metric"><strong>30</strong><span>API controllers</span></div>
+        <div class="metric"><strong>46</strong><span>Domain entity files</span></div>
+        <div class="metric"><strong>29</strong><span>Infrastructure repositories</span></div>
+        <div class="metric"><strong>58</strong><span>Infrastructure services</span></div>
+      </div>
+    </section>
+
+    <section id="architecture">
+      <h2>Architecture</h2>
+      <div class="architecture">
+        <div class="layer"><b>API</b><small>Controllers and middleware</small></div>
+        <div class="layer"><b>Application</b><small>CQRS, MediatR, validation</small></div>
+        <div class="layer"><b>Domain</b><small>Entities and contracts</small></div>
+        <div class="layer"><b>Infrastructure</b><small>Oracle, services, integrations</small></div>
+      </div>
+
+      <table>
+        <thead>
+          <tr><th>Area</th><th>Implementation</th><th>Assessment</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Runtime</td>
+            <td>ASP.NET Core 8</td>
+            <td><span class="badge good">Sound foundation</span></td>
+          </tr>
+          <tr>
+            <td>Application pattern</td>
+            <td>CQRS through MediatR, FluentValidation pipeline</td>
+            <td><span class="badge good">Well structured</span></td>
+          </tr>
+          <tr>
+            <td>Data access</td>
+            <td>Oracle EF Core, repositories, some raw SQL and schema operations</td>
+            <td><span class="badge warn">Needs hardening</span></td>
+          </tr>
+          <tr>
+            <td>Tenancy</td>
+            <td>Central platform schema plus schema-per-company routing</td>
+            <td><span class="badge info">Core design</span></td>
+          </tr>
+          <tr>
+            <td>Observability</td>
+            <td>Serilog, OpenTelemetry, Prometheus, correlation IDs</td>
+            <td><span class="badge good">Broad coverage</span></td>
+          </tr>
+          <tr>
+            <td>Resilience</td>
+            <td>Retry, circuit breaker, async audit queues, filesystem fallback</td>
+            <td><span class="badge good">Strong intent</span></td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h3>Tenant request flow</h3>
+      <div class="flow">
+        <span>Company login</span><i>→</i>
+        <span>Resolve company code</span><i>→</i>
+        <span>Read tenant user</span><i>→</i>
+        <span>Issue JWT with companySchema</span><i>→</i>
+        <span>Schema routing middleware</span><i>→</i>
+        <span>Tenant operation</span>
+      </div>
+
+      <h3>Two API surfaces</h3>
+      <div class="grid">
+        <div class="card">
+          <h3>SuperAdmin API</h3>
+          <p>Platform-wide management of super admins, companies, branches, provisioning, support, global configuration, monitoring, and compliance.</p>
+        </div>
+        <div class="card">
+          <h3>Company API</h3>
+          <p>Tenant-specific authentication, users, roles, permissions, fiscal years, searches, and reference data operating in the company schema.</p>
+        </div>
+        <div class="card">
+          <h3>Shared services</h3>
+          <p>Audit logging, alerts, documents, key management, storage providers, background jobs, metrics, and security monitoring.</p>
+        </div>
+      </div>
+    </section>
+
+    <section id="capabilities">
+      <h2>Implemented capability map</h2>
+      <div class="grid">
+        <div class="card"><h3>Organization</h3><p>Companies, branches, currencies, fiscal years, users, roles, and super administrators.</p></div>
+        <div class="card"><h3>Provisioning</h3><p>Systems/modules, screens, features, branch-system assignments, and tenant schema creation.</p></div>
+        <div class="card"><h3>Permissions</h3><p>Branch access plus active work on role-level and user-level screen permissions.</p></div>
+        <div class="card"><h3>Support</h3><p>Tickets, types, priorities, statuses, comments, attachments, SLA handling, and reports.</p></div>
+        <div class="card"><h3>Documents</h3><p>Upload, retrieval, update, deletion, configurable storage, and external storage abstractions.</p></div>
+        <div class="card"><h3>Traceability</h3><p>Request tracing, audit events, sensitive-data masking, encryption, integrity signatures, archival, and querying.</p></div>
+        <div class="card"><h3>Compliance</h3><p>GDPR/SOX-oriented reporting, scheduled reports, retention policies, and access controls.</p></div>
+        <div class="card"><h3>Operations</h3><p>Health endpoints, Prometheus metrics, OpenTelemetry, alerts, Redis caching, and background processing.</p></div>
+        <div class="card"><h3>Deployment</h3><p>Docker variants, Oracle setup scripts, nginx configuration, monitoring stack, and deployment automation.</p></div>
+      </div>
+    </section>
+
+    <section id="health">
+      <h2>Build and engineering health</h2>
+      <table>
+        <thead>
+          <tr><th>Check</th><th>Result</th><th>Meaning</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>API production project build</td>
+            <td><span class="badge good">Passed</span></td>
+            <td>Domain, Application, Infrastructure, and API compile successfully.</td>
+          </tr>
+          <tr>
+            <td>Full solution build</td>
+            <td><span class="badge risk">Failed</span></td>
+            <td>323 test compilation errors were reported.</td>
+          </tr>
+          <tr>
+            <td>Dependency audit</td>
+            <td><span class="badge warn">Warnings</span></td>
+            <td>Known moderate vulnerabilities and framework compatibility warnings exist.</td>
+          </tr>
+          <tr>
+            <td>Documentation alignment</td>
+            <td><span class="badge warn">Partially stale</span></td>
+            <td>The root README describes an earlier architecture and endpoint set.</td>
+          </tr>
+          <tr>
+            <td>Working tree</td>
+            <td><span class="badge info">Active changes</span></td>
+            <td>Uncommitted company permission implementation is present.</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h3>Dependency observations</h3>
+      <ul>
+        <li><code>MailKit 4.3.0</code> reports a known moderate-severity advisory.</li>
+        <li>OpenTelemetry ASP.NET Core and HTTP instrumentation versions report a known moderate-severity advisory.</li>
+        <li><code>TDigest 1.0.8</code> and its C5 dependency were restored as .NET Framework packages for a .NET 8 project.</li>
+        <li>Test projects reference inconsistent EF Core and Microsoft.Extensions package versions.</li>
+      </ul>
+    </section>
+
+    <section id="risks">
+      <h2>Priority findings</h2>
+
+      <div class="finding">
+        <div class="rank">P0</div>
+        <div>
+          <h3>Test suite no longer compiles</h3>
+          <p>The repository presents broad test coverage, but the full solution currently produces 323 errors caused by changed constructors, deleted members, namespace collisions, stale mocks, and incompatible package versions. Regression confidence is therefore much lower than the test-file count suggests.</p>
+        </div>
+      </div>
+
+      <div class="finding">
+        <div class="rank">P0</div>
+        <div>
+          <h3>Tenant refresh-token flow appears inconsistent</h3>
+          <p>Company login saves refresh tokens into the tenant schema. The refresh endpoint uses the central <code>AuthRepository</code> before an authenticated JWT can provide schema context. This may prevent tenant token refresh or cause it to query the wrong schema.</p>
+        </div>
+      </div>
+
+      <div class="finding">
+        <div class="rank">P0</div>
+        <div>
+          <h3>Schema identifier is interpolated into raw SQL</h3>
+          <p><code>SchemaRoutingMiddleware</code> constructs <code>ALTER SESSION SET CURRENT_SCHEMA</code> using a JWT claim. Signed claims reduce exposure, but the schema should still be validated against a strict Oracle identifier pattern and an authoritative company record.</p>
+        </div>
+      </div>
+
+      <div class="finding medium">
+        <div class="rank">P1</div>
+        <div>
+          <h3>Application startup mutates databases and tenant schemas</h3>
+          <p>Startup seeds data, creates tenant schemas, seeds a default administrator, and upgrades existing tenants. This increases startup time, complicates horizontal deployment, and can cause concurrency or privilege failures.</p>
+        </div>
+      </div>
+
+      <div class="finding medium">
+        <div class="rank">P1</div>
+        <div>
+          <h3>Production exposure defaults are broad</h3>
+          <p>Swagger is always enabled and CORS permits every origin, method, and header. These settings should be environment-specific and driven by an explicit allowlist.</p>
+        </div>
+      </div>
+
+      <div class="finding medium">
+        <div class="rank">P1</div>
+        <div>
+          <h3>Environment files are tracked</h3>
+          <p><code>.env.production</code> and <code>.env.port5001</code> are committed. Any secrets ever stored in these files should be rotated and moved to deployment secret management.</p>
+        </div>
+      </div>
+
+      <div class="finding medium">
+        <div class="rank">P1</div>
+        <div>
+          <h3>Advertised functionality includes unfinished paths</h3>
+          <p>Several archival methods, cloud key providers, filesystem external storage, PDF/Excel exports, persistent alert rules, and holiday-calendar behavior remain TODOs or throw <code>NotImplementedException</code>.</p>
+        </div>
+      </div>
+
+      <div class="finding low">
+        <div class="rank">P2</div>
+        <div>
+          <h3>Documentation volume obscures the source of truth</h3>
+          <p>The repository contains many implementation summaries, fix reports, deployment variants, and historical notes. Useful knowledge exists, but developers must distinguish current operational documentation from archived implementation history.</p>
+        </div>
+      </div>
+    </section>
+
+    <section id="roadmap">
+      <h2>Recommended roadmap</h2>
+      <div class="roadmap">
+        <div class="phase">
+          <h3>Phase 1 — Restore trust</h3>
+          <ol>
+            <li>Create a clean CI build for production projects.</li>
+            <li>Classify tests as current, obsolete, integration-only, or performance-only.</li>
+            <li>Align package versions and repair the smallest critical test suite first.</li>
+            <li>Add smoke tests for login, refresh, schema routing, and permission checks.</li>
+          </ol>
+        </div>
+
+        <div class="phase">
+          <h3>Phase 2 — Secure tenancy</h3>
+          <ol>
+            <li>Redesign company refresh-token resolution around company code/schema identity.</li>
+            <li>Validate and allowlist tenant schema identifiers.</li>
+            <li>Test Oracle session reuse and schema reset behavior.</li>
+            <li>Verify every tenant endpoint uses the intended schema.</li>
+          </ol>
+        </div>
+
+        <div class="phase">
+          <h3>Phase 3 — Production hardening</h3>
+          <ol>
+            <li>Move schema provisioning and upgrades into explicit jobs.</li>
+            <li>Restrict Swagger and CORS by environment.</li>
+            <li>Remove tracked secrets and rotate exposed credentials.</li>
+            <li>Upgrade vulnerable and incompatible dependencies.</li>
+          </ol>
+        </div>
+
+        <div class="phase">
+          <h3>Phase 4 — Simplify ownership</h3>
+          <ol>
+            <li>Publish one authoritative architecture document.</li>
+            <li>Archive historical implementation summaries.</li>
+            <li>Consolidate deployment scripts into one supported path.</li>
+            <li>Track unfinished features explicitly instead of leaving runtime stubs.</li>
+          </ol>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Overall assessment</h2>
+      <p class="lead">
+        ThinkOnERP has strong scope, thoughtful operational ambitions, and a recognizable architecture. Its main challenge is not a lack of features—it is converting a fast-moving, documentation-heavy codebase into a system with dependable tests, controlled tenant boundaries, and one clearly supported production path.
+      </p>
+      <p>
+        The best next investment is stabilization rather than expansion. A reliable test baseline and a hardened tenancy/authentication flow will create far more leverage for every feature added afterward.
+      </p>
+    </section>
+  </main>
+
+  <footer>
+    ThinkOnERP Project Study Report · Generated from repository inspection on June 21, 2026
+  </footer>
+</body>
+</html>

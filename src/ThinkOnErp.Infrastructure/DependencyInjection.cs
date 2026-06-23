@@ -118,6 +118,11 @@ public static class DependencyInjection
         services.AddScoped<ISysCodeRepository, SysCodeRepository>();
         services.AddScoped<ISysCodeService, SysCodeService>();
         services.AddScoped<ISysSettingRepository, SysSettingRepository>();
+
+        // Register company-level permission repositories
+        services.AddScoped<IRoleScreenPermissionRepository, RoleScreenPermissionRepository>();
+        services.AddScoped<IUserScreenPermissionRepository, UserScreenPermissionRepository>();
+        services.AddScoped<IPermissionService, PermissionService>();
         
         // Register ticket system repositories
         services.AddScoped<ITicketRepository, TicketRepository>();

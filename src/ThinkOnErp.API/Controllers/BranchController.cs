@@ -26,6 +26,26 @@ public class BranchController : ControllerBase
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
+    private bool IsSuperAdmin() =>
+        string.Equals(User.FindFirst("isSuperAdmin")?.Value, "true", StringComparison.OrdinalIgnoreCase);
+
+    private long? GetCurrentCompanyId()
+    {
+        var claim = User.FindFirst("companyId")?.Value;
+        return long.TryParse(claim, out var companyId) && companyId > 0 ? companyId : null;
+    }
+
+    private bool CanAccessCompany(long? companyId)
+    {
+        if (IsSuperAdmin())
+            return true;
+
+        var currentCompanyId = GetCurrentCompanyId();
+        return currentCompanyId.HasValue
+            && companyId.HasValue
+            && currentCompanyId.Value == companyId.Value;
+    }
+
     [HttpGet]
     [ProducesResponseType(typeof(ApiResponse<List<BranchDto>>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiResponse<List<BranchDto>>), StatusCodes.Status401Unauthorized)]
@@ -33,10 +53,24 @@ public class BranchController : ControllerBase
     {
         try
         {
-            _logger.LogInformation("Retrieving all branches with logos");
+            var companyId = GetCurrentCompanyId();
+            var isSuperAdmin = IsSuperAdmin();
 
-            var query = new GetAllBranchesQuery();
-            var branches = await _mediator.Send(query);
+            if (!isSuperAdmin && !companyId.HasValue)
+            {
+                _logger.LogWarning("Branch list denied because user has no companyId claim");
+                return Forbid();
+            }
+
+            _logger.LogInformation(
+                isSuperAdmin
+                    ? "Retrieving all branches with logos for SuperAdmin"
+                    : "Retrieving branches with logos for company ID: {CompanyId}",
+                companyId);
+
+            var branches = isSuperAdmin
+                ? await _mediator.Send(new GetAllBranchesQuery())
+                : await _mediator.Send(new GetBranchesByCompanyIdQuery { CompanyId = companyId!.Value });
 
             _logger.LogInformation("Retrieved {Count} branches with logos", branches.Count);
 
@@ -73,6 +107,16 @@ public class BranchController : ControllerBase
                     statusCode: 404));
             }
 
+            if (!CanAccessCompany(branch.CompanyId))
+            {
+                _logger.LogWarning(
+                    "Branch access denied. User company {UserCompanyId} attempted to access branch {BranchId} company {BranchCompanyId}",
+                    GetCurrentCompanyId(),
+                    id,
+                    branch.CompanyId);
+                return Forbid();
+            }
+
             _logger.LogInformation("Retrieved branch with ID: {BranchId} with logo", id);
 
             return Ok(ApiResponse<BranchDto>.CreateSuccess(
@@ -100,6 +144,15 @@ public class BranchController : ControllerBase
         try
         {
             _logger.LogInformation("Creating new branch with logo file: {BranchDesc}", dto.BranchNameEn);
+
+            if (!CanAccessCompany(dto.CompanyId))
+            {
+                _logger.LogWarning(
+                    "Branch create denied. User company {UserCompanyId} attempted to create branch for company {TargetCompanyId}",
+                    GetCurrentCompanyId(),
+                    dto.CompanyId);
+                return Forbid();
+            }
 
             var command = new CreateBranchCommand
             {
@@ -154,6 +207,35 @@ public class BranchController : ControllerBase
         try
         {
             _logger.LogInformation("Updating branch with ID: {BranchId} including logo file", id);
+
+            var existingBranch = await _mediator.Send(new GetBranchByIdQuery { BranchId = id });
+            if (existingBranch == null)
+            {
+                _logger.LogWarning("Branch not found for update with ID: {BranchId}", id);
+                return NotFound(ApiResponse<Int64>.CreateFailure(
+                    "No branch found with the specified identifier",
+                    statusCode: 404));
+            }
+
+            if (!CanAccessCompany(existingBranch.CompanyId))
+            {
+                _logger.LogWarning(
+                    "Branch update denied. User company {UserCompanyId} attempted to update branch {BranchId} owned by company {BranchCompanyId}",
+                    GetCurrentCompanyId(),
+                    id,
+                    existingBranch.CompanyId);
+                return Forbid();
+            }
+
+            if (!CanAccessCompany(dto.CompanyId))
+            {
+                _logger.LogWarning(
+                    "Branch update denied. User company {UserCompanyId} attempted to update branch {BranchId} for company {TargetCompanyId}",
+                    GetCurrentCompanyId(),
+                    id,
+                    dto.CompanyId);
+                return Forbid();
+            }
 
             var command = new UpdateBranchCommand
             {
@@ -210,6 +292,25 @@ public class BranchController : ControllerBase
         {
             _logger.LogInformation("Deleting branch with ID: {BranchId}", id);
 
+            var existingBranch = await _mediator.Send(new GetBranchByIdQuery { BranchId = id });
+            if (existingBranch == null)
+            {
+                _logger.LogWarning("Branch not found for deletion with ID: {BranchId}", id);
+                return NotFound(ApiResponse<Int64>.CreateFailure(
+                    "No branch found with the specified identifier",
+                    statusCode: 404));
+            }
+
+            if (!CanAccessCompany(existingBranch.CompanyId))
+            {
+                _logger.LogWarning(
+                    "Branch delete denied. User company {UserCompanyId} attempted to delete branch {BranchId} owned by company {BranchCompanyId}",
+                    GetCurrentCompanyId(),
+                    id,
+                    existingBranch.CompanyId);
+                return Forbid();
+            }
+
             var command = new DeleteBranchCommand { BranchId = id };
             var rowsAffected = await _mediator.Send(command);
 
@@ -243,6 +344,15 @@ public class BranchController : ControllerBase
         try
         {
             _logger.LogInformation("Retrieving branches for company ID: {CompanyId} with logos", companyId);
+
+            if (!CanAccessCompany(companyId))
+            {
+                _logger.LogWarning(
+                    "Company branch list denied. User company {UserCompanyId} attempted to list company {TargetCompanyId}",
+                    GetCurrentCompanyId(),
+                    companyId);
+                return Forbid();
+            }
 
             var query = new GetBranchesByCompanyIdQuery { CompanyId = companyId };
             var branches = await _mediator.Send(query);

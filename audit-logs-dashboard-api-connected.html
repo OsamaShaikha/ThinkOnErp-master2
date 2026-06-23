@@ -91,13 +91,24 @@
   .toast.error { border-left: 3px solid #ef4444; }
   .login-overlay { display: flex; position: fixed; inset: 0; background: rgba(0,0,0,.6); z-index: 3000; align-items: center; justify-content: center; }
   .login-overlay.hidden { display: none; }
-  .login-box { background: #fff; border-radius: 12px; padding: 2rem; width: 380px; box-shadow: 0 12px 48px rgba(0,0,0,.3); }
+  .login-box { background: #fff; border-radius: 12px; padding: 2rem; width: min(480px, calc(100vw - 2rem)); box-shadow: 0 12px 48px rgba(0,0,0,.3); }
   .login-box h2 { margin-bottom: .25rem; }
   .login-box p { color: #64748b; font-size: .85rem; margin-bottom: 1.25rem; }
   .login-box label { display: block; font-size: .8rem; font-weight: 500; color: #475569; margin-bottom: .3rem; }
   .login-box input { width: 100%; padding: .5rem .75rem; border: 1px solid #e2e8f0; border-radius: 6px; font-size: .85rem; margin-bottom: .75rem; outline: none; }
+  .login-box textarea { width: 100%; min-height: 74px; resize: vertical; padding: .5rem .75rem; border: 1px solid #e2e8f0; border-radius: 6px; font: .75rem Consolas, monospace; margin-bottom: .75rem; outline: none; }
   .login-box input:focus { border-color: #38bdf8; }
   .login-box .btn { width: 100%; padding: .6rem; font-size: .9rem; }
+  .login-actions { display:grid; grid-template-columns:1fr 1fr; gap:.5rem; }
+  .login-divider { display:flex; align-items:center; gap:.65rem; margin:.85rem 0; color:#94a3b8; font-size:.72rem; }
+  .login-divider::before,.login-divider::after { content:""; flex:1; height:1px; background:#e2e8f0; }
+  .api-console { background:#0f172a; color:#cbd5e1; border-radius:10px; margin-bottom:1.5rem; overflow:hidden; border:1px solid #1e293b; }
+  .api-console-head { display:flex; flex-wrap:wrap; align-items:center; gap:.5rem; padding:.7rem .9rem; background:#1e293b; }
+  .api-console-head strong { margin-right:auto; color:#f8fafc; font-size:.85rem; }
+  .test-btn { border:1px solid #475569; background:#0f172a; color:#cbd5e1; border-radius:5px; padding:.3rem .55rem; cursor:pointer; font-size:.72rem; }
+  .test-btn:hover { border-color:#38bdf8; color:#7dd3fc; }
+  .api-console pre { margin:0; padding:.9rem; max-height:260px; overflow:auto; white-space:pre-wrap; word-break:break-word; font:12px/1.5 Consolas, monospace; }
+  .request-log { color:#7dd3fc; }
 
   .config-code { background: #1e293b; color: #e2e8f0; padding: .75rem 1rem; border-radius: 6px; font-family: 'JetBrains Mono', monospace; font-size: .75rem; line-height: 1.5; margin: .5rem 0; white-space: pre; overflow-x: auto; }
 
@@ -121,12 +132,19 @@
     <p>Sign in to access the Audit Log Dashboard</p>
     <form id="loginForm" onsubmit="return doLogin(event)">
       <label>API Base URL</label>
-      <input type="text" id="apiBase" value="http://178.104.126.99:5000" placeholder="http://your-server:5000">
+      <input type="text" id="apiBase" value="http://localhost:5000" placeholder="http://localhost:5000">
       <label>Username</label>
-      <input type="text" id="username" value="superadmin" placeholder="superadmin">
+      <input type="text" id="username" autocomplete="username" placeholder="superadmin">
       <label>Password</label>
-      <input type="password" id="password" value="P@ssw0rd@2026!" placeholder="password">
-      <button type="submit" class="btn btn-primary" id="loginBtn">Sign In</button>
+      <input type="password" id="password" autocomplete="current-password" placeholder="password">
+      <div class="login-actions">
+        <button type="submit" class="btn btn-primary" id="loginBtn">SuperAdmin Login</button>
+        <button type="button" class="btn btn-outline" onclick="testPublicHealth()">Test URL</button>
+      </div>
+      <div class="login-divider">or use an existing admin token</div>
+      <label>JWT access token</label>
+      <textarea id="manualToken" placeholder="Paste JWT token here"></textarea>
+      <button type="button" class="btn btn-outline" onclick="useManualToken()">Use Token</button>
       <div id="loginError" style="color:#ef4444;font-size:.8rem;margin-top:.5rem;display:none;"></div>
     </form>
   </div>
@@ -181,6 +199,18 @@
         <span style="margin-left:auto;">
           <span id="healthLatency" style="font-size:.75rem;color:#94a3b8;"></span>
         </span>
+      </div>
+
+      <div class="api-console">
+        <div class="api-console-head">
+          <strong>API Test Console</strong>
+          <button class="test-btn" onclick="runEndpointTest('/api/AuditHealth/status', false)">Public health</button>
+          <button class="test-btn" onclick="runEndpointTest('/api/auditlogs/dashboard')">Counters</button>
+          <button class="test-btn" onclick="runEndpointTest('/api/auditlogs/legacy?pageNumber=1&pageSize=5')">Latest 5</button>
+          <button class="test-btn" onclick="runEndpointTest('/api/AuditHealth/metrics')">Audit metrics</button>
+          <button class="test-btn" onclick="clearConsole()">Clear</button>
+        </div>
+        <pre id="apiConsole">Ready. Sign in or paste an admin JWT, then run endpoint tests.</pre>
       </div>
 
       <!-- Stats -->
@@ -327,6 +357,34 @@ const STATE = {
   currentDetailId: null,
 };
 
+function normalizeBase(value) {
+  return String(value || '').trim().replace(/\/+$/, '');
+}
+
+function escapeHtml(value) {
+  return String(value ?? '-')
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&#039;');
+}
+
+function pretty(value) {
+  try { return JSON.stringify(value, null, 2); }
+  catch { return String(value); }
+}
+
+function setConsole(title, value, isError = false) {
+  const el = document.getElementById('apiConsole');
+  el.style.color = isError ? '#fca5a5' : '#cbd5e1';
+  el.textContent = title + '\n\n' + pretty(value);
+}
+
+function clearConsole() {
+  setConsole('API Test Console', 'Ready.');
+}
+
 // ============================================================
 // API CLIENT
 // ============================================================
@@ -359,6 +417,76 @@ async function api(path, options = {}) {
   return body?.data ?? body ?? null;
 }
 
+async function runEndpointTest(path, requiresAuth = true) {
+  const base = normalizeBase(document.getElementById('apiBase').value || STATE.apiBase);
+  if (!base) return setConsole('Configuration error', 'API Base URL is required.', true);
+  STATE.apiBase = base;
+  if (requiresAuth && !STATE.token) {
+    return setConsole('Authorization required', 'Sign in or paste an AdminOnly JWT first.', true);
+  }
+
+  const started = performance.now();
+  const headers = { Accept: 'application/json' };
+  if (requiresAuth && STATE.token) headers.Authorization = 'Bearer ' + STATE.token;
+  setConsole('GET ' + base + path, 'Request in progress...');
+
+  try {
+    const response = await fetch(base + path, { headers });
+    const text = await response.text();
+    let body = text;
+    try { body = text ? JSON.parse(text) : null; } catch {}
+    const elapsed = Math.round(performance.now() - started);
+    setConsole(`GET ${path}\nHTTP ${response.status} ${response.statusText} · ${elapsed}ms`, body, !response.ok);
+  } catch (error) {
+    setConsole(`GET ${path}\nNetwork/CORS failure`, { message: error.message, apiBase: base }, true);
+  }
+}
+
+async function testPublicHealth() {
+  const errEl = document.getElementById('loginError');
+  const base = normalizeBase(document.getElementById('apiBase').value);
+  errEl.style.display = 'none';
+  if (!base) {
+    errEl.textContent = 'API Base URL is required';
+    errEl.style.display = 'block';
+    return;
+  }
+  try {
+    const started = performance.now();
+    const response = await fetch(base + '/api/AuditHealth/status', { headers: { Accept: 'application/json' } });
+    const body = await response.json();
+    if (!response.ok && response.status !== 503) throw new Error(body.message || 'HTTP ' + response.status);
+    errEl.style.color = '#15803d';
+    errEl.textContent = `API reached in ${Math.round(performance.now() - started)}ms: ${body.status || 'responding'}`;
+    errEl.style.display = 'block';
+  } catch (error) {
+    errEl.style.color = '#ef4444';
+    errEl.textContent = 'Cannot reach API: ' + error.message;
+    errEl.style.display = 'block';
+  }
+}
+
+function useManualToken() {
+  const errEl = document.getElementById('loginError');
+  const base = normalizeBase(document.getElementById('apiBase').value);
+  const token = document.getElementById('manualToken').value.trim().replace(/^Bearer\s+/i, '');
+  errEl.style.color = '#ef4444';
+  if (!base || !token) {
+    errEl.textContent = 'API Base URL and JWT token are required';
+    errEl.style.display = 'block';
+    return;
+  }
+  STATE.apiBase = base;
+  STATE.token = token;
+  sessionStorage.setItem('thinkonerpAuditApiBase', base);
+  sessionStorage.setItem('thinkonerpAuditToken', token);
+  document.getElementById('loginOverlay').classList.add('hidden');
+  document.getElementById('userLabel').textContent = 'JWT Admin';
+  document.getElementById('avatarLabel').textContent = 'JA';
+  document.getElementById('lastLoginLabel').textContent = 'Token loaded at ' + new Date().toLocaleString();
+  loadDashboard();
+}
+
 // ============================================================
 // LOGIN
 // ============================================================
@@ -370,12 +498,12 @@ async function doLogin(e) {
   btn.textContent = 'Signing in...';
   errEl.style.display = 'none';
 
-  const base = document.getElementById('apiBase').value.replace(/\/+$/, '');
+  const base = normalizeBase(document.getElementById('apiBase').value);
   STATE.apiBase = base;
 
   try {
-    // POST /api/Auth/superadmin/login
-    const res = await fetch(base + '/api/Auth/superadmin/login', {
+    // POST /api/auth/superadmin/login
+    const res = await fetch(base + '/api/auth/superadmin/login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -392,6 +520,8 @@ async function doLogin(e) {
     // TokenDto has: accessToken, expiresAt, tokenType, refreshToken, refreshTokenExpiresAt
     const tokenDto = body.data || body;
     STATE.token = tokenDto.accessToken || tokenDto.AccessToken;
+    sessionStorage.setItem('thinkonerpAuditApiBase', base);
+    sessionStorage.setItem('thinkonerpAuditToken', STATE.token);
     if (!STATE.token) throw new Error('No accessToken in response — got: ' + JSON.stringify(tokenDto).slice(0, 100));
 
     // Hide login screen and set user info
@@ -413,6 +543,7 @@ async function doLogin(e) {
 
 function doLogout() {
   STATE.token = null;
+  sessionStorage.removeItem('thinkonerpAuditToken');
   document.getElementById('loginOverlay').classList.remove('hidden');
   document.getElementById('loginError').style.display = 'none';
 }
@@ -523,7 +654,7 @@ async function loadAuditLogs(page) {
     const totalPages = payload.totalPages || Math.ceil(totalCount / STATE.pageSize) || 1;
 
     document.getElementById('tableInfo').textContent =
-      totalCount + ' total &middot; page ' + (payload.page || STATE.currentPage) + ' of ' + totalPages;
+      totalCount + ' total · page ' + (payload.page || STATE.currentPage) + ' of ' + totalPages;
 
     const tbody = document.getElementById('auditBody');
     if (items.length === 0) {
@@ -535,14 +666,14 @@ async function loadAuditLogs(page) {
         const statusClass = statusVal.replace(/\s/g, '');
         return `<tr onclick="openDetail(${rowId},'${statusVal}')" style="cursor:pointer;">
           <td style="color:#94a3b8;">${rowId}</td>
-          <td style="white-space:nowrap;">${row.dateTime || row.creationDate || '-'}</td>
-          <td><strong>${row.user || row.actorName || '-'}</strong></td>
-          <td>${row.company || '-'}</td>
-          <td>${row.branch || '-'}</td>
-          <td>${row.module || row.businessModule || '-'}</td>
-          <td><span class="sev-badge Info">${row.action || '-'}</span></td>
-          <td style="max-width:280px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${row.errorDescription || row.description || row.businessDescription || '-'}</td>
-          <td><span class="status-badge ${statusClass}">${statusVal}</span></td>
+          <td style="white-space:nowrap;">${escapeHtml(row.dateTime || row.creationDate)}</td>
+          <td><strong>${escapeHtml(row.user || row.actorName)}</strong></td>
+          <td>${escapeHtml(row.company)}</td>
+          <td>${escapeHtml(row.branch)}</td>
+          <td>${escapeHtml(row.module || row.businessModule)}</td>
+          <td><span class="sev-badge Info">${escapeHtml(row.action)}</span></td>
+          <td style="max-width:280px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escapeHtml(row.errorDescription || row.description || row.businessDescription)}</td>
+          <td><span class="status-badge ${statusClass}">${escapeHtml(statusVal)}</span></td>
           <td>
             <div class="action-cell">
               <button class="btn btn-sm btn-outline" onclick="event.stopPropagation();openDetail(${rowId},'${statusVal}')">View</button>
@@ -719,6 +850,22 @@ function showToast(msg, type) {
 setInterval(() => {
   if (STATE.token) loadDashboard();
 }, 30000); // every 30 seconds
+
+// Restore only this browser tab's test session. Tokens are not persisted in localStorage.
+window.addEventListener('DOMContentLoaded', () => {
+  const savedBase = sessionStorage.getItem('thinkonerpAuditApiBase');
+  const savedToken = sessionStorage.getItem('thinkonerpAuditToken');
+  if (savedBase) document.getElementById('apiBase').value = savedBase;
+  if (savedBase && savedToken) {
+    STATE.apiBase = savedBase;
+    STATE.token = savedToken;
+    document.getElementById('loginOverlay').classList.add('hidden');
+    document.getElementById('userLabel').textContent = 'Restored Admin';
+    document.getElementById('avatarLabel').textContent = 'RA';
+    document.getElementById('lastLoginLabel').textContent = 'Session restored';
+    loadDashboard();
+  }
+});
 </script>
 
 </body>

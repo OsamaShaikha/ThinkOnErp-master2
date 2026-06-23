@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ThinkOnERP · SuperAdmin Branch Permissions</title>
+<style>
+:root{--bg:#f4f7fb;--panel:#fff;--ink:#132238;--muted:#6b7a90;--line:#dbe4ef;--nav:#0b1930;--blue:#2563eb;--cyan:#0891b2;--green:#16a34a;--red:#dc2626;--amber:#d97706}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.5 Inter,Segoe UI,Arial,sans-serif}
+button,input,select,textarea{font:inherit}.app{min-height:100vh;display:grid;grid-template-columns:250px 1fr}.side{background:var(--nav);color:#dbeafe;padding:24px 16px;position:sticky;top:0;height:100vh}.brand{font-size:21px;font-weight:800;padding:0 10px 22px;border-bottom:1px solid #203353}.brand span{color:#38bdf8}.brand small{display:block;color:#7f95b4;font-size:11px;font-weight:500}.nav{margin-top:18px}.nav div{padding:11px 12px;border-radius:9px;color:#8fa6c4;margin:4px 0}.nav .active{background:#172b4a;color:#7dd3fc}.side-note{position:absolute;bottom:24px;left:26px;right:26px;color:#7790b2;font-size:11px}
+.main{min-width:0}.top{height:68px;background:#fff;border-bottom:1px solid var(--line);display:flex;align-items:center;padding:0 28px;gap:14px}.top h1{font-size:18px;margin:0}.pill{margin-left:auto;background:#eff6ff;color:#1d4ed8;padding:6px 11px;border-radius:999px;font-size:12px;font-weight:700}
+.content{padding:24px 28px}.toolbar,.panel{background:var(--panel);border:1px solid var(--line);border-radius:14px;box-shadow:0 8px 28px rgba(15,23,42,.04)}.toolbar{padding:16px;display:flex;flex-wrap:wrap;gap:10px;align-items:end;margin-bottom:18px}.field label{display:block;color:var(--muted);font-size:11px;font-weight:700;margin-bottom:4px;text-transform:uppercase}.field input,.field select{height:38px;border:1px solid var(--line);border-radius:8px;padding:0 10px;min-width:190px;background:#fff}.btn{height:38px;border:0;border-radius:8px;padding:0 14px;font-weight:700;cursor:pointer}.primary{background:var(--blue);color:#fff}.secondary{background:#eaf0f8;color:#334155}.danger{background:#fee2e2;color:#991b1b}.btn:disabled{opacity:.5;cursor:not-allowed}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:18px}.stat{padding:17px;background:#fff;border:1px solid var(--line);border-radius:13px}.stat b{display:block;font-size:27px;color:var(--blue)}.stat span{color:var(--muted);font-size:12px}
+.layout{display:grid;grid-template-columns:360px 1fr;gap:18px}.panel-head{padding:17px 18px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:10px}.panel-head h2{margin:0;font-size:15px}.panel-head button{margin-left:auto}.panel-body{padding:16px}.module{display:flex;align-items:center;gap:11px;padding:12px;border:1px solid var(--line);border-radius:10px;margin-bottom:9px}.module input{width:18px;height:18px}.module b{display:block}.module small{color:var(--muted)}
+.system{border:1px solid var(--line);border-radius:12px;margin-bottom:13px;overflow:hidden}.system-title{background:#f8fafc;padding:12px 14px;font-weight:800;display:flex;justify-content:space-between}.screen{padding:13px 14px;border-top:1px solid #edf2f7}.screen-row{display:flex;align-items:center;gap:10px}.screen-name{font-weight:700}.code{font:11px Consolas,monospace;color:#64748b}.switch{margin-left:auto;position:relative;width:42px;height:23px;border-radius:999px;background:#cbd5e1;cursor:pointer;border:0}.switch.on{background:var(--green)}.switch:after{content:"";position:absolute;width:17px;height:17px;left:3px;top:3px;background:#fff;border-radius:50%;transition:.18s}.switch.on:after{left:22px}.features{display:flex;flex-wrap:wrap;gap:7px;margin:10px 0 0 28px}.feature{border:1px solid var(--line);border-radius:999px;padding:5px 8px 5px 10px;background:#fff;color:#475569}.feature.off{background:#fff1f2;color:#9f1239;border-color:#fecdd3}.feature button{border:0;background:transparent;color:inherit;cursor:pointer;font-weight:800}
+.console{margin-top:18px;background:#0f172a;color:#cbd5e1;border-radius:12px;overflow:hidden}.console-head{padding:10px 14px;background:#1e293b;display:flex;align-items:center}.console-head b{font-size:12px}.console pre{margin:0;padding:14px;max-height:230px;overflow:auto;white-space:pre-wrap;font:12px/1.5 Consolas,monospace}
+.login{position:fixed;inset:0;background:rgba(5,15,30,.72);z-index:20;display:grid;place-items:center}.login.hidden{display:none}.login-card{width:min(450px,calc(100vw - 28px));background:#fff;border-radius:16px;padding:25px}.login-card h2{margin:0}.login-card p{color:var(--muted);margin:5px 0 18px}.login-card input,.login-card textarea{width:100%;border:1px solid var(--line);border-radius:8px;padding:10px;margin:5px 0 10px}.login-card textarea{height:70px;resize:vertical}.actions{display:grid;grid-template-columns:1fr 1fr;gap:8px}.error{color:var(--red);font-size:12px;margin-top:9px}.empty{text-align:center;padding:35px;color:var(--muted)}.toast{position:fixed;right:22px;bottom:22px;background:#172033;color:#fff;padding:11px 15px;border-radius:9px;display:none;z-index:30}.toast.show{display:block}.toast.bad{border-left:4px solid var(--red)}
+@media(max-width:900px){.app{grid-template-columns:1fr}.side{display:none}.layout{grid-template-columns:1fr}.stats{grid-template-columns:1fr 1fr}}@media(max-width:560px){.content{padding:15px}.stats{grid-template-columns:1fr}.field,.field input,.field select{width:100%}}
+</style>
+</head>
+<body>
+<div class="login" id="login">
+  <div class="login-card">
+    <h2>SuperAdmin access</h2><p>Provision systems, screens and features for a branch.</p>
+    <label>API base URL</label><input id="apiBase" value="http://localhost:5000">
+    <label>Username</label><input id="username" autocomplete="username">
+    <label>Password</label><input id="password" type="password" autocomplete="current-password">
+    <div class="actions"><button class="btn primary" onclick="login()">Sign in</button><button class="btn secondary" onclick="testHealth()">Test API</button></div>
+    <p style="text-align:center;margin:13px 0 6px">or paste an existing SuperAdmin JWT</p>
+    <textarea id="manualToken" placeholder="JWT access token"></textarea>
+    <button class="btn secondary" style="width:100%" onclick="useToken()">Use token</button>
+    <div id="loginError" class="error"></div>
+  </div>
+</div>
+<div class="app">
+  <aside class="side"><div class="brand">ThinkOn<span>ERP</span><small>SuperAdmin permissions</small></div><div class="nav"><div>Platform</div><div>Companies</div><div class="active">Branch provisioning</div><div>Audit</div></div><div class="side-note">Controls the maximum access available to company roles and users.</div></aside>
+  <main class="main">
+    <header class="top"><h1>Branch Permission Provisioning</h1><span class="pill" id="identity">Not connected</span></header>
+    <div class="content">
+      <div class="toolbar">
+        <div class="field"><label>Branch</label><select id="branchSelect" onchange="loadBranch()"><option value="">Select branch</option></select></div>
+        <button class="btn secondary" onclick="reloadAll()">Refresh</button>
+        <button class="btn danger" onclick="logout()">Logout</button>
+      </div>
+      <div class="stats"><div class="stat"><b id="sModules">0</b><span>Assigned systems</span></div><div class="stat"><b id="sScreens">0</b><span>Available screens</span></div><div class="stat"><b id="sRevScreens">0</b><span>Revoked screens</span></div><div class="stat"><b id="sRevFeatures">0</b><span>Revoked features</span></div></div>
+      <div class="layout">
+        <section class="panel"><div class="panel-head"><h2>Systems assigned to branch</h2><button class="btn primary" onclick="saveSystems()">Save</button></div><div id="modules" class="panel-body"><div class="empty">Select a branch</div></div></section>
+        <section class="panel"><div class="panel-head"><h2>Screens and features</h2><span style="color:var(--muted);font-size:12px">Green = allowed</span></div><div id="screens" class="panel-body"><div class="empty">Select a branch</div></div></section>
+      </div>
+      <div class="console"><div class="console-head"><b>API response console</b><button class="btn secondary" style="height:27px;margin-left:auto" onclick="setConsole('Ready')">Clear</button></div><pre id="console">Ready.</pre></div>
+    </div>
+  </main>
+</div>
+<div class="toast" id="toast"></div>
+<script>
+const S={base:"",token:"",branches:[],modules:[],state:null,screens:[],featureMap:new Map()};
+const $=id=>document.getElementById(id);
+const esc=v=>String(v??"").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;").replaceAll("'","&#039;");
+const unwrap=v=>v?.data??v;
+function setConsole(v,bad=false){$("console").textContent=typeof v==="string"?v:JSON.stringify(v,null,2);$("console").style.color=bad?"#fca5a5":"#cbd5e1"}
+function toast(v,bad=false){const t=$("toast");t.textContent=v;t.className="toast show"+(bad?" bad":"");clearTimeout(t.x);t.x=setTimeout(()=>t.className="toast",3000)}
+function base(){return $("apiBase").value.trim().replace(/\/+$/,"")}
+async function request(path,opt={}){const started=performance.now();const headers={Accept:"application/json",...(opt.body?{"Content-Type":"application/json"}:{}),...(opt.headers||{})};if(S.token)headers.Authorization="Bearer "+S.token;const r=await fetch(S.base+path,{...opt,headers});const text=await r.text();let body=text;try{body=text?JSON.parse(text):null}catch{}setConsole({request:(opt.method||"GET")+" "+path,status:r.status,elapsedMs:Math.round(performance.now()-started),response:body},!r.ok);if(!r.ok)throw new Error(body?.message||body?.title||"HTTP "+r.status);return unwrap(body)}
+async function testHealth(){S.base=base();try{const r=await fetch(S.base+"/api/AuditHealth/status");const j=await r.json();$("loginError").textContent="API responded: "+(j.status||r.status)}catch(e){$("loginError").textContent="API unreachable: "+e.message}}
+async function login(){S.base=base();$("loginError").textContent="";try{const r=await fetch(S.base+"/api/auth/superadmin/login",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({userName:$("username").value,password:$("password").value})});const j=await r.json();if(!r.ok)throw new Error(j.message||"Login failed");S.token=(j.data||j).accessToken;if(!S.token)throw new Error("No access token returned");start($("username").value)}catch(e){$("loginError").textContent=e.message}}
+function useToken(){S.base=base();S.token=$("manualToken").value.trim().replace(/^Bearer\s+/i,"");if(!S.base||!S.token)return $("loginError").textContent="Base URL and token are required";start("JWT SuperAdmin")}
+function start(name){sessionStorage.setItem("sapBase",S.base);sessionStorage.setItem("sapToken",S.token);$("login").classList.add("hidden");$("identity").textContent=name;reloadAll()}
+function logout(){sessionStorage.removeItem("sapToken");S.token="";$("login").classList.remove("hidden")}
+async function reloadAll(){try{[S.branches,S.modules]=await Promise.all([request("/api/branches"),request("/api/modules")]);renderBranchSelect();if($("branchSelect").value)await loadBranch()}catch(e){toast(e.message,true)}}
+function renderBranchSelect(){const old=$("branchSelect").value;$("branchSelect").innerHTML='<option value="">Select branch</option>'+S.branches.map(b=>`<option value="${b.branchId}">${esc(b.branchNameEn||b.branchNameAr)} · #${b.branchId}</option>`).join("");$("branchSelect").value=old}
+async function loadBranch(){const id=+$("branchSelect").value;if(!id)return;try{S.state=await request(`/api/branches/${id}/access/state`);const assigned=new Set((S.state.systems||[]).map(x=>x.id));const screenLists=await Promise.all([...assigned].map(x=>request(`/api/screens/bysystem/${x}`)));S.screens=screenLists.flat();await loadFeatures();renderAll()}catch(e){toast(e.message,true)}}
+async function loadFeatures(){S.featureMap.clear();await Promise.all(S.screens.map(async s=>{try{S.featureMap.set(s.id,await request(`/api/screens/${s.id}/features`))}catch{S.featureMap.set(s.id,[])}}))}
+function renderAll(){const assigned=new Set((S.state.systems||[]).map(x=>x.id));$("modules").innerHTML=S.modules.map(m=>`<label class="module"><input type="checkbox" data-system="${m.id}" ${assigned.has(m.id)?"checked":""}><span><b>${esc(m.moduleNameE||m.moduleName)}</b><small>${esc(m.moduleCode)}</small></span></label>`).join("")||'<div class="empty">No systems found</div>';const revokedScreens=new Set(S.state.revokedScreenIds||[]);const revokedFeatures=new Set((S.state.revokedFeatures||[]).map(x=>x.screenId+":"+x.featureId));const groups=[...assigned].map(id=>({module:S.modules.find(m=>m.id===id),screens:S.screens.filter(s=>s.systemId===id)}));$("screens").innerHTML=groups.map(g=>`<div class="system"><div class="system-title"><span>${esc(g.module?.moduleNameE||g.module?.moduleName||"System")}</span><span>${g.screens.length} screens</span></div>${g.screens.map(s=>{const allowed=!revokedScreens.has(s.id);const features=S.featureMap.get(s.id)||[];return `<div class="screen"><div class="screen-row"><span><span class="screen-name">${esc(s.screenNameE||s.screenName)}</span> <span class="code">${esc(s.screenCode)}</span></span><button class="switch ${allowed?"on":""}" title="${allowed?"Revoke":"Allow"}" onclick="toggleScreen(${s.id},${allowed})"></button></div><div class="features">${features.map(f=>{const on=!revokedFeatures.has(s.id+":"+f.id);return `<span class="feature ${on?"":"off"}">${esc(f.featureNameE||f.featureName)} <button onclick="toggleFeature(${s.id},${f.id},${on})">${on?"✓":"×"}</button></span>`}).join("")||'<span class="code">No features</span>'}</div></div>`}).join("")}</div>`).join("")||'<div class="empty">Assign at least one system</div>';$("sModules").textContent=assigned.size;$("sScreens").textContent=S.screens.length-revokedScreens.size;$("sRevScreens").textContent=revokedScreens.size;$("sRevFeatures").textContent=revokedFeatures.size}
+async function saveSystems(){const id=+$("branchSelect").value;if(!id)return toast("Select a branch",true);const systemIds=[...document.querySelectorAll("[data-system]:checked")].map(x=>+x.dataset.system);try{await request(`/api/branches/${id}/access/systems`,{method:"PUT",body:JSON.stringify({systemIds})});toast("Systems saved");await loadBranch()}catch(e){toast(e.message,true)}}
+async function toggleScreen(screenId,isAllowed){const branch=+$("branchSelect").value;try{await request(`/api/branches/${branch}/access/screens/${screenId}/revoke`,{method:isAllowed?"POST":"DELETE"});toast(isAllowed?"Screen revoked":"Screen allowed");await loadBranch()}catch(e){toast(e.message,true)}}
+async function toggleFeature(screenId,featureId,isAllowed){const branch=+$("branchSelect").value;try{await request(`/api/branches/${branch}/access/screens/${screenId}/features/${featureId}/revoke`,{method:isAllowed?"POST":"DELETE"});toast(isAllowed?"Feature revoked":"Feature allowed");await loadBranch()}catch(e){toast(e.message,true)}}
+addEventListener("DOMContentLoaded",()=>{const b=sessionStorage.getItem("sapBase"),t=sessionStorage.getItem("sapToken");if(b)$("apiBase").value=b;if(b&&t){S.base=b;S.token=t;start("Restored SuperAdmin")}})
+</script>
+</body>
+</html>

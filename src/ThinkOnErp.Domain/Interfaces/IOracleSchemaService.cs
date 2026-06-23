@@ -15,4 +15,6 @@ public interface IOracleSchemaService
     Task<bool> UnlockUserAccountAsync(string schemaName);
 
     Task GrantUserPrivilegesAsync(string schemaName);
+
+    Task UpgradeExistingTenantSchemasAsync();
 }
