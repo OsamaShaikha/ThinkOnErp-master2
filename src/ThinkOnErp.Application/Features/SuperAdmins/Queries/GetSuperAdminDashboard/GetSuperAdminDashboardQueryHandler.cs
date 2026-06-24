@@ -14,20 +14,20 @@ public class GetSuperAdminDashboardQueryHandler : IRequestHandler<GetSuperAdminD
 {
     private readonly ICompanyRepository _companyRepository;
     private readonly IBranchRepository _branchRepository;
-    private readonly IUserRepository _userRepository;
+    private readonly ISuperAdminRepository _superAdminRepository;
     private readonly ITicketRepository _ticketRepository;
     private readonly ILogger<GetSuperAdminDashboardQueryHandler> _logger;
 
     public GetSuperAdminDashboardQueryHandler(
         ICompanyRepository companyRepository,
         IBranchRepository branchRepository,
-        IUserRepository userRepository,
+        ISuperAdminRepository superAdminRepository,
         ITicketRepository ticketRepository,
         ILogger<GetSuperAdminDashboardQueryHandler> logger)
     {
         _companyRepository = companyRepository;
         _branchRepository = branchRepository;
-        _userRepository = userRepository;
+        _superAdminRepository = superAdminRepository;
         _ticketRepository = ticketRepository;
         _logger = logger;
     }
@@ -39,7 +39,7 @@ public class GetSuperAdminDashboardQueryHandler : IRequestHandler<GetSuperAdminD
             // Sequential repository calls to avoid DbContext concurrency issues (DbContext is not thread-safe)
             var companies = (await _companyRepository.GetAllAsync()) ?? new List<Domain.Entities.SysCompany>();
             var branches = (await _branchRepository.GetAllAsync()) ?? new List<Domain.Entities.SysBranch>();
-            var users = (await _userRepository.GetAllAsync()) ?? new List<Domain.Entities.SysUser>();
+            var superAdmins = (await _superAdminRepository.GetAllAsync()) ?? new List<Domain.Entities.SysSuperAdmin>();
             var ticketResult = await _ticketRepository.GetAllAsync();
             var tickets = ticketResult.Tickets ?? new List<Domain.Entities.SysRequestTicket>();
 
@@ -52,9 +52,9 @@ public class GetSuperAdminDashboardQueryHandler : IRequestHandler<GetSuperAdminD
             {
                 _logger.LogWarning("No branches found in the system");
             }
-            if (users.Count == 0)
+            if (superAdmins.Count == 0)
             {
-                _logger.LogWarning("No users found in the system");
+                _logger.LogWarning("No superAdmins found in the system");
             }
             if (tickets.Count == 0)
             {
@@ -72,7 +72,7 @@ public class GetSuperAdminDashboardQueryHandler : IRequestHandler<GetSuperAdminD
                 InactiveCompanies = companies.Count(c => !c.IsActive),
                 TotalBranches = branches.Count,
                 ActiveBranches = branches.Count(b => b.IsActive),
-                TotalSystemAdmins = users.Count(u => u.IsAdmin),
+                TotalSystemAdmins = superAdmins.Count(u => u.IsActive),
                 PendingRequests = pendingTicketsCount
             };
 
