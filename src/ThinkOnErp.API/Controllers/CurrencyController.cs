@@ -17,7 +17,7 @@ namespace ThinkOnErp.API.Controllers;
 /// </summary>
 [ApiController]
 [Route("api/currencies")]
-[Authorize]
+[Authorize(Policy = "SuperAdminOnly")]
 public class CurrencyController : ControllerBase
 {
     private readonly IMediator _mediator;
@@ -120,9 +120,8 @@ public class CurrencyController : ControllerBase
     /// <response code="201">Currency created successfully</response>
     /// <response code="400">Validation errors in the request</response>
     /// <response code="401">User is not authenticated</response>
-    /// <response code="403">User does not have admin privileges</response>
+    /// <response code="403">User does not have super admin privileges</response>
     [HttpPost]
-    [Authorize(Policy = "AdminOnly")]
     [ProducesResponseType(typeof(ApiResponse<Int64>), StatusCodes.Status201Created)]
     [ProducesResponseType(typeof(ApiResponse<Int64>), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ApiResponse<Int64>), StatusCodes.Status401Unauthorized)]
@@ -131,6 +130,7 @@ public class CurrencyController : ControllerBase
     {
         try
         {
+            command.CreationUser = User.Identity?.Name ?? "system";
             _logger.LogInformation("Creating new currency: {CurrencyDesc}", command.CurrencyNameAr);
 
             var currencyId = await _mediator.Send(command);
@@ -163,9 +163,8 @@ public class CurrencyController : ControllerBase
     /// <response code="400">Validation errors or ID mismatch</response>
     /// <response code="404">Currency not found with the specified ID</response>
     /// <response code="401">User is not authenticated</response>
-    /// <response code="403">User does not have admin privileges</response>
+    /// <response code="403">User does not have super admin privileges</response>
     [HttpPut("{id}")]
-    [Authorize(Policy = "AdminOnly")]
     [ProducesResponseType(typeof(ApiResponse<Int64>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiResponse<Int64>), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ApiResponse<Int64>), StatusCodes.Status404NotFound)]
@@ -175,13 +174,8 @@ public class CurrencyController : ControllerBase
     {
         try
         {
-            if (id != command.CurrencyId)
-            {
-                _logger.LogWarning("Currency ID mismatch: URL ID {UrlId} vs Command ID {CommandId}", id, command.CurrencyId);
-                return BadRequest(ApiResponse<Int64>.CreateFailure(
-                    "Currency ID in URL does not match the ID in the request body",
-                    statusCode: 400));
-            }
+            command.CurrencyId = id;
+            command.UpdateUser = User.Identity?.Name ?? "system";
 
             _logger.LogInformation("Updating currency with ID: {CurrencyId}", id);
 
@@ -218,9 +212,8 @@ public class CurrencyController : ControllerBase
     /// <response code="200">Currency deleted successfully</response>
     /// <response code="404">Currency not found with the specified ID</response>
     /// <response code="401">User is not authenticated</response>
-    /// <response code="403">User does not have admin privileges</response>
+    /// <response code="403">User does not have super admin privileges</response>
     [HttpDelete("{id}")]
-    [Authorize(Policy = "AdminOnly")]
     [ProducesResponseType(typeof(ApiResponse<int>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiResponse<int>), StatusCodes.Status404NotFound)]
     [ProducesResponseType(typeof(ApiResponse<int>), StatusCodes.Status401Unauthorized)]

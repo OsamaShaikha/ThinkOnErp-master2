@@ -94,11 +94,7 @@ public class ModulesController : ControllerBase
     {
         try
         {
-            if (id != command.ModuleId)
-            {
-                return BadRequest(ApiResponse<long>.CreateFailure("Module ID in URL does not match the ID in the request body", statusCode: 400));
-            }
-
+            command.ModuleId = id;
             command.UpdateUser = User.Identity?.Name ?? "system";
             _logger.LogInformation("Updating module with ID: {ModuleId}", id);
             var rowsAffected = await _mediator.Send(command);

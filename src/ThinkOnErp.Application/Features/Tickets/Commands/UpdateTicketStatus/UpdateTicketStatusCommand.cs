@@ -1,3 +1,4 @@
+using System.Text.Json.Serialization;
 using MediatR;
 
 namespace ThinkOnErp.Application.Features.Tickets.Commands.UpdateTicketStatus;
@@ -10,6 +11,7 @@ public class UpdateTicketStatusCommand : IRequest<Int64>
     /// <summary>
     /// Unique identifier of the ticket to update
     /// </summary>
+    [JsonIgnore]
     public Int64 TicketId { get; set; }
 
     /// <summary>
@@ -25,5 +27,6 @@ public class UpdateTicketStatusCommand : IRequest<Int64>
     /// <summary>
     /// Username of the user updating the status
     /// </summary>
+    [JsonIgnore]
     public string UpdateUser { get; set; } = string.Empty;
 }

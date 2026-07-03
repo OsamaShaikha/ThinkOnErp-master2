@@ -1,3 +1,4 @@
+using System.Text.Json.Serialization;
 using MediatR;
 using ThinkOnErp.Application.DTOs.Ticket;
 
@@ -61,5 +62,6 @@ public class CreateTicketCommand : IRequest<Int64>
     /// <summary>
     /// Username of the user creating this ticket
     /// </summary>
+    [JsonIgnore]
     public string CreationUser { get; set; } = string.Empty;
 }

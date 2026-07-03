@@ -1,9 +1,11 @@
+using System.Text.Json.Serialization;
 using MediatR;
 
 namespace ThinkOnErp.Application.Features.FiscalYears.Commands.UpdateFiscalYear;
 
 public class UpdateFiscalYearCommand : IRequest<Int64>
 {
+    [JsonIgnore]
     public Int64 FiscalYearId { get; set; }
     public Int64 CompanyId { get; set; }
     public Int64 BranchId { get; set; }
@@ -13,5 +15,6 @@ public class UpdateFiscalYearCommand : IRequest<Int64>
     public DateTime StartDate { get; set; }
     public DateTime EndDate { get; set; }
     public bool IsClosed { get; set; }
+    [JsonIgnore]
     public string UpdateUser { get; set; } = string.Empty;
 }

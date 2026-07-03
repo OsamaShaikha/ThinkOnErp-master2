@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using ThinkOnErp.Domain.Entities;
 using ThinkOnErp.Domain.Interfaces;
 using ThinkOnErp.Infrastructure.Data;
@@ -42,7 +42,6 @@ public class TicketRepository : ITicketRepository
     public async Task<SysRequestTicket?> GetByIdAsync(long rowId) =>
         await _context.SysRequestTickets
             .Include(t => t.Company).Include(t => t.Branch)
-            .Include(t => t.Requester).Include(t => t.Assignee)
             .Include(t => t.TicketType).Include(t => t.TicketStatus)
             .Include(t => t.TicketPriority).Include(t => t.TicketCategory)
             .Include(t => t.Comments).Include(t => t.Attachments)
@@ -57,8 +56,19 @@ public class TicketRepository : ITicketRepository
 
     public async Task<long> UpdateAsync(SysRequestTicket ticket)
     {
-        ticket.UpdateDate = DateTime.Now;
-        _context.SysRequestTickets.Update(ticket);
+        var existing = await _context.SysRequestTickets.FindAsync(ticket.Id);
+        if (existing == null) return 0;
+
+        existing.TitleAr = ticket.TitleAr;
+        existing.TitleEn = ticket.TitleEn;
+        existing.Description = ticket.Description;
+        existing.TicketTypeId = ticket.TicketTypeId;
+        existing.TicketPriorityId = ticket.TicketPriorityId;
+        existing.TicketCategoryId = ticket.TicketCategoryId;
+        existing.IsActive = ticket.IsActive;
+        existing.UpdateUser = ticket.UpdateUser;
+        existing.UpdateDate = DateTime.Now;
+
         return await _context.SaveChangesAsync();
     }
 

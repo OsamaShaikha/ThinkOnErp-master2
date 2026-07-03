@@ -1,0 +1,309 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ThinkOnERP · Tickets Roadmap</title>
+  <style>
+    :root{
+      --bg:#07111f;--panel:#0f1b2d;--panel2:#14243a;--line:#2a3f5f;--text:#eaf2ff;
+      --muted:#9fb2cf;--blue:#38bdf8;--green:#22c55e;--amber:#f59e0b;--red:#ef4444;
+      --violet:#a78bfa;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;background:linear-gradient(135deg,#07111f,#0f172a 58%,#172554);color:var(--text);font-family:Inter,Segoe UI,Arial,sans-serif;line-height:1.55}
+    header{padding:34px 42px;border-bottom:1px solid var(--line);background:rgba(15,27,45,.86);backdrop-filter:blur(12px);position:sticky;top:0;z-index:4}
+    h1{margin:0;font-size:32px;letter-spacing:-.04em}.sub{color:var(--muted);max-width:980px;margin-top:8px}
+    main{padding:22px;max-width:1320px;margin:auto}.grid{display:grid;grid-template-columns:330px 1fr;gap:18px;align-items:start}
+    nav,section{background:rgba(15,27,45,.92);border:1px solid var(--line);border-radius:18px;box-shadow:0 20px 55px rgba(0,0,0,.28)}
+    nav{padding:16px;position:sticky;top:132px}nav a{display:block;color:#dbeafe;text-decoration:none;padding:10px 12px;border-radius:12px;margin:3px 0}
+    nav a:hover{background:#13233a}.content{display:grid;gap:18px}section{padding:22px}
+    h2{margin:0 0 12px;font-size:23px;letter-spacing:-.02em}h3{margin:20px 0 8px;font-size:17px;color:#bfdbfe}
+    p{margin:8px 0}.muted{color:var(--muted)}code{background:#08111f;border:1px solid var(--line);padding:2px 6px;border-radius:7px;color:#bae6fd}
+    .cards{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}.card{background:var(--panel2);border:1px solid var(--line);border-radius:16px;padding:15px}
+    .card strong{display:block;font-size:26px}.tag{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);border-radius:999px;padding:5px 9px;color:#dbeafe;background:#0b1628;font-size:12px;margin:3px 5px 3px 0}
+    .tag.green{border-color:#14532d;color:#bbf7d0;background:#052e16}.tag.amber{border-color:#78350f;color:#fde68a;background:#451a03}.tag.blue{border-color:#164e63;color:#bae6fd;background:#082f49}.tag.violet{border-color:#5b21b6;color:#ddd6fe;background:#2e1065}
+    .flow{display:grid;gap:10px}.step{display:grid;grid-template-columns:42px 1fr;gap:12px;background:#0b1628;border:1px solid var(--line);border-radius:16px;padding:13px}
+    .num{width:34px;height:34px;border-radius:999px;display:grid;place-items:center;background:linear-gradient(135deg,#38bdf8,#2563eb);font-weight:800}
+    table{width:100%;border-collapse:collapse;margin-top:10px;font-size:14px}th,td{border-bottom:1px solid var(--line);padding:11px;text-align:left;vertical-align:top}
+    th{color:#bfdbfe;background:#0b1628}tr:hover td{background:#101f34}
+    .callout{border-left:5px solid var(--blue);background:#082f49;border-radius:12px;padding:13px 15px;margin:12px 0;color:#dbeafe}
+    .warn{border-left-color:var(--amber);background:#451a03;color:#fde68a}.ok{border-left-color:var(--green);background:#052e16;color:#bbf7d0}
+    .danger{border-left-color:var(--red);background:#450a0a;color:#fecaca}.links a{display:inline-block;margin:5px 8px 5px 0;color:white;text-decoration:none;background:linear-gradient(135deg,#0ea5e9,#2563eb);padding:9px 12px;border-radius:10px;font-weight:700}
+    pre{overflow:auto;background:#030712;border:1px solid var(--line);border-radius:14px;padding:14px;color:#dbeafe}
+    .two{display:grid;grid-template-columns:1fr 1fr;gap:14px}.mini{font-size:13px;color:var(--muted)}
+    @media(max-width:980px){.grid,.two{grid-template-columns:1fr}nav{position:static}.cards{grid-template-columns:1fr}header{padding:24px}}
+  </style>
+</head>
+<body>
+<header>
+  <h1>ThinkOnERP Tickets Roadmap</h1>
+  <div class="sub">
+    A practical guide for using the ticket system from SuperAdmin and tenant branch dashboards:
+    what each role does, which API routes are used, and how to test safely.
+  </div>
+</header>
+
+<main class="grid">
+  <nav>
+    <a href="#overview">1. Overview</a>
+    <a href="#roles">2. Roles and scope</a>
+    <a href="#lifecycle">3. Ticket lifecycle</a>
+    <a href="#api">4. API route map</a>
+    <a href="#superadmin">5. SuperAdmin usage</a>
+    <a href="#tenant">6. Tenant branch usage</a>
+    <a href="#testing">7. Test plan</a>
+    <a href="#troubleshooting">8. Troubleshooting</a>
+    <a href="#next">9. Recommended next steps</a>
+  </nav>
+
+  <div class="content">
+    <section id="overview">
+      <h2>1. Overview</h2>
+      <p>
+        The ticket system is the support/request module in ThinkOnERP. A ticket belongs to one
+        company and one branch, is opened by a requester, may be assigned to a support user,
+        and moves through statuses until resolution.
+      </p>
+      <div class="cards">
+        <div class="card"><strong>Company</strong><span class="muted">The tenant/account that owns the ticket data.</span></div>
+        <div class="card"><strong>Branch</strong><span class="muted">The operational unit where the issue/request happened.</span></div>
+        <div class="card"><strong>SLA</strong><span class="muted">Expected resolution timing based on priority/type rules.</span></div>
+      </div>
+      <div class="callout">
+        SuperAdmin is for system-wide visibility and reports. Tenant branch users are for daily branch operations: create,
+        view, comment, and move their own branch tickets.
+      </div>
+      <div class="links">
+        <a href="superadmin-system-tickets-dashboard.html">Open SuperAdmin Tickets Dashboard</a>
+        <a href="branch-tickets-dashboard.html">Open Branch Tickets Dashboard</a>
+      </div>
+    </section>
+
+    <section id="roles">
+      <h2>2. Roles and scope</h2>
+      <table>
+        <thead><tr><th>Actor</th><th>Login/API surface</th><th>Expected ticket scope</th><th>Main actions</th></tr></thead>
+        <tbody>
+          <tr>
+            <td><span class="tag violet">SuperAdmin</span></td>
+            <td><code>POST /api/auth/superadmin/login</code></td>
+            <td>Platform-wide. Can inspect/filter all companies and branches.</td>
+            <td>System reports, SLA overview, ticket assignment, status operations, admin testing.</td>
+          </tr>
+          <tr>
+            <td><span class="tag blue">Company Admin</span></td>
+            <td><code>POST /api/Auth/login</code> with company code</td>
+            <td>Company tenant schema. Should not see other companies.</td>
+            <td>Manage company/branch ticket activity, create tickets, status/comment workflows.</td>
+          </tr>
+          <tr>
+            <td><span class="tag green">Branch User</span></td>
+            <td><code>POST /api/Auth/login</code></td>
+            <td>Branch-level operational view, based on token/permissions.</td>
+            <td>Create requests, check own/branch tickets, add comments, follow status.</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="callout ok">
+        Tenant isolation depends on the JWT company claims and <code>SchemaRoutingMiddleware</code>, which sets Oracle
+        <code>CURRENT_SCHEMA</code> for authenticated tenant requests.
+      </div>
+    </section>
+
+    <section id="lifecycle">
+      <h2>3. Ticket lifecycle</h2>
+      <div class="flow">
+        <div class="step"><div class="num">1</div><div><strong>Create</strong><br>A branch user/company admin creates a ticket with title, description, company, branch, requester, type, priority, and optional category.</div></div>
+        <div class="step"><div class="num">2</div><div><strong>Open</strong><br>The system sets the initial status, calculates expected resolution from SLA rules, and stores the ticket.</div></div>
+        <div class="step"><div class="num">3</div><div><strong>Assign</strong><br>An admin or SuperAdmin assigns the ticket to a support user. Assignment may move status to in progress.</div></div>
+        <div class="step"><div class="num">4</div><div><strong>Comment / attach</strong><br>Users add discussion notes and attachments. Internal comments are admin-only context.</div></div>
+        <div class="step"><div class="num">5</div><div><strong>Status update</strong><br>The ticket moves through allowed status transitions. Invalid transitions should return validation errors.</div></div>
+        <div class="step"><div class="num">6</div><div><strong>Resolve and report</strong><br>Resolution date and SLA compliance are used in reports: volume, SLA compliance, and workload.</div></div>
+      </div>
+    </section>
+
+    <section id="api">
+      <h2>4. API route map</h2>
+      <h3>Authentication</h3>
+      <table>
+        <thead><tr><th>Action</th><th>Route</th><th>Body / query</th></tr></thead>
+        <tbody>
+          <tr><td>SuperAdmin login</td><td><code>POST /api/auth/superadmin/login</code></td><td><code>{ userName, password }</code></td></tr>
+          <tr><td>Tenant/company login</td><td><code>POST /api/Auth/login</code></td><td><code>{ companyCode, userName, password }</code></td></tr>
+          <tr><td>Public API health</td><td><code>GET /api/AuditHealth/status</code></td><td>No token required</td></tr>
+        </tbody>
+      </table>
+
+      <h3>Tickets</h3>
+      <table>
+        <thead><tr><th>Action</th><th>Route</th><th>Notes</th></tr></thead>
+        <tbody>
+          <tr><td>List tickets</td><td><code>GET /api/tickets</code></td><td>Supports filters: page, pageSize, companyId, branchId, requesterId, assigneeId, statusId, priorityId, typeId, categoryId, created dates, due dates, slaStatus, sort.</td></tr>
+          <tr><td>Get detail</td><td><code>GET /api/tickets/{id}</code></td><td>Returns ticket detail with comments and attachments.</td></tr>
+          <tr><td>Create ticket</td><td><code>POST /api/tickets</code></td><td>Creates real data. Use only in test environments unless intended.</td></tr>
+          <tr><td>Update ticket</td><td><code>PUT /api/tickets/{id}</code></td><td>Updates main ticket fields.</td></tr>
+          <tr><td>Assign</td><td><code>PUT /api/tickets/{id}/assign</code></td><td>AdminOnly. Assigns/unassigns support user.</td></tr>
+          <tr><td>Status update</td><td><code>PUT /api/tickets/{id}/status</code></td><td>Checks workflow transition rules.</td></tr>
+          <tr><td>Add comment</td><td><code>POST /api/tickets/{id}/comments</code></td><td>Can be public-to-ticket or internal admin comment.</td></tr>
+          <tr><td>Get comments</td><td><code>GET /api/tickets/{id}/comments</code></td><td>Read discussion history.</td></tr>
+          <tr><td>Attachments</td><td><code>GET/POST /api/tickets/{id}/attachments</code></td><td>Upload uses Base64 content.</td></tr>
+        </tbody>
+      </table>
+
+      <h3>Types and reports</h3>
+      <table>
+        <thead><tr><th>Action</th><th>Route</th><th>Notes</th></tr></thead>
+        <tbody>
+          <tr><td>Ticket types</td><td><code>GET /api/ticket-types</code></td><td>Useful before creating tickets.</td></tr>
+          <tr><td>Volume report</td><td><code>GET /api/tickets/reports/volume</code></td><td>AdminOnly. Supports date range and groupBy.</td></tr>
+          <tr><td>SLA report</td><td><code>GET /api/tickets/reports/sla-compliance</code></td><td>AdminOnly.</td></tr>
+          <tr><td>Workload report</td><td><code>GET /api/tickets/reports/workload</code></td><td>AdminOnly. Shows distribution by assignee.</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section id="superadmin">
+      <h2>5. How SuperAdmin should use tickets</h2>
+      <div class="two">
+        <div>
+          <h3>Use case</h3>
+          <p>
+            SuperAdmin monitors support health across the platform. They can filter by company/branch, inspect SLA risk,
+            run reports, and make admin-level assignments or status changes.
+          </p>
+          <p>
+            Open <code>superadmin-system-tickets-dashboard.html</code>, login as SuperAdmin or paste a SuperAdmin JWT,
+            then start with read-only tests.
+          </p>
+        </div>
+        <div>
+          <h3>Safe order</h3>
+          <ol>
+            <li>Run public health.</li>
+            <li>Login SuperAdmin.</li>
+            <li>Load ticket types.</li>
+            <li>Load tickets with small page size, for example 5 or 10.</li>
+            <li>Open one ticket detail.</li>
+            <li>Run reports.</li>
+            <li>Only then test assign/status/comment on a test ticket.</li>
+          </ol>
+        </div>
+      </div>
+
+      <div class="callout warn">
+        Assignment, status update, comments, delete, and create operations write to the database and audit logs.
+        Do not use those buttons on production records unless you really mean it.
+      </div>
+    </section>
+
+    <section id="tenant">
+      <h2>6. How tenant branches should use tickets</h2>
+      <div class="two">
+        <div>
+          <h3>Company login</h3>
+          <p>
+            Tenant users login with <code>companyCode</code>, username, and password. The token carries company and schema
+            information so the request runs inside the tenant schema.
+          </p>
+          <pre>{
+  "companyCode": "TECH01",
+  "userName": "tech_admin",
+  "password": "..."
+}</pre>
+        </div>
+        <div>
+          <h3>Branch flow</h3>
+          <ol>
+            <li>Login tenant user.</li>
+            <li>Load branches visible to that user.</li>
+            <li>Select branch.</li>
+            <li>List branch tickets.</li>
+            <li>Create a test ticket if needed.</li>
+            <li>Open detail, add comments, update status.</li>
+          </ol>
+        </div>
+      </div>
+
+      <div class="callout ok">
+        Expected behavior: a company admin sees only their company branches; branch users should be scoped to their branch/permissions.
+        If a tenant user sees another company’s tickets, that is a tenant isolation bug.
+      </div>
+    </section>
+
+    <section id="testing">
+      <h2>7. Practical test plan</h2>
+      <table>
+        <thead><tr><th>#</th><th>Test</th><th>Expected result</th><th>Dashboard</th></tr></thead>
+        <tbody>
+          <tr><td>1</td><td>Public health</td><td>HTTP 200, healthy status</td><td>Both</td></tr>
+          <tr><td>2</td><td>SuperAdmin login</td><td>JWT returned with SuperAdmin claims</td><td>SuperAdmin</td></tr>
+          <tr><td>3</td><td>Tenant login</td><td>JWT returned with company/schema claims</td><td>Branch</td></tr>
+          <tr><td>4</td><td>Load ticket types</td><td>List of active ticket types</td><td>Both</td></tr>
+          <tr><td>5</td><td>List tickets pageSize 5</td><td>Fast response with paged result</td><td>Both</td></tr>
+          <tr><td>6</td><td>Filter by branch</td><td>Only selected branch tickets</td><td>Branch</td></tr>
+          <tr><td>7</td><td>Create test ticket</td><td>201 Created, new ticket ID</td><td>Branch</td></tr>
+          <tr><td>8</td><td>Get detail</td><td>Ticket with comments/attachments arrays</td><td>Both</td></tr>
+          <tr><td>9</td><td>Add comment</td><td>Comment ID returned, appears in comments list</td><td>Both</td></tr>
+          <tr><td>10</td><td>Status update</td><td>Valid transition succeeds; invalid transition returns 400</td><td>Both</td></tr>
+          <tr><td>11</td><td>Reports</td><td>Volume/SLA/workload data returned</td><td>SuperAdmin</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section id="troubleshooting">
+      <h2>8. Troubleshooting</h2>
+      <table>
+        <thead><tr><th>Symptom</th><th>Likely cause</th><th>What to do</th></tr></thead>
+        <tbody>
+          <tr>
+            <td><span class="tag amber">Failed to fetch</span></td>
+            <td>API is not running, wrong API base URL, or CORS/network issue.</td>
+            <td>Start API on <code>http://localhost:5000</code>, then test <code>/api/AuditHealth/status</code>.</td>
+          </tr>
+          <tr>
+            <td><span class="tag amber">401 Unauthorized</span></td>
+            <td>Missing/expired token or wrong login type.</td>
+            <td>Login again. Use SuperAdmin login for SuperAdmin page and company login for branch page.</td>
+          </tr>
+          <tr>
+            <td><span class="tag amber">403 Forbidden</span></td>
+            <td>User authenticated but lacks AdminOnly permission.</td>
+            <td>Use SuperAdmin/company admin for reports, assignment, or delete operations.</td>
+          </tr>
+          <tr>
+            <td><span class="tag amber">Ticket list timeout</span></td>
+            <td>Query is heavy, joins are slow, Oracle session is busy, or ticket table lacks needed indexes.</td>
+            <td>Test with <code>pageSize=5</code>, filter by branch/company, then inspect repository query and database plan.</td>
+          </tr>
+          <tr>
+            <td><span class="tag amber">Wrong branch/company data</span></td>
+            <td>Tenant schema or filter is wrong.</td>
+            <td>Check JWT claims: <code>companyId</code>, <code>branchId</code>, <code>companySchema</code>.</td>
+          </tr>
+          <tr>
+            <td><span class="tag amber">Invalid status transition</span></td>
+            <td>Workflow rules reject the move.</td>
+            <td>Check current status ID and allowed transition logic before updating.</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section id="next">
+      <h2>9. Recommended next steps</h2>
+      <div class="flow">
+        <div class="step"><div class="num">A</div><div><strong>Seed clean test ticket data</strong><br>Create a small set of tickets for TECH01 branches with known status/priority/type IDs.</div></div>
+        <div class="step"><div class="num">B</div><div><strong>Fix or profile ticket list timeout</strong><br>If <code>GET /api/tickets</code> times out, profile <code>TicketRepository</code> and the Oracle query generated by EF.</div></div>
+        <div class="step"><div class="num">C</div><div><strong>Enforce tenant/branch scope</strong><br>Confirm company admins see only company branches/tickets and branch users see only allowed branch tickets.</div></div>
+        <div class="step"><div class="num">D</div><div><strong>Add a “safe test mode”</strong><br>Use test records with titles like <code>API TEST</code> so destructive actions never touch real tickets.</div></div>
+      </div>
+      <div class="callout danger">
+        Never use the mutation buttons on real production tickets until you have confirmed token scope, branch scope, and test data.
+      </div>
+    </section>
+  </div>
+</main>
+</body>
+</html>

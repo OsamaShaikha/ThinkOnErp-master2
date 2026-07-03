@@ -1,9 +1,11 @@
+using System.Text.Json.Serialization;
 using MediatR;
 
 namespace ThinkOnErp.Application.Features.Currencies.Commands.UpdateCurrency;
 
 public class UpdateCurrencyCommand : IRequest<Int64>
 {
+    [JsonIgnore]
     public Int64 CurrencyId { get; set; }
     public string CurrencyNameAr { get; set; } = string.Empty;
     public string CurrencyNameEn { get; set; } = string.Empty;
@@ -19,5 +21,6 @@ public class UpdateCurrencyCommand : IRequest<Int64>
     public string FractionNameEn { get; set; } = string.Empty;
     public decimal? CurrRate { get; set; }
     public DateTime? CurrRateDate { get; set; }
+    [JsonIgnore]
     public string UpdateUser { get; set; } = string.Empty;
 }

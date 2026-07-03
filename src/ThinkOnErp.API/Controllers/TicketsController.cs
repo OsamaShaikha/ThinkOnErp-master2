@@ -201,18 +201,10 @@ public class TicketsController : ControllerBase
     {
         try
         {
-            if (id != command.TicketId)
-            {
-                _logger.LogWarning("Ticket ID mismatch: URL ID {UrlId} vs Command ID {CommandId}", id, command.TicketId);
-                return BadRequest(ApiResponse<Int64>.CreateFailure(
-                    "Ticket ID in URL does not match the ID in the request body",
-                    statusCode: 400));
-            }
+            command.TicketId = id;
+            command.UpdateUser = User.Identity?.Name ?? "system";
 
             _logger.LogInformation("Updating ticket with ID: {TicketId}", id);
-
-            // Set update user from authenticated user
-            command.UpdateUser = User.Identity?.Name ?? "system";
 
             var rowsAffected = await _mediator.Send(command);
 
@@ -321,18 +313,10 @@ public class TicketsController : ControllerBase
     {
         try
         {
-            if (id != command.TicketId)
-            {
-                _logger.LogWarning("Ticket ID mismatch: URL ID {UrlId} vs Command ID {CommandId}", id, command.TicketId);
-                return BadRequest(ApiResponse<Int64>.CreateFailure(
-                    "Ticket ID in URL does not match the ID in the request body",
-                    statusCode: 400));
-            }
+            command.TicketId = id;
+            command.UpdateUser = User.Identity?.Name ?? "system";
 
             _logger.LogInformation("Assigning ticket {TicketId} to user {AssigneeId}", id, command.AssigneeId);
-
-            // Set update user from authenticated user
-            command.UpdateUser = User.Identity?.Name ?? "system";
 
             var rowsAffected = await _mediator.Send(command);
 
@@ -387,18 +371,10 @@ public class TicketsController : ControllerBase
     {
         try
         {
-            if (id != command.TicketId)
-            {
-                _logger.LogWarning("Ticket ID mismatch: URL ID {UrlId} vs Command ID {CommandId}", id, command.TicketId);
-                return BadRequest(ApiResponse<Int64>.CreateFailure(
-                    "Ticket ID in URL does not match the ID in the request body",
-                    statusCode: 400));
-            }
+            command.TicketId = id;
+            command.UpdateUser = User.Identity?.Name ?? "system";
 
             _logger.LogInformation("Updating status for ticket {TicketId} to status {NewStatusId}", id, command.NewStatusId);
-
-            // Set update user from authenticated user
-            command.UpdateUser = User.Identity?.Name ?? "system";
 
             var rowsAffected = await _mediator.Send(command);
 
@@ -460,18 +436,10 @@ public class TicketsController : ControllerBase
     {
         try
         {
-            if (id != command.TicketId)
-            {
-                _logger.LogWarning("Ticket ID mismatch: URL ID {UrlId} vs Command ID {CommandId}", id, command.TicketId);
-                return BadRequest(ApiResponse<Int64>.CreateFailure(
-                    "Ticket ID in URL does not match the ID in the request body",
-                    statusCode: 400));
-            }
+            command.TicketId = id;
+            command.CreationUser = User.Identity?.Name ?? "system";
 
             _logger.LogInformation("Adding comment to ticket {TicketId}", id);
-
-            // Set creation user from authenticated user
-            command.CreationUser = User.Identity?.Name ?? "system";
 
             var commentId = await _mediator.Send(command);
 
@@ -566,18 +534,10 @@ public class TicketsController : ControllerBase
     {
         try
         {
-            if (id != command.TicketId)
-            {
-                _logger.LogWarning("Ticket ID mismatch: URL ID {UrlId} vs Command ID {CommandId}", id, command.TicketId);
-                return BadRequest(ApiResponse<Int64>.CreateFailure(
-                    "Ticket ID in URL does not match the ID in the request body",
-                    statusCode: 400));
-            }
+            command.TicketId = id;
+            command.CreationUser = User.Identity?.Name ?? "system";
 
             _logger.LogInformation("Uploading attachment to ticket {TicketId}, file: {FileName}", id, command.FileName);
-
-            // Set creation user from authenticated user
-            command.CreationUser = User.Identity?.Name ?? "system";
 
             var attachmentId = await _mediator.Send(command);
 

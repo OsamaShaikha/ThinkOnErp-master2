@@ -5,6 +5,7 @@ namespace ThinkOnErp.Application.Features.Modules.Commands.UpdateModule;
 
 public class UpdateModuleCommand : IRequest<long>
 {
+    [JsonIgnore]
     public long ModuleId { get; set; }
     public string ModuleCode { get; set; } = string.Empty;
     public string ModuleName { get; set; } = string.Empty;

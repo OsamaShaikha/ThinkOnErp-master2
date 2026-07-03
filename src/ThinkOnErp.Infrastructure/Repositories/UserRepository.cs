@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using ThinkOnErp.Domain.Entities;
 using ThinkOnErp.Domain.Interfaces;
 using ThinkOnErp.Infrastructure.Data;
@@ -26,8 +26,26 @@ public class UserRepository : IUserRepository
 
     public async Task<long> UpdateAsync(SysUser user)
     {
-        user.UpdateDate = DateTime.Now;
-        _context.SysUsers.Update(user);
+        var existing = await _context.SysUsers.FindAsync(user.Id);
+        if (existing == null) return 0;
+
+        existing.FullNameAr = user.FullNameAr;
+        existing.FullNameEn = user.FullNameEn;
+        existing.UserName = user.UserName;
+        if (!string.IsNullOrEmpty(user.Password))
+        {
+            existing.Password = user.Password;
+        }
+        existing.Phone = user.Phone;
+        existing.Phone2 = user.Phone2;
+        existing.RoleId = user.RoleId;
+        existing.BranchId = user.BranchId;
+        existing.CompanyId = user.CompanyId;
+        existing.Email = user.Email;
+        existing.IsAdmin = user.IsAdmin;
+        existing.UpdateUser = user.UpdateUser;
+        existing.UpdateDate = DateTime.Now;
+
         return await _context.SaveChangesAsync();
     }
 

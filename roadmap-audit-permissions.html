@@ -1,0 +1,665 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ThinkOnERP — Audit & Permissions Roadmap</title>
+<style>
+  :root {
+    --bg: #0f172a;
+    --surface: #1e293b;
+    --border: #334155;
+    --text: #e2e8f0;
+    --muted: #94a3b8;
+    --accent-blue: #38bdf8;
+    --accent-green: #4ade80;
+    --accent-amber: #fbbf24;
+    --accent-rose: #fb7185;
+    --accent-violet: #a78bfa;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.6;
+    padding: 2rem;
+  }
+  .container { max-width: 1100px; margin: 0 auto; }
+
+  /* Header */
+  header {
+    text-align: center;
+    padding: 2.5rem 0 2rem;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 2.5rem;
+  }
+  header h1 {
+    font-size: 2.2rem;
+    font-weight: 700;
+    background: linear-gradient(135deg, var(--accent-blue), var(--accent-violet));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  header p { color: var(--muted); margin-top: 0.5rem; font-size: 1rem; }
+  header .badge {
+    display: inline-block;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    padding: 0.25rem 1rem;
+    font-size: 0.8rem;
+    color: var(--muted);
+    margin-top: 0.75rem;
+  }
+
+  /* Section */
+  section { margin-bottom: 3rem; }
+  .section-title {
+    font-size: 1.4rem;
+    font-weight: 600;
+    margin-bottom: 1.25rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 2px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .section-title .icon { font-size: 1.3rem; }
+
+  /* Cards */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 1.25rem;
+    margin-bottom: 1rem;
+  }
+  .card h3 {
+    font-size: 1.05rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    color: var(--accent-blue);
+  }
+  .card h3 .file {
+    color: var(--muted);
+    font-weight: 400;
+    font-size: 0.85rem;
+  }
+  .card p, .card li { color: var(--text); font-size: 0.92rem; }
+  .card ul { list-style: none; padding: 0; }
+  .card ul li::before {
+    content: "›";
+    color: var(--accent-blue);
+    font-weight: 700;
+    margin-right: 0.5rem;
+  }
+  .card ul li { margin-bottom: 0.3rem; }
+
+  /* Grid */
+  .grid-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+  }
+  .grid-3 {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 1rem;
+  }
+  @media (max-width: 768px) {
+    .grid-2, .grid-3 { grid-template-columns: 1fr; }
+  }
+
+  /* Flow Diagram */
+  .flow {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.4rem;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 1.25rem;
+    margin-bottom: 1rem;
+    font-size: 0.88rem;
+  }
+  .flow .node {
+    background: #1a2a4a;
+    border: 1px solid var(--accent-blue);
+    border-radius: 6px;
+    padding: 0.4rem 0.8rem;
+    white-space: nowrap;
+    color: var(--accent-blue);
+  }
+  .flow .node.green { border-color: var(--accent-green); color: var(--accent-green); }
+  .flow .node.amber { border-color: var(--accent-amber); color: var(--accent-amber); }
+  .flow .node.rose { border-color: var(--accent-rose); color: var(--accent-rose); }
+  .flow .node.surface { border-color: var(--muted); color: var(--muted); }
+  .flow .arrow { color: var(--muted); font-size: 1.1rem; }
+
+  /* Step chain */
+  .step-chain {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 1rem 1.25rem;
+    margin-bottom: 1rem;
+  }
+  .step {
+    display: flex;
+    align-items: baseline;
+    gap: 0.75rem;
+    padding: 0.45rem 0;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+  }
+  .step:last-child { border-bottom: none; }
+  .step-num {
+    font-weight: 700;
+    font-size: 0.8rem;
+    color: var(--muted);
+    min-width: 2rem;
+    text-align: right;
+  }
+  .step-desc { font-size: 0.9rem; }
+  .step-result {
+    font-size: 0.78rem;
+    padding: 0.15rem 0.5rem;
+    border-radius: 4px;
+    font-weight: 600;
+    margin-left: auto;
+    white-space: nowrap;
+  }
+  .result-deny { background: rgba(251,113,133,0.15); color: var(--accent-rose); }
+  .result-grant { background: rgba(74,222,128,0.15); color: var(--accent-green); }
+  .result-bypass { background: rgba(251,191,36,0.15); color: var(--accent-amber); }
+  .step .badge-sm {
+    font-size: 0.7rem;
+    background: rgba(255,255,255,0.06);
+    padding: 0.1rem 0.45rem;
+    border-radius: 4px;
+    color: var(--muted);
+  }
+
+  /* Table */
+  .table-wrap { overflow-x: auto; }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.88rem;
+    background: var(--surface);
+    border-radius: 10px;
+    overflow: hidden;
+  }
+  th {
+    background: rgba(56,189,248,0.08);
+    padding: 0.7rem 0.8rem;
+    text-align: left;
+    font-weight: 600;
+    color: var(--accent-blue);
+    border-bottom: 1px solid var(--border);
+  }
+  td {
+    padding: 0.6rem 0.8rem;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+    color: var(--text);
+  }
+  tr:last-child td { border-bottom: none; }
+  td.code { font-family: 'Cascadia Code', 'Fira Code', monospace; font-size: 0.82rem; color: var(--accent-amber); }
+
+  /* Tags */
+  .tag {
+    display: inline-block;
+    font-size: 0.7rem;
+    padding: 0.1rem 0.5rem;
+    border-radius: 4px;
+    font-weight: 600;
+    margin-right: 0.3rem;
+  }
+  .tag.blue { background: rgba(56,189,248,0.15); color: var(--accent-blue); }
+  .tag.green { background: rgba(74,222,128,0.15); color: var(--accent-green); }
+  .tag.amber { background: rgba(251,191,36,0.15); color: var(--accent-amber); }
+  .tag.rose { background: rgba(251,113,133,0.15); color: var(--accent-rose); }
+  .tag.violet { background: rgba(167,139,250,0.15); color: var(--accent-violet); }
+  .tag.surface { background: rgba(148,163,184,0.1); color: var(--muted); }
+
+  /* Section badges */
+  .phase-label {
+    display: inline-block;
+    font-size: 0.72rem;
+    font-weight: 600;
+    padding: 0.2rem 0.7rem;
+    border-radius: 999px;
+    margin-left: 0.75rem;
+    vertical-align: middle;
+  }
+  .phase-done { background: rgba(74,222,128,0.15); color: var(--accent-green); }
+  .phase-next { background: rgba(251,191,36,0.15); color: var(--accent-amber); }
+  .phase-future { background: rgba(148,163,184,0.1); color: var(--muted); }
+
+  hr { border: none; border-top: 1px solid var(--border); margin: 1.5rem 0; }
+  .legend { display: flex; gap: 1.5rem; flex-wrap: wrap; font-size: 0.82rem; color: var(--muted); margin-bottom: 1rem; }
+  .legend span { display: flex; align-items: center; gap: 0.4rem; }
+</style>
+</head>
+<body>
+<div class="container">
+
+<header>
+  <h1>Audit Logs &amp; Permissions · System Roadmap</h1>
+  <p>ThinkOnERP — Architecture, data flow, and implementation plan</p>
+  <span class="badge">v1.0 &middot; June 2026</span>
+</header>
+
+<!-- ============================================================ -->
+<!-- OVERVIEW -->
+<!-- ============================================================ -->
+<section>
+  <div class="section-title"><span class="icon">&#9670;</span>System Overview</div>
+  <div class="grid-2">
+    <div class="card">
+      <h3>Audit Logging</h3>
+      <p>A channel-based, non-blocking pipeline that captures every meaningful state change across the platform. Events flow from application code through a resilient chain: in-memory channel &rarr; batch processing &rarr; circuit breaker &rarr; DB insert (with HMAC integrity). Falls back to JSON files when the database is unreachable.</p>
+      <p style="margin-top:0.5rem;font-size:0.85rem;color:var(--muted);">
+        <span class="tag green">16</span> event types &middot;
+        <span class="tag green">3</span> trigger paths &middot;
+        <span class="tag green">7</span> service interfaces &middot;
+        <span class="tag green">3</span> controllers
+      </p>
+    </div>
+    <div class="card">
+      <h3>Permissions</h3>
+      <p>An implicit-grant + explicit-deny model with branch-scoped role/user permissions. SuperAdmin provisions systems to branches; screens and features auto-cascade from systems. Individual screens/features can be revoked per branch. Users and roles get fine-grained (screen, feature) permission overrides.</p>
+      <p style="margin-top:0.5rem;font-size:0.85rem;color:var(--muted);">
+        <span class="tag green">12</span> resolution steps &middot;
+        <span class="tag green">2</span> permission entities &middot;
+        <span class="tag green">3</span> provisioning tables &middot;
+        <span class="tag green">3</span> controllers
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- PHASE 1 — FOUNDATION (COMPLETE) -->
+<!-- ============================================================ -->
+<section>
+  <div class="section-title"><span class="icon">&#10003;</span>Phase 1 — Foundation <span class="phase-label phase-done">Done</span></div>
+
+  <h3 style="font-size:0.95rem;font-weight:600;margin-bottom:0.75rem;color:var(--accent-blue);">1.1 Domain &amp; Persistence Layer</h3>
+  <div class="grid-3">
+    <div class="card">
+      <h3>Audit Event Hierarchy <span class="file">Domain/Entities/Audit/</span></h3>
+      <ul>
+        <li><code>AuditEvent</code> (abstract base) — CorrelationId, ActorId/Type, CompanyId, BranchId, Action, EntityType, EntityId, IpAddress, UserAgent, HttpMethod, EndpointPath, Payloads, ExecutionTimeMs, StatusCode, Timestamp</li>
+        <li><code>DataChangeAuditEvent</code> — OldValue, NewValue, ChangedFields (Dictionary), EventCategory, Metadata</li>
+        <li><code>AuthenticationAuditEvent</code> — Success, FailureReason, TokenId, SessionDuration</li>
+        <li><code>ExceptionAuditEvent</code> — ExceptionType, ExceptionMessage, StackTrace, Severity</li>
+        <li><code>ConfigurationChangeAuditEvent</code> — SettingName, Settings (Dictionary)</li>
+        <li><code>PermissionChangeAuditEvent</code> — RoleId, PermissionId, PermissionBefore/After (JSON)</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>DB Entity <span class="file">SysAuditLog.cs</span></h3>
+      <p>Table <code>SYS_AUDIT_LOG</code>. CLOBs for OldValue, NewValue, Metadata. Indexed on CorrelationId, EntityType+EntityId, ActorId, CreationDate, Status. Also <code>SYS_AUDIT_LOG_ARCHIVE</code> with ArchivedDate + ArchiveBatchId.</p>
+    </div>
+    <div class="card">
+      <h3>Permission Entities <span class="file">Domain/Entities/</span></h3>
+      <ul>
+        <li><code>SysRoleScreenPermission</code> — <code>SYS_ROLE_SCREEN_PERMISSIONS</code>: Id, BranchId, RoleId, ScreenId, FeatureId, IsGranted</li>
+        <li><code>SysUserScreenPermission</code> — <code>SYS_USER_SCREEN_PERMISSIONS</code>: Id, BranchId, UserId, ScreenId, FeatureId, IsGranted</li>
+        <li><code>SysBranchSystem</code> — grant table (BranchId, SystemId)</li>
+        <li><code>SysBranchScreen</code> — deny-list (BranchId, ScreenId)</li>
+        <li><code>SysBranchFeature</code> — deny-list (BranchId, ScreenId, FeatureId)</li>
+      </ul>
+    </div>
+  </div>
+
+  <h3 style="font-size:0.95rem;font-weight:600;margin:1.25rem 0 0.75rem;color:var(--accent-blue);">1.2 Service Interfaces</h3>
+  <div class="grid-2">
+    <div class="card">
+      <h3>Audit Interfaces <span class="file">Domain/Interfaces/</span></h3>
+      <ul>
+        <li><code>IAuditLogger</code> — LogDataChangeAsync(), LogAuthenticationAsync(), LogPermissionChangeAsync(), LogConfigurationChangeAsync(), LogExceptionAsync(), LogBatchAsync(), IsHealthyAsync(), GetQueueDepth()</li>
+        <li><code>IAuditRepository</code> — InsertAsync(), InsertBatchAsync(), GetByCorrelationIdAsync(), GetByEntityAsync()</li>
+        <li><code>IAuditQueryService</code> — QueryAsync(), SearchAsync(), GetUserActionReplayAsync(), ExportToCsv/JsonAsync()</li>
+        <li><code>IAuditTrailService</code> — 12 ticket-specific methods (creation, modification, status change, assignment, comment, attachment, search, access, auth failure, admin action)</li>
+        <li><code>IAuditContextProvider</code> — GetCorrelationId(), GetActorId(), GetCompanyId(), GetBranchId(), GetIpAddress(), GetUserAgent()</li>
+        <li><code>IAuditLogIntegrityService</code> — HMAC hash generation/verification, batch integrity, tampering detection</li>
+        <li><code>IAuditDataEncryption</code> — AES-256-GCM field-level encryption/decryption</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>Permission Interfaces <span class="file">Domain/Interfaces/</span></h3>
+      <ul>
+        <li><code>IPermissionService</code> — CanAccessAsync(userId, screenId, featureId), CanAccessByCodeAsync(userId, screenCode, featureCode)</li>
+        <li><code>IRoleScreenPermissionRepository</code> — GetByBranchAndRoleAsync(), BulkSetAsync(), DeleteAsync()</li>
+        <li><code>IUserScreenPermissionRepository</code> — GetByBranchAndUserAsync(), BulkSetAsync(), DeleteAsync()</li>
+        <li><code>IBranchSystemRepository</code> — GetSystemsByBranchIdAsync(), HasSystemAsync(), AssignSystemsToBranchAsync(), RemoveSystemFromBranchAsync()</li>
+        <li><code>IBranchScreenRepository</code> — GetAvailableScreensAsync(), GetRevokedScreenIdsAsync(), RevokeScreenAsync(), AllowScreenAsync()</li>
+        <li><code>IBranchFeatureRepository</code> — GetAvailableFeaturesAsync(), GetRevokedScreenFeaturesAsync(), RevokeFeatureAsync(), AllowFeatureAsync()</li>
+      </ul>
+    </div>
+  </div>
+
+  <h3 style="font-size:0.95rem;font-weight:600;margin:1.25rem 0 0.75rem;color:var(--accent-blue);">1.3 Service Implementations</h3>
+  <div class="grid-2">
+    <div class="card">
+      <h3>AuditLogger <span class="file">Infrastructure/Services/AuditLogger.cs</span></h3>
+      <p>Core engine (921 lines). Uses <code>Channel&lt;AuditEvent&gt;</code> (bounded, <code>BoundedChannelFullMode.Wait</code>). Background task <code>ProcessAuditEventsAsync()</code> batches 50 events or 100ms window. Maps event types to SysAuditLog, enriches with legacy fields via <code>LegacyAuditService</code> (device ID, business module, error code, business description). Triggers <code>IAlertManager</code> for critical exceptions. Flushes remaining events on shutdown.</p>
+      <p style="margin-top:0.5rem;">
+        <span class="tag violet">ResilientAuditLogger</span> decorator adds circuit breaker + retry policy + file fallback.
+        <span class="tag violet">FileSystemAuditFallback</span> writes JSON files with 100MB rotation.
+      </p>
+    </div>
+    <div class="card">
+      <h3>PermissionService <span class="file">Infrastructure/Services/PermissionService.cs</span></h3>
+      <p>8 logical steps (12 individual checks):</p>
+      <div class="step-chain" style="border:none;padding:0.25rem 0;">
+        <div class="step"><span class="step-num">0</span><span class="step-desc">User validation (null or inactive &rarr; deny)</span><span class="step-result result-deny">Deny</span></div>
+        <div class="step"><span class="step-num">1</span><span class="step-desc">Admin bypass (<code>user.IsAdmin</code> &rarr; grant)</span><span class="step-result result-bypass">Bypass</span></div>
+        <div class="step"><span class="step-num">2</span><span class="step-desc">Active user check (<code>BranchId == null</code> &rarr; deny)</span><span class="step-result result-deny">Deny</span></div>
+        <div class="step"><span class="step-num">3</span><span class="step-desc">Screen validation (null or inactive &rarr; deny)</span><span class="step-result result-deny">Deny</span></div>
+        <div class="step"><span class="step-num">4</span><span class="step-desc">Branch provisioning — system assigned? (no &rarr; deny)</span><span class="step-result result-deny">Deny</span></div>
+        <div class="step"><span class="step-num">5</span><span class="step-desc">Branch provisioning — screen revoked? (yes &rarr; deny)</span><span class="step-result result-deny">Deny</span></div>
+        <div class="step"><span class="step-num">6</span><span class="step-desc">Branch provisioning — feature revoked? (yes &rarr; deny)</span><span class="step-result result-deny">Deny</span></div>
+        <div class="step"><span class="step-num">7</span><span class="step-desc">User explicit deny (yes &rarr; deny, overrides everything)</span><span class="step-result result-deny">Deny</span></div>
+        <div class="step"><span class="step-num">8</span><span class="step-desc">User explicit grant (yes &rarr; grant, overrides role)</span><span class="step-result result-grant">Grant</span></div>
+        <div class="step"><span class="step-num">9</span><span class="step-desc">Role validation (<code>RoleId == null</code> &rarr; deny)</span><span class="step-result result-deny">Deny</span></div>
+        <div class="step"><span class="step-num">10</span><span class="step-desc">Role explicit deny (yes &rarr; deny)</span><span class="step-result result-deny">Deny</span></div>
+        <div class="step"><span class="step-num">11</span><span class="step-desc">Role explicit grant (yes &rarr; grant)</span><span class="step-result result-grant">Grant</span></div>
+        <div class="step"><span class="step-num">12</span><span class="step-desc"><strong>Implicit grant</strong> (default &rarr; grant)</span><span class="step-result result-grant">Grant</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid-2">
+    <div class="card">
+      <h3>LegacyAuditService <span class="file">Infrastructure/Services/LegacyAuditService.cs</span></h3>
+      <p>1580 lines of backward compatibility. Transforms SysAuditLog into human-readable <code>LegacyAuditLogDto</code>. Generates business descriptions for 22 action types. Extracts device identifiers from User-Agent (POS terminals, kiosks, mobile, tablets, desktops, Postman, curl, ThinkOnERP apps). Maps IPs to departments. Generates sequential error codes. Caches SysSystem data with 30-minute TTL.</p>
+    </div>
+    <div class="card">
+      <h3>AuditTrailService <span class="file">Infrastructure/Services/AuditTrailService.cs</span></h3>
+      <p>813 lines, ticket-specific. 12 methods all using <code>DataChangeAuditEvent</code> with action strings: INSERT, UPDATE, DELETE, STATUS_CHANGE, ASSIGNMENT_CHANGE, COMMENT_ADDED, ATTACHMENT_UPLOADED/DOWNLOADED, SEARCH, VIEW, AUTHORIZATION_FAILURE. Queries SysAuditLog directly for trails. Full search with pagination. Export to CSV/JSON.</p>
+    </div>
+  </div>
+
+  <div class="grid-2" style="margin-top:0.5rem;">
+    <div class="card">
+      <h3>AuditQueryService <span class="file">Infrastructure/Services/AuditQueryService.cs</span></h3>
+      <p>1305+ lines query engine. Optional Redis caching (SHA256-hashed keys, cache-aside). Parallel query execution for date ranges > 30 days (chunks of 7 days). Oracle Text CONTAINS support with LIKE fallback. Role-based filtering: SuperAdmin &rarr; all, CompanyAdmin &rarr; company-scoped, regular &rarr; self only. User action replay with timeline visualization.</p>
+    </div>
+    <div class="card">
+      <h3>Integrity &amp; Encryption <span class="file">Infrastructure/Services/</span></h3>
+      <p><strong>AuditLogIntegrityService</strong> (522 lines): HMACSHA256/512, canonical format <code>id|actorId|action|entityType|entityId|creationDate|oldValue|newValue</code>. Batch verification (100 per batch, 5 concurrent). Tampering detection alerts.</p>
+      <p style="margin-top:0.5rem;"><strong>AuditDataEncryption</strong> (318 lines): AES-256-GCM with 12-byte nonce + 16-byte tag. Thread-safe via SemaphoreSlim(10). Configurable encrypted fields: password, token, creditCard, ssn, apiKey, secretKey, privateKey.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- PHASE 2 — INTEGRATION (COMPLETE) -->
+<!-- ============================================================ -->
+<section>
+  <div class="section-title"><span class="icon">&#10003;</span>Phase 2 — Integration <span class="phase-label phase-done">Done</span></div>
+
+  <h3 style="font-size:0.95rem;font-weight:600;margin-bottom:0.75rem;color:var(--accent-blue);">2.1 Trigger Paths</h3>
+  <div class="grid-3">
+    <div class="card">
+      <h3>Path 1: MediatR Pipeline</h3>
+      <p><code>AuditLoggingBehavior.cs</code> intercepts all <code>IRequest&lt;TResponse&gt;</code> commands (names ending in <code>Command</code>). Captures request state before, response after. For UPDATE/DELETE, captures old state via <code>IEntityStateProvider</code>. Fire-and-forget — never blocks the pipeline.</p>
+    </div>
+    <div class="card">
+      <h3>Path 2: ADO.NET Interceptor</h3>
+      <p><code>AuditCommandInterceptor</code> + <code>AuditableOracleConnection</code> + <code>AuditableOracleCommand</code>. Regex captures INSERT/UPDATE/DELETE table names. Skips <code>SYS_AUDIT_LOG</code>, <code>SYS_AUDIT_LOG_ARCHIVE</code>, <code>SYS_AUDIT_STATUS_TRACKING</code>. Logs the SQL operation with table name.</p>
+    </div>
+    <div class="card">
+      <h3>Path 3: Explicit Code</h3>
+      <p><code>IAuditLogger.Log*Async()</code> called directly from business logic. <code>AuditTrailService</code> provides 12 ticket-specific methods. MediatR pipeline behavior for automatic command auditing.</p>
+    </div>
+  </div>
+
+  <h3 style="font-size:0.95rem;font-weight:600;margin:1.25rem 0 0.75rem;color:var(--accent-blue);">2.2 Controllers &amp; Auth</h3>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr><th>Controller</th><th>Route</th><th>Auth</th><th>Key Endpoints</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><code>AuditLogsController</code></td><td><code>/api/auditlogs</code></td><td><span class="tag amber">AdminOnly</span></td><td>GET legacy, dashboard, by id/entity/correlation; POST transform, query, search; export CSV/JSON</td></tr>
+        <tr><td><code>AuditTrailController</code></td><td><code>/api/audit-trail</code></td><td><span class="tag amber">AdminOnly</span></td><td>GET tickets/{id}, POST search, export, GET statistics</td></tr>
+        <tr><td><code>AuditHealthController</code></td><td><code>/api/audithealth</code></td><td><span class="tag surface">AllowAnonymous</span> / <span class="tag amber">AdminOnly</span></td><td>GET status, metrics; POST replay-fallback</td></tr>
+        <tr><td><code>PermissionsController</code></td><td><code>/api/permissions</code></td><td><span class="tag blue">Authorize</span></td><td>GET check (screenCode+featureCode), GET my-screens</td></tr>
+        <tr><td><code>CompanyPermissionsController</code></td><td><code>/api/branches/{branchId}/permissions</code></td><td><span class="tag amber">AdminOnly</span></td><td>GET/PUT/DELETE role and user permissions per branch</td></tr>
+        <tr><td><code>BranchAccessController</code></td><td><code>/api/branches/{branchId}/access</code></td><td><span class="tag amber">AdminOnly</span></td><td>GET state, systems, screens; POST/DELETE revoke/allow screens/features</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3 style="font-size:0.95rem;font-weight:600;margin:1.25rem 0 0.75rem;color:var(--accent-blue);">2.3 Authorization Handlers</h3>
+  <div class="grid-2">
+    <div class="card">
+      <h3>AuditDataAuthorizationHandler</h3>
+      <p>Enforces <code>AuditDataAccess</code> / <code>AdminOnlyAuditDataAccess</code> policies. SuperAdmin &rarr; full access. CompanyAdmin (role + companyId claims) &rarr; company-scoped. Regular user &rarr; self only.</p>
+    </div>
+    <div class="card">
+      <h3>MultiTenantAuthorizationHandler</h3>
+      <p>Enforces <code>MultiTenantAccess</code> policy. Validates user's CompanyId matches resource's CompanyId. Branch-level checks BranchId match. Logs unauthorized attempts to <code>ISecurityMonitor</code>.</p>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:0.5rem;">
+    <h3>PermissionRequiredAttribute <span class="file">API/Authorization/PermissionRequiredAttribute.cs</span></h3>
+    <p>Action filter: <code>[PermissionRequired("screenCode", "featureCode")]</code>. Extracts <code>userId</code> from JWT claim, calls <code>IPermissionService.CanAccessByCodeAsync()</code>. Returns 401 if no userId claim, 403 if access denied.</p>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- PHASE 3 — DATA FLOW -->
+<!-- ============================================================ -->
+<section>
+  <div class="section-title"><span class="icon">&#8617;</span>Phase 3 — Data Flow &amp; Architecture <span class="phase-label phase-done">Done</span></div>
+
+  <h3 style="font-size:0.95rem;font-weight:600;margin-bottom:0.75rem;color:var(--accent-blue);">3.1 Audit Pipeline</h3>
+  <div class="flow">
+    <span class="node">App Code</span>
+    <span class="arrow">&rarr;</span>
+    <span class="node">IAuditLogger</span>
+    <span class="arrow">&rarr;</span>
+    <span class="node green">Channel&lt;AuditEvent&gt;</span>
+    <span class="arrow">&rarr;</span>
+    <span class="node">ProcessAuditEventsAsync</span>
+    <span class="arrow">&rarr;</span>
+    <span class="node amber">ResilientAuditLogger</span>
+    <span class="arrow">&rarr;</span>
+    <span class="node">IAuditRepository</span>
+    <span class="arrow">&rarr;</span>
+    <span class="node rose">SYS_AUDIT_LOG</span>
+  </div>
+  <div class="flow" style="margin-top:0.5rem;">
+    <span class="node">ResilientAuditLogger</span>
+    <span class="arrow">&rarr;</span>
+    <span class="node amber">Circuit Breaker</span>
+    <span class="arrow">&rarr;</span>
+    <span class="node amber">Retry Policy</span>
+    <span class="arrow">&rarr;</span>
+    <span class="node">Inner Logger</span>
+    <span style="color:var(--muted);margin:0 0.3rem;">|</span>
+    <span class="node rose">Fallback → FileSystem</span>
+  </div>
+
+  <h3 style="font-size:0.95rem;font-weight:600;margin:1.25rem 0 0.75rem;color:var(--accent-blue);">3.2 Permission Resolution</h3>
+  <div class="flow">
+    <span class="node">PermissionRequiredAttribute</span>
+    <span class="arrow">&rarr;</span>
+    <span class="node">IPermissionService</span>
+    <span class="arrow">&rarr;</span>
+    <span class="node green">8-Step Chain</span>
+    <span class="arrow">&rarr;</span>
+    <span class="node rose">Grant / Deny</span>
+  </div>
+  <div class="flow" style="margin-top:0.5rem;">
+    <span class="node">CompanyPermissionsController</span>
+    <span class="arrow">&rarr;</span>
+    <span class="node">Role/User Permission Repos</span>
+    <span class="arrow">&rarr;</span>
+    <span class="node rose">SYS_ROLE/USER_SCREEN_PERMISSIONS</span>
+  </div>
+
+  <h3 style="font-size:0.95rem;font-weight:600;margin:1.25rem 0 0.75rem;color:var(--accent-blue);">3.3 Entity Relationships</h3>
+  <div class="card">
+    <pre style="font-size:0.8rem;color:var(--muted);line-height:1.7;overflow-x:auto;">
+    SysCompany (1) ──&gt; (N) SysBranch (1) ──&gt; (N) SysBranchSystem   ← grant (systems assigned to branch)
+                    │                           ├── SysBranchScreen    ← deny-list (screens revoked at branch)
+                    │                           └── SysBranchFeature   ← deny-list (features revoked at branch)
+                    │
+                    └── (N) SysUser (N) ──&gt; (M) SysRole
+                              │                       │
+                              │                       └── SysRoleScreenPermission (BranchId, RoleId, ScreenId, FeatureId, IsGranted)
+                              │
+                              └── SysUserScreenPermission (BranchId, UserId, ScreenId, FeatureId, IsGranted)
+
+    SysSystem (1) ──&gt; (N) SysScreen (N) ──&gt; (M) SysFeature   ← SysScreenFeature bridge
+                                    │
+                                    └── SysAuditLog (CorrelationId, ActorType, EntityType, EntityId, Action, ...)
+    </pre>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- PHASE 4 — IMPROVEMENTS (NEXT) -->
+<!-- ============================================================ -->
+<section>
+  <div class="section-title"><span class="icon">&#9654;</span>Phase 4 — Enhancements &amp; QA <span class="phase-label phase-next">Next</span></div>
+
+  <div class="grid-2">
+    <div class="card">
+      <h3>Audit Query Performance</h3>
+      <ul>
+        <li>Verify Redis caching is operational (config defaults to disabled)</li>
+        <li>Add date-range query metrics + monitoring</li>
+        <li>Evaluate Oracle Text CONTAINS vs LIKE fallback performance</li>
+        <li>Consider pre-aggregated dashboard counters table</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>Permission Edge Cases</h3>
+      <ul>
+        <li>Test user with multiple roles (current model uses single RoleId)</li>
+        <li>Test branch provisioning with large system/screen/feature sets</li>
+        <li>Test permission attribute on non-GET endpoints</li>
+        <li>Consider caching for hot permission lookups</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="grid-2">
+    <div class="card">
+      <h3>Integrity &amp; Security</h3>
+      <ul>
+        <li>Enable HMAC integrity verification on read</li>
+        <li>Configure AES-256-GCM encryption key rotation</li>
+        <li>Test tampering detection alert flow</li>
+        <li>Review audit event retention policy integration with archive table</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>Monitoring &amp; Observability</h3>
+      <ul>
+        <li>Expose AuditLogger queue depth as metric</li>
+        <li>Expose circuit breaker state as health check</li>
+        <li>Add Prometheus counters for permission grants/denies</li>
+        <li>Monitor file-system fallback replay success rate</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- PHASE 5 — FUTURE -->
+<!-- ============================================================ -->
+<section>
+  <div class="section-title"><span class="icon">&#9672;</span>Phase 5 — Future <span class="phase-label phase-future">Planned</span></div>
+
+  <div class="grid-3">
+    <div class="card">
+      <h3>Real-time Audit Streaming</h3>
+      <p>WebSocket / SSE endpoint for live audit event streaming. Useful for admin dashboards and security monitoring.</p>
+    </div>
+    <div class="card">
+      <h3>Permission Audit Trail</h3>
+      <p>Log every permission change (grant/revoke) as a PermissionChangeAuditEvent with before/after state for compliance.</p>
+    </div>
+    <div class="card">
+      <h3>Bulk Permission Management</h3>
+      <p>CSV import/export for role/user permissions. Template-based role provisioning for new branches.</p>
+    </div>
+  </div>
+
+  <div class="grid-3" style="margin-top:0.5rem;">
+    <div class="card">
+      <h3>Permission Simulation</h3>
+      <p>Admin tool to simulate what a given user/role can access across a branch, showing the full resolution chain.</p>
+    </div>
+    <div class="card">
+      <h3>Audit Retention Scheduler</h3>
+      <p>Background job that archives old audit logs based on retention policies and purges expired archives.</p>
+    </div>
+    <div class="card">
+      <h3>Compliance Reports</h3>
+      <p>Generate SoD (Segregation of Duties) reports, permission matrices, and audit trail summaries for auditors.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- APPENDIX -->
+<!-- ============================================================ -->
+<hr>
+<section>
+  <div class="section-title"><span class="icon">&#9432;</span>Appendix — Key Files</div>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr><th>File</th><th>Type</th><th>Lines</th></tr>
+      </thead>
+      <tbody>
+        <tr><td class="code">Domain/Entities/SysAuditLog.cs</td><td>Entity</td><td>~60</td></tr>
+        <tr><td class="code">Domain/Entities/SysRoleScreenPermission.cs</td><td>Entity</td><td>~25</td></tr>
+        <tr><td class="code">Domain/Entities/SysUserScreenPermission.cs</td><td>Entity</td><td>~30</td></tr>
+        <tr><td class="code">Domain/Entities/Audit/*.cs</td><td>Domain Events</td><td>6 files</td></tr>
+        <tr><td class="code">Domain/Interfaces/IPermissionService.cs</td><td>Interface</td><td>~10</td></tr>
+        <tr><td class="code">Infrastructure/Services/PermissionService.cs</td><td>Service</td><td>~120</td></tr>
+        <tr><td class="code">Infrastructure/Services/AuditLogger.cs</td><td>Service</td><td>921</td></tr>
+        <tr><td class="code">Infrastructure/Services/ResilientAuditLogger.cs</td><td>Service</td><td>718</td></tr>
+        <tr><td class="code">Infrastructure/Services/LegacyAuditService.cs</td><td>Service</td><td>1580</td></tr>
+        <tr><td class="code">Infrastructure/Services/AuditTrailService.cs</td><td>Service</td><td>813</td></tr>
+        <tr><td class="code">Infrastructure/Services/AuditQueryService.cs</td><td>Service</td><td>1305+</td></tr>
+        <tr><td class="code">Infrastructure/Services/FileSystemAuditFallback.cs</td><td>Service</td><td>653</td></tr>
+        <tr><td class="code">Infrastructure/Services/AuditContextProvider.cs</td><td>Service</td><td>146</td></tr>
+        <tr><td class="code">Infrastructure/Services/AuditLogIntegrityService.cs</td><td>Service</td><td>522</td></tr>
+        <tr><td class="code">Infrastructure/Services/AuditDataEncryption.cs</td><td>Service</td><td>318</td></tr>
+        <tr><td class="code">Infrastructure/Repositories/AuditRepository.cs</td><td>Repository</td><td>334</td></tr>
+        <tr><td class="code">Infrastructure/Repositories/RoleScreenPermissionRepository.cs</td><td>Repository</td><td>~60</td></tr>
+        <tr><td class="code">Infrastructure/Repositories/UserScreenPermissionRepository.cs</td><td>Repository</td><td>~60</td></tr>
+        <tr><td class="code">API/Controllers/AuditLogsController.cs</td><td>Controller</td><td>~200</td></tr>
+        <tr><td class="code">API/Controllers/AuditTrailController.cs</td><td>Controller</td><td>~80</td></tr>
+        <tr><td class="code">API/Controllers/AuditHealthController.cs</td><td>Controller</td><td>~40</td></tr>
+        <tr><td class="code">API/Controllers/PermissionsController.cs</td><td>Controller</td><td>~60</td></tr>
+        <tr><td class="code">API/Controllers/CompanyPermissionsController.cs</td><td>Controller</td><td>~150</td></tr>
+        <tr><td class="code">API/Controllers/BranchAccessController.cs</td><td>Controller</td><td>~200</td></tr>
+        <tr><td class="code">API/Authorization/PermissionRequiredAttribute.cs</td><td>Filter</td><td>~50</td></tr>
+        <tr><td class="code">Infrastructure/Authorization/MultiTenantAuthorizationHandler.cs</td><td>Auth Handler</td><td>~80</td></tr>
+        <tr><td class="code">Infrastructure/Authorization/AuditDataAuthorizationHandler.cs</td><td>Auth Handler</td><td>~80</td></tr>
+        <tr><td class="code">Infrastructure/Configuration/AuditLoggingOptions.cs</td><td>Config</td><td>~50</td></tr>
+        <tr><td class="code">Infrastructure/Configuration/AuditIntegrityOptions.cs</td><td>Config</td><td>~20</td></tr>
+        <tr><td class="code">Infrastructure/Configuration/AuditEncryptionOptions.cs</td><td>Config</td><td>~20</td></tr>
+        <tr><td class="code">Application/Behaviors/AuditLoggingBehavior.cs</td><td>Pipeline</td><td>~120</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+</div>
+</body>
+</html>

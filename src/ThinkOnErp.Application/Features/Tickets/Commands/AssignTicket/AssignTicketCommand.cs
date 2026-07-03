@@ -1,3 +1,4 @@
+using System.Text.Json.Serialization;
 using MediatR;
 
 namespace ThinkOnErp.Application.Features.Tickets.Commands.AssignTicket;
@@ -11,6 +12,7 @@ public class AssignTicketCommand : IRequest<Int64>
     /// <summary>
     /// Unique identifier of the ticket to assign
     /// </summary>
+    [JsonIgnore]
     public Int64 TicketId { get; set; }
 
     /// <summary>
@@ -27,5 +29,6 @@ public class AssignTicketCommand : IRequest<Int64>
     /// <summary>
     /// Username of the user making the assignment
     /// </summary>
+    [JsonIgnore]
     public string UpdateUser { get; set; } = string.Empty;
 }

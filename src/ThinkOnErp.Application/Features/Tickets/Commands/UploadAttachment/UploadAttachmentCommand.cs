@@ -1,3 +1,4 @@
+using System.Text.Json.Serialization;
 using MediatR;
 
 namespace ThinkOnErp.Application.Features.Tickets.Commands.UploadAttachment;
@@ -10,6 +11,7 @@ public class UploadAttachmentCommand : IRequest<Int64>
     /// <summary>
     /// Unique identifier of the ticket to attach the file to
     /// </summary>
+    [JsonIgnore]
     public Int64 TicketId { get; set; }
 
     /// <summary>
@@ -30,5 +32,6 @@ public class UploadAttachmentCommand : IRequest<Int64>
     /// <summary>
     /// Username of the user uploading the attachment
     /// </summary>
+    [JsonIgnore]
     public string CreationUser { get; set; } = string.Empty;
 }

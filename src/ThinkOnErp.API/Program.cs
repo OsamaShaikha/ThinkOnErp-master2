@@ -313,7 +313,7 @@ try
             "Company", "Compliance", "Configuration", "Documents", "Health",
             "Features", "KeyManagement", "Modules", "Monitoring", "Screens", "SuperAdmin", 
             "Tickets", "TicketTypes", "AuditLogs", "BranchAccess",
-            "SysCodes", "SysSettings"
+            "SysCodes", "SysSettings", "Currency"
         };
 
         options.DocInclusionPredicate((docName, apiDesc) =>

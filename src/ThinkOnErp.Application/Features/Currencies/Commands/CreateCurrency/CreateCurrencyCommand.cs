@@ -1,3 +1,4 @@
+using System.Text.Json.Serialization;
 using MediatR;
 
 namespace ThinkOnErp.Application.Features.Currencies.Commands.CreateCurrency;
@@ -22,5 +23,6 @@ public class CreateCurrencyCommand : IRequest<Int64>
     public string FractionNameEn { get; set; } = string.Empty;
     public decimal? CurrRate { get; set; }
     public DateTime? CurrRateDate { get; set; }
+    [JsonIgnore]
     public string CreationUser { get; set; } = string.Empty;
 }

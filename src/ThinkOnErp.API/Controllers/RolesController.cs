@@ -131,6 +131,7 @@ public class RolesController : ControllerBase
     {
         try
         {
+            command.CreationUser = User.Identity?.Name ?? "system";
             _logger.LogInformation("Creating new role: {RoleDesc}", command.RoleNameEn);
 
             var roleId = await _mediator.Send(command);
@@ -175,13 +176,8 @@ public class RolesController : ControllerBase
     {
         try
         {
-            if (id != command.RoleId)
-            {
-                _logger.LogWarning("Role ID mismatch: URL ID {UrlId} vs Command ID {CommandId}", id, command.RoleId);
-                return BadRequest(ApiResponse<Int64>.CreateFailure(
-                    "Role ID in URL does not match the ID in the request body",
-                    statusCode: 400));
-            }
+            command.RoleId = id;
+            command.UpdateUser = User.Identity?.Name ?? "system";
 
             _logger.LogInformation("Updating role with ID: {RoleId}", id);
 

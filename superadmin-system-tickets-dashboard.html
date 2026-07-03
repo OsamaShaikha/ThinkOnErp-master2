@@ -1,0 +1,209 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ThinkOnERP · SuperAdmin System Tickets API</title>
+  <style>
+    :root{--bg:#07111f;--panel:#0f1b2d;--panel2:#13233a;--line:#253a59;--text:#e9f0fb;--muted:#9fb2cf;--ok:#22c55e;--bad:#ef4444;--warn:#f59e0b;--blue:#38bdf8}
+    *{box-sizing:border-box}body{margin:0;background:linear-gradient(135deg,#07111f,#0b1630 55%,#111827);color:var(--text);font-family:Inter,Segoe UI,Arial,sans-serif}
+    header{padding:22px 28px;border-bottom:1px solid var(--line);background:rgba(15,27,45,.85);position:sticky;top:0;z-index:2;backdrop-filter:blur(10px)}
+    h1{margin:0;font-size:24px}.sub{color:var(--muted);margin-top:6px}.grid{display:grid;grid-template-columns:360px 1fr;gap:18px;padding:18px}
+    section,.card{background:rgba(15,27,45,.9);border:1px solid var(--line);border-radius:16px;padding:16px;box-shadow:0 18px 50px rgba(0,0,0,.25)}
+    label{display:block;color:var(--muted);font-size:12px;margin:10px 0 5px}input,select,textarea{width:100%;background:#07111f;border:1px solid var(--line);border-radius:10px;color:var(--text);padding:10px}
+    textarea{min-height:94px;resize:vertical}.row{display:grid;grid-template-columns:1fr 1fr;gap:10px}.row3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+    button{background:linear-gradient(135deg,#0ea5e9,#2563eb);border:0;color:white;border-radius:10px;padding:10px 12px;font-weight:700;cursor:pointer;margin:8px 6px 0 0}
+    button.secondary{background:#1f2937;border:1px solid var(--line)}button.warn{background:linear-gradient(135deg,#f59e0b,#b45309)}button.bad{background:linear-gradient(135deg,#ef4444,#991b1b)}
+    .pill{display:inline-flex;gap:6px;align-items:center;padding:6px 10px;border-radius:999px;background:#0b2538;color:#bae6fd;border:1px solid #164e63;font-size:12px}
+    .ok{color:var(--ok)}.badTxt{color:var(--bad)}.warnTxt{color:var(--warn)}.muted{color:var(--muted)}
+    table{width:100%;border-collapse:collapse;margin-top:12px;font-size:13px}th,td{padding:9px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}th{color:#bfdbfe;background:#0b1628;position:sticky;top:86px}
+    pre{background:#030712;border:1px solid var(--line);border-radius:14px;padding:12px;overflow:auto;max-height:380px;color:#dbeafe}
+    .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}.stat{background:var(--panel2);border:1px solid var(--line);border-radius:14px;padding:14px}.stat strong{font-size:24px;display:block}
+    .tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}.tab{background:#111827}.hidden{display:none}.note{border-left:4px solid var(--blue);padding:10px 12px;background:#082f49;border-radius:10px;margin:10px 0;color:#dbeafe}
+    @media(max-width:950px){.grid{grid-template-columns:1fr}.stats{grid-template-columns:repeat(2,1fr)}}
+  </style>
+</head>
+<body>
+<header>
+  <h1>SuperAdmin System Tickets API Dashboard</h1>
+  <div class="sub">Platform-wide ticket testing. SuperAdmin can inspect all companies/branches and AdminOnly ticket reports.</div>
+</header>
+
+<div class="grid">
+  <aside>
+    <section>
+      <h2>Connect</h2>
+      <label>API base URL</label><input id="apiBase" value="http://localhost:5000">
+      <div class="row">
+        <div><label>SuperAdmin username</label><input id="username" placeholder="superadmin_test"></div>
+        <div><label>Password</label><input id="password" type="password" placeholder="password"></div>
+      </div>
+      <button onclick="login()">SuperAdmin login</button>
+      <button class="secondary" onclick="testHealth()">Public health</button>
+      <label>Or paste JWT</label><textarea id="manualToken" placeholder="Bearer token only"></textarea>
+      <button class="secondary" onclick="useToken()">Use token</button>
+      <p id="authStatus" class="muted">Not connected.</p>
+    </section>
+
+    <section style="margin-top:14px">
+      <h2>System ticket structure</h2>
+      <div class="note">
+        Tickets are stored as request tickets with company, branch, requester, optional assignee,
+        type, priority, status, category, SLA dates, comments and attachments.
+      </div>
+      <p class="muted">
+        SuperAdmin uses the same <code>/api/tickets</code> API, but with <code>isSuperAdmin=true</code>.
+        Use this page to filter by company/branch, run AdminOnly reports, assign tickets, and check SLA.
+      </p>
+      <ul class="muted">
+        <li>List: <code>GET /api/tickets</code></li>
+        <li>Details: <code>GET /api/tickets/{id}</code></li>
+        <li>Types: <code>GET /api/ticket-types</code></li>
+        <li>Reports: <code>/reports/volume</code>, <code>/reports/sla-compliance</code>, <code>/reports/workload</code></li>
+      </ul>
+    </section>
+  </aside>
+
+  <main>
+    <section>
+      <div class="tabs">
+        <button class="tab" onclick="showTab('list')">Tickets</button>
+        <button class="tab" onclick="showTab('detail')">Details</button>
+        <button class="tab" onclick="showTab('reports')">Reports</button>
+        <button class="tab" onclick="showTab('mutate')">Actions</button>
+        <button class="tab" onclick="showTab('consoleTab')">Console</button>
+      </div>
+
+      <div class="stats">
+        <div class="stat"><strong id="totalTickets">--</strong><span>Total result</span></div>
+        <div class="stat"><strong id="pageInfo">--</strong><span>Page</span></div>
+        <div class="stat"><strong id="lastStatus">--</strong><span>Last HTTP</span></div>
+        <div class="stat"><strong id="latency">--</strong><span>Latency</span></div>
+      </div>
+    </section>
+
+    <section id="list" style="margin-top:14px">
+      <h2>List system tickets</h2>
+      <div class="row3">
+        <div><label>Company ID</label><input id="filterCompanyId" placeholder="optional"></div>
+        <div><label>Branch ID</label><input id="filterBranchId" placeholder="optional"></div>
+        <div><label>Search</label><input id="filterSearch" placeholder="title/description"></div>
+      </div>
+      <div class="row3">
+        <div><label>Status ID</label><input id="filterStatusId" placeholder="optional"></div>
+        <div><label>Priority ID</label><input id="filterPriorityId" placeholder="optional"></div>
+        <div><label>SLA status</label><select id="filterSla"><option value="">Any</option><option>OnTime</option><option>AtRisk</option><option>Overdue</option></select></div>
+      </div>
+      <div class="row3">
+        <div><label>Page</label><input id="page" value="1"></div>
+        <div><label>Page size</label><input id="pageSize" value="10"></div>
+        <div><label>Sort</label><select id="sortBy"><option>CreationDate</option><option>Priority</option><option>Status</option><option>DueDate</option></select></div>
+      </div>
+      <button onclick="loadTickets()">Load tickets</button>
+      <button class="secondary" onclick="loadTicketTypes()">Load ticket types</button>
+      <table>
+        <thead><tr><th>ID</th><th>Title</th><th>Company/Branch</th><th>Status</th><th>Priority</th><th>SLA</th><th>Created</th></tr></thead>
+        <tbody id="ticketsBody"><tr><td colspan="7" class="muted">No data loaded.</td></tr></tbody>
+      </table>
+    </section>
+
+    <section id="detail" class="hidden" style="margin-top:14px">
+      <h2>Ticket detail</h2>
+      <div class="row">
+        <div><label>Ticket ID</label><input id="detailId" placeholder="ticket id"></div>
+        <div><label>&nbsp;</label><button onclick="getTicketDetail()">Load detail</button><button class="secondary" onclick="getComments()">Comments</button><button class="secondary" onclick="getAttachments()">Attachments</button></div>
+      </div>
+      <pre id="detailBox">Select a ticket from the table or enter an ID.</pre>
+    </section>
+
+    <section id="reports" class="hidden" style="margin-top:14px">
+      <h2>AdminOnly reports</h2>
+      <div class="row3">
+        <div><label>Start date</label><input id="startDate" type="date"></div>
+        <div><label>End date</label><input id="endDate" type="date"></div>
+        <div><label>Group by</label><select id="groupBy"><option>Day</option><option>Week</option><option>Month</option></select></div>
+      </div>
+      <button onclick="runReport('volume')">Volume report</button>
+      <button onclick="runReport('sla-compliance')">SLA compliance</button>
+      <button onclick="runReport('workload')">Workload</button>
+      <pre id="reportBox">Run a report.</pre>
+    </section>
+
+    <section id="mutate" class="hidden" style="margin-top:14px">
+      <h2>Ticket actions</h2>
+      <p class="warnTxt">These buttons can change data. Use only on test tickets.</p>
+      <div class="row3">
+        <div><label>Ticket ID</label><input id="actionTicketId"></div>
+        <div><label>Assignee ID</label><input id="assigneeId" placeholder="blank = unassign"></div>
+        <div><label>New status ID</label><input id="newStatusId" placeholder="ex: 2"></div>
+      </div>
+      <label>Reason / comment</label><textarea id="actionReason" placeholder="reason for audit trail"></textarea>
+      <button class="warn" onclick="assignTicket()">Assign / unassign</button>
+      <button class="warn" onclick="updateStatus()">Update status</button>
+      <button class="secondary" onclick="addComment(true)">Add internal comment</button>
+    </section>
+
+    <section id="consoleTab" class="hidden" style="margin-top:14px">
+      <h2>API console</h2>
+      <button class="secondary" onclick="clearConsole()">Clear</button>
+      <pre id="console">Ready.</pre>
+    </section>
+  </main>
+</div>
+
+<script>
+const S={base:'',token:'',lastTickets:[]};
+const $=id=>document.getElementById(id);
+const esc=v=>String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+const unwrap=x=>x&&typeof x==='object'&&'data'in x?x.data:x;
+function base(){return $('apiBase').value.trim().replace(/\/+$/,'')}
+function setStatus(code,ms){$('lastStatus').textContent=code;$('latency').textContent=ms+'ms'}
+function log(obj,bad=false){$('console').textContent=JSON.stringify(obj,null,2);$('console').style.borderColor=bad?'#ef4444':'#253a59'}
+function clearConsole(){$('console').textContent='Ready.'}
+function showTab(id){['list','detail','reports','mutate','consoleTab'].forEach(x=>$(x).classList.toggle('hidden',x!==id))}
+async function request(path,opt={}){
+  S.base=base(); const started=performance.now();
+  const headers={Accept:'application/json',...(opt.body?{'Content-Type':'application/json'}:{}),...(opt.headers||{})};
+  if(S.token)headers.Authorization='Bearer '+S.token;
+  const res=await fetch(S.base+path,{...opt,headers});
+  const text=await res.text(); let body=text; try{body=text?JSON.parse(text):null}catch{}
+  const ms=Math.round(performance.now()-started); setStatus(res.status,ms);
+  log({request:(opt.method||'GET')+' '+path,status:res.status,elapsedMs:ms,response:body},!res.ok);
+  if(!res.ok)throw new Error(body?.message||body?.title||text||('HTTP '+res.status));
+  return unwrap(body);
+}
+async function testHealth(){
+  try{const r=await fetch(base()+'/api/AuditHealth/status'); const j=await r.json(); $('authStatus').innerHTML='<span class="ok">API healthy:</span> '+esc(j.status||r.status)}
+  catch(e){$('authStatus').innerHTML='<span class="badTxt">API unreachable:</span> '+esc(e.message)}
+}
+async function login(){
+  try{
+    const r=await fetch(base()+'/api/auth/superadmin/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({userName:$('username').value,password:$('password').value})});
+    const j=await r.json(); if(!r.ok)throw new Error(j.message||'Login failed');
+    S.token=(j.data||j).accessToken; if(!S.token)throw new Error('No access token returned');
+    sessionStorage.setItem('satBase',base()); sessionStorage.setItem('satToken',S.token);
+    $('authStatus').innerHTML='<span class="ok">Connected as SuperAdmin.</span>';
+    await loadTickets();
+  }catch(e){$('authStatus').innerHTML='<span class="badTxt">'+esc(e.message)+'</span>'}
+}
+function useToken(){S.base=base();S.token=$('manualToken').value.trim().replace(/^Bearer\s+/i,'');sessionStorage.setItem('satBase',S.base);sessionStorage.setItem('satToken',S.token);$('authStatus').innerHTML='<span class="ok">Token loaded.</span>'}
+function params(obj){const p=new URLSearchParams();Object.entries(obj).forEach(([k,v])=>{if(v!==''&&v!=null)p.set(k,v)});return p.toString()}
+async function loadTickets(){
+  const q=params({page:$('page').value,pageSize:$('pageSize').value,companyId:$('filterCompanyId').value,branchId:$('filterBranchId').value,searchTerm:$('filterSearch').value,statusId:$('filterStatusId').value,priorityId:$('filterPriorityId').value,slaStatus:$('filterSla').value,sortBy:$('sortBy').value,sortDirection:'DESC'});
+  const data=await request('/api/tickets?'+q); const items=data.items||data.Items||[]; S.lastTickets=items;
+  $('totalTickets').textContent=data.totalCount??items.length; $('pageInfo').textContent=(data.page||$('page').value)+'/'+(data.totalPages||'?');
+  $('ticketsBody').innerHTML=items.length?items.map(t=>`<tr onclick="selectTicket(${Number(t.ticketId||t.TicketId)})"><td>${esc(t.ticketId||t.TicketId)}</td><td>${esc(t.titleEn||t.TitleEn)}<br><span class="muted">${esc(t.description||t.Description)}</span></td><td>${esc(t.companyName||t.CompanyName||t.companyId||t.CompanyId)}<br>${esc(t.branchName||t.BranchName||t.branchId||t.BranchId)}</td><td>${esc(t.ticketStatusName||t.TicketStatusName||t.ticketStatusId||t.TicketStatusId)}</td><td>${esc(t.ticketPriorityName||t.TicketPriorityName||t.ticketPriorityId||t.TicketPriorityId)}</td><td>${esc(t.slaStatus||t.SlaStatus)}</td><td>${esc(t.creationDate||t.CreationDate)}</td></tr>`).join(''):'<tr><td colspan="7" class="muted">No tickets returned.</td></tr>';
+}
+function selectTicket(id){$('detailId').value=id;$('actionTicketId').value=id;showTab('detail');getTicketDetail()}
+async function loadTicketTypes(){const d=await request('/api/ticket-types'); $('detailBox').textContent=JSON.stringify(d,null,2); showTab('detail')}
+async function getTicketDetail(){const id=$('detailId').value.trim(); if(!id)return; $('detailBox').textContent=JSON.stringify(await request('/api/tickets/'+encodeURIComponent(id)),null,2)}
+async function getComments(){const id=$('detailId').value.trim(); if(!id)return; $('detailBox').textContent=JSON.stringify(await request('/api/tickets/'+encodeURIComponent(id)+'/comments'),null,2)}
+async function getAttachments(){const id=$('detailId').value.trim(); if(!id)return; $('detailBox').textContent=JSON.stringify(await request('/api/tickets/'+encodeURIComponent(id)+'/attachments'),null,2)}
+async function runReport(name){const q=params({startDate:$('startDate').value,endDate:$('endDate').value,groupBy:name==='volume' ? $('groupBy').value : ''}); $('reportBox').textContent=JSON.stringify(await request('/api/tickets/reports/'+name+'?'+q),null,2)}
+async function assignTicket(){const id=$('actionTicketId').value.trim(); await request('/api/tickets/'+id+'/assign',{method:'PUT',body:JSON.stringify({ticketId:Number(id),assigneeId:$('assigneeId').value?Number($('assigneeId').value):null,assignmentReason:$('actionReason').value})})}
+async function updateStatus(){const id=$('actionTicketId').value.trim(); await request('/api/tickets/'+id+'/status',{method:'PUT',body:JSON.stringify({ticketId:Number(id),newStatusId:Number($('newStatusId').value),statusChangeReason:$('actionReason').value})})}
+async function addComment(internal){const id=$('actionTicketId').value.trim(); await request('/api/tickets/'+id+'/comments',{method:'POST',body:JSON.stringify({ticketId:Number(id),commentText:$('actionReason').value,isInternal:!!internal})})}
+addEventListener('DOMContentLoaded',()=>{const b=sessionStorage.getItem('satBase'),t=sessionStorage.getItem('satToken');if(b)$('apiBase').value=b;if(t){S.token=t;$('authStatus').innerHTML='<span class="ok">Restored SuperAdmin token.</span>'}});
+</script>
+</body>
+</html>

@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using ThinkOnErp.Domain.Entities;
 using ThinkOnErp.Domain.Interfaces;
 using ThinkOnErp.Infrastructure.Data;
@@ -25,8 +25,26 @@ public class CurrencyRepository : ICurrencyRepository
 
     public async Task<long> UpdateAsync(SysCurrency currency)
     {
-        currency.UpdateDate = DateTime.Now;
-        _context.SysCurrencies.Update(currency);
+        var existing = await _context.SysCurrencies.FindAsync(currency.Id);
+        if (existing == null) return 0;
+
+        existing.CurrencyNameAr = currency.CurrencyNameAr;
+        existing.CurrencyNameEn = currency.CurrencyNameEn;
+        existing.ShortNameAr = currency.ShortNameAr;
+        existing.ShortNameEn = currency.ShortNameEn;
+        existing.SingularNameAr = currency.SingularNameAr;
+        existing.SingularNameEn = currency.SingularNameEn;
+        existing.DualNameAr = currency.DualNameAr;
+        existing.DualNameEn = currency.DualNameEn;
+        existing.CollectiveNameAr = currency.CollectiveNameAr;
+        existing.CollectiveNameEn = currency.CollectiveNameEn;
+        existing.FractionNameAr = currency.FractionNameAr;
+        existing.FractionNameEn = currency.FractionNameEn;
+        existing.CurrRate = currency.CurrRate;
+        existing.CurrRateDate = currency.CurrRateDate;
+        existing.UpdateUser = currency.UpdateUser;
+        existing.UpdateDate = DateTime.Now;
+
         return await _context.SaveChangesAsync();
     }
 

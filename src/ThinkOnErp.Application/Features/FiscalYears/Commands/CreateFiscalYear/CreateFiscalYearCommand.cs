@@ -1,3 +1,4 @@
+using System.Text.Json.Serialization;
 using MediatR;
 
 namespace ThinkOnErp.Application.Features.FiscalYears.Commands.CreateFiscalYear;
@@ -12,5 +13,6 @@ public class CreateFiscalYearCommand : IRequest<Int64>
     public DateTime StartDate { get; set; }
     public DateTime EndDate { get; set; }
     public bool IsClosed { get; set; } = false;
+    [JsonIgnore]
     public string CreationUser { get; set; } = string.Empty;
 }

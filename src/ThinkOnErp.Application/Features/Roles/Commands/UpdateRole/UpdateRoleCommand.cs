@@ -1,3 +1,4 @@
+using System.Text.Json.Serialization;
 using MediatR;
 
 namespace ThinkOnErp.Application.Features.Roles.Commands.UpdateRole;
@@ -11,6 +12,7 @@ public class UpdateRoleCommand : IRequest<Int64>
     /// <summary>
     /// Unique identifier of the role to update
     /// </summary>
+    [JsonIgnore]
     public Int64 RoleId { get; set; }
 
     /// <summary>
@@ -31,5 +33,6 @@ public class UpdateRoleCommand : IRequest<Int64>
     /// <summary>
     /// Username of the user updating this role
     /// </summary>
+    [JsonIgnore]
     public string UpdateUser { get; set; } = string.Empty;
 }

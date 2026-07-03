@@ -167,6 +167,7 @@ public class FiscalYearController : ControllerBase
     {
         try
         {
+            command.CreationUser = User.Identity?.Name ?? "system";
             _logger.LogInformation("Creating new fiscal year: {FiscalYearCode}", command.FiscalYearCode);
 
             var fiscalYearId = await _mediator.Send(command);
@@ -211,13 +212,8 @@ public class FiscalYearController : ControllerBase
     {
         try
         {
-            if (id != command.FiscalYearId)
-            {
-                _logger.LogWarning("Fiscal year ID mismatch: URL ID {UrlId} vs Command ID {CommandId}", id, command.FiscalYearId);
-                return BadRequest(ApiResponse<Int64>.CreateFailure(
-                    "Fiscal year ID in URL does not match the ID in the request body",
-                    statusCode: 400));
-            }
+            command.FiscalYearId = id;
+            command.UpdateUser = User.Identity?.Name ?? "system";
 
             _logger.LogInformation("Updating fiscal year with ID: {FiscalYearId}", id);
 

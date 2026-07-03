@@ -185,18 +185,10 @@ public class TicketTypesController : ControllerBase
     {
         try
         {
-            if (id != command.TicketTypeId)
-            {
-                _logger.LogWarning("Ticket type ID mismatch: URL ID {UrlId} vs Command ID {CommandId}", id, command.TicketTypeId);
-                return BadRequest(ApiResponse<Int64>.CreateFailure(
-                    "Ticket type ID in URL does not match the ID in the request body",
-                    statusCode: 400));
-            }
+            command.TicketTypeId = id;
+            command.UpdateUser = User.Identity?.Name ?? "system";
 
             _logger.LogInformation("Updating ticket type with ID: {TicketTypeId}", id);
-
-            // Set update user from authenticated user
-            command.UpdateUser = User.Identity?.Name ?? "system";
 
             var rowsAffected = await _mediator.Send(command);
 

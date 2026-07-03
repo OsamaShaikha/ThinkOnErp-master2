@@ -1,0 +1,215 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ThinkOnERP · Tenant Branch Tickets API</title>
+  <style>
+    :root{--bg:#08111f;--panel:#101d2f;--panel2:#14243a;--line:#29405f;--text:#eef5ff;--muted:#a8bbd5;--ok:#22c55e;--bad:#ef4444;--warn:#f59e0b;--green:#34d399}
+    *{box-sizing:border-box}body{margin:0;background:linear-gradient(135deg,#07111f,#0f172a 65%,#064e3b);color:var(--text);font-family:Inter,Segoe UI,Arial,sans-serif}
+    header{padding:22px 28px;border-bottom:1px solid var(--line);background:rgba(16,29,47,.9);position:sticky;top:0;z-index:2;backdrop-filter:blur(10px)}
+    h1{margin:0;font-size:24px}.sub{color:var(--muted);margin-top:6px}.grid{display:grid;grid-template-columns:360px 1fr;gap:18px;padding:18px}
+    section{background:rgba(16,29,47,.92);border:1px solid var(--line);border-radius:16px;padding:16px;box-shadow:0 18px 50px rgba(0,0,0,.25)}
+    label{display:block;color:var(--muted);font-size:12px;margin:10px 0 5px}input,select,textarea{width:100%;background:#07111f;border:1px solid var(--line);border-radius:10px;color:var(--text);padding:10px}
+    textarea{min-height:90px;resize:vertical}.row{display:grid;grid-template-columns:1fr 1fr;gap:10px}.row3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+    button{background:linear-gradient(135deg,#10b981,#047857);border:0;color:white;border-radius:10px;padding:10px 12px;font-weight:700;cursor:pointer;margin:8px 6px 0 0}
+    button.secondary{background:#1f2937;border:1px solid var(--line)}button.warn{background:linear-gradient(135deg,#f59e0b,#b45309)}
+    .ok{color:var(--ok)}.badTxt{color:var(--bad)}.warnTxt{color:var(--warn)}.muted{color:var(--muted)}code{color:#bbf7d0}
+    table{width:100%;border-collapse:collapse;margin-top:12px;font-size:13px}th,td{padding:9px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}th{color:#bbf7d0;background:#0b1628;position:sticky;top:86px}
+    pre{background:#030712;border:1px solid var(--line);border-radius:14px;padding:12px;overflow:auto;max-height:380px;color:#dcfce7}
+    .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}.stat{background:var(--panel2);border:1px solid var(--line);border-radius:14px;padding:14px}.stat strong{font-size:24px;display:block}
+    .tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}.tab{background:#111827}.hidden{display:none}.note{border-left:4px solid var(--green);padding:10px 12px;background:#052e2b;border-radius:10px;margin:10px 0;color:#dcfce7}
+    @media(max-width:950px){.grid{grid-template-columns:1fr}.stats{grid-template-columns:repeat(2,1fr)}}
+  </style>
+</head>
+<body>
+<header>
+  <h1>Tenant Branch Tickets API Dashboard</h1>
+  <div class="sub">Company/branch login for creating, listing, commenting, and checking branch-scoped tickets.</div>
+</header>
+
+<div class="grid">
+  <aside>
+    <section>
+      <h2>Tenant login</h2>
+      <label>API base URL</label><input id="apiBase" value="http://localhost:5000">
+      <label>Company code</label><input id="companyCode" placeholder="TECH01">
+      <div class="row">
+        <div><label>Username</label><input id="username" placeholder="tech_admin"></div>
+        <div><label>Password</label><input id="password" type="password" placeholder="password"></div>
+      </div>
+      <button onclick="login()">Company login</button>
+      <button class="secondary" onclick="testHealth()">Public health</button>
+      <label>Or paste tenant JWT</label><textarea id="manualToken" placeholder="Bearer token only"></textarea>
+      <button class="secondary" onclick="useToken()">Use token</button>
+      <p id="authStatus" class="muted">Not connected.</p>
+    </section>
+
+    <section style="margin-top:14px">
+      <h2>Branch ticket structure</h2>
+      <div class="note">
+        Tenant requests run inside the company schema from the JWT. Branch users should work only with tickets
+        for their permitted branch/company context.
+      </div>
+      <ul class="muted">
+        <li>Company login: <code>POST /api/Auth/login</code></li>
+        <li>Branch list: <code>GET /api/branches</code></li>
+        <li>Users: <code>GET /api/users</code></li>
+        <li>Tickets: <code>GET/POST /api/tickets</code></li>
+        <li>Comments: <code>POST /api/tickets/{id}/comments</code></li>
+      </ul>
+    </section>
+  </aside>
+
+  <main>
+    <section>
+      <div class="tabs">
+        <button class="tab" onclick="showTab('list')">Branch tickets</button>
+        <button class="tab" onclick="showTab('create')">Create ticket</button>
+        <button class="tab" onclick="showTab('detail')">Details/actions</button>
+        <button class="tab" onclick="showTab('consoleTab')">Console</button>
+      </div>
+      <div class="stats">
+        <div class="stat"><strong id="totalTickets">--</strong><span>Total result</span></div>
+        <div class="stat"><strong id="branchCount">--</strong><span>Branches loaded</span></div>
+        <div class="stat"><strong id="lastStatus">--</strong><span>Last HTTP</span></div>
+        <div class="stat"><strong id="latency">--</strong><span>Latency</span></div>
+      </div>
+    </section>
+
+    <section id="list" style="margin-top:14px">
+      <h2>List tickets by branch</h2>
+      <div class="row3">
+        <div><label>Branch</label><select id="branchSelect"><option value="">Login then load branches</option></select></div>
+        <div><label>Search</label><input id="searchTerm" placeholder="title/description"></div>
+        <div><label>SLA</label><select id="slaStatus"><option value="">Any</option><option>OnTime</option><option>AtRisk</option><option>Overdue</option></select></div>
+      </div>
+      <div class="row3">
+        <div><label>Status ID</label><input id="statusId" placeholder="optional"></div>
+        <div><label>Priority ID</label><input id="priorityId" placeholder="optional"></div>
+        <div><label>Page size</label><input id="pageSize" value="10"></div>
+      </div>
+      <button onclick="loadBranches()">Load branches/users</button>
+      <button onclick="loadTickets()">Load branch tickets</button>
+      <button class="secondary" onclick="loadTicketTypes()">Load ticket types</button>
+      <table>
+        <thead><tr><th>ID</th><th>Title</th><th>Branch</th><th>Status</th><th>Priority</th><th>SLA</th><th>Requester</th></tr></thead>
+        <tbody id="ticketsBody"><tr><td colspan="7" class="muted">No data loaded.</td></tr></tbody>
+      </table>
+    </section>
+
+    <section id="create" class="hidden" style="margin-top:14px">
+      <h2>Create test ticket</h2>
+      <p class="warnTxt">This creates data. Use a clear test title so it is easy to find/delete later.</p>
+      <div class="row">
+        <div><label>Company ID</label><input id="companyId" placeholder="from token/company, ex: 161"></div>
+        <div><label>Branch ID</label><input id="createBranchId" placeholder="select branch first"></div>
+      </div>
+      <div class="row">
+        <div><label>Requester user ID</label><input id="requesterId" placeholder="current user id"></div>
+        <div><label>Ticket type ID</label><input id="ticketTypeId" value="1"></div>
+      </div>
+      <div class="row">
+        <div><label>Priority ID</label><input id="ticketPriorityId" value="2"></div>
+        <div><label>Category ID</label><input id="ticketCategoryId" placeholder="optional"></div>
+      </div>
+      <label>Title EN</label><input id="titleEn" value="API test ticket from branch dashboard">
+      <label>Title AR</label><input id="titleAr" value="تذكرة اختبار من لوحة الفرع">
+      <label>Description</label><textarea id="description">Created from branch-tickets-dashboard.html for API smoke testing.</textarea>
+      <button class="warn" onclick="createTicket()">Create ticket</button>
+    </section>
+
+    <section id="detail" class="hidden" style="margin-top:14px">
+      <h2>Ticket detail and branch actions</h2>
+      <div class="row3">
+        <div><label>Ticket ID</label><input id="ticketId"></div>
+        <div><label>New status ID</label><input id="newStatusId" placeholder="ex: 2"></div>
+        <div><label>Comment internal?</label><select id="isInternal"><option value="false">No</option><option value="true">Yes</option></select></div>
+      </div>
+      <label>Comment / reason</label><textarea id="commentText">Branch dashboard API test comment.</textarea>
+      <button onclick="getTicketDetail()">Load detail</button>
+      <button class="secondary" onclick="getComments()">Load comments</button>
+      <button class="warn" onclick="updateStatus()">Update status</button>
+      <button class="warn" onclick="addComment()">Add comment</button>
+      <pre id="detailBox">Select a ticket from the list or enter an ID.</pre>
+    </section>
+
+    <section id="consoleTab" class="hidden" style="margin-top:14px">
+      <h2>API console</h2>
+      <button class="secondary" onclick="clearConsole()">Clear</button>
+      <pre id="console">Ready.</pre>
+    </section>
+  </main>
+</div>
+
+<script>
+const S={base:'',token:'',branches:[],users:[],ticketTypes:[],claims:{}};
+const $=id=>document.getElementById(id);
+const esc=v=>String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+const unwrap=x=>x&&typeof x==='object'&&'data'in x?x.data:x;
+function base(){return $('apiBase').value.trim().replace(/\/+$/,'')}
+function showTab(id){['list','create','detail','consoleTab'].forEach(x=>$(x).classList.toggle('hidden',x!==id))}
+function setStatus(code,ms){$('lastStatus').textContent=code;$('latency').textContent=ms+'ms'}
+function log(obj,bad=false){$('console').textContent=JSON.stringify(obj,null,2);$('console').style.borderColor=bad?'#ef4444':'#29405f'}
+function clearConsole(){$('console').textContent='Ready.'}
+function parseJwt(t){try{return JSON.parse(atob(t.split('.')[1].replace(/-/g,'+').replace(/_/g,'/')))}catch{return {}}}
+async function request(path,opt={}){
+  S.base=base(); const started=performance.now();
+  const headers={Accept:'application/json',...(opt.body?{'Content-Type':'application/json'}:{}),...(opt.headers||{})};
+  if(S.token)headers.Authorization='Bearer '+S.token;
+  const res=await fetch(S.base+path,{...opt,headers});
+  const text=await res.text(); let body=text; try{body=text?JSON.parse(text):null}catch{}
+  const ms=Math.round(performance.now()-started); setStatus(res.status,ms);
+  log({request:(opt.method||'GET')+' '+path,status:res.status,elapsedMs:ms,response:body},!res.ok);
+  if(!res.ok)throw new Error(body?.message||body?.title||text||('HTTP '+res.status));
+  return unwrap(body);
+}
+async function testHealth(){
+  try{const r=await fetch(base()+'/api/AuditHealth/status'); const j=await r.json(); $('authStatus').innerHTML='<span class="ok">API healthy:</span> '+esc(j.status||r.status)}
+  catch(e){$('authStatus').innerHTML='<span class="badTxt">API unreachable:</span> '+esc(e.message)}
+}
+async function login(){
+  try{
+    const res=await fetch(base()+'/api/Auth/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({companyCode:$('companyCode').value,userName:$('username').value,password:$('password').value})});
+    const j=await res.json(); if(!res.ok)throw new Error(j.message||'Login failed');
+    S.token=(j.data||j).accessToken; if(!S.token)throw new Error('No access token returned');
+    S.claims=parseJwt(S.token); fillClaims();
+    sessionStorage.setItem('btBase',base()); sessionStorage.setItem('btToken',S.token);
+    $('authStatus').innerHTML='<span class="ok">Connected tenant token.</span> '+esc(S.claims.companyCode||'');
+    await loadBranches();
+  }catch(e){$('authStatus').innerHTML='<span class="badTxt">'+esc(e.message)+'</span>'}
+}
+function useToken(){S.base=base();S.token=$('manualToken').value.trim().replace(/^Bearer\s+/i,'');S.claims=parseJwt(S.token);fillClaims();sessionStorage.setItem('btBase',S.base);sessionStorage.setItem('btToken',S.token);$('authStatus').innerHTML='<span class="ok">Token loaded.</span>'}
+function fillClaims(){
+  const c=S.claims||{};
+  if(c.companyId&&!$('companyId').value)$('companyId').value=c.companyId;
+  if(c.branchId&&!$('createBranchId').value)$('createBranchId').value=c.branchId;
+  if(c.userId&&!$('requesterId').value)$('requesterId').value=c.userId;
+}
+function params(obj){const p=new URLSearchParams();Object.entries(obj).forEach(([k,v])=>{if(v!==''&&v!=null)p.set(k,v)});return p.toString()}
+async function loadBranches(){
+  const branches=await request('/api/branches'); S.branches=Array.isArray(branches)?branches:[];
+  $('branchCount').textContent=S.branches.length;
+  $('branchSelect').innerHTML='<option value="">All visible branches</option>'+S.branches.map(b=>`<option value="${esc(b.branchId)}">${esc(b.branchNameEn||b.branchNameAr||'Branch')} · #${esc(b.branchId)}</option>`).join('');
+  const first=S.branches[0]; if(first){$('branchSelect').value=first.branchId;$('createBranchId').value=first.branchId;$('companyId').value=first.companyId||$('companyId').value}
+  try{S.users=await request('/api/users')}catch{}
+}
+async function loadTicketTypes(){S.ticketTypes=await request('/api/ticket-types'); $('detailBox').textContent=JSON.stringify(S.ticketTypes,null,2); showTab('detail')}
+async function loadTickets(){
+  const q=params({page:1,pageSize:$('pageSize').value,branchId:$('branchSelect').value,searchTerm:$('searchTerm').value,statusId:$('statusId').value,priorityId:$('priorityId').value,slaStatus:$('slaStatus').value,sortBy:'CreationDate',sortDirection:'DESC'});
+  const data=await request('/api/tickets?'+q); const items=data.items||data.Items||[]; $('totalTickets').textContent=data.totalCount??items.length;
+  $('ticketsBody').innerHTML=items.length?items.map(t=>`<tr onclick="selectTicket(${Number(t.ticketId||t.TicketId)})"><td>${esc(t.ticketId||t.TicketId)}</td><td>${esc(t.titleEn||t.TitleEn)}<br><span class="muted">${esc(t.description||t.Description)}</span></td><td>${esc(t.branchName||t.BranchName||t.branchId||t.BranchId)}</td><td>${esc(t.ticketStatusName||t.TicketStatusName||t.ticketStatusId||t.TicketStatusId)}</td><td>${esc(t.ticketPriorityName||t.TicketPriorityName||t.ticketPriorityId||t.TicketPriorityId)}</td><td>${esc(t.slaStatus||t.SlaStatus)}</td><td>${esc(t.requesterName||t.RequesterName||t.requesterId||t.RequesterId)}</td></tr>`).join(''):'<tr><td colspan="7" class="muted">No tickets returned.</td></tr>';
+}
+function selectTicket(id){$('ticketId').value=id;showTab('detail');getTicketDetail()}
+async function createTicket(){
+  const body={titleAr:$('titleAr').value,titleEn:$('titleEn').value,description:$('description').value,companyId:Number($('companyId').value),branchId:Number($('createBranchId').value),requesterId:Number($('requesterId').value),ticketTypeId:Number($('ticketTypeId').value),ticketPriorityId:Number($('ticketPriorityId').value),ticketCategoryId:$('ticketCategoryId').value?Number($('ticketCategoryId').value):null,attachments:[]};
+  const id=await request('/api/tickets',{method:'POST',body:JSON.stringify(body)}); $('ticketId').value=id; showTab('detail'); await getTicketDetail();
+}
+async function getTicketDetail(){const id=$('ticketId').value.trim(); if(!id)return; $('detailBox').textContent=JSON.stringify(await request('/api/tickets/'+encodeURIComponent(id)),null,2)}
+async function getComments(){const id=$('ticketId').value.trim(); if(!id)return; $('detailBox').textContent=JSON.stringify(await request('/api/tickets/'+encodeURIComponent(id)+'/comments'),null,2)}
+async function updateStatus(){const id=$('ticketId').value.trim(); await request('/api/tickets/'+id+'/status',{method:'PUT',body:JSON.stringify({ticketId:Number(id),newStatusId:Number($('newStatusId').value),statusChangeReason:$('commentText').value})}); await getTicketDetail()}
+async function addComment(){const id=$('ticketId').value.trim(); await request('/api/tickets/'+id+'/comments',{method:'POST',body:JSON.stringify({ticketId:Number(id),commentText:$('commentText').value,isInternal:$('isInternal').value==='true'})}); await getComments()}
+addEventListener('DOMContentLoaded',()=>{const b=sessionStorage.getItem('btBase'),t=sessionStorage.getItem('btToken');if(b)$('apiBase').value=b;if(t){S.token=t;S.claims=parseJwt(t);fillClaims();$('authStatus').innerHTML='<span class="ok">Restored tenant token.</span>'}});
+</script>
+</body>
+</html>

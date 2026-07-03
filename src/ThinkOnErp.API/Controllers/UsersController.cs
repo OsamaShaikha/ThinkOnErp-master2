@@ -154,6 +154,7 @@ public class UsersController : ControllerBase
     {
         try
         {
+            command.CreationUser = User.Identity?.Name ?? "system";
             _logger.LogInformation("Creating new user: {UserName}", command.UserName);
 
             // Hash the password before creating the user
@@ -201,13 +202,8 @@ public class UsersController : ControllerBase
     {
         try
         {
-            if (id != command.UserId)
-            {
-                _logger.LogWarning("User ID mismatch: URL ID {UrlId} vs Command ID {CommandId}", id, command.UserId);
-                return BadRequest(ApiResponse<Int64>.CreateFailure(
-                    "User ID in URL does not match the ID in the request body",
-                    statusCode: 400));
-            }
+            command.UserId = id;
+            command.UpdateUser = User.Identity?.Name ?? "system";
 
             _logger.LogInformation("Updating user with ID: {UserId}", id);
 

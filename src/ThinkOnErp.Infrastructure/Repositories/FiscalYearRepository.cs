@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using ThinkOnErp.Domain.Entities;
 using ThinkOnErp.Domain.Interfaces;
 using ThinkOnErp.Infrastructure.Data;
@@ -31,8 +31,21 @@ public class FiscalYearRepository : IFiscalYearRepository
 
     public async Task<long> UpdateAsync(SysFiscalYear fiscalYear)
     {
-        fiscalYear.UpdateDate = DateTime.Now;
-        _context.SysFiscalYears.Update(fiscalYear);
+        var existing = await _context.SysFiscalYears.FindAsync(fiscalYear.Id);
+        if (existing == null) return 0;
+
+        existing.CompanyId = fiscalYear.CompanyId;
+        existing.BranchId = fiscalYear.BranchId;
+        existing.FiscalYearCode = fiscalYear.FiscalYearCode;
+        existing.FiscalYearNameAr = fiscalYear.FiscalYearNameAr;
+        existing.FiscalYearNameEn = fiscalYear.FiscalYearNameEn;
+        existing.StartDate = fiscalYear.StartDate;
+        existing.EndDate = fiscalYear.EndDate;
+        existing.IsClosed = fiscalYear.IsClosed;
+        existing.IsActive = fiscalYear.IsActive;
+        existing.UpdateUser = fiscalYear.UpdateUser;
+        existing.UpdateDate = DateTime.Now;
+
         return await _context.SaveChangesAsync();
     }
 

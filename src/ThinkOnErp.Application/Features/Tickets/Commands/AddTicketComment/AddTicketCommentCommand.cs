@@ -1,3 +1,4 @@
+using System.Text.Json.Serialization;
 using MediatR;
 
 namespace ThinkOnErp.Application.Features.Tickets.Commands.AddTicketComment;
@@ -10,6 +11,7 @@ public class AddTicketCommentCommand : IRequest<Int64>
     /// <summary>
     /// Unique identifier of the ticket to comment on
     /// </summary>
+    [JsonIgnore]
     public Int64 TicketId { get; set; }
 
     /// <summary>
@@ -25,5 +27,6 @@ public class AddTicketCommentCommand : IRequest<Int64>
     /// <summary>
     /// Username of the user adding the comment
     /// </summary>
+    [JsonIgnore]
     public string CreationUser { get; set; } = string.Empty;
 }

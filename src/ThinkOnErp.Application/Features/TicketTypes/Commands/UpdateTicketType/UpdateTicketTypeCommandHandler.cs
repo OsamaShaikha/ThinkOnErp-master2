@@ -44,15 +44,7 @@ public class UpdateTicketTypeCommandHandler : IRequestHandler<UpdateTicketTypeCo
             if (request.SlaTargetHours <= 0)
                 throw new ArgumentException("SLA target hours must be greater than zero");
 
-            // Get existing ticket type
-            var existingTicketType = await _ticketTypeRepository.GetByIdAsync(request.TicketTypeId);
-            if (existingTicketType == null)
-            {
-                _logger.LogWarning("Ticket type not found with ID: {TicketTypeId}", request.TicketTypeId);
-                return 0;
-            }
-
-            // Update entity
+            // Build a data-only entity to pass field values to the repository
             var ticketType = new SysTicketType
             {
                 Id = request.TicketTypeId,
@@ -62,16 +54,19 @@ public class UpdateTicketTypeCommandHandler : IRequestHandler<UpdateTicketTypeCo
                 DescriptionEn = request.DescriptionEn,
                 DefaultPriorityId = request.DefaultPriorityId,
                 SlaTargetHours = request.SlaTargetHours,
-                IsActive = existingTicketType.IsActive,
-                CreationUser = existingTicketType.CreationUser,
-                CreationDate = existingTicketType.CreationDate,
-                UpdateUser = request.UpdateUser,
-                UpdateDate = DateTime.Now
+                UpdateUser = request.UpdateUser
             };
 
             var rowsAffected = await _ticketTypeRepository.UpdateAsync(ticketType);
 
-            _logger.LogInformation("Ticket type updated successfully with ID: {TicketTypeId}", request.TicketTypeId);
+            if (rowsAffected == 0)
+            {
+                _logger.LogWarning("Ticket type not found with ID: {TicketTypeId}", request.TicketTypeId);
+            }
+            else
+            {
+                _logger.LogInformation("Ticket type updated successfully with ID: {TicketTypeId}", request.TicketTypeId);
+            }
 
             return rowsAffected;
         }

@@ -1,3 +1,4 @@
+using System.Text.Json.Serialization;
 using MediatR;
 
 namespace ThinkOnErp.Application.Features.Roles.Commands.CreateRole;
@@ -26,5 +27,6 @@ public class CreateRoleCommand : IRequest<Int64>
     /// <summary>
     /// Username of the user creating this role
     /// </summary>
+    [JsonIgnore]
     public string CreationUser { get; set; } = string.Empty;
 }

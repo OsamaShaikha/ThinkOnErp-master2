@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using ThinkOnErp.Domain.Entities;
 using ThinkOnErp.Domain.Interfaces;
 using ThinkOnErp.Infrastructure.Data;
@@ -11,10 +11,17 @@ public class TicketTypeRepository : ITicketTypeRepository
     public TicketTypeRepository(OracleDbContext context) => _context = context;
 
     public async Task<List<SysTicketType>> GetAllAsync() =>
-        await _context.SysTicketTypes.Where(t => t.IsActive).Include(t => t.DefaultPriority).ToListAsync();
+        await _context.SysTicketTypes
+            .AsNoTracking()
+            .Where(t => t.IsActive)
+            .Include(t => t.DefaultPriority)
+            .ToListAsync();
 
     public async Task<SysTicketType?> GetByIdAsync(long rowId) =>
-        await _context.SysTicketTypes.Include(t => t.DefaultPriority).FirstOrDefaultAsync(t => t.Id == rowId);
+        await _context.SysTicketTypes
+            .AsNoTracking()
+            .Include(t => t.DefaultPriority)
+            .FirstOrDefaultAsync(t => t.Id == rowId);
 
     public async Task<long> CreateAsync(SysTicketType ticketType)
     {
@@ -25,8 +32,18 @@ public class TicketTypeRepository : ITicketTypeRepository
 
     public async Task<long> UpdateAsync(SysTicketType ticketType)
     {
-        ticketType.UpdateDate = DateTime.Now;
-        _context.SysTicketTypes.Update(ticketType);
+        var existing = await _context.SysTicketTypes.FindAsync(ticketType.Id);
+        if (existing == null) return 0;
+
+        existing.TypeNameAr = ticketType.TypeNameAr;
+        existing.TypeNameEn = ticketType.TypeNameEn;
+        existing.DescriptionAr = ticketType.DescriptionAr;
+        existing.DescriptionEn = ticketType.DescriptionEn;
+        existing.DefaultPriorityId = ticketType.DefaultPriorityId;
+        existing.SlaTargetHours = ticketType.SlaTargetHours;
+        existing.UpdateUser = ticketType.UpdateUser;
+        existing.UpdateDate = DateTime.Now;
+
         return await _context.SaveChangesAsync();
     }
 
@@ -45,8 +62,8 @@ public class TicketTypeRepository : ITicketTypeRepository
 
     public async Task<List<(SysTicketType TicketType, int TicketCount)>> GetByUsageAsync(DateTime? fromDate = null, DateTime? toDate = null)
     {
-        var query = _context.SysTicketTypes.Where(t => t.IsActive);
-        var tickets = _context.SysRequestTickets.AsQueryable();
+        var query = _context.SysTicketTypes.AsNoTracking().Where(t => t.IsActive);
+        var tickets = _context.SysRequestTickets.AsNoTracking().AsQueryable();
         if (fromDate.HasValue) tickets = tickets.Where(t => t.CreationDate >= fromDate.Value);
         if (toDate.HasValue) tickets = tickets.Where(t => t.CreationDate <= toDate.Value);
 
