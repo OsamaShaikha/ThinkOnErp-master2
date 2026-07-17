@@ -100,9 +100,7 @@ public class CreateCompanyWithBranchCommandHandler : IRequestHandler<CreateCompa
                 "Company created successfully with ID: {CompanyId}, Default branch created with ID: {BranchId}, Default fiscal year created with ID: {FiscalYearId}",
                 result.CompanyId, result.BranchId, result.FiscalYearId);
 
-            // Create the Oracle schema for this tenant (failures here will propagate up)
-            _logger.LogInformation("Creating Oracle schema {Schema} for company {CompanyCode}", companySchema, request.CompanyCode);
-            await _oracleSchemaService.CreateCompanySchemaAsync(companySchema, companySchema);
+
 
             // Seed default admin user in the tenant schema
             _logger.LogInformation("Seeding default admin user in schema {Schema}", companySchema);

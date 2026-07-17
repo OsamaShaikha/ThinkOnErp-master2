@@ -10,8 +10,8 @@ public interface IDocumentRepository
     Task<int> BulkSoftDeleteAsync(long[] ids, string updateUser);
     Task<SysDocument?> GetByIdAsync(long id);
     Task<(List<SysDocument> Items, int TotalCount)> GetByOwnerAsync(
-        string ownerType, long ownerId, int page, int pageSize,
+        int ownerType, long ownerId, int page, int pageSize,
         string? category = null, string? search = null);
-    Task<int> CountByOwnerAsync(string ownerType, long ownerId);
+    Task<int> CountByOwnerAsync(int ownerType, long ownerId);
     Task<bool> ExistsAsync(long id);
 }

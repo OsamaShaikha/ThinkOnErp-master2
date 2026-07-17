@@ -57,7 +57,7 @@ public class DocumentRepository : IDocumentRepository
         await _context.SysDocuments.FindAsync(id);
 
     public async Task<(List<SysDocument> Items, int TotalCount)> GetByOwnerAsync(
-        string ownerType, long ownerId, int page, int pageSize,
+        int ownerType, long ownerId, int page, int pageSize,
         string? category = null, string? search = null)
     {
         var query = _context.SysDocuments
@@ -83,7 +83,7 @@ public class DocumentRepository : IDocumentRepository
         return (items, totalCount);
     }
 
-    public async Task<int> CountByOwnerAsync(string ownerType, long ownerId) =>
+    public async Task<int> CountByOwnerAsync(int ownerType, long ownerId) =>
         await _context.SysDocuments
             .CountAsync(d => d.OwnerType == ownerType && d.OwnerId == ownerId && d.IsActive == "Y");
 

@@ -86,7 +86,7 @@ public class SysBranchConfiguration : IEntityTypeConfiguration<SysBranch>
 {
     public void Configure(EntityTypeBuilder<SysBranch> builder)
     {
-        builder.ToTable("SYS_BRANCH");
+        builder.ToTable("SYS_BRANCH", t => t.ExcludeFromMigrations());
         builder.HasKey(e => e.Id);
         builder.Property(e => e.Id).ValueGeneratedOnAdd();
         builder.Property(e => e.CompanyId).HasColumnName("COMPANY_ID");
@@ -102,6 +102,7 @@ builder.Property(e => e.BranchNameEn).HasColumnName("NAME_EN").HasMaxLength(200)
         builder.Property(e => e.BaseCurrencyId).HasColumnName("BASE_CURRENCY_ID");
         builder.Property(e => e.RoundingRules).HasColumnName("ROUNDING_RULES");
         builder.Property(e => e.BranchLogoPath).HasColumnName("BRANCH_LOGO_PATH").HasMaxLength(500);
+        builder.Property(e => e.UsersLimit).HasColumnName("USERS_LIMIT");
         builder.Property(e => e.IsActive).HasColumnName("IS_ACTIVE").HasConversion<string>(v => v ? "Y" : "N", v => v == "Y").HasMaxLength(1);
         builder.Property(e => e.CreationUser).HasColumnName("CREATION_USER").HasMaxLength(100).IsRequired();
         builder.Property(e => e.CreationDate).HasColumnName("CREATION_DATE");
@@ -129,8 +130,8 @@ builder.Property(e => e.FullNameEn).HasColumnName("NAME_EN").HasMaxLength(200).I
         builder.Property(e => e.Phone).HasColumnName("PHONE").HasMaxLength(50);
         builder.Property(e => e.Phone2).HasColumnName("PHONE2").HasMaxLength(50);
         builder.Property(e => e.RoleId).HasColumnName("ROLE");
-        builder.Property(e => e.BranchId).HasColumnName("BRANCH_ID");
         builder.Property(e => e.CompanyId).HasColumnName("COMPANY_ID");
+        builder.Ignore(e => e.BranchId);
         builder.Property(e => e.Email).HasColumnName("EMAIL").HasMaxLength(200);
         builder.Property(e => e.LastLoginDate).HasColumnName("LAST_LOGIN_DATE");
         builder.Property(e => e.IsActive).HasColumnName("IS_ACTIVE").HasConversion<string>(v => v ? "Y" : "N", v => v == "Y").HasMaxLength(1);
@@ -189,6 +190,7 @@ builder.Property(e => e.NameEn).HasColumnName("NAME_EN").HasMaxLength(200).IsReq
         builder.Property(e => e.Phone).HasColumnName("PHONE").HasMaxLength(50);
         builder.Property(e => e.TwoFaSecret).HasColumnName("TWO_FA_SECRET").HasMaxLength(200);
         builder.Property(e => e.TwoFaEnabled).HasColumnName("TWO_FA_ENABLED").HasConversion<string>(v => v ? "Y" : "N", v => v == "Y").HasMaxLength(1);
+        builder.Property(e => e.PinHash).HasColumnName("PIN_HASH").HasMaxLength(256);
         builder.Property(e => e.IsActive).HasColumnName("IS_ACTIVE").HasConversion<string>(v => v ? "Y" : "N", v => v == "Y").HasMaxLength(1);
         builder.Property(e => e.LastLoginDate).HasColumnName("LAST_LOGIN_DATE");
         builder.Property(e => e.CreationUser).HasColumnName("CREATION_USER").HasMaxLength(100).IsRequired();
@@ -299,3 +301,22 @@ public class SysSettingConfiguration : IEntityTypeConfiguration<SysSetting>
         builder.Property(e => e.SettingValue).HasColumnName("SETTING_VALUE").HasMaxLength(2000).IsRequired();
     }
 }
+
+public class SysUserBranchConfiguration : IEntityTypeConfiguration<SysUserBranch>
+{
+    public void Configure(EntityTypeBuilder<SysUserBranch> builder)
+    {
+        builder.ToTable("SYS_USER_BRANCHES", t => t.ExcludeFromMigrations());
+        builder.HasKey(e => e.Id);
+        builder.Property(e => e.Id).ValueGeneratedOnAdd();
+        builder.Property(e => e.UserId).HasColumnName("USER_ID").IsRequired();
+        builder.Property(e => e.BranchId).HasColumnName("BRANCH_ID").IsRequired();
+        builder.Property(e => e.IsPrimary).HasColumnName("IS_PRIMARY").HasConversion<string>(v => v ? "Y" : "N", v => v == "Y").HasMaxLength(1);
+        builder.Property(e => e.AssignedBy).HasColumnName("ASSIGNED_BY").HasMaxLength(100).IsRequired();
+        builder.Property(e => e.AssignedAt).HasColumnName("ASSIGNED_AT").IsRequired();
+
+        builder.HasOne(e => e.User).WithMany().HasForeignKey(e => e.UserId).OnDelete(DeleteBehavior.Cascade);
+        builder.HasOne(e => e.Branch).WithMany().HasForeignKey(e => e.BranchId).OnDelete(DeleteBehavior.Cascade);
+    }
+}
+

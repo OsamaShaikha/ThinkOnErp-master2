@@ -49,7 +49,7 @@ public class SysRetentionPolicyConfiguration : IEntityTypeConfiguration<SysReten
 {
     public void Configure(EntityTypeBuilder<SysRetentionPolicy> builder)
     {
-        builder.ToTable("SYS_RETENTION_POLICIES");
+        builder.ToTable("SYS_RETENTION_POLICIES", t => t.ExcludeFromMigrations());
         builder.HasKey(e => e.Id);
         builder.Property(e => e.Id).ValueGeneratedOnAdd();
         builder.Property(e => e.EventCategory).HasColumnName("EVENT_CATEGORY").HasMaxLength(50).IsRequired();

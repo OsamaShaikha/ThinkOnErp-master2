@@ -11,7 +11,7 @@ public class DocumentDto
     public string? Description { get; set; }
     public string? Category { get; set; }
     public string? Tags { get; set; }
-    public string OwnerType { get; set; } = string.Empty;
+    public int OwnerType { get; set; }
     public long OwnerId { get; set; }
     public string CreationUser { get; set; } = string.Empty;
     public DateTime? CreationDate { get; set; }

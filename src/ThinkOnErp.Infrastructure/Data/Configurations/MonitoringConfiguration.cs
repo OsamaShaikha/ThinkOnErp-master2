@@ -85,7 +85,7 @@ public class SysReportScheduleConfiguration : IEntityTypeConfiguration<SysReport
 {
     public void Configure(EntityTypeBuilder<SysReportSchedule> builder)
     {
-        builder.ToTable("SYS_REPORT_SCHEDULE");
+        builder.ToTable("SYS_REPORT_SCHEDULE", t => t.ExcludeFromMigrations());
         builder.HasKey(e => e.Id);
         builder.Property(e => e.Id).ValueGeneratedOnAdd();
         builder.Property(e => e.ReportType).HasColumnName("REPORT_TYPE").HasMaxLength(100).IsRequired();

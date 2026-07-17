@@ -17,4 +17,16 @@ public interface IOracleSchemaService
     Task GrantUserPrivilegesAsync(string schemaName);
 
     Task UpgradeExistingTenantSchemasAsync();
+    Task ProvisionDeveloperSchemaAsync();
+    Task SyncTenantSchemaAsync(string schemaName, string schemaPassword);
+    Task<(long BranchId, long FiscalYearId)> ProvisionTenantBranchAndFiscalYearAsync(
+        string schemaName,
+        string schemaPassword,
+        long companyId,
+        string? branchNameAr, string? branchNameEn,
+        string? branchPhone, string? branchMobile,
+        string? branchFax, string? branchEmail,
+        string? taxNumber, int defaultLang,
+        long? baseCurrencyId, int roundingRules,
+        string? branchLogoPath, string creationUser);
 }

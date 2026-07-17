@@ -50,9 +50,9 @@ public class DocumentsController : ControllerBase
         {
             ownerTypes = new[]
             {
-                new { value = "Company", label = "Company", hint = "Documents belong to a company" },
-                new { value = "Branch", label = "Branch", hint = "Documents belong to a branch" },
-                new { value = "SuperAdmin", label = "Super Admin", hint = "Personal documents for super admin" }
+                new { value = ThinkOnErp.Domain.Constants.SysCodeKeys.OwnerTypes.Company, label = "Company", hint = "Documents belong to a company" },
+                new { value = ThinkOnErp.Domain.Constants.SysCodeKeys.OwnerTypes.Branch, label = "Branch", hint = "Documents belong to a branch" },
+                new { value = ThinkOnErp.Domain.Constants.SysCodeKeys.OwnerTypes.SuperAdmin, label = "Super Admin", hint = "Personal documents for super admin" }
             },
             categories = SysDocument.AllowedDocumentCategories.Select(c => new
             {
@@ -70,7 +70,7 @@ public class DocumentsController : ControllerBase
     [ProducesResponseType(typeof(ApiResponse<DocumentUploadResult>), StatusCodes.Status201Created)]
     [ProducesResponseType(typeof(ApiResponse<DocumentUploadResult>), StatusCodes.Status400BadRequest)]
     public async Task<ActionResult<ApiResponse<DocumentUploadResult>>> Upload(
-        [FromForm] string ownerType,
+        [FromForm] int ownerType,
         [FromForm] long ownerId,
         [FromForm] string? description,
         [FromForm] string? category,
@@ -119,7 +119,7 @@ public class DocumentsController : ControllerBase
     [ProducesResponseType(typeof(ApiResponse<List<DocumentUploadResult>>), StatusCodes.Status201Created)]
     [ProducesResponseType(typeof(ApiResponse<List<DocumentUploadResult>>), StatusCodes.Status400BadRequest)]
     public async Task<ActionResult<ApiResponse<List<DocumentUploadResult>>>> UploadBulk(
-        [FromForm] string ownerType,
+        [FromForm] int ownerType,
         [FromForm] long ownerId,
         [FromForm] string? description,
         [FromForm] string? category,
@@ -347,7 +347,7 @@ public class DocumentsController : ControllerBase
     public async Task<ActionResult<ApiResponse<PagedResult<DocumentDto>>>> GetByCompany(
         long companyId, [FromQuery] GetDocumentsQuery query)
     {
-        query.OwnerType = "Company";
+        query.OwnerType = ThinkOnErp.Domain.Constants.SysCodeKeys.OwnerTypes.Company;
         query.OwnerId = companyId;
         return await GetList(query);
     }
@@ -357,7 +357,7 @@ public class DocumentsController : ControllerBase
     public async Task<ActionResult<ApiResponse<PagedResult<DocumentDto>>>> GetByBranch(
         long branchId, [FromQuery] GetDocumentsQuery query)
     {
-        query.OwnerType = "Branch";
+        query.OwnerType = ThinkOnErp.Domain.Constants.SysCodeKeys.OwnerTypes.Branch;
         query.OwnerId = branchId;
         return await GetList(query);
     }
@@ -368,7 +368,7 @@ public class DocumentsController : ControllerBase
         [FromQuery] GetDocumentsQuery query)
     {
         var userId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
-        query.OwnerType = "SuperAdmin";
+        query.OwnerType = ThinkOnErp.Domain.Constants.SysCodeKeys.OwnerTypes.SuperAdmin;
         query.OwnerId = long.TryParse(userId, out var id) ? id : 0;
         return await GetList(query);
     }

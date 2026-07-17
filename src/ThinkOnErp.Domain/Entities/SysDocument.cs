@@ -11,7 +11,7 @@ public class SysDocument
     public string? Description { get; set; }
     public string? Category { get; set; }
     public string? Tags { get; set; }
-    public string OwnerType { get; set; } = string.Empty;
+    public int OwnerType { get; set; }
     public Int64 OwnerId { get; set; }
     public string IsActive { get; set; } = "Y";
     public string CreationUser { get; set; } = string.Empty;

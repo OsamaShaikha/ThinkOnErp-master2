@@ -81,6 +81,31 @@ public interface IUserRepository
     Task<int> ChangePasswordAsync(long userId, string newPasswordHash, string updateUser);
 
     /// <summary>
+    /// Assigns a user to multiple branches, specifying a primary branch.
+    /// </summary>
+    Task AssignToBranchesAsync(long userId, List<long> branchIds, long primaryBranchId, string assignedBy);
+
+    /// <summary>
+    /// Gets all branch IDs assigned to a user.
+    /// </summary>
+    Task<List<long>> GetUserBranchIdsAsync(long userId);
+
+    /// <summary>
+    /// Gets the count of active users assigned to a branch.
+    /// </summary>
+    Task<long> GetBranchUserCountAsync(long branchId);
+
+    /// <summary>
+    /// Gets all branch assignments for a user.
+    /// </summary>
+    Task<List<SysUserBranch>> GetUserBranchesAsync(long userId);
+
+    /// <summary>
+    /// Gets all branch assignments for a list of user IDs.
+    /// </summary>
+    Task<List<SysUserBranch>> GetUserBranchesForUsersAsync(List<long> userIds);
+
+    /// <summary>
     /// Retrieves all active admin users from the database.
     /// Gets users with IS_ADMIN flag set to true.
     /// </summary>

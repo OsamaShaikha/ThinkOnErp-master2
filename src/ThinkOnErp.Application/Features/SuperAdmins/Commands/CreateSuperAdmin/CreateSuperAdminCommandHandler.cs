@@ -38,6 +38,7 @@ public class CreateSuperAdminCommandHandler : IRequestHandler<CreateSuperAdminCo
             NameEn = request.NameEn,
             UserName = request.UserName,
             Password = request.Password, // Will be hashed in API layer before reaching here
+            PinHash = request.PinHash,
             Email = request.Email,
             Phone = request.Phone,
             TwoFaEnabled = false,

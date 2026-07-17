@@ -16,6 +16,7 @@ public class SysBranch
     public Int64? BaseCurrencyId { get; set; }
     public int? RoundingRules { get; set; }
     public string? BranchLogoPath { get; set; }
+    public int? UsersLimit { get; set; }
     public bool IsActive { get; set; }
     public string CreationUser { get; set; } = string.Empty;
     public DateTime? CreationDate { get; set; }

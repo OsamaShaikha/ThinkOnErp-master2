@@ -20,7 +20,7 @@ public class SysDocumentConfiguration : IEntityTypeConfiguration<SysDocument>
         builder.Property(e => e.Description).HasColumnName("DESCRIPTION").HasMaxLength(1000);
         builder.Property(e => e.Category).HasColumnName("CATEGORY").HasMaxLength(50);
         builder.Property(e => e.Tags).HasColumnName("TAGS").HasMaxLength(500);
-        builder.Property(e => e.OwnerType).HasColumnName("OWNER_TYPE").HasMaxLength(20).IsRequired();
+        builder.Property(e => e.OwnerType).HasColumnName("OWNER_TYPE").IsRequired();
         builder.Property(e => e.OwnerId).HasColumnName("OWNER_ID").IsRequired();
         builder.Property(e => e.IsActive).HasColumnName("IS_ACTIVE").HasMaxLength(1).IsRequired();
         builder.Property(e => e.CreationUser).HasColumnName("CREATION_USER").HasMaxLength(100).IsRequired();

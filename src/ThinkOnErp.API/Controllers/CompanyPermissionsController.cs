@@ -121,6 +121,12 @@ public class CompanyPermissionsController : ControllerBase
         if (branchError != null)
             return branchError;
 
+        var scopeValidationError = await ValidateBranchPermissionsScopeAsync(branchId, dtos);
+        if (scopeValidationError != null)
+        {
+            return BadRequest(ApiResponse<object>.CreateFailure(scopeValidationError, statusCode: 400));
+        }
+
         var userName = User.Identity?.Name ?? "system";
         var now = DateTime.UtcNow;
 
@@ -178,6 +184,12 @@ public class CompanyPermissionsController : ControllerBase
         if (branchError != null)
             return branchError;
 
+        var scopeValidationError = await ValidateBranchPermissionsScopeAsync(branchId, dtos);
+        if (scopeValidationError != null)
+        {
+            return BadRequest(ApiResponse<object>.CreateFailure(scopeValidationError, statusCode: 400));
+        }
+
         var userName = User.Identity?.Name ?? "system";
         var now = DateTime.UtcNow;
 
@@ -206,6 +218,43 @@ public class CompanyPermissionsController : ControllerBase
 
         await _userPermRepo.DeleteAsync(branchId, userId, screenId, featureId);
         return Ok(ApiResponse<object>.CreateSuccess(new { }, "User permission override removed", 200));
+    }
+
+    private async Task<string?> ValidateBranchPermissionsScopeAsync(long branchId, List<BulkPermissionDto> dtos)
+    {
+        var systems = await _branchSystemRepo.GetSystemsByBranchIdAsync(branchId);
+        var systemIds = systems.Select(s => s.Id).ToList();
+
+        var revokedScreenIds = await _branchScreenRepo.GetRevokedScreenIdsAsync(branchId);
+        var revokedFeatures = await _branchFeatureRepo.GetRevokedScreenFeaturesAsync(branchId);
+
+        var allowedScreens = await _context.Set<SysScreen>()
+            .Where(s => systemIds.Contains(s.SystemId) && s.IsActive)
+            .ToDictionaryAsync(s => s.Id);
+
+        foreach (var dto in dtos)
+        {
+            if (!allowedScreens.TryGetValue(dto.ScreenId, out var screen))
+            {
+                return $"Screen with ID {dto.ScreenId} belongs to a system that is not assigned to this branch.";
+            }
+
+            if (revokedScreenIds.Contains(dto.ScreenId))
+            {
+                return $"Screen '{screen.ScreenName}' (ID {dto.ScreenId}) is revoked for this branch.";
+            }
+
+            if (dto.FeatureId > 0)
+            {
+                var isRevoked = revokedFeatures.Any(rf => rf.ScreenId == dto.ScreenId && rf.FeatureId == dto.FeatureId);
+                if (isRevoked)
+                {
+                    return $"Feature ID {dto.FeatureId} on screen '{screen.ScreenName}' is revoked for this branch.";
+                }
+            }
+        }
+
+        return null;
     }
 }
 

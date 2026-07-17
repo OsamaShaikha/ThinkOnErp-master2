@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Oracle.EntityFrameworkCore.Metadata;
 using ThinkOnErp.Infrastructure.Data;
@@ -11,9 +12,11 @@ using ThinkOnErp.Infrastructure.Data;
 namespace ThinkOnErp.Infrastructure.Migrations
 {
     [DbContext(typeof(OracleDbContext))]
-    partial class OracleDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260714194357_CleanSuperAdminSchema")]
+    partial class CleanSuperAdminSchema
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -981,8 +984,10 @@ namespace ThinkOnErp.Infrastructure.Migrations
                         .HasColumnType("NUMBER(19)")
                         .HasColumnName("OWNER_ID");
 
-                    b.Property<int>("OwnerType")
-                        .HasColumnType("NUMBER(10)")
+                    b.Property<string>("OwnerType")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("NVARCHAR2(20)")
                         .HasColumnName("OWNER_TYPE");
 
                     b.Property<string>("Tags")

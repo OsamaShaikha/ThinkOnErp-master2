@@ -18,6 +18,7 @@ public class CreateBranchCommand : IRequest<Int64>
     public int? RoundingRules { get; set; }
     public Int64? FiscalYearId { get; set; }
     public byte[]? BranchLogo { get; set; }
+    public int? UsersLimit { get; set; }
     public string CreationUser { get; set; } = string.Empty;
 
     public List<long>? Systems { get; set; }

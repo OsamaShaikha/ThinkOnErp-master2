@@ -32,6 +32,7 @@ public class CreateBranchCommandHandler : IRequestHandler<CreateBranchCommand, I
             DefaultLang = request.DefaultLang,
             BaseCurrencyId = request.BaseCurrencyId,
             RoundingRules = request.RoundingRules,
+            UsersLimit = request.UsersLimit,
             IsActive = true,
             CreationUser = request.CreationUser,
             CreationDate = DateTime.UtcNow

@@ -10,5 +10,6 @@ public class CreateSuperAdminCommand : IRequest<Int64>
     public string Password { get; set; } = string.Empty;
     public string? Email { get; set; }
     public string? Phone { get; set; }
+    public string? PinHash { get; set; }
     public string CreationUser { get; set; } = string.Empty;
 }

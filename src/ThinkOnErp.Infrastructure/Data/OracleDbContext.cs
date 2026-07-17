@@ -23,6 +23,7 @@ public class OracleDbContext : DbContext
     public DbSet<SysScreen> SysScreens => Set<SysScreen>();
     public DbSet<SysFeature> SysFeatures => Set<SysFeature>();
     public DbSet<SysUserRole> SysUserRoles => Set<SysUserRole>();
+    public DbSet<SysUserBranch> SysUserBranches => Set<SysUserBranch>();
 
     // Branch-system provisioning
     public DbSet<SysBranchSystem> SysBranchSystems => Set<SysBranchSystem>();
@@ -113,6 +114,7 @@ public class OracleDbContext : DbContext
         modelBuilder.ApplyConfiguration(new SysBranchFeatureConfiguration());
         modelBuilder.ApplyConfiguration(new SysRoleScreenPermissionConfiguration());
         modelBuilder.ApplyConfiguration(new SysUserScreenPermissionConfiguration());
+        modelBuilder.ApplyConfiguration(new SysUserBranchConfiguration());
 
         // Oracle doesn't support BOOLEAN as a SQL column type; map all bool to NUMBER(1)
         // Clear HasConversion<string> from individual configs — Oracle provider handles

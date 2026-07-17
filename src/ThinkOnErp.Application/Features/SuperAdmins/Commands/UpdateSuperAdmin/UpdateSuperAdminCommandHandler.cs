@@ -24,6 +24,10 @@ public class UpdateSuperAdminCommandHandler : IRequestHandler<UpdateSuperAdminCo
         superAdmin.NameEn = request.NameEn;
         superAdmin.Email = request.Email;
         superAdmin.Phone = request.Phone;
+        if (!string.IsNullOrEmpty(request.PinHash))
+        {
+            superAdmin.PinHash = request.PinHash;
+        }
         superAdmin.UpdateUser = request.UpdateUser;
         superAdmin.UpdateDate = DateTime.UtcNow;
 

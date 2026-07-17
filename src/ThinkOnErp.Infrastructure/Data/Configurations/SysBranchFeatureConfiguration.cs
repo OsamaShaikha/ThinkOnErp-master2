@@ -8,7 +8,7 @@ public class SysBranchFeatureConfiguration : IEntityTypeConfiguration<SysBranchF
 {
     public void Configure(EntityTypeBuilder<SysBranchFeature> builder)
     {
-        builder.ToTable("SYS_BRANCH_FEATURES");
+        builder.ToTable("SYS_BRANCH_FEATURES", t => t.ExcludeFromMigrations());
         builder.HasKey(e => e.Id);
         builder.Property(e => e.Id).ValueGeneratedOnAdd();
         builder.Property(e => e.BranchId).HasColumnName("BRANCH_ID").IsRequired();

@@ -9,6 +9,8 @@ using ThinkOnErp.Application.Features.Branches.Commands.DeleteBranch;
 using ThinkOnErp.Application.Features.Branches.Queries.GetAllBranches;
 using ThinkOnErp.Application.Features.Branches.Queries.GetBranchById;
 using ThinkOnErp.Application.Features.Branches.Queries.GetBranchesByCompanyId;
+using ThinkOnErp.Domain.Interfaces;
+using ThinkOnErp.Infrastructure.Services;
 
 namespace ThinkOnErp.API.Controllers;
 
@@ -19,11 +21,19 @@ public class BranchController : ControllerBase
 {
     private readonly IMediator _mediator;
     private readonly ILogger<BranchController> _logger;
+    private readonly ISuperAdminRepository _superAdminRepository;
+    private readonly PasswordHashingService _passwordHashingService;
 
-    public BranchController(IMediator mediator, ILogger<BranchController> logger)
+    public BranchController(
+        IMediator mediator, 
+        ILogger<BranchController> logger,
+        ISuperAdminRepository superAdminRepository,
+        PasswordHashingService passwordHashingService)
     {
         _mediator = mediator ?? throw new ArgumentNullException(nameof(mediator));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        _superAdminRepository = superAdminRepository ?? throw new ArgumentNullException(nameof(superAdminRepository));
+        _passwordHashingService = passwordHashingService ?? throw new ArgumentNullException(nameof(passwordHashingService));
     }
 
     private bool IsSuperAdmin() =>
@@ -168,6 +178,7 @@ public class BranchController : ControllerBase
                 DefaultLang = dto.DefaultLang,
                 BaseCurrencyId = dto.BaseCurrencyId,
                 RoundingRules = dto.RoundingRules,
+                UsersLimit = dto.UsersLimit,
                 BranchLogo = branchLogo != null ? await ReadFileBytesAsync(branchLogo) : null,
                 Systems = dto.Systems,
                 CreationUser = User.Identity?.Name ?? "system"
@@ -207,6 +218,13 @@ public class BranchController : ControllerBase
         try
         {
             _logger.LogInformation("Updating branch with ID: {BranchId} including logo file", id);
+
+            if (!await VerifySuperAdminPinAsync())
+            {
+                return StatusCode(StatusCodes.Status403Forbidden, ApiResponse<Int64>.CreateFailure(
+                    "Invalid or missing Super Admin PIN. Please provide it in the 'X-SuperAdmin-PIN' header.", 
+                    statusCode: 403));
+            }
 
             var existingBranch = await _mediator.Send(new GetBranchByIdQuery { BranchId = id });
             if (existingBranch == null)
@@ -252,6 +270,7 @@ public class BranchController : ControllerBase
                 DefaultLang = dto.DefaultLang,
                 BaseCurrencyId = dto.BaseCurrencyId,
                 RoundingRules = dto.RoundingRules,
+                UsersLimit = dto.UsersLimit,
                 BranchLogo = branchLogo != null ? await ReadFileBytesAsync(branchLogo) : null,
                 UpdateUser = User.Identity?.Name ?? "system"
             };
@@ -291,6 +310,13 @@ public class BranchController : ControllerBase
         try
         {
             _logger.LogInformation("Deleting branch with ID: {BranchId}", id);
+
+            if (!await VerifySuperAdminPinAsync())
+            {
+                return StatusCode(StatusCodes.Status403Forbidden, ApiResponse<Int64>.CreateFailure(
+                    "Invalid or missing Super Admin PIN. Please provide it in the 'X-SuperAdmin-PIN' header.", 
+                    statusCode: 403));
+            }
 
             var existingBranch = await _mediator.Send(new GetBranchByIdQuery { BranchId = id });
             if (existingBranch == null)
@@ -376,5 +402,33 @@ public class BranchController : ControllerBase
         using var ms = new MemoryStream();
         await file.CopyToAsync(ms);
         return ms.ToArray();
+    }
+
+    private async Task<bool> VerifySuperAdminPinAsync()
+    {
+        var superAdminIdClaim = User.FindFirst("userId")?.Value;
+        if (!long.TryParse(superAdminIdClaim, out var superAdminId))
+        {
+            return false;
+        }
+
+        var pinCode = Request.Headers["X-SuperAdmin-PIN"].ToString();
+        if (string.IsNullOrEmpty(pinCode))
+        {
+            return false;
+        }
+
+        var superAdmin = await _superAdminRepository.GetByIdAsync(superAdminId);
+        if (superAdmin == null)
+        {
+            return false;
+        }
+
+        if (string.IsNullOrEmpty(superAdmin.PinHash))
+        {
+            return pinCode == "1234";
+        }
+
+        return _passwordHashingService.VerifyPassword(pinCode, superAdmin.PinHash);
     }
 }

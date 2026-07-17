@@ -8,7 +8,7 @@ public class SysTicketTypeConfiguration : IEntityTypeConfiguration<SysTicketType
 {
     public void Configure(EntityTypeBuilder<SysTicketType> builder)
     {
-        builder.ToTable("SYS_TICKET_TYPE");
+        builder.ToTable("SYS_TICKET_TYPE", t => t.ExcludeFromMigrations());
         builder.HasKey(e => e.Id);
         builder.Property(e => e.Id).ValueGeneratedOnAdd();
         builder.Property(e => e.TypeNameAr).HasColumnName("TYPE_NAME_AR").HasMaxLength(200).IsRequired();
@@ -31,7 +31,7 @@ public class SysTicketPriorityConfiguration : IEntityTypeConfiguration<SysTicket
 {
     public void Configure(EntityTypeBuilder<SysTicketPriority> builder)
     {
-        builder.ToTable("SYS_TICKET_PRIORITY");
+        builder.ToTable("SYS_TICKET_PRIORITY", t => t.ExcludeFromMigrations());
         builder.HasKey(e => e.Id);
         builder.Property(e => e.Id).ValueGeneratedOnAdd();
         builder.Property(e => e.PriorityNameAr).HasColumnName("PRIORITY_NAME_AR").HasMaxLength(200).IsRequired();
@@ -49,7 +49,7 @@ public class SysTicketStatusConfiguration : IEntityTypeConfiguration<SysTicketSt
 {
     public void Configure(EntityTypeBuilder<SysTicketStatus> builder)
     {
-        builder.ToTable("SYS_TICKET_STATUS");
+        builder.ToTable("SYS_TICKET_STATUS", t => t.ExcludeFromMigrations());
         builder.HasKey(e => e.Id);
         builder.Property(e => e.Id).ValueGeneratedOnAdd();
         builder.Property(e => e.StatusNameAr).HasColumnName("STATUS_NAME_AR").HasMaxLength(200).IsRequired();
@@ -68,7 +68,7 @@ public class SysTicketCategoryConfiguration : IEntityTypeConfiguration<SysTicket
 {
     public void Configure(EntityTypeBuilder<SysTicketCategory> builder)
     {
-        builder.ToTable("SYS_TICKET_CATEGORY");
+        builder.ToTable("SYS_TICKET_CATEGORY", t => t.ExcludeFromMigrations());
         builder.HasKey(e => e.Id);
         builder.Property(e => e.Id).ValueGeneratedOnAdd();
         builder.Property(e => e.CategoryNameAr).HasColumnName("CATEGORY_NAME_AR").HasMaxLength(200).IsRequired();
@@ -88,7 +88,7 @@ public class SysTicketCommentConfiguration : IEntityTypeConfiguration<SysTicketC
 {
     public void Configure(EntityTypeBuilder<SysTicketComment> builder)
     {
-        builder.ToTable("SYS_TICKET_COMMENT");
+        builder.ToTable("SYS_TICKET_COMMENT", t => t.ExcludeFromMigrations());
         builder.HasKey(e => e.Id);
         builder.Property(e => e.Id).ValueGeneratedOnAdd();
         builder.Property(e => e.TicketId).HasColumnName("TICKET_ID").IsRequired();
@@ -105,7 +105,7 @@ public class SysTicketAttachmentConfiguration : IEntityTypeConfiguration<SysTick
 {
     public void Configure(EntityTypeBuilder<SysTicketAttachment> builder)
     {
-        builder.ToTable("SYS_TICKET_ATTACHMENT");
+        builder.ToTable("SYS_TICKET_ATTACHMENT", t => t.ExcludeFromMigrations());
         builder.HasKey(e => e.Id);
         builder.Property(e => e.Id).ValueGeneratedOnAdd();
         builder.Property(e => e.TicketId).HasColumnName("TICKET_ID").IsRequired();
@@ -124,7 +124,7 @@ public class SysRequestTicketConfiguration : IEntityTypeConfiguration<SysRequest
 {
     public void Configure(EntityTypeBuilder<SysRequestTicket> builder)
     {
-        builder.ToTable("SYS_REQUEST_TICKET");
+        builder.ToTable("SYS_REQUEST_TICKET", t => t.ExcludeFromMigrations());
         builder.HasKey(e => e.Id);
         builder.Property(e => e.Id).ValueGeneratedOnAdd();
         builder.Property(e => e.TitleAr).HasColumnName("TITLE_AR").HasMaxLength(200).IsRequired();
@@ -168,7 +168,7 @@ public class SysTicketConfigConfiguration : IEntityTypeConfiguration<SysTicketCo
 {
     public void Configure(EntityTypeBuilder<SysTicketConfig> builder)
     {
-        builder.ToTable("SYS_TICKET_CONFIG");
+        builder.ToTable("SYS_TICKET_CONFIG", t => t.ExcludeFromMigrations());
         builder.HasKey(e => e.Id);
         builder.Property(e => e.Id).ValueGeneratedOnAdd();
         builder.Property(e => e.ConfigKey).HasColumnName("CONFIG_KEY").HasMaxLength(100).IsRequired();

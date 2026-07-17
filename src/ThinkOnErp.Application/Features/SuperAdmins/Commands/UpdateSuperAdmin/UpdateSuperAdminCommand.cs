@@ -9,5 +9,6 @@ public class UpdateSuperAdminCommand : IRequest<bool>
     public string NameEn { get; set; } = string.Empty;
     public string? Email { get; set; }
     public string? Phone { get; set; }
+    public string? PinHash { get; set; }
     public string UpdateUser { get; set; } = string.Empty;
 }

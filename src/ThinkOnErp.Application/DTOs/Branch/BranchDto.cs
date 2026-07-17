@@ -74,6 +74,11 @@ public class BranchDto
     public int? RoundingRules { get; set; }
 
     /// <summary>
+    /// Maximum number of users that can be assigned to the branch
+    /// </summary>
+    public int? UsersLimit { get; set; }
+
+    /// <summary>
     /// Indicates if the branch has a logo
     /// </summary>
     public bool HasLogo { get; set; }

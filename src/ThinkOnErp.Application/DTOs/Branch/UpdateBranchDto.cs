@@ -30,4 +30,5 @@ public class UpdateBranchDto
     /// </summary>
     public Int64? BaseCurrencyId { get; set; }
     public int? RoundingRules { get; set; }
+    public int? UsersLimit { get; set; }
 }

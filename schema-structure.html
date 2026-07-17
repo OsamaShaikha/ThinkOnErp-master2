@@ -1,0 +1,1034 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="ThinkOnErp Multi-Tenant Database Schema Structure — SuperAdmin vs Tenant schema distribution" />
+    <title>ThinkOnErp — Schema Structure v2</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+    <style>
+        *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+        :root{
+            --bg:#0b0f1a;--bg-card:rgba(17,24,42,.72);--bg-glass:rgba(255,255,255,.04);
+            --border:rgba(255,255,255,.07);--text:#e2e8f0;--text-dim:#94a3b8;--text-bright:#f8fafc;
+            --accent-super:#6366f1;--accent-super-glow:rgba(99,102,241,.25);
+            --accent-tenant:#10b981;--accent-tenant-glow:rgba(16,185,129,.25);
+            --accent-warn:#f59e0b;--accent-danger:#ef4444;--accent-info:#3b82f6;
+            --accent-pink:#ec4899;--accent-purple:#a855f7;
+            --radius:16px;--radius-sm:10px;
+        }
+        html{scroll-behavior:smooth}
+        body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--text);line-height:1.6;overflow-x:hidden}
+        body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse 80% 60% at 20% 10%,rgba(99,102,241,.12) 0%,transparent 60%),radial-gradient(ellipse 60% 50% at 80% 80%,rgba(16,185,129,.10) 0%,transparent 60%);pointer-events:none;z-index:0}
+        .container{max-width:1320px;margin:0 auto;padding:0 24px;position:relative;z-index:1}
+        .mono{font-family:'JetBrains Mono',monospace}
+
+        /* ── Nav ── */
+        .nav-bar{position:sticky;top:0;z-index:100;backdrop-filter:blur(20px) saturate(1.6);background:rgba(11,15,26,.78);border-bottom:1px solid var(--border);padding:0 24px}
+        .nav-inner{max-width:1320px;margin:0 auto;display:flex;align-items:center;gap:4px;padding:10px 0;overflow-x:auto;scrollbar-width:none}
+        .nav-inner::-webkit-scrollbar{display:none}
+        .nav-link{padding:7px 16px;border-radius:999px;font-size:.78rem;font-weight:600;color:var(--text-dim);text-decoration:none;white-space:nowrap;transition:all .25s;border:1px solid transparent}
+        .nav-link:hover,.nav-link.active{color:var(--text-bright);background:var(--bg-glass);border-color:var(--border)}
+
+        /* ── Hero ── */
+        .hero{min-height:48vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:80px 24px 50px}
+        .hero__badge{display:inline-flex;align-items:center;gap:8px;background:var(--bg-glass);border:1px solid var(--border);border-radius:999px;padding:6px 18px;font-size:.78rem;font-weight:500;color:var(--accent-super);letter-spacing:.5px;text-transform:uppercase;margin-bottom:24px;backdrop-filter:blur(12px);animation:fadeDown .7s ease-out}
+        .hero__badge::before{content:'';width:8px;height:8px;border-radius:50%;background:var(--accent-tenant);box-shadow:0 0 8px var(--accent-tenant);animation:pulse 2s infinite}
+        .hero h1{font-size:clamp(2rem,5vw,3.4rem);font-weight:900;letter-spacing:-1.5px;line-height:1.1;background:linear-gradient(135deg,#fff 0%,#a5b4fc 50%,#6ee7b7 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:14px;animation:fadeDown .7s ease-out .1s both}
+        .hero p{max-width:640px;font-size:1.05rem;color:var(--text-dim);animation:fadeDown .7s ease-out .2s both}
+        .hero__stats{display:flex;gap:40px;margin-top:36px;animation:fadeDown .7s ease-out .35s both}
+        .stat{text-align:center}
+        .stat__num{font-size:2.6rem;font-weight:800;letter-spacing:-1px}
+        .stat__num--super{color:var(--accent-super)}
+        .stat__num--tenant{color:var(--accent-tenant)}
+        .stat__num--total{color:var(--text-bright)}
+        .stat__label{font-size:.72rem;color:var(--text-dim);text-transform:uppercase;letter-spacing:1px;font-weight:600}
+
+        /* ── Section ── */
+        section{padding:56px 0}
+        .section-header{text-align:center;margin-bottom:42px}
+        .section-header h2{font-size:1.9rem;font-weight:800;letter-spacing:-.5px;color:var(--text-bright);margin-bottom:8px}
+        .section-header p{color:var(--text-dim);max-width:620px;margin:0 auto;font-size:.95rem}
+
+        /* ── Change Log ── */
+        .changelog{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px;margin-bottom:40px}
+        .cl-item{display:flex;align-items:flex-start;gap:12px;padding:16px 18px;border-radius:var(--radius);border:1px solid var(--border);background:var(--bg-card);transition:transform .2s}
+        .cl-item:hover{transform:translateY(-2px)}
+        .cl-icon{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:.95rem;flex-shrink:0}
+        .cl-icon--new{background:rgba(16,185,129,.15);color:#6ee7b7}
+        .cl-icon--mod{background:rgba(245,158,11,.15);color:#fcd34d}
+        .cl-icon--sec{background:rgba(239,68,68,.15);color:#fca5a5}
+        .cl-icon--rule{background:rgba(99,102,241,.15);color:#a5b4fc}
+        .cl-text{font-size:.84rem;line-height:1.5}
+        .cl-text strong{color:var(--text-bright)}
+
+        /* ── Architecture Boxes ── */
+        .arch-diagram{display:grid;grid-template-columns:1fr 70px 1fr;gap:0;align-items:start}
+        @media(max-width:860px){.arch-diagram{grid-template-columns:1fr;gap:20px}.arch-arrow{display:none}}
+        .schema-box{border-radius:var(--radius);padding:24px;border:1px solid var(--border);backdrop-filter:blur(12px);transition:transform .3s,box-shadow .3s}
+        .schema-box:hover{transform:translateY(-3px)}
+        .schema-box--super{background:linear-gradient(160deg,rgba(99,102,241,.10) 0%,var(--bg-card) 40%);box-shadow:0 8px 40px rgba(99,102,241,.08)}
+        .schema-box--super:hover{box-shadow:0 12px 48px rgba(99,102,241,.16)}
+        .schema-box--tenant{background:linear-gradient(160deg,rgba(16,185,129,.10) 0%,var(--bg-card) 40%);box-shadow:0 8px 40px rgba(16,185,129,.08)}
+        .schema-box--tenant:hover{box-shadow:0 12px 48px rgba(16,185,129,.16)}
+        .schema-box__title{display:flex;align-items:center;gap:10px;font-size:1.05rem;font-weight:700;margin-bottom:4px}
+        .schema-box__icon{width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1rem;flex-shrink:0}
+        .schema-box--super .schema-box__icon{background:rgba(99,102,241,.18);color:#a5b4fc}
+        .schema-box--tenant .schema-box__icon{background:rgba(16,185,129,.18);color:#6ee7b7}
+        .schema-box__sub{font-size:.74rem;color:var(--text-dim);margin-bottom:16px;padding-left:44px}
+        .schema-box__list{list-style:none;display:flex;flex-direction:column;gap:4px}
+        .schema-box__list li{display:flex;align-items:center;gap:8px;padding:6px 10px;border-radius:var(--radius-sm);font-size:.8rem;font-weight:500;transition:background .2s;cursor:default;flex-wrap:wrap}
+        .schema-box__list li:hover{background:var(--bg-glass)}
+        .schema-box__list li .dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+        .schema-box--super .dot{background:var(--accent-super);box-shadow:0 0 6px var(--accent-super-glow)}
+        .schema-box--tenant .dot{background:var(--accent-tenant);box-shadow:0 0 6px var(--accent-tenant-glow)}
+        .tag{margin-left:auto;font-size:.62rem;font-weight:700;padding:2px 7px;border-radius:5px;text-transform:uppercase;letter-spacing:.4px;white-space:nowrap}
+        .tag--catalog{background:rgba(99,102,241,.15);color:#a5b4fc}
+        .tag--registry{background:rgba(245,158,11,.15);color:#fcd34d}
+        .tag--monitor{background:rgba(239,68,68,.15);color:#fca5a5}
+        .tag--ops{background:rgba(16,185,129,.15);color:#6ee7b7}
+        .tag--perm{background:rgba(139,92,246,.15);color:#c4b5fd}
+        .tag--audit{background:rgba(244,114,182,.15);color:#f9a8d4}
+        .tag--ticket{background:rgba(14,165,233,.15);color:#7dd3fc}
+        .tag--config{background:rgba(251,191,36,.15);color:#fde68a}
+        .tag--new{background:rgba(16,185,129,.25);color:#6ee7b7;border:1px solid rgba(16,185,129,.3)}
+        .tag--both{background:rgba(168,85,247,.18);color:#c4b5fd;border:1px solid rgba(168,85,247,.25)}
+        .tag--sa-only{background:rgba(239,68,68,.15);color:#fca5a5;border:1px solid rgba(239,68,68,.2)}
+        .arch-arrow{display:flex;flex-direction:column;align-items:center;justify-content:center;padding-top:80px;gap:6px;color:var(--text-dim)}
+        .arch-arrow__line{width:2px;height:70px;background:linear-gradient(to bottom,var(--accent-super),var(--accent-tenant));border-radius:2px;position:relative}
+        .arch-arrow__line::after{content:'';position:absolute;bottom:-6px;left:50%;transform:translateX(-50%);border-left:6px solid transparent;border-right:6px solid transparent;border-top:8px solid var(--accent-tenant)}
+        .arch-arrow span{font-size:.65rem;text-transform:uppercase;letter-spacing:1px;font-weight:600;writing-mode:vertical-lr}
+
+        /* ── Access Matrix Table ── */
+        .matrix-wrap{overflow-x:auto;border-radius:var(--radius);border:1px solid var(--border);background:var(--bg-card)}
+        .matrix{width:100%;border-collapse:collapse;font-size:.82rem}
+        .matrix thead{background:rgba(255,255,255,.03)}
+        .matrix th{padding:12px 16px;text-align:left;font-weight:700;font-size:.72rem;text-transform:uppercase;letter-spacing:.8px;color:var(--text-dim);border-bottom:1px solid var(--border);white-space:nowrap}
+        .matrix td{padding:10px 16px;border-bottom:1px solid rgba(255,255,255,.03);white-space:nowrap}
+        .matrix tr:last-child td{border-bottom:none}
+        .matrix tr:hover td{background:rgba(255,255,255,.02)}
+        .matrix .tbl-name{font-family:'JetBrains Mono',monospace;font-weight:600;font-size:.8rem;color:var(--text-bright)}
+        .matrix .schema-tag{font-size:.62rem;font-weight:700;padding:2px 8px;border-radius:5px;text-transform:uppercase}
+        .schema-tag--super{background:rgba(99,102,241,.15);color:#a5b4fc}
+        .schema-tag--tenant{background:rgba(16,185,129,.15);color:#6ee7b7}
+        .schema-tag--both{background:rgba(168,85,247,.15);color:#c4b5fd}
+        .perm-badge{font-size:.68rem;font-weight:700;padding:3px 10px;border-radius:6px;display:inline-block}
+        .perm-full{background:rgba(34,197,94,.12);color:#4ade80;border:1px solid rgba(34,197,94,.2)}
+        .perm-view{background:rgba(59,130,246,.12);color:#93c5fd;border:1px solid rgba(59,130,246,.2)}
+        .perm-none{background:rgba(239,68,68,.08);color:#f87171;border:1px solid rgba(239,68,68,.15)}
+        .perm-crud{background:rgba(245,158,11,.12);color:#fcd34d;border:1px solid rgba(245,158,11,.2)}
+        .perm-pin{background:rgba(236,72,153,.12);color:#f9a8d4;border:1px solid rgba(236,72,153,.2)}
+        .matrix .note-col{color:var(--text-dim);font-size:.76rem;max-width:280px;white-space:normal}
+
+        /* ── Card Grid ── */
+        .table-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:14px}
+        .t-card{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:20px;transition:transform .25s,box-shadow .25s;cursor:default;position:relative;overflow:hidden}
+        .t-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;border-radius:var(--radius) var(--radius) 0 0}
+        .t-card--super::before{background:linear-gradient(90deg,var(--accent-super),#818cf8)}
+        .t-card--tenant::before{background:linear-gradient(90deg,var(--accent-tenant),#34d399)}
+        .t-card--both::before{background:linear-gradient(90deg,var(--accent-purple),var(--accent-pink))}
+        .t-card:hover{transform:translateY(-3px);box-shadow:0 12px 40px rgba(0,0,0,.3);border-color:rgba(255,255,255,.12)}
+        .t-card__head{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:8px}
+        .t-card__name{font-family:'JetBrains Mono',monospace;font-size:.84rem;font-weight:600;color:var(--text-bright)}
+        .t-card__num{font-size:.65rem;font-weight:700;color:var(--text-dim);background:var(--bg-glass);border:1px solid var(--border);padding:2px 7px;border-radius:6px;flex-shrink:0}
+        .t-card__desc{font-size:.8rem;color:var(--text-dim);margin-bottom:10px;line-height:1.5}
+        .t-card__reason{font-size:.76rem;color:var(--text-dim);padding:10px 12px;background:var(--bg-glass);border-radius:var(--radius-sm);border-left:3px solid;line-height:1.5}
+        .t-card--super .t-card__reason{border-color:var(--accent-super)}
+        .t-card--tenant .t-card__reason{border-color:var(--accent-tenant)}
+        .t-card--both .t-card__reason{border-color:var(--accent-purple)}
+        .t-card__tags{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
+
+        /* ── Permission Flow ── */
+        .perm-flow{display:flex;flex-direction:column;align-items:center;max-width:640px;margin:0 auto}
+        .perm-step{width:100%;padding:18px 22px;border-radius:var(--radius);border:1px solid var(--border);background:var(--bg-card);text-align:center;transition:transform .2s,box-shadow .2s}
+        .perm-step:hover{transform:scale(1.02);box-shadow:0 8px 30px rgba(0,0,0,.3)}
+        .perm-step__level{font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:3px}
+        .perm-step__title{font-size:.95rem;font-weight:700;color:var(--text-bright);margin-bottom:3px}
+        .perm-step__table{font-family:'JetBrains Mono',monospace;font-size:.76rem;color:var(--text-dim)}
+        .perm-step__who{display:inline-block;font-size:.62rem;font-weight:700;padding:2px 8px;border-radius:6px;margin-top:5px;text-transform:uppercase;letter-spacing:.5px}
+        .perm-step--1{border-color:rgba(99,102,241,.3)}.perm-step--1 .perm-step__level{color:#818cf8}.perm-step--1 .perm-step__who{background:rgba(99,102,241,.15);color:#a5b4fc}
+        .perm-step--2{border-color:rgba(245,158,11,.3)}.perm-step--2 .perm-step__level{color:#fbbf24}.perm-step--2 .perm-step__who{background:rgba(99,102,241,.15);color:#a5b4fc}
+        .perm-step--3{border-color:rgba(236,72,153,.3)}.perm-step--3 .perm-step__level{color:#f472b6}.perm-step--3 .perm-step__who{background:rgba(99,102,241,.15);color:#a5b4fc}
+        .perm-step--4{border-color:rgba(34,197,94,.3)}.perm-step--4 .perm-step__level{color:#4ade80}.perm-step--4 .perm-step__who{background:rgba(16,185,129,.15);color:#6ee7b7}
+        .perm-step--5{border-color:rgba(168,85,247,.3)}.perm-step--5 .perm-step__level{color:#c084fc}.perm-step--5 .perm-step__who{background:rgba(16,185,129,.15);color:#6ee7b7}
+        .perm-arrow{display:flex;flex-direction:column;align-items:center;padding:3px 0;color:var(--text-dim)}
+        .perm-arrow__line{width:2px;height:14px;background:rgba(255,255,255,.15);border-radius:2px}
+        .perm-arrow__text{font-size:.65rem;font-weight:600;padding:2px 10px;border-radius:6px}
+        .perm-arrow__text--pass{background:rgba(34,197,94,.12);color:#4ade80}
+        .perm-result{width:100%;padding:14px;border-radius:var(--radius);text-align:center;font-weight:700;font-size:.95rem}
+        .perm-result--granted{background:rgba(34,197,94,.12);border:1px solid rgba(34,197,94,.25);color:#4ade80}
+
+        /* ── Info Banners ── */
+        .info-banner{display:flex;align-items:flex-start;gap:12px;padding:16px 20px;border-radius:var(--radius);border:1px solid;margin:24px 0;font-size:.85rem;line-height:1.6}
+        .info-banner--warn{background:rgba(245,158,11,.06);border-color:rgba(245,158,11,.2);color:#fcd34d}
+        .info-banner--info{background:rgba(59,130,246,.06);border-color:rgba(59,130,246,.2);color:#93c5fd}
+        .info-banner--tip{background:rgba(16,185,129,.06);border-color:rgba(16,185,129,.2);color:#6ee7b7}
+        .info-banner--danger{background:rgba(239,68,68,.06);border-color:rgba(239,68,68,.2);color:#fca5a5}
+        .info-banner__icon{font-size:1.1rem;flex-shrink:0;margin-top:2px}
+
+        /* ── ERD-like Relationship Box ── */
+        .rel-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(380px,1fr));gap:14px}
+        .rel-card{padding:20px;border-radius:var(--radius);border:1px solid var(--border);background:var(--bg-card)}
+        .rel-card__title{font-weight:700;color:var(--text-bright);font-size:.95rem;margin-bottom:6px;display:flex;align-items:center;gap:8px}
+        .rel-card__title .emoji{font-size:1.1rem}
+        .rel-card__desc{font-size:.82rem;color:var(--text-dim);margin-bottom:12px;line-height:1.5}
+        .rel-card__code{font-family:'JetBrains Mono',monospace;font-size:.76rem;color:var(--text-dim);background:rgba(0,0,0,.35);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 14px;display:block;overflow-x:auto;white-space:pre;line-height:1.6}
+
+        /* ── Timeline ── */
+        .timeline{position:relative;max-width:700px;margin:0 auto;padding-left:36px}
+        .timeline::before{content:'';position:absolute;left:14px;top:0;bottom:0;width:2px;background:linear-gradient(to bottom,var(--accent-super),var(--accent-tenant),var(--accent-info));border-radius:2px}
+        .tl-item{position:relative;padding:0 0 28px 28px}
+        .tl-item:last-child{padding-bottom:0}
+        .tl-item__dot{position:absolute;left:-22px;top:4px;width:12px;height:12px;border-radius:50%;border:2px solid}
+        .tl-item--super .tl-item__dot{border-color:var(--accent-super);background:rgba(99,102,241,.3)}
+        .tl-item--tenant .tl-item__dot{border-color:var(--accent-tenant);background:rgba(16,185,129,.3)}
+        .tl-item--info .tl-item__dot{border-color:var(--accent-info);background:rgba(59,130,246,.3)}
+        .tl-item__step{font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:3px}
+        .tl-item--super .tl-item__step{color:#818cf8}
+        .tl-item--tenant .tl-item__step{color:#34d399}
+        .tl-item--info .tl-item__step{color:#60a5fa}
+        .tl-item__title{font-weight:700;color:var(--text-bright);margin-bottom:5px;font-size:.95rem}
+        .tl-item__code{font-family:'JetBrains Mono',monospace;font-size:.74rem;color:var(--text-dim);background:rgba(0,0,0,.35);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 14px;display:block;overflow-x:auto;white-space:pre;line-height:1.5}
+
+        /* ── FK Table ── */
+        .fk-table-wrap{overflow-x:auto;border-radius:var(--radius);border:1px solid var(--border);background:var(--bg-card)}
+        .fk-table{width:100%;border-collapse:collapse;font-size:.82rem}
+        .fk-table thead{background:rgba(255,255,255,.03)}
+        .fk-table th{padding:12px 16px;text-align:left;font-weight:700;font-size:.7rem;text-transform:uppercase;letter-spacing:.8px;color:var(--text-dim);border-bottom:1px solid var(--border);white-space:nowrap}
+        .fk-table td{padding:10px 16px;border-bottom:1px solid rgba(255,255,255,.03);white-space:nowrap}
+        .fk-table tr:last-child td{border-bottom:none}
+        .fk-table tr:hover td{background:rgba(255,255,255,.02)}
+        .fk-table .col-tenant{color:#6ee7b7;font-family:'JetBrains Mono',monospace;font-weight:500}
+        .fk-table .col-global{color:#a5b4fc;font-family:'JetBrains Mono',monospace;font-weight:500}
+        .fk-table .col-arrow{color:var(--text-dim);text-align:center;font-size:1rem}
+        .fk-table .col-note{color:var(--text-dim);font-style:italic}
+
+        /* ── Filter ── */
+        .filter-bar{display:flex;align-items:center;gap:10px;margin-bottom:24px;flex-wrap:wrap}
+        .filter-input-wrap{position:relative;flex:1;min-width:200px}
+        .filter-input-wrap::before{content:'⌕';position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--text-dim);font-size:1rem;pointer-events:none}
+        .filter-input{width:100%;padding:9px 14px 9px 38px;border-radius:999px;border:1px solid var(--border);background:var(--bg-card);color:var(--text-bright);font-family:inherit;font-size:.85rem;outline:none;transition:border-color .25s}
+        .filter-input:focus{border-color:var(--accent-super)}
+        .filter-btn{padding:9px 16px;border-radius:999px;border:1px solid var(--border);background:transparent;color:var(--text-dim);font-family:inherit;font-size:.78rem;font-weight:600;cursor:pointer;transition:all .25s}
+        .filter-btn:hover,.filter-btn.active{color:var(--text-bright);background:var(--bg-glass)}
+        .t-card.hidden{display:none}
+
+        /* ── Footer ── */
+        .footer{text-align:center;padding:50px 24px 36px;color:var(--text-dim);font-size:.8rem;border-top:1px solid var(--border);margin-top:30px}
+        .footer strong{color:var(--text-bright)}
+
+        /* ── Animations ── */
+        @keyframes fadeDown{from{opacity:0;transform:translateY(-18px)}to{opacity:1;transform:translateY(0)}}
+        @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+        .reveal{opacity:0;transform:translateY(28px);transition:opacity .6s ease-out,transform .6s ease-out}
+        .reveal.visible{opacity:1;transform:translateY(0)}
+        @media(max-width:600px){.hero__stats{flex-direction:column;gap:16px}.table-grid,.rel-grid{grid-template-columns:1fr}.changelog{grid-template-columns:1fr}}
+
+        /* ── Divider ── */
+        .section-divider{height:1px;background:linear-gradient(90deg,transparent,var(--border),transparent);margin:20px 0}
+    </style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav class="nav-bar" id="navbar">
+    <div class="nav-inner">
+        <a class="nav-link active" href="#overview">Overview</a>
+        <a class="nav-link" href="#changes">What Changed</a>
+        <a class="nav-link" href="#access-matrix">Access Matrix</a>
+        <a class="nav-link" href="#superadmin">SuperAdmin</a>
+        <a class="nav-link" href="#tenant">Tenant</a>
+        <a class="nav-link" href="#new-features">New Features</a>
+        <a class="nav-link" href="#permissions">Permission Flow</a>
+        <a class="nav-link" href="#crossref">Cross-Schema FKs</a>
+        <a class="nav-link" href="#provisioning">Provisioning</a>
+    </div>
+</nav>
+
+<!-- HERO -->
+<header class="hero" id="overview">
+    <span class="hero__badge">Multi-Tenant Architecture v2</span>
+    <h1>ThinkOnErp<br/>Schema Structure</h1>
+    <p>Updated table distribution with access control rules, User-Branch multi-assignment, SuperAdmin PIN verification, and branch user limits.</p>
+    <div class="hero__stats">
+        <div class="stat"><div class="stat__num stat__num--super">12</div><div class="stat__label">SuperAdmin Tables</div></div>
+        <div class="stat"><div class="stat__num stat__num--tenant">28</div><div class="stat__label">Tenant Tables</div></div>
+        <div class="stat"><div class="stat__num stat__num--total">40</div><div class="stat__label">Total Tables</div></div>
+    </div>
+</header>
+
+<!-- WHAT CHANGED -->
+<section class="container reveal" id="changes">
+    <div class="section-header">
+        <h2>What Changed in v2</h2>
+        <p>Key structural changes from the previous version based on new business requirements.</p>
+    </div>
+    <div class="changelog">
+        <div class="cl-item">
+            <div class="cl-icon cl-icon--new">＋</div>
+            <div class="cl-text"><strong>SYS_USER_BRANCHES</strong> — New junction table. Users must have ≥1 branch. Supports multi-branch assignment with a primary flag.</div>
+        </div>
+        <div class="cl-item">
+            <div class="cl-icon cl-icon--mod">✎</div>
+            <div class="cl-text"><strong>SYS_BRANCH</strong> — Added <code class="mono">USERS_LIMIT</code> column to cap the number of users per branch.</div>
+        </div>
+        <div class="cl-item">
+            <div class="cl-icon cl-icon--sec">🔐</div>
+            <div class="cl-text"><strong>SYS_SUPER_ADMIN</strong> — Added <code class="mono">PIN_HASH</code> for edit/delete action confirmation.</div>
+        </div>
+        <div class="cl-item">
+            <div class="cl-icon cl-icon--mod">✎</div>
+            <div class="cl-text"><strong>SYS_DOCUMENT</strong> — Now exists in <strong>both</strong> SuperAdmin and Tenant schemas.</div>
+        </div>
+        <div class="cl-item">
+            <div class="cl-icon cl-icon--rule">⚙</div>
+            <div class="cl-text"><strong>SYS_CODE & SYS_SETTINGS</strong> — In tenant schema but <strong>SuperAdmin access only</strong>. Tenant users cannot modify.</div>
+        </div>
+        <div class="cl-item">
+            <div class="cl-icon cl-icon--rule">⚙</div>
+            <div class="cl-text"><strong>SYS_AUDIT_LOG</strong> — SuperAdmin has <strong>full access</strong>. Tenant users have <strong>view-only</strong> access.</div>
+        </div>
+        <div class="cl-item">
+            <div class="cl-icon cl-icon--rule">⚙</div>
+            <div class="cl-text"><strong>Permission Flow</strong> — SuperAdmin grants to branch → Company Admin assigns roles/permissions to users within what was granted.</div>
+        </div>
+        <div class="cl-item">
+            <div class="cl-icon cl-icon--mod">✎</div>
+            <div class="cl-text"><strong>SYS_USERS</strong> — <code class="mono">BranchId</code> replaced by <code class="mono">SYS_USER_BRANCHES</code> many-to-many table.</div>
+        </div>
+    </div>
+</section>
+
+<!-- ACCESS CONTROL MATRIX -->
+<section class="container reveal" id="access-matrix">
+    <div class="section-header">
+        <h2>Access Control Matrix</h2>
+        <p>Who can do what on each table — the single source of truth for all access rules.</p>
+    </div>
+
+    <div class="info-banner info-banner--danger">
+        <span class="info-banner__icon">🔐</span>
+        <div><strong>PIN Confirmation:</strong> SuperAdmin <strong>Edit</strong> and <strong>Delete</strong> actions require PIN Code verification before execution. The PIN is stored as <code class="mono">PIN_HASH</code> in SYS_SUPER_ADMIN.</div>
+    </div>
+
+    <div class="matrix-wrap">
+        <table class="matrix" id="access-matrix-table">
+            <thead>
+                <tr>
+                    <th>Table</th>
+                    <th>Schema</th>
+                    <th>SuperAdmin</th>
+                    <th>Company / Branch Admin</th>
+                    <th>Regular User</th>
+                    <th>Notes</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr><td colspan="6" style="padding:8px 16px;font-weight:700;color:#818cf8;font-size:.72rem;text-transform:uppercase;letter-spacing:1px;background:rgba(99,102,241,.05)">SuperAdmin Schema — Platform Management</td></tr>
+                <tr>
+                    <td class="tbl-name">SYS_SUPER_ADMIN</td>
+                    <td><span class="schema-tag schema-tag--super">SuperAdmin</span></td>
+                    <td><span class="perm-badge perm-pin">FULL + PIN</span></td>
+                    <td><span class="perm-badge perm-none">No Access</span></td>
+                    <td><span class="perm-badge perm-none">No Access</span></td>
+                    <td class="note-col">Edit/Delete require PIN. Added PIN_HASH column.</td>
+                </tr>
+                <tr>
+                    <td class="tbl-name">SYS_COMPANY</td>
+                    <td><span class="schema-tag schema-tag--super">SuperAdmin</span></td>
+                    <td><span class="perm-badge perm-pin">FULL + PIN</span></td>
+                    <td><span class="perm-badge perm-view">View Own</span></td>
+                    <td><span class="perm-badge perm-none">No Access</span></td>
+                    <td class="note-col">Company admin sees only their company info.</td>
+                </tr>
+                <tr>
+                    <td class="tbl-name">SYS_SYSTEM</td>
+                    <td><span class="schema-tag schema-tag--super">SuperAdmin</span></td>
+                    <td><span class="perm-badge perm-full">Full CRUD</span></td>
+                    <td><span class="perm-badge perm-view">View</span></td>
+                    <td><span class="perm-badge perm-view">View</span></td>
+                    <td class="note-col">Global catalog. Tenants see for navigation.</td>
+                </tr>
+                <tr>
+                    <td class="tbl-name">SYS_SCREEN</td>
+                    <td><span class="schema-tag schema-tag--super">SuperAdmin</span></td>
+                    <td><span class="perm-badge perm-full">Full CRUD</span></td>
+                    <td><span class="perm-badge perm-view">View</span></td>
+                    <td><span class="perm-badge perm-view">View</span></td>
+                    <td class="note-col">Global catalog. Tenants see for navigation.</td>
+                </tr>
+                <tr>
+                    <td class="tbl-name">SYS_FEATURE</td>
+                    <td><span class="schema-tag schema-tag--super">SuperAdmin</span></td>
+                    <td><span class="perm-badge perm-full">Full CRUD</span></td>
+                    <td><span class="perm-badge perm-view">View</span></td>
+                    <td><span class="perm-badge perm-none">No Access</span></td>
+                    <td class="note-col">Developer-defined actions.</td>
+                </tr>
+                <tr>
+                    <td class="tbl-name">SYS_SCREEN_FEATURE</td>
+                    <td><span class="schema-tag schema-tag--super">SuperAdmin</span></td>
+                    <td><span class="perm-badge perm-full">Full CRUD</span></td>
+                    <td><span class="perm-badge perm-view">View</span></td>
+                    <td><span class="perm-badge perm-none">No Access</span></td>
+                    <td class="note-col">Mapping table.</td>
+                </tr>
+                <tr>
+                    <td class="tbl-name">SYS_CURRENCY</td>
+                    <td><span class="schema-tag schema-tag--super">SuperAdmin</span></td>
+                    <td><span class="perm-badge perm-full">Full CRUD</span></td>
+                    <td><span class="perm-badge perm-view">View</span></td>
+                    <td><span class="perm-badge perm-view">View</span></td>
+                    <td class="note-col">Reference data used in dropdowns.</td>
+                </tr>
+                <tr>
+                    <td class="tbl-name">SYS_DOCUMENT</td>
+                    <td><span class="schema-tag schema-tag--both">Both</span></td>
+                    <td><span class="perm-badge perm-full">Full CRUD</span></td>
+                    <td><span class="perm-badge perm-crud">Full CRUD</span></td>
+                    <td><span class="perm-badge perm-view">View</span></td>
+                    <td class="note-col">Exists in both schemas. Each manages own docs.</td>
+                </tr>
+                <tr>
+                    <td class="tbl-name">SYS_PERFORMANCE_METRICS</td>
+                    <td><span class="schema-tag schema-tag--super">SuperAdmin</span></td>
+                    <td><span class="perm-badge perm-full">Full CRUD</span></td>
+                    <td><span class="perm-badge perm-none">No Access</span></td>
+                    <td><span class="perm-badge perm-none">No Access</span></td>
+                    <td class="note-col">DevOps monitoring.</td>
+                </tr>
+                <tr>
+                    <td class="tbl-name">SYS_SLOW_QUERIES</td>
+                    <td><span class="schema-tag schema-tag--super">SuperAdmin</span></td>
+                    <td><span class="perm-badge perm-full">Full CRUD</span></td>
+                    <td><span class="perm-badge perm-none">No Access</span></td>
+                    <td><span class="perm-badge perm-none">No Access</span></td>
+                    <td class="note-col">DevOps monitoring.</td>
+                </tr>
+                <tr>
+                    <td class="tbl-name">SYS_SECURITY_THREATS</td>
+                    <td><span class="schema-tag schema-tag--super">SuperAdmin</span></td>
+                    <td><span class="perm-badge perm-full">Full CRUD</span></td>
+                    <td><span class="perm-badge perm-none">No Access</span></td>
+                    <td><span class="perm-badge perm-none">No Access</span></td>
+                    <td class="note-col">Security monitoring.</td>
+                </tr>
+                <tr>
+                    <td class="tbl-name">SYS_FAILED_LOGINS</td>
+                    <td><span class="schema-tag schema-tag--super">SuperAdmin</span></td>
+                    <td><span class="perm-badge perm-full">Full CRUD</span></td>
+                    <td><span class="perm-badge perm-none">No Access</span></td>
+                    <td><span class="perm-badge perm-none">No Access</span></td>
+                    <td class="note-col">Pre-auth, no tenant context.</td>
+                </tr>
+
+                <tr><td colspan="6" style="padding:8px 16px;font-weight:700;color:#34d399;font-size:.72rem;text-transform:uppercase;letter-spacing:1px;background:rgba(16,185,129,.05)">Tenant Schema — Company Operations (SuperAdmin accesses via schema switch)</td></tr>
+                <tr>
+                    <td class="tbl-name">SYS_BRANCH</td>
+                    <td><span class="schema-tag schema-tag--tenant">Tenant</span></td>
+                    <td><span class="perm-badge perm-pin">FULL + PIN</span></td>
+                    <td><span class="perm-badge perm-crud">Full CRUD</span></td>
+                    <td><span class="perm-badge perm-view">View</span></td>
+                    <td class="note-col">Added USERS_LIMIT column. SA edit/delete needs PIN.</td>
+                </tr>
+                <tr>
+                    <td class="tbl-name">SYS_USERS</td>
+                    <td><span class="schema-tag schema-tag--tenant">Tenant</span></td>
+                    <td><span class="perm-badge perm-full">Full CRUD</span></td>
+                    <td><span class="perm-badge perm-crud">Full CRUD</span></td>
+                    <td><span class="perm-badge perm-view">View Self</span></td>
+                    <td class="note-col">BranchId removed → use SYS_USER_BRANCHES.</td>
+                </tr>
+                <tr>
+                    <td class="tbl-name">SYS_USER_BRANCHES</td>
+                    <td><span class="schema-tag schema-tag--tenant">Tenant</span></td>
+                    <td><span class="perm-badge perm-full">Full CRUD</span></td>
+                    <td><span class="perm-badge perm-crud">Full CRUD</span></td>
+                    <td><span class="perm-badge perm-view">View Self</span></td>
+                    <td class="note-col">NEW. User ↔ Branch many-to-many. Min 1 branch required.</td>
+                </tr>
+                <tr>
+                    <td class="tbl-name">SYS_ROLE</td>
+                    <td><span class="schema-tag schema-tag--tenant">Tenant</span></td>
+                    <td><span class="perm-badge perm-full">Full CRUD</span></td>
+                    <td><span class="perm-badge perm-crud">Full CRUD</span></td>
+                    <td><span class="perm-badge perm-view">View</span></td>
+                    <td class="note-col">Company-defined roles.</td>
+                </tr>
+                <tr>
+                    <td class="tbl-name">SYS_USERS_ROLES</td>
+                    <td><span class="schema-tag schema-tag--tenant">Tenant</span></td>
+                    <td><span class="perm-badge perm-full">Full CRUD</span></td>
+                    <td><span class="perm-badge perm-crud">Full CRUD</span></td>
+                    <td><span class="perm-badge perm-none">No Access</span></td>
+                    <td class="note-col">Admin assigns roles to users.</td>
+                </tr>
+                <tr>
+                    <td class="tbl-name">SYS_BRANCH_SYSTEMS</td>
+                    <td><span class="schema-tag schema-tag--tenant">Tenant</span></td>
+                    <td><span class="perm-badge perm-full">Full CRUD</span></td>
+                    <td><span class="perm-badge perm-view">View</span></td>
+                    <td><span class="perm-badge perm-none">No Access</span></td>
+                    <td class="note-col">Only SuperAdmin grants/revokes system access to branches.</td>
+                </tr>
+                <tr>
+                    <td class="tbl-name">SYS_BRANCH_SCREENS</td>
+                    <td><span class="schema-tag schema-tag--tenant">Tenant</span></td>
+                    <td><span class="perm-badge perm-full">Full CRUD</span></td>
+                    <td><span class="perm-badge perm-view">View</span></td>
+                    <td><span class="perm-badge perm-none">No Access</span></td>
+                    <td class="note-col">Only SuperAdmin grants/revokes screen access to branches.</td>
+                </tr>
+                <tr>
+                    <td class="tbl-name">SYS_BRANCH_FEATURES</td>
+                    <td><span class="schema-tag schema-tag--tenant">Tenant</span></td>
+                    <td><span class="perm-badge perm-full">Full CRUD</span></td>
+                    <td><span class="perm-badge perm-view">View</span></td>
+                    <td><span class="perm-badge perm-none">No Access</span></td>
+                    <td class="note-col">Only SuperAdmin grants/revokes feature access to branches.</td>
+                </tr>
+                <tr>
+                    <td class="tbl-name">SYS_ROLE_SCREEN_PERMISSIONS</td>
+                    <td><span class="schema-tag schema-tag--tenant">Tenant</span></td>
+                    <td><span class="perm-badge perm-full">Full CRUD</span></td>
+                    <td><span class="perm-badge perm-crud">CRUD *</span></td>
+                    <td><span class="perm-badge perm-none">No Access</span></td>
+                    <td class="note-col">* Admin can only assign permissions that SuperAdmin granted to the branch.</td>
+                </tr>
+                <tr>
+                    <td class="tbl-name">SYS_USER_SCREEN_PERMISSIONS</td>
+                    <td><span class="schema-tag schema-tag--tenant">Tenant</span></td>
+                    <td><span class="perm-badge perm-full">Full CRUD</span></td>
+                    <td><span class="perm-badge perm-crud">CRUD *</span></td>
+                    <td><span class="perm-badge perm-none">No Access</span></td>
+                    <td class="note-col">* Admin can only assign permissions that SuperAdmin granted to the branch.</td>
+                </tr>
+                <tr>
+                    <td class="tbl-name">SYS_FISCAL_YEAR</td>
+                    <td><span class="schema-tag schema-tag--tenant">Tenant</span></td>
+                    <td><span class="perm-badge perm-full">Full CRUD</span></td>
+                    <td><span class="perm-badge perm-crud">Full CRUD</span></td>
+                    <td><span class="perm-badge perm-view">View</span></td>
+                    <td class="note-col">Financial periods.</td>
+                </tr>
+                <tr>
+                    <td class="tbl-name">SYS_AUDIT_LOG</td>
+                    <td><span class="schema-tag schema-tag--tenant">Tenant</span></td>
+                    <td><span class="perm-badge perm-full">Full Access</span></td>
+                    <td><span class="perm-badge perm-view">View Only</span></td>
+                    <td><span class="perm-badge perm-view">View Only</span></td>
+                    <td class="note-col">SuperAdmin full access on all tenants. Tenant can only view.</td>
+                </tr>
+                <tr>
+                    <td class="tbl-name">SYS_AUDIT_LOG_ARCHIVE</td>
+                    <td><span class="schema-tag schema-tag--tenant">Tenant</span></td>
+                    <td><span class="perm-badge perm-full">Full Access</span></td>
+                    <td><span class="perm-badge perm-view">View Only</span></td>
+                    <td><span class="perm-badge perm-none">No Access</span></td>
+                    <td class="note-col">Archive companion to audit log.</td>
+                </tr>
+                <tr>
+                    <td class="tbl-name">SYS_RETENTION_POLICIES</td>
+                    <td><span class="schema-tag schema-tag--tenant">Tenant</span></td>
+                    <td><span class="perm-badge perm-full">Full CRUD</span></td>
+                    <td><span class="perm-badge perm-view">View Only</span></td>
+                    <td><span class="perm-badge perm-none">No Access</span></td>
+                    <td class="note-col">Retention rules set by SuperAdmin.</td>
+                </tr>
+                <tr>
+                    <td class="tbl-name">SYS_REQUEST_TICKET</td>
+                    <td><span class="schema-tag schema-tag--tenant">Tenant</span></td>
+                    <td><span class="perm-badge perm-full">Full Access</span></td>
+                    <td><span class="perm-badge perm-crud">Full CRUD</span></td>
+                    <td><span class="perm-badge perm-crud">Create / View Own</span></td>
+                    <td class="note-col">SA accesses via schema switch.</td>
+                </tr>
+                <tr>
+                    <td class="tbl-name">SYS_TICKET_*</td>
+                    <td><span class="schema-tag schema-tag--tenant">Tenant</span></td>
+                    <td><span class="perm-badge perm-full">Full Access</span></td>
+                    <td><span class="perm-badge perm-crud">Full CRUD</span></td>
+                    <td><span class="perm-badge perm-view">View</span></td>
+                    <td class="note-col">Type, Status, Priority, Category, Comment, Attachment, Config.</td>
+                </tr>
+                <tr>
+                    <td class="tbl-name">SYS_CODE</td>
+                    <td><span class="schema-tag schema-tag--tenant">Tenant</span></td>
+                    <td><span class="perm-badge perm-full">Full CRUD</span></td>
+                    <td><span class="perm-badge perm-none">No Access</span></td>
+                    <td><span class="perm-badge perm-none">No Access</span></td>
+                    <td class="note-col">SuperAdmin only. Tenant users cannot modify or view.</td>
+                </tr>
+                <tr>
+                    <td class="tbl-name">SYS_SETTINGS</td>
+                    <td><span class="schema-tag schema-tag--tenant">Tenant</span></td>
+                    <td><span class="perm-badge perm-full">Full CRUD</span></td>
+                    <td><span class="perm-badge perm-none">No Access</span></td>
+                    <td><span class="perm-badge perm-none">No Access</span></td>
+                    <td class="note-col">SuperAdmin only. Tenant users cannot modify or view.</td>
+                </tr>
+                <tr>
+                    <td class="tbl-name">SYS_SAVED_SEARCH</td>
+                    <td><span class="schema-tag schema-tag--tenant">Tenant</span></td>
+                    <td><span class="perm-badge perm-full">Full CRUD</span></td>
+                    <td><span class="perm-badge perm-crud">Full CRUD</span></td>
+                    <td><span class="perm-badge perm-crud">Own Only</span></td>
+                    <td class="note-col">Per-user searches.</td>
+                </tr>
+                <tr>
+                    <td class="tbl-name">SYS_SEARCH_ANALYTICS</td>
+                    <td><span class="schema-tag schema-tag--tenant">Tenant</span></td>
+                    <td><span class="perm-badge perm-full">Full CRUD</span></td>
+                    <td><span class="perm-badge perm-view">View</span></td>
+                    <td><span class="perm-badge perm-none">No Access</span></td>
+                    <td class="note-col">Analytics data.</td>
+                </tr>
+                <tr>
+                    <td class="tbl-name">SYS_REPORT_SCHEDULE</td>
+                    <td><span class="schema-tag schema-tag--tenant">Tenant</span></td>
+                    <td><span class="perm-badge perm-full">Full CRUD</span></td>
+                    <td><span class="perm-badge perm-crud">Full CRUD</span></td>
+                    <td><span class="perm-badge perm-view">View Own</span></td>
+                    <td class="note-col">Scheduled reports.</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="info-banner info-banner--info" style="margin-top:20px">
+        <span class="info-banner__icon">ℹ️</span>
+        <div><strong>How SuperAdmin accesses tenant tables:</strong> The API calls <code class="mono">ALTER SESSION SET CURRENT_SCHEMA = "TENANT_ACME"</code> via EF Core, then queries using the same <code class="mono">OracleDbContext</code>. This is the same mechanism as <code class="mono">SchemaRoutingMiddleware</code>.</div>
+    </div>
+</section>
+
+<!-- NEW FEATURES DETAIL -->
+<section class="container reveal" id="new-features">
+    <div class="section-header">
+        <h2>New Features & Schema Changes</h2>
+        <p>Detailed breakdown of each structural change introduced in v2.</p>
+    </div>
+
+    <div class="rel-grid">
+
+        <!-- User-Branch Many-to-Many -->
+        <div class="rel-card">
+            <div class="rel-card__title"><span class="emoji">👥</span> User ↔ Branch Multi-Assignment</div>
+            <div class="rel-card__desc">A user <strong>must</strong> be assigned to at least 1 branch. Can be assigned to multiple branches. One branch is marked as <strong>primary</strong>.</div>
+<code class="rel-card__code">-- NEW TABLE: SYS_USER_BRANCHES (Tenant Schema)
+CREATE TABLE SYS_USER_BRANCHES (
+  "Id"          NUMBER(19) GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  "USER_ID"     NUMBER(19) NOT NULL,  -- FK → SYS_USERS
+  "BRANCH_ID"   NUMBER(19) NOT NULL,  -- FK → SYS_BRANCH
+  "IS_PRIMARY"  NUMBER(1)  DEFAULT 0, -- One branch is primary
+  "ASSIGNED_BY" NUMBER(19),           -- Who assigned this
+  "ASSIGNED_AT" DATE DEFAULT SYSDATE,
+  CONSTRAINT UQ_USER_BRANCH UNIQUE ("USER_ID", "BRANCH_ID")
+);
+
+-- SYS_USERS: Remove BranchId column
+ALTER TABLE SYS_USERS DROP COLUMN "BRANCH_ID";</code>
+        </div>
+
+        <!-- Branch Users Limit -->
+        <div class="rel-card">
+            <div class="rel-card__title"><span class="emoji">🔢</span> Branch Users Limit</div>
+            <div class="rel-card__desc">Each branch has a maximum number of users. The API validates this limit when assigning users to a branch via <code class="mono">SYS_USER_BRANCHES</code>.</div>
+<code class="rel-card__code">-- MODIFIED: SYS_BRANCH (Tenant Schema)
+ALTER TABLE SYS_BRANCH ADD (
+  "USERS_LIMIT" NUMBER(10) DEFAULT 0  -- 0 = unlimited
+);
+
+-- API validation logic:
+-- SELECT COUNT(*) FROM SYS_USER_BRANCHES
+--   WHERE BRANCH_ID = :branchId;
+-- IF count >= branch.USERS_LIMIT AND USERS_LIMIT > 0
+--   THEN THROW "Branch user limit reached";</code>
+        </div>
+
+        <!-- SuperAdmin PIN -->
+        <div class="rel-card">
+            <div class="rel-card__title"><span class="emoji">🔐</span> SuperAdmin PIN Confirmation</div>
+            <div class="rel-card__desc">Edit and Delete actions by SuperAdmin require a PIN code. The PIN is hashed and stored in <code class="mono">SYS_SUPER_ADMIN</code>. Each mutation API call includes a <code class="mono">pinCode</code> field.</div>
+<code class="rel-card__code">-- MODIFIED: SYS_SUPER_ADMIN (SuperAdmin Schema)
+ALTER TABLE SYS_SUPER_ADMIN ADD (
+  "PIN_HASH" VARCHAR2(256)  -- Hashed PIN for edit/delete
+);
+
+-- API request example:
+-- PUT /api/superadmin/branches/5
+-- {
+--   "branchNameEn": "New Name",
+--   "pinCode": "1234"  ← verified server-side
+-- }
+
+-- Server-side:
+-- var admin = await _db.SysSuperAdmins.FindAsync(adminId);
+-- if (!VerifyHash(request.PinCode, admin.PinHash))
+--   return Unauthorized("Invalid PIN");</code>
+        </div>
+
+        <!-- SYS_DOCUMENT in Both -->
+        <div class="rel-card">
+            <div class="rel-card__title"><span class="emoji">📄</span> SYS_DOCUMENT in Both Schemas</div>
+            <div class="rel-card__desc">Platform-level documents (contracts, templates) live in SuperAdmin schema. Company-level documents (invoices, reports) live in tenant schema. Same table structure, different data.</div>
+<code class="rel-card__code">-- SuperAdmin Schema: SYS_DOCUMENT
+-- Platform templates, license files, global docs
+-- Managed by SuperAdmin only
+
+-- Tenant Schema: SYS_DOCUMENT  
+-- Company invoices, reports, attachments
+-- Managed by company admin and users
+
+-- Both use the same entity: SysDocument
+-- The schema determines which data is accessed</code>
+        </div>
+
+        <!-- Audit Log Access Rules -->
+        <div class="rel-card">
+            <div class="rel-card__title"><span class="emoji">📋</span> Audit Log Access Rules</div>
+            <div class="rel-card__desc">Audit logs live in tenant schema for data isolation. SuperAdmin has <strong>full access</strong> via schema switch. Tenant users can only <strong>view</strong> — no edit, no delete.</div>
+<code class="rel-card__code">-- SuperAdmin access flow:
+-- 1. Query SYS_COMPANY for target schema
+-- 2. ALTER SESSION SET CURRENT_SCHEMA = "TENANT_X"
+-- 3. Full CRUD on SYS_AUDIT_LOG
+
+-- Tenant user access:
+-- Can only call GET endpoints
+-- POST/PUT/DELETE blocked at API level
+-- [Authorize(Policy = "SuperAdminOnly")]
+-- on all mutation endpoints</code>
+        </div>
+
+        <!-- Permission Delegation -->
+        <div class="rel-card">
+            <div class="rel-card__title"><span class="emoji">🔑</span> Permission Delegation Flow</div>
+            <div class="rel-card__desc">SuperAdmin grants systems/screens/features to a branch. Company Admin can only assign roles and user permissions <strong>within what SuperAdmin granted</strong>. Cannot exceed branch-level permissions.</div>
+<code class="rel-card__code">-- Step 1: SuperAdmin grants HR system to Branch 1
+-- INSERT INTO SYS_BRANCH_SYSTEMS 
+--   (BRANCH_ID=1, SYSTEM_ID=3, IS_ALLOWED=1)
+
+-- Step 2: Company Admin creates a role with HR access
+-- INSERT INTO SYS_ROLE_SCREEN_PERMISSIONS
+--   (ROLE_ID=5, SCREEN_ID=12, CAN_VIEW=1, CAN_INSERT=1)
+-- ⚠️ API validates: Screen 12 must belong to 
+--    a system granted to the user's branch
+
+-- Step 3: Company Admin assigns role to user
+-- INSERT INTO SYS_USERS_ROLES (USER_ID=8, ROLE_ID=5)</code>
+        </div>
+
+    </div>
+</section>
+
+<!-- SUPERADMIN SCHEMA -->
+<section class="container reveal" id="superadmin">
+    <div class="section-header">
+        <h2>SuperAdmin Schema — 12 Tables</h2>
+        <p>Global tables managed by platform administrators. Includes SYS_DOCUMENT for platform-level documents.</p>
+    </div>
+    <div class="table-grid">
+        <div class="t-card t-card--super"><div class="t-card__head"><span class="t-card__name">SYS_SUPER_ADMIN</span><span class="t-card__num">#1</span></div><div class="t-card__desc">Platform admin accounts. <strong class="mono" style="color:#f9a8d4">+ PIN_HASH</strong> for edit/delete confirmation.</div><div class="t-card__reason">Controls entire platform. PIN required for destructive actions.</div></div>
+
+        <div class="t-card t-card--super"><div class="t-card__head"><span class="t-card__name">SYS_COMPANY</span><span class="t-card__num">#2</span></div><div class="t-card__desc">Company registry with COMPANY_SCHEMA for routing and licensing.</div><div class="t-card__reason">Schema routing target. SuperAdmin creates/manages companies.</div></div>
+
+        <div class="t-card t-card--super"><div class="t-card__head"><span class="t-card__name">SYS_SYSTEM</span><span class="t-card__num">#3</span></div><div class="t-card__desc">ERP module catalog: Accounting, HR, Inventory, Payroll.</div><div class="t-card__reason">Developer-defined. Single source of truth for all tenants.</div></div>
+
+        <div class="t-card t-card--super"><div class="t-card__head"><span class="t-card__name">SYS_SCREEN</span><span class="t-card__num">#4</span></div><div class="t-card__desc">Screens/pages within each module with URLs and display order.</div><div class="t-card__reason">Global catalog for navigation and permission targeting.</div></div>
+
+        <div class="t-card t-card--super"><div class="t-card__head"><span class="t-card__name">SYS_FEATURE</span><span class="t-card__num">#5</span></div><div class="t-card__desc">Feature actions: view, create, edit, delete, approve, reject, export, print.</div><div class="t-card__reason">Fixed CRUD actions. Standardized across all tenants.</div></div>
+
+        <div class="t-card t-card--super"><div class="t-card__head"><span class="t-card__name">SYS_SCREEN_FEATURE</span><span class="t-card__num">#6</span></div><div class="t-card__desc">Maps which features are available on which screens.</div><div class="t-card__reason">Global capability matrix defining application features.</div></div>
+
+        <div class="t-card t-card--super"><div class="t-card__head"><span class="t-card__name">SYS_CURRENCY</span><span class="t-card__num">#7</span></div><div class="t-card__desc">Global currency dictionary: SAR, USD, AED, EUR.</div><div class="t-card__reason">Reference data. Prevents duplication across tenants.</div></div>
+
+        <div class="t-card t-card--both"><div class="t-card__head"><span class="t-card__name">SYS_DOCUMENT</span><span class="t-card__num">#8</span></div><div class="t-card__desc">Platform-level documents: templates, contracts, license files.</div><div class="t-card__reason">Exists in BOTH schemas. SuperAdmin copy for platform docs, tenant copy for company docs.</div><div class="t-card__tags"><span class="tag tag--both">Both Schemas</span></div></div>
+
+        <div class="t-card t-card--super"><div class="t-card__head"><span class="t-card__name">SYS_PERFORMANCE_METRICS</span><span class="t-card__num">#9</span></div><div class="t-card__desc">Hourly API performance: request count, p50/p95/p99 latency.</div><div class="t-card__reason">Platform-wide monitoring. DevOps only.</div></div>
+
+        <div class="t-card t-card--super"><div class="t-card__head"><span class="t-card__name">SYS_SLOW_QUERIES</span><span class="t-card__num">#10</span></div><div class="t-card__desc">SQL statements exceeding thresholds with correlation IDs.</div><div class="t-card__reason">Central query optimization. Has COMPANY_ID for filtering.</div></div>
+
+        <div class="t-card t-card--super"><div class="t-card__head"><span class="t-card__name">SYS_SECURITY_THREATS</span><span class="t-card__num">#11</span></div><div class="t-card__desc">SQL injection, XSS, brute-force detection with severity tracking.</div><div class="t-card__reason">Platform-wide security. Central visibility and response.</div></div>
+
+        <div class="t-card t-card--super"><div class="t-card__head"><span class="t-card__name">SYS_FAILED_LOGINS</span><span class="t-card__num">#12</span></div><div class="t-card__desc">Failed authentication attempts with IP and failure reason.</div><div class="t-card__reason">Pre-authentication. No tenant context exists yet.</div></div>
+    </div>
+</section>
+
+<!-- TENANT SCHEMA -->
+<section class="container reveal" id="tenant">
+    <div class="section-header">
+        <h2>Tenant Schema — 28 Tables</h2>
+        <p>Isolated copy per company. SuperAdmin accesses via schema switching.</p>
+    </div>
+
+    <div class="filter-bar">
+        <div class="filter-input-wrap"><input type="text" class="filter-input" id="tableSearch" placeholder="Search tables..." autocomplete="off"/></div>
+        <button class="filter-btn active" data-filter="all">All (28)</button>
+        <button class="filter-btn" data-filter="ops">Ops</button>
+        <button class="filter-btn" data-filter="perm">Perms</button>
+        <button class="filter-btn" data-filter="audit">Audit</button>
+        <button class="filter-btn" data-filter="ticket">Tickets</button>
+        <button class="filter-btn" data-filter="config">Config</button>
+    </div>
+
+    <div class="table-grid" id="tenant-grid">
+        <div class="t-card t-card--tenant" data-name="SYS_BRANCH" data-cat="ops"><div class="t-card__head"><span class="t-card__name">SYS_BRANCH</span><span class="t-card__num">#1</span></div><div class="t-card__desc">Company branches. <strong class="mono" style="color:#6ee7b7">+ USERS_LIMIT</strong> to cap users per branch.</div><div class="t-card__reason">Core ops. SA edit/delete requires PIN. Users limit enforced at API.</div></div>
+
+        <div class="t-card t-card--tenant" data-name="SYS_USERS" data-cat="ops"><div class="t-card__head"><span class="t-card__name">SYS_USERS</span><span class="t-card__num">#2</span></div><div class="t-card__desc">Company staff accounts. <strong style="color:#f87171">BranchId removed</strong> → use SYS_USER_BRANCHES.</div><div class="t-card__reason">Multi-branch assignment via junction table. Must have ≥1 branch.</div></div>
+
+        <div class="t-card t-card--tenant" data-name="SYS_USER_BRANCHES" data-cat="ops"><div class="t-card__head"><span class="t-card__name">SYS_USER_BRANCHES</span><span class="t-card__num">#3</span></div><div class="t-card__desc">User ↔ Branch many-to-many. IS_PRIMARY flag. ASSIGNED_BY for audit.</div><div class="t-card__reason">NEW. Enables multi-branch users. Min 1 branch enforced at API level.</div><div class="t-card__tags"><span class="tag tag--new">New Table</span></div></div>
+
+        <div class="t-card t-card--tenant" data-name="SYS_ROLE" data-cat="ops"><div class="t-card__head"><span class="t-card__name">SYS_ROLE</span><span class="t-card__num">#4</span></div><div class="t-card__desc">Company-defined roles with bilingual names.</div><div class="t-card__reason">Each company customizes roles independently.</div></div>
+
+        <div class="t-card t-card--tenant" data-name="SYS_USERS_ROLES" data-cat="ops"><div class="t-card__head"><span class="t-card__name">SYS_USERS_ROLES</span><span class="t-card__num">#5</span></div><div class="t-card__desc">User ↔ Role assignments.</div><div class="t-card__reason">Local mapping within tenant schema.</div></div>
+
+        <div class="t-card t-card--tenant" data-name="SYS_BRANCH_SYSTEMS" data-cat="perm"><div class="t-card__head"><span class="t-card__name">SYS_BRANCH_SYSTEMS</span><span class="t-card__num">#6</span></div><div class="t-card__desc">Which ERP systems are enabled per branch. SuperAdmin CRUD only.</div><div class="t-card__reason">SuperAdmin grants. Company Admin can only view.</div></div>
+
+        <div class="t-card t-card--tenant" data-name="SYS_BRANCH_SCREENS" data-cat="perm"><div class="t-card__head"><span class="t-card__name">SYS_BRANCH_SCREENS</span><span class="t-card__num">#7</span></div><div class="t-card__desc">Which screens are enabled per branch. SuperAdmin CRUD only.</div><div class="t-card__reason">SuperAdmin grants. Company Admin can only view.</div></div>
+
+        <div class="t-card t-card--tenant" data-name="SYS_BRANCH_FEATURES" data-cat="perm"><div class="t-card__head"><span class="t-card__name">SYS_BRANCH_FEATURES</span><span class="t-card__num">#8</span></div><div class="t-card__desc">Which features are enabled per branch+screen. SuperAdmin CRUD only.</div><div class="t-card__reason">SuperAdmin grants. Company Admin can only view.</div></div>
+
+        <div class="t-card t-card--tenant" data-name="SYS_ROLE_SCREEN_PERMISSIONS" data-cat="perm"><div class="t-card__head"><span class="t-card__name">SYS_ROLE_SCREEN_PERMISSIONS</span><span class="t-card__num">#9</span></div><div class="t-card__desc">Role-level screen/feature permissions.</div><div class="t-card__reason">Company Admin CRUD — but only within what SuperAdmin granted to the branch.</div></div>
+
+        <div class="t-card t-card--tenant" data-name="SYS_USER_SCREEN_PERMISSIONS" data-cat="perm"><div class="t-card__head"><span class="t-card__name">SYS_USER_SCREEN_PERMISSIONS</span><span class="t-card__num">#10</span></div><div class="t-card__desc">User-level permission overrides.</div><div class="t-card__reason">Company Admin CRUD — but only within what SuperAdmin granted to the branch.</div></div>
+
+        <div class="t-card t-card--tenant" data-name="SYS_FISCAL_YEAR" data-cat="ops"><div class="t-card__head"><span class="t-card__name">SYS_FISCAL_YEAR</span><span class="t-card__num">#11</span></div><div class="t-card__desc">Branch-specific fiscal periods with close status.</div><div class="t-card__reason">Financial data. FK to SYS_BRANCH (local).</div></div>
+
+        <div class="t-card t-card--tenant" data-name="SYS_AUDIT_LOG" data-cat="audit"><div class="t-card__head"><span class="t-card__name">SYS_AUDIT_LOG</span><span class="t-card__num">#12</span></div><div class="t-card__desc">Complete user action trail. <strong style="color:#6ee7b7">SA: Full Access</strong> · <strong style="color:#93c5fd">Tenant: View Only</strong></div><div class="t-card__reason">SuperAdmin full access via schema switch. Tenant users can only view, never edit or delete.</div></div>
+
+        <div class="t-card t-card--tenant" data-name="SYS_AUDIT_LOG_ARCHIVE" data-cat="audit"><div class="t-card__head"><span class="t-card__name">SYS_AUDIT_LOG_ARCHIVE</span><span class="t-card__num">#13</span></div><div class="t-card__desc">Archived audit log records with batch ID.</div><div class="t-card__reason">SA: Full Access. Tenant Admin: View Only.</div></div>
+
+        <div class="t-card t-card--tenant" data-name="SYS_RETENTION_POLICIES" data-cat="audit"><div class="t-card__head"><span class="t-card__name">SYS_RETENTION_POLICIES</span><span class="t-card__num">#14</span></div><div class="t-card__desc">Audit data retention rules per event category.</div><div class="t-card__reason">SuperAdmin CRUD. Tenant Admin: View Only.</div></div>
+
+        <div class="t-card t-card--tenant" data-name="SYS_REQUEST_TICKET" data-cat="ticket"><div class="t-card__head"><span class="t-card__name">SYS_REQUEST_TICKET</span><span class="t-card__num">#15</span></div><div class="t-card__desc">Support/request tickets. SA has full access via schema switch.</div><div class="t-card__reason">Company ops. Users create tickets, admins manage them.</div></div>
+
+        <div class="t-card t-card--tenant" data-name="SYS_TICKET_TYPE" data-cat="ticket"><div class="t-card__head"><span class="t-card__name">SYS_TICKET_TYPE</span><span class="t-card__num">#16</span></div><div class="t-card__desc">Ticket type definitions.</div><div class="t-card__reason">Company-customizable. Seeded from defaults.</div></div>
+
+        <div class="t-card t-card--tenant" data-name="SYS_TICKET_STATUS" data-cat="ticket"><div class="t-card__head"><span class="t-card__name">SYS_TICKET_STATUS</span><span class="t-card__num">#17</span></div><div class="t-card__desc">Ticket status workflow states.</div><div class="t-card__reason">Company-customizable workflow.</div></div>
+
+        <div class="t-card t-card--tenant" data-name="SYS_TICKET_PRIORITY" data-cat="ticket"><div class="t-card__head"><span class="t-card__name">SYS_TICKET_PRIORITY</span><span class="t-card__num">#18</span></div><div class="t-card__desc">Priority levels with SLA hours.</div><div class="t-card__reason">SLA terms differ per company.</div></div>
+
+        <div class="t-card t-card--tenant" data-name="SYS_TICKET_CATEGORY" data-cat="ticket"><div class="t-card__head"><span class="t-card__name">SYS_TICKET_CATEGORY</span><span class="t-card__num">#19</span></div><div class="t-card__desc">Ticket categorization.</div><div class="t-card__reason">Company-specific categories.</div></div>
+
+        <div class="t-card t-card--tenant" data-name="SYS_TICKET_COMMENT" data-cat="ticket"><div class="t-card__head"><span class="t-card__name">SYS_TICKET_COMMENT</span><span class="t-card__num">#20</span></div><div class="t-card__desc">Ticket discussion threads.</div><div class="t-card__reason">Child of SYS_REQUEST_TICKET.</div></div>
+
+        <div class="t-card t-card--tenant" data-name="SYS_TICKET_ATTACHMENT" data-cat="ticket"><div class="t-card__head"><span class="t-card__name">SYS_TICKET_ATTACHMENT</span><span class="t-card__num">#21</span></div><div class="t-card__desc">Ticket file attachments.</div><div class="t-card__reason">Child of SYS_REQUEST_TICKET.</div></div>
+
+        <div class="t-card t-card--tenant" data-name="SYS_TICKET_CONFIG" data-cat="ticket"><div class="t-card__head"><span class="t-card__name">SYS_TICKET_CONFIG</span><span class="t-card__num">#22</span></div><div class="t-card__desc">Ticket workflow configuration.</div><div class="t-card__reason">Company-specific workflow settings.</div></div>
+
+        <div class="t-card t-card--tenant" data-name="SYS_SAVED_SEARCH" data-cat="config"><div class="t-card__head"><span class="t-card__name">SYS_SAVED_SEARCH</span><span class="t-card__num">#23</span></div><div class="t-card__desc">User-saved search queries.</div><div class="t-card__reason">Per-user. FK to SYS_USERS (local).</div></div>
+
+        <div class="t-card t-card--tenant" data-name="SYS_SEARCH_ANALYTICS" data-cat="config"><div class="t-card__head"><span class="t-card__name">SYS_SEARCH_ANALYTICS</span><span class="t-card__num">#24</span></div><div class="t-card__desc">Search usage tracking per user/branch.</div><div class="t-card__reason">Company analytics data.</div></div>
+
+        <div class="t-card t-card--tenant" data-name="SYS_DOCUMENT" data-cat="ops"><div class="t-card__head"><span class="t-card__name">SYS_DOCUMENT</span><span class="t-card__num">#25</span></div><div class="t-card__desc">Company documents and attachments. <span class="tag tag--both" style="margin-left:6px">Both Schemas</span></div><div class="t-card__reason">Tenant copy for company-level documents. SuperAdmin copy for platform-level docs.</div></div>
+
+        <div class="t-card t-card--tenant" data-name="SYS_REPORT_SCHEDULE" data-cat="config"><div class="t-card__head"><span class="t-card__name">SYS_REPORT_SCHEDULE</span><span class="t-card__num">#26</span></div><div class="t-card__desc">Scheduled report generation.</div><div class="t-card__reason">Company-specific reports.</div></div>
+
+        <div class="t-card t-card--tenant" data-name="SYS_CODE" data-cat="config"><div class="t-card__head"><span class="t-card__name">SYS_CODE</span><span class="t-card__num">#27</span></div><div class="t-card__desc">Lookup/reference codes. <span class="tag tag--sa-only" style="margin-left:6px">SA Only</span></div><div class="t-card__reason">In tenant schema but only SuperAdmin can access. Tenant users have no access.</div></div>
+
+        <div class="t-card t-card--tenant" data-name="SYS_SETTINGS" data-cat="config"><div class="t-card__head"><span class="t-card__name">SYS_SETTINGS</span><span class="t-card__num">#28</span></div><div class="t-card__desc">Company/branch settings. <span class="tag tag--sa-only" style="margin-left:6px">SA Only</span></div><div class="t-card__reason">In tenant schema but only SuperAdmin can access. Tenant users have no access.</div></div>
+    </div>
+</section>
+
+<!-- PERMISSION FLOW -->
+<section class="container reveal" id="permissions">
+    <div class="section-header">
+        <h2>Permission Hierarchy Flow</h2>
+        <p>SuperAdmin grants access to branches → Company Admin assigns roles/permissions to users within what was granted.</p>
+    </div>
+
+    <div class="info-banner info-banner--warn">
+        <span class="info-banner__icon">⚠️</span>
+        <div><strong>Key Rule:</strong> Company Admin can <strong>never</strong> grant permissions that SuperAdmin hasn't first granted to the branch. The API validates every role/user permission against <code class="mono">SYS_BRANCH_SYSTEMS</code>, <code class="mono">SYS_BRANCH_SCREENS</code>, and <code class="mono">SYS_BRANCH_FEATURES</code>.</div>
+    </div>
+
+    <div class="perm-flow">
+        <div class="perm-step perm-step--1">
+            <div class="perm-step__level">Level 1 — System Licensing</div>
+            <div class="perm-step__title">Is the System Licensed for this Company?</div>
+            <div class="perm-step__table">SYS_COMPANY ↔ SYS_SYSTEM</div>
+            <span class="perm-step__who">SuperAdmin manages</span>
+        </div>
+        <div class="perm-arrow"><div class="perm-arrow__line"></div><span class="perm-arrow__text perm-arrow__text--pass">Licensed ✓</span><div class="perm-arrow__line"></div></div>
+
+        <div class="perm-step perm-step--2">
+            <div class="perm-step__level">Level 2 — Branch System Access</div>
+            <div class="perm-step__title">Is the System Enabled for this Branch?</div>
+            <div class="perm-step__table">SYS_BRANCH_SYSTEMS</div>
+            <span class="perm-step__who">SuperAdmin grants</span>
+        </div>
+        <div class="perm-arrow"><div class="perm-arrow__line"></div><span class="perm-arrow__text perm-arrow__text--pass">Allowed ✓</span><div class="perm-arrow__line"></div></div>
+
+        <div class="perm-step perm-step--3">
+            <div class="perm-step__level">Level 3 — Branch Screen Access</div>
+            <div class="perm-step__title">Is the Screen Enabled for this Branch?</div>
+            <div class="perm-step__table">SYS_BRANCH_SCREENS + SYS_BRANCH_FEATURES</div>
+            <span class="perm-step__who">SuperAdmin grants</span>
+        </div>
+        <div class="perm-arrow"><div class="perm-arrow__line"></div><span class="perm-arrow__text perm-arrow__text--pass">Allowed ✓</span><div class="perm-arrow__line"></div></div>
+
+        <div class="perm-step perm-step--4">
+            <div class="perm-step__level">Level 4 — Role Permissions</div>
+            <div class="perm-step__title">Does the User's Role Have Access?</div>
+            <div class="perm-step__table">SYS_ROLE_SCREEN_PERMISSIONS</div>
+            <span class="perm-step__who">Company Admin assigns (within branch grants)</span>
+        </div>
+        <div class="perm-arrow"><div class="perm-arrow__line"></div><span class="perm-arrow__text perm-arrow__text--pass">Has Permission ✓</span><div class="perm-arrow__line"></div></div>
+
+        <div class="perm-step perm-step--5">
+            <div class="perm-step__level">Level 5 — User Override</div>
+            <div class="perm-step__title">User-Level Permission Override?</div>
+            <div class="perm-step__table">SYS_USER_SCREEN_PERMISSIONS</div>
+            <span class="perm-step__who">Company Admin assigns (within branch grants)</span>
+        </div>
+        <div class="perm-arrow"><div class="perm-arrow__line"></div><div class="perm-arrow__line"></div></div>
+
+        <div class="perm-result perm-result--granted">✅ ACCESS GRANTED</div>
+    </div>
+
+    <div class="info-banner info-banner--info" style="margin-top:24px;max-width:640px;margin-left:auto;margin-right:auto">
+        <span class="info-banner__icon">ℹ️</span>
+        <div><strong>Multi-Branch Users:</strong> When a user belongs to multiple branches, permissions are evaluated per-branch. The user sees the <strong>union</strong> of permissions across all assigned branches.</div>
+    </div>
+</section>
+
+<!-- CROSS-SCHEMA FK -->
+<section class="container reveal" id="crossref">
+    <div class="section-header">
+        <h2>Cross-Schema Foreign Keys</h2>
+        <p>All logical FKs that cross the schema boundary. No physical DB constraints.</p>
+    </div>
+
+    <div class="info-banner info-banner--warn">
+        <span class="info-banner__icon">⚠️</span>
+        <div><strong>Never create physical FOREIGN KEY constraints across schemas.</strong> Cross-schema FKs break independent backup/restore and prevent tenant portability.</div>
+    </div>
+
+    <div class="fk-table-wrap">
+        <table class="fk-table">
+            <thead><tr><th>Tenant Table</th><th>Column</th><th></th><th>Global Table</th><th>Column</th><th>Notes</th></tr></thead>
+            <tbody>
+                <tr><td class="col-tenant">SYS_BRANCH</td><td class="col-tenant">BASE_CURRENCY_ID</td><td class="col-arrow">→</td><td class="col-global">SYS_CURRENCY</td><td class="col-global">Id</td><td class="col-note">Read-only lookup</td></tr>
+                <tr><td class="col-tenant">SYS_BRANCH_SYSTEMS</td><td class="col-tenant">SYSTEM_ID</td><td class="col-arrow">→</td><td class="col-global">SYS_SYSTEM</td><td class="col-global">Id</td><td class="col-note">Validated at API level</td></tr>
+                <tr><td class="col-tenant">SYS_BRANCH_SYSTEMS</td><td class="col-tenant">GRANTED_BY</td><td class="col-arrow">→</td><td class="col-global">SYS_SUPER_ADMIN</td><td class="col-global">Id</td><td class="col-note">Audit trail</td></tr>
+                <tr><td class="col-tenant">SYS_BRANCH_SCREENS</td><td class="col-tenant">SCREEN_ID</td><td class="col-arrow">→</td><td class="col-global">SYS_SCREEN</td><td class="col-global">Id</td><td class="col-note">Validated at API level</td></tr>
+                <tr><td class="col-tenant">SYS_BRANCH_SCREENS</td><td class="col-tenant">GRANTED_BY</td><td class="col-arrow">→</td><td class="col-global">SYS_SUPER_ADMIN</td><td class="col-global">Id</td><td class="col-note">Audit trail</td></tr>
+                <tr><td class="col-tenant">SYS_BRANCH_FEATURES</td><td class="col-tenant">SCREEN_FEATURE_ID</td><td class="col-arrow">→</td><td class="col-global">SYS_SCREEN_FEATURE</td><td class="col-global">Id</td><td class="col-note">Validated at API level</td></tr>
+                <tr><td class="col-tenant">SYS_BRANCH_FEATURES</td><td class="col-tenant">GRANTED_BY</td><td class="col-arrow">→</td><td class="col-global">SYS_SUPER_ADMIN</td><td class="col-global">Id</td><td class="col-note">Audit trail</td></tr>
+                <tr><td class="col-tenant">SYS_ROLE_SCREEN_PERMISSIONS</td><td class="col-tenant">SCREEN_ID</td><td class="col-arrow">→</td><td class="col-global">SYS_SCREEN</td><td class="col-global">Id</td><td class="col-note">Validated at API level</td></tr>
+                <tr><td class="col-tenant">SYS_USER_SCREEN_PERMISSIONS</td><td class="col-tenant">SCREEN_ID</td><td class="col-arrow">→</td><td class="col-global">SYS_SCREEN</td><td class="col-global">Id</td><td class="col-note">Validated at API level</td></tr>
+            </tbody>
+        </table>
+    </div>
+</section>
+
+<!-- PROVISIONING -->
+<section class="container reveal" id="provisioning">
+    <div class="section-header">
+        <h2>Tenant Provisioning Workflow</h2>
+        <p>What happens when SuperAdmin creates a new company. Updated with new tables and seed data.</p>
+    </div>
+
+    <div class="info-banner info-banner--tip">
+        <span class="info-banner__icon">💡</span>
+        <div><strong>SYS_CODE</strong>, <strong>SYS_SETTINGS</strong>, and ticket lookup tables are seeded from global defaults during provisioning. Only SuperAdmin can modify them afterward.</div>
+    </div>
+
+    <div class="timeline">
+        <div class="tl-item tl-item--super">
+            <div class="tl-item__dot"></div>
+            <div class="tl-item__step">Step 1 — SuperAdmin Schema</div>
+            <div class="tl-item__title">Register the Company</div>
+            <code class="tl-item__code">INSERT INTO SYS_COMPANY
+  (COMPANY_CODE, LEGAL_NAME, COMPANY_SCHEMA, CREATED_BY_SUPER_ADMIN_ID)
+VALUES ('ACME001', 'Acme Corporation', 'TENANT_ACME', 1);</code>
+        </div>
+
+        <div class="tl-item tl-item--tenant">
+            <div class="tl-item__dot"></div>
+            <div class="tl-item__step">Step 2 — Oracle</div>
+            <div class="tl-item__title">Create Tenant Schema + Grant Access</div>
+            <code class="tl-item__code">CREATE USER "TENANT_ACME" IDENTIFIED BY "***";
+GRANT CONNECT, RESOURCE TO "TENANT_ACME";
+-- Grant master user access for schema switching
+GRANT SELECT, INSERT, UPDATE, DELETE ON all 28 tables TO THINKON_ERP;</code>
+        </div>
+
+        <div class="tl-item tl-item--tenant">
+            <div class="tl-item__dot"></div>
+            <div class="tl-item__step">Step 3 — Tenant Schema</div>
+            <div class="tl-item__title">Run EF Core Migrations (creates all 28 tenant tables)</div>
+            <code class="tl-item__code">ALTER SESSION SET CURRENT_SCHEMA = "TENANT_ACME";
+-- EF Core creates all 28 tables including:
+-- NEW: SYS_USER_BRANCHES (User ↔ Branch junction)
+-- MODIFIED: SYS_BRANCH (+ USERS_LIMIT column)
+-- MODIFIED: SYS_USERS (BranchId removed)</code>
+        </div>
+
+        <div class="tl-item tl-item--tenant">
+            <div class="tl-item__dot"></div>
+            <div class="tl-item__step">Step 4 — Tenant Schema</div>
+            <div class="tl-item__title">Seed Default Data</div>
+            <code class="tl-item__code">INSERT INTO SYS_BRANCH    (NAME, IS_HEAD_BRANCH, USERS_LIMIT) VALUES ('Head Office', 1, 50);
+INSERT INTO SYS_ROLE      (ROLE_NAME) VALUES ('Admin'), ('User'), ('Viewer');
+INSERT INTO SYS_TICKET_TYPE     (...) -- copy global defaults
+INSERT INTO SYS_TICKET_STATUS   (...) -- copy global defaults
+INSERT INTO SYS_TICKET_PRIORITY (...) -- copy global defaults
+INSERT INTO SYS_CODE             (...) -- copy global defaults (SA-only access)
+INSERT INTO SYS_SETTINGS         (...) -- copy global defaults (SA-only access)
+INSERT INTO SYS_RETENTION_POLICIES (...) -- copy global defaults</code>
+        </div>
+
+        <div class="tl-item tl-item--super">
+            <div class="tl-item__dot"></div>
+            <div class="tl-item__step">Step 5 — SuperAdmin Schema</div>
+            <div class="tl-item__title">Link Default Branch + Grant Permissions</div>
+            <code class="tl-item__code">-- Update company with default branch
+UPDATE SYS_COMPANY SET DEFAULT_BRANCH_ID = :newBranchId WHERE COMPANY_CODE = 'ACME001';
+
+-- SuperAdmin grants initial system access to the head branch
+-- via SYS_BRANCH_SYSTEMS, SYS_BRANCH_SCREENS, SYS_BRANCH_FEATURES</code>
+        </div>
+
+        <div class="tl-item tl-item--info">
+            <div class="tl-item__dot"></div>
+            <div class="tl-item__step">Step 6 — Create Admin User</div>
+            <div class="tl-item__title">Create Company Admin + Assign to Branch</div>
+            <code class="tl-item__code">-- Create the first admin user
+INSERT INTO SYS_USERS (USER_NAME, IS_ADMIN) VALUES ('admin@acme', 1);
+
+-- Assign admin to head office branch (required!)
+INSERT INTO SYS_USER_BRANCHES (USER_ID, BRANCH_ID, IS_PRIMARY) VALUES (:userId, :branchId, 1);
+
+-- Assign admin role
+INSERT INTO SYS_USERS_ROLES (USER_ID, ROLE_ID) VALUES (:userId, :adminRoleId);</code>
+        </div>
+    </div>
+</section>
+
+<!-- FOOTER -->
+<footer class="footer">
+    <p><strong>ThinkOnErp</strong> — Multi-Tenant Schema Structure v2</p>
+    <p style="margin-top:4px">12 SuperAdmin · 28 Tenant · 1 Shared (SYS_DOCUMENT) · 9 Logical FKs · PIN Verification · Multi-Branch Users</p>
+</footer>
+
+<script>
+const observer=new IntersectionObserver(e=>{e.forEach(e=>{e.isIntersecting&&e.target.classList.add('visible')})},{threshold:.06});
+document.querySelectorAll('.reveal').forEach(el=>observer.observe(el));
+
+const sections=document.querySelectorAll('section[id],header[id]');
+const navLinks=document.querySelectorAll('.nav-link');
+window.addEventListener('scroll',()=>{let c='';sections.forEach(s=>{if(scrollY>=s.offsetTop-120)c=s.getAttribute('id')});navLinks.forEach(l=>{l.classList.remove('active');if(l.getAttribute('href')==='#'+c)l.classList.add('active')})});
+
+const searchInput=document.getElementById('tableSearch');
+const filterBtns=document.querySelectorAll('.filter-btn');
+const tenantCards=document.querySelectorAll('#tenant-grid .t-card');
+let activeFilter='all';
+function applyFilters(){const q=searchInput.value.toLowerCase().trim();tenantCards.forEach(c=>{const n=c.dataset.name.toLowerCase(),cat=c.dataset.cat,d=c.querySelector('.t-card__desc').textContent.toLowerCase(),r=c.querySelector('.t-card__reason').textContent.toLowerCase();const ms=!q||n.includes(q)||d.includes(q)||r.includes(q);const mf=activeFilter==='all'||cat===activeFilter;c.classList.toggle('hidden',!(ms&&mf))})}
+searchInput.addEventListener('input',applyFilters);
+filterBtns.forEach(b=>{b.addEventListener('click',()=>{filterBtns.forEach(x=>x.classList.remove('active'));activeFilter=b.dataset.filter;b.classList.add('active');applyFilters()})});
+navLinks.forEach(l=>{l.addEventListener('click',e=>{e.preventDefault();const t=document.querySelector(l.getAttribute('href'));if(t)t.scrollIntoView({behavior:'smooth',block:'start'})})});
+</script>
+</body>
+</html>

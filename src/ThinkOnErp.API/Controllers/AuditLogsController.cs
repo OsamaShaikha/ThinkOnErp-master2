@@ -273,6 +273,7 @@ public class AuditLogsController : ControllerBase
     /// <response code="403">User does not have admin privileges</response>
     /// <response code="404">Audit log entry not found</response>
     [HttpPut("legacy/{id}/status")]
+    [Authorize(Policy = "SuperAdminOnly")]
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status401Unauthorized)]

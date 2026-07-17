@@ -7,7 +7,7 @@ namespace ThinkOnErp.Application.Features.Documents.Queries.GetDocuments;
 
 public class GetDocumentsQuery : IRequest<ApiResponse<PagedResult<DocumentDto>>>
 {
-    public string? OwnerType { get; set; }
+    public int? OwnerType { get; set; }
     public long? OwnerId { get; set; }
     public string? Category { get; set; }
     public string? Search { get; set; }

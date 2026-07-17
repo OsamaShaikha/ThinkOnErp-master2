@@ -32,6 +32,7 @@ public class UpdateBranchCommandHandler : IRequestHandler<UpdateBranchCommand, I
         existing.DefaultLang = request.DefaultLang;
         existing.BaseCurrencyId = request.BaseCurrencyId;
         existing.RoundingRules = request.RoundingRules;
+        existing.UsersLimit = request.UsersLimit;
         existing.UpdateUser = request.UpdateUser;
         existing.UpdateDate = DateTime.UtcNow;
 

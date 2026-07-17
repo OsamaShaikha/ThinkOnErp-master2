@@ -8,7 +8,7 @@ public class SysBranchScreenConfiguration : IEntityTypeConfiguration<SysBranchSc
 {
     public void Configure(EntityTypeBuilder<SysBranchScreen> builder)
     {
-        builder.ToTable("SYS_BRANCH_SCREENS");
+        builder.ToTable("SYS_BRANCH_SCREENS", t => t.ExcludeFromMigrations());
         builder.HasKey(e => e.Id);
         builder.Property(e => e.Id).ValueGeneratedOnAdd();
         builder.Property(e => e.BranchId).HasColumnName("BRANCH_ID").IsRequired();

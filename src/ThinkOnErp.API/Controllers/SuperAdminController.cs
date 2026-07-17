@@ -31,6 +31,7 @@ public class SuperAdminController : ControllerBase
     private readonly ISuperAdminRepository _superAdminRepository;
     private readonly IValidator<CreateSuperAdminDto> _createValidator;
     private readonly IValidator<SuperAdminChangePasswordDto> _changePasswordValidator;
+    private readonly IOracleSchemaService _oracleSchemaService;
 
     public SuperAdminController(
         IMediator mediator, 
@@ -38,7 +39,8 @@ public class SuperAdminController : ControllerBase
         PasswordHashingService passwordHashingService,
         ISuperAdminRepository superAdminRepository,
         IValidator<CreateSuperAdminDto> createValidator,
-        IValidator<SuperAdminChangePasswordDto> changePasswordValidator)
+        IValidator<SuperAdminChangePasswordDto> changePasswordValidator,
+        IOracleSchemaService oracleSchemaService)
     {
         _mediator = mediator ?? throw new ArgumentNullException(nameof(mediator));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
@@ -46,6 +48,7 @@ public class SuperAdminController : ControllerBase
         _superAdminRepository = superAdminRepository ?? throw new ArgumentNullException(nameof(superAdminRepository));
         _createValidator = createValidator ?? throw new ArgumentNullException(nameof(createValidator));
         _changePasswordValidator = changePasswordValidator ?? throw new ArgumentNullException(nameof(changePasswordValidator));
+        _oracleSchemaService = oracleSchemaService ?? throw new ArgumentNullException(nameof(oracleSchemaService));
     }
 
     /// <summary>
@@ -139,6 +142,9 @@ public class SuperAdminController : ControllerBase
 
             // Hash the password using SHA-256 AFTER validation
             var passwordHash = _passwordHashingService.HashPassword(dto.Password);
+            var pinHash = !string.IsNullOrEmpty(dto.PinCode)
+                ? _passwordHashingService.HashPassword(dto.PinCode)
+                : _passwordHashingService.HashPassword("1234");
 
             var command = new CreateSuperAdminCommand
             {
@@ -146,6 +152,7 @@ public class SuperAdminController : ControllerBase
                 NameEn = dto.NameEn,
                 UserName = dto.UserName,
                 Password = passwordHash, // Pass hashed password
+                PinHash = pinHash,
                 Email = dto.Email,
                 Phone = dto.Phone,
                 CreationUser = User.Identity?.Name ?? "system"
@@ -183,11 +190,23 @@ public class SuperAdminController : ControllerBase
     [HttpPut("{id}")]
     [ProducesResponseType(typeof(ApiResponse<bool>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiResponse<bool>), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ApiResponse<bool>), StatusCodes.Status403Forbidden)]
     public async Task<ActionResult<ApiResponse<bool>>> UpdateSuperAdmin(Int64 id, [FromBody] UpdateSuperAdminDto dto)
     {
         try
         {
             _logger.LogInformation("Updating super admin with ID: {SuperAdminId}", id);
+
+            if (!await VerifySuperAdminPinAsync())
+            {
+                return StatusCode(StatusCodes.Status403Forbidden, ApiResponse<bool>.CreateFailure(
+                    "Invalid or missing Super Admin PIN. Please provide it in the 'X-SuperAdmin-PIN' header.", 
+                    statusCode: 403));
+            }
+
+            var pinHash = !string.IsNullOrEmpty(dto.PinCode)
+                ? _passwordHashingService.HashPassword(dto.PinCode)
+                : null;
 
             var command = new UpdateSuperAdminCommand
             {
@@ -196,6 +215,7 @@ public class SuperAdminController : ControllerBase
                 NameEn = dto.NameEn,
                 Email = dto.Email,
                 Phone = dto.Phone,
+                PinHash = pinHash,
                 UpdateUser = User.Identity?.Name ?? "system"
             };
 
@@ -228,11 +248,19 @@ public class SuperAdminController : ControllerBase
     [HttpDelete("{id}")]
     [ProducesResponseType(typeof(ApiResponse<bool>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiResponse<bool>), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ApiResponse<bool>), StatusCodes.Status403Forbidden)]
     public async Task<ActionResult<ApiResponse<bool>>> DeleteSuperAdmin(Int64 id)
     {
         try
         {
             _logger.LogInformation("Deleting super admin with ID: {SuperAdminId}", id);
+
+            if (!await VerifySuperAdminPinAsync())
+            {
+                return StatusCode(StatusCodes.Status403Forbidden, ApiResponse<bool>.CreateFailure(
+                    "Invalid or missing Super Admin PIN. Please provide it in the 'X-SuperAdmin-PIN' header.", 
+                    statusCode: 403));
+            }
 
             var command = new DeleteSuperAdminCommand { SuperAdminId = id };
             var result = await _mediator.Send(command);
@@ -506,5 +534,75 @@ public class SuperAdminController : ControllerBase
             }
             
             return new string(password);
+        }
+
+        private async Task<bool> VerifySuperAdminPinAsync()
+        {
+            var superAdminIdClaim = User.FindFirst("userId")?.Value;
+            if (!long.TryParse(superAdminIdClaim, out var superAdminId))
+            {
+                return false;
+            }
+
+            var pinCode = Request.Headers["X-SuperAdmin-PIN"].ToString();
+            if (string.IsNullOrEmpty(pinCode))
+            {
+                return false;
+            }
+
+            var superAdmin = await _superAdminRepository.GetByIdAsync(superAdminId);
+            if (superAdmin == null)
+            {
+                return false;
+            }
+
+            if (string.IsNullOrEmpty(superAdmin.PinHash))
+            {
+                return pinCode == "1234";
+            }
+
+            return _passwordHashingService.VerifyPassword(pinCode, superAdmin.PinHash);
+        }
+
+        /// <summary>
+        /// Provisions or re-syncs the developer template schema.
+        /// </summary>
+        [HttpPost("provision-dev-schema")]
+        [Authorize(Policy = "SuperAdminOnly")]
+        [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status200OK)]
+        public async Task<IActionResult> ProvisionDeveloperSchema()
+        {
+            try
+            {
+                _logger.LogInformation("SuperAdmin requesting developer schema provisioning");
+                await _oracleSchemaService.ProvisionDeveloperSchemaAsync();
+                return Ok(ApiResponse<object>.CreateSuccess(null!, "Developer schema provisioned successfully", 200));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error provisioning developer schema");
+                return StatusCode(500, ApiResponse<object>.CreateFailure($"Failed to provision developer schema: {ex.Message}", statusCode: 500));
+            }
+        }
+
+        /// <summary>
+        /// Syncs all existing tenant schemas against the developer template.
+        /// </summary>
+        [HttpPost("sync-tenant-schemas")]
+        [Authorize(Policy = "SuperAdminOnly")]
+        [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status200OK)]
+        public async Task<IActionResult> SyncTenantSchemas()
+        {
+            try
+            {
+                _logger.LogInformation("SuperAdmin requesting sync/upgrade of all tenant schemas");
+                await _oracleSchemaService.UpgradeExistingTenantSchemasAsync();
+                return Ok(ApiResponse<object>.CreateSuccess(null!, "All tenant schemas synced successfully", 200));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error syncing tenant schemas");
+                return StatusCode(500, ApiResponse<object>.CreateFailure($"Failed to sync tenant schemas: {ex.Message}", statusCode: 500));
+            }
         }
 }

@@ -14,6 +14,7 @@ public class SysSuperAdmin
     public string? Phone { get; set; }
     public string? TwoFaSecret { get; set; }
     public bool TwoFaEnabled { get; set; }
+    public string? PinHash { get; set; }
     public bool IsActive { get; set; }
     public DateTime? LastLoginDate { get; set; }
     public string CreationUser { get; set; } = string.Empty;

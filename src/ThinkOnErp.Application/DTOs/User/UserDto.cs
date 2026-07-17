@@ -43,9 +43,19 @@ public class UserDto
     public Int64? RoleId { get; set; }
 
     /// <summary>
-    /// Foreign key to SYS_BRANCH table
+    /// Foreign key to SYS_BRANCH table (Primary Branch)
     /// </summary>
     public Int64? BranchId { get; set; }
+
+    /// <summary>
+    /// All assigned branch IDs for the user
+    /// </summary>
+    public List<long> BranchIds { get; set; } = new();
+
+    /// <summary>
+    /// Primary branch ID for the user
+    /// </summary>
+    public long? PrimaryBranchId { get; set; }
 
     /// <summary>
     /// Email address

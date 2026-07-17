@@ -16,20 +16,16 @@ public class OracleSchemaService : IOracleSchemaService
     private readonly ILogger<OracleSchemaService> _logger;
     private readonly string _masterConnectionString;
     private readonly string _pdbConnectionString;
+    private readonly PasswordHashingService _passwordHashingService;
+    private readonly string _devSchemaName;
+    private readonly string _devSchemaPassword;
+    private readonly List<string> _objectTypesToClone;
 
     private static readonly HashSet<string> GlobalTables = new(StringComparer.OrdinalIgnoreCase)
     {
         "SYS_SUPER_ADMIN", "SYS_COMPANY", "SYS_SYSTEM", "SYS_SCREEN",
-        "SYS_CURRENCY", "SYS_SETTINGS", "SYS_CODE",
-        "SYS_AUDIT_LOG", "SYS_AUDIT_LOG_ARCHIVE", "SYS_RETENTION_POLICIES",
-        "SYS_BRANCH",
-        "SYS_DOCUMENT", "SYS_REQUEST_TICKET",
-        "SYS_TICKET_ATTACHMENT", "SYS_TICKET_CATEGORY", "SYS_TICKET_COMMENT",
-        "SYS_TICKET_CONFIG", "SYS_TICKET_PRIORITY", "SYS_TICKET_STATUS", "SYS_TICKET_TYPE",
-        "SYS_SECURITY_THREATS", "SYS_FAILED_LOGINS",
-        "SYS_PERFORMANCE_METRICS", "SYS_SLOW_QUERIES", "SYS_REPORT_SCHEDULE",
-        "SYS_FEATURE", "SYS_SCREEN_FEATURE", "SYS_BRANCH_SYSTEMS",
-        "SYS_BRANCH_SCREENS", "SYS_BRANCH_FEATURES",
+        "SYS_FEATURE", "SYS_SCREEN_FEATURE", "SYS_CURRENCY",
+        "SYS_PERFORMANCE_METRICS", "SYS_SLOW_QUERIES", "SYS_SECURITY_THREATS", "SYS_FAILED_LOGINS",
         "__EFMigrationsHistory"
     };
 
@@ -46,9 +42,12 @@ public class OracleSchemaService : IOracleSchemaService
             "SERVICE_NAME=free)", "SERVICE_NAME=FREEPDB1)", StringComparison.OrdinalIgnoreCase);
         _logger = logger;
         _passwordHashingService = passwordHashingService;
-    }
 
-    private readonly PasswordHashingService _passwordHashingService;
+        _devSchemaName = configuration["TenantProvisioning:DeveloperSchemaName"] ?? "DEV_TEMPLATE";
+        _devSchemaPassword = configuration["TenantProvisioning:DeveloperSchemaPassword"] ?? "DEV_TEMPLATE";
+        _objectTypesToClone = configuration.GetSection("TenantProvisioning:ObjectTypesToClone").Get<List<string>>() 
+            ?? new List<string> { "TABLE", "INDEX", "SEQUENCE", "TRIGGER", "CONSTRAINT" };
+    }
 
     public async Task CreateCompanySchemaAsync(string schemaName, string password)
     {
@@ -81,8 +80,8 @@ public class OracleSchemaService : IOracleSchemaService
             $"ALTER USER \"{schemaName}\" ACCOUNT UNLOCK");
         _logger.LogInformation("Privileges and quota granted to: {SchemaName}", schemaName);
 
-        // 3. Create tenant tables
-        await CreateTenantTablesAsync(masterConn, schemaName);
+        // 3. Clone tenant tables from developer schema
+        await CloneFromDeveloperSchemaAsync(masterConn, schemaName);
 
         // 4. Grant privileges on tenant tables to master user for cross-schema access
         await GrantTenantTableAccessAsync(schemaName, password);
@@ -123,14 +122,13 @@ public class OracleSchemaService : IOracleSchemaService
         try
         {
             var userSql = $"INSERT INTO \"{schemaName}\".\"SYS_USERS\" " +
-                $"(\"Id\", \"NAME_AR\", \"NAME_EN\", \"USER_NAME\", \"PASSWORD\", \"ROLE\", \"BRANCH_ID\", \"COMPANY_ID\", " +
+                $"(\"Id\", \"NAME_AR\", \"NAME_EN\", \"USER_NAME\", \"PASSWORD\", \"ROLE\", \"COMPANY_ID\", " +
                 $"\"IS_ACTIVE\", \"IS_ADMIN\", \"CREATION_USER\", \"CREATION_DATE\") " +
-                $"VALUES (1, 'مدير النظام', 'Admin', 'admin', :password, :roleId, :branchId, :companyId, 1, 1, :creationUser, SYSDATE)";
+                $"VALUES (1, 'مدير النظام', 'Admin', 'admin', :password, :roleId, :companyId, 1, 1, :creationUser, SYSDATE)";
             await using var userCmd = tenantConn.CreateCommand();
             userCmd.CommandText = userSql;
             userCmd.Parameters.Add(new OracleParameter("password", hashedPassword));
             userCmd.Parameters.Add(new OracleParameter("roleId", roleId));
-            userCmd.Parameters.Add(new OracleParameter("branchId", branchId));
             userCmd.Parameters.Add(new OracleParameter("companyId", companyId));
             userCmd.Parameters.Add(new OracleParameter("creationUser", creationUser));
             await userCmd.ExecuteNonQueryAsync();
@@ -139,6 +137,23 @@ public class OracleSchemaService : IOracleSchemaService
         catch (OracleException ex) when (ex.Number == 1)
         {
             _logger.LogDebug("Default admin user already exists in {SchemaName}", schemaName);
+        }
+
+        try
+        {
+            var userBranchSql = $"INSERT INTO \"{schemaName}\".\"SYS_USER_BRANCHES\" " +
+                $"(\"USER_ID\", \"BRANCH_ID\", \"IS_PRIMARY\", \"ASSIGNED_BY\", \"ASSIGNED_AT\") " +
+                $"VALUES (1, :branchId, 1, :creationUser, SYSDATE)";
+            await using var ubCmd = tenantConn.CreateCommand();
+            ubCmd.CommandText = userBranchSql;
+            ubCmd.Parameters.Add(new OracleParameter("branchId", branchId));
+            ubCmd.Parameters.Add(new OracleParameter("creationUser", creationUser));
+            await ubCmd.ExecuteNonQueryAsync();
+            _logger.LogInformation("Default admin user mapped to branch {BranchId} in {SchemaName}", branchId, schemaName);
+        }
+        catch (OracleException ex) when (ex.Number == 1)
+        {
+            _logger.LogDebug("Default admin user branch mapping already exists in {SchemaName}", schemaName);
         }
     }
 
@@ -250,10 +265,12 @@ public class OracleSchemaService : IOracleSchemaService
 
         await using var tenantConn = await OpenTenantConnectionAsync(schemaName, schemaPassword);
 
-        var sql = $"SELECT \"Id\", \"NAME_AR\", \"NAME_EN\", \"USER_NAME\", \"PASSWORD\", \"ROLE\", \"BRANCH_ID\", \"COMPANY_ID\", " +
-                  $"\"IS_ACTIVE\", \"IS_ADMIN\", \"CREATION_USER\", \"CREATION_DATE\", \"UPDATE_USER\", \"UPDATE_DATE\", " +
-                  $"\"REFRESH_TOKEN\", \"REFRESH_TOKEN_EXPIRY\", \"FORCE_LOGOUT_DATE\" " +
-                  $"FROM \"{schemaName}\".\"SYS_USERS\" WHERE \"USER_NAME\" = :userName AND \"IS_ACTIVE\" = 1";
+        var sql = $"SELECT u.\"Id\", u.\"NAME_AR\", u.\"NAME_EN\", u.\"USER_NAME\", u.\"PASSWORD\", u.\"ROLE\", ub.\"BRANCH_ID\", u.\"COMPANY_ID\", " +
+                  $"u.\"IS_ACTIVE\", u.\"IS_ADMIN\", u.\"CREATION_USER\", u.\"CREATION_DATE\", u.\"UPDATE_USER\", u.\"UPDATE_DATE\", " +
+                  $"u.\"REFRESH_TOKEN\", u.\"REFRESH_TOKEN_EXPIRY\", u.\"FORCE_LOGOUT_DATE\" " +
+                  $"FROM \"{schemaName}\".\"SYS_USERS\" u " +
+                  $"LEFT JOIN \"{schemaName}\".\"SYS_USER_BRANCHES\" ub ON u.\"Id\" = ub.\"USER_ID\" AND ub.\"IS_PRIMARY\" = 1 " +
+                  $"WHERE u.\"USER_NAME\" = :userName AND u.\"IS_ACTIVE\" = 1";
 
         await using var cmd = tenantConn.CreateCommand();
         cmd.CommandText = sql;
@@ -287,7 +304,7 @@ public class OracleSchemaService : IOracleSchemaService
         return null;
     }
 
-    private async Task CreateTenantTablesAsync(OracleConnection connection, string schemaName)
+    private async Task BootstrapTablesFromEfModelAsync(OracleConnection connection, string schemaName)
     {
         using var scope = _scopeFactory.CreateScope();
         await using var context = scope.ServiceProvider.GetRequiredService<OracleDbContext>();
@@ -396,9 +413,13 @@ public class OracleSchemaService : IOracleSchemaService
 
     private static readonly HashSet<string> TenantOnlyTables = new(StringComparer.OrdinalIgnoreCase)
     {
-        "SYS_ROLE", "SYS_USERS", "SYS_USERS_ROLES",
+        "SYS_ROLE", "SYS_USERS", "SYS_USERS_ROLES", "SYS_USER_BRANCHES",
         "SYS_FISCAL_YEAR", "SYS_SAVED_SEARCH", "SYS_SEARCH_ANALYTICS",
-        "SYS_ROLE_SCREEN_PERMISSIONS", "SYS_USER_SCREEN_PERMISSIONS"
+        "SYS_ROLE_SCREEN_PERMISSIONS", "SYS_USER_SCREEN_PERMISSIONS",
+        "SYS_BRANCH", "SYS_BRANCH_FEATURES", "SYS_BRANCH_SCREENS", "SYS_BRANCH_SYSTEMS",
+        "SYS_AUDIT_LOG", "SYS_AUDIT_LOG_ARCHIVE", "SYS_RETENTION_POLICIES", "SYS_SETTINGS", "SYS_CODE",
+        "SYS_DOCUMENT", "SYS_REQUEST_TICKET", "SYS_TICKET_ATTACHMENT", "SYS_TICKET_CATEGORY", "SYS_TICKET_COMMENT",
+        "SYS_TICKET_CONFIG", "SYS_TICKET_PRIORITY", "SYS_TICKET_STATUS", "SYS_TICKET_TYPE"
     };
 
     private async Task GrantTenantTableAccessAsync(string schemaName, string password)
@@ -453,15 +474,16 @@ public class OracleSchemaService : IOracleSchemaService
 
     public async Task UpgradeExistingTenantSchemasAsync()
     {
-        var masterConn = await OpenMasterConnectionAsync();
-        await using var _ = masterConn.ConfigureAwait(false);
+        _logger.LogInformation("Upgrading all existing tenant schemas against template {SourceSchema}", _devSchemaName);
+        
+        await using var masterConn = await OpenMasterConnectionAsync();
 
         // Get all company schemas
         var schemas = new List<string>();
         try
         {
             await using var cmd = masterConn.CreateCommand();
-            cmd.CommandText = "SELECT COMPANY_SCHEMA FROM SYS_COMPANY WHERE COMPANY_SCHEMA IS NOT NULL";
+            cmd.CommandText = "SELECT COMPANY_SCHEMA FROM \"THINKON_ERP\".\"SYS_COMPANY\" WHERE COMPANY_SCHEMA IS NOT NULL";
             await using var reader = await cmd.ExecuteReaderAsync();
             while (await reader.ReadAsync())
             {
@@ -482,36 +504,278 @@ public class OracleSchemaService : IOracleSchemaService
             return;
         }
 
-        var oldTables = new[] { "SYS_ROLE_SCREEN_PERMISSIONS", "SYS_USER_SCREEN_PERMISSIONS" };
-
         foreach (var schema in schemas)
         {
+            // Skip the template schema itself if it is in the list
+            if (string.Equals(schema, _devSchemaName, StringComparison.OrdinalIgnoreCase))
+                continue;
+
             try
             {
-                await using var pdbConn = await OpenTenantConnectionAsync(schema, schema);
-                await using var __ = pdbConn.ConfigureAwait(false);
-
-                foreach (var table in oldTables)
-                {
-                    try
-                    {
-                        await ExecuteRawAsync(pdbConn, $"DROP TABLE \"{schema}\".\"{table}\" CASCADE CONSTRAINTS PURGE");
-                        _logger.LogInformation("Dropped old table {Schema}.{Table}", schema, table);
-                    }
-                    catch (OracleException ex) when (ex.Number == 942)
-                    {
-                        // 942 = table does not exist, that's fine
-                    }
-                }
-
-                // Create new permission tables using EF model
-                await CreateTenantTablesAsync(pdbConn, schema);
-                _logger.LogInformation("Upgraded tenant schema: {Schema}", schema);
+                _logger.LogInformation("Syncing schema: {Schema}", schema);
+                await CloneFromDeveloperSchemaAsync(masterConn, schema);
+                
+                // Regenerate synonyms & table access grants to ensure everything is correct
+                await GrantTenantTableAccessAsync(schema, schema);
+                await CreateGlobalSynonymsAsync(schema, schema);
+                
+                _logger.LogInformation("Upgraded and synced tenant schema: {Schema}", schema);
             }
             catch (Exception ex)
             {
                 _logger.LogWarning(ex, "Failed to upgrade tenant schema: {Schema}", schema);
             }
         }
+    }
+
+    public async Task SyncTenantSchemaAsync(string schemaName, string schemaPassword)
+    {
+        schemaName = schemaName.ToUpperInvariant();
+        _logger.LogInformation("Syncing tenant schema {SchemaName} with template {SourceSchema}", schemaName, _devSchemaName);
+        
+        await using var masterConn = await OpenMasterConnectionAsync();
+        await CloneFromDeveloperSchemaAsync(masterConn, schemaName);
+        
+        // Ensure access privileges and synonyms are up to date
+        await GrantTenantTableAccessAsync(schemaName, schemaPassword);
+        await CreateGlobalSynonymsAsync(schemaName, schemaPassword);
+    }
+
+    public async Task ProvisionDeveloperSchemaAsync()
+    {
+        _logger.LogInformation("Ensuring developer template schema exists: {SchemaName}", _devSchemaName);
+
+        await using var masterConn = await OpenMasterConnectionAsync();
+
+        // Enable Oracle 12c+ script mode
+        await ExecuteRawAsync(masterConn, "ALTER SESSION SET \"_ORACLE_SCRIPT\" = TRUE");
+
+        // 1. Create the Oracle user for developer template if not exists
+        try
+        {
+            await ExecuteRawAsync(masterConn, $"CREATE USER \"{_devSchemaName}\" IDENTIFIED BY \"{_devSchemaPassword}\"");
+            _logger.LogInformation("Developer template user created: {SchemaName}", _devSchemaName);
+        }
+        catch (OracleException ex) when (ex.Number == 1920)
+        {
+            _logger.LogDebug("Developer template schema already exists: {SchemaName}", _devSchemaName);
+        }
+
+        // 2. Grant privileges and tablespace quota
+        await ExecuteRawAsync(masterConn,
+            $"GRANT CONNECT, RESOURCE, CREATE SESSION, CREATE TABLE, CREATE VIEW, CREATE SEQUENCE, CREATE PROCEDURE, CREATE TRIGGER, CREATE SYNONYM TO \"{_devSchemaName}\"");
+        await ExecuteRawAsync(masterConn,
+            $"ALTER USER \"{_devSchemaName}\" QUOTA UNLIMITED ON USERS");
+        await ExecuteRawAsync(masterConn,
+            $"ALTER USER \"{_devSchemaName}\" ACCOUNT UNLOCK");
+
+        // 3. Bootstrap tables from EF model into the template schema
+        await BootstrapTablesFromEfModelAsync(masterConn, _devSchemaName);
+        
+        // 4. Create synonyms for global tables in the developer template schema so it has full connectivity
+        await CreateGlobalSynonymsAsync(_devSchemaName, _devSchemaPassword);
+
+        _logger.LogInformation("Developer template schema provisioning/verification completed: {SchemaName}", _devSchemaName);
+    }
+
+    private async Task CloneFromDeveloperSchemaAsync(OracleConnection connection, string targetSchema)
+    {
+        _logger.LogInformation("Cloning schema structure from {SourceSchema} to {TargetSchema}", _devSchemaName, targetSchema);
+
+        var objects = new List<(string Name, string Type)>();
+        
+        var query = @"
+            SELECT OBJECT_NAME, OBJECT_TYPE 
+            FROM ALL_OBJECTS 
+            WHERE OWNER = :sourceSchema 
+              AND (
+                (OBJECT_TYPE = 'TABLE' AND OBJECT_NAME NOT LIKE 'BIN$%') OR
+                (OBJECT_TYPE = 'INDEX' AND OBJECT_NAME NOT LIKE 'SYS_%') OR
+                (OBJECT_TYPE = 'SEQUENCE' AND OBJECT_NAME NOT LIKE 'ISEQ$$%')
+              )
+            ORDER BY 
+              CASE OBJECT_TYPE 
+                WHEN 'SEQUENCE' THEN 1
+                WHEN 'TABLE' THEN 2
+                WHEN 'INDEX' THEN 3
+                ELSE 4
+              END";
+
+        await using (var cmd = connection.CreateCommand())
+        {
+            cmd.CommandText = query;
+            cmd.Parameters.Add(new OracleParameter("sourceSchema", _devSchemaName));
+            await using var reader = await cmd.ExecuteReaderAsync();
+            while (await reader.ReadAsync())
+            {
+                objects.Add((reader.GetString(0), reader.GetString(1)));
+            }
+        }
+
+        _logger.LogInformation("Found {Count} objects to clone from {SourceSchema}", objects.Count, _devSchemaName);
+
+        // Set DBMS_METADATA session transform options for portable DDL
+        try
+        {
+            await using (var cmd = connection.CreateCommand())
+            {
+                cmd.CommandText = "BEGIN DBMS_METADATA.SET_TRANSFORM_PARAM(DBMS_METADATA.SESSION_TRANSFORM, 'SEGMENT_ATTRIBUTES', FALSE); END;";
+                await cmd.ExecuteNonQueryAsync();
+            }
+            await using (var cmd = connection.CreateCommand())
+            {
+                cmd.CommandText = "BEGIN DBMS_METADATA.SET_TRANSFORM_PARAM(DBMS_METADATA.SESSION_TRANSFORM, 'TABLESPACE', FALSE); END;";
+                await cmd.ExecuteNonQueryAsync();
+            }
+            await using (var cmd = connection.CreateCommand())
+            {
+                cmd.CommandText = "BEGIN DBMS_METADATA.SET_TRANSFORM_PARAM(DBMS_METADATA.SESSION_TRANSFORM, 'STORAGE', FALSE); END;";
+                await cmd.ExecuteNonQueryAsync();
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Failed to set DBMS_METADATA session transform parameters. Output DDL may contain storage clauses.");
+        }
+
+        foreach (var obj in objects)
+        {
+            if (GlobalTables.Contains(obj.Name))
+                continue;
+
+            if (!TenantOnlyTables.Contains(obj.Name) && obj.Type == "TABLE")
+                continue;
+
+            _logger.LogDebug("Retrieving DDL for {Type} {Name} from {SourceSchema}", obj.Type, obj.Name, _devSchemaName);
+
+            string ddl = "";
+            try
+            {
+                await using var cmd = connection.CreateCommand();
+                cmd.CommandText = "SELECT DBMS_METADATA.GET_DDL(:objType, :objName, :sourceSchema) FROM DUAL";
+                cmd.Parameters.Add(new OracleParameter("objType", obj.Type));
+                cmd.Parameters.Add(new OracleParameter("objName", obj.Name));
+                cmd.Parameters.Add(new OracleParameter("sourceSchema", _devSchemaName));
+
+                var result = await cmd.ExecuteScalarAsync();
+                ddl = result?.ToString() ?? "";
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Failed to get DDL for {Type} {Name}", obj.Type, obj.Name);
+                continue;
+            }
+
+            if (string.IsNullOrWhiteSpace(ddl))
+                continue;
+
+            // Retarget DDL to the target schema name
+            var pattern = $"\"{_devSchemaName}\".";
+            var replacement = $"\"{targetSchema}\".";
+            ddl = ddl.Replace(pattern, replacement, StringComparison.OrdinalIgnoreCase);
+            ddl = ddl.Replace($"\"{_devSchemaName}\"", $"\"{targetSchema}\"", StringComparison.OrdinalIgnoreCase);
+
+            _logger.LogDebug("Executing DDL for {Type} {TargetSchema}.{Name}", obj.Type, targetSchema, obj.Name);
+            try
+            {
+                await using var cmd = connection.CreateCommand();
+                cmd.CommandText = ddl;
+                await cmd.ExecuteNonQueryAsync();
+            }
+            catch (OracleException ex) when (ex.Number == 955 || ex.Number == 2261 || ex.Number == 2264 || ex.Number == 1917)
+            {
+                _logger.LogDebug("Object/constraint {Name} already exists or is redundant: {Msg}", obj.Name, ex.Message);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Error creating cloned {Type} {TargetSchema}.{Name}. DDL was: {Ddl}", obj.Type, targetSchema, obj.Name, ddl);
+            }
+        }
+    }
+
+    public async Task<(long BranchId, long FiscalYearId)> ProvisionTenantBranchAndFiscalYearAsync(
+        string schemaName,
+        string schemaPassword,
+        long companyId,
+        string? branchNameAr, string? branchNameEn,
+        string? branchPhone, string? branchMobile,
+        string? branchFax, string? branchEmail,
+        string? taxNumber, int defaultLang,
+        long? baseCurrencyId, int roundingRules,
+        string? branchLogoPath, string creationUser)
+    {
+        schemaName = schemaName.ToUpperInvariant();
+        _logger.LogInformation("Provisioning tenant branch and fiscal year in schema: {SchemaName}", schemaName);
+
+        await using var tenantConn = await OpenTenantConnectionAsync(schemaName, schemaPassword);
+
+        // 1. Insert Branch
+        var branchSql = $@"
+            INSERT INTO ""{schemaName}"".""SYS_BRANCH"" 
+            (""COMPANY_ID"", ""NAME_AR"", ""NAME_EN"", ""PHONE"", ""MOBILE"", ""FAX"", ""EMAIL"", ""IS_HEAD_BRANCH"", ""TAX_NUMBER"", ""DEFAULT_LANG"", ""BASE_CURRENCY_ID"", ""ROUNDING_RULES"", ""BRANCH_LOGO_PATH"", ""IS_ACTIVE"", ""CREATION_USER"", ""CREATION_DATE"")
+            VALUES (:companyId, :nameAr, :nameEn, :phone, :mobile, :fax, :email, 1, :taxNumber, :defaultLang, :baseCurrencyId, :roundingRules, :logoPath, 1, :creationUser, SYSDATE)
+            RETURNING ""Id"" INTO :branchId";
+
+        await using var branchCmd = tenantConn.CreateCommand();
+        branchCmd.CommandText = branchSql;
+        branchCmd.Parameters.Add(new OracleParameter("companyId", companyId));
+        branchCmd.Parameters.Add(new OracleParameter("nameAr", branchNameAr ?? "Default Branch"));
+        branchCmd.Parameters.Add(new OracleParameter("nameEn", branchNameEn ?? "Default Branch"));
+        branchCmd.Parameters.Add(new OracleParameter("phone", (object?)branchPhone ?? DBNull.Value));
+        branchCmd.Parameters.Add(new OracleParameter("mobile", (object?)branchMobile ?? DBNull.Value));
+        branchCmd.Parameters.Add(new OracleParameter("fax", (object?)branchFax ?? DBNull.Value));
+        branchCmd.Parameters.Add(new OracleParameter("email", (object?)branchEmail ?? DBNull.Value));
+        branchCmd.Parameters.Add(new OracleParameter("taxNumber", (object?)taxNumber ?? DBNull.Value));
+        branchCmd.Parameters.Add(new OracleParameter("defaultLang", defaultLang));
+        branchCmd.Parameters.Add(new OracleParameter("baseCurrencyId", baseCurrencyId ?? 1L));
+        branchCmd.Parameters.Add(new OracleParameter("roundingRules", roundingRules));
+        branchCmd.Parameters.Add(new OracleParameter("logoPath", (object?)branchLogoPath ?? DBNull.Value));
+        branchCmd.Parameters.Add(new OracleParameter("creationUser", creationUser));
+
+        var branchIdParam = new OracleParameter("branchId", OracleDbType.Decimal)
+        {
+            Direction = System.Data.ParameterDirection.Output
+        };
+        branchCmd.Parameters.Add(branchIdParam);
+        await branchCmd.ExecuteNonQueryAsync();
+
+        var branchId = Convert.ToInt64(branchIdParam.Value.ToString());
+        _logger.LogInformation("Successfully created branch with ID {BranchId} in schema {SchemaName}", branchId, schemaName);
+
+        // 2. Insert Fiscal Year
+        var fyCode = $"FY{DateTime.Now.Year}";
+        var fyNameAr = $"السنة المالية {DateTime.Now.Year}";
+        var fyNameEn = $"Fiscal Year {DateTime.Now.Year}";
+        var startDate = new DateTime(DateTime.Now.Year, 1, 1);
+        var endDate = new DateTime(DateTime.Now.Year, 12, 31);
+
+        var fySql = $@"
+            INSERT INTO ""{schemaName}"".""SYS_FISCAL_YEAR""
+            (""COMPANY_ID"", ""BRANCH_ID"", ""FISCAL_YEAR_CODE"", ""NAME_AR"", ""NAME_EN"", ""START_DATE"", ""END_DATE"", ""IS_CLOSED"", ""IS_ACTIVE"", ""CREATION_USER"", ""CREATION_DATE"")
+            VALUES (:companyId, :branchId, :fyCode, :nameAr, :nameEn, :startDate, :endDate, 0, 1, :creationUser, SYSDATE)
+            RETURNING ""Id"" INTO :fyId";
+
+        await using var fyCmd = tenantConn.CreateCommand();
+        fyCmd.CommandText = fySql;
+        fyCmd.Parameters.Add(new OracleParameter("companyId", companyId));
+        fyCmd.Parameters.Add(new OracleParameter("branchId", branchId));
+        fyCmd.Parameters.Add(new OracleParameter("fyCode", fyCode));
+        fyCmd.Parameters.Add(new OracleParameter("nameAr", fyNameAr));
+        fyCmd.Parameters.Add(new OracleParameter("nameEn", fyNameEn));
+        fyCmd.Parameters.Add(new OracleParameter("startDate", startDate));
+        fyCmd.Parameters.Add(new OracleParameter("endDate", endDate));
+        fyCmd.Parameters.Add(new OracleParameter("creationUser", creationUser));
+
+        var fyIdParam = new OracleParameter("fyId", OracleDbType.Decimal)
+        {
+            Direction = System.Data.ParameterDirection.Output
+        };
+        fyCmd.Parameters.Add(fyIdParam);
+        await fyCmd.ExecuteNonQueryAsync();
+
+        var fiscalYearId = Convert.ToInt64(fyIdParam.Value.ToString());
+        _logger.LogInformation("Successfully created fiscal year with ID {FiscalYearId} in schema {SchemaName}", fiscalYearId, schemaName);
+
+        return (branchId, fiscalYearId);
     }
 }

@@ -13,6 +13,7 @@ using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Logs;
+using ThinkOnErp.Domain.Interfaces;
 
 // Configure Serilog before building the host
 Log.Logger = new LoggerConfiguration()
@@ -309,16 +310,18 @@ try
 
         var superAdminControllers = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
         {
-            "SuperAdminAuth", "Alerts", "AuditHealth", "AuditTrail", "Branch", "BranchPermissions",
-            "Company", "Compliance", "Configuration", "Documents", "Health",
+            "SuperAdminAuth", "Alerts", "AuditHealth", "AuditTrail",
+            "Company", "Configuration", "Health",
             "Features", "KeyManagement", "Modules", "Monitoring", "Screens", "SuperAdmin", 
-            "Tickets", "TicketTypes", "AuditLogs", "BranchAccess",
-            "SysCodes", "SysSettings", "Currency"
+            "AuditLogs", "SysCodes", "SysSettings", "Currency"
         };
 
         options.DocInclusionPredicate((docName, apiDesc) =>
         {
             var controller = apiDesc.ActionDescriptor.RouteValues["controller"];
+            if (string.Equals(controller, "Documents", StringComparison.OrdinalIgnoreCase))
+                return true;
+
             if (docName == "superadmin")
                 return superAdminControllers.Contains(controller);
             return !superAdminControllers.Contains(controller);
@@ -461,6 +464,22 @@ Example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...'
     app.UseAuthorization();
 
     app.MapControllers();
+
+    // Auto-provision developer template schema on startup
+    using (var scope = app.Services.CreateScope())
+    {
+        try
+        {
+            var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
+            logger.LogInformation("Auto-provisioning developer template schema on startup");
+            var schemaService = scope.ServiceProvider.GetRequiredService<IOracleSchemaService>();
+            await schemaService.ProvisionDeveloperSchemaAsync();
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "Failed to auto-provision developer template schema on startup");
+        }
+    }
 
     app.Run();
 }

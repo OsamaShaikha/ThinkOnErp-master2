@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Oracle.EntityFrameworkCore.Metadata;
 using ThinkOnErp.Infrastructure.Data;
@@ -11,9 +12,11 @@ using ThinkOnErp.Infrastructure.Data;
 namespace ThinkOnErp.Infrastructure.Migrations
 {
     [DbContext(typeof(OracleDbContext))]
-    partial class OracleDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260713211953_AddSuperAdminPinAndUserBranches")]
+    partial class AddSuperAdminPinAndUserBranches
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -438,10 +441,7 @@ namespace ThinkOnErp.Infrastructure.Migrations
 
                     b.HasIndex("CompanyId");
 
-                    b.ToTable("SYS_BRANCH", null, t =>
-                        {
-                            t.ExcludeFromMigrations();
-                        });
+                    b.ToTable("SYS_BRANCH", (string)null);
                 });
 
             modelBuilder.Entity("ThinkOnErp.Domain.Entities.SysBranchFeature", b =>
@@ -508,10 +508,7 @@ namespace ThinkOnErp.Infrastructure.Migrations
                         .IsUnique()
                         .HasDatabaseName("IX_SYS_BRANCH_FEATURES_UK");
 
-                    b.ToTable("SYS_BRANCH_FEATURES", null, t =>
-                        {
-                            t.ExcludeFromMigrations();
-                        });
+                    b.ToTable("SYS_BRANCH_FEATURES", (string)null);
                 });
 
             modelBuilder.Entity("ThinkOnErp.Domain.Entities.SysBranchScreen", b =>
@@ -572,10 +569,7 @@ namespace ThinkOnErp.Infrastructure.Migrations
                         .IsUnique()
                         .HasDatabaseName("IX_SYS_BRANCH_SCREENS_UK");
 
-                    b.ToTable("SYS_BRANCH_SCREENS", null, t =>
-                        {
-                            t.ExcludeFromMigrations();
-                        });
+                    b.ToTable("SYS_BRANCH_SCREENS", (string)null);
                 });
 
             modelBuilder.Entity("ThinkOnErp.Domain.Entities.SysBranchSystem", b =>
@@ -640,10 +634,7 @@ namespace ThinkOnErp.Infrastructure.Migrations
                         .IsUnique()
                         .HasDatabaseName("IX_SYS_BRANCH_SYSTEMS_UK");
 
-                    b.ToTable("SYS_BRANCH_SYSTEMS", null, t =>
-                        {
-                            t.ExcludeFromMigrations();
-                        });
+                    b.ToTable("SYS_BRANCH_SYSTEMS", (string)null);
                 });
 
             modelBuilder.Entity("ThinkOnErp.Domain.Entities.SysCode", b =>
@@ -981,8 +972,10 @@ namespace ThinkOnErp.Infrastructure.Migrations
                         .HasColumnType("NUMBER(19)")
                         .HasColumnName("OWNER_ID");
 
-                    b.Property<int>("OwnerType")
-                        .HasColumnType("NUMBER(10)")
+                    b.Property<string>("OwnerType")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("NVARCHAR2(20)")
                         .HasColumnName("OWNER_TYPE");
 
                     b.Property<string>("Tags")
@@ -1347,10 +1340,7 @@ namespace ThinkOnErp.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("SYS_REPORT_SCHEDULE", null, t =>
-                        {
-                            t.ExcludeFromMigrations();
-                        });
+                    b.ToTable("SYS_REPORT_SCHEDULE", (string)null);
                 });
 
             modelBuilder.Entity("ThinkOnErp.Domain.Entities.SysRequestTicket", b =>
@@ -1461,10 +1451,7 @@ namespace ThinkOnErp.Infrastructure.Migrations
 
                     b.HasIndex("TicketTypeId");
 
-                    b.ToTable("SYS_REQUEST_TICKET", null, t =>
-                        {
-                            t.ExcludeFromMigrations();
-                        });
+                    b.ToTable("SYS_REQUEST_TICKET", (string)null);
                 });
 
             modelBuilder.Entity("ThinkOnErp.Domain.Entities.SysRetentionPolicy", b =>
@@ -1504,10 +1491,7 @@ namespace ThinkOnErp.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("SYS_RETENTION_POLICIES", null, t =>
-                        {
-                            t.ExcludeFromMigrations();
-                        });
+                    b.ToTable("SYS_RETENTION_POLICIES", (string)null);
                 });
 
             modelBuilder.Entity("ThinkOnErp.Domain.Entities.SysRole", b =>
@@ -1626,10 +1610,7 @@ namespace ThinkOnErp.Infrastructure.Migrations
                         .IsUnique()
                         .HasDatabaseName("IX_SYS_ROLE_SCREEN_PERM_UK");
 
-                    b.ToTable("SYS_ROLE_SCREEN_PERMISSIONS", null, t =>
-                        {
-                            t.ExcludeFromMigrations();
-                        });
+                    b.ToTable("SYS_ROLE_SCREEN_PERMISSIONS", (string)null);
                 });
 
             modelBuilder.Entity("ThinkOnErp.Domain.Entities.SysSavedSearch", b =>
@@ -2245,10 +2226,7 @@ namespace ThinkOnErp.Infrastructure.Migrations
 
                     b.HasIndex("TicketId");
 
-                    b.ToTable("SYS_TICKET_ATTACHMENT", null, t =>
-                        {
-                            t.ExcludeFromMigrations();
-                        });
+                    b.ToTable("SYS_TICKET_ATTACHMENT", (string)null);
                 });
 
             modelBuilder.Entity("ThinkOnErp.Domain.Entities.SysTicketCategory", b =>
@@ -2311,10 +2289,7 @@ namespace ThinkOnErp.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("SYS_TICKET_CATEGORY", null, t =>
-                        {
-                            t.ExcludeFromMigrations();
-                        });
+                    b.ToTable("SYS_TICKET_CATEGORY", (string)null);
                 });
 
             modelBuilder.Entity("ThinkOnErp.Domain.Entities.SysTicketComment", b =>
@@ -2354,10 +2329,7 @@ namespace ThinkOnErp.Infrastructure.Migrations
 
                     b.HasIndex("TicketId");
 
-                    b.ToTable("SYS_TICKET_COMMENT", null, t =>
-                        {
-                            t.ExcludeFromMigrations();
-                        });
+                    b.ToTable("SYS_TICKET_COMMENT", (string)null);
                 });
 
             modelBuilder.Entity("ThinkOnErp.Domain.Entities.SysTicketConfig", b =>
@@ -2425,10 +2397,7 @@ namespace ThinkOnErp.Infrastructure.Migrations
                     b.HasIndex("ConfigKey")
                         .IsUnique();
 
-                    b.ToTable("SYS_TICKET_CONFIG", null, t =>
-                        {
-                            t.ExcludeFromMigrations();
-                        });
+                    b.ToTable("SYS_TICKET_CONFIG", (string)null);
                 });
 
             modelBuilder.Entity("ThinkOnErp.Domain.Entities.SysTicketPriority", b =>
@@ -2480,10 +2449,7 @@ namespace ThinkOnErp.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("SYS_TICKET_PRIORITY", null, t =>
-                        {
-                            t.ExcludeFromMigrations();
-                        });
+                    b.ToTable("SYS_TICKET_PRIORITY", (string)null);
                 });
 
             modelBuilder.Entity("ThinkOnErp.Domain.Entities.SysTicketStatus", b =>
@@ -2541,10 +2507,7 @@ namespace ThinkOnErp.Infrastructure.Migrations
                     b.HasIndex("StatusCode")
                         .IsUnique();
 
-                    b.ToTable("SYS_TICKET_STATUS", null, t =>
-                        {
-                            t.ExcludeFromMigrations();
-                        });
+                    b.ToTable("SYS_TICKET_STATUS", (string)null);
                 });
 
             modelBuilder.Entity("ThinkOnErp.Domain.Entities.SysTicketType", b =>
@@ -2613,10 +2576,7 @@ namespace ThinkOnErp.Infrastructure.Migrations
 
                     b.HasIndex("DefaultPriorityId");
 
-                    b.ToTable("SYS_TICKET_TYPE", null, t =>
-                        {
-                            t.ExcludeFromMigrations();
-                        });
+                    b.ToTable("SYS_TICKET_TYPE", (string)null);
                 });
 
             modelBuilder.Entity("ThinkOnErp.Domain.Entities.SysUser", b =>
@@ -2768,10 +2728,7 @@ namespace ThinkOnErp.Infrastructure.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("SYS_USER_BRANCHES", null, t =>
-                        {
-                            t.ExcludeFromMigrations();
-                        });
+                    b.ToTable("SYS_USER_BRANCHES", (string)null);
                 });
 
             modelBuilder.Entity("ThinkOnErp.Domain.Entities.SysUserRole", b =>
@@ -2879,10 +2836,7 @@ namespace ThinkOnErp.Infrastructure.Migrations
                         .IsUnique()
                         .HasDatabaseName("IX_SYS_USER_SCREEN_PERM_UK");
 
-                    b.ToTable("SYS_USER_SCREEN_PERMISSIONS", null, t =>
-                        {
-                            t.ExcludeFromMigrations();
-                        });
+                    b.ToTable("SYS_USER_SCREEN_PERMISSIONS", (string)null);
                 });
 
             modelBuilder.Entity("ThinkOnErp.Domain.Entities.SysAuditLog", b =>

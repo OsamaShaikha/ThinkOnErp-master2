@@ -19,5 +19,6 @@ public class UpdateBranchCommand : IRequest<Int64>
     public int? RoundingRules { get; set; }
     public Int64? FiscalYearId { get; set; }
     public byte[]? BranchLogo { get; set; }
+    public int? UsersLimit { get; set; }
     public string UpdateUser { get; set; } = string.Empty;
 }

@@ -8,7 +8,7 @@ public class SysUserScreenPermissionConfiguration : IEntityTypeConfiguration<Sys
 {
     public void Configure(EntityTypeBuilder<SysUserScreenPermission> builder)
     {
-        builder.ToTable("SYS_USER_SCREEN_PERMISSIONS");
+        builder.ToTable("SYS_USER_SCREEN_PERMISSIONS", t => t.ExcludeFromMigrations());
         builder.HasKey(e => e.Id);
         builder.Property(e => e.Id).ValueGeneratedOnAdd();
         builder.Property(e => e.BranchId).HasColumnName("BRANCH_ID").IsRequired();

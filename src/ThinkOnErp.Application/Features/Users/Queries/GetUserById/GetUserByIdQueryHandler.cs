@@ -20,6 +20,9 @@ public class GetUserByIdQueryHandler : IRequestHandler<GetUserByIdQuery, UserDto
         if (user == null)
             return null;
 
+        var branches = await _userRepository.GetUserBranchesAsync(user.Id);
+        var primaryBranch = branches.FirstOrDefault(b => b.IsPrimary);
+
         return new UserDto
         {
             UserId = user.Id,
@@ -29,7 +32,9 @@ public class GetUserByIdQueryHandler : IRequestHandler<GetUserByIdQuery, UserDto
             Phone = user.Phone,
             Phone2 = user.Phone2,
             RoleId = user.RoleId,
-            BranchId = user.BranchId,
+            BranchId = primaryBranch?.BranchId,
+            BranchIds = branches.Select(b => b.BranchId).ToList(),
+            PrimaryBranchId = primaryBranch?.BranchId,
             Email = user.Email,
             LastLoginDate = user.LastLoginDate,
             IsActive = user.IsActive,

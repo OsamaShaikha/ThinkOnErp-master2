@@ -30,5 +30,6 @@ public class CreateBranchDto
     /// </summary>
     public Int64? BaseCurrencyId { get; set; }
     public int? RoundingRules { get; set; }
+    public int? UsersLimit { get; set; }
     public List<long>? Systems { get; set; }
 }

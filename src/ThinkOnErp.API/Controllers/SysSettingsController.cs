@@ -8,7 +8,7 @@ namespace ThinkOnErp.API.Controllers;
 
 [ApiController]
 [Route("api/syssettings")]
-[Authorize(Policy = "AdminOnly")]
+[Authorize(Policy = "SuperAdminOnly")]
 public class SysSettingsController : ControllerBase
 {
     private readonly ISysSettingRepository _repo;

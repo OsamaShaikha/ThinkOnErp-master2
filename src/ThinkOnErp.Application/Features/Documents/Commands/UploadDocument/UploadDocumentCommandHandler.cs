@@ -57,7 +57,7 @@ public class UploadDocumentCommandHandler : IRequestHandler<UploadDocumentComman
             }
 
             // Save file to disk
-            var relativePath = Path.Combine(request.OwnerType, request.OwnerId.ToString(), $"{Guid.NewGuid():N}_{request.FileName}");
+            var relativePath = Path.Combine(request.OwnerType.ToString(), request.OwnerId.ToString(), $"{Guid.NewGuid():N}_{request.FileName}");
             var sanitizedPath = relativePath.Replace("..", "");
 
             var savedPath = await _storageService.SaveFileAsync(request.FileStream, sanitizedPath);

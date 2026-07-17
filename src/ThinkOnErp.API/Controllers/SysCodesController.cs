@@ -8,7 +8,7 @@ namespace ThinkOnErp.API.Controllers;
 
 [ApiController]
 [Route("api/syscodes")]
-[Authorize(Policy = "AdminOnly")]
+[Authorize(Policy = "SuperAdminOnly")]
 public class SysCodesController : ControllerBase
 {
     private readonly ISysCodeRepository _repo;

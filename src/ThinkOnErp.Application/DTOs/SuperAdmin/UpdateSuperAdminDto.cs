@@ -9,4 +9,5 @@ public class UpdateSuperAdminDto
     public string NameEn { get; set; } = string.Empty;
     public string? Email { get; set; }
     public string? Phone { get; set; }
+    public string? PinCode { get; set; }
 }

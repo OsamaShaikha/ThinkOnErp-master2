@@ -27,14 +27,14 @@ public class GetDocumentsQueryHandler : IRequestHandler<GetDocumentsQuery, ApiRe
 
         try
         {
-            if (string.IsNullOrEmpty(request.OwnerType) || !request.OwnerId.HasValue)
+            if (!request.OwnerType.HasValue || !request.OwnerId.HasValue)
             {
                 return ApiResponse<PagedResult<DocumentDto>>.CreateFailure(
                     "OwnerType and OwnerId are required.", statusCode: 400);
             }
 
             var (items, totalCount) = await _documentRepository.GetByOwnerAsync(
-                request.OwnerType, request.OwnerId.Value,
+                request.OwnerType.Value, request.OwnerId.Value,
                 request.Page, request.PageSize,
                 request.Category, request.Search);
 

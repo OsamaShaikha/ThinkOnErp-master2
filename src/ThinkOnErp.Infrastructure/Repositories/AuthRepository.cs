@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using ThinkOnErp.Domain.Entities;
 using ThinkOnErp.Domain.Interfaces;
 using ThinkOnErp.Infrastructure.Data;
@@ -37,9 +37,16 @@ public class AuthRepository : IAuthRepository
 
     public async Task<SysUser?> ValidateRefreshTokenAsync(string refreshToken)
     {
-        return await _context.SysUsers
+        var user = await _context.SysUsers
             .FirstOrDefaultAsync(u => u.RefreshToken == refreshToken 
                 && u.RefreshTokenExpiry > DateTime.Now 
                 && u.IsActive);
+        if (user != null)
+        {
+            var primaryBranch = await _context.SysUserBranches
+                .FirstOrDefaultAsync(ub => ub.UserId == user.Id && ub.IsPrimary);
+            user.BranchId = primaryBranch?.BranchId;
+        }
+        return user;
     }
 }

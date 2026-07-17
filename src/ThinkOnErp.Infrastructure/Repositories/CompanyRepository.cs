@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using ThinkOnErp.Domain.Entities;
 using ThinkOnErp.Domain.Interfaces;
 using ThinkOnErp.Infrastructure.Data;
@@ -8,10 +8,12 @@ namespace ThinkOnErp.Infrastructure.Repositories;
 public class CompanyRepository : ICompanyRepository
 {
     private readonly OracleDbContext _context;
+    private readonly IOracleSchemaService _oracleSchemaService;
 
-    public CompanyRepository(OracleDbContext context)
+    public CompanyRepository(OracleDbContext context, IOracleSchemaService oracleSchemaService)
     {
         _context = context;
+        _oracleSchemaService = oracleSchemaService;
     }
 
     public async Task<SysCompany?> GetBySchemaAsync(string companySchema)
@@ -95,86 +97,59 @@ public class CompanyRepository : ICompanyRepository
         long? createdBySuperAdminId,
         string creationUser)
     {
-        // Use a strategy pattern - create company, branch, and fiscal year in a transaction
-        using var transaction = await _context.Database.BeginTransactionAsync();
-        try
+        if (string.IsNullOrEmpty(companySchema))
         {
-            // 1. Create the company
-            var company = new SysCompany
-            {
-                CompanyNameAr = companyNameAr ?? string.Empty,
-                CompanyNameEn = companyNameEn,
-                LegalName = legalNameAr,
-                LegalNameE = legalNameEn,
-                CompanyCode = companyCode,
-                CompanySchema = companySchema,
-                CountryId = countryId,
-                CurrId = currId,
-                CompanyLogoPath = companyLogoPath,
-                IsActive = true,
-                CreatedBySuperAdminId = createdBySuperAdminId,
-                CreationUser = creationUser,
-                CreationDate = DateTime.Now
-            };
-            _context.SysCompanies.Add(company);
-            await _context.SaveChangesAsync();
-
-            // 2. Create the branch
-            var branch = new SysBranch
-            {
-                CompanyId = company.Id,
-                BranchNameAr = branchNameAr ?? companyNameAr ?? "Default Branch",
-                BranchNameEn = branchNameEn ?? companyNameEn ?? "Default Branch",
-                Phone = branchPhone,
-                Mobile = branchMobile,
-                Fax = branchFax,
-                Email = branchEmail,
-                IsHeadBranch = true,
-                TaxNumber = taxNumber,
-                DefaultLang = defaultLang ?? 1,
-                BaseCurrencyId = baseCurrencyId,
-                RoundingRules = roundingRules ?? 1,
-                BranchLogoPath = branchLogoPath,
-                IsActive = true,
-                CreationUser = creationUser,
-                CreationDate = DateTime.Now
-            };
-            _context.SysBranches.Add(branch);
-            await _context.SaveChangesAsync();
-
-            // 3. Set default branch on company
-            company.DefaultBranchId = branch.Id;
-            company.UpdateUser = creationUser;
-            company.UpdateDate = DateTime.Now;
-            await _context.SaveChangesAsync();
-
-            // 4. Create default fiscal year
-            var fiscalYear = new SysFiscalYear
-            {
-                CompanyId = company.Id,
-                BranchId = branch.Id,
-                FiscalYearCode = $"FY{DateTime.Now.Year}",
-                FiscalYearNameAr = $"Ø§Ù„Ø³Ù†Ø© Ø§Ù„Ù…Ø§Ù„ÙŠØ© {DateTime.Now.Year}",
-                FiscalYearNameEn = $"Fiscal Year {DateTime.Now.Year}",
-                StartDate = new DateTime(DateTime.Now.Year, 1, 1),
-                EndDate = new DateTime(DateTime.Now.Year, 12, 31),
-                IsClosed = false,
-                IsActive = true,
-                CreationUser = creationUser,
-                CreationDate = DateTime.Now
-            };
-            _context.SysFiscalYears.Add(fiscalYear);
-            await _context.SaveChangesAsync();
-
-            await transaction.CommitAsync();
-
-            return (company.Id, branch.Id, fiscalYear.Id);
+            throw new ArgumentException("Company schema name is required.", nameof(companySchema));
         }
-        catch
+
+        // 1. Create the company in the master schema
+        var company = new SysCompany
         {
-            await transaction.RollbackAsync();
-            throw;
-        }
+            CompanyNameAr = companyNameAr ?? string.Empty,
+            CompanyNameEn = companyNameEn,
+            LegalName = legalNameAr,
+            LegalNameE = legalNameEn,
+            CompanyCode = companyCode,
+            CompanySchema = companySchema,
+            CountryId = countryId,
+            CurrId = currId,
+            CompanyLogoPath = companyLogoPath,
+            IsActive = true,
+            CreatedBySuperAdminId = createdBySuperAdminId,
+            CreationUser = creationUser,
+            CreationDate = DateTime.Now
+        };
+        _context.SysCompanies.Add(company);
+        await _context.SaveChangesAsync();
+
+        // 2. Create the Oracle schema and clone objects from DEV_TEMPLATE
+        await _oracleSchemaService.CreateCompanySchemaAsync(companySchema, companySchema);
+
+        // 3. Provision the default branch and default fiscal year inside the tenant schema
+        var (branchId, fiscalYearId) = await _oracleSchemaService.ProvisionTenantBranchAndFiscalYearAsync(
+            schemaName: companySchema,
+            schemaPassword: companySchema,
+            companyId: company.Id,
+            branchNameAr: branchNameAr,
+            branchNameEn: branchNameEn,
+            branchPhone: branchPhone,
+            branchMobile: branchMobile,
+            branchFax: branchFax,
+            branchEmail: branchEmail,
+            taxNumber: taxNumber,
+            defaultLang: defaultLang ?? 1,
+            baseCurrencyId: baseCurrencyId,
+            roundingRules: roundingRules ?? 1,
+            branchLogoPath: branchLogoPath,
+            creationUser: creationUser);
+
+        // 4. Update default branch ID on the company in the master schema
+        company.DefaultBranchId = branchId;
+        company.UpdateUser = creationUser;
+        company.UpdateDate = DateTime.Now;
+        await _context.SaveChangesAsync();
+
+        return (company.Id, branchId, fiscalYearId);
     }
 
     public async Task<long> SetDefaultBranchAsync(long companyId, long branchId, string userName)
