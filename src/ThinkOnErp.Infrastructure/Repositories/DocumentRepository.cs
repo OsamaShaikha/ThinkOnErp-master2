@@ -58,13 +58,13 @@ public class DocumentRepository : IDocumentRepository
 
     public async Task<(List<SysDocument> Items, int TotalCount)> GetByOwnerAsync(
         int ownerType, long ownerId, int page, int pageSize,
-        string? category = null, string? search = null)
+        int? documentType = null, string? search = null)
     {
         var query = _context.SysDocuments
             .Where(d => d.OwnerType == ownerType && d.OwnerId == ownerId && d.IsActive == "Y");
 
-        if (!string.IsNullOrEmpty(category))
-            query = query.Where(d => d.Category == category);
+        if (documentType.HasValue)
+            query = query.Where(d => d.DocumentType == documentType.Value);
 
         if (!string.IsNullOrEmpty(search))
             query = query.Where(d =>

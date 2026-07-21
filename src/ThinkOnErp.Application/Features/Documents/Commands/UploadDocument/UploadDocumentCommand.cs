@@ -11,7 +11,7 @@ public class UploadDocumentCommand : IRequest<ApiResponse<DocumentUploadResult>>
     public long FileSize { get; set; }
     public string ContentType { get; set; } = "application/octet-stream";
     public string? Description { get; set; }
-    public string? Category { get; set; }
+    public int DocumentType { get; set; }
     public string? Tags { get; set; }
     public int OwnerType { get; set; }
     public long OwnerId { get; set; }

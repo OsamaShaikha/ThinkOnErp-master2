@@ -34,8 +34,8 @@ public class UpdateDocumentCommandHandler : IRequestHandler<UpdateDocumentComman
             if (request.Description != null)
                 document.Description = request.Description;
 
-            if (request.Category != null)
-                document.Category = request.Category;
+            if (request.DocumentType.HasValue)
+                document.DocumentType = request.DocumentType.Value;
 
             if (request.Tags != null)
                 document.Tags = request.Tags;
@@ -56,7 +56,7 @@ public class UpdateDocumentCommandHandler : IRequestHandler<UpdateDocumentComman
                     MimeType = document.MimeType,
                     FileExtension = document.FileExtension,
                     Description = document.Description,
-                    Category = document.Category,
+                    DocumentType = document.DocumentType,
                     Tags = document.Tags,
                     OwnerType = document.OwnerType,
                     OwnerId = document.OwnerId,

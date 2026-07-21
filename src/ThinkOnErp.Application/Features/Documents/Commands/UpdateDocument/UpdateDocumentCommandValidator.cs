@@ -10,9 +10,9 @@ public class UpdateDocumentCommandValidator : AbstractValidator<UpdateDocumentCo
         RuleFor(x => x.Id)
             .GreaterThan(0).WithMessage("Valid document ID is required.");
 
-        RuleFor(x => x.Category)
-            .Must(c => string.IsNullOrEmpty(c) || SysDocument.AllowedDocumentCategories.Contains(c))
-            .WithMessage($"Category must be one of: {string.Join(", ", SysDocument.AllowedDocumentCategories)}");
+        RuleFor(x => x.DocumentType)
+            .Must(dt => !dt.HasValue || (dt.Value >= 1 && dt.Value <= 12))
+            .WithMessage("Document type must be a valid code between 1 (Contracts) and 12 (Other) if provided.");
 
         RuleFor(x => x.UpdateUser)
             .NotEmpty().WithMessage("Update user is required.");

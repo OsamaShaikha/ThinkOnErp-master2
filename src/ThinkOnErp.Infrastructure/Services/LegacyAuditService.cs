@@ -123,7 +123,7 @@ public class LegacyAuditService : ILegacyAuditService
     {
         try
         {
-            var query = _dbContext.SysAuditLogs.AsQueryable();
+            var query = await _dbContext.GetCombinedAuditLogsAsync();
 
             if (!string.IsNullOrWhiteSpace(filter.Company))
                 query = query.Where(a => a.CompanyId.HasValue && _dbContext.SysCompanies.Any(c => c.Id == a.CompanyId.Value && c.CompanyNameEn!.Contains(filter.Company)));
@@ -178,7 +178,7 @@ public class LegacyAuditService : ILegacyAuditService
     {
         try
         {
-            var query = _dbContext.SysAuditLogs.AsQueryable();
+            var query = await _dbContext.GetCombinedAuditLogsAsync();
 
             if (!string.IsNullOrWhiteSpace(filter.Company))
                 query = query.Where(a => a.CompanyId.HasValue && _dbContext.SysCompanies.Any(c => c.Id == a.CompanyId.Value && c.CompanyNameEn!.Contains(filter.Company)));
@@ -341,7 +341,7 @@ public class LegacyAuditService : ILegacyAuditService
     {
         try
         {
-            var allLogs = _dbContext.SysAuditLogs;
+            var allLogs = await _dbContext.GetCombinedAuditLogsAsync();
             var statusUnresolved = _sysCodeService.GetCodeValue(SysCodeKeys.AuditStatus.Mgr, SysCodeKeys.AuditStatus.Unresolved);
             var statusInProgress = _sysCodeService.GetCodeValue(SysCodeKeys.AuditStatus.Mgr, SysCodeKeys.AuditStatus.InProgress);
             var statusResolved = _sysCodeService.GetCodeValue(SysCodeKeys.AuditStatus.Mgr, SysCodeKeys.AuditStatus.Resolved);
@@ -371,20 +371,34 @@ public class LegacyAuditService : ILegacyAuditService
     {
         try
         {
-            var auditLog = await _dbContext.SysAuditLogs.FindAsync(auditLogId);
+            var query = await _dbContext.GetCombinedAuditLogsAsync();
+            var auditLog = await query.FirstOrDefaultAsync(l => l.Id == auditLogId);
             if (auditLog == null)
             {
                 _logger.LogWarning("Audit log not found: {AuditLogId}", auditLogId);
                 return;
             }
 
-            auditLog.Status = status;
-            if (!string.IsNullOrWhiteSpace(resolutionNotes))
-                auditLog.Metadata = resolutionNotes;
+            var schema = "THINKON_ERP";
+            if (auditLog.CompanyId.HasValue)
+            {
+                var compSchema = await _dbContext.SysCompanies
+                    .Where(c => c.Id == auditLog.CompanyId.Value)
+                    .Select(c => c.CompanySchema)
+                    .FirstOrDefaultAsync();
+                if (!string.IsNullOrEmpty(compSchema))
+                {
+                    schema = compSchema;
+                }
+            }            var metadata = (object?)(resolutionNotes ?? auditLog.Metadata) ?? DBNull.Value;
 
-            await _dbContext.SaveChangesAsync();
+#pragma warning disable EF1002
+            await _dbContext.Database.ExecuteSqlRawAsync(
+                $"UPDATE \"{schema}\".\"SYS_AUDIT_LOG\" SET \"STATUS\" = {{0}}, \"METADATA\" = {{1}} WHERE \"ID\" = {{2}}",
+                status, metadata, auditLogId);
+#pragma warning restore EF1002
 
-            _logger.LogInformation("Updated audit log {AuditLogId} status to {Status}", auditLogId, status);
+            _logger.LogInformation("Updated audit log {AuditLogId} status to {Status} in schema {Schema}", auditLogId, status, schema);
         }
         catch (Exception ex)
         {
@@ -398,7 +412,8 @@ public class LegacyAuditService : ILegacyAuditService
     {
         try
         {
-            var auditLog = await _dbContext.SysAuditLogs
+            var query = await _dbContext.GetCombinedAuditLogsAsync();
+            var auditLog = await query
                 .Where(a => a.Id == auditLogId)
                 .Select(a => a.Status)
                 .FirstOrDefaultAsync();
@@ -416,7 +431,8 @@ public class LegacyAuditService : ILegacyAuditService
     {
         try
         {
-            var log = await _dbContext.SysAuditLogs.FindAsync(id);
+            var query = await _dbContext.GetCombinedAuditLogsAsync();
+            var log = await query.FirstOrDefaultAsync(l => l.Id == id);
             if (log == null) return null;
             var entry = MapToAuditLogEntry(log);
 

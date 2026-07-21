@@ -36,7 +36,7 @@ public class GetDocumentsQueryHandler : IRequestHandler<GetDocumentsQuery, ApiRe
             var (items, totalCount) = await _documentRepository.GetByOwnerAsync(
                 request.OwnerType.Value, request.OwnerId.Value,
                 request.Page, request.PageSize,
-                request.Category, request.Search);
+                request.DocumentType, request.Search);
 
             var dtos = items.Select(d => new DocumentDto
             {
@@ -47,7 +47,7 @@ public class GetDocumentsQueryHandler : IRequestHandler<GetDocumentsQuery, ApiRe
                 MimeType = d.MimeType,
                 FileExtension = d.FileExtension,
                 Description = d.Description,
-                Category = d.Category,
+                DocumentType = d.DocumentType,
                 Tags = d.Tags,
                 OwnerType = d.OwnerType,
                 OwnerId = d.OwnerId,

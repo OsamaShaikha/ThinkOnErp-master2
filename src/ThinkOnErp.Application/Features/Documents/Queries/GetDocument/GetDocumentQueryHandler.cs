@@ -40,7 +40,7 @@ public class GetDocumentQueryHandler : IRequestHandler<GetDocumentQuery, ApiResp
                 MimeType = document.MimeType,
                 FileExtension = document.FileExtension,
                 Description = document.Description,
-                Category = document.Category,
+                DocumentType = document.DocumentType,
                 Tags = document.Tags,
                 OwnerType = document.OwnerType,
                 OwnerId = document.OwnerId,

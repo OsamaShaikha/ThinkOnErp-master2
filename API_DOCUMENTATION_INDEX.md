@@ -2,6 +2,12 @@
 
 This document provides links to detailed explanations of all API controllers in the ThinkOnERP system.
 
+> **Current generated reference (2026-07-18):** Start with
+> [`docs/API_DOCUMENTATION_CURRENT.md`](docs/API_DOCUMENTATION_CURRENT.md). It links to the
+> live-code endpoint catalog, full SuperAdmin and Company OpenAPI schemas, and the dated
+> verification report. The older documents below are retained for historical and feature-specific
+> context and may not match the current controllers.
+
 ---
 
 ## 📚 Documentation Files

@@ -25,6 +25,8 @@ public class CompanyRepository : ICompanyRepository
     public async Task<SysCompany?> GetByCodeAsync(string companyCode)
     {
         return await _context.SysCompanies
+            .OrderBy(c => c.CompanySchema == null ? 1 : 0)
+            .ThenByDescending(c => c.Id)
             .FirstOrDefaultAsync(c => c.CompanyCode == companyCode && c.IsActive);
     }
 

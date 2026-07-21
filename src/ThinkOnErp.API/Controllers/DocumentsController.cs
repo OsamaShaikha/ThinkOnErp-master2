@@ -54,11 +54,21 @@ public class DocumentsController : ControllerBase
                 new { value = ThinkOnErp.Domain.Constants.SysCodeKeys.OwnerTypes.Branch, label = "Branch", hint = "Documents belong to a branch" },
                 new { value = ThinkOnErp.Domain.Constants.SysCodeKeys.OwnerTypes.SuperAdmin, label = "Super Admin", hint = "Personal documents for super admin" }
             },
-            categories = SysDocument.AllowedDocumentCategories.Select(c => new
+            documentTypes = new[]
             {
-                value = c,
-                label = c
-            }),
+                new { value = ThinkOnErp.Domain.Constants.SysCodeKeys.DocumentCategories.Contracts, label = "Contracts" },
+                new { value = ThinkOnErp.Domain.Constants.SysCodeKeys.DocumentCategories.Reports, label = "Reports" },
+                new { value = ThinkOnErp.Domain.Constants.SysCodeKeys.DocumentCategories.Invoices, label = "Invoices" },
+                new { value = ThinkOnErp.Domain.Constants.SysCodeKeys.DocumentCategories.Receipts, label = "Receipts" },
+                new { value = ThinkOnErp.Domain.Constants.SysCodeKeys.DocumentCategories.Identification, label = "Identification" },
+                new { value = ThinkOnErp.Domain.Constants.SysCodeKeys.DocumentCategories.Certificates, label = "Certificates" },
+                new { value = ThinkOnErp.Domain.Constants.SysCodeKeys.DocumentCategories.Financial, label = "Financial" },
+                new { value = ThinkOnErp.Domain.Constants.SysCodeKeys.DocumentCategories.HR, label = "HR" },
+                new { value = ThinkOnErp.Domain.Constants.SysCodeKeys.DocumentCategories.Legal, label = "Legal" },
+                new { value = ThinkOnErp.Domain.Constants.SysCodeKeys.DocumentCategories.Technical, label = "Technical" },
+                new { value = ThinkOnErp.Domain.Constants.SysCodeKeys.DocumentCategories.Marketing, label = "Marketing" },
+                new { value = ThinkOnErp.Domain.Constants.SysCodeKeys.DocumentCategories.Other, label = "Other" }
+            },
             allowedExtensions,
             maxFileSizeMB = maxSizeMB
         };
@@ -73,7 +83,7 @@ public class DocumentsController : ControllerBase
         [FromForm] int ownerType,
         [FromForm] long ownerId,
         [FromForm] string? description,
-        [FromForm] string? category,
+        [FromForm] int documentType,
         [FromForm] string? tags)
     {
         try
@@ -94,7 +104,7 @@ public class DocumentsController : ControllerBase
                 FileSize = file.Length,
                 ContentType = file.ContentType,
                 Description = description,
-                Category = category,
+                DocumentType = documentType,
                 Tags = tags,
                 OwnerType = ownerType,
                 OwnerId = ownerId,
@@ -122,7 +132,7 @@ public class DocumentsController : ControllerBase
         [FromForm] int ownerType,
         [FromForm] long ownerId,
         [FromForm] string? description,
-        [FromForm] string? category,
+        [FromForm] int documentType,
         [FromForm] string? tags)
     {
         try
@@ -150,7 +160,7 @@ public class DocumentsController : ControllerBase
                         FileSize = file.Length,
                         ContentType = file.ContentType,
                         Description = description,
-                        Category = category,
+                        DocumentType = documentType,
                         Tags = tags,
                         OwnerType = ownerType,
                         OwnerId = ownerId,

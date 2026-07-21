@@ -25,9 +25,9 @@ public class UploadDocumentCommandValidator : AbstractValidator<UploadDocumentCo
         RuleFor(x => x.OwnerId)
             .GreaterThan(0).WithMessage("Owner ID must be greater than 0.");
 
-        RuleFor(x => x.Category)
-            .Must(c => string.IsNullOrEmpty(c) || SysDocument.AllowedDocumentCategories.Contains(c))
-            .WithMessage($"Category must be one of: {string.Join(", ", SysDocument.AllowedDocumentCategories)}");
+        RuleFor(x => x.DocumentType)
+            .Must(dt => dt >= 1 && dt <= 12)
+            .WithMessage("Document type must be a valid code between 1 (Contracts) and 12 (Other).");
 
         RuleFor(x => x.CreationUser)
             .NotEmpty().WithMessage("Creation user is required.");

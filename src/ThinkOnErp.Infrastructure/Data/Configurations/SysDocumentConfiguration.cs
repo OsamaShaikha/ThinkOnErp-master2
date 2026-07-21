@@ -18,7 +18,7 @@ public class SysDocumentConfiguration : IEntityTypeConfiguration<SysDocument>
         builder.Property(e => e.FileExtension).HasColumnName("FILE_EXTENSION").HasMaxLength(20).IsRequired();
         builder.Property(e => e.FilePath).HasColumnName("FILE_PATH").HasMaxLength(1000).IsRequired();
         builder.Property(e => e.Description).HasColumnName("DESCRIPTION").HasMaxLength(1000);
-        builder.Property(e => e.Category).HasColumnName("CATEGORY").HasMaxLength(50);
+        builder.Property(e => e.DocumentType).HasColumnName("DOCUMENT_TYPE").IsRequired();
         builder.Property(e => e.Tags).HasColumnName("TAGS").HasMaxLength(500);
         builder.Property(e => e.OwnerType).HasColumnName("OWNER_TYPE").IsRequired();
         builder.Property(e => e.OwnerId).HasColumnName("OWNER_ID").IsRequired();
@@ -29,6 +29,6 @@ public class SysDocumentConfiguration : IEntityTypeConfiguration<SysDocument>
         builder.Property(e => e.UpdateDate).HasColumnName("UPDATE_DATE");
 
         builder.HasIndex(e => new { e.OwnerType, e.OwnerId, e.IsActive }).HasDatabaseName("IX_DOC_OWNER");
-        builder.HasIndex(e => e.Category).HasDatabaseName("IX_DOC_CATEGORY");
+        builder.HasIndex(e => e.DocumentType).HasDatabaseName("IX_DOC_TYPE");
     }
 }

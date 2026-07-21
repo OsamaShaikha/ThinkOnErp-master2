@@ -1,3 +1,7 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using ThinkOnErp.Domain.Entities;
 
@@ -7,6 +11,70 @@ public class OracleDbContext : DbContext
 {
     public OracleDbContext(DbContextOptions<OracleDbContext> options) : base(options)
     {
+    }
+
+    public async Task<IQueryable<SysAuditLog>> GetCombinedAuditLogsAsync()
+    {
+        var connection = this.Database.GetDbConnection();
+        var isMasterSchema = false;
+        try
+        {
+            var builder = new Oracle.ManagedDataAccess.Client.OracleConnectionStringBuilder(connection.ConnectionString);
+            isMasterSchema = builder.TryGetValue("User Id", out var userIdObj) && string.Equals(userIdObj?.ToString(), "THINKON_ERP", StringComparison.OrdinalIgnoreCase);
+        }
+        catch
+        {
+            isMasterSchema = await this.SysCompanies.CountAsync() > 1;
+        }
+
+        if (!isMasterSchema)
+        {
+            return this.SysAuditLogs.AsQueryable();
+        }
+
+        var ownersWithAuditLogs = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        try
+        {
+            var wasOpen = connection.State == System.Data.ConnectionState.Open;
+            if (!wasOpen) await connection.OpenAsync();
+            
+            using (var checkCmd = connection.CreateCommand())
+            {
+                checkCmd.CommandText = "SELECT DISTINCT owner FROM all_tables WHERE table_name = 'SYS_AUDIT_LOG'";
+                using (var reader = await checkCmd.ExecuteReaderAsync())
+                {
+                    while (await reader.ReadAsync())
+                    {
+                        ownersWithAuditLogs.Add(reader.GetString(0));
+                    }
+                }
+            }
+        }
+        catch
+        {
+            // Fallback: return only master logs if table check fails
+            return this.SysAuditLogs.AsQueryable();
+        }
+
+        var sqlParts = new List<string>();
+        sqlParts.Add("SELECT * FROM \"SYS_AUDIT_LOG\"");
+
+        var companySchemas = await this.SysCompanies
+            .Where(c => c.IsActive && c.CompanySchema != null && c.CompanySchema != "")
+            .Select(c => c.CompanySchema)
+            .Distinct()
+            .ToListAsync();
+
+        foreach (var sch in companySchemas)
+        {
+            if (sch != null && ownersWithAuditLogs.Contains(sch))
+            {
+                sqlParts.Add($"SELECT * FROM \"{sch}\".\"SYS_AUDIT_LOG\"");
+            }
+        }
+
+        var combinedSql = string.Join(" UNION ALL ", sqlParts);
+        return this.SysAuditLogs.FromSqlRaw(combinedSql).AsQueryable();
     }
 
     // Core entities

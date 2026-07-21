@@ -9,7 +9,7 @@ public class DocumentDto
     public string MimeType { get; set; } = string.Empty;
     public string FileExtension { get; set; } = string.Empty;
     public string? Description { get; set; }
-    public string? Category { get; set; }
+    public int DocumentType { get; set; }
     public string? Tags { get; set; }
     public int OwnerType { get; set; }
     public long OwnerId { get; set; }

@@ -403,7 +403,7 @@
             <div class="nav-category">
                 <div class="nav-category-title">GETTING STARTED</div>
                 <div class="nav-item active" onclick="showSection('intro')">Introduction & Auth</div>
-                <div class="nav-item" onclick="showSection('owner-types')">Owner Type Codes</div>
+                <div class="nav-item" onclick="showSection('owner-types')">Owner & Document Codes</div>
             </div>
 
             <div class="nav-category">
@@ -2276,6 +2276,14 @@
         },
         {
           "verb": "GET",
+          "path": "/api/syscodes/definitions",
+          "name": "",
+          "params": "",
+          "auth": "SuperAdminOnly",
+          "payload": null
+        },
+        {
+          "verb": "GET",
           "path": "/api/syscodes/groups/{codeMgr}",
           "name": "",
           "params": "",
@@ -2810,48 +2818,57 @@
             setActiveNavItem('intro');
         }
 
-        // Display Owner Type details
+        // Display Owner Type & Document Type details
         function showOwnerTypes() {
             const area = document.getElementById('contentArea');
-            document.getElementById('headerTitle').textContent = 'SYS_CODE Seeding & Owner Types';
+            document.getElementById('headerTitle').textContent = 'SYS_CODE Seeding Mappings';
             
             area.innerHTML = `
                 <div class="intro-section">
-                    <h2>Numeric Code Mappings</h2>
-                    <p>For file upload attachments and other system bindings, <code>OwnerType</code> is represented as a number (derived from <code>SYS_CODE</code>) rather than a string.</p>
+                    <h2>Owner Types (CODE_MGR = 2)</h2>
+                    <p>For file upload attachments, <code>OwnerType</code> is represented as a number (derived from <code>SYS_CODE</code>) rather than a string.</p>
+                    
+                    <table class="seeding-table" style="margin-bottom: 40px;">
+                        <thead>
+                            <tr>
+                                <th>Owner Type Code (CodeMnr)</th>
+                                <th>Value Name</th>
+                                <th>Arabic Label</th>
+                                <th>English Label</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr><td><strong>1</strong></td><td>Company</td><td>شركة</td><td>Company</td></tr>
+                            <tr><td><strong>2</strong></td><td>Branch</td><td>فرع</td><td>Branch</td></tr>
+                            <tr><td><strong>3</strong></td><td>SuperAdmin</td><td>المشرف العام</td><td>Super Admin</td></tr>
+                        </tbody>
+                    </table>
+
+                    <h2>Document Types (CODE_MGR = 1)</h2>
+                    <p>For attachment classifications, <code>DocumentType</code> (formerly Category) is represented as a number (derived from <code>SYS_CODE</code>) rather than a string.</p>
                     
                     <table class="seeding-table">
                         <thead>
                             <tr>
-                                <th>Owner Type Code</th>
+                                <th>Document Type Code (CodeMnr)</th>
                                 <th>Value Name</th>
                                 <th>Arabic Label</th>
                                 <th>English Label</th>
-                                <th>Notes</th>
                             </tr>
                         </thead>
                         <tbody>
-                            <tr>
-                                <td><strong>1</strong></td>
-                                <td>Company</td>
-                                <td>شركة</td>
-                                <td>Company</td>
-                                <td>Bound to parent tenant registries</td>
-                            </tr>
-                            <tr>
-                                <td><strong>2</strong></td>
-                                <td>Branch</td>
-                                <td>فرع</td>
-                                <td>Branch</td>
-                                <td>Bound to company branches</td>
-                            </tr>
-                            <tr>
-                                <td><strong>3</strong></td>
-                                <td>SuperAdmin</td>
-                                <td>المشرف العام</td>
-                                <td>Super Admin</td>
-                                <td>Personal system attachments</td>
-                            </tr>
+                            <tr><td><strong>1</strong></td><td>Contracts</td><td>عقود</td><td>Contracts</td></tr>
+                            <tr><td><strong>2</strong></td><td>Reports</td><td>تقارير</td><td>Reports</td></tr>
+                            <tr><td><strong>3</strong></td><td>Invoices</td><td>فواتير</td><td>Invoices</td></tr>
+                            <tr><td><strong>4</strong></td><td>Receipts</td><td>إيصالات</td><td>Receipts</td></tr>
+                            <tr><td><strong>5</strong></td><td>Identification</td><td>بطاقات هوية</td><td>Identification</td></tr>
+                            <tr><td><strong>6</strong></td><td>Certificates</td><td>شهادات</td><td>Certificates</td></tr>
+                            <tr><td><strong>7</strong></td><td>Financial</td><td>مالي</td><td>Financial</td></tr>
+                            <tr><td><strong>8</strong></td><td>HR</td><td>الموارد البشرية</td><td>HR</td></tr>
+                            <tr><td><strong>9</strong></td><td>Legal</td><td>قانوني</td><td>Legal</td></tr>
+                            <tr><td><strong>10</strong></td><td>Technical</td><td>تقني</td><td>Technical</td></tr>
+                            <tr><td><strong>11</strong></td><td>Marketing</td><td>تسويق</td><td>Marketing</td></tr>
+                            <tr><td><strong>12</strong></td><td>Other</td><td>أخرى</td><td>Other</td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -2956,7 +2973,6 @@
             if (section === 'owner-types') showOwnerTypes();
         }
 
-        // Dynamic Filtering across all routes and controllers
         function filterApis() {
             const searchStr = document.getElementById('searchBox').value.toLowerCase();
             if (!searchStr) {
@@ -2971,7 +2987,6 @@
             companyList.innerHTML = '';
 
             apiData.controllers.forEach(c => {
-                // Check match
                 const controllerMatch = c.clean_name.toLowerCase().includes(searchStr);
                 const routeMatch = c.methods.some(m => m.path.toLowerCase().includes(searchStr) || m.name.toLowerCase().includes(searchStr));
 
@@ -2990,7 +3005,6 @@
             });
         }
 
-        // Bootstrap UI Portal
         initNav();
         showIntro();
     </script>

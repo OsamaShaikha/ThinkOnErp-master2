@@ -11,7 +11,7 @@ public interface IDocumentRepository
     Task<SysDocument?> GetByIdAsync(long id);
     Task<(List<SysDocument> Items, int TotalCount)> GetByOwnerAsync(
         int ownerType, long ownerId, int page, int pageSize,
-        string? category = null, string? search = null);
+        int? documentType = null, string? search = null);
     Task<int> CountByOwnerAsync(int ownerType, long ownerId);
     Task<bool> ExistsAsync(long id);
 }

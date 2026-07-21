@@ -9,7 +9,7 @@ public class GetDocumentsQuery : IRequest<ApiResponse<PagedResult<DocumentDto>>>
 {
     public int? OwnerType { get; set; }
     public long? OwnerId { get; set; }
-    public string? Category { get; set; }
+    public int? DocumentType { get; set; }
     public string? Search { get; set; }
     public int Page { get; set; } = 1;
     public int PageSize { get; set; } = 20;

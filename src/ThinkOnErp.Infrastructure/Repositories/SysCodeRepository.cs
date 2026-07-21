@@ -56,6 +56,33 @@ public class SysCodeRepository : ISysCodeRepository
             .ToListAsync();
     }
 
+    public async Task<List<SysCode>> GetDefinitionsAsync(int? codeLang = null, int? codeMgr = null, int? codeMnr = null, string? codeDesc = null)
+    {
+        var targetMnr = codeMnr ?? 0;
+        var query = _context.SysCodes.Where(c => c.CodeMnr == targetMnr);
+        
+        if (codeLang.HasValue)
+        {
+            query = query.Where(c => c.CodeLang == codeLang.Value);
+        }
+
+        if (codeMgr.HasValue)
+        {
+            query = query.Where(c => c.CodeMgr == codeMgr.Value);
+        }
+
+        if (!string.IsNullOrWhiteSpace(codeDesc))
+        {
+            var search = codeDesc.ToLower();
+            query = query.Where(c => c.CodeDesc != null && c.CodeDesc.ToLower().Contains(search));
+        }
+
+        return await query
+            .OrderBy(c => c.CodeMgr)
+            .ThenBy(c => c.CodeLang)
+            .ToListAsync();
+    }
+
     public async Task<SysCode> AddAsync(SysCode code)
     {
         _context.SysCodes.Add(code);

@@ -9,7 +9,7 @@ public class SysDocument
     public string FileExtension { get; set; } = string.Empty;
     public string FilePath { get; set; } = string.Empty;
     public string? Description { get; set; }
-    public string? Category { get; set; }
+    public int DocumentType { get; set; }
     public string? Tags { get; set; }
     public int OwnerType { get; set; }
     public Int64 OwnerId { get; set; }
@@ -27,12 +27,6 @@ public class SysDocument
         ".ppt", ".pptx", ".txt", ".csv",
         ".jpg", ".jpeg", ".png", ".gif",
         ".zip", ".rar", ".7z"
-    };
-
-    public static readonly string[] AllowedDocumentCategories =
-    {
-        "Contracts", "Reports", "Invoices", "Receipts", "Identification",
-        "Certificates", "Financial", "HR", "Legal", "Technical", "Marketing", "Other"
     };
 
     public string GetFormattedFileSize()

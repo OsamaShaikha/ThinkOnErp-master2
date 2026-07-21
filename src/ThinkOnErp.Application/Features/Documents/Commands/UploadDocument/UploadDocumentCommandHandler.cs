@@ -71,7 +71,7 @@ public class UploadDocumentCommandHandler : IRequestHandler<UploadDocumentComman
                 FileExtension = fileExtension,
                 FilePath = savedPath,
                 Description = request.Description,
-                Category = request.Category,
+                DocumentType = request.DocumentType,
                 Tags = request.Tags,
                 OwnerType = request.OwnerType,
                 OwnerId = request.OwnerId,

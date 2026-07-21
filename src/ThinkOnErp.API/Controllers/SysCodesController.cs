@@ -49,6 +49,31 @@ public class SysCodesController : ControllerBase
         return Ok(ApiResponse<List<int>>.CreateSuccess(groups, "Code groups retrieved successfully", 200));
     }
 
+    [HttpGet("definitions")]
+    [ProducesResponseType(typeof(ApiResponse<List<SysCodeDto>>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<ApiResponse<List<SysCodeDto>>>> GetDefinitions(
+        [FromQuery] int? codeLang,
+        [FromQuery] int? codeMgr,
+        [FromQuery] int? codeMnr,
+        [FromQuery] string? codeDesc)
+    {
+        var codes = await _repo.GetDefinitionsAsync(codeLang, codeMgr, codeMnr, codeDesc);
+        var dtos = codes.Select(c => new SysCodeDto
+        {
+            CodeMgr = c.CodeMgr,
+            CodeMnr = c.CodeMnr,
+            CodeLang = c.CodeLang,
+            CodeDesc = c.CodeDesc,
+            CodeValue = c.CodeValue,
+            IsActive = c.IsActive,
+            CreationUser = c.CreationUser,
+            CreationDate = c.CreationDate,
+            UpdateUser = c.UpdateUser,
+            UpdateDate = c.UpdateDate
+        }).ToList();
+        return Ok(ApiResponse<List<SysCodeDto>>.CreateSuccess(dtos, "Code definitions retrieved successfully", 200));
+    }
+
     [HttpGet("groups/{codeMgr}")]
     [ProducesResponseType(typeof(ApiResponse<List<SysCodeDto>>), StatusCodes.Status200OK)]
     public async Task<ActionResult<ApiResponse<List<SysCodeDto>>>> GetByGroup(int codeMgr)
