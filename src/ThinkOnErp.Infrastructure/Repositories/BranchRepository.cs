@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using ThinkOnErp.Domain.Entities;
 using ThinkOnErp.Domain.Interfaces;
 using ThinkOnErp.Infrastructure.Data;
@@ -8,11 +9,26 @@ namespace ThinkOnErp.Infrastructure.Repositories;
 public class BranchRepository : IBranchRepository
 {
     private readonly OracleDbContext _context;
+    private readonly ILogger<BranchRepository> _logger;
 
-    public BranchRepository(OracleDbContext context) => _context = context;
+    public BranchRepository(OracleDbContext context, ILogger<BranchRepository> logger)
+    {
+        _context = context;
+        _logger = logger;
+    }
 
-    public async Task<List<SysBranch>> GetAllAsync() =>
-        await _context.SysBranches.Where(b => b.IsActive).ToListAsync();
+    public async Task<List<SysBranch>> GetAllAsync()
+    {
+        try
+        {
+            return await _context.SysBranches.Where(b => b.IsActive).ToListAsync();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to retrieve branches from database");
+            return new List<SysBranch>();
+        }
+    }
 
     public async Task<SysBranch?> GetByIdAsync(long rowId) =>
         await _context.SysBranches.FindAsync(rowId);
@@ -40,8 +56,18 @@ public class BranchRepository : IBranchRepository
         return await _context.SaveChangesAsync();
     }
 
-    public async Task<List<SysBranch>> GetByCompanyIdAsync(long companyId) =>
-        await _context.SysBranches.Where(b => b.CompanyId == companyId && b.IsActive).ToListAsync();
+    public async Task<List<SysBranch>> GetByCompanyIdAsync(long companyId)
+    {
+        try
+        {
+            return await _context.SysBranches.Where(b => b.CompanyId == companyId && b.IsActive).ToListAsync();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to retrieve branches for company {CompanyId} from database", companyId);
+            return new List<SysBranch>();
+        }
+    }
 
     public async Task<long> UpdateLogoPathAsync(long rowId, string? logoPath, string userName)
     {

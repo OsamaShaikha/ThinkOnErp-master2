@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using ThinkOnErp.Domain.Entities;
 using ThinkOnErp.Domain.Interfaces;
 using ThinkOnErp.Infrastructure.Data;
@@ -8,7 +9,13 @@ namespace ThinkOnErp.Infrastructure.Repositories;
 public class TicketRepository : ITicketRepository
 {
     private readonly OracleDbContext _context;
-    public TicketRepository(OracleDbContext context) => _context = context;
+    private readonly ILogger<TicketRepository> _logger;
+
+    public TicketRepository(OracleDbContext context, ILogger<TicketRepository> logger)
+    {
+        _context = context;
+        _logger = logger;
+    }
 
     public async Task<(List<SysRequestTicket> Tickets, int TotalCount)> GetAllAsync(
         long? companyId = null, long? branchId = null, long? assigneeId = null,
@@ -16,27 +23,35 @@ public class TicketRepository : ITicketRepository
         string? searchTerm = null, DateTime? createdFrom = null, DateTime? createdTo = null,
         int page = 1, int pageSize = 20, string sortBy = "CreationDate", string sortDirection = "DESC")
     {
-        var query = _context.SysRequestTickets.Where(t => t.IsActive).AsQueryable();
+        try
+        {
+            var query = _context.SysRequestTickets.Where(t => t.IsActive).AsQueryable();
 
-        if (companyId.HasValue) query = query.Where(t => t.CompanyId == companyId.Value);
-        if (branchId.HasValue) query = query.Where(t => t.BranchId == branchId.Value);
-        if (assigneeId.HasValue) query = query.Where(t => t.AssigneeId == assigneeId.Value);
-        if (statusId.HasValue) query = query.Where(t => t.TicketStatusId == statusId.Value);
-        if (priorityId.HasValue) query = query.Where(t => t.TicketPriorityId == priorityId.Value);
-        if (typeId.HasValue) query = query.Where(t => t.TicketTypeId == typeId.Value);
-        if (!string.IsNullOrEmpty(searchTerm))
-            query = query.Where(t => t.TitleAr.Contains(searchTerm) || t.TitleEn.Contains(searchTerm) || t.Description.Contains(searchTerm));
-        if (createdFrom.HasValue) query = query.Where(t => t.CreationDate >= createdFrom.Value);
-        if (createdTo.HasValue) query = query.Where(t => t.CreationDate <= createdTo.Value);
+            if (companyId.HasValue) query = query.Where(t => t.CompanyId == companyId.Value);
+            if (branchId.HasValue) query = query.Where(t => t.BranchId == branchId.Value);
+            if (assigneeId.HasValue) query = query.Where(t => t.AssigneeId == assigneeId.Value);
+            if (statusId.HasValue) query = query.Where(t => t.TicketStatusId == statusId.Value);
+            if (priorityId.HasValue) query = query.Where(t => t.TicketPriorityId == priorityId.Value);
+            if (typeId.HasValue) query = query.Where(t => t.TicketTypeId == typeId.Value);
+            if (!string.IsNullOrEmpty(searchTerm))
+                query = query.Where(t => t.TitleAr.Contains(searchTerm) || t.TitleEn.Contains(searchTerm) || t.Description.Contains(searchTerm));
+            if (createdFrom.HasValue) query = query.Where(t => t.CreationDate >= createdFrom.Value);
+            if (createdTo.HasValue) query = query.Where(t => t.CreationDate <= createdTo.Value);
 
-        var totalCount = await query.CountAsync();
+            var totalCount = await query.CountAsync();
 
-        query = sortDirection.ToUpper() == "DESC"
-            ? query.OrderByDescending(t => EF.Property<object>(t, sortBy))
-            : query.OrderBy(t => EF.Property<object>(t, sortBy));
+            query = sortDirection.ToUpper() == "DESC"
+                ? query.OrderByDescending(t => EF.Property<object>(t, sortBy))
+                : query.OrderBy(t => EF.Property<object>(t, sortBy));
 
-        var tickets = await query.Skip((page - 1) * pageSize).Take(pageSize).ToListAsync();
-        return (tickets, totalCount);
+            var tickets = await query.Skip((page - 1) * pageSize).Take(pageSize).ToListAsync();
+            return (tickets, totalCount);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to retrieve request tickets from database");
+            return (new List<SysRequestTicket>(), 0);
+        }
     }
 
     public async Task<SysRequestTicket?> GetByIdAsync(long rowId) =>

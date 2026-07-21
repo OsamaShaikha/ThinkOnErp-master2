@@ -36,12 +36,47 @@ public class GetSuperAdminDashboardQueryHandler : IRequestHandler<GetSuperAdminD
     {
         try
         {
-            // Sequential repository calls to avoid DbContext concurrency issues (DbContext is not thread-safe)
-            var companies = (await _companyRepository.GetAllAsync()) ?? new List<Domain.Entities.SysCompany>();
-            var branches = (await _branchRepository.GetAllAsync()) ?? new List<Domain.Entities.SysBranch>();
-            var superAdmins = (await _superAdminRepository.GetAllAsync()) ?? new List<Domain.Entities.SysSuperAdmin>();
-            var ticketResult = await _ticketRepository.GetAllAsync();
-            var tickets = ticketResult.Tickets ?? new List<Domain.Entities.SysRequestTicket>();
+            // Sequential repository calls with try-catch blocks to prevent individual component failures from crashing the entire dashboard
+            List<Domain.Entities.SysCompany> companies = new();
+            try
+            {
+                companies = (await _companyRepository.GetAllAsync()) ?? new List<Domain.Entities.SysCompany>();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error fetching companies for SuperAdmin dashboard");
+            }
+
+            List<Domain.Entities.SysBranch> branches = new();
+            try
+            {
+                branches = (await _branchRepository.GetAllAsync()) ?? new List<Domain.Entities.SysBranch>();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error fetching branches for SuperAdmin dashboard");
+            }
+
+            List<Domain.Entities.SysSuperAdmin> superAdmins = new();
+            try
+            {
+                superAdmins = (await _superAdminRepository.GetAllAsync()) ?? new List<Domain.Entities.SysSuperAdmin>();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error fetching superAdmins for SuperAdmin dashboard");
+            }
+
+            List<Domain.Entities.SysRequestTicket> tickets = new();
+            try
+            {
+                var ticketResult = await _ticketRepository.GetAllAsync();
+                tickets = ticketResult.Tickets ?? new List<Domain.Entities.SysRequestTicket>();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error fetching tickets for SuperAdmin dashboard");
+            }
 
             // Log warnings for empty data
             if (companies.Count == 0)
@@ -123,12 +158,12 @@ public class GetSuperAdminDashboardQueryHandler : IRequestHandler<GetSuperAdminD
                     RequestTypeAr = t.TitleAr,
                     RequestTypeEn = t.TitleEn,
                     Description = t.Description,
-                    Priority = t.TicketPriority?.PriorityNameAr ?? "?????",
+                    Priority = t.TicketPriority?.PriorityNameAr ?? "متوسط",
                     PriorityCode = GetPriorityCode(t.TicketPriority?.PriorityNameEn ?? "Medium"),
                     RequestDate = t.CreationDate ?? DateTime.MinValue,
                     BranchNameAr = t.Branch?.BranchNameAr ?? "",
                     BranchNameEn = t.Branch?.BranchNameEn ?? "",
-                    Status = t.TicketStatus?.StatusNameAr ?? "??? ????????"
+                    Status = t.TicketStatus?.StatusNameAr ?? "قيد الانتظار"
                 })
                 .ToList();
 
