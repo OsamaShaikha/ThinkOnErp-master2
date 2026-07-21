@@ -605,4 +605,26 @@ public class SuperAdminController : ControllerBase
                 return StatusCode(500, ApiResponse<object>.CreateFailure($"Failed to sync tenant schemas: {ex.Message}", statusCode: 500));
             }
         }
+
+        /// <summary>
+        /// Retrieves branches for a company (SuperAdmin only)
+        /// </summary>
+        [HttpGet("branches/company/{companyId}")]
+        [Authorize(Policy = "SuperAdminOnly")]
+        [ProducesResponseType(typeof(ApiResponse<List<ThinkOnErp.Application.DTOs.Branch.BranchDto>>), StatusCodes.Status200OK)]
+        public async Task<ActionResult<ApiResponse<List<ThinkOnErp.Application.DTOs.Branch.BranchDto>>>> GetBranchesByCompanyId(Int64 companyId)
+        {
+            try
+            {
+                _logger.LogInformation("SuperAdmin retrieving branches for company ID: {CompanyId}", companyId);
+                var query = new ThinkOnErp.Application.Features.Branches.Queries.GetBranchesByCompanyId.GetBranchesByCompanyIdQuery { CompanyId = companyId };
+                var branches = await _mediator.Send(query);
+                return Ok(ApiResponse<List<ThinkOnErp.Application.DTOs.Branch.BranchDto>>.CreateSuccess(branches, "Branches retrieved successfully", 200));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error retrieving branches for company ID: {CompanyId} as SuperAdmin", companyId);
+                throw;
+            }
+        }
 }
