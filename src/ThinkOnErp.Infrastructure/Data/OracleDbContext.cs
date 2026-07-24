@@ -15,6 +15,40 @@ public class OracleDbContext : DbContext
 
     public async Task<IQueryable<SysAuditLog>> GetCombinedAuditLogsAsync()
     {
+        const string auditLogProjection = """
+            "Id",
+            CORRELATION_ID,
+            ACTOR_TYPE,
+            ACTOR_ID,
+            COMPANY_ID,
+            BRANCH_ID,
+            ACTION,
+            ENTITY_TYPE,
+            ENTITY_ID,
+            OLD_VALUE,
+            NEW_VALUE,
+            IP_ADDRESS,
+            USER_AGENT,
+            HTTP_METHOD,
+            ENDPOINT_PATH,
+            REQUEST_PAYLOAD,
+            RESPONSE_PAYLOAD,
+            EXECUTION_TIME_MS,
+            STATUS_CODE,
+            EXCEPTION_TYPE,
+            EXCEPTION_MESSAGE,
+            STACK_TRACE,
+            SEVERITY,
+            EVENT_CATEGORY,
+            METADATA,
+            STATUS,
+            CREATION_DATE,
+            BUSINESS_MODULE,
+            DEVICE_IDENTIFIER,
+            ERROR_CODE,
+            BUSINESS_DESCRIPTION
+            """;
+
         var connection = this.Database.GetDbConnection();
         var isMasterSchema = false;
         try
@@ -57,7 +91,7 @@ public class OracleDbContext : DbContext
         }
 
         var sqlParts = new List<string>();
-        sqlParts.Add("SELECT * FROM \"SYS_AUDIT_LOG\"");
+        sqlParts.Add($"SELECT {auditLogProjection} FROM \"SYS_AUDIT_LOG\"");
 
         var companySchemas = await this.SysCompanies
             .Where(c => c.IsActive && c.CompanySchema != null && c.CompanySchema != "")
@@ -69,7 +103,7 @@ public class OracleDbContext : DbContext
         {
             if (sch != null && ownersWithAuditLogs.Contains(sch))
             {
-                sqlParts.Add($"SELECT * FROM \"{sch}\".\"SYS_AUDIT_LOG\"");
+                sqlParts.Add($"SELECT {auditLogProjection} FROM \"{sch}\".\"SYS_AUDIT_LOG\"");
             }
         }
 

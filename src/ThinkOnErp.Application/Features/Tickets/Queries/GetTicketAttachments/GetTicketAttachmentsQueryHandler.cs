@@ -1,6 +1,7 @@
 using MediatR;
 using Microsoft.Extensions.Logging;
 using ThinkOnErp.Application.DTOs.Ticket;
+using ThinkOnErp.Domain.Exceptions;
 using ThinkOnErp.Domain.Interfaces;
 
 namespace ThinkOnErp.Application.Features.Tickets.Queries.GetTicketAttachments;
@@ -35,7 +36,7 @@ public class GetTicketAttachmentsQueryHandler : IRequestHandler<GetTicketAttachm
             var ticket = await _ticketRepository.GetByIdAsync(request.TicketId);
             if (ticket == null)
             {
-                throw new ArgumentException($"Ticket with ID {request.TicketId} not found.");
+                throw new TicketNotFoundException(request.TicketId);
             }
 
             // Get attachments for the ticket

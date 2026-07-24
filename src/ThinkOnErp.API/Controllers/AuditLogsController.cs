@@ -17,7 +17,7 @@ namespace ThinkOnErp.API.Controllers;
 /// </summary>
 [ApiController]
 [Route("api/auditlogs")]
-[Authorize(Policy = "AdminOnly")]
+[Authorize(Policy = "SuperAdminOnly")]
 public class AuditLogsController : ControllerBase
 {
     private readonly ILegacyAuditService _legacyAuditService;

@@ -1,6 +1,7 @@
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using ThinkOnErp.API.Authorization;
 using ThinkOnErp.Application.Common;
 using ThinkOnErp.Application.DTOs.User;
 using ThinkOnErp.Application.Features.Users.Commands.CreateUser;
@@ -24,6 +25,7 @@ namespace ThinkOnErp.API.Controllers;
 /// </summary>
 [ApiController]
 [Route("api/users")]
+[TenantScoped]
 [Authorize]
 public class UsersController : ControllerBase
 {

@@ -125,6 +125,28 @@ public class SysCodesController : ControllerBase
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<ActionResult<ApiResponse<SysCodeDto>>> Create([FromBody] CreateSysCodeDto dto)
     {
+        var validationErrors = new List<string>();
+        if (string.IsNullOrWhiteSpace(dto.CodeDesc))
+            validationErrors.Add("Code description is required.");
+        else if (dto.CodeDesc.Length > 1000)
+            validationErrors.Add("Code description must not exceed 1000 characters.");
+
+        if (string.IsNullOrWhiteSpace(dto.CodeValue))
+            validationErrors.Add("Code value is required.");
+        else if (dto.CodeValue.Length > 200)
+            validationErrors.Add("Code value must not exceed 200 characters.");
+
+        if (dto.IsActive is not (0 or 1))
+            validationErrors.Add("IsActive must be either 0 or 1.");
+
+        if (validationErrors.Count > 0)
+        {
+            return BadRequest(ApiResponse<SysCodeDto>.CreateFailure(
+                "One or more validation errors occurred",
+                validationErrors,
+                400));
+        }
+
         var existing = await _repo.GetByCodeMgrAndCodeMnrAndCodeLangAsync(dto.CodeMgr, dto.CodeMnr, dto.CodeLang);
         if (existing != null)
             return BadRequest(ApiResponse<SysCodeDto>.CreateFailure("Code with this key already exists", statusCode: 400));

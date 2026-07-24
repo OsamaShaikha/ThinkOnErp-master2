@@ -1,6 +1,7 @@
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using ThinkOnErp.API.Authorization;
 using ThinkOnErp.Application.Common;
 using ThinkOnErp.Application.DTOs.Ticket;
 using ThinkOnErp.Application.Features.TicketTypes.Commands.CreateTicketType;
@@ -17,6 +18,7 @@ namespace ThinkOnErp.API.Controllers;
 /// </summary>
 [ApiController]
 [Route("api/ticket-types")]
+[TenantScoped]
 [Authorize]
 public class TicketTypesController : ControllerBase
 {

@@ -16,7 +16,7 @@ namespace ThinkOnErp.API.Controllers;
 /// </summary>
 [ApiController]
 [Route("api/alerts")]
-[Authorize(Policy = "AdminOnly")]
+[Authorize(Policy = "SuperAdminOnly")]
 public class AlertsController : ControllerBase
 {
     private readonly IAlertManager _alertManager;

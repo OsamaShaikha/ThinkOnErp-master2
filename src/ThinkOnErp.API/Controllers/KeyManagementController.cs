@@ -10,7 +10,7 @@ namespace ThinkOnErp.API.Controllers;
 /// </summary>
 [ApiController]
 [Route("api/[controller]")]
-[Authorize(Policy = "AdminOnly")]
+[Authorize(Policy = "SuperAdminOnly")]
 public class KeyManagementController : ControllerBase
 {
     private readonly IKeyManagementService _keyManagementService;

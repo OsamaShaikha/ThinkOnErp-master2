@@ -1,6 +1,7 @@
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using ThinkOnErp.API.Authorization;
 using ThinkOnErp.Application.Common;
 using ThinkOnErp.Application.DTOs.Role;
 using ThinkOnErp.Application.Features.Roles.Commands.CreateRole;
@@ -17,6 +18,7 @@ namespace ThinkOnErp.API.Controllers;
 /// </summary>
 [ApiController]
 [Route("api/[controller]")]
+[TenantScoped]
 [Authorize]
 public class RolesController : ControllerBase
 {

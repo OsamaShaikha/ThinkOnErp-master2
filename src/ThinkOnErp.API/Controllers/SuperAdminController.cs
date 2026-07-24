@@ -22,7 +22,7 @@ namespace ThinkOnErp.API.Controllers;
 /// </summary>
 [ApiController]
 [Route("api/superadmins")]
-[Authorize(Policy = "AdminOnly")]
+[Authorize(Policy = "SuperAdminOnly")]
 public class SuperAdminController : ControllerBase
 {
     private readonly IMediator _mediator;

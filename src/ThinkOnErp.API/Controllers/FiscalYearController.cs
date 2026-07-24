@@ -1,6 +1,7 @@
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using ThinkOnErp.API.Authorization;
 using ThinkOnErp.Application.Common;
 using ThinkOnErp.Application.DTOs.FiscalYear;
 using ThinkOnErp.Application.Features.FiscalYears.Commands.CreateFiscalYear;
@@ -19,6 +20,7 @@ namespace ThinkOnErp.API.Controllers;
 /// </summary>
 [ApiController]
 [Route("api/fiscalyears")]
+[TenantScoped]
 [Authorize]
 public class FiscalYearController : ControllerBase
 {

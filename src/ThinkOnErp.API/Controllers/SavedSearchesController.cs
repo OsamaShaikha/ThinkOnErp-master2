@@ -2,6 +2,7 @@ using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
+using ThinkOnErp.API.Authorization;
 using ThinkOnErp.Application.Common;
 using ThinkOnErp.Application.DTOs.SavedSearch;
 using ThinkOnErp.Application.Features.SavedSearches.Commands.CreateSavedSearch;
@@ -16,6 +17,7 @@ namespace ThinkOnErp.API.Controllers;
 /// </summary>
 [ApiController]
 [Route("api/saved-searches")]
+[TenantScoped]
 [Authorize]
 public class SavedSearchesController : ControllerBase
 {
@@ -42,7 +44,10 @@ public class SavedSearchesController : ControllerBase
     {
         try
         {
-            var userId = GetCurrentUserId();
+            // SuperAdmin is a different actor type from SysUser. Use an ID that
+            // cannot collide with a tenant user so this returns public searches
+            // only rather than another user's private searches.
+            var userId = IsSuperAdmin() ? 0 : GetCurrentUserId();
             _logger.LogInformation("Retrieving saved searches for user {UserId}", userId);
 
             var query = new GetSavedSearchesQuery { UserId = userId };
@@ -80,6 +85,13 @@ public class SavedSearchesController : ControllerBase
     {
         try
         {
+            if (IsSuperAdmin())
+            {
+                return BadRequest(ApiResponse<Int64>.CreateFailure(
+                    "A SuperAdmin cannot own a tenant user's personal saved search",
+                    statusCode: 400));
+            }
+
             var userId = GetCurrentUserId();
             var userName = GetCurrentUserName();
 
@@ -141,4 +153,10 @@ public class SavedSearchesController : ControllerBase
             ?? User.FindFirst("UserName")?.Value 
             ?? "Unknown";
     }
+
+    private bool IsSuperAdmin() =>
+        string.Equals(
+            User.FindFirst("isSuperAdmin")?.Value,
+            "true",
+            StringComparison.OrdinalIgnoreCase);
 }

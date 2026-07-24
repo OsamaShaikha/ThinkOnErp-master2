@@ -8,6 +8,7 @@ using ThinkOnErp.Domain.Interfaces;
 using ThinkOnErp.Infrastructure.Configuration;
 using ThinkOnErp.Infrastructure.Services;
 using PerformanceMetrics = ThinkOnErp.Domain.Models;
+using TenantContext = ThinkOnErp.Domain.Models.TenantRequestContext;
 
 namespace ThinkOnErp.API.Middleware;
 
@@ -232,6 +233,15 @@ public class RequestTracingMiddleware
                 requestContext.CompanyId = companyId;
             }
 
+            if (context.Items.TryGetValue(
+                    TenantContext.HttpContextItemKey,
+                    out var tenantValue) &&
+                tenantValue is TenantContext tenantContext)
+            {
+                requestContext.CompanyId = tenantContext.CompanyId;
+                requestContext.Metadata["CompanyCode"] = tenantContext.CompanyCode;
+            }
+
             var branchIdClaim = user.FindFirst("branchId");
             if (branchIdClaim != null && long.TryParse(branchIdClaim.Value, out var branchId))
             {
@@ -244,6 +254,19 @@ public class RequestTracingMiddleware
             {
                 requestContext.Metadata["UserName"] = userNameClaim.Value;
             }
+
+            requestContext.Metadata["ActorKind"] =
+                string.Equals(
+                    user.FindFirst("isSuperAdmin")?.Value,
+                    "true",
+                    StringComparison.OrdinalIgnoreCase)
+                    ? "SuperAdmin"
+                    : string.Equals(
+                        user.FindFirst("isAdmin")?.Value,
+                        "true",
+                        StringComparison.OrdinalIgnoreCase)
+                        ? "CompanyAdmin"
+                        : "User";
         }
 
         // Capture request headers (excluding sensitive headers)
@@ -444,9 +467,7 @@ public class RequestTracingMiddleware
             var auditEvent = new DataChangeAuditEvent
             {
                 CorrelationId = requestContext.CorrelationId,
-                ActorType = requestContext.UserId.HasValue
-                    ? sysCodeService.GetCodeValue(SysCodeKeys.ActorTypes.Mgr, SysCodeKeys.ActorTypes.User)
-                    : sysCodeService.GetCodeValue(SysCodeKeys.ActorTypes.Mgr, SysCodeKeys.ActorTypes.Anonymous),
+                ActorType = ResolveActorType(requestContext, sysCodeService),
                 ActorId = requestContext.UserId ?? 0,
                 CompanyId = requestContext.CompanyId,
                 BranchId = requestContext.BranchId,
@@ -537,9 +558,7 @@ public class RequestTracingMiddleware
             var auditEvent = new ExceptionAuditEvent
             {
                 CorrelationId = requestContext.CorrelationId,
-                ActorType = requestContext.UserId.HasValue
-                    ? sysCodeService.GetCodeValue(SysCodeKeys.ActorTypes.Mgr, SysCodeKeys.ActorTypes.User)
-                    : sysCodeService.GetCodeValue(SysCodeKeys.ActorTypes.Mgr, SysCodeKeys.ActorTypes.Anonymous),
+                ActorType = ResolveActorType(requestContext, sysCodeService),
                 ActorId = requestContext.UserId ?? 0,
                 CompanyId = requestContext.CompanyId,
                 BranchId = requestContext.BranchId,
@@ -581,6 +600,33 @@ public class RequestTracingMiddleware
             _logger.LogError(ex, "Failed to log request exception. CorrelationId: {CorrelationId}",
                 requestContext.CorrelationId);
         }
+    }
+
+    private static string ResolveActorType(
+        RequestContext requestContext,
+        ISysCodeService sysCodeService)
+    {
+        if (requestContext.Metadata.TryGetValue("ActorKind", out var actorKind))
+        {
+            return actorKind?.ToString() switch
+            {
+                "SuperAdmin" => sysCodeService.GetCodeValue(
+                    SysCodeKeys.ActorTypes.Mgr,
+                    SysCodeKeys.ActorTypes.SuperAdmin),
+                "CompanyAdmin" => sysCodeService.GetCodeValue(
+                    SysCodeKeys.ActorTypes.Mgr,
+                    SysCodeKeys.ActorTypes.CompanyAdmin),
+                _ => sysCodeService.GetCodeValue(
+                    SysCodeKeys.ActorTypes.Mgr,
+                    SysCodeKeys.ActorTypes.User)
+            };
+        }
+
+        return sysCodeService.GetCodeValue(
+            SysCodeKeys.ActorTypes.Mgr,
+            requestContext.UserId.HasValue
+                ? SysCodeKeys.ActorTypes.User
+                : SysCodeKeys.ActorTypes.Anonymous);
     }
 
     /// <summary>

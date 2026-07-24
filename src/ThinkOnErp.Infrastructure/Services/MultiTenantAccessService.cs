@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using System.Security.Claims;
 using ThinkOnErp.Domain.Interfaces;
+using ThinkOnErp.Domain.Models;
 
 namespace ThinkOnErp.Infrastructure.Services;
 
@@ -40,15 +41,31 @@ public class MultiTenantAccessService : IMultiTenantAccessService
         }
 
         var user = httpContext.User;
-        if (user == null || !user.Identity?.IsAuthenticated == true)
+        if (user?.Identity?.IsAuthenticated != true)
         {
             throw new UnauthorizedAccessException("User is not authenticated");
         }
 
+        if (IsSuperAdmin(user))
+        {
+            if (!TryGetTenantContext(httpContext, out var selectedTenant) ||
+                selectedTenant.CompanyId != companyId)
+            {
+                throw new UnauthorizedAccessException(
+                    "SuperAdmin must explicitly select the target company for this request");
+            }
+
+            _logger.LogDebug(
+                "SuperAdmin access validated for Company {CompanyId}, Branch {BranchId}",
+                companyId,
+                branchId);
+            return;
+        }
+
         // Extract user claims
-        var userIdClaim = user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        var userCompanyIdClaim = user.FindFirst("CompanyId")?.Value;
-        var userBranchIdClaim = user.FindFirst("BranchId")?.Value;
+        var userIdClaim = FindClaim(user, "userId", ClaimTypes.NameIdentifier);
+        var userCompanyIdClaim = FindClaim(user, "companyId", "CompanyId");
+        var userBranchIdClaim = FindClaim(user, "branchId", "BranchId");
 
         if (string.IsNullOrEmpty(userIdClaim) || string.IsNullOrEmpty(userCompanyIdClaim))
         {
@@ -63,7 +80,9 @@ public class MultiTenantAccessService : IMultiTenantAccessService
 
         // Parse user's branch ID (may be null for company-level users)
         long? userBranchId = null;
-        if (!string.IsNullOrEmpty(userBranchIdClaim) && long.TryParse(userBranchIdClaim, out var parsedBranchId))
+        if (!string.IsNullOrEmpty(userBranchIdClaim) &&
+            long.TryParse(userBranchIdClaim, out var parsedBranchId) &&
+            parsedBranchId > 0)
         {
             userBranchId = parsedBranchId;
         }
@@ -152,7 +171,16 @@ public class MultiTenantAccessService : IMultiTenantAccessService
         }
 
         var user = httpContext.User;
-        var companyIdClaim = user?.FindFirst("CompanyId")?.Value;
+        if (user != null &&
+            IsSuperAdmin(user) &&
+            TryGetTenantContext(httpContext, out var selectedTenant))
+        {
+            return selectedTenant.CompanyId;
+        }
+
+        var companyIdClaim = user == null
+            ? null
+            : FindClaim(user, "companyId", "CompanyId");
 
         if (string.IsNullOrEmpty(companyIdClaim) || !long.TryParse(companyIdClaim, out var companyId))
         {
@@ -174,14 +202,21 @@ public class MultiTenantAccessService : IMultiTenantAccessService
         }
 
         var user = httpContext.User;
-        var branchIdClaim = user?.FindFirst("BranchId")?.Value;
+        if (user != null && IsSuperAdmin(user))
+        {
+            return null;
+        }
+
+        var branchIdClaim = user == null
+            ? null
+            : FindClaim(user, "branchId", "BranchId");
 
         if (string.IsNullOrEmpty(branchIdClaim))
         {
             return null;
         }
 
-        if (long.TryParse(branchIdClaim, out var branchId))
+        if (long.TryParse(branchIdClaim, out var branchId) && branchId > 0)
         {
             return branchId;
         }
@@ -201,7 +236,9 @@ public class MultiTenantAccessService : IMultiTenantAccessService
         }
 
         var user = httpContext.User;
-        var userIdClaim = user?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        var userIdClaim = user == null
+            ? null
+            : FindClaim(user, "userId", ClaimTypes.NameIdentifier);
 
         if (string.IsNullOrEmpty(userIdClaim) || !long.TryParse(userIdClaim, out var userId))
         {
@@ -209,5 +246,35 @@ public class MultiTenantAccessService : IMultiTenantAccessService
         }
 
         return userId;
+    }
+
+    private static bool IsSuperAdmin(ClaimsPrincipal user) =>
+        string.Equals(
+            user.FindFirst("isSuperAdmin")?.Value,
+            "true",
+            StringComparison.OrdinalIgnoreCase);
+
+    private static string? FindClaim(
+        ClaimsPrincipal user,
+        string preferredClaimType,
+        string legacyClaimType) =>
+        user.FindFirst(preferredClaimType)?.Value ??
+        user.FindFirst(legacyClaimType)?.Value;
+
+    private static bool TryGetTenantContext(
+        HttpContext httpContext,
+        out TenantRequestContext tenantContext)
+    {
+        if (httpContext.Items.TryGetValue(
+                TenantRequestContext.HttpContextItemKey,
+                out var value) &&
+            value is TenantRequestContext resolvedContext)
+        {
+            tenantContext = resolvedContext;
+            return true;
+        }
+
+        tenantContext = null!;
+        return false;
     }
 }

@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using ThinkOnErp.API.Authorization;
 using ThinkOnErp.Application.Common;
 using ThinkOnErp.Application.DTOs.BranchProvisioning;
 using ThinkOnErp.Application.DTOs.Feature;
@@ -12,6 +13,7 @@ namespace ThinkOnErp.API.Controllers;
 
 [ApiController]
 [Route("api/branches/{branchId}/access")]
+[TenantScoped]
 [Authorize(Policy = "AdminOnly")]
 public class BranchAccessController : ControllerBase
 {

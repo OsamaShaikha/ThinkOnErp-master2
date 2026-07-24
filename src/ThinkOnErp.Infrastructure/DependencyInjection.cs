@@ -230,7 +230,29 @@ public static class DependencyInjection
 
         // Register key management services
         services.AddSingleton<KeyManagementService>();
-        services.AddSingleton<IKeyManagementService>(sp => sp.GetRequiredService<KeyManagementService>());
+        services.AddSingleton<Services.KeyManagement.KeyProviderFactory>();
+        services.AddSingleton<IKeyManagementService>(sp =>
+        {
+            var optionsAccessor = sp.GetRequiredService<
+                Microsoft.Extensions.Options.IOptions<KeyManagementOptions>>();
+            var options = optionsAccessor.Value;
+            var factory = sp.GetRequiredService<Services.KeyManagement.KeyProviderFactory>();
+            var primaryProvider = factory.CreateProvider(options.Provider, options);
+            var fallbackProvider =
+                string.Equals(options.FallbackProvider, "None", StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(options.FallbackProvider, options.Provider, StringComparison.OrdinalIgnoreCase)
+                    ? null
+                    : factory.CreateProvider(options.FallbackProvider, options);
+
+            return new Services.KeyManagement.KeyManagementService(
+                primaryProvider,
+                fallbackProvider,
+                optionsAccessor,
+                sp.GetRequiredService<
+                    ILogger<Services.KeyManagement.KeyManagementService>>(),
+                sp.GetService<Microsoft.Extensions.Caching.Memory.IMemoryCache>(),
+                sp.GetService<IAlertManager>());
+        });
         services.AddScoped<KeyManagementCli>();
 
         // Register background services as Hosted Services

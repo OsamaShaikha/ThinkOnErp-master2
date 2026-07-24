@@ -48,20 +48,27 @@ public class JwtTokenService
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey));
         var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
-        // Calculate expiration time
-        var expiresAt = DateTime.UtcNow.AddMinutes(expiryInMinutes);
+        // Calculate token lifetime and include an explicit issued-at timestamp
+        // so force-logout checks never have to infer when the token was created.
+        var issuedAt = DateTime.UtcNow;
+        var expiresAt = issuedAt.AddMinutes(expiryInMinutes);
 
         // Create claims with user information
         var claims = new List<Claim>
         {
             new("userId", user.Id.ToString()),
+            new(ClaimTypes.NameIdentifier, user.Id.ToString()),
             new("userName", user.UserName),
             new(ClaimTypes.Name, user.UserName),
             new("role", user.RoleId?.ToString() ?? "0"),
             new(ClaimTypes.Role, user.RoleId?.ToString() ?? "0"),
             new("companyId", user.CompanyId?.ToString() ?? "0"),
             new("branchId", user.BranchId?.ToString() ?? "0"),
-            new("isAdmin", user.IsAdmin.ToString().ToLower())
+            new("isAdmin", user.IsAdmin.ToString().ToLower()),
+            new(
+                JwtRegisteredClaimNames.Iat,
+                new DateTimeOffset(issuedAt).ToUnixTimeSeconds().ToString(),
+                ClaimValueTypes.Integer64)
         };
 
         if (companyCode != null)
@@ -74,6 +81,7 @@ public class JwtTokenService
             issuer: issuer,
             audience: audience,
             claims: claims,
+            notBefore: issuedAt,
             expires: expiresAt,
             signingCredentials: credentials
         );
@@ -121,20 +129,25 @@ public class JwtTokenService
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey));
         var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
-        // Calculate expiration time
-        var expiresAt = DateTime.UtcNow.AddMinutes(expiryInMinutes);
+        var issuedAt = DateTime.UtcNow;
+        var expiresAt = issuedAt.AddMinutes(expiryInMinutes);
 
         // Create claims with super admin information
         var claims = new[]
         {
             new Claim("userId", superAdmin.Id.ToString()),
+            new Claim(ClaimTypes.NameIdentifier, superAdmin.Id.ToString()),
             new Claim("userName", superAdmin.UserName),
             new Claim(ClaimTypes.Name, superAdmin.UserName),
             new Claim("userType", "SuperAdmin"), // Distinguish from regular users
             new Claim("role", "SuperAdmin"),
             new Claim(ClaimTypes.Role, "SuperAdmin"),
             new Claim("isAdmin", "true"), // Super admins are always admins
-            new Claim("isSuperAdmin", "true") // Special claim for super admin
+            new Claim("isSuperAdmin", "true"), // Special claim for super admin
+            new Claim(
+                JwtRegisteredClaimNames.Iat,
+                new DateTimeOffset(issuedAt).ToUnixTimeSeconds().ToString(),
+                ClaimValueTypes.Integer64)
         };
 
         // Create JWT token
@@ -142,6 +155,7 @@ public class JwtTokenService
             issuer: issuer,
             audience: audience,
             claims: claims,
+            notBefore: issuedAt,
             expires: expiresAt,
             signingCredentials: credentials
         );

@@ -11,7 +11,6 @@ namespace ThinkOnErp.API.Controllers;
 /// </summary>
 [ApiController]
 [Route("api/[controller]")]
-[AllowAnonymous] // Health checks should be accessible without authentication
 public class AuditHealthController : ControllerBase
 {
     private readonly IAuditLogger _auditLogger;
@@ -41,6 +40,7 @@ public class AuditHealthController : ControllerBase
     /// Audit events are queued and will be processed when the system recovers.
     /// </remarks>
     [HttpGet("status")]
+    [AllowAnonymous]
     [ProducesResponseType(typeof(AuditHealthStatus), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(AuditHealthStatus), StatusCodes.Status503ServiceUnavailable)]
     public async Task<IActionResult> GetHealthStatus()
@@ -112,7 +112,7 @@ public class AuditHealthController : ControllerBase
     /// Requires admin authorization.
     /// </summary>
     [HttpGet("metrics")]
-    [Authorize(Policy = "AdminOnly")]
+    [Authorize(Policy = "SuperAdminOnly")]
     [ProducesResponseType(typeof(AuditHealthMetrics), StatusCodes.Status200OK)]
     public IActionResult GetMetrics()
     {
@@ -159,7 +159,7 @@ public class AuditHealthController : ControllerBase
     /// Requires admin authorization.
     /// </summary>
     [HttpPost("replay-fallback")]
-    [Authorize(Policy = "AdminOnly")]
+    [Authorize(Policy = "SuperAdminOnly")]
     [ProducesResponseType(typeof(ReplayResult), StatusCodes.Status200OK)]
     public async Task<IActionResult> ReplayFallbackEvents()
     {

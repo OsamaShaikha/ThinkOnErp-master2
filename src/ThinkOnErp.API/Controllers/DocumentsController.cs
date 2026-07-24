@@ -1,6 +1,7 @@
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using ThinkOnErp.API.Authorization;
 using ThinkOnErp.Application.Common;
 using ThinkOnErp.Domain.Entities;
 using ThinkOnErp.Application.DTOs.Documents;
@@ -17,6 +18,7 @@ namespace ThinkOnErp.API.Controllers;
 
 [ApiController]
 [Route("api/documents")]
+[TenantScoped(selectionRequired: false)]
 [Authorize]
 public class DocumentsController : ControllerBase
 {

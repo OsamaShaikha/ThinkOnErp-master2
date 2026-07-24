@@ -11,6 +11,7 @@ namespace ThinkOnErp.API.Controllers;
 
 [ApiController]
 [Route("api/branches/{branchId:long}/permissions")]
+[TenantScoped]
 [Authorize(Policy = "AdminOnly")]
 public class CompanyPermissionsController : ControllerBase
 {

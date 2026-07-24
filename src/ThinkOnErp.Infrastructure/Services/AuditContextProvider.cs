@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Http;
 using ThinkOnErp.Domain.Constants;
 using ThinkOnErp.Domain.Interfaces;
+using ThinkOnErp.Domain.Models;
 
 namespace ThinkOnErp.Infrastructure.Services;
 
@@ -81,6 +82,14 @@ public class AuditContextProvider : IAuditContextProvider
         if (httpContext == null)
         {
             return null;
+        }
+
+        if (httpContext.Items.TryGetValue(
+                TenantRequestContext.HttpContextItemKey,
+                out var tenantValue) &&
+            tenantValue is TenantRequestContext tenantContext)
+        {
+            return tenantContext.CompanyId;
         }
 
         var companyIdClaim = httpContext.User?.FindFirst("companyId")?.Value;

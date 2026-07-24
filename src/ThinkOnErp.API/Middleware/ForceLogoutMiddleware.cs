@@ -23,8 +23,16 @@ public class ForceLogoutMiddleware
 
     public async Task InvokeAsync(HttpContext context, IUserRepository userRepository)
     {
-        // Only check authenticated requests
-        if (context.User.Identity?.IsAuthenticated == true)
+        // SuperAdmin accounts are stored centrally and are not tenant SysUser
+        // records. Looking them up through IUserRepository can collide with a
+        // tenant user that happens to have the same numeric ID.
+        var isSuperAdmin = string.Equals(
+            context.User.FindFirst("isSuperAdmin")?.Value,
+            "true",
+            StringComparison.OrdinalIgnoreCase);
+
+        // Only check authenticated tenant-user requests.
+        if (context.User.Identity?.IsAuthenticated == true && !isSuperAdmin)
         {
             try
             {

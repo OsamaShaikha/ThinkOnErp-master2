@@ -15,7 +15,7 @@ namespace ThinkOnErp.API.Controllers;
 
 [ApiController]
 [Route("api/companies")]
-[Authorize]
+[Authorize(Policy = "SuperAdminOnly")]
 public class CompanyController : ControllerBase
 {
     private readonly IMediator _mediator;

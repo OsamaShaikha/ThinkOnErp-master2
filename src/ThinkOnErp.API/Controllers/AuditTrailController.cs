@@ -14,7 +14,7 @@ namespace ThinkOnErp.API.Controllers;
 /// </summary>
 [ApiController]
 [Route("api/audit-trail")]
-[Authorize(Policy = "AdminOnly")]
+[Authorize(Policy = "SuperAdminOnly")]
 public class AuditTrailController : ControllerBase
 {
     private readonly IAuditTrailService _auditTrailService;

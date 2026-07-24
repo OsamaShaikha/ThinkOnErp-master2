@@ -13,7 +13,7 @@ namespace ThinkOnErp.API.Controllers;
 
 [ApiController]
 [Route("api/modules")]
-[Authorize(Policy = "AdminOnly")]
+[Authorize(Policy = "SuperAdminOnly")]
 public class ModulesController : ControllerBase
 {
     private readonly IMediator _mediator;

@@ -57,6 +57,25 @@ public class SysSettingsController : ControllerBase
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<ActionResult<ApiResponse<SysSettingDto>>> Create([FromBody] CreateSysSettingDto dto)
     {
+        var validationErrors = new List<string>();
+        if (string.IsNullOrWhiteSpace(dto.SettingDesc))
+            validationErrors.Add("Setting description is required.");
+        else if (dto.SettingDesc.Length > 500)
+            validationErrors.Add("Setting description must not exceed 500 characters.");
+
+        if (string.IsNullOrWhiteSpace(dto.SettingValue))
+            validationErrors.Add("Setting value is required.");
+        else if (dto.SettingValue.Length > 2000)
+            validationErrors.Add("Setting value must not exceed 2000 characters.");
+
+        if (validationErrors.Count > 0)
+        {
+            return BadRequest(ApiResponse<SysSettingDto>.CreateFailure(
+                "One or more validation errors occurred",
+                validationErrors,
+                400));
+        }
+
         var existing = await _repo.GetByCodeAsync(dto.SettingCode);
         if (existing != null)
             return BadRequest(ApiResponse<SysSettingDto>.CreateFailure("Setting with this code already exists", statusCode: 400));

@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 using ThinkOnErp.Domain.Interfaces;
+using ThinkOnErp.Domain.Models;
 
 namespace ThinkOnErp.API.Authorization;
 
@@ -18,6 +19,24 @@ public class PermissionRequiredAttribute : Attribute, IAsyncAuthorizationFilter
 
     public async Task OnAuthorizationAsync(AuthorizationFilterContext context)
     {
+        var isSuperAdmin = string.Equals(
+            context.HttpContext.User.FindFirst("isSuperAdmin")?.Value,
+            "true",
+            StringComparison.OrdinalIgnoreCase);
+
+        if (isSuperAdmin)
+        {
+            // A SuperAdmin has every screen/feature permission, but only after
+            // SchemaRoutingMiddleware has resolved an explicit company.
+            if (context.HttpContext.Items.ContainsKey(TenantRequestContext.HttpContextItemKey))
+            {
+                return;
+            }
+
+            context.Result = new ForbidResult();
+            return;
+        }
+
         var userIdClaim = context.HttpContext.User.FindFirst("userId")?.Value;
         if (string.IsNullOrEmpty(userIdClaim) || !long.TryParse(userIdClaim, out var userId))
         {

@@ -17,6 +17,12 @@ public class UpdateUserCommandHandler : IRequestHandler<UpdateUserCommand, Int64
 
     public async Task<Int64> Handle(UpdateUserCommand request, CancellationToken cancellationToken)
     {
+        var existingUser = await _userRepository.GetByIdAsync(request.UserId);
+        if (existingUser == null)
+        {
+            return 0;
+        }
+
         if (request.BranchIds == null || request.BranchIds.Count == 0)
         {
             throw new ArgumentException("User must be assigned to at least one branch.");
@@ -72,7 +78,14 @@ public class UpdateUserCommandHandler : IRequestHandler<UpdateUserCommand, Int64
         var result = await _userRepository.UpdateAsync(user);
 
         // Update branch assignments
-        await _userRepository.AssignToBranchesAsync(request.UserId, request.BranchIds, request.PrimaryBranchId, request.UpdateUser);
+        if (result > 0)
+        {
+            await _userRepository.AssignToBranchesAsync(
+                request.UserId,
+                request.BranchIds,
+                request.PrimaryBranchId,
+                request.UpdateUser);
+        }
 
         return result;
     }

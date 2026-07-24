@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using System.Security.Claims;
 using ThinkOnErp.Domain.Interfaces;
+using ThinkOnErp.Domain.Models;
 
 namespace ThinkOnErp.Infrastructure.Authorization;
 
@@ -32,10 +33,34 @@ public class MultiTenantAuthorizationHandler : AuthorizationHandler<MultiTenantA
         MultiTenantAccessRequirement requirement,
         MultiTenantResource resource)
     {
+        if (IsSuperAdmin(context.User))
+        {
+            var httpContext = _httpContextAccessor.HttpContext;
+            if (httpContext != null &&
+                httpContext.Items.TryGetValue(
+                    TenantRequestContext.HttpContextItemKey,
+                    out var tenantValue) &&
+                tenantValue is TenantRequestContext tenantContext &&
+                tenantContext.CompanyId == resource.CompanyId)
+            {
+                _logger.LogDebug(
+                    "SuperAdmin authorized for selected Company {CompanyId}, Branch {BranchId}",
+                    resource.CompanyId,
+                    resource.BranchId);
+                context.Succeed(requirement);
+                return;
+            }
+
+            _logger.LogWarning(
+                "SuperAdmin request denied because the target company was not explicitly selected");
+            context.Fail();
+            return;
+        }
+
         // Extract user claims
-        var userIdClaim = context.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        var userCompanyIdClaim = context.User.FindFirst("CompanyId")?.Value;
-        var userBranchIdClaim = context.User.FindFirst("BranchId")?.Value;
+        var userIdClaim = FindClaim(context.User, "userId", ClaimTypes.NameIdentifier);
+        var userCompanyIdClaim = FindClaim(context.User, "companyId", "CompanyId");
+        var userBranchIdClaim = FindClaim(context.User, "branchId", "BranchId");
 
         if (string.IsNullOrEmpty(userIdClaim) || 
             string.IsNullOrEmpty(userCompanyIdClaim))
@@ -55,7 +80,9 @@ public class MultiTenantAuthorizationHandler : AuthorizationHandler<MultiTenantA
 
         // Parse user's branch ID (may be null for company-level users)
         long? userBranchId = null;
-        if (!string.IsNullOrEmpty(userBranchIdClaim) && long.TryParse(userBranchIdClaim, out var parsedBranchId))
+        if (!string.IsNullOrEmpty(userBranchIdClaim) &&
+            long.TryParse(userBranchIdClaim, out var parsedBranchId) &&
+            parsedBranchId > 0)
         {
             userBranchId = parsedBranchId;
         }
@@ -123,6 +150,19 @@ public class MultiTenantAuthorizationHandler : AuthorizationHandler<MultiTenantA
 
         context.Succeed(requirement);
     }
+
+    private static bool IsSuperAdmin(ClaimsPrincipal user) =>
+        string.Equals(
+            user.FindFirst("isSuperAdmin")?.Value,
+            "true",
+            StringComparison.OrdinalIgnoreCase);
+
+    private static string? FindClaim(
+        ClaimsPrincipal user,
+        string preferredClaimType,
+        string legacyClaimType) =>
+        user.FindFirst(preferredClaimType)?.Value ??
+        user.FindFirst(legacyClaimType)?.Value;
 }
 
 /// <summary>

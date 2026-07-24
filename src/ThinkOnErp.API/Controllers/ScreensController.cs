@@ -19,7 +19,7 @@ namespace ThinkOnErp.API.Controllers;
 
 [ApiController]
 [Route("api/screens")]
-[Authorize(Policy = "AdminOnly")]
+[Authorize(Policy = "SuperAdminOnly")]
 public class ScreensController : ControllerBase
 {
     private readonly IMediator _mediator;

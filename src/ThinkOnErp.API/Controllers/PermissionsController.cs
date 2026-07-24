@@ -5,12 +5,14 @@ using ThinkOnErp.API.Authorization;
 using ThinkOnErp.Application.Common;
 using ThinkOnErp.Domain.Entities;
 using ThinkOnErp.Domain.Interfaces;
+using ThinkOnErp.Domain.Models;
 using ThinkOnErp.Infrastructure.Data;
 
 namespace ThinkOnErp.API.Controllers;
 
 [ApiController]
 [Route("api/permissions")]
+[TenantScoped]
 [Authorize]
 public class PermissionsController : ControllerBase
 {
@@ -58,10 +60,34 @@ public class PermissionsController : ControllerBase
         return long.TryParse(claim, out var id) ? id : 0;
     }
 
+    private bool IsSuperAdmin() =>
+        string.Equals(
+            User.FindFirst("isSuperAdmin")?.Value,
+            "true",
+            StringComparison.OrdinalIgnoreCase);
+
+    private bool HasTenantContext() =>
+        HttpContext.Items.ContainsKey(TenantRequestContext.HttpContextItemKey);
+
     [HttpGet("check")]
     public async Task<ActionResult<ApiResponse<object>>> CheckPermission(
         [FromQuery] string screenCode, [FromQuery] string featureCode)
     {
+        if (IsSuperAdmin())
+        {
+            if (!HasTenantContext())
+            {
+                return BadRequest(ApiResponse<object>.CreateFailure(
+                    "Select a company using X-Company-Id or X-Company-Code",
+                    statusCode: 400));
+            }
+
+            return Ok(ApiResponse<object>.CreateSuccess(
+                new { allowed = true },
+                "SuperAdmin has all tenant permissions",
+                200));
+        }
+
         var userId = GetCurrentUserId();
         if (userId == 0)
             return Unauthorized(ApiResponse<object>.CreateFailure("Invalid user", statusCode: 401));
@@ -73,6 +99,22 @@ public class PermissionsController : ControllerBase
     [HttpGet("my-screens")]
     public async Task<ActionResult<ApiResponse<List<object>>>> GetMyScreens()
     {
+        if (IsSuperAdmin())
+        {
+            if (!HasTenantContext())
+            {
+                return BadRequest(ApiResponse<List<object>>.CreateFailure(
+                    "Select a company using X-Company-Id or X-Company-Code",
+                    statusCode: 400));
+            }
+
+            var superAdminScreens = await GetAllActiveScreensAsync();
+            return Ok(ApiResponse<List<object>>.CreateSuccess(
+                superAdminScreens,
+                "All active screens retrieved for SuperAdmin",
+                200));
+        }
+
         var userId = GetCurrentUserId();
         if (userId == 0)
             return Unauthorized(ApiResponse<List<object>>.CreateFailure("Invalid user", statusCode: 401));
@@ -165,5 +207,59 @@ public class PermissionsController : ControllerBase
         }
 
         return Ok(ApiResponse<List<object>>.CreateSuccess(result, "Screens retrieved", 200));
+    }
+
+    private async Task<List<object>> GetAllActiveScreensAsync()
+    {
+        var screens = await _context.Set<SysScreen>()
+            .Where(screen => screen.IsActive)
+            .Include(screen => screen.System)
+            .OrderBy(screen => screen.System!.DisplayOrder)
+            .ThenBy(screen => screen.DisplayOrder)
+            .ToListAsync();
+
+        if (screens.Count == 0)
+        {
+            return new List<object>();
+        }
+
+        var screenIds = screens.Select(screen => screen.Id).ToList();
+        var screenFeatures = await _context.Set<SysScreenFeature>()
+            .Where(screenFeature => screenIds.Contains(screenFeature.ScreenId))
+            .Include(screenFeature => screenFeature.Feature)
+            .Where(screenFeature => screenFeature.Feature!.IsActive)
+            .OrderBy(screenFeature => screenFeature.Feature!.DisplayOrder)
+            .ToListAsync();
+
+        var featuresByScreen = screenFeatures
+            .GroupBy(screenFeature => screenFeature.ScreenId)
+            .ToDictionary(
+                group => group.Key,
+                group => group
+                    .Select(screenFeature => screenFeature.Feature!)
+                    .Select(feature => (object)new
+                    {
+                        feature.Id,
+                        feature.FeatureCode,
+                        feature.FeatureName
+                    })
+                    .ToList());
+
+        return screens
+            .Select(screen => (object)new
+            {
+                screen.Id,
+                screen.ScreenCode,
+                screen.ScreenName,
+                screen.ScreenNameE,
+                screen.Route,
+                screen.Icon,
+                systemId = screen.System?.Id,
+                systemName = screen.System?.SystemName,
+                features = featuresByScreen.GetValueOrDefault(
+                    screen.Id,
+                    new List<object>())
+            })
+            .ToList();
     }
 }

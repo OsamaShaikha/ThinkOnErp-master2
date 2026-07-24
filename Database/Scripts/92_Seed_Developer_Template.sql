@@ -1,0 +1,313 @@
+-- =====================================================
+-- ThinkOnErp DEV_TEMPLATE Schema Seeding Script
+-- Description: Seeds the developer template schema with realistic test data.
+-- =====================================================
+
+-- 1. Clear existing data in reverse dependency order
+BEGIN
+    EXECUTE IMMEDIATE 'DELETE FROM "DEV_TEMPLATE"."SYS_TICKET_COMMENT"';
+    EXECUTE IMMEDIATE 'DELETE FROM "DEV_TEMPLATE"."SYS_TICKET_ATTACHMENT"';
+    EXECUTE IMMEDIATE 'DELETE FROM "DEV_TEMPLATE"."SYS_REQUEST_TICKET"';
+    EXECUTE IMMEDIATE 'DELETE FROM "DEV_TEMPLATE"."SYS_SAVED_SEARCH"';
+    EXECUTE IMMEDIATE 'DELETE FROM "DEV_TEMPLATE"."SYS_SEARCH_ANALYTICS"';
+    EXECUTE IMMEDIATE 'DELETE FROM "DEV_TEMPLATE"."SYS_USER_BRANCHES"';
+    EXECUTE IMMEDIATE 'DELETE FROM "DEV_TEMPLATE"."SYS_USERS_ROLES"';
+    EXECUTE IMMEDIATE 'DELETE FROM "DEV_TEMPLATE"."SYS_USERS"';
+    EXECUTE IMMEDIATE 'DELETE FROM "DEV_TEMPLATE"."SYS_ROLE_SCREEN_PERMISSIONS"';
+    EXECUTE IMMEDIATE 'DELETE FROM "DEV_TEMPLATE"."SYS_USER_SCREEN_PERMISSIONS"';
+    EXECUTE IMMEDIATE 'DELETE FROM "DEV_TEMPLATE"."SYS_BRANCH_SCREENS"';
+    EXECUTE IMMEDIATE 'DELETE FROM "DEV_TEMPLATE"."SYS_BRANCH_SYSTEMS"';
+    EXECUTE IMMEDIATE 'DELETE FROM "DEV_TEMPLATE"."SYS_ROLE"';
+    EXECUTE IMMEDIATE 'DELETE FROM "DEV_TEMPLATE"."SYS_FISCAL_YEAR"';
+    EXECUTE IMMEDIATE 'DELETE FROM "DEV_TEMPLATE"."SYS_BRANCH"';
+    EXECUTE IMMEDIATE 'DELETE FROM "DEV_TEMPLATE"."SYS_TICKET_CONFIG"';
+    EXECUTE IMMEDIATE 'DELETE FROM "DEV_TEMPLATE"."SYS_TICKET_TYPE"';
+    EXECUTE IMMEDIATE 'DELETE FROM "DEV_TEMPLATE"."SYS_TICKET_CATEGORY"';
+    EXECUTE IMMEDIATE 'DELETE FROM "DEV_TEMPLATE"."SYS_TICKET_STATUS"';
+    EXECUTE IMMEDIATE 'DELETE FROM "DEV_TEMPLATE"."SYS_TICKET_PRIORITY"';
+    EXECUTE IMMEDIATE 'DELETE FROM "DEV_TEMPLATE"."SYS_RETENTION_POLICIES"';
+    EXECUTE IMMEDIATE 'DELETE FROM "DEV_TEMPLATE"."SYS_SETTINGS"';
+    EXECUTE IMMEDIATE 'DELETE FROM "DEV_TEMPLATE"."SYS_CODE"';
+    COMMIT;
+END;
+/
+
+-- 2. Seed SYS_ROLE (Roles)
+BEGIN
+    INSERT INTO "DEV_TEMPLATE"."SYS_ROLE" ("Id", "NAME_AR", "NAME_EN", "NOTE", "IS_ACTIVE", "CREATION_USER", "CREATION_DATE")
+    VALUES (1, 'مدير النظام', 'System Administrator', 'Full platform access permissions', 1, 'seed', SYSDATE);
+    
+    INSERT INTO "DEV_TEMPLATE"."SYS_ROLE" ("Id", "NAME_AR", "NAME_EN", "NOTE", "IS_ACTIVE", "CREATION_USER", "CREATION_DATE")
+    VALUES (2, 'مدير قسم', 'Department Manager', 'Access to manage tickets and view department reports', 1, 'seed', SYSDATE);
+    
+    INSERT INTO "DEV_TEMPLATE"."SYS_ROLE" ("Id", "NAME_AR", "NAME_EN", "NOTE", "IS_ACTIVE", "CREATION_USER", "CREATION_DATE")
+    VALUES (3, 'محاسب', 'Accountant', 'Access to financial records and reporting', 1, 'seed', SYSDATE);
+    
+    INSERT INTO "DEV_TEMPLATE"."SYS_ROLE" ("Id", "NAME_AR", "NAME_EN", "NOTE", "IS_ACTIVE", "CREATION_USER", "CREATION_DATE")
+    VALUES (4, 'موظف', 'Employee', 'Regular user with ticket request submission capability', 1, 'seed', SYSDATE);
+    
+    INSERT INTO "DEV_TEMPLATE"."SYS_ROLE" ("Id", "NAME_AR", "NAME_EN", "NOTE", "IS_ACTIVE", "CREATION_USER", "CREATION_DATE")
+    VALUES (5, 'مدقق ومراجع', 'Auditor', 'Read-only log viewing and auditing privileges', 1, 'seed', SYSDATE);
+    
+    COMMIT;
+END;
+/
+
+-- 3. Seed SYS_BRANCH (Branches)
+BEGIN
+    INSERT INTO "DEV_TEMPLATE"."SYS_BRANCH" ("Id", "COMPANY_ID", "NAME_AR", "NAME_EN", "PHONE", "MOBILE", "FAX", "EMAIL", "IS_HEAD_BRANCH", "IS_ACTIVE", "CREATION_USER", "CREATION_DATE", "DEFAULT_LANG", "BASE_CURRENCY_ID", "ROUNDING_RULES")
+    VALUES (1, 1, 'المقر الرئيسي', 'Headquarters', '+966112345678', '+966501234567', '+966112345679', 'hq@thinkonerp.com', 1, 1, 'seed', SYSDATE, 2, 1, 1);
+    
+    INSERT INTO "DEV_TEMPLATE"."SYS_BRANCH" ("Id", "COMPANY_ID", "NAME_AR", "NAME_EN", "PHONE", "MOBILE", "FAX", "EMAIL", "IS_HEAD_BRANCH", "IS_ACTIVE", "CREATION_USER", "CREATION_DATE", "DEFAULT_LANG", "BASE_CURRENCY_ID", "ROUNDING_RULES")
+    VALUES (2, 1, 'فرع الرياض', 'Riyadh Branch', '+966112223344', '+966502223344', NULL, 'riyadh@thinkonerp.com', 0, 1, 'seed', SYSDATE, 2, 1, 1);
+    
+    INSERT INTO "DEV_TEMPLATE"."SYS_BRANCH" ("Id", "COMPANY_ID", "NAME_AR", "NAME_EN", "PHONE", "MOBILE", "FAX", "EMAIL", "IS_HEAD_BRANCH", "IS_ACTIVE", "CREATION_USER", "CREATION_DATE", "DEFAULT_LANG", "BASE_CURRENCY_ID", "ROUNDING_RULES")
+    VALUES (3, 1, 'فرع جدة', 'Jeddah Branch', '+966126667788', '+966506667788', NULL, 'jeddah@thinkonerp.com', 0, 1, 'seed', SYSDATE, 2, 1, 1);
+    
+    COMMIT;
+END;
+/
+
+-- 4. Seed SYS_USERS (Users)
+-- Note: Passwords will be updated dynamically in C# to use PBKDF2 hash of 'Password@123'
+BEGIN
+    INSERT INTO "DEV_TEMPLATE"."SYS_USERS" ("Id", "COMPANY_ID", "NAME_AR", "NAME_EN", "USER_NAME", "PASSWORD", "PHONE", "EMAIL", "ROLE", "IS_ACTIVE", "IS_ADMIN", "CREATION_USER", "CREATION_DATE")
+    VALUES (1, 1, 'أحمد المسؤول', 'Ahmed Admin', 'admin', 'TEMP_HASH', '+966500000001', 'admin@thinkonerp.com', 1, 1, 1, 'seed', SYSDATE);
+    
+    INSERT INTO "DEV_TEMPLATE"."SYS_USERS" ("Id", "COMPANY_ID", "NAME_AR", "NAME_EN", "USER_NAME", "PASSWORD", "PHONE", "EMAIL", "ROLE", "IS_ACTIVE", "IS_ADMIN", "CREATION_USER", "CREATION_DATE")
+    VALUES (2, 1, 'سارة مديرة', 'Sara Manager', 'sara', 'TEMP_HASH', '+966500000002', 'sara@thinkonerp.com', 2, 1, 0, 'seed', SYSDATE);
+    
+    INSERT INTO "DEV_TEMPLATE"."SYS_USERS" ("Id", "COMPANY_ID", "NAME_AR", "NAME_EN", "USER_NAME", "PASSWORD", "PHONE", "EMAIL", "ROLE", "IS_ACTIVE", "IS_ADMIN", "CREATION_USER", "CREATION_DATE")
+    VALUES (3, 1, 'خالد محاسب', 'Khaled Accountant', 'khaled', 'TEMP_HASH', '+966500000003', 'khaled@thinkonerp.com', 3, 1, 0, 'seed', SYSDATE);
+    
+    INSERT INTO "DEV_TEMPLATE"."SYS_USERS" ("Id", "COMPANY_ID", "NAME_AR", "NAME_EN", "USER_NAME", "PASSWORD", "PHONE", "EMAIL", "ROLE", "IS_ACTIVE", "IS_ADMIN", "CREATION_USER", "CREATION_DATE")
+    VALUES (4, 1, 'عمر موظف', 'Omar Employee', 'omar', 'TEMP_HASH', '+966500000004', 'omar@thinkonerp.com', 4, 1, 0, 'seed', SYSDATE);
+    
+    INSERT INTO "DEV_TEMPLATE"."SYS_USERS" ("Id", "COMPANY_ID", "NAME_AR", "NAME_EN", "USER_NAME", "PASSWORD", "PHONE", "EMAIL", "ROLE", "IS_ACTIVE", "IS_ADMIN", "CREATION_USER", "CREATION_DATE")
+    VALUES (5, 1, 'مريم مدققة', 'Maryam Auditor', 'maryam', 'TEMP_HASH', '+966500000005', 'maryam@thinkonerp.com', 5, 1, 0, 'seed', SYSDATE);
+    
+    INSERT INTO "DEV_TEMPLATE"."SYS_USERS" ("Id", "COMPANY_ID", "NAME_AR", "NAME_EN", "USER_NAME", "PASSWORD", "PHONE", "EMAIL", "ROLE", "IS_ACTIVE", "IS_ADMIN", "CREATION_USER", "CREATION_DATE")
+    VALUES (6, 1, 'مستخدم معطل', 'Inactive User', 'inactive', 'TEMP_HASH', '+966500000006', 'inactive@thinkonerp.com', 4, 0, 0, 'seed', SYSDATE);
+    
+    COMMIT;
+END;
+/
+
+-- 5. Seed SYS_USERS_ROLES (Junction)
+BEGIN
+    INSERT INTO "DEV_TEMPLATE"."SYS_USERS_ROLES" ("Id", "USER_ID", "ROLE_ID", "ASSIGNED_BY", "ASSIGNED_DATE", "CREATION_USER", "CREATION_DATE")
+    VALUES (1, 1, 1, 1, SYSDATE, 'seed', SYSDATE);
+    
+    INSERT INTO "DEV_TEMPLATE"."SYS_USERS_ROLES" ("Id", "USER_ID", "ROLE_ID", "ASSIGNED_BY", "ASSIGNED_DATE", "CREATION_USER", "CREATION_DATE")
+    VALUES (2, 2, 2, 1, SYSDATE, 'seed', SYSDATE);
+    
+    INSERT INTO "DEV_TEMPLATE"."SYS_USERS_ROLES" ("Id", "USER_ID", "ROLE_ID", "ASSIGNED_BY", "ASSIGNED_DATE", "CREATION_USER", "CREATION_DATE")
+    VALUES (3, 3, 3, 1, SYSDATE, 'seed', SYSDATE);
+    
+    INSERT INTO "DEV_TEMPLATE"."SYS_USERS_ROLES" ("Id", "USER_ID", "ROLE_ID", "ASSIGNED_BY", "ASSIGNED_DATE", "CREATION_USER", "CREATION_DATE")
+    VALUES (4, 4, 4, 1, SYSDATE, 'seed', SYSDATE);
+    
+    INSERT INTO "DEV_TEMPLATE"."SYS_USERS_ROLES" ("Id", "USER_ID", "ROLE_ID", "ASSIGNED_BY", "ASSIGNED_DATE", "CREATION_USER", "CREATION_DATE")
+    VALUES (5, 5, 5, 1, SYSDATE, 'seed', SYSDATE);
+    
+    COMMIT;
+END;
+/
+
+-- 6. Seed SYS_USER_BRANCHES
+BEGIN
+    INSERT INTO "DEV_TEMPLATE"."SYS_USER_BRANCHES" ("Id", "USER_ID", "BRANCH_ID", "IS_PRIMARY", "ASSIGNED_BY", "ASSIGNED_AT")
+    VALUES (1, 1, 1, 1, 'seed', SYSDATE);
+    
+    INSERT INTO "DEV_TEMPLATE"."SYS_USER_BRANCHES" ("Id", "USER_ID", "BRANCH_ID", "IS_PRIMARY", "ASSIGNED_BY", "ASSIGNED_AT")
+    VALUES (2, 2, 1, 1, 'seed', SYSDATE);
+    
+    INSERT INTO "DEV_TEMPLATE"."SYS_USER_BRANCHES" ("Id", "USER_ID", "BRANCH_ID", "IS_PRIMARY", "ASSIGNED_BY", "ASSIGNED_AT")
+    VALUES (3, 3, 2, 1, 'seed', SYSDATE);
+    
+    INSERT INTO "DEV_TEMPLATE"."SYS_USER_BRANCHES" ("Id", "USER_ID", "BRANCH_ID", "IS_PRIMARY", "ASSIGNED_BY", "ASSIGNED_AT")
+    VALUES (4, 4, 2, 1, 'seed', SYSDATE);
+    
+    INSERT INTO "DEV_TEMPLATE"."SYS_USER_BRANCHES" ("Id", "USER_ID", "BRANCH_ID", "IS_PRIMARY", "ASSIGNED_BY", "ASSIGNED_AT")
+    VALUES (5, 5, 1, 1, 'seed', SYSDATE);
+    
+    INSERT INTO "DEV_TEMPLATE"."SYS_USER_BRANCHES" ("Id", "USER_ID", "BRANCH_ID", "IS_PRIMARY", "ASSIGNED_BY", "ASSIGNED_AT")
+    VALUES (6, 3, 3, 0, 'seed', SYSDATE);
+    
+    COMMIT;
+END;
+/
+
+-- 7. Seed SYS_FISCAL_YEAR (Fiscal Years)
+BEGIN
+    INSERT INTO "DEV_TEMPLATE"."SYS_FISCAL_YEAR" ("Id", "COMPANY_ID", "BRANCH_ID", "FISCAL_YEAR_CODE", "NAME_AR", "NAME_EN", "START_DATE", "END_DATE", "IS_CLOSED", "IS_ACTIVE", "CREATION_USER", "CREATION_DATE")
+    VALUES (1, 1, 1, 'FY2026', 'السنة المالية 2026', 'Fiscal Year 2026', TO_DATE('2026-01-01', 'YYYY-MM-DD'), TO_DATE('2026-12-31', 'YYYY-MM-DD'), 0, 1, 'seed', SYSDATE);
+    
+    INSERT INTO "DEV_TEMPLATE"."SYS_FISCAL_YEAR" ("Id", "COMPANY_ID", "BRANCH_ID", "FISCAL_YEAR_CODE", "NAME_AR", "NAME_EN", "START_DATE", "END_DATE", "IS_CLOSED", "IS_ACTIVE", "CREATION_USER", "CREATION_DATE")
+    VALUES (2, 1, 2, 'FY2026', 'السنة المالية 2026 - الرياض', 'Fiscal Year 2026 - Riyadh', TO_DATE('2026-01-01', 'YYYY-MM-DD'), TO_DATE('2026-12-31', 'YYYY-MM-DD'), 0, 1, 'seed', SYSDATE);
+    
+    COMMIT;
+END;
+/
+
+-- 8. Seed SYS_SETTINGS (Tenant Settings)
+BEGIN
+    INSERT INTO "DEV_TEMPLATE"."SYS_SETTINGS" ("SETTING_CODE", "SETTING_DESC", "SETTING_VALUE")
+    VALUES (1, 'Upload files path', '/THINKON_FILES/UPLOADS/');
+    
+    INSERT INTO "DEV_TEMPLATE"."SYS_SETTINGS" ("SETTING_CODE", "SETTING_DESC", "SETTING_VALUE")
+    VALUES (2, 'Maximum file size (bytes)', '52428800');
+    
+    INSERT INTO "DEV_TEMPLATE"."SYS_SETTINGS" ("SETTING_CODE", "SETTING_DESC", "SETTING_VALUE")
+    VALUES (3, 'Allowed file extensions', '.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv,.jpg,.jpeg,.png,.gif,.zip,.rar,.7z');
+    
+    INSERT INTO "DEV_TEMPLATE"."SYS_SETTINGS" ("SETTING_CODE", "SETTING_DESC", "SETTING_VALUE")
+    VALUES (4, 'Logs path', '/THINKON_FILES/LOGS/');
+    
+    INSERT INTO "DEV_TEMPLATE"."SYS_SETTINGS" ("SETTING_CODE", "SETTING_DESC", "SETTING_VALUE")
+    VALUES (5, 'Audit fallback path', '/THINKON_FILES/LOGS/audit-fallback/');
+    
+    INSERT INTO "DEV_TEMPLATE"."SYS_SETTINGS" ("SETTING_CODE", "SETTING_DESC", "SETTING_VALUE")
+    VALUES (6, 'Logos path', '/THINKON_FILES/LOGOS/');
+    
+    INSERT INTO "DEV_TEMPLATE"."SYS_SETTINGS" ("SETTING_CODE", "SETTING_DESC", "SETTING_VALUE")
+    VALUES (7, 'Icons path', '/THINKON_FILES/ICONS/');
+    
+    COMMIT;
+END;
+/
+
+-- 9. Seed SYS_RETENTION_POLICIES (Retention policies for audit logging)
+BEGIN
+    INSERT INTO "DEV_TEMPLATE"."SYS_RETENTION_POLICIES" ("Id", "ARCHIVE_ENABLED", "DESCRIPTION", "EVENT_CATEGORY", "LAST_MODIFIED_BY", "LAST_MODIFIED_DATE", "RETENTION_DAYS")
+    VALUES (1, 1, 'Keep authentication logs for 1 year, then archive', 'Authentication', 1, SYSDATE, 365);
+    
+    INSERT INTO "DEV_TEMPLATE"."SYS_RETENTION_POLICIES" ("Id", "ARCHIVE_ENABLED", "DESCRIPTION", "EVENT_CATEGORY", "LAST_MODIFIED_BY", "LAST_MODIFIED_DATE", "RETENTION_DAYS")
+    VALUES (2, 1, 'Keep data change audit logs for 2 years, then archive', 'DataChange', 1, SYSDATE, 730);
+    
+    INSERT INTO "DEV_TEMPLATE"."SYS_RETENTION_POLICIES" ("Id", "ARCHIVE_ENABLED", "DESCRIPTION", "EVENT_CATEGORY", "LAST_MODIFIED_BY", "LAST_MODIFIED_DATE", "RETENTION_DAYS")
+    VALUES (3, 1, 'Keep security events for 5 years', 'Security', 1, SYSDATE, 1825);
+    
+    COMMIT;
+END;
+/
+
+-- 10. Seed SYS_TICKET_PRIORITY
+BEGIN
+    INSERT INTO "DEV_TEMPLATE"."SYS_TICKET_PRIORITY" ("Id", "PRIORITY_NAME_AR", "PRIORITY_NAME_EN", "PRIORITY_LEVEL", "SLA_TARGET_HOURS", "ESCALATION_THRESHOLD_HOURS", "IS_ACTIVE", "CREATION_USER", "CREATION_DATE")
+    VALUES (1, 'عاجل جداً', 'Critical', 1, 1.0, 0.5, 1, 'seed', SYSDATE);
+    
+    INSERT INTO "DEV_TEMPLATE"."SYS_TICKET_PRIORITY" ("Id", "PRIORITY_NAME_AR", "PRIORITY_NAME_EN", "PRIORITY_LEVEL", "SLA_TARGET_HOURS", "ESCALATION_THRESHOLD_HOURS", "IS_ACTIVE", "CREATION_USER", "CREATION_DATE")
+    VALUES (2, 'مرتفع', 'High', 2, 4.0, 2.0, 1, 'seed', SYSDATE);
+    
+    INSERT INTO "DEV_TEMPLATE"."SYS_TICKET_PRIORITY" ("Id", "PRIORITY_NAME_AR", "PRIORITY_NAME_EN", "PRIORITY_LEVEL", "SLA_TARGET_HOURS", "ESCALATION_THRESHOLD_HOURS", "IS_ACTIVE", "CREATION_USER", "CREATION_DATE")
+    VALUES (3, 'متوسط', 'Medium', 3, 8.0, 4.0, 1, 'seed', SYSDATE);
+    
+    INSERT INTO "DEV_TEMPLATE"."SYS_TICKET_PRIORITY" ("Id", "PRIORITY_NAME_AR", "PRIORITY_NAME_EN", "PRIORITY_LEVEL", "SLA_TARGET_HOURS", "ESCALATION_THRESHOLD_HOURS", "IS_ACTIVE", "CREATION_USER", "CREATION_DATE")
+    VALUES (4, 'منخفض', 'Low', 4, 24.0, 12.0, 1, 'seed', SYSDATE);
+    
+    COMMIT;
+END;
+/
+
+-- 11. Seed SYS_TICKET_STATUS
+BEGIN
+    INSERT INTO "DEV_TEMPLATE"."SYS_TICKET_STATUS" ("Id", "STATUS_NAME_AR", "STATUS_NAME_EN", "STATUS_CODE", "DISPLAY_ORDER", "IS_FINAL_STATUS", "IS_ACTIVE", "CREATION_USER", "CREATION_DATE")
+    VALUES (1, 'مفتوح', 'Open', 'OPEN', 1, 0, 1, 'seed', SYSDATE);
+    
+    INSERT INTO "DEV_TEMPLATE"."SYS_TICKET_STATUS" ("Id", "STATUS_NAME_AR", "STATUS_NAME_EN", "STATUS_CODE", "DISPLAY_ORDER", "IS_FINAL_STATUS", "IS_ACTIVE", "CREATION_USER", "CREATION_DATE")
+    VALUES (2, 'قيد المعالجة', 'In Progress', 'IN_PROGRESS', 2, 0, 1, 'seed', SYSDATE);
+    
+    INSERT INTO "DEV_TEMPLATE"."SYS_TICKET_STATUS" ("Id", "STATUS_NAME_AR", "STATUS_NAME_EN", "STATUS_CODE", "DISPLAY_ORDER", "IS_FINAL_STATUS", "IS_ACTIVE", "CREATION_USER", "CREATION_DATE")
+    VALUES (3, 'تم الحل', 'Resolved', 'RESOLVED', 3, 0, 1, 'seed', SYSDATE);
+    
+    INSERT INTO "DEV_TEMPLATE"."SYS_TICKET_STATUS" ("Id", "STATUS_NAME_AR", "STATUS_NAME_EN", "STATUS_CODE", "DISPLAY_ORDER", "IS_FINAL_STATUS", "IS_ACTIVE", "CREATION_USER", "CREATION_DATE")
+    VALUES (4, 'مغلق', 'Closed', 'CLOSED', 4, 1, 1, 'seed', SYSDATE);
+    
+    COMMIT;
+END;
+/
+
+-- 12. Seed SYS_TICKET_TYPE
+BEGIN
+    INSERT INTO "DEV_TEMPLATE"."SYS_TICKET_TYPE" ("Id", "TYPE_NAME_AR", "TYPE_NAME_EN", "DESCRIPTION_AR", "DESCRIPTION_EN", "DEFAULT_PRIORITY_ID", "SLA_TARGET_HOURS", "IS_ACTIVE", "CREATION_USER", "CREATION_DATE")
+    VALUES (1, 'طلب مشكلة', 'Bug Report', 'Technical problem report', 'Technical problem report', 2, 4.0, 1, 'seed', SYSDATE);
+    
+    INSERT INTO "DEV_TEMPLATE"."SYS_TICKET_TYPE" ("Id", "TYPE_NAME_AR", "TYPE_NAME_EN", "DESCRIPTION_AR", "DESCRIPTION_EN", "DEFAULT_PRIORITY_ID", "SLA_TARGET_HOURS", "IS_ACTIVE", "CREATION_USER", "CREATION_DATE")
+    VALUES (2, 'طلب ميزة', 'Feature Request', 'New feature proposal', 'New feature proposal', 3, 24.0, 1, 'seed', SYSDATE);
+    
+    INSERT INTO "DEV_TEMPLATE"."SYS_TICKET_TYPE" ("Id", "TYPE_NAME_AR", "TYPE_NAME_EN", "DESCRIPTION_AR", "DESCRIPTION_EN", "DEFAULT_PRIORITY_ID", "SLA_TARGET_HOURS", "IS_ACTIVE", "CREATION_USER", "CREATION_DATE")
+    VALUES (3, 'استفسار عام', 'General Inquiry', 'General inquiry or support request', 'General inquiry or support request', 4, 48.0, 1, 'seed', SYSDATE);
+    
+    COMMIT;
+END;
+/
+
+-- 13. Seed SYS_TICKET_CATEGORY
+BEGIN
+    INSERT INTO "DEV_TEMPLATE"."SYS_TICKET_CATEGORY" ("Id", "CATEGORY_NAME_AR", "CATEGORY_NAME_EN", "DESCRIPTION_AR", "DESCRIPTION_EN", "DISPLAY_ORDER", "IS_ACTIVE", "CREATION_USER", "CREATION_DATE")
+    VALUES (1, 'الشبكات', 'Network', 'Router, switch, internet connectivity issues', 'Router, switch, internet connectivity issues', 1, 1, 'seed', SYSDATE);
+    
+    INSERT INTO "DEV_TEMPLATE"."SYS_TICKET_CATEGORY" ("Id", "CATEGORY_NAME_AR", "CATEGORY_NAME_EN", "DESCRIPTION_AR", "DESCRIPTION_EN", "DISPLAY_ORDER", "IS_ACTIVE", "CREATION_USER", "CREATION_DATE")
+    VALUES (2, 'البرمجيات', 'Software', 'ERP application bugs and software requests', 'ERP application bugs and software requests', 2, 1, 'seed', SYSDATE);
+    
+    INSERT INTO "DEV_TEMPLATE"."SYS_TICKET_CATEGORY" ("Id", "CATEGORY_NAME_AR", "CATEGORY_NAME_EN", "DESCRIPTION_AR", "DESCRIPTION_EN", "DISPLAY_ORDER", "IS_ACTIVE", "CREATION_USER", "CREATION_DATE")
+    VALUES (3, 'العتاد والأجهزة', 'Hardware', 'Printer, laptop, keyboard issues', 'Printer, laptop, keyboard issues', 3, 1, 'seed', SYSDATE);
+    
+    COMMIT;
+END;
+/
+
+-- 14. Seed SYS_TICKET_CONFIG
+BEGIN
+    INSERT INTO "DEV_TEMPLATE"."SYS_TICKET_CONFIG" ("Id", "CONFIG_KEY", "CONFIG_VALUE", "DESCRIPTION_AR", "DESCRIPTION_EN", "CONFIG_TYPE", "IS_ACTIVE", "CREATION_USER", "CREATION_DATE")
+    VALUES (1, 'SLA.Priority.Critical.Hours', '1', 'ساعات اتفاقية مستوى الخدمة للحالات الحرجة', 'SLA target hours for critical priority', 'SLA', 1, 'seed', SYSDATE);
+    
+    INSERT INTO "DEV_TEMPLATE"."SYS_TICKET_CONFIG" ("Id", "CONFIG_KEY", "CONFIG_VALUE", "DESCRIPTION_AR", "DESCRIPTION_EN", "CONFIG_TYPE", "IS_ACTIVE", "CREATION_USER", "CREATION_DATE")
+    VALUES (2, 'SLA.Priority.High.Hours', '4', 'ساعات اتفاقية مستوى الخدمة للحالات المرتفعة', 'SLA target hours for high priority', 'SLA', 1, 'seed', SYSDATE);
+    
+    INSERT INTO "DEV_TEMPLATE"."SYS_TICKET_CONFIG" ("Id", "CONFIG_KEY", "CONFIG_VALUE", "DESCRIPTION_AR", "DESCRIPTION_EN", "CONFIG_TYPE", "IS_ACTIVE", "CREATION_USER", "CREATION_DATE")
+    VALUES (3, 'Attachment.MaxFileSize', '10485760', 'الحد الأقصى لحجم المرفقات بالبايت', 'Maximum allowed attachment size in bytes (10MB)', 'FileAttachment', 1, 'seed', SYSDATE);
+    
+    INSERT INTO "DEV_TEMPLATE"."SYS_TICKET_CONFIG" ("Id", "CONFIG_KEY", "CONFIG_VALUE", "DESCRIPTION_AR", "DESCRIPTION_EN", "CONFIG_TYPE", "IS_ACTIVE", "CREATION_USER", "CREATION_DATE")
+    VALUES (4, 'Attachment.AllowedExtensions', '.pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png,.txt', 'الامتدادات المسموح بها للمرفقات', 'Allowed file extensions for attachments', 'FileAttachment', 1, 'seed', SYSDATE);
+    
+    COMMIT;
+END;
+/
+
+-- 15. Seed SYS_REQUEST_TICKET (Sample tickets)
+BEGIN
+    INSERT INTO "DEV_TEMPLATE"."SYS_REQUEST_TICKET" ("Id", "TITLE_AR", "TITLE_EN", "DESCRIPTION", "COMPANY_ID", "BRANCH_ID", "REQUESTER_ID", "ASSIGNEE_ID", "TICKET_TYPE_ID", "TICKET_STATUS_ID", "TICKET_PRIORITY_ID", "TICKET_CATEGORY_ID", "EXPECTED_RESOLUTION_DATE", "IS_ACTIVE", "CREATION_USER", "CREATION_DATE")
+    VALUES (1, 'مشكلة في الاتصال بالشبكة', 'Network Connection Drop', 'The internet drops intermittently when connecting to the main ERP portal.', 1, 2, 4, 2, 1, 2, 2, 1, SYSDATE + 1/6, 1, 'omar', SYSDATE - 1);
+    
+    INSERT INTO "DEV_TEMPLATE"."SYS_REQUEST_TICKET" ("Id", "TITLE_AR", "TITLE_EN", "DESCRIPTION", "COMPANY_ID", "BRANCH_ID", "REQUESTER_ID", "ASSIGNEE_ID", "TICKET_TYPE_ID", "TICKET_STATUS_ID", "TICKET_PRIORITY_ID", "TICKET_CATEGORY_ID", "EXPECTED_RESOLUTION_DATE", "IS_ACTIVE", "CREATION_USER", "CREATION_DATE")
+    VALUES (2, 'طلب تصدير لملفات إكسل', 'Feature Request: Export to Excel', 'We need to export the financial balance sheets to Excel format.', 1, 2, 3, NULL, 2, 1, 3, 2, SYSDATE + 1, 1, 'khaled', SYSDATE - 2);
+    
+    COMMIT;
+END;
+/
+
+-- 16. Seed SYS_TICKET_COMMENT (Sample comments)
+BEGIN
+    INSERT INTO "DEV_TEMPLATE"."SYS_TICKET_COMMENT" ("Id", "TICKET_ID", "COMMENT_TEXT", "IS_INTERNAL", "CREATION_USER", "CREATION_DATE")
+    VALUES (1, 1, 'I have checked the local switch port and restarted the interface. Please verify.', 1, 'sara', SYSDATE - 0.5);
+    
+    INSERT INTO "DEV_TEMPLATE"."SYS_TICKET_COMMENT" ("Id", "TICKET_ID", "COMMENT_TEXT", "IS_INTERNAL", "CREATION_USER", "CREATION_DATE")
+    VALUES (2, 1, 'Working fine now, thank you.', 0, 'omar', SYSDATE - 0.2);
+    
+    COMMIT;
+END;
+/
+
+-- 17. Seed SYS_SAVED_SEARCH (Saved searches)
+BEGIN
+    INSERT INTO "DEV_TEMPLATE"."SYS_SAVED_SEARCH" ("Id", "SEARCH_NAME", "USER_ID", "SEARCH_CRITERIA", "SEARCH_DESCRIPTION", "IS_PUBLIC", "IS_DEFAULT", "IS_ACTIVE", "CREATION_USER", "CREATION_DATE", "USAGE_COUNT")
+    VALUES (1, 'My Open Tickets', 1, '{"status":"OPEN","assigneeId":"current"}', 'All open tickets assigned to me', 0, 1, 1, 'admin', SYSDATE, 5);
+    
+    INSERT INTO "DEV_TEMPLATE"."SYS_SAVED_SEARCH" ("Id", "SEARCH_NAME", "USER_ID", "SEARCH_CRITERIA", "SEARCH_DESCRIPTION", "IS_PUBLIC", "IS_DEFAULT", "IS_ACTIVE", "CREATION_USER", "CREATION_DATE", "USAGE_COUNT")
+    VALUES (2, 'Critical Tickets', 2, '{"priority":"CRITICAL","assigneeId":null}', 'All unassigned critical tickets', 1, 0, 1, 'sara', SYSDATE, 12);
+    
+    COMMIT;
+END;
+/

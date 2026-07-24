@@ -1,6 +1,7 @@
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using ThinkOnErp.API.Authorization;
 using ThinkOnErp.Application.Common;
 using ThinkOnErp.Application.DTOs.Branch;
 using ThinkOnErp.Application.Features.Branches.Commands.CreateBranch;
@@ -16,6 +17,7 @@ namespace ThinkOnErp.API.Controllers;
 
 [ApiController]
 [Route("api/branches")]
+[TenantScoped]
 [Authorize]
 public class BranchController : ControllerBase
 {

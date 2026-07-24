@@ -52,11 +52,15 @@ public class AuditDataAuthorizationHandler : AuthorizationHandler<AuditDataAcces
         var user = context.User;
 
         // Extract user claims
-        var userIdClaim = user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        var userIdClaim = user.FindFirst("userId")?.Value ??
+            user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         var isAdminClaim = user.FindFirst("isAdmin")?.Value;
+        var isSuperAdminClaim = user.FindFirst("isSuperAdmin")?.Value;
         var roleClaim = user.FindFirst("role")?.Value;
-        var userCompanyIdClaim = user.FindFirst("CompanyId")?.Value;
-        var userBranchIdClaim = user.FindFirst("BranchId")?.Value;
+        var userCompanyIdClaim = user.FindFirst("companyId")?.Value ??
+            user.FindFirst("CompanyId")?.Value;
+        var userBranchIdClaim = user.FindFirst("branchId")?.Value ??
+            user.FindFirst("BranchId")?.Value;
 
         // Validate required claims
         if (string.IsNullOrEmpty(userIdClaim))
@@ -74,7 +78,10 @@ public class AuditDataAuthorizationHandler : AuthorizationHandler<AuditDataAcces
         }
 
         // SuperAdmins can access all audit data
-        if (isAdminClaim == "true")
+        if (string.Equals(
+                isSuperAdminClaim,
+                "true",
+                StringComparison.OrdinalIgnoreCase))
         {
             _logger.LogDebug(
                 "SuperAdmin user {UserId} granted access to all audit data",
@@ -84,7 +91,8 @@ public class AuditDataAuthorizationHandler : AuthorizationHandler<AuditDataAcces
         }
 
         // Company admins can access their company's audit data
-        if (roleClaim == "COMPANY_ADMIN")
+        if (string.Equals(isAdminClaim, "true", StringComparison.OrdinalIgnoreCase) ||
+            string.Equals(roleClaim, "COMPANY_ADMIN", StringComparison.OrdinalIgnoreCase))
         {
             if (string.IsNullOrEmpty(userCompanyIdClaim) || !long.TryParse(userCompanyIdClaim, out var userCompanyId))
             {

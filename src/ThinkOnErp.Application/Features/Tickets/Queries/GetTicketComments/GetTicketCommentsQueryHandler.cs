@@ -1,6 +1,7 @@
 using MediatR;
 using Microsoft.Extensions.Logging;
 using ThinkOnErp.Application.DTOs.Ticket;
+using ThinkOnErp.Domain.Exceptions;
 using ThinkOnErp.Domain.Interfaces;
 
 namespace ThinkOnErp.Application.Features.Tickets.Queries.GetTicketComments;
@@ -35,7 +36,7 @@ public class GetTicketCommentsQueryHandler : IRequestHandler<GetTicketCommentsQu
             var ticket = await _ticketRepository.GetByIdAsync(request.TicketId);
             if (ticket == null)
             {
-                throw new ArgumentException($"Ticket with ID {request.TicketId} not found.");
+                throw new TicketNotFoundException(request.TicketId);
             }
 
             // Get comments for the ticket (filtering is handled by repository)

@@ -29,4 +29,6 @@ public interface IOracleSchemaService
         string? taxNumber, int defaultLang,
         long? baseCurrencyId, int roundingRules,
         string? branchLogoPath, string creationUser);
+
+    Task SeedDeveloperTemplateAsync();
 }

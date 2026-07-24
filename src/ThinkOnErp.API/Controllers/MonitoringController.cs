@@ -11,7 +11,7 @@ namespace ThinkOnErp.API.Controllers;
 /// </summary>
 [ApiController]
 [Route("api/[controller]")]
-[Authorize(Policy = "AdminOnly")]
+[Authorize(Policy = "SuperAdminOnly")]
 public class MonitoringController : ControllerBase
 {
     private readonly IPerformanceMonitor _performanceMonitor;

@@ -118,6 +118,17 @@ try
     {
         options.AddPolicy("AdminOnly", policy =>
             policy.RequireClaim("isAdmin", "true"));
+
+        // Tenant configuration must run only after SchemaRoutingMiddleware
+        // has resolved an active company from the central registry.
+        options.AddPolicy("TenantAdminOnly", policy =>
+        {
+            policy.RequireClaim("isAdmin", "true");
+            policy.RequireAssertion(context =>
+                context.Resource is HttpContext httpContext &&
+                httpContext.Items.ContainsKey(
+                    ThinkOnErp.Domain.Models.TenantRequestContext.HttpContextItemKey));
+        });
         
         // Add multi-tenant access control policy
         options.AddPolicy("MultiTenantAccess", policy =>
@@ -273,6 +284,8 @@ try
     builder.Services.AddEndpointsApiExplorer();
     builder.Services.AddSwaggerGen(options =>
     {
+        options.OperationFilter<ThinkOnErp.API.Swagger.TenantCompanyHeaderOperationFilter>();
+
         // API Information
         options.SwaggerDoc("superadmin", new Microsoft.OpenApi.Models.OpenApiInfo
         {
@@ -311,7 +324,7 @@ try
         var superAdminControllers = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
         {
             "SuperAdminAuth", "Alerts", "AuditHealth", "AuditTrail",
-            "Company", "Configuration", "Health",
+            "Company", "Health",
             "Features", "KeyManagement", "Modules", "Monitoring", "Screens", "SuperAdmin", 
             "AuditLogs", "SysCodes", "SysSettings", "Currency"
         };
@@ -452,14 +465,14 @@ Example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...'
     // Add authentication and authorization middleware
     app.UseAuthentication();
 
-    // Add request tracing after authentication so user/company/branch claims are available.
-    app.UseMiddleware<ThinkOnErp.API.Middleware.RequestTracingMiddleware>();
-    
-    // Add force logout check middleware (after authentication, before authorization)
-    app.UseMiddleware<ThinkOnErp.API.Middleware.ForceLogoutMiddleware>();
-    
-    // Route requests to tenant schema based on companySchema JWT claim
+    // Resolve the tenant before middleware reads tenant repositories.
     app.UseMiddleware<ThinkOnErp.API.Middleware.SchemaRoutingMiddleware>();
+
+    // Trace the immutable actor and the authoritative effective company.
+    app.UseMiddleware<ThinkOnErp.API.Middleware.RequestTracingMiddleware>();
+
+    // Force logout is tenant-user state, so it runs after schema selection.
+    app.UseMiddleware<ThinkOnErp.API.Middleware.ForceLogoutMiddleware>();
 
     app.UseAuthorization();
 

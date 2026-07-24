@@ -1,6 +1,7 @@
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using ThinkOnErp.API.Authorization;
 using ThinkOnErp.Application.Common;
 using ThinkOnErp.Application.DTOs.TicketConfig;
 using ThinkOnErp.Application.Features.TicketConfig.Commands.UpdateConfigValue;
@@ -20,7 +21,8 @@ namespace ThinkOnErp.API.Controllers;
 /// </summary>
 [ApiController]
 [Route("api/configuration")]
-[Authorize(Policy = "AdminOnly")]
+[TenantScoped]
+[Authorize(Policy = "TenantAdminOnly")]
 public class ConfigurationController : ControllerBase
 {
     private readonly IMediator _mediator;
