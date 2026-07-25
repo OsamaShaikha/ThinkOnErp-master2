@@ -30,5 +30,7 @@ public interface IOracleSchemaService
         long? baseCurrencyId, int roundingRules,
         string? branchLogoPath, string creationUser);
 
+    Task UpdateTenantBranchLogoPathAsync(string schemaName, string schemaPassword, long branchId, string? logoPath, string updateUser);
+    Task<(string? BranchNameEn, string? BranchNameAr, string? BranchLogoPath)> GetBranchDetailsAsync(string schemaName, long branchId);
     Task SeedDeveloperTemplateAsync();
 }

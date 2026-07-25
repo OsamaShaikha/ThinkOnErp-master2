@@ -104,6 +104,12 @@ public class CompanyRepository : ICompanyRepository
             throw new ArgumentException("Company schema name is required.", nameof(companySchema));
         }
 
+        // Verify foreign key currency exists in master schema
+        if (currId.HasValue && !await _context.SysCurrencies.AnyAsync(c => c.Id == currId.Value))
+        {
+            currId = null;
+        }
+
         // 1. Create the company in the master schema
         var company = new SysCompany
         {

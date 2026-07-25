@@ -29,7 +29,8 @@ public class LogoStorageService : ILogoStorageService
             throw new ArgumentException("Logo bytes cannot be empty");
 
         var ext = DetectExtension(logoBytes);
-        var relativePath = $"{entityType}/{entityId}{ext}";
+        var uniqueSuffix = Guid.NewGuid().ToString("N").Substring(0, 8);
+        var relativePath = $"{entityType}/{entityId}_{uniqueSuffix}{ext}";
         var fullPath = Path.Combine(_basePath, relativePath);
         var dir = Path.GetDirectoryName(fullPath);
 

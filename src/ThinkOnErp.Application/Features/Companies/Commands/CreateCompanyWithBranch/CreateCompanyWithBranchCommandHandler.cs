@@ -92,7 +92,7 @@ public class CreateCompanyWithBranchCommandHandler : IRequestHandler<CreateCompa
             {
                 var oldPath = branchLogoPath;
                 branchLogoPath = await _logoStorageService.SaveLogoAsync(request.BranchLogo, "branches", result.BranchId);
-                await _branchRepository.UpdateLogoPathAsync(result.BranchId, branchLogoPath, request.CreationUser);
+                await _oracleSchemaService.UpdateTenantBranchLogoPathAsync(companySchema, companySchema, result.BranchId, branchLogoPath, request.CreationUser);
                 if (oldPath != null) await _logoStorageService.DeleteLogoAsync(oldPath);
             }
 

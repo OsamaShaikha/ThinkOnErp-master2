@@ -248,7 +248,7 @@ public class SchemaRoutingMiddleware
             command.CommandText = $"""
                 SELECT "Id", COMPANY_CODE, COMPANY_SCHEMA
                 FROM "{_masterSchema.ToUpperInvariant()}"."SYS_COMPANY"
-                WHERE NVL(IS_ACTIVE, 'N') IN ('Y', '1')
+                WHERE (TO_CHAR(IS_ACTIVE) = '1' OR UPPER(TO_CHAR(IS_ACTIVE)) = 'Y')
                   AND COMPANY_SCHEMA IS NOT NULL
                 """;
 

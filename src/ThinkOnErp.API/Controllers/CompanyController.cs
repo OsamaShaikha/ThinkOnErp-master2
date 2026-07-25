@@ -8,6 +8,7 @@ using ThinkOnErp.Application.DTOs.Company;
 using ThinkOnErp.Application.Features.Companies.Commands.CreateCompanyWithBranch;
 using ThinkOnErp.Application.Features.Companies.Commands.UpdateCompany;
 using ThinkOnErp.Application.Features.Companies.Commands.DeleteCompany;
+using ThinkOnErp.Application.Features.Companies.Commands.SetCompanyStatus;
 using ThinkOnErp.Application.Features.Companies.Queries.GetAllCompanies;
 using ThinkOnErp.Application.Features.Companies.Queries.GetCompanyById;
 
@@ -281,6 +282,48 @@ public class CompanyController : ControllerBase
             throw;
         }
     }
+
+    [HttpPatch("{id}/status")]
+    [ProducesResponseType(typeof(ApiResponse<bool>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<bool>), StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<ApiResponse<bool>>> SetCompanyStatus(Int64 id, [FromBody] SetCompanyStatusDto dto)
+    {
+        try
+        {
+            _logger.LogInformation("Setting status for company ID {CompanyId} to IsActive={IsActive}", id, dto.IsActive);
+            var userName = User.Identity?.Name ?? "system";
+            var command = new SetCompanyStatusCommand
+            {
+                CompanyId = id,
+                IsActive = dto.IsActive,
+                UpdateUser = userName
+            };
+            var success = await _mediator.Send(command);
+            if (!success)
+            {
+                return NotFound(ApiResponse<bool>.CreateFailure("Company not found", statusCode: 404));
+            }
+            var actionStr = dto.IsActive ? "activated" : "deactivated";
+            return Ok(ApiResponse<bool>.CreateSuccess(true, $"Company {actionStr} successfully", 200));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error setting status for company ID {CompanyId}", id);
+            throw;
+        }
+    }
+
+    [HttpPatch("{id}/activate")]
+    [ProducesResponseType(typeof(ApiResponse<bool>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<bool>), StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<ApiResponse<bool>>> ActivateCompany(Int64 id) =>
+        await SetCompanyStatus(id, new SetCompanyStatusDto { IsActive = true });
+
+    [HttpPatch("{id}/deactivate")]
+    [ProducesResponseType(typeof(ApiResponse<bool>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<bool>), StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<ApiResponse<bool>>> DeactivateCompany(Int64 id) =>
+        await SetCompanyStatus(id, new SetCompanyStatusDto { IsActive = false });
 
     private static async Task<byte[]> ReadFileBytesAsync(IFormFile file)
     {

@@ -14,7 +14,7 @@ public class SysRoleConfiguration : IEntityTypeConfiguration<SysRole>
 builder.Property(e => e.RoleNameAr).HasColumnName("NAME_AR").HasMaxLength(200).IsRequired();
 builder.Property(e => e.RoleNameEn).HasColumnName("NAME_EN").HasMaxLength(200).IsRequired();
         builder.Property(e => e.Note).HasColumnName("NOTE").HasMaxLength(500);
-        builder.Property(e => e.IsActive).HasColumnName("IS_ACTIVE").HasConversion<string>(v => v ? "Y" : "N", v => v == "Y").HasMaxLength(1);
+        builder.Property(e => e.IsActive).HasColumnName("IS_ACTIVE").HasConversion<string>(v => v ? "1" : "0", v => v == "1" || v == "Y" || v == "true").HasMaxLength(1);
         builder.Property(e => e.CreationUser).HasColumnName("CREATION_USER").HasMaxLength(100).IsRequired();
         builder.Property(e => e.CreationDate).HasColumnName("CREATION_DATE");
         builder.Property(e => e.UpdateUser).HasColumnName("UPDATE_USER").HasMaxLength(100);
@@ -66,7 +66,7 @@ builder.Property(e => e.CompanyNameEn).HasColumnName("NAME_EN").HasMaxLength(200
         builder.Property(e => e.CompanyCode).HasColumnName("COMPANY_CODE").HasMaxLength(50);
         builder.Property(e => e.DefaultBranchId).HasColumnName("DEFAULT_BRANCH_ID");
         builder.Property(e => e.CompanyLogoPath).HasColumnName("COMPANY_LOGO_PATH").HasMaxLength(500);
-        builder.Property(e => e.IsActive).HasColumnName("IS_ACTIVE").HasConversion<string>(v => v ? "Y" : "N", v => v == "Y").HasMaxLength(1);
+        builder.Property(e => e.IsActive).HasColumnName("IS_ACTIVE").HasConversion<string>(v => v ? "1" : "0", v => v == "1" || v == "Y" || v == "true").HasMaxLength(1);
         builder.Property(e => e.CreatedBySuperAdminId).HasColumnName("CREATED_BY_SUPER_ADMIN_ID");
         builder.Property(e => e.CompanySchema).HasColumnName("COMPANY_SCHEMA").HasMaxLength(100);
         builder.HasIndex(e => e.CompanySchema).IsUnique().HasDatabaseName("IX_SYS_COMPANY_SCHEMA");
@@ -97,13 +97,13 @@ builder.Property(e => e.BranchNameEn).HasColumnName("NAME_EN").HasMaxLength(200)
         builder.Property(e => e.Fax).HasColumnName("FAX").HasMaxLength(50);
         builder.Property(e => e.Email).HasColumnName("EMAIL").HasMaxLength(200);
         builder.Property(e => e.TaxNumber).HasColumnName("TAX_NUMBER").HasMaxLength(50);
-        builder.Property(e => e.IsHeadBranch).HasColumnName("IS_HEAD_BRANCH").HasConversion<string>(v => v ? "Y" : "N", v => v == "Y").HasMaxLength(1);
+        builder.Property(e => e.IsHeadBranch).HasColumnName("IS_HEAD_BRANCH").HasConversion<string>(v => v ? "1" : "0", v => v == "1" || v == "Y" || v == "true").HasMaxLength(1);
         builder.Property(e => e.DefaultLang).HasColumnName("DEFAULT_LANG");
         builder.Property(e => e.BaseCurrencyId).HasColumnName("BASE_CURRENCY_ID");
         builder.Property(e => e.RoundingRules).HasColumnName("ROUNDING_RULES");
         builder.Property(e => e.BranchLogoPath).HasColumnName("BRANCH_LOGO_PATH").HasMaxLength(500);
         builder.Property(e => e.UsersLimit).HasColumnName("USERS_LIMIT");
-        builder.Property(e => e.IsActive).HasColumnName("IS_ACTIVE").HasConversion<string>(v => v ? "Y" : "N", v => v == "Y").HasMaxLength(1);
+        builder.Property(e => e.IsActive).HasColumnName("IS_ACTIVE").HasConversion<string>(v => v ? "1" : "0", v => v == "1" || v == "Y" || v == "true").HasMaxLength(1);
         builder.Property(e => e.CreationUser).HasColumnName("CREATION_USER").HasMaxLength(100).IsRequired();
         builder.Property(e => e.CreationDate).HasColumnName("CREATION_DATE");
         builder.Property(e => e.UpdateUser).HasColumnName("UPDATE_USER").HasMaxLength(100);
@@ -134,8 +134,8 @@ builder.Property(e => e.FullNameEn).HasColumnName("NAME_EN").HasMaxLength(200).I
         builder.Ignore(e => e.BranchId);
         builder.Property(e => e.Email).HasColumnName("EMAIL").HasMaxLength(200);
         builder.Property(e => e.LastLoginDate).HasColumnName("LAST_LOGIN_DATE");
-        builder.Property(e => e.IsActive).HasColumnName("IS_ACTIVE").HasConversion<string>(v => v ? "Y" : "N", v => v == "Y").HasMaxLength(1);
-        builder.Property(e => e.IsAdmin).HasColumnName("IS_ADMIN").HasConversion<string>(v => v ? "Y" : "N", v => v == "Y").HasMaxLength(1);
+        builder.Property(e => e.IsActive).HasColumnName("IS_ACTIVE").HasConversion<string>(v => v ? "1" : "0", v => v == "1" || v == "Y" || v == "true").HasMaxLength(1);
+        builder.Property(e => e.IsAdmin).HasColumnName("IS_ADMIN").HasConversion<string>(v => v ? "1" : "0", v => v == "1" || v == "Y" || v == "true").HasMaxLength(1);
         builder.Property(e => e.CreationUser).HasColumnName("CREATION_USER").HasMaxLength(100).IsRequired();
         builder.Property(e => e.CreationDate).HasColumnName("CREATION_DATE");
         builder.Property(e => e.UpdateUser).HasColumnName("UPDATE_USER").HasMaxLength(100);
@@ -160,8 +160,8 @@ builder.Property(e => e.FiscalYearNameAr).HasColumnName("NAME_AR").HasMaxLength(
 builder.Property(e => e.FiscalYearNameEn).HasColumnName("NAME_EN").HasMaxLength(200);
         builder.Property(e => e.StartDate).HasColumnName("START_DATE").IsRequired();
         builder.Property(e => e.EndDate).HasColumnName("END_DATE").IsRequired();
-        builder.Property(e => e.IsClosed).HasColumnName("IS_CLOSED").HasConversion<string>(v => v ? "Y" : "N", v => v == "Y").HasMaxLength(1);
-        builder.Property(e => e.IsActive).HasColumnName("IS_ACTIVE").HasConversion<string>(v => v ? "Y" : "N", v => v == "Y").HasMaxLength(1);
+        builder.Property(e => e.IsClosed).HasColumnName("IS_CLOSED").HasConversion<string>(v => v ? "1" : "0", v => v == "1" || v == "Y" || v == "true").HasMaxLength(1);
+        builder.Property(e => e.IsActive).HasColumnName("IS_ACTIVE").HasConversion<string>(v => v ? "1" : "0", v => v == "1" || v == "Y" || v == "true").HasMaxLength(1);
         builder.Property(e => e.CreationUser).HasColumnName("CREATION_USER").HasMaxLength(100).IsRequired();
         builder.Property(e => e.CreationDate).HasColumnName("CREATION_DATE");
         builder.Property(e => e.UpdateUser).HasColumnName("UPDATE_USER").HasMaxLength(100);
@@ -189,9 +189,9 @@ builder.Property(e => e.NameEn).HasColumnName("NAME_EN").HasMaxLength(200).IsReq
         builder.HasIndex(e => e.Email).IsUnique();
         builder.Property(e => e.Phone).HasColumnName("PHONE").HasMaxLength(50);
         builder.Property(e => e.TwoFaSecret).HasColumnName("TWO_FA_SECRET").HasMaxLength(200);
-        builder.Property(e => e.TwoFaEnabled).HasColumnName("TWO_FA_ENABLED").HasConversion<string>(v => v ? "Y" : "N", v => v == "Y").HasMaxLength(1);
+        builder.Property(e => e.TwoFaEnabled).HasColumnName("TWO_FA_ENABLED").HasConversion<string>(v => v ? "1" : "0", v => v == "1" || v == "Y" || v == "true").HasMaxLength(1);
         builder.Property(e => e.PinHash).HasColumnName("PIN_HASH").HasMaxLength(256);
-        builder.Property(e => e.IsActive).HasColumnName("IS_ACTIVE").HasConversion<string>(v => v ? "Y" : "N", v => v == "Y").HasMaxLength(1);
+        builder.Property(e => e.IsActive).HasColumnName("IS_ACTIVE").HasConversion<string>(v => v ? "1" : "0", v => v == "1" || v == "Y" || v == "true").HasMaxLength(1);
         builder.Property(e => e.LastLoginDate).HasColumnName("LAST_LOGIN_DATE");
         builder.Property(e => e.CreationUser).HasColumnName("CREATION_USER").HasMaxLength(100).IsRequired();
         builder.Property(e => e.CreationDate).HasColumnName("CREATION_DATE");
@@ -215,7 +215,7 @@ public class SysSystemConfiguration : IEntityTypeConfiguration<SysSystem>
         builder.Property(e => e.DescriptionE).HasColumnName("DESCRIPTION_E").HasMaxLength(500);
         builder.Property(e => e.Icon).HasColumnName("ICON").HasMaxLength(100);
         builder.Property(e => e.DisplayOrder).HasColumnName("DISPLAY_ORDER");
-        builder.Property(e => e.IsActive).HasColumnName("IS_ACTIVE").HasConversion<string>(v => v ? "Y" : "N", v => v == "Y").HasMaxLength(1);
+        builder.Property(e => e.IsActive).HasColumnName("IS_ACTIVE").HasConversion<string>(v => v ? "1" : "0", v => v == "1" || v == "Y" || v == "true").HasMaxLength(1);
         builder.Property(e => e.CreationUser).HasColumnName("CREATION_USER").HasMaxLength(100).IsRequired();
         builder.Property(e => e.CreationDate).HasColumnName("CREATION_DATE");
         builder.Property(e => e.UpdateUser).HasColumnName("UPDATE_USER").HasMaxLength(100);
@@ -241,7 +241,7 @@ public class SysScreenConfiguration : IEntityTypeConfiguration<SysScreen>
         builder.Property(e => e.DescriptionE).HasColumnName("DESCRIPTION_E").HasMaxLength(500);
         builder.Property(e => e.Icon).HasColumnName("ICON").HasMaxLength(100);
         builder.Property(e => e.DisplayOrder).HasColumnName("DISPLAY_ORDER");
-        builder.Property(e => e.IsActive).HasColumnName("IS_ACTIVE").HasConversion<string>(v => v ? "Y" : "N", v => v == "Y").HasMaxLength(1);
+        builder.Property(e => e.IsActive).HasColumnName("IS_ACTIVE").HasConversion<string>(v => v ? "1" : "0", v => v == "1" || v == "Y" || v == "true").HasMaxLength(1);
         builder.Property(e => e.CreationUser).HasColumnName("CREATION_USER").HasMaxLength(100).IsRequired();
         builder.Property(e => e.CreationDate).HasColumnName("CREATION_DATE");
         builder.Property(e => e.UpdateUser).HasColumnName("UPDATE_USER").HasMaxLength(100);

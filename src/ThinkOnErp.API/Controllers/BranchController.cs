@@ -7,6 +7,7 @@ using ThinkOnErp.Application.DTOs.Branch;
 using ThinkOnErp.Application.Features.Branches.Commands.CreateBranch;
 using ThinkOnErp.Application.Features.Branches.Commands.UpdateBranch;
 using ThinkOnErp.Application.Features.Branches.Commands.DeleteBranch;
+using ThinkOnErp.Application.Features.Branches.Commands.SetBranchStatus;
 using ThinkOnErp.Application.Features.Branches.Queries.GetAllBranches;
 using ThinkOnErp.Application.Features.Branches.Queries.GetBranchById;
 using ThinkOnErp.Application.Features.Branches.Queries.GetBranchesByCompanyId;
@@ -398,6 +399,48 @@ public class BranchController : ControllerBase
             throw;
         }
     }
+
+    [HttpPatch("{id}/status")]
+    [ProducesResponseType(typeof(ApiResponse<bool>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<bool>), StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<ApiResponse<bool>>> SetBranchStatus(Int64 id, [FromBody] SetBranchStatusDto dto)
+    {
+        try
+        {
+            _logger.LogInformation("Setting status for branch ID {BranchId} to IsActive={IsActive}", id, dto.IsActive);
+            var userName = User.Identity?.Name ?? "system";
+            var command = new SetBranchStatusCommand
+            {
+                BranchId = id,
+                IsActive = dto.IsActive,
+                UpdateUser = userName
+            };
+            var success = await _mediator.Send(command);
+            if (!success)
+            {
+                return NotFound(ApiResponse<bool>.CreateFailure("Branch not found", statusCode: 404));
+            }
+            var actionStr = dto.IsActive ? "activated" : "deactivated";
+            return Ok(ApiResponse<bool>.CreateSuccess(true, $"Branch {actionStr} successfully", 200));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error setting status for branch ID {BranchId}", id);
+            throw;
+        }
+    }
+
+    [HttpPatch("{id}/activate")]
+    [ProducesResponseType(typeof(ApiResponse<bool>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<bool>), StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<ApiResponse<bool>>> ActivateBranch(Int64 id) =>
+        await SetBranchStatus(id, new SetBranchStatusDto { IsActive = true });
+
+    [HttpPatch("{id}/deactivate")]
+    [ProducesResponseType(typeof(ApiResponse<bool>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<bool>), StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<ApiResponse<bool>>> DeactivateBranch(Int64 id) =>
+        await SetBranchStatus(id, new SetBranchStatusDto { IsActive = false });
 
     private static async Task<byte[]> ReadFileBytesAsync(IFormFile file)
     {
