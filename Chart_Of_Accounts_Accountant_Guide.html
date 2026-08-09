@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>دليل المحاسب: هيكل شجرة الحسابات</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Cairo', sans-serif;
+            background: #ffffff;
+            color: #1f2937;
+            line-height: 1.8;
+            margin: 0;
+            padding: 40px;
+        }
+        .header {
+            text-align: center;
+            padding: 30px;
+            background: #f3f4f6;
+            border-bottom: 4px solid #2563eb;
+            margin-bottom: 40px;
+            border-radius: 8px 8px 0 0;
+        }
+        h1 { color: #1e3a8a; margin: 0 0 10px 0; font-size: 28px; }
+        .subtitle { color: #4b5563; font-size: 18px; }
+        
+        h2 {
+            color: #1d4ed8;
+            border-bottom: 2px solid #e5e7eb;
+            padding-bottom: 10px;
+            margin-top: 40px;
+            font-size: 22px;
+        }
+        h3 {
+            color: #4338ca;
+            margin-top: 20px;
+        }
+        
+        .box {
+            background: #f9fafb;
+            border: 1px solid #e5e7eb;
+            border-right: 4px solid #3b82f6;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+        .box.warning { border-right-color: #ef4444; background: #fef2f2; }
+        .box.success { border-right-color: #10b981; background: #ecfdf5; }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            font-size: 14px;
+        }
+        th, td {
+            border: 1px solid #d1d5db;
+            padding: 12px;
+            text-align: right;
+        }
+        th {
+            background: #f3f4f6;
+            color: #111827;
+            font-weight: 700;
+        }
+        tr:nth-child(even) { background: #f9fafb; }
+
+        .number-format {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin: 30px 0;
+            direction: ltr;
+        }
+        .digit {
+            background: #eff6ff;
+            border: 1px solid #bfdbfe;
+            padding: 10px 20px;
+            border-radius: 6px;
+            text-align: center;
+        }
+        .digit strong { display: block; font-size: 24px; color: #1d4ed8; font-family: monospace; }
+        .digit span { font-size: 12px; color: #4b5563; }
+        .dash { font-size: 24px; color: #9ca3af; align-self: center; }
+
+        .tree-container {
+            background: #ffffff;
+            border: 1px solid #e5e7eb;
+            padding: 20px;
+            border-radius: 8px;
+            font-family: monospace;
+            font-size: 14px;
+            direction: ltr;
+            text-align: left;
+            margin-top: 20px;
+            page-break-inside: avoid;
+        }
+        .tree-line { padding: 4px 0; }
+        .level-1 { font-weight: bold; color: #1e3a8a; font-size: 16px; margin-top: 15px; border-bottom: 1px solid #e5e7eb; }
+        .level-2 { font-weight: bold; color: #047857; margin-left: 20px; }
+        .level-3 { color: #b45309; margin-left: 40px; }
+        .level-4 { color: #6d28d9; margin-left: 60px; }
+        .level-5 { color: #4b5563; margin-left: 80px; }
+        .code { font-weight: bold; display: inline-block; width: 120px; }
+        .badge { display: inline-block; padding: 2px 8px; border-radius: 12px; font-size: 11px; font-family: 'Cairo'; margin-left: 10px; }
+        .badge.postable { background: #dcfce7; color: #166534; border: 1px solid #bbf7d0; }
+        .badge.header { background: #f3f4f6; color: #4b5563; border: 1px solid #e5e7eb; }
+        .badge.control { background: #fee2e2; color: #991b1b; border: 1px solid #fecaca; }
+
+        .page-break { page-break-before: always; }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h1>دليل المحاسب: الدليل المحاسبي الموحد (شجرة الحسابات)</h1>
+        <div class="subtitle">نظام ThinkOnErp - الإصدار 2.0</div>
+    </div>
+
+    <h2>1. مقدمة عن الدليل المحاسبي</h2>
+    <p>
+        تم بناء شجرة الحسابات في نظام ThinkOnErp لتلبي متطلبات الشركات متعددة الفروع. يعتمد النظام على <strong>7 فئات رئيسية</strong> بدلاً من 5 (تم فصل تكلفة البضاعة المباعة، والمصاريف التشغيلية، والمصاريف الأخرى لضمان دقة قائمة الدخل).
+    </p>
+
+    <div class="box">
+        <strong>الفئات السبعة الرئيسية:</strong>
+        <ol>
+            <li><strong>الأصول (Assets)</strong>: طبيعتها مدينة (D). تظهر في الميزانية العمومية.</li>
+            <li><strong>الالتزامات (Liabilities)</strong>: طبيعتها دائنة (C). تظهر في الميزانية العمومية.</li>
+            <li><strong>حقوق الملكية (Equity)</strong>: طبيعتها دائنة (C). تظهر في الميزانية العمومية.</li>
+            <li><strong>الإيرادات (Revenue)</strong>: طبيعتها دائنة (C). تظهر في قائمة الدخل.</li>
+            <li><strong>تكلفة المبيعات (COGS)</strong>: طبيعتها مدينة (D). تظهر في قائمة الدخل.</li>
+            <li><strong>المصاريف التشغيلية (OPEX)</strong>: طبيعتها مدينة (D). تظهر في قائمة الدخل.</li>
+            <li>(الرقم 7 محجوز للتوسعات المستقبلية).</li>
+            <li><strong>مصاريف وأرباح أخرى (Other)</strong>: طبيعتها مدينة/دائنة. تظهر في قائمة الدخل.</li>
+        </ol>
+    </div>
+
+    <h2>2. نظام ترقيم الحسابات (11 خانة)</h2>
+    <p>
+        يستخدم النظام آلية الترقيم الخماسي <strong>(1-2-2-2-4)</strong> لضمان المرونة واستيعاب عدد ضخم من الحسابات الفرعية لكل فرع.
+    </p>
+
+    <div class="number-format">
+        <div class="digit"><strong>X</strong><span>المستوى 1<br>(فئة رئيسية)</span></div>
+        <div class="dash">-</div>
+        <div class="digit"><strong>XX</strong><span>المستوى 2<br>(فئة فرعية)</span></div>
+        <div class="dash">-</div>
+        <div class="digit"><strong>XX</strong><span>المستوى 3<br>(مجموعة)</span></div>
+        <div class="dash">-</div>
+        <div class="digit"><strong>XX</strong><span>المستوى 4<br>(مجموعة فرعية)</span></div>
+        <div class="dash">-</div>
+        <div class="digit"><strong>XXXX</strong><span>المستوى 5<br>(حساب تفصيلي)</span></div>
+    </div>
+
+    <table>
+        <tr>
+            <th>المستوى</th>
+            <th>نوع الحساب</th>
+            <th>هل يقبل قيود (ترحيل)؟</th>
+            <th>مثال</th>
+        </tr>
+        <tr>
+            <td>المستوى 1 إلى 4</td>
+            <td>تجميعي (Header)</td>
+            <td>❌ لا يقبل قيود أبداً (يستخدم للعرض وتجميع الأرصدة)</td>
+            <td>1-01-01 النقد والبنوك</td>
+        </tr>
+        <tr>
+            <td>المستوى 5</td>
+            <td>تفصيلي (Detail)</td>
+            <td>✅ نعم، هو المستوى الوحيد الذي يتم عمل القيود عليه</td>
+            <td>1-01-01-02-0001 بنك الراجحي - فرع الرياض</td>
+        </tr>
+    </table>
+
+    <div class="box warning">
+        <strong>حسابات التحكم (Control Accounts):</strong>
+        <p>بعض الحسابات التفصيلية مثل (ذمم العملاء 1-01-02-01-0001) و (ذمم الموردين 2-01-01-01-0001) هي حسابات تحكم مغلقة، مما يعني أنه لا يمكن عمل "قيد يومية يدوي" عليها مباشرة. يتم الترحيل إليها آلياً من شاشات فواتير المبيعات والمشتريات والسندات.</p>
+    </div>
+
+    <div class="box success">
+        <strong>حسابات الفروع:</strong>
+        <p>في هذا النظام، يمكن تقييد الحساب التفصيلي لفرع معين. مثلاً: يمكن إنشاء "صندوق الكاشير 1" وربطه بفرع الرياض فقط، بحيث لا يظهر هذا الحساب لمحاسب فرع جدة.</p>
+    </div>
+
+    <div class="page-break"></div>
+
+    <h2>3. استعراض شجرة الحسابات</h2>
+    <p>فيما يلي الهيكل الكامل المعتمد لشجرة الحسابات لجميع الفئات:</p>
+
+    <div class="tree-container">
+        <!-- الأصول -->
+        <div class="tree-line level-1"><span class="code">1</span> الأصول (Assets)</div>
+        <div class="tree-line level-2"><span class="code">1-01</span> أصول متداولة</div>
+        <div class="tree-line level-3"><span class="code">1-01-01</span> النقد والبنوك</div>
+        <div class="tree-line level-4"><span class="code">1-01-01-01</span> الصندوق</div>
+        <div class="tree-line level-5"><span class="code">1-01-01-01-0001</span> الصندوق الرئيسي <span class="badge postable">حساب تفصيلي / يقبل قيود</span></div>
+        <div class="tree-line level-4"><span class="code">1-01-01-02</span> البنوك</div>
+        <div class="tree-line level-5"><span class="code">1-01-01-02-0001</span> البنك الرئيسي <span class="badge postable">حساب تفصيلي</span></div>
+        <div class="tree-line level-4"><span class="code">1-01-01-03</span> تحت التحصيل</div>
+        <div class="tree-line level-5"><span class="code">1-01-01-03-0001</span> مبالغ تحت التحصيل (Undeposited Funds) <span class="badge postable">حساب تفصيلي</span></div>
+        
+        <div class="tree-line level-3"><span class="code">1-01-02</span> الذمم المدينة</div>
+        <div class="tree-line level-4"><span class="code">1-01-02-01</span> ذمم العملاء</div>
+        <div class="tree-line level-5"><span class="code">1-01-02-01-0001</span> ذمم العملاء - تحكم (AR Control) <span class="badge control">حساب تحكم آلي</span></div>
+        <div class="tree-line level-4"><span class="code">1-01-02-02</span> أوراق قبض</div>
+        <div class="tree-line level-5"><span class="code">1-01-02-02-0001</span> أوراق قبض <span class="badge postable">حساب تفصيلي</span></div>
+        <div class="tree-line level-4"><span class="code">1-01-02-03</span> ذمم موظفين</div>
+        <div class="tree-line level-5"><span class="code">1-01-02-03-0001</span> سلف وذمم موظفين <span class="badge postable">حساب تفصيلي</span></div>
+        <div class="tree-line level-4"><span class="code">1-01-02-04</span> مخصصات ذمم</div>
+        <div class="tree-line level-5"><span class="code">1-01-02-04-0001</span> مخصص ديون مشكوك فيها <span class="badge postable">حساب تفصيلي</span></div>
+
+        <div class="tree-line level-3"><span class="code">1-01-03</span> المخزون</div>
+        <div class="tree-line level-4"><span class="code">1-01-03-01</span> بضاعة جاهزة</div>
+        <div class="tree-line level-5"><span class="code">1-01-03-01-0001</span> بضاعة جاهزة <span class="badge postable">حساب تفصيلي</span></div>
+        <div class="tree-line level-4"><span class="code">1-01-03-02</span> بضاعة بالطريق</div>
+        <div class="tree-line level-5"><span class="code">1-01-03-02-0001</span> بضاعة بالطريق <span class="badge postable">حساب تفصيلي</span></div>
+        
+        <div class="tree-line level-3"><span class="code">1-01-04</span> أصول ضريبية ومقدمة</div>
+        <div class="tree-line level-4"><span class="code">1-01-04-01</span> ضريبة مدخلات</div>
+        <div class="tree-line level-5"><span class="code">1-01-04-01-0001</span> ضريبة قيمة مضافة مستردة <span class="badge postable">حساب تفصيلي</span></div>
+        <div class="tree-line level-4"><span class="code">1-01-04-02</span> مصاريف مقدمة</div>
+        <div class="tree-line level-5"><span class="code">1-01-04-02-0001</span> إيجار وتأمين مقدم <span class="badge postable">حساب تفصيلي</span></div>
+
+        <div class="tree-line level-2"><span class="code">1-02</span> أصول ثابتة</div>
+        <div class="tree-line level-3"><span class="code">1-02-01</span> الأصول الملموسة (التكلفة)</div>
+        <div class="tree-line level-4"><span class="code">1-02-01-01</span> مباني ومعدات</div>
+        <div class="tree-line level-5"><span class="code">1-02-01-01-0001</span> مباني <span class="badge postable">حساب تفصيلي</span></div>
+        <div class="tree-line level-5"><span class="code">1-02-01-01-0002</span> سيارات <span class="badge postable">حساب تفصيلي</span></div>
+        <div class="tree-line level-5"><span class="code">1-02-01-01-0003</span> أجهزة حاسوب <span class="badge postable">حساب تفصيلي</span></div>
+        <div class="tree-line level-3"><span class="code">1-02-02</span> مجمعات الاستهلاك</div>
+        <div class="tree-line level-4"><span class="code">1-02-02-01</span> مجمعات</div>
+        <div class="tree-line level-5"><span class="code">1-02-02-01-0001</span> مجمع استهلاك سيارات <span class="badge postable">حساب تفصيلي</span></div>
+        <div class="tree-line level-5"><span class="code">1-02-02-01-0002</span> مجمع استهلاك أجهزة <span class="badge postable">حساب تفصيلي</span></div>
+
+        <!-- الالتزامات -->
+        <div class="tree-line level-1"><span class="code">2</span> الالتزامات (Liabilities)</div>
+        <div class="tree-line level-2"><span class="code">2-01</span> التزامات متداولة</div>
+        <div class="tree-line level-3"><span class="code">2-01-01</span> الذمم الدائنة</div>
+        <div class="tree-line level-4"><span class="code">2-01-01-01</span> ذمم الموردين</div>
+        <div class="tree-line level-5"><span class="code">2-01-01-01-0001</span> ذمم الموردين - تحكم (AP Control) <span class="badge control">حساب تحكم آلي</span></div>
+        <div class="tree-line level-4"><span class="code">2-01-01-02</span> أوراق دفع</div>
+        <div class="tree-line level-5"><span class="code">2-01-01-02-0001</span> أوراق دفع (شيكات مؤجلة) <span class="badge postable">حساب تفصيلي</span></div>
+
+        <div class="tree-line level-3"><span class="code">2-01-02</span> مستحقات وأرصدة دائنة</div>
+        <div class="tree-line level-4"><span class="code">2-01-02-01</span> رواتب مستحقة</div>
+        <div class="tree-line level-5"><span class="code">2-01-02-01-0001</span> رواتب مستحقة الدفع <span class="badge postable">حساب تفصيلي</span></div>
+        <div class="tree-line level-4"><span class="code">2-01-02-02</span> ضرائب مستحقة</div>
+        <div class="tree-line level-5"><span class="code">2-01-02-02-0001</span> ضريبة قيمة مضافة مستحقة (VAT Payable) <span class="badge postable">حساب تفصيلي</span></div>
+
+        <div class="tree-line level-3"><span class="code">2-01-03</span> التزامات مؤجلة</div>
+        <div class="tree-line level-4"><span class="code">2-01-03-01</span> استلام بدون فاتورة (GRNI)</div>
+        <div class="tree-line level-5"><span class="code">2-01-03-01-0001</span> بضاعة مستلمة غير مفوترة (GRNI) <span class="badge postable">حساب تفصيلي</span></div>
+        <div class="tree-line level-4"><span class="code">2-01-03-02</span> إيرادات مؤجلة</div>
+        <div class="tree-line level-5"><span class="code">2-01-03-02-0001</span> إيرادات مقبوضة مقدماً <span class="badge postable">حساب تفصيلي</span></div>
+
+        <div class="tree-line level-2"><span class="code">2-02</span> التزامات طويلة الأجل</div>
+        <div class="tree-line level-3"><span class="code">2-02-01</span> قروض ومخصصات</div>
+        <div class="tree-line level-4"><span class="code">2-02-01-01</span> قروض</div>
+        <div class="tree-line level-5"><span class="code">2-02-01-01-0001</span> قروض بنكية طويلة الأجل <span class="badge postable">حساب تفصيلي</span></div>
+        <div class="tree-line level-4"><span class="code">2-02-01-02</span> مخصص نهاية الخدمة</div>
+        <div class="tree-line level-5"><span class="code">2-02-01-02-0001</span> مخصص مكافأة نهاية الخدمة <span class="badge postable">حساب تفصيلي</span></div>
+
+        <!-- حقوق الملكية -->
+        <div class="tree-line level-1"><span class="code">3</span> حقوق الملكية (Equity)</div>
+        <div class="tree-line level-2"><span class="code">3-01</span> رأس المال والاحتياطيات</div>
+        <div class="tree-line level-3"><span class="code">3-01-01</span> رأس المال</div>
+        <div class="tree-line level-4"><span class="code">3-01-01-01</span> رأس المال المدفوع</div>
+        <div class="tree-line level-5"><span class="code">3-01-01-01-0001</span> رأس المال <span class="badge postable">حساب تفصيلي</span></div>
+        <div class="tree-line level-3"><span class="code">3-01-02</span> الأرباح المحتجزة</div>
+        <div class="tree-line level-4"><span class="code">3-01-02-01</span> أرباح سنوات سابقة</div>
+        <div class="tree-line level-5"><span class="code">3-01-02-01-0001</span> أرباح محتجزة - سنوات سابقة <span class="badge postable">حساب تفصيلي</span></div>
+        <div class="tree-line level-4"><span class="code">3-01-02-02</span> أرباح السنة الحالية</div>
+        <div class="tree-line level-5"><span class="code">3-01-02-02-0001</span> أرباح/خسائر الفترة الحالية <span class="badge postable">حساب تفصيلي</span></div>
+
+        <!-- الإيرادات -->
+        <div class="tree-line level-1"><span class="code">4</span> الإيرادات (Revenue)</div>
+        <div class="tree-line level-2"><span class="code">4-01</span> المبيعات</div>
+        <div class="tree-line level-3"><span class="code">4-01-01</span> مبيعات البضائع</div>
+        <div class="tree-line level-4"><span class="code">4-01-01-01</span> مبيعات جملة وتجزئة</div>
+        <div class="tree-line level-5"><span class="code">4-01-01-01-0001</span> مبيعات البضائع <span class="badge postable">حساب تفصيلي</span></div>
+        <div class="tree-line level-3"><span class="code">4-01-02</span> الخصومات والمردودات</div>
+        <div class="tree-line level-4"><span class="code">4-01-02-01</span> خصومات ومردودات</div>
+        <div class="tree-line level-5"><span class="code">4-01-02-01-0001</span> مردودات مبيعات <span class="badge postable">حساب تفصيلي</span></div>
+        <div class="tree-line level-5"><span class="code">4-01-02-01-0002</span> خصم مسموح به <span class="badge postable">حساب تفصيلي</span></div>
+
+        <!-- تكلفة المبيعات -->
+        <div class="tree-line level-1"><span class="code">5</span> تكلفة البضاعة المباعة (COGS)</div>
+        <div class="tree-line level-2"><span class="code">5-01</span> التكلفة المباشرة</div>
+        <div class="tree-line level-3"><span class="code">5-01-01</span> المشتريات وتكلفة المبيعات</div>
+        <div class="tree-line level-4"><span class="code">5-01-01-01</span> تكلفة فعلية</div>
+        <div class="tree-line level-5"><span class="code">5-01-01-01-0001</span> تكلفة البضاعة المباعة <span class="badge postable">حساب تفصيلي</span></div>
+        <div class="tree-line level-4"><span class="code">5-01-01-02</span> فروقات المخزون</div>
+        <div class="tree-line level-5"><span class="code">5-01-01-02-0001</span> فروقات جرد وتسويات مخزون <span class="badge postable">حساب تفصيلي</span></div>
+
+        <!-- المصاريف التشغيلية -->
+        <div class="tree-line level-1"><span class="code">6</span> المصاريف التشغيلية (OPEX)</div>
+        <div class="tree-line level-2"><span class="code">6-01</span> مصاريف بيعية وتسويقية</div>
+        <div class="tree-line level-3"><span class="code">6-01-01</span> تسويق وعمولات</div>
+        <div class="tree-line level-4"><span class="code">6-01-01-01</span> عمولات وإعلان</div>
+        <div class="tree-line level-5"><span class="code">6-01-01-01-0001</span> عمولات مبيعات <span class="badge postable">حساب تفصيلي</span></div>
+        <div class="tree-line level-5"><span class="code">6-01-01-01-0002</span> مصاريف تسويق وإعلان <span class="badge postable">حساب تفصيلي</span></div>
+        
+        <div class="tree-line level-2"><span class="code">6-02</span> مصاريف عمومية وإدارية</div>
+        <div class="tree-line level-3"><span class="code">6-02-01</span> رواتب وأجور</div>
+        <div class="tree-line level-4"><span class="code">6-02-01-01</span> الرواتب</div>
+        <div class="tree-line level-5"><span class="code">6-02-01-01-0001</span> مصاريف رواتب وأجور <span class="badge postable">حساب تفصيلي</span></div>
+        <div class="tree-line level-3"><span class="code">6-02-02</span> مصاريف تشغيلية</div>
+        <div class="tree-line level-4"><span class="code">6-02-02-01</span> إيجار وخدمات</div>
+        <div class="tree-line level-5"><span class="code">6-02-02-01-0001</span> مصاريف إيجار المكاتب <span class="badge postable">حساب تفصيلي</span></div>
+        <div class="tree-line level-5"><span class="code">6-02-02-01-0002</span> مصاريف كهرباء وماء <span class="badge postable">حساب تفصيلي</span></div>
+
+        <!-- إيرادات ومصاريف أخرى -->
+        <div class="tree-line level-1"><span class="code">8</span> مصاريف وأرباح أخرى (Other)</div>
+        <div class="tree-line level-2"><span class="code">8-01</span> أرباح وخسائر غير تشغيلية</div>
+        <div class="tree-line level-3"><span class="code">8-01-01</span> فروقات عملة وفوائد</div>
+        <div class="tree-line level-4"><span class="code">8-01-01-01</span> فوائد وتمويل</div>
+        <div class="tree-line level-5"><span class="code">8-01-01-01-0001</span> أرباح فوائد بنكية <span class="badge postable">حساب تفصيلي</span></div>
+        <div class="tree-line level-5"><span class="code">8-01-01-01-0002</span> مصاريف عمولات بنكية وتمويل <span class="badge postable">حساب تفصيلي</span></div>
+        <div class="tree-line level-4"><span class="code">8-01-01-02</span> فروقات عملة</div>
+        <div class="tree-line level-5"><span class="code">8-01-01-02-0001</span> (أرباح) / خسائر فروقات عملة <span class="badge postable">حساب تفصيلي</span></div>
+        
+    </div>
+
+</body>
+</html>

@@ -1,0 +1,693 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>دليل معماري: إدارة صلاحيات الأنظمة وحجب الشاشات والميزات للفروع | ThinkOnErp</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;800;900&family=Fira+Code:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #0b0f19;
+            --bg-card: #131b2e;
+            --bg-card-hover: #1a243d;
+            --accent-purple: #8b5cf6;
+            --accent-blue: #3b82f6;
+            --accent-cyan: #06b6d4;
+            --accent-red: #ef4444;
+            --accent-emerald: #10b981;
+            --accent-amber: #f59e0b;
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+            --border-color: rgba(255, 255, 255, 0.08);
+            --border-highlight: rgba(139, 92, 246, 0.3);
+            --glow-purple: rgba(139, 92, 246, 0.15);
+            --glow-blue: rgba(59, 130, 246, 0.15);
+            --glow-red: rgba(239, 68, 68, 0.15);
+            --font-main: 'Cairo', system-ui, -apple-system, sans-serif;
+            --font-code: 'Fira Code', monospace;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            font-family: var(--font-main);
+            line-height: 1.7;
+            padding: 2rem 1rem;
+            background-image: 
+                radial-gradient(circle at 10% 20%, rgba(139, 92, 246, 0.05) 0%, transparent 40%),
+                radial-gradient(circle at 90% 80%, rgba(6, 182, 212, 0.05) 0%, transparent 40%);
+            background-attachment: fixed;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        /* Header Header */
+        .header-card {
+            background: linear-gradient(135deg, rgba(19, 27, 46, 0.9) 0%, rgba(26, 36, 61, 0.7) 100%);
+            border: 1px solid var(--border-highlight);
+            border-radius: 20px;
+            padding: 3rem 2.5rem;
+            margin-bottom: 2.5rem;
+            position: relative;
+            overflow: hidden;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4), 0 0 30px var(--glow-purple);
+        }
+
+        .header-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(90deg, var(--accent-purple), var(--accent-blue), var(--accent-cyan));
+        }
+
+        .badge-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(139, 92, 246, 0.15);
+            color: var(--accent-purple);
+            border: 1px solid rgba(139, 92, 246, 0.3);
+            padding: 6px 16px;
+            border-radius: 50px;
+            font-size: 0.85rem;
+            font-weight: 700;
+            margin-bottom: 1.25rem;
+        }
+
+        .header-title {
+            font-size: 2.3rem;
+            font-weight: 900;
+            background: linear-gradient(135deg, #ffffff 0%, #cbd5e1 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 1rem;
+            letter-spacing: -0.5px;
+        }
+
+        .header-subtitle {
+            font-size: 1.1rem;
+            color: var(--text-secondary);
+            max-width: 900px;
+        }
+
+        /* Hierarchy Banner */
+        .hierarchy-banner {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 1.25rem;
+            margin-bottom: 3rem;
+        }
+
+        .level-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 1.5rem;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+
+        .level-card:hover {
+            transform: translateY(-4px);
+            border-color: var(--border-highlight);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+        }
+
+        .level-num {
+            font-size: 0.8rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 0.5rem;
+        }
+
+        .level-1 .level-num { color: var(--accent-purple); }
+        .level-2 .level-num { color: var(--accent-blue); }
+        .level-3 .level-num { color: var(--accent-cyan); }
+        .level-4 .level-num { color: var(--accent-emerald); }
+
+        .level-title {
+            font-size: 1.2rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: var(--text-primary);
+        }
+
+        .level-desc {
+            font-size: 0.88rem;
+            color: var(--text-secondary);
+        }
+
+        /* Section Styling */
+        .section-block {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 18px;
+            padding: 2.2rem;
+            margin-bottom: 2.5rem;
+        }
+
+        .section-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 1.8rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .section-icon {
+            width: 42px;
+            height: 42px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.3rem;
+            font-weight: bold;
+        }
+
+        .icon-purple { background: rgba(139, 92, 246, 0.15); color: var(--accent-purple); }
+        .icon-blue { background: rgba(59, 130, 246, 0.15); color: var(--accent-blue); }
+        .icon-red { background: rgba(239, 68, 68, 0.15); color: var(--accent-red); }
+        .icon-emerald { background: rgba(16, 185, 129, 0.15); color: var(--accent-emerald); }
+
+        .section-title {
+            font-size: 1.45rem;
+            font-weight: 800;
+            color: var(--text-primary);
+        }
+
+        /* Flow Diagram */
+        .flow-diagram {
+            display: flex;
+            flex-direction: column;
+            gap: 1.2rem;
+            margin: 1.5rem 0;
+        }
+
+        .flow-step {
+            display: flex;
+            align-items: flex-start;
+            gap: 1.2rem;
+            background: rgba(11, 15, 25, 0.6);
+            border: 1px solid var(--border-color);
+            border-radius: 14px;
+            padding: 1.2rem 1.5rem;
+        }
+
+        .step-badge {
+            background: var(--bg-card-hover);
+            color: var(--accent-cyan);
+            font-weight: 800;
+            font-size: 0.9rem;
+            padding: 6px 14px;
+            border-radius: 8px;
+            border: 1px solid rgba(6, 182, 212, 0.3);
+            white-space: nowrap;
+        }
+
+        .step-content h4 {
+            font-size: 1.05rem;
+            font-weight: 700;
+            margin-bottom: 0.4rem;
+            color: var(--text-primary);
+        }
+
+        .step-content p {
+            font-size: 0.92rem;
+            color: var(--text-secondary);
+        }
+
+        /* API Endpoint Cards */
+        .endpoint-card {
+            background: rgba(11, 15, 25, 0.8);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            margin-bottom: 1.2rem;
+            overflow: hidden;
+        }
+
+        .endpoint-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 1rem 1.4rem;
+            background: rgba(255, 255, 255, 0.02);
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .method-badge {
+            font-family: var(--font-code);
+            font-weight: 700;
+            font-size: 0.82rem;
+            padding: 4px 10px;
+            border-radius: 6px;
+            text-transform: uppercase;
+        }
+
+        .method-put { background: rgba(245, 158, 11, 0.2); color: var(--accent-amber); border: 1px solid rgba(245, 158, 11, 0.4); }
+        .method-post { background: rgba(16, 185, 129, 0.2); color: var(--accent-emerald); border: 1px solid rgba(16, 185, 129, 0.4); }
+        .method-delete { background: rgba(239, 68, 68, 0.2); color: var(--accent-red); border: 1px solid rgba(239, 68, 68, 0.4); }
+        .method-get { background: rgba(59, 130, 246, 0.2); color: var(--accent-blue); border: 1px solid rgba(59, 130, 246, 0.4); }
+
+        .endpoint-url {
+            font-family: var(--font-code);
+            font-size: 0.95rem;
+            color: var(--text-primary);
+            word-break: break-all;
+        }
+
+        .endpoint-body {
+            padding: 1.2rem 1.4rem;
+        }
+
+        .endpoint-desc {
+            font-size: 0.92rem;
+            color: var(--text-secondary);
+            margin-bottom: 0.8rem;
+        }
+
+        /* Code Block */
+        .code-block {
+            background: #070a12;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            padding: 1.1rem;
+            font-family: var(--font-code);
+            font-size: 0.85rem;
+            color: #a7f3d0;
+            direction: ltr;
+            overflow-x: auto;
+            white-space: pre;
+            line-height: 1.6;
+        }
+
+        /* Table Styling */
+        .custom-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+            border-radius: 12px;
+            overflow: hidden;
+            border: 1px solid var(--border-color);
+        }
+
+        .custom-table th {
+            background: rgba(255, 255, 255, 0.04);
+            color: var(--text-primary);
+            font-weight: 700;
+            font-size: 0.9rem;
+            padding: 1rem;
+            text-align: right;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .custom-table td {
+            padding: 1rem;
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            border-bottom: 1px solid var(--border-color);
+            background: rgba(11, 15, 25, 0.4);
+        }
+
+        .custom-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .entity-code {
+            font-family: var(--font-code);
+            color: var(--accent-cyan);
+            background: rgba(6, 182, 212, 0.1);
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 0.85rem;
+        }
+
+        /* Warning Box */
+        .alert-box {
+            background: rgba(239, 68, 68, 0.08);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            border-radius: 14px;
+            padding: 1.3rem;
+            display: flex;
+            gap: 1rem;
+            align-items: flex-start;
+            margin-top: 1.5rem;
+        }
+
+        .alert-icon {
+            font-size: 1.5rem;
+            color: var(--accent-red);
+        }
+
+        .alert-content h5 {
+            font-size: 1rem;
+            font-weight: 800;
+            color: #fca5a5;
+            margin-bottom: 0.3rem;
+        }
+
+        .alert-content p {
+            font-size: 0.9rem;
+            color: #f8fafc;
+        }
+
+        /* Success Box */
+        .success-box {
+            background: rgba(16, 185, 129, 0.08);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            border-radius: 14px;
+            padding: 1.3rem;
+            display: flex;
+            gap: 1rem;
+            align-items: flex-start;
+            margin-top: 1.5rem;
+        }
+
+        .success-icon {
+            font-size: 1.5rem;
+            color: var(--accent-emerald);
+        }
+
+        .success-content h5 {
+            font-size: 1rem;
+            font-weight: 800;
+            color: #6ee7b7;
+            margin-bottom: 0.3rem;
+        }
+
+        .success-content p {
+            font-size: 0.9rem;
+            color: #f8fafc;
+        }
+
+        footer {
+            text-align: center;
+            padding: 2rem 0;
+            color: var(--text-muted);
+            font-size: 0.88rem;
+            border-top: 1px solid var(--border-color);
+            margin-top: 3rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+
+        <!-- Header Card -->
+        <header class="header-card">
+            <div class="badge-tag">
+                <span>🛡️ المعمارية والأمان</span>
+                <span>•</span>
+                <span>ThinkOnErp Multi-Tenant</span>
+            </div>
+            <h1 class="header-title">دليل إدارة صلاحيات الأنظمة وحجب الشاشات والميزات للفروع</h1>
+            <p class="header-subtitle">
+                شرح تفصيلي تقني ومعماري لكيفية قيام السوبر أدمن (Super Admin) بتعيين الأنظمة للفروع، وحجب شاشة كاملة أو ميزة/زر معين، والتحقق الهرمي الصارم لعدم تجاوز الصلاحيات الممنوحة من قبل أدمن الشركة أو المستخدمين.
+            </p>
+        </header>
+
+        <!-- Hierarchy Banner -->
+        <div class="hierarchy-banner">
+            <div class="level-card level-1">
+                <div class="level-num">المستوى 1 • السوبر أدمن</div>
+                <div class="level-title">تخصيص الأنظمة (Branch Systems)</div>
+                <div class="level-desc">تحديد الأنظمة الكلية المتاحة للفرع (المحاسبة، HR، التذاكر...).</div>
+            </div>
+            <div class="level-card level-2">
+                <div class="level-num">المستوى 2 • السوبر أدمن</div>
+                <div class="level-title">حجب الشاشات (Branch Screen Revocation)</div>
+                <div class="level-desc">تقييد أو حجب شاشة كاملة عن الفرع استثناءً من النظام.</div>
+            </div>
+            <div class="level-card level-3">
+                <div class="level-num">المستوى 3 • السوبر أدمن</div>
+                <div class="level-title">حجب الميزات (Branch Feature Revocation)</div>
+                <div class="level-desc">حجب زر أو ميزة محددة داخل شاشة مجهزة للفرع (مثل حجب زر الحذف/التصدير).</div>
+            </div>
+            <div class="level-card level-4">
+                <div class="level-num">المستوى 4 • أدمن الشركة</div>
+                <div class="level-title">صلاحيات الأدوار والمستخدمين (Roles & Users)</div>
+                <div class="level-desc">توزيع الصلاحيات على المستخدمين والأدوار ضمن نطاق ما سمح به السوبر أدمن فقط.</div>
+            </div>
+        </div>
+
+        <!-- Section 1: Database Architecture -->
+        <section class="section-block">
+            <div class="section-header">
+                <div class="section-icon icon-purple">🗄️</div>
+                <h2 class="section-title">1. الهيكلية والمحتوى في قاعدة البيانات (Database Schema)</h2>
+            </div>
+            <p style="color: var(--text-secondary); margin-bottom: 1.2rem;">
+                يعتمد النظام على فصل كامل بين الكتالوج المركزي للأنظمة والميزات، وبين التعيين والقيود (Revocations) الخاصة بكل فرع:
+            </p>
+            <table class="custom-table">
+                <thead>
+                    <tr>
+                        <th>الجدول (Entity)</th>
+                        <th>المستوى / النطاق</th>
+                        <th>الوصف التقني والوظيفة</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><span class="entity-code">SYS_SYSTEM</span></td>
+                        <td>الكتالوج المركزي (Master)</td>
+                        <td>يحتوي على كافة الأنظمة البرمجية المتاحة في السحابة (مثال: `ACC`, `HR`, `INVENTORY`, `TICKETS`).</td>
+                    </tr>
+                    <tr>
+                        <td><span class="entity-code">SYS_SCREEN</span></td>
+                        <td>الكتالوج المركزي (Master)</td>
+                        <td>الشاشات التابعة للأنظمة (مثال: شاشة إضافة فاتورة `ACC_INV_CREATE` تابعة لنظام `ACC`).</td>
+                    </tr>
+                    <tr>
+                        <td><span class="entity-code">SYS_FEATURE</span></td>
+                        <td>الكتالوج المركزي (Master)</td>
+                        <td>الميزات والأزرار العملية داخل الشاشات (مثال: `CREATE`, `UPDATE`, `DELETE`, `PRINT`, `EXPORT`).</td>
+                    </tr>
+                    <tr>
+                        <td><span class="entity-code">SYS_BRANCH_SYSTEMS</span></td>
+                        <td>تخصيص الفرع (Branch Provisioning)</td>
+                        <td>ربط الأنظمة المسموح بها لفرع معين. الشاشات التابعة لهذه الأنظمة تصبح مرشحة للظهور للفرع.</td>
+                    </tr>
+                    <tr>
+                        <td><span class="entity-code">SYS_BRANCH_SCREENS</span></td>
+                        <td>قيود الفرع (Branch Revocations)</td>
+                        <td>يخزن الشاشات المحجوبة (Revoked) عن فرع معين استثناءً بواسطة السوبر أدمن.</td>
+                    </tr>
+                    <tr>
+                        <td><span class="entity-code">SYS_BRANCH_FEATURES</span></td>
+                        <td>قيود الفرع (Branch Revocations)</td>
+                        <td>يخزن الميزات/الأزرار المحجوبة (Revoked Features) عن شاشة معينة في فرع محدد.</td>
+                    </tr>
+                    <tr>
+                        <td><span class="entity-code">SYS_ROLE_SCREEN_PERMISSIONS</span></td>
+                        <td>صلاحيات الفرع (Tenant Roles)</td>
+                        <td>صلاحيات الأدوار الممنوحة من قبل مدير الشركة داخل الفرع.</td>
+                    </tr>
+                    <tr>
+                        <td><span class="entity-code">SYS_USER_SCREEN_PERMISSIONS</span></td>
+                        <td>صلاحيات الفرع (Tenant Users)</td>
+                        <td>تجاوزات الصلاحيات المباشرة لمستخدم معين داخل الفرع (User Overrides).</td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+
+        <!-- Section 2: How SuperAdmin Assigns & Revokes Access -->
+        <section class="section-block">
+            <div class="section-header">
+                <div class="section-icon icon-blue">⚡</div>
+                <h2 class="section-title">2. كيف يقوم السوبر أدمن بإدارة وإعطاء الصلاحيات وحجبها للفرع؟</h2>
+            </div>
+            <p style="color: var(--text-secondary); margin-bottom: 1.5rem;">
+                يتم تنفيذ عمليات السوبر أدمن عبر مجموعة الـ APIs المخصصة للتحكم بالوصول على مسار контроллер <span class="entity-code">BranchAccessController</span>:
+            </p>
+
+            <!-- Step A -->
+            <div class="endpoint-card">
+                <div class="endpoint-header">
+                    <span class="method-badge method-put">PUT</span>
+                    <span class="endpoint-url">/api/branches/{branchId}/access/systems</span>
+                </div>
+                <div class="endpoint-body">
+                    <div class="endpoint-desc">
+                        <strong>أولاً: تخصيص الأنظمة للفرع (Assign Systems to Branch)</strong><br>
+                        يقوم السوبر أدمن بتمرير مصفوفة من `systemIds` لربط الأنظمة المتاحة للفرع.
+                    </div>
+                    <div class="code-block">{
+  "systemIds": [1, 2, 5]
+}</div>
+                </div>
+            </div>
+
+            <!-- Step B -->
+            <div class="endpoint-card">
+                <div class="endpoint-header">
+                    <span class="method-badge method-post">POST</span>
+                    <span class="endpoint-url">/api/branches/{branchId}/access/screens/{screenId}/revoke</span>
+                </div>
+                <div class="endpoint-body">
+                    <div class="endpoint-desc">
+                        <strong>ثانياً: حجب شاشة كاملة عن الفرع (Revoke Screen from Branch)</strong><br>
+                        إذا كان النظام (مثلاً نظام المحاسبة ID=1) متاحاً للفرع، ولكن السوبر أدمن يريد حجب شاشة القيود اليومية (ID=105) عن هذا الفرع تحديداً:
+                    </div>
+                    <div class="code-block">// إرسال POST لهذا المسار ينشئ قيد حجب في جدول SYS_BRANCH_SCREENS
+HTTP 200 OK -> { "success": true, "message": "Screen revoked successfully" }</div>
+                </div>
+            </div>
+
+            <!-- Step C -->
+            <div class="endpoint-card">
+                <div class="endpoint-header">
+                    <span class="method-badge method-delete">DELETE</span>
+                    <span class="endpoint-url">/api/branches/{branchId}/access/screens/{screenId}/revoke</span>
+                </div>
+                <div class="endpoint-body">
+                    <div class="endpoint-desc">
+                        <strong>إلغاء حجب شاشة وإعادتها للفرع (Re-allow Screen)</strong><br>
+                        عند رغبة السوبر أدمن في فك الحجب وإتاحة الشاشة للفرع مجدداً.
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step D -->
+            <div class="endpoint-card">
+                <div class="endpoint-header">
+                    <span class="method-badge method-post">POST</span>
+                    <span class="endpoint-url">/api/branches/{branchId}/access/screens/{screenId}/features/{featureId}/revoke</span>
+                </div>
+                <div class="endpoint-body">
+                    <div class="endpoint-desc">
+                        <strong>ثالثاً: حجب ميزة أو زر معين داخل شاشة للفرع (Revoke Specific Feature)</strong><br>
+                        إذا كانت الشاشة متمثلة بشاشة الفواتير (ScreenId=10), وأراد السوبر أدمن حجب زر "حذف فاتورة" (FeatureId=4 - DELETE) عن هذا الفرع:
+                    </div>
+                    <div class="code-block">// ينشئ قيد حجب في جدول SYS_BRANCH_FEATURES
+HTTP 200 OK -> { "success": true, "message": "Feature revoked successfully" }</div>
+                </div>
+            </div>
+
+            <!-- Step E -->
+            <div class="endpoint-card">
+                <div class="endpoint-header">
+                    <span class="method-badge method-delete">DELETE</span>
+                    <span class="endpoint-url">/api/branches/{branchId}/access/screens/{screenId}/features/{featureId}/revoke</span>
+                </div>
+                <div class="endpoint-body">
+                    <div class="endpoint-desc">
+                        <strong>إلغاء حجب الميزة وإعادة إتاحتها للفرع (Re-allow Feature)</strong><br>
+                        لحذف قيد الحجب وإرجاع إمكانية منح الميزة لأدوار المستخدمين.
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 3: Hierarchy Enforcement & Company Admin Boundaries -->
+        <section class="section-block">
+            <div class="section-header">
+                <div class="section-icon icon-red">🔒</div>
+                <h2 class="section-title">3. الحماية والتحقق الهرمي الصارم (Strict Scope Validation)</h2>
+            </div>
+            <p style="color: var(--text-secondary); margin-bottom: 1rem;">
+                عندما يحاول أدمن الشركة (Company Admin) إعطاء صلاحيات لأحد الأدوار أو المستخدمين في الفرع عبر <span class="entity-code">CompanyPermissionsController</span>:
+            </p>
+            
+            <div class="flow-diagram">
+                <div class="flow-step">
+                    <div class="step-badge">خطوة 1</div>
+                    <div class="step-content">
+                        <h4>استلام طلب تعديل صلاحيات الدور/المستخدم</h4>
+                        <p>يتلقى النظام طلب إعطاء صلاحيات عبر `PUT /api/branches/{branchId}/permissions/roles/{roleId}`.</p>
+                    </div>
+                </div>
+
+                <div class="flow-step">
+                    <div class="step-badge">خطوة 2</div>
+                    <div class="step-content">
+                        <h4>فحص النطاق المحجوب (ValidateBranchPermissionsScopeAsync)</h4>
+                        <p>يفحص النظام هل الشاشات والميزات المطلوبة تنتمي لأنظمة مخصصة للفرع أولاً، وهل هي غير محجوبة في `SYS_BRANCH_SCREENS` أو `SYS_BRANCH_FEATURES`.</p>
+                    </div>
+                </div>
+
+                <div class="flow-step">
+                    <div class="step-badge">خطوة 3</div>
+                    <div class="step-content">
+                        <h4>الرفض الفوري عند اكتشاف محاولة تجاوز قيد السوبر أدمن</h4>
+                        <p>إذا حاول أدمن الشركة إعطاء ميزة أو شاشة قام السوبر أدمن بحجبها على مستوى الفرع، يتم إرجاع استجابة رفض حاسمة برمز `400 Bad Request`.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="alert-box">
+                <div class="alert-icon">⚠️</div>
+                <div class="alert-content">
+                    <h5>مثال لرسالة الرفض عند محاولة تجاوز حجب السوبر أدمن:</h5>
+                    <p><code>"Feature ID 4 (DELETE) on screen 'Invoices' is revoked for this branch by SuperAdmin."</code></p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 4: Runtime Permission Resolution -->
+        <section class="section-block">
+            <div class="section-header">
+                <div class="section-icon icon-emerald">⚙️</div>
+                <h2 class="section-title">4. خوارزمية احتساب الصلاحيات عند تشغيل النظام (Runtime Evaluation)</h2>
+            </div>
+            <p style="color: var(--text-secondary); margin-bottom: 1.2rem;">
+                عندما يطلب مستخدم عادي شاشاته المتاحة عبر كود التنفيذ في <span class="entity-code">PermissionsController.GetMyScreens()</span> أو فحص صلاحية زر عبر <span class="entity-code">PermissionService.CanAccessByCodeAsync</span>، يتم الاستعلام وفق التسلسل التالي:
+            </p>
+
+            <div class="code-block">// خوارزمية تقييم الصلاحيات في PermissionService / PermissionsController:
+
+1. هل المستخدم SuperAdmin؟ 
+   <span style="color:#6ee7b7;">---> نعم:</span> يمنح صلاحية كاملة (Master Access) مع التزام سياق الشركة (X-Company-Id).
+
+2. هل النظام التابع للشاشة مخصص للفرع في (SYS_BRANCH_SYSTEMS)؟
+   <span style="color:#fca5a5;">---> لا:</span> يُحجب فوراً.
+
+3. هل الشاشة مضافة في قائمة حجب الفرع (SYS_BRANCH_SCREENS)؟
+   <span style="color:#fca5a5;">---> نعم:</span> تُلغى الشاشة بالكامل ويُمنع الوصول إليها.
+
+4. هل الميزة/الزر مضاف في قائمة حجب ميزات الفرع (SYS_BRANCH_FEATURES)؟
+   <span style="color:#fca5a5;">---> نعم:</span> تُحجب الميزة ولا تظهر للمستخدم أبداً.
+
+5. فحص تجاوزات المستخدم الخاص (SYS_USER_SCREEN_PERMISSIONS):
+   - إذا وجد قيد حجب صريح (IsGranted = 0) ---> تُحجب الميزة.
+   - إذا وجد قيد منح صريح (IsGranted = 1) ---> تُمنح الميزة.
+
+6. فحص صلاحيات دور المستخدم (SYS_ROLE_SCREEN_PERMISSIONS):
+   - إذا كان الدور يملك منح صريح (IsGranted = 1) ولم تُحجب من الفرع ---> تُمنح الميزة.</div>
+
+            <div class="success-box">
+                <div class="success-icon">✨</div>
+                <div class="success-content">
+                    <h5>النتيجة التكاملية لسلامة النظام:</h5>
+                    <p>تضمن هذه المعمارية التحكم الكامل والسيطرة المطلقة للسوبر أدمن على الفروع، مع مرونة تامة لمدراء الشركات لتوزيع الصلاحيات اليومية في حدود السقف المحدد لكل فرع.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Footer -->
+        <footer>
+            تم إنتاج هذا الدليل التقني تلقائياً لنظام <strong>ThinkOnErp</strong> • جميع الحقوق محفوظة &copy; 2026
+        </footer>
+
+    </div>
+</body>
+</html>

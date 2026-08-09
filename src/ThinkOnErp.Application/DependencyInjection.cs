@@ -4,6 +4,7 @@ using Microsoft.Extensions.DependencyInjection;
 using System.Reflection;
 using ThinkOnErp.Application.Behaviors;
 using ThinkOnErp.Application.Services;
+using ThinkOnErp.Application.Services.Accounting;
 
 namespace ThinkOnErp.Application;
 
@@ -38,6 +39,8 @@ public static class DependencyInjection
 
         // Register application services
         services.AddScoped<ITicketConfigurationService, TicketConfigurationService>();
+        services.AddScoped<IGlAccountService, GlAccountService>();
+        services.AddScoped<ICoaExcelImportService, CoaExcelImportService>();
 
         return services;
     }

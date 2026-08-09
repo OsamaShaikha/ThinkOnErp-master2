@@ -4,6 +4,8 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using ThinkOnErp.Domain.Entities;
+using ThinkOnErp.Domain.Entities.Accounting;
+using ThinkOnErp.Infrastructure.Data.Configurations.Accounting;
 
 namespace ThinkOnErp.Infrastructure.Data;
 
@@ -173,6 +175,11 @@ public class OracleDbContext : DbContext
     public DbSet<SysCode> SysCodes => Set<SysCode>();
     public DbSet<SysSetting> SysSettings => Set<SysSetting>();
 
+    // General ledger / chart of accounts (tenant schemas)
+    public DbSet<AccountCategory> AccountCategories => Set<AccountCategory>();
+    public DbSet<GlAccount> GlAccounts => Set<GlAccount>();
+    public DbSet<GlAccountBranch> GlAccountBranches => Set<GlAccountBranch>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
@@ -217,6 +224,9 @@ public class OracleDbContext : DbContext
         modelBuilder.ApplyConfiguration(new SysRoleScreenPermissionConfiguration());
         modelBuilder.ApplyConfiguration(new SysUserScreenPermissionConfiguration());
         modelBuilder.ApplyConfiguration(new SysUserBranchConfiguration());
+        modelBuilder.ApplyConfiguration(new AccountCategoryConfiguration());
+        modelBuilder.ApplyConfiguration(new GlAccountConfiguration());
+        modelBuilder.ApplyConfiguration(new GlAccountBranchConfiguration());
 
         // Oracle doesn't support BOOLEAN as a SQL column type; map all bool to NUMBER(1)
         // Clear HasConversion<string> from individual configs — Oracle provider handles

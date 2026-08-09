@@ -5,12 +5,16 @@ using Microsoft.Extensions.Logging;
 using Scrutor;
 using System.Threading.Channels;
 using ThinkOnErp.Domain.Interfaces;
+using ThinkOnErp.Domain.Interfaces.Accounting;
 using ThinkOnErp.Infrastructure.Resilience;
 using ThinkOnErp.Infrastructure.Configuration;
 using ThinkOnErp.Infrastructure.Configuration.Validation;
 using ThinkOnErp.Infrastructure.Data;
 using ThinkOnErp.Infrastructure.Repositories;
+using ThinkOnErp.Infrastructure.Repositories.Accounting;
 using ThinkOnErp.Infrastructure.Services;
+using ThinkOnErp.Infrastructure.Services.Accounting;
+using ThinkOnErp.Application.Services.Accounting;
 
 
 namespace ThinkOnErp.Infrastructure;
@@ -118,6 +122,7 @@ public static class DependencyInjection
         services.AddScoped<ISysCodeRepository, SysCodeRepository>();
         services.AddScoped<ISysCodeService, SysCodeService>();
         services.AddScoped<ISysSettingRepository, SysSettingRepository>();
+        services.AddScoped<IGlAccountRepository, GlAccountRepository>();
 
         // Register company-level permission repositories
         services.AddScoped<IRoleScreenPermissionRepository, RoleScreenPermissionRepository>();
@@ -145,6 +150,8 @@ public static class DependencyInjection
         services.AddScoped<ISlaEscalationService, SlaEscalationService>();
         services.AddScoped<IAuditTrailService, AuditTrailService>();
         services.AddScoped<ILegacyAuditService, LegacyAuditService>();
+        services.AddScoped<ICurrentTenantContext, HttpCurrentTenantContext>();
+        services.AddScoped<ICoaWorkbookReader, XlsxCoaWorkbookReader>();
 
         // Register audit logging services
         services.AddScoped<IAuditRepository, AuditRepository>();

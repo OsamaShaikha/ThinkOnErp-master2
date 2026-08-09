@@ -162,6 +162,34 @@ public class ExceptionHandlingMiddleware
                     statusCode);
                 break;
 
+            case AccountingNotFoundException accountingNotFoundException:
+                statusCode = (int)HttpStatusCode.NotFound;
+                _logger.LogWarning(
+                    accountingNotFoundException,
+                    "Accounting resource not found: {ErrorCode} - {Message}",
+                    accountingNotFoundException.ErrorCode,
+                    accountingNotFoundException.Message);
+
+                response = ApiResponse<object>.CreateFailure(
+                    accountingNotFoundException.Message,
+                    new List<string> { accountingNotFoundException.ErrorCode },
+                    statusCode);
+                break;
+
+            case AccountingConflictException accountingConflictException:
+                statusCode = (int)HttpStatusCode.Conflict;
+                _logger.LogWarning(
+                    accountingConflictException,
+                    "Accounting conflict: {ErrorCode} - {Message}",
+                    accountingConflictException.ErrorCode,
+                    accountingConflictException.Message);
+
+                response = ApiResponse<object>.CreateFailure(
+                    accountingConflictException.Message,
+                    new List<string> { accountingConflictException.ErrorCode },
+                    statusCode);
+                break;
+
             case DomainException domainException:
                 // Generic domain exception handler
                 statusCode = (int)HttpStatusCode.BadRequest;
@@ -388,6 +416,8 @@ public class ExceptionHandlingMiddleware
             DatabaseConnectionException => "DATABASE_ERROR",
             ExternalServiceException => "EXTERNAL_SERVICE_ERROR",
             ConcurrentModificationException => "CONCURRENT_MODIFICATION",
+            AccountingNotFoundException => "NOT_FOUND",
+            AccountingConflictException => "CONFLICT",
             DomainException => "DOMAIN_ERROR",
             _ => "UNHANDLED_EXCEPTION"
         };

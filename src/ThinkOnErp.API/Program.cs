@@ -13,6 +13,7 @@ using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Logs;
+using ThinkOnErp.API.Swagger;
 using ThinkOnErp.Domain.Interfaces;
 
 // Configure Serilog before building the host
@@ -287,7 +288,7 @@ try
         options.OperationFilter<ThinkOnErp.API.Swagger.TenantCompanyHeaderOperationFilter>();
 
         // API Information
-        options.SwaggerDoc("superadmin", new Microsoft.OpenApi.Models.OpenApiInfo
+        options.SwaggerDoc(ApiSwaggerDocuments.SuperAdmin, new Microsoft.OpenApi.Models.OpenApiInfo
         {
             Title = "ThinkOnErp SuperAdmin API",
             Version = "v1.0",
@@ -304,7 +305,7 @@ try
             }
         });
 
-        options.SwaggerDoc("company", new Microsoft.OpenApi.Models.OpenApiInfo
+        options.SwaggerDoc(ApiSwaggerDocuments.Company, new Microsoft.OpenApi.Models.OpenApiInfo
         {
             Title = "ThinkOnErp Company API",
             Version = "v1.0",
@@ -321,23 +322,30 @@ try
             }
         });
 
-        var superAdminControllers = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+        options.SwaggerDoc(ApiSwaggerDocuments.Accounting, new Microsoft.OpenApi.Models.OpenApiInfo
         {
-            "SuperAdminAuth", "Alerts", "AuditHealth", "AuditTrail",
-            "Company", "Health",
-            "Features", "KeyManagement", "Modules", "Monitoring", "Screens", "SuperAdmin", 
-            "AuditLogs", "SysCodes", "SysSettings", "Currency"
-        };
+            Title = "ThinkOnErp Accounting API",
+            Version = "v1.0",
+            Description = "Accounting operations: chart-of-accounts CRUD and categories, COA workbook validation/import, postable accounts, tenant fiscal years, and SuperAdmin-managed currency reference data.",
+            Contact = new Microsoft.OpenApi.Models.OpenApiContact
+            {
+                Name = "ThinkOnErp Development Team",
+                Email = "support@thinkonerp.com"
+            },
+            License = new Microsoft.OpenApi.Models.OpenApiLicense
+            {
+                Name = "Proprietary License",
+                Url = new Uri("https://thinkonerp.com/license")
+            }
+        });
 
         options.DocInclusionPredicate((docName, apiDesc) =>
         {
             var controller = apiDesc.ActionDescriptor.RouteValues["controller"];
-            if (string.Equals(controller, "Documents", StringComparison.OrdinalIgnoreCase))
-                return true;
-
-            if (docName == "superadmin")
-                return superAdminControllers.Contains(controller);
-            return !superAdminControllers.Contains(controller);
+            return ApiSwaggerDocuments.Includes(
+                docName,
+                controller,
+                apiDesc.RelativePath);
         });
 
         // Add JWT Bearer authentication to Swagger
@@ -447,6 +455,7 @@ Example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...'
         {
             options.SwaggerEndpoint("/swagger/superadmin/swagger.json", "SuperAdmin API");
             options.SwaggerEndpoint("/swagger/company/swagger.json", "Company API");
+            options.SwaggerEndpoint("/swagger/accounting/swagger.json", "Accounting API");
         });
     //}
 

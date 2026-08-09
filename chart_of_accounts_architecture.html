@@ -1,0 +1,965 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>هيكل شجرة الحسابات - ThinkOnErp v2</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #0a0e1a;
+            --bg-secondary: #111827;
+            --bg-card: #1a2235;
+            --bg-highlight: #0f1729;
+            --accent-blue: #3b82f6;
+            --accent-cyan: #06b6d4;
+            --accent-green: #10b981;
+            --accent-amber: #f59e0b;
+            --accent-red: #ef4444;
+            --accent-purple: #8b5cf6;
+            --accent-pink: #ec4899;
+            --accent-orange: #f97316;
+            --text-primary: #f1f5f9;
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+            --border-color: #1e293b;
+            --border-accent: #334155;
+            --gradient-1: linear-gradient(135deg, #3b82f6, #8b5cf6);
+            --gradient-2: linear-gradient(135deg, #06b6d4, #10b981);
+            --shadow-glow: 0 0 30px rgba(59, 130, 246, 0.15);
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Cairo', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.8;
+            min-height: 100vh;
+        }
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background:
+                radial-gradient(ellipse at 20% 20%, rgba(59,130,246,0.08) 0%, transparent 50%),
+                radial-gradient(ellipse at 80% 80%, rgba(139,92,246,0.06) 0%, transparent 50%);
+            pointer-events: none; z-index: 0;
+        }
+        .container { max-width: 1300px; margin: 0 auto; padding: 40px 30px; position: relative; z-index: 1; }
+
+        /* Hero */
+        .hero {
+            text-align: center; padding: 60px 40px; margin-bottom: 50px;
+            background: linear-gradient(145deg, rgba(59,130,246,0.12), rgba(139,92,246,0.08));
+            border: 1px solid rgba(59,130,246,0.2); border-radius: 24px;
+            position: relative; overflow: hidden;
+        }
+        .hero::before {
+            content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
+            background: conic-gradient(from 0deg, transparent, rgba(59,130,246,0.05), transparent, rgba(139,92,246,0.05), transparent);
+            animation: rotate 20s linear infinite;
+        }
+        @keyframes rotate { to { transform: rotate(360deg); } }
+        .hero > * { position: relative; z-index: 1; }
+        .hero h1 {
+            font-size: 2.8em; font-weight: 900;
+            background: var(--gradient-1); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+            margin-bottom: 12px;
+        }
+        .hero .subtitle { font-size: 1.2em; color: var(--text-secondary); }
+        .hero .badge {
+            display: inline-block; margin-top: 20px; padding: 8px 24px;
+            background: rgba(59,130,246,0.15); border: 1px solid rgba(59,130,246,0.3);
+            border-radius: 100px; font-size: 0.85em; color: var(--accent-blue); font-weight: 600;
+        }
+        .hero .version {
+            display: inline-block; margin-top: 10px; padding: 6px 18px;
+            background: rgba(16,185,129,0.15); border: 1px solid rgba(16,185,129,0.3);
+            border-radius: 100px; font-size: 0.8em; color: var(--accent-green); font-weight: 700;
+        }
+
+        /* TOC */
+        .toc { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 16px; padding: 30px 35px; margin-bottom: 40px; }
+        .toc h2 { font-size: 1.4em; margin-bottom: 18px; color: var(--accent-cyan); }
+        .toc-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 10px; }
+        .toc a { display: flex; align-items: center; gap: 10px; padding: 10px 16px; color: var(--text-secondary); text-decoration: none; border-radius: 10px; transition: all 0.2s; font-size: 0.95em; }
+        .toc a:hover { background: rgba(59,130,246,0.1); color: var(--text-primary); }
+        .toc a .num { width: 28px; height: 28px; border-radius: 8px; background: var(--gradient-1); display: flex; align-items: center; justify-content: center; font-size: 0.75em; font-weight: 700; color: #fff; flex-shrink: 0; }
+
+        /* Section */
+        .section { margin-bottom: 50px; }
+        .section-header { display: flex; align-items: center; gap: 16px; margin-bottom: 24px; padding-bottom: 16px; border-bottom: 2px solid var(--border-color); }
+        .section-header .icon { width: 48px; height: 48px; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 1.5em; flex-shrink: 0; }
+        .section-header h2 { font-size: 1.6em; font-weight: 800; }
+        .section-header .section-num { font-size: 0.8em; color: var(--text-muted); }
+
+        /* Cards */
+        .card { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 16px; padding: 28px; margin-bottom: 20px; transition: all 0.3s; }
+        .card:hover { border-color: var(--border-accent); box-shadow: var(--shadow-glow); }
+        .card h3 { font-size: 1.2em; margin-bottom: 14px; color: var(--accent-blue); }
+        .card h4 { font-size: 1.05em; margin: 18px 0 10px; color: var(--accent-cyan); }
+        .card p, .card li { color: var(--text-secondary); line-height: 2; }
+        .card ul, .card ol { padding-right: 24px; margin: 8px 0; }
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; }
+        .grid-5 { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; }
+        @media (max-width: 900px) { .grid-2, .grid-3, .grid-5 { grid-template-columns: 1fr; } }
+
+        /* Stat Cards */
+        .stat-card { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 14px; padding: 24px; text-align: center; position: relative; overflow: hidden; }
+        .stat-card::before { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 4px; }
+        .stat-card.blue::before { background: var(--gradient-1); }
+        .stat-card.green::before { background: var(--gradient-2); }
+        .stat-card.amber::before { background: linear-gradient(135deg, #f59e0b, #ef4444); }
+        .stat-card.purple::before { background: linear-gradient(135deg, #ec4899, #8b5cf6); }
+        .stat-card.cyan::before { background: linear-gradient(135deg, #06b6d4, #3b82f6); }
+        .stat-card .value { font-size: 2.2em; font-weight: 900; line-height: 1; margin-bottom: 8px; }
+        .stat-card.blue .value { color: var(--accent-blue); }
+        .stat-card.green .value { color: var(--accent-green); }
+        .stat-card.amber .value { color: var(--accent-amber); }
+        .stat-card.purple .value { color: var(--accent-purple); }
+        .stat-card.cyan .value { color: var(--accent-cyan); }
+        .stat-card .label { color: var(--text-muted); font-size: 0.85em; }
+
+        /* Tables */
+        .table-wrapper { overflow-x: auto; margin: 16px 0; border-radius: 12px; border: 1px solid var(--border-color); }
+        table { width: 100%; border-collapse: collapse; font-size: 0.9em; }
+        thead { background: linear-gradient(135deg, rgba(59,130,246,0.15), rgba(139,92,246,0.1)); }
+        th { padding: 14px 16px; text-align: right; font-weight: 700; color: var(--text-primary); border-bottom: 2px solid var(--border-accent); white-space: nowrap; }
+        td { padding: 12px 16px; border-bottom: 1px solid var(--border-color); color: var(--text-secondary); }
+        tr:hover td { background: rgba(59,130,246,0.04); }
+
+        /* Code blocks */
+        .code-block { background: var(--bg-highlight); border: 1px solid var(--border-color); border-radius: 12px; padding: 20px 24px; margin: 16px 0; overflow-x: auto; direction: ltr; text-align: left; }
+        .code-block pre { font-family: 'JetBrains Mono', monospace; font-size: 0.85em; line-height: 1.7; color: #e2e8f0; white-space: pre; margin: 0; }
+        .code-block .label { display: inline-block; padding: 4px 14px; background: rgba(59,130,246,0.15); border-radius: 8px; font-size: 0.8em; color: var(--accent-blue); font-weight: 600; margin-bottom: 12px; direction: ltr; font-family: 'JetBrains Mono', monospace; }
+        .kw { color: #c084fc; font-weight: 600; }
+        .str { color: #34d399; }
+        .num { color: #fbbf24; }
+        .cm { color: #64748b; font-style: italic; }
+        .fn { color: #38bdf8; }
+        .tbl { color: #f472b6; }
+        .col { color: #a5b4fc; }
+        .col-type { color: var(--text-muted); }
+
+        /* Alerts */
+        .alert { padding: 18px 22px; border-radius: 12px; margin: 16px 0; display: flex; gap: 14px; align-items: flex-start; }
+        .alert .alert-icon { font-size: 1.4em; flex-shrink: 0; margin-top: 2px; }
+        .alert.warning { background: rgba(245,158,11,0.08); border: 1px solid rgba(245,158,11,0.2); }
+        .alert.danger { background: rgba(239,68,68,0.08); border: 1px solid rgba(239,68,68,0.2); }
+        .alert.info { background: rgba(59,130,246,0.08); border: 1px solid rgba(59,130,246,0.2); }
+        .alert.success { background: rgba(16,185,129,0.08); border: 1px solid rgba(16,185,129,0.2); }
+        .alert .alert-title { font-weight: 700; margin-bottom: 4px; }
+        .alert.warning .alert-title { color: var(--accent-amber); }
+        .alert.danger .alert-title { color: var(--accent-red); }
+        .alert.info .alert-title { color: var(--accent-blue); }
+        .alert.success .alert-title { color: var(--accent-green); }
+
+        /* Tags */
+        .tag { display: inline-block; padding: 3px 10px; border-radius: 6px; font-size: 0.78em; font-weight: 600; }
+        .tag.debit { background: rgba(59,130,246,0.15); color: var(--accent-blue); }
+        .tag.credit { background: rgba(16,185,129,0.15); color: var(--accent-green); }
+        .tag.header { background: rgba(139,92,246,0.15); color: var(--accent-purple); }
+        .tag.detail { background: rgba(6,182,212,0.15); color: var(--accent-cyan); }
+        .tag.bs { background: rgba(245,158,11,0.15); color: var(--accent-amber); }
+        .tag.is { background: rgba(236,72,153,0.15); color: var(--accent-pink); }
+        .tag.new { background: rgba(16,185,129,0.15); color: var(--accent-green); }
+        .tag.control { background: rgba(239,68,68,0.15); color: var(--accent-red); }
+        .tag.branch { background: rgba(249,115,22,0.15); color: var(--accent-orange); }
+        .tag.shared { background: rgba(139,92,246,0.15); color: var(--accent-purple); }
+        .tag.lvl { background: rgba(59,130,246,0.1); color: var(--accent-blue); font-family: 'JetBrains Mono', monospace; font-size: 0.72em; }
+
+        /* Tree */
+        .tree { padding: 20px 30px; background: var(--bg-highlight); border: 1px solid var(--border-color); border-radius: 12px; margin: 16px 0; direction: ltr; text-align: left; font-family: 'JetBrains Mono', monospace; font-size: 0.82em; line-height: 2.1; overflow-x: auto; }
+        .tree .node-h { color: var(--accent-purple); font-weight: 600; }
+        .tree .node-d { color: var(--accent-cyan); }
+        .tree .node-new { color: var(--accent-green); font-weight: 600; }
+        .tree .node-ctrl { color: var(--accent-red); font-weight: 600; }
+        .tree .branch-line { color: var(--text-muted); }
+        .tree .num-code { color: var(--accent-amber); font-weight: 600; }
+        .tree .lvl-tag { color: var(--text-muted); font-size: 0.85em; }
+
+        /* ER Box */
+        .er-box { background: var(--bg-card); border: 2px solid var(--border-accent); border-radius: 14px; padding: 0; margin: 12px 0; overflow: hidden; }
+        .er-box .er-title { padding: 12px 18px; font-weight: 800; font-size: 1em; font-family: 'JetBrains Mono', monospace; border-bottom: 2px solid var(--border-accent); }
+        .er-box .er-title.t-blue { background: rgba(59,130,246,0.12); color: var(--accent-blue); }
+        .er-box .er-title.t-purple { background: rgba(139,92,246,0.12); color: var(--accent-purple); }
+        .er-box .er-title.t-green { background: rgba(16,185,129,0.12); color: var(--accent-green); }
+        .er-box .er-title.t-amber { background: rgba(245,158,11,0.12); color: var(--accent-amber); }
+        .er-box .er-title.t-red { background: rgba(239,68,68,0.12); color: var(--accent-red); }
+        .er-box .er-body { padding: 14px 18px; font-family: 'JetBrains Mono', monospace; font-size: 0.82em; line-height: 2; direction: ltr; text-align: left; }
+        .er-box .er-body .pk { color: var(--accent-amber); }
+        .er-box .er-body .fk { color: var(--accent-cyan); }
+        .er-box .er-body .computed { color: var(--accent-purple); font-style: italic; }
+
+        /* Tabs */
+        .tabs { display: flex; gap: 4px; margin-bottom: 20px; overflow-x: auto; padding-bottom: 4px; }
+        .tab-btn { padding: 10px 22px; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 10px; color: var(--text-secondary); cursor: pointer; font-family: 'Cairo', sans-serif; font-size: 0.9em; font-weight: 600; white-space: nowrap; transition: all 0.2s; }
+        .tab-btn.active, .tab-btn:hover { background: rgba(59,130,246,0.12); border-color: var(--accent-blue); color: var(--accent-blue); }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+
+        /* Level indicators */
+        .level-bar { display: flex; gap: 2px; margin: 20px 0; }
+        .level-segment { flex: 1; padding: 14px; border-radius: 10px; text-align: center; }
+        .level-segment .seg-digits { font-family: 'JetBrains Mono', monospace; font-size: 1.8em; font-weight: 900; line-height: 1; }
+        .level-segment .seg-label { font-size: 0.75em; margin-top: 6px; }
+        .level-segment.l1 { background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.3); }
+        .level-segment.l1 .seg-digits { color: var(--accent-red); }
+        .level-segment.l2 { background: rgba(249,115,22,0.1); border: 1px solid rgba(249,115,22,0.3); }
+        .level-segment.l2 .seg-digits { color: var(--accent-orange); }
+        .level-segment.l3 { background: rgba(245,158,11,0.1); border: 1px solid rgba(245,158,11,0.3); }
+        .level-segment.l3 .seg-digits { color: var(--accent-amber); }
+        .level-segment.l4 { background: rgba(139,92,246,0.1); border: 1px solid rgba(139,92,246,0.3); }
+        .level-segment.l4 .seg-digits { color: var(--accent-purple); }
+        .level-segment.l5 { background: rgba(6,182,212,0.1); border: 1px solid rgba(6,182,212,0.3); }
+        .level-segment.l5 .seg-digits { color: var(--accent-cyan); }
+        .level-dash { display: flex; align-items: center; color: var(--text-muted); font-size: 1.5em; font-weight: 900; padding: 0 4px; }
+
+        .footnote { margin-top: 60px; padding-top: 20px; border-top: 1px solid var(--border-color); text-align: center; color: var(--text-muted); font-size: 0.85em; }
+    </style>
+</head>
+<body>
+<div class="container">
+
+    <!-- HERO -->
+    <div class="hero">
+        <h1>🏗️ هيكل شجرة الحسابات</h1>
+        <div class="subtitle">نظام ترقيم 5 مستويات — خانات 1-2-2-2-4 — متوافق مع بنية الشركات والفروع</div>
+        <div class="badge">ThinkOnErp • Chart of Accounts Architecture • Oracle Multi-Tenant</div>
+        <br>
+        <div class="version">v2.0 — نظام الترقيم الخماسي</div>
+    </div>
+
+    <!-- TOC -->
+    <div class="toc">
+        <h2>📑 فهرس المحتويات</h2>
+        <div class="toc-grid">
+            <a href="#sec1"><span class="num">1</span> نظام الترقيم الخماسي 1-2-2-2-4</a>
+            <a href="#sec2"><span class="num">2</span> الفئات السبعة والفئات الفرعية</a>
+            <a href="#sec3"><span class="num">3</span> جداول قاعدة البيانات (ERD)</a>
+            <a href="#sec4"><span class="num">4</span> شجرة الحسابات الكاملة بالترقيم الجديد</a>
+            <a href="#sec5"><span class="num">5</span> نطاق الفرع والتحكم المركزي</a>
+            <a href="#sec6"><span class="num">6</span> الحسابات الخاصة والتحكمية</a>
+            <a href="#sec7"><span class="num">7</span> كيانات C# وواجهات API</a>
+            <a href="#sec8"><span class="num">8</span> القواعد الذهبية</a>
+        </div>
+    </div>
+
+    <!-- ═══ SECTION 1: NUMBERING SYSTEM ═══ -->
+    <div class="section" id="sec1">
+        <div class="section-header">
+            <div class="icon" style="background: rgba(59,130,246,0.12); color: var(--accent-blue);">🔢</div>
+            <div>
+                <div class="section-num">القسم الأول</div>
+                <h2>نظام الترقيم الخماسي 1-2-2-2-4</h2>
+            </div>
+        </div>
+
+        <div class="card">
+            <h3>بنية رقم الحساب — 11 خانة مع فواصل</h3>
+            <div class="level-bar">
+                <div class="level-segment l1">
+                    <div class="seg-digits">X</div>
+                    <div class="seg-label">المستوى 1<br>الفئة الرئيسية<br><strong>1 خانة</strong></div>
+                </div>
+                <div class="level-dash">—</div>
+                <div class="level-segment l2">
+                    <div class="seg-digits">XX</div>
+                    <div class="seg-label">المستوى 2<br>الفئة الفرعية<br><strong>2 خانة</strong></div>
+                </div>
+                <div class="level-dash">—</div>
+                <div class="level-segment l3">
+                    <div class="seg-digits">XX</div>
+                    <div class="seg-label">المستوى 3<br>المجموعة<br><strong>2 خانة</strong></div>
+                </div>
+                <div class="level-dash">—</div>
+                <div class="level-segment l4">
+                    <div class="seg-digits">XX</div>
+                    <div class="seg-label">المستوى 4<br>المجموعة الفرعية<br><strong>2 خانة</strong></div>
+                </div>
+                <div class="level-dash">—</div>
+                <div class="level-segment l5">
+                    <div class="seg-digits">XXXX</div>
+                    <div class="seg-label">المستوى 5<br>الحساب التفصيلي<br><strong>4 خانات</strong></div>
+                </div>
+            </div>
+
+            <div class="code-block">
+                <div class="label">Example: Account 1-01-01-02-0001</div>
+<pre>
+<span class="cm">   1  -  01  -  01  -  02  -  0001</span>
+<span class="cm">   │      │      │      │      └──── الحساب التفصيلي: البنك الرئيسي</span>
+<span class="cm">   │      │      │      └───────── المجموعة الفرعية: البنوك</span>
+<span class="cm">   │      │      └──────────────  المجموعة: النقد والبنوك</span>
+<span class="cm">   │      └─────────────────────  الفئة الفرعية: أصول متداولة</span>
+<span class="cm">   └────────────────────────────  الفئة الرئيسية: الأصول</span>
+</pre>
+            </div>
+        </div>
+
+        <div class="card">
+            <h3>السعة والمرونة لكل مستوى</h3>
+            <div class="grid-5">
+                <div class="stat-card" style="border-top: 3px solid var(--accent-red);">
+                    <div class="value" style="color: var(--accent-red);">9</div>
+                    <div class="label">فئة رئيسية<br>المستوى 1</div>
+                </div>
+                <div class="stat-card" style="border-top: 3px solid var(--accent-orange);">
+                    <div class="value" style="color: var(--accent-orange);">99</div>
+                    <div class="label">فئة فرعية<br>المستوى 2</div>
+                </div>
+                <div class="stat-card" style="border-top: 3px solid var(--accent-amber);">
+                    <div class="value" style="color: var(--accent-amber);">99</div>
+                    <div class="label">مجموعة<br>المستوى 3</div>
+                </div>
+                <div class="stat-card" style="border-top: 3px solid var(--accent-purple);">
+                    <div class="value" style="color: var(--accent-purple);">99</div>
+                    <div class="label">مجموعة فرعية<br>المستوى 4</div>
+                </div>
+                <div class="stat-card" style="border-top: 3px solid var(--accent-cyan);">
+                    <div class="value" style="color: var(--accent-cyan);">9,999</div>
+                    <div class="label">حساب تفصيلي<br>المستوى 5</div>
+                </div>
+            </div>
+
+            <div class="table-wrapper" style="margin-top: 20px;">
+                <table>
+                    <thead>
+                        <tr><th>المستوى</th><th>الخانات</th><th>النوع</th><th>الدور</th><th>قابل للترحيل؟</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td><span class="tag" style="background:rgba(239,68,68,0.15);color:var(--accent-red);">L1</span></td><td><code>X</code></td><td><span class="tag header">HEADER</span></td><td>الفئة المحاسبية (أصول، التزامات...)</td><td>❌ أبداً</td></tr>
+                        <tr><td><span class="tag" style="background:rgba(249,115,22,0.15);color:var(--accent-orange);">L2</span></td><td><code>X-XX</code></td><td><span class="tag header">HEADER</span></td><td>التصنيف الفرعي (متداولة، ثابتة...)</td><td>❌ أبداً</td></tr>
+                        <tr><td><span class="tag" style="background:rgba(245,158,11,0.15);color:var(--accent-amber);">L3</span></td><td><code>X-XX-XX</code></td><td><span class="tag header">HEADER</span></td><td>المجموعة (نقد، ذمم، مخزون...)</td><td>❌ أبداً</td></tr>
+                        <tr><td><span class="tag" style="background:rgba(139,92,246,0.15);color:var(--accent-purple);">L4</span></td><td><code>X-XX-XX-XX</code></td><td><span class="tag header">HEADER</span></td><td>المجموعة الفرعية (صندوق، بنوك...)</td><td>❌ أبداً</td></tr>
+                        <tr><td><span class="tag" style="background:rgba(6,182,212,0.15);color:var(--accent-cyan);">L5</span></td><td><code>X-XX-XX-XX-XXXX</code></td><td><span class="tag detail">DETAIL</span></td><td>الحساب التفصيلي (صندوق فرع الرياض)</td><td>✅ <strong>نعم</strong></td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══ SECTION 2: CATEGORIES ═══ -->
+    <div class="section" id="sec2">
+        <div class="section-header">
+            <div class="icon" style="background: rgba(139,92,246,0.12); color: var(--accent-purple);">📂</div>
+            <div>
+                <div class="section-num">القسم الثاني</div>
+                <h2>الفئات السبعة والتصنيفات الفرعية</h2>
+            </div>
+        </div>
+
+        <div class="card">
+            <h3>الفئات الرئيسية السبعة (المستوى 1)</h3>
+            <div class="table-wrapper">
+                <table>
+                    <thead><tr><th>الرقم</th><th>الكود</th><th>بالعربي</th><th>بالإنجليزي</th><th>الطبيعة</th><th>القائمة</th></tr></thead>
+                    <tbody>
+                        <tr><td><strong>1</strong></td><td><code>ASSETS</code></td><td>الأصول</td><td>Assets</td><td><span class="tag debit">مدين D</span></td><td><span class="tag bs">الميزانية</span></td></tr>
+                        <tr><td><strong>2</strong></td><td><code>LIABILITIES</code></td><td>الالتزامات</td><td>Liabilities</td><td><span class="tag credit">دائن C</span></td><td><span class="tag bs">الميزانية</span></td></tr>
+                        <tr><td><strong>3</strong></td><td><code>EQUITY</code></td><td>حقوق الملكية</td><td>Equity</td><td><span class="tag credit">دائن C</span></td><td><span class="tag bs">الميزانية</span></td></tr>
+                        <tr><td><strong>4</strong></td><td><code>REVENUE</code></td><td>الإيرادات</td><td>Revenue</td><td><span class="tag credit">دائن C</span></td><td><span class="tag is">الدخل</span></td></tr>
+                        <tr><td><strong>5</strong></td><td><code>COGS</code></td><td>تكلفة البضاعة المباعة</td><td>Cost of Goods Sold</td><td><span class="tag debit">مدين D</span></td><td><span class="tag is">الدخل</span></td></tr>
+                        <tr><td><strong>6</strong></td><td><code>OPEX</code></td><td>المصاريف التشغيلية</td><td>Operating Expenses</td><td><span class="tag debit">مدين D</span></td><td><span class="tag is">الدخل</span></td></tr>
+                        <tr><td><strong>8</strong></td><td><code>OTHER</code></td><td>مصاريف وأرباح أخرى</td><td>Other Income/Expense</td><td><span class="tag debit">مدين D</span></td><td><span class="tag is">الدخل</span></td></tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="alert info">
+                <div class="alert-icon">💡</div>
+                <div><div class="alert-title">الرقم 7 محجوز للتوسع المستقبلي</div><p>يمكن استخدامه لفئة جديدة مثل "مصاريف رأسمالية" أو "مشاريع تحت التنفيذ" مستقبلاً.</p></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══ SECTION 3: DATABASE ═══ -->
+    <div class="section" id="sec3">
+        <div class="section-header">
+            <div class="icon" style="background: rgba(16,185,129,0.12); color: var(--accent-green);">🗃️</div>
+            <div>
+                <div class="section-num">القسم الثالث</div>
+                <h2>جداول قاعدة البيانات (ERD)</h2>
+            </div>
+        </div>
+
+        <div class="card">
+            <h3>جدول الحسابات الرئيسي — <code>GL_ACCOUNT</code></h3>
+            <div class="er-box">
+                <div class="er-title t-blue">GL_ACCOUNT (Tenant Schema)</div>
+                <div class="er-body">
+<span class="pk">🔑 ID</span>                     <span class="col-type">NUMBER(19)     GENERATED BY DEFAULT AS IDENTITY</span>
+<span class="col">ACCOUNT_CODE</span>           <span class="col-type">VARCHAR2(20)   NOT NULL UNIQUE</span>  <span class="cm">-- '1-01-01-02-0001'</span>
+<span class="col">ACCOUNT_NAME_AR</span>        <span class="col-type">NVARCHAR2(200) NOT NULL</span>
+<span class="col">ACCOUNT_NAME_EN</span>        <span class="col-type">VARCHAR2(200)  NOT NULL</span>
+<span class="fk">🔗 CATEGORY_ID</span>            <span class="col-type">NUMBER(19)     NOT NULL → ACCOUNT_CATEGORY.ID</span>
+<span class="fk">🔗 SUB_CATEGORY_ID</span>        <span class="col-type">NUMBER(19)     NULL → ACCOUNT_SUB_CATEGORY.ID</span>
+<span class="fk">🔗 PARENT_ACCOUNT_ID</span>      <span class="col-type">NUMBER(19)     NULL → GL_ACCOUNT.ID (Self-ref)</span>
+<span class="col">ACCOUNT_TYPE</span>           <span class="col-type">VARCHAR2(10)   NOT NULL</span>      <span class="cm">-- 'HEADER' or 'DETAIL'</span>
+<span class="col">NORMAL_BALANCE</span>         <span class="col-type">CHAR(1)        NOT NULL</span>      <span class="cm">-- 'D' or 'C'</span>
+<span class="col">ACCOUNT_LEVEL</span>          <span class="col-type">NUMBER(1)      NOT NULL</span>      <span class="cm">-- 1, 2, 3, 4, or 5</span>
+<span class="col">IS_CONTRA</span>              <span class="col-type">NUMBER(1)      DEFAULT 0</span>
+<span class="col">IS_CONTROL_ACCOUNT</span>    <span class="col-type">VARCHAR2(10)   NULL</span>          <span class="cm">-- 'AR', 'AP', or NULL</span>
+<span class="computed">IS_POSTABLE</span>            <span class="col-type">NUMBER(1)      GENERATED ALWAYS AS (CASE WHEN ACCOUNT_TYPE='DETAIL' AND IS_ACTIVE=1 THEN 1 ELSE 0 END) VIRTUAL</span>
+<span class="col">IS_ACTIVE</span>              <span class="col-type">NUMBER(1)      DEFAULT 1</span>
+<span class="col">HAS_BRANCHES</span>          <span class="col-type">NUMBER(1)      DEFAULT 0</span>     <span class="cm">-- تقييد بفروع معينة؟</span>
+<span class="col">DESCRIPTION_AR</span>        <span class="col-type">NVARCHAR2(500)</span>
+<span class="col">DESCRIPTION_EN</span>        <span class="col-type">VARCHAR2(500)</span>
+<span class="col">CREATION_USER</span>         <span class="col-type">VARCHAR2(100)  NOT NULL</span>
+<span class="col">CREATION_DATE</span>         <span class="col-type">TIMESTAMP      DEFAULT SYSTIMESTAMP</span>
+<span class="col">UPDATE_USER</span>           <span class="col-type">VARCHAR2(100)</span>
+<span class="col">UPDATE_DATE</span>           <span class="col-type">TIMESTAMP</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h3>مخطط العلاقات</h3>
+            <div class="code-block">
+                <div class="label">Entity Relationship Diagram</div>
+<pre>
+<span class="cm">MASTER SCHEMA (THINKON_ERP)</span>
+<span class="cm">┌────────────────────────────────────────────────┐</span>
+<span class="cm">│  ACCOUNT_CATEGORY        (7 records)           │</span>
+<span class="cm">│      └──→ ACCOUNT_SUB_CATEGORY  (20 records)   │</span>
+<span class="cm">└────────────────────────────────────────────────┘</span>
+
+<span class="cm">TENANT SCHEMA (per company)</span>
+<span class="cm">┌────────────────────────────────────────────────┐</span>
+<span class="cm">│  GL_ACCOUNT  ←─── Self-ref PARENT_ACCOUNT_ID   │</span>
+<span class="cm">│      ├──→ GL_ACCOUNT_BRANCH  ──→ SYS_BRANCH   │</span>
+<span class="cm">│      ├──→ ACCOUNT_BALANCE   ──→ FISCAL_PERIOD  │</span>
+<span class="cm">│      └──→ GL_ACCOUNT_AUDIT_LOG                 │</span>
+<span class="cm">│                                                │</span>
+<span class="cm">│  FISCAL_PERIOD ──→ SYS_FISCAL_YEAR             │</span>
+<span class="cm">└────────────────────────────────────────────────┘</span>
+</pre>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══ SECTION 4: FULL TREE ═══ -->
+    <div class="section" id="sec4">
+        <div class="section-header">
+            <div class="icon" style="background: rgba(245,158,11,0.12); color: var(--accent-amber);">🌳</div>
+            <div>
+                <div class="section-num">القسم الرابع</div>
+                <h2>شجرة الحسابات الكاملة — ترقيم 1-2-2-2-4</h2>
+            </div>
+        </div>
+
+        <div class="tabs">
+            <button class="tab-btn active" onclick="showTab('assets')">1 — الأصول</button>
+            <button class="tab-btn" onclick="showTab('liabilities')">2 — الالتزامات</button>
+            <button class="tab-btn" onclick="showTab('equity')">3 — حقوق الملكية</button>
+            <button class="tab-btn" onclick="showTab('revenue')">4 — الإيرادات</button>
+            <button class="tab-btn" onclick="showTab('cogs')">5 — تكلفة المبيعات</button>
+            <button class="tab-btn" onclick="showTab('opex')">6 — المصاريف</button>
+            <button class="tab-btn" onclick="showTab('other')">8 — أخرى</button>
+        </div>
+
+        <!-- ===== ASSETS ===== -->
+        <div class="tab-content active" id="tab-assets">
+            <div class="tree">
+<span class="num-code">1</span> <span class="node-h">الأصول / Assets</span> <span class="tag header">L1 HEADER</span>
+<span class="branch-line">├──</span> <span class="num-code">1-01</span> <span class="node-h">أصول متداولة / Current Assets</span> <span class="tag header">L2</span>
+<span class="branch-line">│   ├──</span> <span class="num-code">1-01-01</span> <span class="node-h">النقد والبنوك / Cash & Banks</span> <span class="tag header">L3</span>
+<span class="branch-line">│   │   ├──</span> <span class="num-code">1-01-01-01</span> <span class="node-h">الصندوق / Cash on Hand</span> <span class="tag header">L4</span>
+<span class="branch-line">│   │   │   └──</span> <span class="num-code">1-01-01-01-0001</span> <span class="node-d">الصندوق الرئيسي / Main Cash Box</span> <span class="tag detail">DETAIL</span> <span class="tag branch">بفرع</span>
+<span class="branch-line">│   │   ├──</span> <span class="num-code">1-01-01-02</span> <span class="node-h">البنوك / Bank Accounts</span> <span class="tag header">L4</span>
+<span class="branch-line">│   │   │   ├──</span> <span class="num-code">1-01-01-02-0001</span> <span class="node-d">البنك الرئيسي / Main Bank</span> <span class="tag detail">DETAIL</span> <span class="tag branch">بفرع</span>
+<span class="branch-line">│   │   │   ├──</span> <span class="num-code">1-01-01-02-0002</span> <span class="node-d">بنك إضافي 1 / Bank 2</span> <span class="tag detail">DETAIL</span> <span class="tag branch">بفرع</span>
+<span class="branch-line">│   │   │   └──</span> <span class="num-code">1-01-01-02-0003</span> <span class="node-d">بنك إضافي 2 / Bank 3</span> <span class="tag detail">DETAIL</span> <span class="tag branch">بفرع</span>
+<span class="branch-line">│   │   └──</span> <span class="num-code">1-01-01-03</span> <span class="node-h">تحت التحصيل / Undeposited</span> <span class="tag header">L4</span>
+<span class="branch-line">│   │       └──</span> <span class="num-code">1-01-01-03-0001</span> <span class="node-new">مبالغ تحت التحصيل / Undeposited Funds</span> <span class="tag detail">DETAIL</span> <span class="tag new">MVP</span>
+<span class="branch-line">│   ├──</span> <span class="num-code">1-01-02</span> <span class="node-h">الذمم المدينة / Receivables</span> <span class="tag header">L3</span>
+<span class="branch-line">│   │   ├──</span> <span class="num-code">1-01-02-01</span> <span class="node-h">ذمم العملاء / Trade AR</span> <span class="tag header">L4</span>
+<span class="branch-line">│   │   │   └──</span> <span class="num-code">1-01-02-01-0001</span> <span class="node-ctrl">ذمم العملاء - تحكم / AR Control</span> <span class="tag detail">DETAIL</span> <span class="tag control">AR CONTROL</span>
+<span class="branch-line">│   │   ├──</span> <span class="num-code">1-01-02-02</span> <span class="node-h">أوراق قبض / Notes Receivable</span> <span class="tag header">L4</span>
+<span class="branch-line">│   │   │   └──</span> <span class="num-code">1-01-02-02-0001</span> <span class="node-d">أوراق قبض / Notes Receivable</span> <span class="tag detail">DETAIL</span>
+<span class="branch-line">│   │   ├──</span> <span class="num-code">1-01-02-03</span> <span class="node-h">ذمم موظفين / Employee AR</span> <span class="tag header">L4</span>
+<span class="branch-line">│   │   │   └──</span> <span class="num-code">1-01-02-03-0001</span> <span class="node-d">ذمم موظفين / Employee Receivables</span> <span class="tag detail">DETAIL</span>
+<span class="branch-line">│   │   └──</span> <span class="num-code">1-01-02-04</span> <span class="node-h">مخصصات ذمم / AR Provisions</span> <span class="tag header">L4</span>
+<span class="branch-line">│   │       └──</span> <span class="num-code">1-01-02-04-0001</span> <span class="node-d">مخصص ديون مشكوك فيها / Doubtful Debts</span> <span class="tag detail">DETAIL</span> <span class="tag debit">CONTRA</span>
+<span class="branch-line">│   ├──</span> <span class="num-code">1-01-03</span> <span class="node-h">المخزون / Inventory</span> <span class="tag header">L3</span>
+<span class="branch-line">│   │   ├──</span> <span class="num-code">1-01-03-01</span> <span class="node-h">بضاعة جاهزة / Finished Goods</span> <span class="tag header">L4</span>
+<span class="branch-line">│   │   │   └──</span> <span class="num-code">1-01-03-01-0001</span> <span class="node-d">بضاعة جاهزة / Finished Goods</span> <span class="tag detail">DETAIL</span> <span class="tag branch">بفرع</span>
+<span class="branch-line">│   │   ├──</span> <span class="num-code">1-01-03-02</span> <span class="node-h">مواد خام / Raw Materials</span> <span class="tag header">L4</span>
+<span class="branch-line">│   │   │   └──</span> <span class="num-code">1-01-03-02-0001</span> <span class="node-d">مواد خام / Raw Materials</span> <span class="tag detail">DETAIL</span> <span class="tag branch">بفرع</span>
+<span class="branch-line">│   │   ├──</span> <span class="num-code">1-01-03-03</span> <span class="node-h">بضاعة بالطريق / In Transit</span> <span class="tag header">L4</span>
+<span class="branch-line">│   │   │   └──</span> <span class="num-code">1-01-03-03-0001</span> <span class="node-d">بضاعة بالطريق / Goods in Transit</span> <span class="tag detail">DETAIL</span>
+<span class="branch-line">│   │   └──</span> <span class="num-code">1-01-03-04</span> <span class="node-h">مخصص مخزون / Inventory Provision</span> <span class="tag header">L4</span>
+<span class="branch-line">│   │       └──</span> <span class="num-code">1-01-03-04-0001</span> <span class="node-d">مخصص هبوط مخزون / Inventory Write-down</span> <span class="tag detail">DETAIL</span> <span class="tag debit">CONTRA</span>
+<span class="branch-line">│   ├──</span> <span class="num-code">1-01-04</span> <span class="node-h">أصول ضريبية / Tax Assets</span> <span class="tag header">L3</span>
+<span class="branch-line">│   │   └──</span> <span class="num-code">1-01-04-01</span> <span class="node-h">ضريبة مدخلات / Input Tax</span> <span class="tag header">L4</span>
+<span class="branch-line">│   │       └──</span> <span class="num-code">1-01-04-01-0001</span> <span class="node-new">ضريبة مدخلات مستردة / Input Tax Receivable</span> <span class="tag detail">DETAIL</span> <span class="tag new">MVP</span>
+<span class="branch-line">│   └──</span> <span class="num-code">1-01-05</span> <span class="node-h">مصاريف مقدمة / Prepaid</span> <span class="tag header">L3</span>
+<span class="branch-line">│       ├──</span> <span class="num-code">1-01-05-01</span> <span class="node-h">إيجار مقدم / Prepaid Rent</span> <span class="tag header">L4</span>
+<span class="branch-line">│       │   └──</span> <span class="num-code">1-01-05-01-0001</span> <span class="node-d">إيجار مقدم / Prepaid Rent</span> <span class="tag detail">DETAIL</span>
+<span class="branch-line">│       ├──</span> <span class="num-code">1-01-05-02</span> <span class="node-h">تأمين مقدم / Prepaid Insurance</span> <span class="tag header">L4</span>
+<span class="branch-line">│       │   └──</span> <span class="num-code">1-01-05-02-0001</span> <span class="node-d">تأمين مقدم / Prepaid Insurance</span> <span class="tag detail">DETAIL</span>
+<span class="branch-line">│       └──</span> <span class="num-code">1-01-05-03</span> <span class="node-h">مقدمة أخرى / Other Prepaid</span> <span class="tag header">L4</span>
+<span class="branch-line">│           └──</span> <span class="num-code">1-01-05-03-0001</span> <span class="node-d">مصاريف مقدمة أخرى / Other Prepaid</span> <span class="tag detail">DETAIL</span>
+<span class="branch-line">├──</span> <span class="num-code">1-02</span> <span class="node-h">أصول ثابتة / Fixed Assets</span> <span class="tag header">L2</span>
+<span class="branch-line">│   ├──</span> <span class="num-code">1-02-01</span> <span class="node-h">أراضي / Land</span> <span class="tag header">L3</span>
+<span class="branch-line">│   │   └──</span> <span class="num-code">1-02-01-01</span> <span class="node-h">أراضي / Land</span> <span class="tag header">L4</span>
+<span class="branch-line">│   │       └──</span> <span class="num-code">1-02-01-01-0001</span> <span class="node-d">أراضي / Land</span> <span class="tag detail">DETAIL</span>
+<span class="branch-line">│   ├──</span> <span class="num-code">1-02-02</span> <span class="node-h">مباني / Buildings</span> <span class="tag header">L3</span>
+<span class="branch-line">│   │   ├──</span> <span class="num-code">1-02-02-01</span> <span class="node-h">تكلفة مباني / Building Cost</span> <span class="tag header">L4</span>
+<span class="branch-line">│   │   │   └──</span> <span class="num-code">1-02-02-01-0001</span> <span class="node-d">مباني / Buildings</span> <span class="tag detail">DETAIL</span>
+<span class="branch-line">│   │   └──</span> <span class="num-code">1-02-02-02</span> <span class="node-h">استهلاك مباني / Bldg Depreciation</span> <span class="tag header">L4</span>
+<span class="branch-line">│   │       └──</span> <span class="num-code">1-02-02-02-0001</span> <span class="node-d">مجمع استهلاك مباني / Accum Depr Bldg</span> <span class="tag detail">DETAIL</span> <span class="tag debit">CONTRA</span>
+<span class="branch-line">│   ├──</span> <span class="num-code">1-02-03</span> <span class="node-h">أثاث ومعدات / Furniture & Equip</span> <span class="tag header">L3</span>
+<span class="branch-line">│   │   ├──</span> <span class="num-code">1-02-03-01</span> <span class="node-h">تكلفة أثاث / F&E Cost</span> <span class="tag header">L4</span>
+<span class="branch-line">│   │   │   └──</span> <span class="num-code">1-02-03-01-0001</span> <span class="node-d">أثاث ومعدات / Furniture & Equipment</span> <span class="tag detail">DETAIL</span>
+<span class="branch-line">│   │   └──</span> <span class="num-code">1-02-03-02</span> <span class="node-h">استهلاك أثاث / F&E Depreciation</span> <span class="tag header">L4</span>
+<span class="branch-line">│   │       └──</span> <span class="num-code">1-02-03-02-0001</span> <span class="node-d">مجمع استهلاك أثاث / Accum Depr F&E</span> <span class="tag detail">DETAIL</span> <span class="tag debit">CONTRA</span>
+<span class="branch-line">│   ├──</span> <span class="num-code">1-02-04</span> <span class="node-h">سيارات / Vehicles</span> <span class="tag header">L3</span>
+<span class="branch-line">│   │   ├──</span> <span class="num-code">1-02-04-01</span> <span class="node-h">تكلفة سيارات / Vehicle Cost</span> <span class="tag header">L4</span>
+<span class="branch-line">│   │   │   └──</span> <span class="num-code">1-02-04-01-0001</span> <span class="node-d">سيارات / Vehicles</span> <span class="tag detail">DETAIL</span>
+<span class="branch-line">│   │   └──</span> <span class="num-code">1-02-04-02</span> <span class="node-h">استهلاك سيارات / Vehicle Depr</span> <span class="tag header">L4</span>
+<span class="branch-line">│   │       └──</span> <span class="num-code">1-02-04-02-0001</span> <span class="node-d">مجمع استهلاك سيارات / Accum Depr Veh</span> <span class="tag detail">DETAIL</span> <span class="tag debit">CONTRA</span>
+<span class="branch-line">│   └──</span> <span class="num-code">1-02-05</span> <span class="node-h">أجهزة حاسوب / Computers</span> <span class="tag header">L3</span>
+<span class="branch-line">│       ├──</span> <span class="num-code">1-02-05-01</span> <span class="node-h">تكلفة حاسوب / Computer Cost</span> <span class="tag header">L4</span>
+<span class="branch-line">│       │   └──</span> <span class="num-code">1-02-05-01-0001</span> <span class="node-d">أجهزة حاسوب / Computer Equipment</span> <span class="tag detail">DETAIL</span>
+<span class="branch-line">│       └──</span> <span class="num-code">1-02-05-02</span> <span class="node-h">استهلاك حاسوب / Computer Depr</span> <span class="tag header">L4</span>
+<span class="branch-line">│           └──</span> <span class="num-code">1-02-05-02-0001</span> <span class="node-d">مجمع استهلاك حاسوب / Accum Depr Comp</span> <span class="tag detail">DETAIL</span> <span class="tag debit">CONTRA</span>
+<span class="branch-line">└──</span> <span class="num-code">1-03</span> <span class="node-h">أصول أخرى / Other Assets</span> <span class="tag header">L2</span>
+<span class="branch-line">    ├──</span> <span class="num-code">1-03-01</span> <span class="node-h">ودائع / Deposits</span> <span class="tag header">L3</span>
+<span class="branch-line">    │   └──</span> <span class="num-code">1-03-01-01</span> <span class="node-h">ودائع مالية / Security Deposits</span> <span class="tag header">L4</span>
+<span class="branch-line">    │       └──</span> <span class="num-code">1-03-01-01-0001</span> <span class="node-d">ودائع مالية / Security Deposits</span> <span class="tag detail">DETAIL</span>
+<span class="branch-line">    └──</span> <span class="num-code">1-03-02</span> <span class="node-h">أصول غير ملموسة / Intangible</span> <span class="tag header">L3</span>
+<span class="branch-line">        └──</span> <span class="num-code">1-03-02-01</span> <span class="node-h">غير ملموسة / Intangible</span> <span class="tag header">L4</span>
+<span class="branch-line">            └──</span> <span class="num-code">1-03-02-01-0001</span> <span class="node-d">أصول غير ملموسة / Intangible Assets</span> <span class="tag detail">DETAIL</span>
+            </div>
+        </div>
+
+        <!-- ===== LIABILITIES ===== -->
+        <div class="tab-content" id="tab-liabilities">
+            <div class="tree">
+<span class="num-code">2</span> <span class="node-h">الالتزامات / Liabilities</span> <span class="tag header">L1 HEADER</span>
+<span class="branch-line">├──</span> <span class="num-code">2-01</span> <span class="node-h">التزامات متداولة / Current Liabilities</span> <span class="tag header">L2</span>
+<span class="branch-line">│   ├──</span> <span class="num-code">2-01-01</span> <span class="node-h">الذمم الدائنة / Accounts Payable</span> <span class="tag header">L3</span>
+<span class="branch-line">│   │   ├──</span> <span class="num-code">2-01-01-01</span> <span class="node-h">ذمم الموردين / Trade AP</span> <span class="tag header">L4</span>
+<span class="branch-line">│   │   │   └──</span> <span class="num-code">2-01-01-01-0001</span> <span class="node-ctrl">ذمم الموردين - تحكم / AP Control</span> <span class="tag detail">DETAIL</span> <span class="tag control">AP CONTROL</span>
+<span class="branch-line">│   │   └──</span> <span class="num-code">2-01-01-02</span> <span class="node-h">أوراق دفع / Notes Payable</span> <span class="tag header">L4</span>
+<span class="branch-line">│   │       └──</span> <span class="num-code">2-01-01-02-0001</span> <span class="node-d">أوراق دفع / Notes Payable</span> <span class="tag detail">DETAIL</span>
+<span class="branch-line">│   ├──</span> <span class="num-code">2-01-02</span> <span class="node-h">مستحقات ورواتب / Accrued</span> <span class="tag header">L3</span>
+<span class="branch-line">│   │   ├──</span> <span class="num-code">2-01-02-01</span> <span class="node-h">رواتب / Salaries</span> <span class="tag header">L4</span>
+<span class="branch-line">│   │   │   └──</span> <span class="num-code">2-01-02-01-0001</span> <span class="node-d">رواتب مستحقة / Accrued Salaries</span> <span class="tag detail">DETAIL</span>
+<span class="branch-line">│   │   ├──</span> <span class="num-code">2-01-02-02</span> <span class="node-h">تأمينات / Social Insurance</span> <span class="tag header">L4</span>
+<span class="branch-line">│   │   │   └──</span> <span class="num-code">2-01-02-02-0001</span> <span class="node-d">تأمينات اجتماعية / Social Insurance</span> <span class="tag detail">DETAIL</span>
+<span class="branch-line">│   │   └──</span> <span class="num-code">2-01-02-03</span> <span class="node-h">مستحقات أخرى / Other Accrued</span> <span class="tag header">L4</span>
+<span class="branch-line">│   │       └──</span> <span class="num-code">2-01-02-03-0001</span> <span class="node-d">مستحقات أخرى / Other Accrued</span> <span class="tag detail">DETAIL</span>
+<span class="branch-line">│   ├──</span> <span class="num-code">2-01-03</span> <span class="node-h">ضرائب مستحقة / Taxes Payable</span> <span class="tag header">L3</span>
+<span class="branch-line">│   │   ├──</span> <span class="num-code">2-01-03-01</span> <span class="node-h">ضريبة قيمة مضافة / VAT</span> <span class="tag header">L4</span>
+<span class="branch-line">│   │   │   └──</span> <span class="num-code">2-01-03-01-0001</span> <span class="node-d">ضريبة قيمة مضافة / VAT Payable</span> <span class="tag detail">DETAIL</span>
+<span class="branch-line">│   │   ├──</span> <span class="num-code">2-01-03-02</span> <span class="node-h">ضريبة دخل / Income Tax</span> <span class="tag header">L4</span>
+<span class="branch-line">│   │   │   └──</span> <span class="num-code">2-01-03-02-0001</span> <span class="node-d">ضريبة دخل مستحقة / Income Tax Payable</span> <span class="tag detail">DETAIL</span>
+<span class="branch-line">│   │   └──</span> <span class="num-code">2-01-03-03</span> <span class="node-h">ضريبة استقطاع / Withholding</span> <span class="tag header">L4</span>
+<span class="branch-line">│   │       └──</span> <span class="num-code">2-01-03-03-0001</span> <span class="node-d">ضريبة استقطاع / Withholding Tax</span> <span class="tag detail">DETAIL</span>
+<span class="branch-line">│   ├──</span> <span class="num-code">2-01-04</span> <span class="node-h">قروض قصيرة / Short-Term Loans</span> <span class="tag header">L3</span>
+<span class="branch-line">│   │   └──</span> <span class="num-code">2-01-04-01</span> <span class="node-h">تسهيلات / Overdraft</span> <span class="tag header">L4</span>
+<span class="branch-line">│   │       └──</span> <span class="num-code">2-01-04-01-0001</span> <span class="node-d">تسهيلات بنكية / Bank Overdraft</span> <span class="tag detail">DETAIL</span>
+<span class="branch-line">│   ├──</span> <span class="num-code">2-01-05</span> <span class="node-h">مؤجلات / Deferred Items</span> <span class="tag header">L3</span>
+<span class="branch-line">│   │   ├──</span> <span class="num-code">2-01-05-01</span> <span class="node-h">GRNI</span> <span class="tag header">L4</span>
+<span class="branch-line">│   │   │   └──</span> <span class="num-code">2-01-05-01-0001</span> <span class="node-new">بضاعة بدون فاتورة / GRNI</span> <span class="tag detail">DETAIL</span> <span class="tag new">MVP</span>
+<span class="branch-line">│   │   └──</span> <span class="num-code">2-01-05-02</span> <span class="node-h">إيرادات مؤجلة / Deferred Rev</span> <span class="tag header">L4</span>
+<span class="branch-line">│   │       └──</span> <span class="num-code">2-01-05-02-0001</span> <span class="node-new">إيرادات مؤجلة / Deferred Revenue</span> <span class="tag detail">DETAIL</span> <span class="tag new">MVP</span>
+<span class="branch-line">│   └──</span> <span class="num-code">2-01-06</span> <span class="node-h">أمانات ومحتجزات / Deposits</span> <span class="tag header">L3</span>
+<span class="branch-line">│       ├──</span> <span class="num-code">2-01-06-01</span> <span class="node-h">أمانات عملاء / Customer Dep</span> <span class="tag header">L4</span>
+<span class="branch-line">│       │   └──</span> <span class="num-code">2-01-06-01-0001</span> <span class="node-d">أمانات عملاء / Customer Deposits</span> <span class="tag detail">DETAIL</span>
+<span class="branch-line">│       └──</span> <span class="num-code">2-01-06-02</span> <span class="node-h">ضمانات / Retentions</span> <span class="tag header">L4</span>
+<span class="branch-line">│           └──</span> <span class="num-code">2-01-06-02-0001</span> <span class="node-d">ضمانات محتجزة / Retention Payable</span> <span class="tag detail">DETAIL</span>
+<span class="branch-line">└──</span> <span class="num-code">2-02</span> <span class="node-h">التزامات طويلة / Long-Term</span> <span class="tag header">L2</span>
+<span class="branch-line">    ├──</span> <span class="num-code">2-02-01</span> <span class="node-h">قروض بنكية / Bank Loans</span> <span class="tag header">L3</span>
+<span class="branch-line">    │   └──</span> <span class="num-code">2-02-01-01</span> <span class="node-h">قروض طويلة / LT Loans</span> <span class="tag header">L4</span>
+<span class="branch-line">    │       └──</span> <span class="num-code">2-02-01-01-0001</span> <span class="node-d">قروض بنكية طويلة / LT Bank Loans</span> <span class="tag detail">DETAIL</span>
+<span class="branch-line">    ├──</span> <span class="num-code">2-02-02</span> <span class="node-h">مكافأة نهاية خدمة / EOS</span> <span class="tag header">L3</span>
+<span class="branch-line">    │   └──</span> <span class="num-code">2-02-02-01</span> <span class="node-h">EOS</span> <span class="tag header">L4</span>
+<span class="branch-line">    │       └──</span> <span class="num-code">2-02-02-01-0001</span> <span class="node-d">مكافأة نهاية خدمة / End of Service</span> <span class="tag detail">DETAIL</span>
+<span class="branch-line">    └──</span> <span class="num-code">2-02-03</span> <span class="node-h">التزامات أخرى / Other LT</span> <span class="tag header">L3</span>
+<span class="branch-line">        └──</span> <span class="num-code">2-02-03-01</span> <span class="node-h">أخرى / Other</span> <span class="tag header">L4</span>
+<span class="branch-line">            └──</span> <span class="num-code">2-02-03-01-0001</span> <span class="node-d">التزامات أخرى طويلة / Other LT Liabilities</span> <span class="tag detail">DETAIL</span>
+            </div>
+        </div>
+
+        <!-- ===== EQUITY ===== -->
+        <div class="tab-content" id="tab-equity">
+            <div class="tree">
+<span class="num-code">3</span> <span class="node-h">حقوق الملكية / Equity</span> <span class="tag header">L1 HEADER</span>
+<span class="branch-line">├──</span> <span class="num-code">3-01</span> <span class="node-h">رأس المال / Capital</span> <span class="tag header">L2</span>
+<span class="branch-line">│   └──</span> <span class="num-code">3-01-01</span> <span class="node-h">رأس مال مدفوع / Paid-in</span> <span class="tag header">L3</span>
+<span class="branch-line">│       ├──</span> <span class="num-code">3-01-01-01</span> <span class="node-h">رأس مال / Capital</span> <span class="tag header">L4</span>
+<span class="branch-line">│       │   └──</span> <span class="num-code">3-01-01-01-0001</span> <span class="node-d">رأس مال مدفوع / Paid-in Capital</span> <span class="tag detail">DETAIL</span>
+<span class="branch-line">│       └──</span> <span class="num-code">3-01-01-02</span> <span class="node-h">علاوة إصدار / Premium</span> <span class="tag header">L4</span>
+<span class="branch-line">│           └──</span> <span class="num-code">3-01-01-02-0001</span> <span class="node-d">علاوة إصدار / Share Premium</span> <span class="tag detail">DETAIL</span>
+<span class="branch-line">├──</span> <span class="num-code">3-02</span> <span class="node-h">احتياطيات / Reserves</span> <span class="tag header">L2</span>
+<span class="branch-line">│   ├──</span> <span class="num-code">3-02-01</span> <span class="node-h">احتياطي قانوني / Legal</span> <span class="tag header">L3</span>
+<span class="branch-line">│   │   └──</span> <span class="num-code">3-02-01-01</span> <span class="node-h">قانوني / Legal</span> <span class="tag header">L4</span>
+<span class="branch-line">│   │       └──</span> <span class="num-code">3-02-01-01-0001</span> <span class="node-d">احتياطي قانوني / Legal Reserve</span> <span class="tag detail">DETAIL</span>
+<span class="branch-line">│   ├──</span> <span class="num-code">3-02-02</span> <span class="node-h">احتياطي اختياري / Voluntary</span> <span class="tag header">L3</span>
+<span class="branch-line">│   │   └──</span> <span class="num-code">3-02-02-01</span> <span class="node-h">اختياري / Voluntary</span> <span class="tag header">L4</span>
+<span class="branch-line">│   │       └──</span> <span class="num-code">3-02-02-01-0001</span> <span class="node-d">احتياطي اختياري / Voluntary Reserve</span> <span class="tag detail">DETAIL</span>
+<span class="branch-line">│   └──</span> <span class="num-code">3-02-03</span> <span class="node-h">احتياطي عام / General</span> <span class="tag header">L3</span>
+<span class="branch-line">│       └──</span> <span class="num-code">3-02-03-01</span> <span class="node-h">عام / General</span> <span class="tag header">L4</span>
+<span class="branch-line">│           └──</span> <span class="num-code">3-02-03-01-0001</span> <span class="node-d">احتياطي عام / General Reserve</span> <span class="tag detail">DETAIL</span>
+<span class="branch-line">├──</span> <span class="num-code">3-03</span> <span class="node-h">توزيعات وسحوبات / Distributions</span> <span class="tag header">L2</span>
+<span class="branch-line">│   ├──</span> <span class="num-code">3-03-01</span> <span class="node-h">توزيعات أرباح / Dividends</span> <span class="tag header">L3</span>
+<span class="branch-line">│   │   └──</span> <span class="num-code">3-03-01-01</span> <span class="node-h">توزيعات / Dividends</span> <span class="tag header">L4</span>
+<span class="branch-line">│   │       └──</span> <span class="num-code">3-03-01-01-0001</span> <span class="node-d">توزيعات أرباح / Dividends</span> <span class="tag detail">DETAIL</span>
+<span class="branch-line">│   └──</span> <span class="num-code">3-03-02</span> <span class="node-h">سحوبات / Withdrawals</span> <span class="tag header">L3</span>
+<span class="branch-line">│       └──</span> <span class="num-code">3-03-02-01</span> <span class="node-h">سحوبات شخصية / Owner</span> <span class="tag header">L4</span>
+<span class="branch-line">│           └──</span> <span class="num-code">3-03-02-01-0001</span> <span class="node-d">سحوبات شخصية / Owner Withdrawals</span> <span class="tag detail">DETAIL</span>
+<span class="branch-line">└──</span> <span class="num-code">3-04</span> <span class="node-h">أرباح محتجزة / Retained Earnings</span> <span class="tag header">L2</span>
+<span class="branch-line">    ├──</span> <span class="num-code">3-04-01</span> <span class="node-h">سنوات سابقة / Prior Years</span> <span class="tag header">L3</span>
+<span class="branch-line">    │   └──</span> <span class="num-code">3-04-01-01</span> <span class="node-h">أرباح سابقة / Prior RE</span> <span class="tag header">L4</span>
+<span class="branch-line">    │       └──</span> <span class="num-code">3-04-01-01-0001</span> <span class="node-d">أرباح محتجزة سنوات سابقة / RE Prior Years</span> <span class="tag detail">DETAIL</span>
+<span class="branch-line">    └──</span> <span class="num-code">3-04-02</span> <span class="node-h">السنة الحالية / Current Year</span> <span class="tag header">L3</span>
+<span class="branch-line">        └──</span> <span class="num-code">3-04-02-01</span> <span class="node-h">أرباح/خسائر / P&L</span> <span class="tag header">L4</span>
+<span class="branch-line">            └──</span> <span class="num-code">3-04-02-01-0001</span> <span class="node-d">أرباح/خسائر السنة الحالية / Current Year P&L</span> <span class="tag detail">DETAIL</span>
+            </div>
+        </div>
+
+        <!-- ===== REVENUE ===== -->
+        <div class="tab-content" id="tab-revenue">
+            <div class="tree">
+<span class="num-code">4</span> <span class="node-h">الإيرادات / Revenue</span> <span class="tag header">L1 HEADER</span>
+<span class="branch-line">├──</span> <span class="num-code">4-01</span> <span class="node-h">إيرادات المبيعات / Sales Revenue</span> <span class="tag header">L2</span>
+<span class="branch-line">│   ├──</span> <span class="num-code">4-01-01</span> <span class="node-h">مبيعات بضائع / Product Sales</span> <span class="tag header">L3</span>
+<span class="branch-line">│   │   ├──</span> <span class="num-code">4-01-01-01</span> <span class="node-h">مبيعات عامة / General</span> <span class="tag header">L4</span>
+<span class="branch-line">│   │   │   └──</span> <span class="num-code">4-01-01-01-0001</span> <span class="node-d">مبيعات بضائع / Product Sales</span> <span class="tag detail">DETAIL</span>
+<span class="branch-line">│   │   ├──</span> <span class="num-code">4-01-01-02</span> <span class="node-h">مبيعات جملة / Wholesale</span> <span class="tag header">L4</span>
+<span class="branch-line">│   │   │   └──</span> <span class="num-code">4-01-01-02-0001</span> <span class="node-d">مبيعات جملة / Wholesale Sales</span> <span class="tag detail">DETAIL</span>
+<span class="branch-line">│   │   └──</span> <span class="num-code">4-01-01-03</span> <span class="node-h">مبيعات تجزئة / Retail</span> <span class="tag header">L4</span>
+<span class="branch-line">│   │       └──</span> <span class="num-code">4-01-01-03-0001</span> <span class="node-d">مبيعات تجزئة / Retail Sales</span> <span class="tag detail">DETAIL</span> <span class="tag branch">بفرع</span>
+<span class="branch-line">│   └──</span> <span class="num-code">4-01-02</span> <span class="node-h">مردودات وخصومات / Returns</span> <span class="tag header">L3</span>
+<span class="branch-line">│       ├──</span> <span class="num-code">4-01-02-01</span> <span class="node-h">مردودات / Returns</span> <span class="tag header">L4</span>
+<span class="branch-line">│       │   └──</span> <span class="num-code">4-01-02-01-0001</span> <span class="node-d">مردودات مبيعات / Sales Returns</span> <span class="tag detail">DETAIL</span> <span class="tag debit">CONTRA</span>
+<span class="branch-line">│       └──</span> <span class="num-code">4-01-02-02</span> <span class="node-h">خصومات / Discounts</span> <span class="tag header">L4</span>
+<span class="branch-line">│           └──</span> <span class="num-code">4-01-02-02-0001</span> <span class="node-d">خصومات مبيعات / Sales Discounts</span> <span class="tag detail">DETAIL</span> <span class="tag debit">CONTRA</span>
+<span class="branch-line">├──</span> <span class="num-code">4-02</span> <span class="node-h">إيرادات خدمات / Service Revenue</span> <span class="tag header">L2</span>
+<span class="branch-line">│   ├──</span> <span class="num-code">4-02-01</span> <span class="node-h">استشارات / Consulting</span> <span class="tag header">L3</span>
+<span class="branch-line">│   │   └──</span> <span class="num-code">4-02-01-01</span> <span class="node-h">استشارات / Consulting</span> <span class="tag header">L4</span>
+<span class="branch-line">│   │       └──</span> <span class="num-code">4-02-01-01-0001</span> <span class="node-d">إيرادات استشارية / Consulting Revenue</span> <span class="tag detail">DETAIL</span>
+<span class="branch-line">│   └──</span> <span class="num-code">4-02-02</span> <span class="node-h">صيانة / Maintenance</span> <span class="tag header">L3</span>
+<span class="branch-line">│       └──</span> <span class="num-code">4-02-02-01</span> <span class="node-h">صيانة / Maintenance</span> <span class="tag header">L4</span>
+<span class="branch-line">│           └──</span> <span class="num-code">4-02-02-01-0001</span> <span class="node-d">إيرادات صيانة / Maintenance Revenue</span> <span class="tag detail">DETAIL</span>
+<span class="branch-line">└──</span> <span class="num-code">4-03</span> <span class="node-h">إيرادات أخرى / Other Revenue</span> <span class="tag header">L2</span>
+<span class="branch-line">    ├──</span> <span class="num-code">4-03-01</span> <span class="node-h">إيجار / Rental</span> <span class="tag header">L3</span>
+<span class="branch-line">    │   └──</span> <span class="num-code">4-03-01-01</span> <span class="node-h">إيجار / Rental</span> <span class="tag header">L4</span>
+<span class="branch-line">    │       └──</span> <span class="num-code">4-03-01-01-0001</span> <span class="node-d">إيرادات إيجار / Rental Income</span> <span class="tag detail">DETAIL</span>
+<span class="branch-line">    ├──</span> <span class="num-code">4-03-02</span> <span class="node-h">فوائد / Interest</span> <span class="tag header">L3</span>
+<span class="branch-line">    │   └──</span> <span class="num-code">4-03-02-01</span> <span class="node-h">فوائد / Interest</span> <span class="tag header">L4</span>
+<span class="branch-line">    │       └──</span> <span class="num-code">4-03-02-01-0001</span> <span class="node-d">إيرادات فوائد / Interest Income</span> <span class="tag detail">DETAIL</span>
+<span class="branch-line">    └──</span> <span class="num-code">4-03-03</span> <span class="node-h">متنوعة / Miscellaneous</span> <span class="tag header">L3</span>
+<span class="branch-line">        └──</span> <span class="num-code">4-03-03-01</span> <span class="node-h">متنوعة / Misc</span> <span class="tag header">L4</span>
+<span class="branch-line">            └──</span> <span class="num-code">4-03-03-01-0001</span> <span class="node-d">إيرادات متنوعة / Misc Income</span> <span class="tag detail">DETAIL</span>
+            </div>
+        </div>
+
+        <!-- ===== COGS ===== -->
+        <div class="tab-content" id="tab-cogs">
+            <div class="tree">
+<span class="num-code">5</span> <span class="node-h">تكلفة البضاعة المباعة / COGS</span> <span class="tag header">L1 HEADER</span>
+<span class="branch-line">├──</span> <span class="num-code">5-01</span> <span class="node-h">مشتريات ومواد / Direct Materials</span> <span class="tag header">L2</span>
+<span class="branch-line">│   ├──</span> <span class="num-code">5-01-01</span> <span class="node-h">مشتريات / Purchases</span> <span class="tag header">L3</span>
+<span class="branch-line">│   │   ├──</span> <span class="num-code">5-01-01-01</span> <span class="node-h">مشتريات بضائع / Goods</span> <span class="tag header">L4</span>
+<span class="branch-line">│   │   │   └──</span> <span class="num-code">5-01-01-01-0001</span> <span class="node-d">مشتريات بضائع / Purchases</span> <span class="tag detail">DETAIL</span>
+<span class="branch-line">│   │   └──</span> <span class="num-code">5-01-01-02</span> <span class="node-h">شحن مشتريات / Freight-In</span> <span class="tag header">L4</span>
+<span class="branch-line">│   │       └──</span> <span class="num-code">5-01-01-02-0001</span> <span class="node-d">مصاريف شحن مشتريات / Freight-In</span> <span class="tag detail">DETAIL</span>
+<span class="branch-line">│   └──</span> <span class="num-code">5-01-02</span> <span class="node-h">مردودات وخصومات / Returns</span> <span class="tag header">L3</span>
+<span class="branch-line">│       ├──</span> <span class="num-code">5-01-02-01</span> <span class="node-h">مردودات / Returns</span> <span class="tag header">L4</span>
+<span class="branch-line">│       │   └──</span> <span class="num-code">5-01-02-01-0001</span> <span class="node-d">مردودات مشتريات / Purchase Returns</span> <span class="tag detail">DETAIL</span> <span class="tag credit">CONTRA</span>
+<span class="branch-line">│       └──</span> <span class="num-code">5-01-02-02</span> <span class="node-h">خصومات / Discounts</span> <span class="tag header">L4</span>
+<span class="branch-line">│           └──</span> <span class="num-code">5-01-02-02-0001</span> <span class="node-d">خصومات مشتريات / Purchase Discounts</span> <span class="tag detail">DETAIL</span> <span class="tag credit">CONTRA</span>
+<span class="branch-line">├──</span> <span class="num-code">5-02</span> <span class="node-h">أجور مباشرة / Direct Labor</span> <span class="tag header">L2</span>
+<span class="branch-line">│   └──</span> <span class="num-code">5-02-01</span> <span class="node-h">أجور إنتاج / Production</span> <span class="tag header">L3</span>
+<span class="branch-line">│       └──</span> <span class="num-code">5-02-01-01</span> <span class="node-h">إنتاج / Production</span> <span class="tag header">L4</span>
+<span class="branch-line">│           └──</span> <span class="num-code">5-02-01-01-0001</span> <span class="node-d">أجور عمال إنتاج / Production Wages</span> <span class="tag detail">DETAIL</span>
+<span class="branch-line">└──</span> <span class="num-code">5-03</span> <span class="node-h">تكاليف مبيعات أخرى / Other COGS</span> <span class="tag header">L2</span>
+<span class="branch-line">    ├──</span> <span class="num-code">5-03-01</span> <span class="node-h">تكلفة فعلية / COGS Actual</span> <span class="tag header">L3</span>
+<span class="branch-line">    │   └──</span> <span class="num-code">5-03-01-01</span> <span class="node-h">فعلية / Actual</span> <span class="tag header">L4</span>
+<span class="branch-line">    │       └──</span> <span class="num-code">5-03-01-01-0001</span> <span class="node-d">تكلفة بضاعة مباعة / COGS Actual</span> <span class="tag detail">DETAIL</span>
+<span class="branch-line">    └──</span> <span class="num-code">5-03-02</span> <span class="node-h">فروقات جرد / Adjustments</span> <span class="tag header">L3</span>
+<span class="branch-line">        └──</span> <span class="num-code">5-03-02-01</span> <span class="node-h">جرد / Inventory Adj</span> <span class="tag header">L4</span>
+<span class="branch-line">            └──</span> <span class="num-code">5-03-02-01-0001</span> <span class="node-d">فروقات جرد / Inventory Adjustments</span> <span class="tag detail">DETAIL</span>
+            </div>
+        </div>
+
+        <!-- ===== OPEX ===== -->
+        <div class="tab-content" id="tab-opex">
+            <div class="tree">
+<span class="num-code">6</span> <span class="node-h">المصاريف التشغيلية / Operating Expenses</span> <span class="tag header">L1 HEADER</span>
+<span class="branch-line">├──</span> <span class="num-code">6-01</span> <span class="node-h">مصاريف بيعية / Selling Expenses</span> <span class="tag header">L2</span>
+<span class="branch-line">│   ├──</span> <span class="num-code">6-01-01</span> <span class="node-h">عمولات / Commissions</span> <span class="tag header">L3</span>
+<span class="branch-line">│   │   └──</span> <span class="num-code">6-01-01-01</span> <span class="node-h">عمولات مبيعات / Sales Comm</span> <span class="tag header">L4</span>
+<span class="branch-line">│   │       └──</span> <span class="num-code">6-01-01-01-0001</span> <span class="node-d">عمولات مبيعات / Sales Commissions</span> <span class="tag detail">DETAIL</span>
+<span class="branch-line">│   ├──</span> <span class="num-code">6-01-02</span> <span class="node-h">تسويق / Marketing</span> <span class="tag header">L3</span>
+<span class="branch-line">│   │   └──</span> <span class="num-code">6-01-02-01</span> <span class="node-h">إعلان / Advertising</span> <span class="tag header">L4</span>
+<span class="branch-line">│   │       └──</span> <span class="num-code">6-01-02-01-0001</span> <span class="node-d">إعلان وتسويق / Advertising & Marketing</span> <span class="tag detail">DETAIL</span>
+<span class="branch-line">│   ├──</span> <span class="num-code">6-01-03</span> <span class="node-h">شحن مبيعات / Freight-Out</span> <span class="tag header">L3</span>
+<span class="branch-line">│   │   └──</span> <span class="num-code">6-01-03-01</span> <span class="node-h">شحن / Freight</span> <span class="tag header">L4</span>
+<span class="branch-line">│   │       └──</span> <span class="num-code">6-01-03-01-0001</span> <span class="node-d">مصاريف شحن مبيعات / Freight-Out</span> <span class="tag detail">DETAIL</span>
+<span class="branch-line">│   └──</span> <span class="num-code">6-01-04</span> <span class="node-h">بيعية أخرى / Other Selling</span> <span class="tag header">L3</span>
+<span class="branch-line">│       └──</span> <span class="num-code">6-01-04-01</span> <span class="node-h">أخرى / Other</span> <span class="tag header">L4</span>
+<span class="branch-line">│           └──</span> <span class="num-code">6-01-04-01-0001</span> <span class="node-d">مصاريف بيعية أخرى / Other Selling</span> <span class="tag detail">DETAIL</span>
+<span class="branch-line">├──</span> <span class="num-code">6-02</span> <span class="node-h">مصاريف إدارية / Admin Expenses</span> <span class="tag header">L2</span>
+<span class="branch-line">│   ├──</span> <span class="num-code">6-02-01</span> <span class="node-h">رواتب / Salaries</span> <span class="tag header">L3</span>
+<span class="branch-line">│   │   └──</span> <span class="num-code">6-02-01-01</span> <span class="node-h">رواتب وأجور / Wages</span> <span class="tag header">L4</span>
+<span class="branch-line">│   │       └──</span> <span class="num-code">6-02-01-01-0001</span> <span class="node-d">رواتب وأجور / Salaries & Wages</span> <span class="tag detail">DETAIL</span> <span class="tag branch">بفرع</span>
+<span class="branch-line">│   ├──</span> <span class="num-code">6-02-02</span> <span class="node-h">إيجار / Rent</span> <span class="tag header">L3</span>
+<span class="branch-line">│   │   └──</span> <span class="num-code">6-02-02-01</span> <span class="node-h">إيجار مكاتب / Office Rent</span> <span class="tag header">L4</span>
+<span class="branch-line">│   │       └──</span> <span class="num-code">6-02-02-01-0001</span> <span class="node-d">إيجار مكاتب / Office Rent</span> <span class="tag detail">DETAIL</span> <span class="tag branch">بفرع</span>
+<span class="branch-line">│   ├──</span> <span class="num-code">6-02-03</span> <span class="node-h">خدمات / Utilities</span> <span class="tag header">L3</span>
+<span class="branch-line">│   │   └──</span> <span class="num-code">6-02-03-01</span> <span class="node-h">كهرباء وماء / Utilities</span> <span class="tag header">L4</span>
+<span class="branch-line">│   │       └──</span> <span class="num-code">6-02-03-01-0001</span> <span class="node-d">كهرباء وماء / Utilities</span> <span class="tag detail">DETAIL</span> <span class="tag branch">بفرع</span>
+<span class="branch-line">│   ├──</span> <span class="num-code">6-02-04</span> <span class="node-h">اتصالات / Telecom</span> <span class="tag header">L3</span>
+<span class="branch-line">│   │   └──</span> <span class="num-code">6-02-04-01</span> <span class="node-h">اتصالات وإنترنت / Telecom</span> <span class="tag header">L4</span>
+<span class="branch-line">│   │       └──</span> <span class="num-code">6-02-04-01-0001</span> <span class="node-d">اتصالات وإنترنت / Telecom & Internet</span> <span class="tag detail">DETAIL</span> <span class="tag branch">بفرع</span>
+<span class="branch-line">│   ├──</span> <span class="num-code">6-02-05</span> <span class="node-h">مستلزمات / Supplies</span> <span class="tag header">L3</span>
+<span class="branch-line">│   │   └──</span> <span class="num-code">6-02-05-01</span> <span class="node-h">قرطاسية / Office Supplies</span> <span class="tag header">L4</span>
+<span class="branch-line">│   │       └──</span> <span class="num-code">6-02-05-01-0001</span> <span class="node-d">قرطاسية ومستلزمات / Office Supplies</span> <span class="tag detail">DETAIL</span>
+<span class="branch-line">│   ├──</span> <span class="num-code">6-02-06</span> <span class="node-h">استهلاك / Depreciation</span> <span class="tag header">L3</span>
+<span class="branch-line">│   │   └──</span> <span class="num-code">6-02-06-01</span> <span class="node-h">استهلاك أصول / Asset Depr</span> <span class="tag header">L4</span>
+<span class="branch-line">│   │       └──</span> <span class="num-code">6-02-06-01-0001</span> <span class="node-d">استهلاك أصول ثابتة / Depreciation Expense</span> <span class="tag detail">DETAIL</span>
+<span class="branch-line">│   ├──</span> <span class="num-code">6-02-07</span> <span class="node-h">رسوم / Fees</span> <span class="tag header">L3</span>
+<span class="branch-line">│   │   └──</span> <span class="num-code">6-02-07-01</span> <span class="node-h">رسوم حكومية / Gov Fees</span> <span class="tag header">L4</span>
+<span class="branch-line">│   │       └──</span> <span class="num-code">6-02-07-01-0001</span> <span class="node-d">رسوم حكومية / Government Fees</span> <span class="tag detail">DETAIL</span>
+<span class="branch-line">│   ├──</span> <span class="num-code">6-02-08</span> <span class="node-h">سفر / Travel</span> <span class="tag header">L3</span>
+<span class="branch-line">│   │   └──</span> <span class="num-code">6-02-08-01</span> <span class="node-h">سفر وتنقلات / Travel</span> <span class="tag header">L4</span>
+<span class="branch-line">│   │       └──</span> <span class="num-code">6-02-08-01-0001</span> <span class="node-d">سفر وتنقلات / Travel & Transport</span> <span class="tag detail">DETAIL</span>
+<span class="branch-line">│   ├──</span> <span class="num-code">6-02-09</span> <span class="node-h">ضيافة / Hospitality</span> <span class="tag header">L3</span>
+<span class="branch-line">│   │   └──</span> <span class="num-code">6-02-09-01</span> <span class="node-h">ضيافة وتمثيل / Hospitality</span> <span class="tag header">L4</span>
+<span class="branch-line">│   │       └──</span> <span class="num-code">6-02-09-01-0001</span> <span class="node-d">ضيافة وتمثيل / Hospitality</span> <span class="tag detail">DETAIL</span>
+<span class="branch-line">│   └──</span> <span class="num-code">6-02-10</span> <span class="node-h">إدارية أخرى / Other Admin</span> <span class="tag header">L3</span>
+<span class="branch-line">│       └──</span> <span class="num-code">6-02-10-01</span> <span class="node-h">أخرى / Other</span> <span class="tag header">L4</span>
+<span class="branch-line">│           └──</span> <span class="num-code">6-02-10-01-0001</span> <span class="node-d">مصاريف إدارية أخرى / Other Admin</span> <span class="tag detail">DETAIL</span>
+<span class="branch-line">└──</span> <span class="num-code">6-03</span> <span class="node-h">مصاريف تشغيلية أخرى / Other Operating</span> <span class="tag header">L2</span>
+<span class="branch-line">    ├──</span> <span class="num-code">6-03-01</span> <span class="node-h">صيانة / Maintenance</span> <span class="tag header">L3</span>
+<span class="branch-line">    │   └──</span> <span class="num-code">6-03-01-01</span> <span class="node-h">صيانة وإصلاح / Repair</span> <span class="tag header">L4</span>
+<span class="branch-line">    │       └──</span> <span class="num-code">6-03-01-01-0001</span> <span class="node-d">صيانة وإصلاحات / Maintenance & Repairs</span> <span class="tag detail">DETAIL</span>
+<span class="branch-line">    ├──</span> <span class="num-code">6-03-02</span> <span class="node-h">تأمينات / Insurance</span> <span class="tag header">L3</span>
+<span class="branch-line">    │   └──</span> <span class="num-code">6-03-02-01</span> <span class="node-h">تأمين / Insurance</span> <span class="tag header">L4</span>
+<span class="branch-line">    │       └──</span> <span class="num-code">6-03-02-01-0001</span> <span class="node-d">تأمينات / Insurance Expense</span> <span class="tag detail">DETAIL</span>
+<span class="branch-line">    ├──</span> <span class="num-code">6-03-03</span> <span class="node-h">تدريب / Training</span> <span class="tag header">L3</span>
+<span class="branch-line">    │   └──</span> <span class="num-code">6-03-03-01</span> <span class="node-h">تدريب وتطوير / Training</span> <span class="tag header">L4</span>
+<span class="branch-line">    │       └──</span> <span class="num-code">6-03-03-01-0001</span> <span class="node-d">تدريب وتطوير / Training & Development</span> <span class="tag detail">DETAIL</span>
+<span class="branch-line">    └──</span> <span class="num-code">6-03-04</span> <span class="node-h">متنوعة / Miscellaneous</span> <span class="tag header">L3</span>
+<span class="branch-line">        └──</span> <span class="num-code">6-03-04-01</span> <span class="node-h">متنوعة / Misc</span> <span class="tag header">L4</span>
+<span class="branch-line">            └──</span> <span class="num-code">6-03-04-01-0001</span> <span class="node-d">مصاريف تشغيلية متنوعة / Misc Operating</span> <span class="tag detail">DETAIL</span>
+            </div>
+        </div>
+
+        <!-- ===== OTHER ===== -->
+        <div class="tab-content" id="tab-other">
+            <div class="tree">
+<span class="num-code">8</span> <span class="node-h">مصاريف وأرباح أخرى / Other Income & Expense</span> <span class="tag header">L1 HEADER</span>
+<span class="branch-line">├──</span> <span class="num-code">8-01</span> <span class="node-h">أرباح غير تشغيلية / Non-Op Income</span> <span class="tag header">L2</span>
+<span class="branch-line">│   ├──</span> <span class="num-code">8-01-01</span> <span class="node-h">أرباح بيع أصول / Asset Gain</span> <span class="tag header">L3</span>
+<span class="branch-line">│   │   └──</span> <span class="num-code">8-01-01-01</span> <span class="node-h">بيع أصول / Disposal</span> <span class="tag header">L4</span>
+<span class="branch-line">│   │       └──</span> <span class="num-code">8-01-01-01-0001</span> <span class="node-d">أرباح بيع أصول / Gain on Disposal</span> <span class="tag detail">DETAIL</span>
+<span class="branch-line">│   ├──</span> <span class="num-code">8-01-02</span> <span class="node-h">فروقات عملة / FX Gain</span> <span class="tag header">L3</span>
+<span class="branch-line">│   │   └──</span> <span class="num-code">8-01-02-01</span> <span class="node-h">فروقات / FX</span> <span class="tag header">L4</span>
+<span class="branch-line">│   │       └──</span> <span class="num-code">8-01-02-01-0001</span> <span class="node-d">أرباح فروقات عملة / FX Gain</span> <span class="tag detail">DETAIL</span>
+<span class="branch-line">│   └──</span> <span class="num-code">8-01-03</span> <span class="node-h">أرباح أخرى / Other</span> <span class="tag header">L3</span>
+<span class="branch-line">│       └──</span> <span class="num-code">8-01-03-01</span> <span class="node-h">أخرى / Other</span> <span class="tag header">L4</span>
+<span class="branch-line">│           └──</span> <span class="num-code">8-01-03-01-0001</span> <span class="node-d">أرباح أخرى / Other Non-Op Income</span> <span class="tag detail">DETAIL</span>
+<span class="branch-line">├──</span> <span class="num-code">8-02</span> <span class="node-h">خسائر غير تشغيلية / Non-Op Expenses</span> <span class="tag header">L2</span>
+<span class="branch-line">│   ├──</span> <span class="num-code">8-02-01</span> <span class="node-h">خسائر بيع أصول / Asset Loss</span> <span class="tag header">L3</span>
+<span class="branch-line">│   │   └──</span> <span class="num-code">8-02-01-01</span> <span class="node-h">بيع أصول / Disposal</span> <span class="tag header">L4</span>
+<span class="branch-line">│   │       └──</span> <span class="num-code">8-02-01-01-0001</span> <span class="node-d">خسائر بيع أصول / Loss on Disposal</span> <span class="tag detail">DETAIL</span>
+<span class="branch-line">│   ├──</span> <span class="num-code">8-02-02</span> <span class="node-h">فروقات عملة / FX Loss</span> <span class="tag header">L3</span>
+<span class="branch-line">│   │   └──</span> <span class="num-code">8-02-02-01</span> <span class="node-h">فروقات / FX</span> <span class="tag header">L4</span>
+<span class="branch-line">│   │       └──</span> <span class="num-code">8-02-02-01-0001</span> <span class="node-d">خسائر فروقات عملة / FX Loss</span> <span class="tag detail">DETAIL</span>
+<span class="branch-line">│   ├──</span> <span class="num-code">8-02-03</span> <span class="node-h">فوائد / Interest</span> <span class="tag header">L3</span>
+<span class="branch-line">│   │   └──</span> <span class="num-code">8-02-03-01</span> <span class="node-h">فوائد / Interest</span> <span class="tag header">L4</span>
+<span class="branch-line">│   │       └──</span> <span class="num-code">8-02-03-01-0001</span> <span class="node-d">مصاريف فوائد / Interest Expense</span> <span class="tag detail">DETAIL</span>
+<span class="branch-line">│   ├──</span> <span class="num-code">8-02-04</span> <span class="node-h">ديون معدومة / Bad Debt</span> <span class="tag header">L3</span>
+<span class="branch-line">│   │   └──</span> <span class="num-code">8-02-04-01</span> <span class="node-h">ديون / Bad Debt</span> <span class="tag header">L4</span>
+<span class="branch-line">│   │       └──</span> <span class="num-code">8-02-04-01-0001</span> <span class="node-d">ديون معدومة / Bad Debt Expense</span> <span class="tag detail">DETAIL</span>
+<span class="branch-line">│   └──</span> <span class="num-code">8-02-05</span> <span class="node-h">خسائر أخرى / Other</span> <span class="tag header">L3</span>
+<span class="branch-line">│       └──</span> <span class="num-code">8-02-05-01</span> <span class="node-h">أخرى / Other</span> <span class="tag header">L4</span>
+<span class="branch-line">│           └──</span> <span class="num-code">8-02-05-01-0001</span> <span class="node-d">خسائر أخرى / Other Non-Op Expenses</span> <span class="tag detail">DETAIL</span>
+<span class="branch-line">└──</span> <span class="num-code">8-03</span> <span class="node-h">ضريبة الدخل / Income Tax</span> <span class="tag header">L2</span>
+<span class="branch-line">    └──</span> <span class="num-code">8-03-01</span> <span class="node-h">ضريبة / Tax</span> <span class="tag header">L3</span>
+<span class="branch-line">        └──</span> <span class="num-code">8-03-01-01</span> <span class="node-h">ضريبة دخل / Income Tax</span> <span class="tag header">L4</span>
+<span class="branch-line">            └──</span> <span class="num-code">8-03-01-01-0001</span> <span class="node-d">مصروف ضريبة دخل / Income Tax Expense</span> <span class="tag detail">DETAIL</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══ SECTION 5: BRANCH SCOPE ═══ -->
+    <div class="section" id="sec5">
+        <div class="section-header">
+            <div class="icon" style="background: rgba(249,115,22,0.12); color: var(--accent-orange);">🏬</div>
+            <div>
+                <div class="section-num">القسم الخامس</div>
+                <h2>نطاق الفرع والتحكم المركزي</h2>
+            </div>
+        </div>
+        <div class="card">
+            <h3>آلية التحكم: <code>HAS_BRANCHES</code> + <code>GL_ACCOUNT_BRANCH</code></h3>
+            <div class="table-wrapper">
+                <table>
+                    <thead><tr><th>الحساب</th><th>HAS_BRANCHES</th><th>السبب</th></tr></thead>
+                    <tbody>
+                        <tr><td><code>1-01-01-01-0001</code> الصندوق</td><td><span class="tag branch">1 = مقيد</span></td><td>كل فرع له صندوقه المستقل</td></tr>
+                        <tr><td><code>1-01-01-02-0001</code> البنك</td><td><span class="tag branch">1 = مقيد</span></td><td>حساب بنكي خاص بفرع</td></tr>
+                        <tr><td><code>1-01-02-01-0001</code> AR Control</td><td><span class="tag shared">0 = مشترك</span></td><td>حساب تحكم مركزي</td></tr>
+                        <tr><td><code>6-02-01-01-0001</code> رواتب</td><td><span class="tag branch">1 = مقيد</span></td><td>كل فرع يتابع مصاريفه</td></tr>
+                        <tr><td><code>3-04-01-01-0001</code> أرباح محتجزة</td><td><span class="tag shared">0 = مشترك</span></td><td>حقوق ملكية على مستوى الشركة</td></tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="alert success">
+                <div class="alert-icon">✅</div>
+                <div><div class="alert-title">القاعدة</div><p><code>HAS_BRANCHES = 0</code> → الحساب متاح لجميع الفروع (الافتراضي). <code>HAS_BRANCHES = 1</code> → فقط الفروع المسجلة في <code>GL_ACCOUNT_BRANCH</code>.</p></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══ SECTION 6: SPECIAL ACCOUNTS ═══ -->
+    <div class="section" id="sec6">
+        <div class="section-header">
+            <div class="icon" style="background: rgba(239,68,68,0.12); color: var(--accent-red);">🔒</div>
+            <div>
+                <div class="section-num">القسم السادس</div>
+                <h2>الحسابات الخاصة والتحكمية</h2>
+            </div>
+        </div>
+        <div class="grid-2">
+            <div class="card">
+                <h3>🎯 حسابات التحكم (Control)</h3>
+                <ul>
+                    <li><code>1-01-02-01-0001</code> — ذمم العملاء <span class="tag control">AR CONTROL</span></li>
+                    <li><code>2-01-01-01-0001</code> — ذمم الموردين <span class="tag control">AP CONTROL</span></li>
+                </ul>
+                <div class="alert danger" style="margin-top:10px;">
+                    <div class="alert-icon">🚫</div>
+                    <div><div class="alert-title">لا ترحيل يدوي!</div><p>فقط محرك الترحيل (Posting Engine) يكتب على هذه الحسابات.</p></div>
+                </div>
+            </div>
+            <div class="card">
+                <h3>⭐ حسابات MVP الحيوية (4)</h3>
+                <ul>
+                    <li><code>1-01-01-03-0001</code> — مبالغ تحت التحصيل <span class="tag new">MVP</span></li>
+                    <li><code>1-01-04-01-0001</code> — ضريبة مدخلات <span class="tag new">MVP</span></li>
+                    <li><code>2-01-05-01-0001</code> — GRNI <span class="tag new">MVP</span></li>
+                    <li><code>2-01-05-02-0001</code> — إيرادات مؤجلة <span class="tag new">MVP</span></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══ SECTION 7: C# & API ═══ -->
+    <div class="section" id="sec7">
+        <div class="section-header">
+            <div class="icon" style="background: rgba(6,182,212,0.12); color: var(--accent-cyan);">💻</div>
+            <div>
+                <div class="section-num">القسم السابع</div>
+                <h2>كيانات C# وواجهات API</h2>
+            </div>
+        </div>
+        <div class="card">
+            <h3>الكيان الرئيسي <code>GlAccount.cs</code></h3>
+            <div class="code-block">
+                <div class="label">ThinkOnErp.Domain/Entities/GlAccount.cs</div>
+<pre>
+<span class="kw">public class</span> <span class="tbl">GlAccount</span>
+{
+    <span class="kw">public</span> <span class="col-type">long</span> <span class="col">Id</span> { <span class="kw">get; set</span>; }
+    <span class="kw">public</span> <span class="col-type">string</span> <span class="col">AccountCode</span> { <span class="kw">get; set</span>; }     <span class="cm">// "1-01-01-02-0001"</span>
+    <span class="kw">public</span> <span class="col-type">string</span> <span class="col">AccountNameAr</span> { <span class="kw">get; set</span>; }
+    <span class="kw">public</span> <span class="col-type">string</span> <span class="col">AccountNameEn</span> { <span class="kw">get; set</span>; }
+    <span class="kw">public</span> <span class="col-type">long</span> <span class="col">CategoryId</span> { <span class="kw">get; set</span>; }
+    <span class="kw">public</span> <span class="col-type">long?</span> <span class="col">SubCategoryId</span> { <span class="kw">get; set</span>; }
+    <span class="kw">public</span> <span class="col-type">long?</span> <span class="col">ParentAccountId</span> { <span class="kw">get; set</span>; }
+    <span class="kw">public</span> <span class="col-type">string</span> <span class="col">AccountType</span> { <span class="kw">get; set</span>; }    <span class="cm">// "HEADER" / "DETAIL"</span>
+    <span class="kw">public</span> <span class="col-type">char</span> <span class="col">NormalBalance</span> { <span class="kw">get; set</span>; }     <span class="cm">// 'D' / 'C'</span>
+    <span class="kw">public</span> <span class="col-type">int</span> <span class="col">AccountLevel</span> { <span class="kw">get; set</span>; }      <span class="cm">// 1-5</span>
+    <span class="kw">public</span> <span class="col-type">bool</span> <span class="col">IsContra</span> { <span class="kw">get; set</span>; }
+    <span class="kw">public</span> <span class="col-type">string?</span> <span class="col">IsControlAccount</span> { <span class="kw">get; set</span>; } <span class="cm">// "AR"/"AP"/null</span>
+    <span class="kw">public</span> <span class="col-type">bool</span> <span class="col">IsPostable</span> { <span class="kw">get; set</span>; }       <span class="cm">// Virtual column</span>
+    <span class="kw">public</span> <span class="col-type">bool</span> <span class="col">IsActive</span> { <span class="kw">get; set</span>; }
+    <span class="kw">public</span> <span class="col-type">bool</span> <span class="col">HasBranches</span> { <span class="kw">get; set</span>; }
+    <span class="cm">// Navigation</span>
+    <span class="kw">public</span> <span class="tbl">GlAccount</span>? <span class="col">ParentAccount</span> { <span class="kw">get; set</span>; }
+    <span class="kw">public</span> ICollection&lt;<span class="tbl">GlAccount</span>&gt; <span class="col">Children</span> { <span class="kw">get; set</span>; }
+    <span class="kw">public</span> ICollection&lt;<span class="tbl">GlAccountBranch</span>&gt; <span class="col">BranchLinks</span> { <span class="kw">get; set</span>; }
+}
+</pre>
+            </div>
+        </div>
+        <div class="card">
+            <h3>واجهات API المقترحة</h3>
+            <div class="table-wrapper">
+                <table>
+                    <thead><tr><th>الطريقة</th><th>المسار</th><th>الوصف</th></tr></thead>
+                    <tbody>
+                        <tr><td><span class="tag credit">GET</span></td><td><code>/api/gl-accounts/tree</code></td><td>الشجرة هرمياً (nested JSON)</td></tr>
+                        <tr><td><span class="tag credit">GET</span></td><td><code>/api/gl-accounts/postable?branchId=</code></td><td>حسابات قابلة للترحيل بفرع</td></tr>
+                        <tr><td><span class="tag credit">GET</span></td><td><code>/api/gl-accounts/{id}</code></td><td>حساب واحد مع أبنائه</td></tr>
+                        <tr><td><span class="tag debit">POST</span></td><td><code>/api/gl-accounts</code></td><td>إنشاء حساب جديد</td></tr>
+                        <tr><td><span class="tag header">PUT</span></td><td><code>/api/gl-accounts/{id}</code></td><td>تعديل حساب</td></tr>
+                        <tr><td><span class="tag header">PUT</span></td><td><code>/api/gl-accounts/{id}/branches</code></td><td>تعيين فروع الحساب</td></tr>
+                        <tr><td><span class="tag header">PUT</span></td><td><code>/api/gl-accounts/{id}/status</code></td><td>تفعيل/تعطيل</td></tr>
+                        <tr><td><span class="tag control">DELETE</span></td><td><code>/api/gl-accounts/{id}</code></td><td>حذف (إذا لم يُستخدم)</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══ SECTION 8: GOLDEN RULES ═══ -->
+    <div class="section" id="sec8">
+        <div class="section-header">
+            <div class="icon" style="background: rgba(245,158,11,0.12); color: var(--accent-amber);">⚡</div>
+            <div>
+                <div class="section-num">القسم الثامن</div>
+                <h2>القواعد الذهبية</h2>
+            </div>
+        </div>
+        <div class="grid-2">
+            <div class="card">
+                <h3>✅ افعل</h3>
+                <ul>
+                    <li>استخدم <code>PARENT_ACCOUNT_ID</code> حصرياً للهرمية</li>
+                    <li>الترحيل فقط على المستوى 5 (<code>DETAIL</code>)</li>
+                    <li>ازرع حسابات MVP الأربعة مع كل شركة جديدة</li>
+                    <li>اختبر <code>SUM(subledger) = control_account</code> دورياً</li>
+                    <li>سجّل كل تعديل في <code>GL_ACCOUNT_AUDIT_LOG</code></li>
+                </ul>
+            </div>
+            <div class="card">
+                <h3>🚫 لا تفعل</h3>
+                <ul>
+                    <li>لا تستنتج العلاقة الأبوية من الرقم أبداً</li>
+                    <li>لا تسمح بالترحيل على <code>HEADER</code> (L1-L4)</li>
+                    <li>لا تسمح بالترحيل اليدوي على AR/AP</li>
+                    <li>لا تحذف حساباً استُخدم في قيد</li>
+                    <li>لا تنسخ الشجرة لكل فرع</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <div class="footnote">
+        <p>📋 ThinkOnErp — Chart of Accounts Architecture v2.0</p>
+        <p>نظام ترقيم خماسي 1-2-2-2-4 | بناءً على ThinkOn_Accounting_MVP_Dev_Spec</p>
+        <p style="margin-top: 8px;">آخر تحديث: يوليو 2026</p>
+    </div>
+
+</div>
+
+<script>
+function showTab(name) {
+    document.querySelectorAll('.tab-content').forEach(e => e.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(e => e.classList.remove('active'));
+    document.getElementById('tab-' + name).classList.add('active');
+    const map = {assets:0,liabilities:1,equity:2,revenue:3,cogs:4,opex:5,other:6};
+    if (map[name] !== undefined) document.querySelectorAll('.tab-btn')[map[name]].classList.add('active');
+}
+</script>
+</body>
+</html>
