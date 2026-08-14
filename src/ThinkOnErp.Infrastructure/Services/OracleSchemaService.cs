@@ -670,6 +670,134 @@ public class OracleSchemaService : IOracleSchemaService
                     CONSTRAINT "PK_GL_ACC_BRANCH" PRIMARY KEY ("ACCOUNT_CODE", "BRANCH_ID")
                 )
                 """
+            ),
+            (
+                "GL_COST_CENTER",
+                $"""
+                CREATE TABLE "{schemaName}"."GL_COST_CENTER"
+                (
+                    "COST_CENTER_CODE" NVARCHAR2(50) NOT NULL,
+                    "PARENT_COST_CENTER_CODE" NVARCHAR2(50) NULL,
+                    "NAME_AR" NVARCHAR2(200) NOT NULL,
+                    "NAME_EN" NVARCHAR2(200) NOT NULL,
+                    "COST_CENTER_LEVEL" NUMBER(2) DEFAULT 1 NOT NULL,
+                    "COST_CENTER_TYPE" NVARCHAR2(20) DEFAULT 'DETAIL' NOT NULL,
+                    "IS_POSTABLE" NUMBER(1) DEFAULT 1 NOT NULL,
+                    "IS_ACTIVE" NUMBER(1) DEFAULT 1 NOT NULL,
+                    "CREATION_USER" NVARCHAR2(100) NOT NULL,
+                    "CREATION_DATE" TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
+                    "UPDATE_USER" NVARCHAR2(100) NULL,
+                    "UPDATE_DATE" TIMESTAMP NULL,
+                    CONSTRAINT "PK_GL_COST_CENTER" PRIMARY KEY ("COST_CENTER_CODE")
+                )
+                """
+            ),
+            (
+                "GL_VOUCHER_TYPE",
+                $"""
+                CREATE TABLE "{schemaName}"."GL_VOUCHER_TYPE"
+                (
+                    "ID" NUMBER(19) GENERATED ALWAYS AS IDENTITY NOT NULL,
+                    "TYPE_CODE" NUMBER(6) NOT NULL,
+                    "TYPE_KEY" NVARCHAR2(20) NOT NULL,
+                    "NAME_AR" NVARCHAR2(200) NOT NULL,
+                    "NAME_EN" NVARCHAR2(200) NOT NULL,
+                    "PREFIX" NVARCHAR2(10) NOT NULL,
+                    "CATEGORY" NVARCHAR2(20) NOT NULL,
+                    "SERIAL_RESET_POLICY" NVARCHAR2(20) DEFAULT 'MONTHLY' NOT NULL,
+                    "REQUIRES_REVIEW" NUMBER(1) DEFAULT 1 NOT NULL,
+                    "ALLOW_MANUAL_ENTRY" NUMBER(1) DEFAULT 1 NOT NULL,
+                    "IS_SYSTEM" NUMBER(1) DEFAULT 0 NOT NULL,
+                    "DISPLAY_ORDER" NUMBER(5) DEFAULT 1 NOT NULL,
+                    "IS_ACTIVE" NUMBER(1) DEFAULT 1 NOT NULL,
+                    "DESCRIPTION" NVARCHAR2(500) NULL,
+                    "CREATION_USER" NVARCHAR2(100) NOT NULL,
+                    "CREATION_DATE" TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
+                    "UPDATE_USER" NVARCHAR2(100) NULL,
+                    "UPDATE_DATE" TIMESTAMP NULL,
+                    CONSTRAINT "PK_GL_VOUCHER_TYPE" PRIMARY KEY ("ID")
+                )
+                """
+            ),
+            (
+                "GL_VOUCHER_HEADER",
+                $"""
+                CREATE TABLE "{schemaName}"."GL_VOUCHER_HEADER"
+                (
+                    "ID" NUMBER(19) GENERATED ALWAYS AS IDENTITY NOT NULL,
+                    "BRANCH_ID" NUMBER(19) NOT NULL,
+                    "FISCAL_YEAR_ID" NUMBER(19) NOT NULL,
+                    "VOUCHER_YEAR" NUMBER(4) NOT NULL,
+                    "VOUCHER_MONTH" NUMBER(2) NOT NULL,
+                    "VOUCHER_TYPE" NUMBER(6) NOT NULL,
+                    "VOUCHER_NO" NUMBER(19) NOT NULL,
+                    "VOUCHER_DATE" DATE NOT NULL,
+                    "DESCRIPTION" NVARCHAR2(2000) NULL,
+                    "TOTAL_AMOUNT" NUMBER(18,3) DEFAULT 0 NOT NULL,
+                    "TOTAL_LOCAL_DEBIT" NUMBER(18,3) DEFAULT 0 NOT NULL,
+                    "TOTAL_LOCAL_CREDIT" NUMBER(18,3) DEFAULT 0 NOT NULL,
+                    "STATUS" NUMBER(2) DEFAULT 1 NOT NULL,
+                    "IS_AUTO_RECORD" NUMBER(1) DEFAULT 0 NOT NULL,
+                    "SOURCE_SYSTEM_CODE" NVARCHAR2(100) NULL,
+                    "SOURCE_REF_ID" NUMBER(19) NULL,
+                    "IS_STANDBY" NUMBER(1) DEFAULT 0 NOT NULL,
+                    "IS_REVIEWED" NUMBER(1) DEFAULT 0 NOT NULL,
+                    "REVIEW_USER" NVARCHAR2(100) NULL,
+                    "REVIEW_DATE" DATE NULL,
+                    "POST_USER" NVARCHAR2(100) NULL,
+                    "POST_DATE" DATE NULL,
+                    "UNPOST_USER" NVARCHAR2(100) NULL,
+                    "UNPOST_DATE" DATE NULL,
+                    "IS_REVERSED" NUMBER(1) DEFAULT 0 NOT NULL,
+                    "REVERSE_USER" NVARCHAR2(100) NULL,
+                    "REVERSE_DATE" DATE NULL,
+                    "CREATION_USER" NVARCHAR2(100) NOT NULL,
+                    "CREATION_DATE" TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
+                    "UPDATE_USER" NVARCHAR2(100) NULL,
+                    "UPDATE_DATE" TIMESTAMP NULL,
+                    CONSTRAINT "PK_GL_VOUCHER_HEADER" PRIMARY KEY ("ID")
+                )
+                """
+            ),
+            (
+                "GL_VOUCHER_DETAIL",
+                $"""
+                CREATE TABLE "{schemaName}"."GL_VOUCHER_DETAIL"
+                (
+                    "ID" NUMBER(19) GENERATED ALWAYS AS IDENTITY NOT NULL,
+                    "VOUCHER_ID" NUMBER(19) NOT NULL,
+                    "LINE_SER" NUMBER(6) NOT NULL,
+                    "ACCOUNT_CODE" NVARCHAR2(50) NOT NULL,
+                    "DEBIT" NUMBER(18,3) DEFAULT 0 NOT NULL,
+                    "CREDIT" NUMBER(18,3) DEFAULT 0 NOT NULL,
+                    "LOCAL_DEBIT" NUMBER(18,3) DEFAULT 0 NOT NULL,
+                    "LOCAL_CREDIT" NUMBER(18,3) DEFAULT 0 NOT NULL,
+                    "BASE_DEBIT" NUMBER(18,3) DEFAULT 0 NOT NULL,
+                    "BASE_CREDIT" NUMBER(18,3) DEFAULT 0 NOT NULL,
+                    "DESCRIPTION" NVARCHAR2(1000) NULL,
+                    "CURRENCY_ID" NUMBER(19) DEFAULT 1 NOT NULL,
+                    "EXCHANGE_RATE" NUMBER(14,6) DEFAULT 1 NOT NULL,
+                    "COST_CENTER_CODE" NVARCHAR2(50) NULL,
+                    "COST_CENTER_MGR_CODE" NVARCHAR2(50) NULL,
+                    "COST_CENTER_MNR_CODE" NVARCHAR2(50) NULL,
+                    "IS_SETTLEMENT" NUMBER(1) DEFAULT 0 NOT NULL,
+                    CONSTRAINT "PK_GL_VOUCHER_DETAIL" PRIMARY KEY ("ID")
+                )
+                """
+            ),
+            (
+                "GL_VOUCHER_SERIAL",
+                $"""
+                CREATE TABLE "{schemaName}"."GL_VOUCHER_SERIAL"
+                (
+                    "BRANCH_ID" NUMBER(19) NOT NULL,
+                    "SERIAL_YEAR" NUMBER(4) NOT NULL,
+                    "SERIAL_MONTH" NUMBER(2) NOT NULL,
+                    "VOUCHER_TYPE" NUMBER(6) NOT NULL,
+                    "LAST_SERIAL_NO" NUMBER(19) DEFAULT 0 NOT NULL,
+                    CONSTRAINT "PK_GL_VOUCHER_SERIAL" PRIMARY KEY ("BRANCH_ID", "SERIAL_YEAR", "SERIAL_MONTH", "VOUCHER_TYPE")
+                )
+                """
             )
         };
 
@@ -698,13 +826,15 @@ public class OracleSchemaService : IOracleSchemaService
         // Seed first so adding the category foreign key also succeeds for partially provisioned
         // schemas whose GL accounts exist but whose fixed category rows do not yet exist.
         await SeedAccountCategoriesAsync(connection, schemaName);
+        await SeedVoucherTypesAsync(connection, schemaName);
+        await SeedCostCentersAsync(connection, schemaName);
 
         var constraintStatements = new (string Name, string Sql)[]
         {
             ("PK_ACC_CAT", $"ALTER TABLE \"{schemaName}\".\"ACCOUNT_CATEGORY\" ADD CONSTRAINT \"PK_ACC_CAT\" PRIMARY KEY (\"Id\")"),
             ("UX_ACC_CATEGORY_CODE", $"ALTER TABLE \"{schemaName}\".\"ACCOUNT_CATEGORY\" ADD CONSTRAINT \"UX_ACC_CATEGORY_CODE\" UNIQUE (\"CATEGORY_CODE\")"),
             ("CK_ACC_CATEGORY_CODE", $"ALTER TABLE \"{schemaName}\".\"ACCOUNT_CATEGORY\" ADD CONSTRAINT \"CK_ACC_CATEGORY_CODE\" CHECK (\"CATEGORY_CODE\" BETWEEN 1 AND 8)"),
-            ("CK_ACC_CATEGORY_BALANCE", $"ALTER TABLE \"{schemaName}\".\"ACCOUNT_CATEGORY\" ADD CONSTRAINT \"CK_ACC_CATEGORY_BALANCE\" CHECK (\"NORMAL_BALANCE\" IN ('D', 'C'))"),
+            ("CK_ACC_CATEGORY_BALANCE", $"ALTER TABLE \"{schemaName}\".\"ACCOUNT_CATEGORY\" CHECK (\"NORMAL_BALANCE\" IN ('D', 'C'))"),
             ("CK_ACC_CATEGORY_STATEMENT", $"ALTER TABLE \"{schemaName}\".\"ACCOUNT_CATEGORY\" ADD CONSTRAINT \"CK_ACC_CATEGORY_STATEMENT\" CHECK (\"FINANCIAL_STATEMENT\" IN ('BALANCE_SHEET', 'INCOME_STATEMENT'))"),
 
             ("PK_GL_ACC", $"ALTER TABLE \"{schemaName}\".\"GL_ACCOUNT\" ADD CONSTRAINT \"PK_GL_ACC\" PRIMARY KEY (\"ACCOUNT_CODE\")"),
@@ -719,7 +849,20 @@ public class OracleSchemaService : IOracleSchemaService
             ("PK_GL_ACC_BRANCH", $"ALTER TABLE \"{schemaName}\".\"GL_ACCOUNT_BRANCH\" ADD CONSTRAINT \"PK_GL_ACC_BRANCH\" PRIMARY KEY (\"ACCOUNT_CODE\", \"BRANCH_ID\")"),
             ("FK_GLAB_ACC", $"ALTER TABLE \"{schemaName}\".\"GL_ACCOUNT_BRANCH\" ADD CONSTRAINT \"FK_GLAB_ACC\" FOREIGN KEY (\"ACCOUNT_CODE\") REFERENCES \"{schemaName}\".\"GL_ACCOUNT\" (\"ACCOUNT_CODE\") ON DELETE CASCADE"),
             ("FK_GLAB_BRANCH", $"ALTER TABLE \"{schemaName}\".\"GL_ACCOUNT_BRANCH\" ADD CONSTRAINT \"FK_GLAB_BRANCH\" FOREIGN KEY (\"BRANCH_ID\") REFERENCES \"{schemaName}\".\"SYS_BRANCH\" (\"Id\")"),
-            ("CK_GL_ACC_BRANCH_ACTIVE", $"ALTER TABLE \"{schemaName}\".\"GL_ACCOUNT_BRANCH\" ADD CONSTRAINT \"CK_GL_ACC_BRANCH_ACTIVE\" CHECK (\"IS_ACTIVE\" IN (0, 1))")
+            ("CK_GL_ACC_BRANCH_ACTIVE", $"ALTER TABLE \"{schemaName}\".\"GL_ACCOUNT_BRANCH\" ADD CONSTRAINT \"CK_GL_ACC_BRANCH_ACTIVE\" CHECK (\"IS_ACTIVE\" IN (0, 1))"),
+
+            ("FK_GL_CC_PARENT", $"ALTER TABLE \"{schemaName}\".\"GL_COST_CENTER\" ADD CONSTRAINT \"FK_GL_CC_PARENT\" FOREIGN KEY (\"PARENT_COST_CENTER_CODE\") REFERENCES \"{schemaName}\".\"GL_COST_CENTER\" (\"COST_CENTER_CODE\")"),
+
+            ("UX_GL_VOUCHER_TYPE_CODE", $"ALTER TABLE \"{schemaName}\".\"GL_VOUCHER_TYPE\" ADD CONSTRAINT \"UX_GL_VOUCHER_TYPE_CODE\" UNIQUE (\"TYPE_CODE\")"),
+            ("UX_GL_VOUCHER_TYPE_KEY", $"ALTER TABLE \"{schemaName}\".\"GL_VOUCHER_TYPE\" ADD CONSTRAINT \"UX_GL_VOUCHER_TYPE_KEY\" UNIQUE (\"TYPE_KEY\")"),
+            ("CK_GL_VT_CATEGORY", $"ALTER TABLE \"{schemaName}\".\"GL_VOUCHER_TYPE\" ADD CONSTRAINT \"CK_GL_VT_CATEGORY\" CHECK (\"CATEGORY\" IN ('JOURNAL', 'RECEIPT', 'PAYMENT', 'SYSTEM'))"),
+            ("CK_GL_VT_RESET", $"ALTER TABLE \"{schemaName}\".\"GL_VOUCHER_TYPE\" ADD CONSTRAINT \"CK_GL_VT_RESET\" CHECK (\"SERIAL_RESET_POLICY\" IN ('YEARLY', 'MONTHLY', 'CONTINUOUS'))"),
+
+            ("UX_GL_VOUCHER_NO", $"ALTER TABLE \"{schemaName}\".\"GL_VOUCHER_HEADER\" ADD CONSTRAINT \"UX_GL_VOUCHER_NO\" UNIQUE (\"BRANCH_ID\", \"VOUCHER_YEAR\", \"VOUCHER_MONTH\", \"VOUCHER_TYPE\", \"VOUCHER_NO\")"),
+            ("FK_GL_VH_BRANCH", $"ALTER TABLE \"{schemaName}\".\"GL_VOUCHER_HEADER\" ADD CONSTRAINT \"FK_GL_VH_BRANCH\" FOREIGN KEY (\"BRANCH_ID\") REFERENCES \"{schemaName}\".\"SYS_BRANCH\" (\"Id\")"),
+            ("FK_GL_VD_VH", $"ALTER TABLE \"{schemaName}\".\"GL_VOUCHER_DETAIL\" ADD CONSTRAINT \"FK_GL_VD_VH\" FOREIGN KEY (\"VOUCHER_ID\") REFERENCES \"{schemaName}\".\"GL_VOUCHER_HEADER\" (\"ID\") ON DELETE CASCADE"),
+            ("FK_GL_VD_ACC", $"ALTER TABLE \"{schemaName}\".\"GL_VOUCHER_DETAIL\" ADD CONSTRAINT \"FK_GL_VD_ACC\" FOREIGN KEY (\"ACCOUNT_CODE\") REFERENCES \"{schemaName}\".\"GL_ACCOUNT\" (\"ACCOUNT_CODE\")"),
+            ("FK_GL_VD_CC", $"ALTER TABLE \"{schemaName}\".\"GL_VOUCHER_DETAIL\" ADD CONSTRAINT \"FK_GL_VD_CC\" FOREIGN KEY (\"COST_CENTER_CODE\") REFERENCES \"{schemaName}\".\"GL_COST_CENTER\" (\"COST_CENTER_CODE\")")
         };
 
         foreach (var statement in constraintStatements)
@@ -731,7 +874,12 @@ public class OracleSchemaService : IOracleSchemaService
         {
             ("IX_GL_ACCOUNT_PARENT", $"CREATE INDEX \"{schemaName}\".\"IX_GL_ACCOUNT_PARENT\" ON \"{schemaName}\".\"GL_ACCOUNT\" (\"PARENT_ACCOUNT_CODE\")"),
             ("IX_DEV_GL_ACC_OLD_CODE", $"CREATE INDEX \"{schemaName}\".\"IX_DEV_GL_ACC_OLD_CODE\" ON \"{schemaName}\".\"GL_ACCOUNT\" (\"OLD_ACCOUNT_CODE\")"),
-            ("IX_GL_ACC_BRANCH_BRANCH", $"CREATE INDEX \"{schemaName}\".\"IX_GL_ACC_BRANCH_BRANCH\" ON \"{schemaName}\".\"GL_ACCOUNT_BRANCH\" (\"BRANCH_ID\")")
+            ("IX_GL_ACC_BRANCH_BRANCH", $"CREATE INDEX \"{schemaName}\".\"IX_GL_ACC_BRANCH_BRANCH\" ON \"{schemaName}\".\"GL_ACCOUNT_BRANCH\" (\"BRANCH_ID\")"),
+            ("IX_GL_CC_PARENT", $"CREATE INDEX \"{schemaName}\".\"IX_GL_CC_PARENT\" ON \"{schemaName}\".\"GL_COST_CENTER\" (\"PARENT_COST_CENTER_CODE\")"),
+            ("IX_GL_VH_DATE", $"CREATE INDEX \"{schemaName}\".\"IX_GL_VH_DATE\" ON \"{schemaName}\".\"GL_VOUCHER_HEADER\" (\"VOUCHER_DATE\")"),
+            ("IX_GL_VH_TYPE", $"CREATE INDEX \"{schemaName}\".\"IX_GL_VH_TYPE\" ON \"{schemaName}\".\"GL_VOUCHER_HEADER\" (\"VOUCHER_TYPE\")"),
+            ("IX_GL_VD_ACC", $"CREATE INDEX \"{schemaName}\".\"IX_GL_VD_ACC\" ON \"{schemaName}\".\"GL_VOUCHER_DETAIL\" (\"ACCOUNT_CODE\")"),
+            ("IX_GL_VD_CC", $"CREATE INDEX \"{schemaName}\".\"IX_GL_VD_CC\" ON \"{schemaName}\".\"GL_VOUCHER_DETAIL\" (\"COST_CENTER_CODE\")")
         };
 
         foreach (var statement in indexStatements)
@@ -867,6 +1015,183 @@ public class OracleSchemaService : IOracleSchemaService
             catch (Exception rollbackException)
             {
                 _logger.LogWarning(rollbackException, "Failed to roll back account-category seed transaction for {SchemaName}", schemaName);
+            }
+
+            throw;
+        }
+    }
+
+    private async Task SeedVoucherTypesAsync(OracleConnection connection, string schemaName)
+    {
+        var voucherTypes = new (int Code, string Key, string NameAr, string NameEn, string Prefix, string Category, string Policy, int Review, int Manual, int System, int Order)[]
+        {
+            (101, "JV", "قيد يومية عام", "General Journal Voucher", "JV", "JOURNAL", "MONTHLY", 1, 1, 1, 1),
+            (102, "RV", "سند قبض", "Receipt Voucher", "RV", "RECEIPT", "MONTHLY", 1, 1, 1, 2),
+            (103, "PV", "سند صرف", "Payment Voucher", "PV", "PAYMENT", "MONTHLY", 1, 1, 1, 3),
+            (201, "SALES", "قيد مبيعات آلي", "Sales Automated Journal", "INV", "SYSTEM", "MONTHLY", 0, 0, 1, 4),
+            (202, "PURCHASE", "قيد مشتريات آلي", "Purchases Automated Journal", "PUR", "SYSTEM", "MONTHLY", 0, 0, 1, 5),
+            (301, "CLOSING", "قيد إقفال سنوي", "Fiscal Year Closing Journal", "CLS", "SYSTEM", "YEARLY", 1, 0, 1, 6),
+            (302, "OPENING", "قيد أرصدة افتتاحية", "Opening Balance Journal", "OB", "JOURNAL", "YEARLY", 1, 1, 1, 7)
+        };
+
+        var mergeSql = $"""
+            MERGE INTO "{schemaName}"."GL_VOUCHER_TYPE" target
+            USING
+            (
+                SELECT :typeCode AS "TYPE_CODE",
+                       :typeKey AS "TYPE_KEY",
+                       :nameAr AS "NAME_AR",
+                       :nameEn AS "NAME_EN",
+                       :prefix AS "PREFIX",
+                       :category AS "CATEGORY",
+                       :serialResetPolicy AS "SERIAL_RESET_POLICY",
+                       :requiresReview AS "REQUIRES_REVIEW",
+                       :allowManualEntry AS "ALLOW_MANUAL_ENTRY",
+                       :isSystem AS "IS_SYSTEM",
+                       :displayOrder AS "DISPLAY_ORDER",
+                       'SYSTEM' AS "CREATION_USER"
+                FROM DUAL
+            ) source
+            ON (target."TYPE_CODE" = source."TYPE_CODE")
+            WHEN MATCHED THEN UPDATE SET
+                target."NAME_AR" = source."NAME_AR",
+                target."NAME_EN" = source."NAME_EN",
+                target."PREFIX" = source."PREFIX",
+                target."CATEGORY" = source."CATEGORY",
+                target."SERIAL_RESET_POLICY" = source."SERIAL_RESET_POLICY",
+                target."REQUIRES_REVIEW" = source."REQUIRES_REVIEW",
+                target."ALLOW_MANUAL_ENTRY" = source."ALLOW_MANUAL_ENTRY",
+                target."IS_SYSTEM" = source."IS_SYSTEM",
+                target."DISPLAY_ORDER" = source."DISPLAY_ORDER"
+            WHEN NOT MATCHED THEN INSERT
+            (
+                "TYPE_CODE", "TYPE_KEY", "NAME_AR", "NAME_EN", "PREFIX", "CATEGORY",
+                "SERIAL_RESET_POLICY", "REQUIRES_REVIEW", "ALLOW_MANUAL_ENTRY", "IS_SYSTEM", "DISPLAY_ORDER", "IS_ACTIVE", "CREATION_USER", "CREATION_DATE"
+            )
+            VALUES
+            (
+                source."TYPE_CODE", source."TYPE_KEY", source."NAME_AR", source."NAME_EN", source."PREFIX", source."CATEGORY",
+                source."SERIAL_RESET_POLICY", source."REQUIRES_REVIEW", source."ALLOW_MANUAL_ENTRY", source."IS_SYSTEM", source."DISPLAY_ORDER", 1, source."CREATION_USER", CURRENT_TIMESTAMP
+            )
+            """;
+
+        using var transaction = connection.BeginTransaction();
+        try
+        {
+            foreach (var vt in voucherTypes)
+            {
+                await using var cmd = connection.CreateCommand();
+                cmd.BindByName = true;
+                cmd.CommandText = mergeSql;
+                cmd.Transaction = transaction;
+                cmd.Parameters.Add(new OracleParameter("typeCode", OracleDbType.Int32) { Value = vt.Code });
+                cmd.Parameters.Add(new OracleParameter("typeKey", OracleDbType.NVarchar2, 20) { Value = vt.Key });
+                cmd.Parameters.Add(new OracleParameter("nameAr", OracleDbType.NVarchar2, 200) { Value = vt.NameAr });
+                cmd.Parameters.Add(new OracleParameter("nameEn", OracleDbType.NVarchar2, 200) { Value = vt.NameEn });
+                cmd.Parameters.Add(new OracleParameter("prefix", OracleDbType.NVarchar2, 10) { Value = vt.Prefix });
+                cmd.Parameters.Add(new OracleParameter("category", OracleDbType.NVarchar2, 20) { Value = vt.Category });
+                cmd.Parameters.Add(new OracleParameter("serialResetPolicy", OracleDbType.NVarchar2, 20) { Value = vt.Policy });
+                cmd.Parameters.Add(new OracleParameter("requiresReview", OracleDbType.Int32) { Value = vt.Review });
+                cmd.Parameters.Add(new OracleParameter("allowManualEntry", OracleDbType.Int32) { Value = vt.Manual });
+                cmd.Parameters.Add(new OracleParameter("isSystem", OracleDbType.Int32) { Value = vt.System });
+                cmd.Parameters.Add(new OracleParameter("displayOrder", OracleDbType.Int32) { Value = vt.Order });
+                await cmd.ExecuteNonQueryAsync();
+            }
+
+            await transaction.CommitAsync();
+        }
+        catch
+        {
+            try
+            {
+                await transaction.RollbackAsync();
+            }
+            catch (Exception rollbackException)
+            {
+                _logger.LogWarning(rollbackException, "Failed to roll back voucher-type seed transaction for {SchemaName}", schemaName);
+            }
+
+            throw;
+        }
+    }
+
+    private async Task SeedCostCentersAsync(OracleConnection connection, string schemaName)
+    {
+        var costCenters = new (string Code, string? ParentCode, string NameAr, string NameEn, int Level, string Type, int IsPostable)[]
+        {
+            ("100", null, "الإدارة العامة والخدمات المساندة", "General Administration & Support", 1, "HEADER", 0),
+            ("101", "100", "قسم تقنية المعلومات", "Information Technology Dept", 2, "DETAIL", 1),
+            ("102", "100", "قسم الموارد البشرية", "Human Resources Dept", 2, "DETAIL", 1),
+            ("200", null, "إدارة المبيعات والتسويق", "Sales & Marketing Administration", 1, "HEADER", 0),
+            ("201", "200", "قسم التسويق والإعلانات", "Marketing & Advertising Dept", 2, "DETAIL", 1),
+            ("202", "200", "قسم المبيعات المباشرة", "Direct Sales Dept", 2, "DETAIL", 1),
+            ("300", null, "إدارة العمليات والتشغيل", "Operations & Maintenance Administration", 1, "HEADER", 0),
+            ("301", "300", "قسم الخدمات اللوجستية والنقل", "Logistics & Transport Dept", 2, "DETAIL", 1)
+        };
+
+        var mergeSql = $"""
+            MERGE INTO "{schemaName}"."GL_COST_CENTER" target
+            USING
+            (
+                SELECT :costCenterCode AS "COST_CENTER_CODE",
+                       :parentCode AS "PARENT_COST_CENTER_CODE",
+                       :nameAr AS "NAME_AR",
+                       :nameEn AS "NAME_EN",
+                       :ccLevel AS "COST_CENTER_LEVEL",
+                       :ccType AS "COST_CENTER_TYPE",
+                       :isPostable AS "IS_POSTABLE",
+                       'SYSTEM' AS "CREATION_USER"
+                FROM DUAL
+            ) source
+            ON (target."COST_CENTER_CODE" = source."COST_CENTER_CODE")
+            WHEN MATCHED THEN UPDATE SET
+                target."NAME_AR" = source."NAME_AR",
+                target."NAME_EN" = source."NAME_EN",
+                target."COST_CENTER_LEVEL" = source."COST_CENTER_LEVEL",
+                target."COST_CENTER_TYPE" = source."COST_CENTER_TYPE",
+                target."IS_POSTABLE" = source."IS_POSTABLE"
+            WHEN NOT MATCHED THEN INSERT
+            (
+                "COST_CENTER_CODE", "PARENT_COST_CENTER_CODE", "NAME_AR", "NAME_EN",
+                "COST_CENTER_LEVEL", "COST_CENTER_TYPE", "IS_POSTABLE", "IS_ACTIVE", "CREATION_USER", "CREATION_DATE"
+            )
+            VALUES
+            (
+                source."COST_CENTER_CODE", source."PARENT_COST_CENTER_CODE", source."NAME_AR", source."NAME_EN",
+                source."COST_CENTER_LEVEL", source."COST_CENTER_TYPE", source."IS_POSTABLE", 1, source."CREATION_USER", CURRENT_TIMESTAMP
+            )
+            """;
+
+        using var transaction = connection.BeginTransaction();
+        try
+        {
+            foreach (var cc in costCenters)
+            {
+                await using var cmd = connection.CreateCommand();
+                cmd.Transaction = transaction;
+                cmd.BindByName = true;
+                cmd.CommandText = mergeSql;
+                cmd.Parameters.Add(new OracleParameter("costCenterCode", OracleDbType.NVarchar2, 50) { Value = cc.Code });
+                cmd.Parameters.Add(new OracleParameter("parentCode", OracleDbType.NVarchar2, 50) { Value = (object?)cc.ParentCode ?? DBNull.Value });
+                cmd.Parameters.Add(new OracleParameter("nameAr", OracleDbType.NVarchar2, 200) { Value = cc.NameAr });
+                cmd.Parameters.Add(new OracleParameter("nameEn", OracleDbType.NVarchar2, 200) { Value = cc.NameEn });
+                cmd.Parameters.Add(new OracleParameter("ccLevel", OracleDbType.Int32) { Value = cc.Level });
+                cmd.Parameters.Add(new OracleParameter("ccType", OracleDbType.NVarchar2, 20) { Value = cc.Type });
+                cmd.Parameters.Add(new OracleParameter("isPostable", OracleDbType.Int32) { Value = cc.IsPostable });
+                await cmd.ExecuteNonQueryAsync();
+            }
+
+            await transaction.CommitAsync();
+        }
+        catch
+        {
+            try
+            {
+                await transaction.RollbackAsync();
+            }
+            catch (Exception rollbackException)
+            {
+                _logger.LogWarning(rollbackException, "Failed to roll back cost-center seed transaction for {SchemaName}", schemaName);
             }
 
             throw;

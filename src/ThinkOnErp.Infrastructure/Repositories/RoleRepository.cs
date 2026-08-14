@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using ThinkOnErp.Domain.Entities;
 using ThinkOnErp.Domain.Interfaces;
 using ThinkOnErp.Infrastructure.Data;
@@ -17,7 +17,6 @@ public class RoleRepository : IRoleRepository
     public async Task<List<SysRole>> GetAllAsync()
     {
         return await _context.SysRoles
-            .Where(r => r.IsActive)
             .ToListAsync();
     }
 

@@ -11,7 +11,7 @@ public class SysFeatureRepository : ISysFeatureRepository
     public SysFeatureRepository(OracleDbContext context) => _context = context;
 
     public async Task<List<SysFeature>> GetAllFeaturesAsync() =>
-        await _context.SysFeatures.Where(f => f.IsActive).ToListAsync();
+        await _context.SysFeatures.ToListAsync();
 
     public async Task<SysFeature?> GetFeatureByIdAsync(long featureId) =>
         await _context.SysFeatures.FindAsync(featureId);

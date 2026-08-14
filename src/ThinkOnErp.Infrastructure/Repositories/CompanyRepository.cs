@@ -27,13 +27,12 @@ public class CompanyRepository : ICompanyRepository
         return await _context.SysCompanies
             .OrderBy(c => c.CompanySchema == null ? 1 : 0)
             .ThenByDescending(c => c.Id)
-            .FirstOrDefaultAsync(c => c.CompanyCode == companyCode && c.IsActive);
+            .FirstOrDefaultAsync(c => c.CompanyCode == companyCode);
     }
 
     public async Task<List<SysCompany>> GetAllAsync()
     {
         return await _context.SysCompanies
-            .Where(c => c.IsActive)
             .ToListAsync();
     }
 

@@ -152,6 +152,8 @@ public static class DependencyInjection
         services.AddScoped<ILegacyAuditService, LegacyAuditService>();
         services.AddScoped<ICurrentTenantContext, HttpCurrentTenantContext>();
         services.AddScoped<ICoaWorkbookReader, XlsxCoaWorkbookReader>();
+        services.AddScoped<IGlVoucherRepository, GlVoucherRepository>();
+        services.AddScoped<IGlCostCenterRepository, GlCostCenterRepository>();
 
         // Register audit logging services
         services.AddScoped<IAuditRepository, AuditRepository>();

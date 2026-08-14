@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using ThinkOnErp.Domain.Entities;
 using ThinkOnErp.Domain.Interfaces;
 using ThinkOnErp.Infrastructure.Data;
@@ -11,10 +11,10 @@ public class ScreenRepository : IScreenRepository
     public ScreenRepository(OracleDbContext context) => _context = context;
 
     public async Task<List<SysScreen>> GetAllScreensAsync() =>
-        await _context.SysScreens.Where(s => s.IsActive).ToListAsync();
+        await _context.SysScreens.ToListAsync();
 
     public async Task<List<SysScreen>> GetScreensBySystemIdAsync(long systemId) =>
-        await _context.SysScreens.Where(s => s.SystemId == systemId && s.IsActive).ToListAsync();
+        await _context.SysScreens.Where(s => s.SystemId == systemId).ToListAsync();
 
     public async Task<SysScreen?> GetScreenByIdAsync(long screenId) =>
         await _context.SysScreens.FindAsync(screenId);

@@ -11,16 +11,16 @@ public class FiscalYearRepository : IFiscalYearRepository
     public FiscalYearRepository(OracleDbContext context) => _context = context;
 
     public async Task<List<SysFiscalYear>> GetAllAsync() =>
-        await _context.SysFiscalYears.Where(f => f.IsActive).ToListAsync();
+        await _context.SysFiscalYears.ToListAsync();
 
     public async Task<SysFiscalYear?> GetByIdAsync(long rowId) =>
         await _context.SysFiscalYears.FindAsync(rowId);
 
     public async Task<List<SysFiscalYear>> GetByCompanyIdAsync(long companyId) =>
-        await _context.SysFiscalYears.Where(f => f.CompanyId == companyId && f.IsActive).ToListAsync();
+        await _context.SysFiscalYears.Where(f => f.CompanyId == companyId).ToListAsync();
 
     public async Task<List<SysFiscalYear>> GetByBranchIdAsync(long branchId) =>
-        await _context.SysFiscalYears.Where(f => f.BranchId == branchId && f.IsActive).ToListAsync();
+        await _context.SysFiscalYears.Where(f => f.BranchId == branchId).ToListAsync();
 
     public async Task<long> CreateAsync(SysFiscalYear fiscalYear)
     {

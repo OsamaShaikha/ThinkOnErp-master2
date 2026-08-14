@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using ThinkOnErp.Domain.Entities;
 using ThinkOnErp.Domain.Interfaces;
 using ThinkOnErp.Infrastructure.Data;
@@ -11,7 +11,7 @@ public class SystemRepository : ISystemRepository
     public SystemRepository(OracleDbContext context) => _context = context;
 
     public async Task<List<SysSystem>> GetAllSystemsAsync() =>
-        await _context.SysSystems.Where(s => s.IsActive).ToListAsync();
+        await _context.SysSystems.ToListAsync();
 
     public async Task<SysSystem?> GetSystemByIdAsync(long systemId) =>
         await _context.SysSystems.FindAsync(systemId);

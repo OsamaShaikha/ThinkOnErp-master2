@@ -21,7 +21,7 @@ public class BranchRepository : IBranchRepository
     {
         try
         {
-            return await _context.SysBranches.Where(b => b.IsActive).ToListAsync();
+            return await _context.SysBranches.ToListAsync();
         }
         catch (Exception ex)
         {
@@ -60,7 +60,7 @@ public class BranchRepository : IBranchRepository
     {
         try
         {
-            return await _context.SysBranches.Where(b => b.CompanyId == companyId && b.IsActive).ToListAsync();
+            return await _context.SysBranches.Where(b => b.CompanyId == companyId).ToListAsync();
         }
         catch (Exception ex)
         {

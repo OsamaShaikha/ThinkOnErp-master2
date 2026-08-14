@@ -177,10 +177,15 @@ public class OracleDbContext : DbContext
     public DbSet<SysCode> SysCodes => Set<SysCode>();
     public DbSet<SysSetting> SysSettings => Set<SysSetting>();
 
-    // General ledger / chart of accounts (tenant schemas)
+    // General ledger / chart of accounts & vouchers (tenant schemas)
     public DbSet<GlAccount> GlAccounts => Set<GlAccount>();
     public DbSet<GlAccountBranch> GlAccountBranches => Set<GlAccountBranch>();
     public DbSet<GlAccountStructureConfig> GlAccountStructureConfigs => Set<GlAccountStructureConfig>();
+    public DbSet<GlCostCenter> GlCostCenters => Set<GlCostCenter>();
+    public DbSet<GlVoucherType> GlVoucherTypes => Set<GlVoucherType>();
+    public DbSet<GlVoucherHeader> GlVoucherHeaders => Set<GlVoucherHeader>();
+    public DbSet<GlVoucherDetail> GlVoucherDetails => Set<GlVoucherDetail>();
+    public DbSet<GlVoucherSerial> GlVoucherSerials => Set<GlVoucherSerial>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

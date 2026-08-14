@@ -89,7 +89,6 @@ public sealed class GlAccountRepository : IGlAccountRepository
     {
         return await _context.GlAccountStructureConfigs
             .AsNoTracking()
-            .Where(c => c.IsActive)
             .OrderBy(c => c.LevelNumber)
             .ToListAsync(cancellationToken);
     }

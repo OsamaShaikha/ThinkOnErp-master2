@@ -41,6 +41,8 @@ public static class DependencyInjection
         services.AddScoped<ITicketConfigurationService, TicketConfigurationService>();
         services.AddScoped<IGlAccountService, GlAccountService>();
         services.AddScoped<ICoaExcelImportService, CoaExcelImportService>();
+        services.AddScoped<IGlVoucherService, GlVoucherService>();
+        services.AddScoped<IGlCostCenterService, GlCostCenterService>();
 
         return services;
     }

@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using ThinkOnErp.Domain.Entities;
 using ThinkOnErp.Domain.Interfaces;
 using ThinkOnErp.Infrastructure.Data;
@@ -11,7 +11,7 @@ public class SuperAdminRepository : ISuperAdminRepository
     public SuperAdminRepository(OracleDbContext context) => _context = context;
 
     public async Task<List<SysSuperAdmin>> GetAllAsync() =>
-        await _context.SysSuperAdmins.Where(s => s.IsActive).ToListAsync();
+        await _context.SysSuperAdmins.ToListAsync();
 
     public async Task<SysSuperAdmin?> GetByIdAsync(long id) =>
         await _context.SysSuperAdmins.FindAsync(id);
