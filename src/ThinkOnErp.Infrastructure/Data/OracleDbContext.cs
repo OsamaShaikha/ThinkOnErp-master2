@@ -120,6 +120,8 @@ public class OracleDbContext : DbContext
     public DbSet<SysBranch> SysBranches => Set<SysBranch>();
     public DbSet<SysUser> SysUsers => Set<SysUser>();
     public DbSet<SysFiscalYear> SysFiscalYears => Set<SysFiscalYear>();
+    public DbSet<SysApiCategory> SysApiCategories => Set<SysApiCategory>();
+    public DbSet<SysApiEndpoint> SysApiEndpoints => Set<SysApiEndpoint>();
 
     // Permission system entities
     public DbSet<SysSuperAdmin> SysSuperAdmins => Set<SysSuperAdmin>();
@@ -176,9 +178,9 @@ public class OracleDbContext : DbContext
     public DbSet<SysSetting> SysSettings => Set<SysSetting>();
 
     // General ledger / chart of accounts (tenant schemas)
-    public DbSet<AccountCategory> AccountCategories => Set<AccountCategory>();
     public DbSet<GlAccount> GlAccounts => Set<GlAccount>();
     public DbSet<GlAccountBranch> GlAccountBranches => Set<GlAccountBranch>();
+    public DbSet<GlAccountStructureConfig> GlAccountStructureConfigs => Set<GlAccountStructureConfig>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -224,13 +226,11 @@ public class OracleDbContext : DbContext
         modelBuilder.ApplyConfiguration(new SysRoleScreenPermissionConfiguration());
         modelBuilder.ApplyConfiguration(new SysUserScreenPermissionConfiguration());
         modelBuilder.ApplyConfiguration(new SysUserBranchConfiguration());
-        modelBuilder.ApplyConfiguration(new AccountCategoryConfiguration());
         modelBuilder.ApplyConfiguration(new GlAccountConfiguration());
         modelBuilder.ApplyConfiguration(new GlAccountBranchConfiguration());
-
-        // Oracle doesn't support BOOLEAN as a SQL column type; map all bool to NUMBER(1)
-        // Clear HasConversion<string> from individual configs — Oracle provider handles
-        // bool <-> NUMBER(1) natively when there's no explicit value converter
+        modelBuilder.ApplyConfiguration(new GlAccountStructureConfigConfiguration());
+        modelBuilder.ApplyConfiguration(new Configurations.SysApiCategoryConfiguration());
+        modelBuilder.ApplyConfiguration(new Configurations.SysApiEndpointConfiguration());
         foreach (var entityType in modelBuilder.Model.GetEntityTypes())
         {
             foreach (var property in entityType.GetProperties())

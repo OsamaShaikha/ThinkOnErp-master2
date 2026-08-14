@@ -88,39 +88,17 @@ public sealed class CoaExcelImportService : ICoaExcelImportService
             return result;
         }
 
-        var categories = await _repository.GetCategoriesAsync(cancellationToken);
-        var categoriesByCode = categories.ToDictionary(category => category.CategoryCode);
-        foreach (var definition in CategoryDefinitions.Values)
-        {
-            if (!categoriesByCode.TryGetValue(definition.NumericCode, out var category) ||
-                !string.Equals(category.NormalBalance, definition.NormalBalance, StringComparison.Ordinal) ||
-                !string.Equals(category.FinancialStatement, definition.FinancialStatement, StringComparison.Ordinal))
-            {
-                result.Errors.Add(new CoaImportErrorDto(
-                    null,
-                    "category_code",
-                    "COA_CATEGORY_REFERENCE_MISSING",
-                    $"Account category {definition.NumericCode} is missing or inconsistent in the tenant schema."));
-            }
-        }
-
-        if (!result.IsValid)
-        {
-            return result;
-        }
-
         var accountsByCode = new Dictionary<string, GlAccount>(StringComparer.Ordinal);
         foreach (var row in rows)
         {
-            var categoryDefinition = CategoryDefinitions[Normalize(row.CategoryCode)];
-            var category = categoriesByCode[categoryDefinition.NumericCode];
+            var accountCode = Normalize(row.AccountCode);
             var account = new GlAccount
             {
-                CompanyId = companyId,
-                AccountCode = Normalize(row.AccountCode),
+                AccountCode = accountCode,
+                OldAccountCode = NullIfWhiteSpace(row.OldAccountCode),
                 AccountNameAr = row.AccountNameAr.Trim(),
                 AccountNameEn = row.AccountNameEn.Trim(),
-                CategoryId = category.Id,
+                ParentAccountCode = NullIfWhiteSpace(row.ParentCode),
                 AccountLevel = row.AccountLevel,
                 AccountType = Normalize(row.AccountType),
                 NormalBalance = Normalize(row.NormalBalance),
@@ -133,31 +111,23 @@ public sealed class CoaExcelImportService : ICoaExcelImportService
                 Notes = NullIfWhiteSpace(row.Notes)
             };
 
-            accountsByCode.Add(account.AccountCode, account);
-        }
-
-        foreach (var row in rows)
-        {
-            var account = accountsByCode[Normalize(row.AccountCode)];
-            var parentCode = NullIfWhiteSpace(row.ParentCode);
-            if (parentCode != null)
-            {
-                account.ParentAccount = accountsByCode[parentCode];
-            }
-
             if (account.IsBranchSpecific)
             {
                 account.BranchLinks.Add(new GlAccountBranch
                 {
+                    AccountCode = accountCode,
                     BranchId = defaultBranchId,
                     IsActive = true
                 });
             }
+
+            accountsByCode.Add(account.AccountCode, account);
         }
 
         await _repository.ImportAsync(accountsByCode.Values.ToList(), cancellationToken);
         result.ImportedCount = accountsByCode.Count;
         return result;
+
     }
 
     private async Task<(IReadOnlyList<CoaImportRowDto> Rows, CoaImportResultDto Result)>

@@ -2,15 +2,12 @@ namespace ThinkOnErp.Application.DTOs.Accounting;
 
 public class GlAccountDto
 {
-    public long Id { get; set; }
     public string AccountCode { get; set; } = string.Empty;
+    public string? OldAccountCode { get; set; }
     public string AccountNameAr { get; set; } = string.Empty;
     public string AccountNameEn { get; set; } = string.Empty;
-    public long? ParentAccountId { get; set; }
-    public long CategoryId { get; set; }
+    public string? ParentAccountCode { get; set; }
     public int CategoryCode { get; set; }
-    public string CategoryNameAr { get; set; } = string.Empty;
-    public string CategoryNameEn { get; set; } = string.Empty;
     public int AccountLevel { get; set; }
     public string AccountType { get; set; } = string.Empty;
     public string NormalBalance { get; set; } = string.Empty;

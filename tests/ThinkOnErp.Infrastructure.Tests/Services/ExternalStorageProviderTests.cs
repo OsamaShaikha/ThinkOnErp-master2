@@ -290,14 +290,14 @@ public class ExternalStorageProviderTests
     }
 
     [Fact]
-    public void AzureCLOBStorageProvider_ProviderName_ShouldReturnAzureCLOB()
+    public void AzureBlobStorageProvider_ProviderName_ShouldReturnAzureBlob()
     {
         // Arrange
-        var mockCLOBServiceClient = new Mock<CLOBServiceClient>();
-        var mockLogger = new Mock<ILogger<AzureCLOBStorageProvider>>();
+        var mockBlobServiceClient = new Mock<BlobServiceClient>();
+        var mockLogger = new Mock<ILogger<AzureBlobStorageProvider>>();
         var connectionString = "ContainerName=test-container";
 
-        var provider = new AzureCLOBStorageProvider(mockCLOBServiceClient.Object, mockLogger.Object, connectionString);
+        var provider = new AzureBlobStorageProvider(mockBlobServiceClient.Object, mockLogger.Object, connectionString);
 
         // Act
         var providerName = provider.ProviderName;

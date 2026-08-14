@@ -23,7 +23,6 @@ public sealed class GlAccountsControllerTests
         {
             new GlAccountTreeDto
             {
-                Id = 1,
                 AccountCode = "1",
                 AccountNameAr = "الأصول",
                 AccountNameEn = "Assets",
@@ -52,14 +51,12 @@ public sealed class GlAccountsControllerTests
             AccountCode = "111101",
             AccountNameAr = "الصندوق الرئيسي",
             AccountNameEn = "Main cash",
-            ParentAccountId = 10,
-            CategoryId = 1,
+            ParentAccountCode = "1111",
             AccountType = "DETAIL",
             NormalBalance = "D"
         };
         var created = new GlAccountDto
         {
-            Id = 11,
             AccountCode = request.AccountCode,
             AccountNameAr = request.AccountNameAr,
             AccountNameEn = request.AccountNameEn,
@@ -78,29 +75,28 @@ public sealed class GlAccountsControllerTests
         Assert.Equal(201, result.StatusCode);
         var response = Assert.IsType<ApiResponse<GlAccountDto>>(result.Value);
         Assert.True(response.Success);
-        Assert.Equal(11, response.Data!.Id);
+        Assert.Equal("111101", response.Data!.AccountCode);
         _service.VerifyAll();
     }
 
     [Fact]
-    public async Task GetById_WhenAccountExists_ReturnsSuccessfulEnvelope()
+    public async Task GetByCode_WhenAccountExists_ReturnsSuccessfulEnvelope()
     {
         var account = new GlAccountDto
         {
-            Id = 11,
             AccountCode = "111101",
             AccountNameAr = "الصندوق الرئيسي",
             AccountNameEn = "Main cash"
         };
         _service
-            .Setup(service => service.GetAccountAsync(11, CancellationToken.None))
+            .Setup(service => service.GetAccountByCodeAsync("111101", CancellationToken.None))
             .ReturnsAsync(account);
 
-        var action = await CreateController().GetById(11, CancellationToken.None);
+        var action = await CreateController().GetByCode("111101", CancellationToken.None);
 
         var ok = Assert.IsType<OkObjectResult>(action.Result);
         var response = Assert.IsType<ApiResponse<GlAccountDto>>(ok.Value);
-        Assert.Equal(11, response.Data!.Id);
+        Assert.Equal("111101", response.Data!.AccountCode);
         _service.VerifyAll();
     }
 
@@ -114,20 +110,19 @@ public sealed class GlAccountsControllerTests
         };
         var updated = new GlAccountDto
         {
-            Id = 11,
             AccountCode = "111101",
             AccountNameAr = request.AccountNameAr,
             AccountNameEn = request.AccountNameEn
         };
         _service
             .Setup(service => service.UpdateAccountAsync(
-                11,
+                "111101",
                 request,
                 CancellationToken.None))
             .ReturnsAsync(updated);
 
         var action = await CreateController().Update(
-            11,
+            "111101",
             request,
             CancellationToken.None);
 
@@ -141,7 +136,7 @@ public sealed class GlAccountsControllerTests
     public async Task Update_WhenRequestIsMissing_Returns400WithoutCallingService()
     {
         var action = await CreateController().Update(
-            11,
+            "111101",
             null,
             CancellationToken.None);
 
@@ -156,20 +151,19 @@ public sealed class GlAccountsControllerTests
     {
         var deleted = new GlAccountDto
         {
-            Id = 11,
             AccountCode = "111101",
             AccountNameAr = "الصندوق الرئيسي",
             AccountNameEn = "Main cash"
         };
         _service
-            .Setup(service => service.DeleteAccountAsync(11, CancellationToken.None))
+            .Setup(service => service.DeleteAccountAsync("111101", CancellationToken.None))
             .ReturnsAsync(deleted);
 
-        var action = await CreateController().Delete(11, CancellationToken.None);
+        var action = await CreateController().Delete("111101", CancellationToken.None);
 
         var ok = Assert.IsType<OkObjectResult>(action.Result);
         var response = Assert.IsType<ApiResponse<GlAccountDto>>(ok.Value);
-        Assert.Equal(11, response.Data!.Id);
+        Assert.Equal("111101", response.Data!.AccountCode);
         _service.VerifyAll();
     }
 
@@ -177,7 +171,7 @@ public sealed class GlAccountsControllerTests
     public async Task UpdateStatus_WhenIsActiveIsMissing_Returns400WithoutCallingService()
     {
         var action = await CreateController().UpdateStatus(
-            11,
+            "111101",
             new UpdateGlAccountStatusDto(),
             CancellationToken.None);
 
@@ -232,3 +226,4 @@ public sealed class GlAccountsControllerTests
         _service.Object,
         Mock.Of<ILogger<GlAccountsController>>());
 }
+

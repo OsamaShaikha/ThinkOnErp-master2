@@ -16,10 +16,11 @@ public class GlAccountBranchConfiguration : IEntityTypeConfiguration<GlAccountBr
                 "\"IS_ACTIVE\" IN (0, 1)");
         });
 
-        builder.HasKey(link => new { link.GlAccountId, link.BranchId });
-        builder.Property(link => link.GlAccountId)
-            .HasColumnName("GL_ACCOUNT_ID")
-            .HasColumnType("NUMBER(19)")
+        builder.HasKey(link => new { link.AccountCode, link.BranchId });
+        builder.Property(link => link.AccountCode)
+            .HasColumnName("ACCOUNT_CODE")
+            .HasColumnType("NVARCHAR2(50)")
+            .HasMaxLength(50)
             .IsRequired();
         builder.Property(link => link.BranchId)
             .HasColumnName("BRANCH_ID")
@@ -32,7 +33,7 @@ public class GlAccountBranchConfiguration : IEntityTypeConfiguration<GlAccountBr
 
         builder.HasOne(link => link.GlAccount)
             .WithMany(account => account.BranchLinks)
-            .HasForeignKey(link => link.GlAccountId)
+            .HasForeignKey(link => link.AccountCode)
             .OnDelete(DeleteBehavior.Restrict);
         builder.HasOne(link => link.Branch)
             .WithMany()
@@ -43,3 +44,4 @@ public class GlAccountBranchConfiguration : IEntityTypeConfiguration<GlAccountBr
             .HasDatabaseName("IX_GL_ACC_BRANCH_BRANCH");
     }
 }
+

@@ -234,9 +234,8 @@ public sealed class CoaImportControllerTests
         Assert.Contains("/api/accounting/coa-import/import", accountingDocument.Paths.Keys);
         Assert.Contains("/api/accounting/gl-accounts/tree", accountingDocument.Paths.Keys);
         Assert.Contains("/api/accounting/gl-accounts/postable", accountingDocument.Paths.Keys);
-        Assert.Contains("/api/accounting/gl-accounts/{id}", accountingDocument.Paths.Keys);
-        Assert.Contains("/api/accounting/gl-accounts/{id}/status", accountingDocument.Paths.Keys);
-        Assert.Contains("/api/accounting/account-categories", accountingDocument.Paths.Keys);
+        Assert.Contains("/api/accounting/gl-accounts/{accountCode}", accountingDocument.Paths.Keys);
+        Assert.Contains("/api/accounting/gl-accounts/{accountCode}/status", accountingDocument.Paths.Keys);
         Assert.Contains("/api/fiscalyears", accountingDocument.Paths.Keys);
         Assert.Contains("/api/fiscalyears/{id}/close", accountingDocument.Paths.Keys);
         Assert.Contains("/api/currencies", accountingDocument.Paths.Keys);
@@ -261,22 +260,12 @@ public sealed class CoaImportControllerTests
         Assert.Contains(treeOperation.Parameters, parameter => parameter.Name == "X-Company-Code");
         Assert.Contains(treeOperation.Parameters, parameter => parameter.Name == "X-Company-Id");
 
-        var accountPath = accountingDocument.Paths["/api/accounting/gl-accounts/{id}"];
+        var accountPath = accountingDocument.Paths["/api/accounting/gl-accounts/{accountCode}"];
         Assert.Contains(OperationType.Get, accountPath.Operations.Keys);
         Assert.Contains(OperationType.Put, accountPath.Operations.Keys);
         Assert.Contains(OperationType.Delete, accountPath.Operations.Keys);
         Assert.Contains("404", accountPath.Operations[OperationType.Get].Responses.Keys);
         Assert.Contains("409", accountPath.Operations[OperationType.Delete].Responses.Keys);
-
-        var categoriesOperation = accountingDocument
-            .Paths["/api/accounting/account-categories"]
-            .Operations[OperationType.Get];
-        Assert.Contains(
-            categoriesOperation.Parameters,
-            parameter => parameter.Name == "X-Company-Code");
-        Assert.Contains(
-            categoriesOperation.Parameters,
-            parameter => parameter.Name == "X-Company-Id");
 
         var currencyOperation = accountingDocument.Paths["/api/currencies"]
             .Operations[OperationType.Get];

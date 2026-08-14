@@ -70,7 +70,7 @@ public class RequestContextCapturePropertyTests : IDisposable
         // Setup legacy service with default implementations
         _mockLegacyService
             .Setup(l => l.DetermineBusinessModuleAsync(It.IsAny<string>(), It.IsAny<string?>()))
-            .ReturnsAsync("TestModule");
+            .ReturnsAsync(1L);
 
         _mockLegacyService
             .Setup(l => l.ExtractDeviceIdentifierAsync(It.IsAny<string>(), It.IsAny<string?>()))

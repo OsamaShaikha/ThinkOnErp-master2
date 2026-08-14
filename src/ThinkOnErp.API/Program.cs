@@ -283,70 +283,12 @@ try
     
     // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
     builder.Services.AddEndpointsApiExplorer();
+    builder.Services.AddSingleton<ThinkOnErp.API.Swagger.SwaggerCategoryLoader>();
+    builder.Services.ConfigureOptions<ThinkOnErp.API.Swagger.ConfigureSwaggerOptions>();
+
     builder.Services.AddSwaggerGen(options =>
     {
         options.OperationFilter<ThinkOnErp.API.Swagger.TenantCompanyHeaderOperationFilter>();
-
-        // API Information
-        options.SwaggerDoc(ApiSwaggerDocuments.SuperAdmin, new Microsoft.OpenApi.Models.OpenApiInfo
-        {
-            Title = "ThinkOnErp SuperAdmin API",
-            Version = "v1.0",
-            Description = "Platform-wide management: super admin accounts, company/branch registry, support ticketing, documents, audit logs, security monitoring, global settings, and compliance policies.",
-            Contact = new Microsoft.OpenApi.Models.OpenApiContact
-            {
-                Name = "ThinkOnErp Development Team",
-                Email = "support@thinkonerp.com"
-            },
-            License = new Microsoft.OpenApi.Models.OpenApiLicense
-            {
-                Name = "Proprietary License",
-                Url = new Uri("https://thinkonerp.com/license")
-            }
-        });
-
-        options.SwaggerDoc(ApiSwaggerDocuments.Company, new Microsoft.OpenApi.Models.OpenApiInfo
-        {
-            Title = "ThinkOnErp Company API",
-            Version = "v1.0",
-            Description = "Tenant-specific operations: user auth, role/permission management, users, fiscal years, saved searches, and reference data (currencies).",
-            Contact = new Microsoft.OpenApi.Models.OpenApiContact
-            {
-                Name = "ThinkOnErp Development Team",
-                Email = "support@thinkonerp.com"
-            },
-            License = new Microsoft.OpenApi.Models.OpenApiLicense
-            {
-                Name = "Proprietary License",
-                Url = new Uri("https://thinkonerp.com/license")
-            }
-        });
-
-        options.SwaggerDoc(ApiSwaggerDocuments.Accounting, new Microsoft.OpenApi.Models.OpenApiInfo
-        {
-            Title = "ThinkOnErp Accounting API",
-            Version = "v1.0",
-            Description = "Accounting operations: chart-of-accounts CRUD and categories, COA workbook validation/import, postable accounts, tenant fiscal years, and SuperAdmin-managed currency reference data.",
-            Contact = new Microsoft.OpenApi.Models.OpenApiContact
-            {
-                Name = "ThinkOnErp Development Team",
-                Email = "support@thinkonerp.com"
-            },
-            License = new Microsoft.OpenApi.Models.OpenApiLicense
-            {
-                Name = "Proprietary License",
-                Url = new Uri("https://thinkonerp.com/license")
-            }
-        });
-
-        options.DocInclusionPredicate((docName, apiDesc) =>
-        {
-            var controller = apiDesc.ActionDescriptor.RouteValues["controller"];
-            return ApiSwaggerDocuments.Includes(
-                docName,
-                controller,
-                apiDesc.RelativePath);
-        });
 
         // Add JWT Bearer authentication to Swagger
         options.AddSecurityDefinition("Bearer", new Microsoft.OpenApi.Models.OpenApiSecurityScheme
@@ -451,12 +393,7 @@ Example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...'
     //if (app.Environment.IsDevelopment())
     //{
         app.UseSwagger();
-        app.UseSwaggerUI(options =>
-        {
-            options.SwaggerEndpoint("/swagger/superadmin/swagger.json", "SuperAdmin API");
-            options.SwaggerEndpoint("/swagger/company/swagger.json", "Company API");
-            options.SwaggerEndpoint("/swagger/accounting/swagger.json", "Accounting API");
-        });
+        app.UseSwaggerUI();
     //}
 
     // Disable HTTPS redirection for IP-based access
@@ -500,6 +437,18 @@ Example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...'
         catch (Exception ex)
         {
             Log.Error(ex, "Failed to auto-provision developer template schema on startup");
+        }
+
+        // Auto-sync discovered API Endpoints to Oracle DB SYS_API_ENDPOINTS table
+        try
+        {
+            var apiExplorer = scope.ServiceProvider.GetRequiredService<Microsoft.AspNetCore.Mvc.ApiExplorer.IApiDescriptionGroupCollectionProvider>();
+            var swaggerLoader = scope.ServiceProvider.GetRequiredService<ThinkOnErp.API.Swagger.SwaggerCategoryLoader>();
+            await swaggerLoader.SyncDiscoveredEndpointsAsync(apiExplorer);
+        }
+        catch (Exception ex)
+        {
+            Log.Warning(ex, "Failed to auto-sync discovered API Endpoints to SYS_API_ENDPOINTS table");
         }
     }
 

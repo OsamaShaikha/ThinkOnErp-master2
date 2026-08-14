@@ -250,6 +250,13 @@ public sealed class XlsxCoaWorkbookReader : ICoaWorkbookReader
                     "account_code",
                     rowNumber,
                     result),
+                OldAccountCode = headerMap.ContainsKey("old_account_code")
+                    ? ReadOptionalText(cells, headerMap, "old_account_code")
+                    : headerMap.ContainsKey("legacy_account_code")
+                        ? ReadOptionalText(cells, headerMap, "legacy_account_code")
+                        : headerMap.ContainsKey("رقم_الحساب_القديم")
+                            ? ReadOptionalText(cells, headerMap, "رقم_الحساب_القديم")
+                            : null,
                 ParentCode = ReadOptionalText(cells, headerMap, "parent_code"),
                 AccountNameAr = ReadRequiredText(
                     cells,

@@ -33,19 +33,17 @@ public class GlAccountConfiguration : IEntityTypeConfiguration<GlAccount>
                 "(\"IS_CONTROL_ACCOUNT\" = 1 AND \"CONTROL_ACCOUNT_TYPE\" IN ('AR', 'AP', 'INVENTORY'))");
         });
 
-        builder.HasKey(account => account.Id);
-        builder.Property(account => account.Id)
-            .HasColumnType("NUMBER(19)")
-            .ValueGeneratedOnAdd();
-        builder.Property(account => account.CompanyId)
-            .HasColumnName("COMPANY_ID")
-            .HasColumnType("NUMBER(19)")
-            .IsRequired();
+        builder.HasKey(account => account.AccountCode);
+
         builder.Property(account => account.AccountCode)
             .HasColumnName("ACCOUNT_CODE")
             .HasColumnType("NVARCHAR2(50)")
             .HasMaxLength(50)
             .IsRequired();
+        builder.Property(account => account.OldAccountCode)
+            .HasColumnName("OLD_ACCOUNT_CODE")
+            .HasColumnType("NVARCHAR2(50)")
+            .HasMaxLength(50);
         builder.Property(account => account.AccountNameAr)
             .HasColumnName("ACCOUNT_NAME_AR")
             .HasColumnType("NVARCHAR2(200)")
@@ -56,13 +54,10 @@ public class GlAccountConfiguration : IEntityTypeConfiguration<GlAccount>
             .HasColumnType("NVARCHAR2(200)")
             .HasMaxLength(200)
             .IsRequired();
-        builder.Property(account => account.ParentAccountId)
-            .HasColumnName("PARENT_ACCOUNT_ID")
-            .HasColumnType("NUMBER(19)");
-        builder.Property(account => account.CategoryId)
-            .HasColumnName("CATEGORY_ID")
-            .HasColumnType("NUMBER(19)")
-            .IsRequired();
+        builder.Property(account => account.ParentAccountCode)
+            .HasColumnName("PARENT_ACCOUNT_CODE")
+            .HasColumnType("NVARCHAR2(50)")
+            .HasMaxLength(50);
         builder.Property(account => account.AccountLevel)
             .HasColumnName("ACCOUNT_LEVEL")
             .HasColumnType("NUMBER(2)")
@@ -114,21 +109,15 @@ public class GlAccountConfiguration : IEntityTypeConfiguration<GlAccount>
 
         builder.HasOne(account => account.ParentAccount)
             .WithMany(account => account.ChildrenAccounts)
-            .HasForeignKey(account => account.ParentAccountId)
-            .OnDelete(DeleteBehavior.Restrict);
-        builder.HasOne(account => account.Category)
-            .WithMany(category => category.Accounts)
-            .HasForeignKey(account => account.CategoryId)
+            .HasForeignKey(account => account.ParentAccountCode)
             .OnDelete(DeleteBehavior.Restrict);
 
-        builder.HasIndex(account => new { account.CompanyId, account.AccountCode })
-            .IsUnique()
-            .HasDatabaseName("UX_GL_ACCOUNT_COMP_CODE");
-        builder.HasIndex(account => account.ParentAccountId)
+        builder.HasIndex(account => account.ParentAccountCode)
             .HasDatabaseName("IX_GL_ACCOUNT_PARENT");
-        builder.HasIndex(account => new { account.CompanyId, account.IsControlAccount })
-            .HasDatabaseName("IX_GL_ACCOUNT_COMP_CTRL");
-        builder.HasIndex(account => account.CategoryId)
-            .HasDatabaseName("IX_GL_ACCOUNT_CATEGORY");
+        builder.HasIndex(account => account.IsControlAccount)
+            .HasDatabaseName("IX_GL_ACCOUNT_CTRL");
+        builder.HasIndex(account => account.OldAccountCode)
+            .HasDatabaseName("IX_GL_ACCOUNT_OLD_CODE");
     }
 }
+

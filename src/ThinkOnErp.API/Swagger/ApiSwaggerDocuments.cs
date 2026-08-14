@@ -1,82 +1,101 @@
 namespace ThinkOnErp.API.Swagger;
 
 /// <summary>
-/// Defines the available Swagger documents and assigns API controllers to them.
+/// Dynamic Swagger document predicate evaluator mapping endpoints to module categories.
 /// </summary>
 public static class ApiSwaggerDocuments
 {
-    public const string SuperAdmin = "superadmin";
-    public const string Company = "company";
-    public const string Accounting = "accounting";
+    public const string SuperAdmin = ApiCategories.SuperAdmin;
+    public const string Company = ApiCategories.Company;
+    public const string Accounting = ApiCategories.Accounting;
+    public const string Auth = ApiCategories.Auth;
+    public const string Audit = ApiCategories.Audit;
+    public const string Support = ApiCategories.Support;
+    public const string System = ApiCategories.System;
 
-    private static readonly HashSet<string> SuperAdminControllers = new(
-        StringComparer.OrdinalIgnoreCase)
+    private static readonly Dictionary<string, string> ControllerToCategoryMap = new(StringComparer.OrdinalIgnoreCase)
     {
-        "SuperAdminAuth", "Alerts", "AuditHealth", "AuditTrail",
-        "Company", "Health",
-        "Features", "KeyManagement", "Modules", "Monitoring", "Screens", "SuperAdmin",
-        "AuditLogs", "SysCodes", "SysSettings", "Currency"
-    };
+        // SuperAdmin
+        ["SuperAdmin"] = SuperAdmin,
+        ["SuperAdminAuth"] = SuperAdmin,
 
-    private static readonly HashSet<string> AdditionalAccountingControllers = new(
-        StringComparer.OrdinalIgnoreCase)
-    {
-        "FiscalYear",
-        "Currency"
+        // Company
+        ["Company"] = Company,
+        ["Branch"] = Company,
+        ["BranchAccess"] = Company,
+        ["CompanyPermissions"] = Company,
+
+        // Accounting
+        ["GlAccounts"] = Accounting,
+        ["AccountCategories"] = Accounting,
+        ["CoaImport"] = Accounting,
+        ["Currency"] = Accounting,
+        ["FiscalYear"] = Accounting,
+
+        // Auth & User Management
+        ["Auth"] = Auth,
+        ["Users"] = Auth,
+        ["Roles"] = Auth,
+        ["Permissions"] = Auth,
+
+        // Audit & Security Monitoring
+        ["AuditLogs"] = Audit,
+        ["AuditTrail"] = Audit,
+        ["AuditHealth"] = Audit,
+        ["Alerts"] = Audit,
+        ["Monitoring"] = Audit,
+        ["Compliance"] = Audit,
+        ["KeyManagement"] = Audit,
+
+        // Support & Ticketing
+        ["Tickets"] = Support,
+        ["TicketTypes"] = Support,
+
+        // System Settings & Metadata
+        ["SysCodes"] = System,
+        ["SysSettings"] = System,
+        ["Modules"] = System,
+        ["Screens"] = System,
+        ["Features"] = System,
+        ["Health"] = System,
+        ["Documents"] = System,
+        ["Configuration"] = System,
+        ["SavedSearches"] = System
     };
 
     /// <summary>
-    /// Returns whether an API description belongs to the requested Swagger document.
-    /// Tenant accounting APIs remain visible in the company document for backward compatibility.
+    /// Evaluates whether an endpoint belongs to the specified Swagger document tab.
     /// </summary>
     public static bool Includes(
         string documentName,
+        string? groupName,
         string? controllerName,
         string? relativePath)
     {
-        if (string.IsNullOrWhiteSpace(controllerName))
+        // 1. Explicit GroupName from [ApiExplorerSettings(GroupName = "...")]
+        if (!string.IsNullOrWhiteSpace(groupName))
         {
-            return false;
+            return string.Equals(documentName, groupName, StringComparison.OrdinalIgnoreCase);
         }
 
-        if (string.Equals(documentName, Accounting, StringComparison.OrdinalIgnoreCase))
+        // 2. Controller Name Mapping
+        if (!string.IsNullOrWhiteSpace(controllerName) &&
+            ControllerToCategoryMap.TryGetValue(controllerName, out var targetCategory))
         {
-            return IsAccountingApi(controllerName, relativePath);
+            return string.Equals(documentName, targetCategory, StringComparison.OrdinalIgnoreCase);
         }
 
-        var isDocumentsController = string.Equals(
-            controllerName,
-            "Documents",
-            StringComparison.OrdinalIgnoreCase);
-
-        if (string.Equals(documentName, SuperAdmin, StringComparison.OrdinalIgnoreCase))
-        {
-            return isDocumentsController || SuperAdminControllers.Contains(controllerName);
-        }
-
-        if (string.Equals(documentName, Company, StringComparison.OrdinalIgnoreCase))
-        {
-            return isDocumentsController || !SuperAdminControllers.Contains(controllerName);
-        }
-
-        return false;
-    }
-
-    private static bool IsAccountingApi(string controllerName, string? relativePath)
-    {
-        if (AdditionalAccountingControllers.Contains(controllerName))
-        {
+        // 3. Fallback Route matching
+        if (string.Equals(documentName, Accounting, StringComparison.OrdinalIgnoreCase) && relativePath?.StartsWith("api/accounting", StringComparison.OrdinalIgnoreCase) == true)
             return true;
-        }
+        if (string.Equals(documentName, SuperAdmin, StringComparison.OrdinalIgnoreCase) && relativePath?.StartsWith("api/superadmin", StringComparison.OrdinalIgnoreCase) == true)
+            return true;
+        if (string.Equals(documentName, Auth, StringComparison.OrdinalIgnoreCase) && relativePath?.StartsWith("api/auth", StringComparison.OrdinalIgnoreCase) == true)
+            return true;
+        if (string.Equals(documentName, Company, StringComparison.OrdinalIgnoreCase) && relativePath?.StartsWith("api/companies", StringComparison.OrdinalIgnoreCase) == true)
+            return true;
 
-        const string accountingRoute = "api/accounting";
-        if (string.IsNullOrWhiteSpace(relativePath) ||
-            !relativePath.StartsWith(accountingRoute, StringComparison.OrdinalIgnoreCase))
-        {
-            return false;
-        }
-
-        return relativePath.Length == accountingRoute.Length ||
-               relativePath[accountingRoute.Length] == '/';
+        // Default fallback to System document
+        return string.Equals(documentName, System, StringComparison.OrdinalIgnoreCase);
     }
 }

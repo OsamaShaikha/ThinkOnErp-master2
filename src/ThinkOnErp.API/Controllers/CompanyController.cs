@@ -16,6 +16,7 @@ namespace ThinkOnErp.API.Controllers;
 
 [ApiController]
 [Route("api/companies")]
+[ApiExplorerSettings(GroupName = ThinkOnErp.API.Swagger.ApiCategories.Company)]
 [Authorize(Policy = "SuperAdminOnly")]
 public class CompanyController : ControllerBase
 {
@@ -23,17 +24,23 @@ public class CompanyController : ControllerBase
     private readonly ILogger<CompanyController> _logger;
     private readonly ISuperAdminRepository _superAdminRepository;
     private readonly PasswordHashingService _passwordHashingService;
+    private readonly ICompanyRepository _companyRepository;
+    private readonly IOracleSchemaService _oracleSchemaService;
 
     public CompanyController(
         IMediator mediator, 
         ILogger<CompanyController> logger,
         ISuperAdminRepository superAdminRepository,
-        PasswordHashingService passwordHashingService)
+        PasswordHashingService passwordHashingService,
+        ICompanyRepository companyRepository,
+        IOracleSchemaService oracleSchemaService)
     {
         _mediator = mediator ?? throw new ArgumentNullException(nameof(mediator));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _superAdminRepository = superAdminRepository ?? throw new ArgumentNullException(nameof(superAdminRepository));
         _passwordHashingService = passwordHashingService ?? throw new ArgumentNullException(nameof(passwordHashingService));
+        _companyRepository = companyRepository ?? throw new ArgumentNullException(nameof(companyRepository));
+        _oracleSchemaService = oracleSchemaService ?? throw new ArgumentNullException(nameof(oracleSchemaService));
     }
 
     [HttpGet]
@@ -324,6 +331,88 @@ public class CompanyController : ControllerBase
     [ProducesResponseType(typeof(ApiResponse<bool>), StatusCodes.Status404NotFound)]
     public async Task<ActionResult<ApiResponse<bool>>> DeactivateCompany(Int64 id) =>
         await SetCompanyStatus(id, new SetCompanyStatusDto { IsActive = false });
+
+    /// <summary>
+    /// Exports/Syncs all schema changes and objects from DEV_TEMPLATE to a specific company's Oracle schema.
+    /// </summary>
+    [HttpPost("{id}/sync-schema-from-dev-template")]
+    [Authorize(Policy = "AdminOnly")]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status500InternalServerError)]
+    public async Task<ActionResult<ApiResponse<object>>> SyncCompanySchemaFromDevTemplate(Int64 id)
+    {
+        try
+        {
+            _logger.LogInformation("Exporting schema changes from DEV_TEMPLATE to company ID: {CompanyId}", id);
+
+            var company = await _companyRepository.GetByIdAsync(id);
+            if (company == null)
+            {
+                return NotFound(ApiResponse<object>.CreateFailure("Company not found with specified identifier", statusCode: 404));
+            }
+
+            if (string.IsNullOrWhiteSpace(company.CompanySchema))
+            {
+                return BadRequest(ApiResponse<object>.CreateFailure($"Company '{company.CompanyNameEn}' does not have a configured Oracle schema name.", statusCode: 400));
+            }
+
+            await _oracleSchemaService.SyncTenantSchemaAsync(company.CompanySchema, company.CompanySchema);
+
+            _logger.LogInformation("Successfully synced DEV_TEMPLATE changes to company {CompanyCode} ({Schema})", company.CompanyCode, company.CompanySchema);
+
+            return Ok(ApiResponse<object>.CreateSuccess(
+                new
+                {
+                    CompanyId = company.Id,
+                    CompanyCode = company.CompanyCode,
+                    CompanySchema = company.CompanySchema,
+                    SyncedFromSchema = "DEV_TEMPLATE",
+                    SyncedAtUtc = DateTime.UtcNow
+                },
+                $"Successfully exported and synced all DEV_TEMPLATE changes to company '{company.CompanyNameEn}' schema ({company.CompanySchema}).",
+                200));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error syncing schema from DEV_TEMPLATE for company ID: {CompanyId}", id);
+            return StatusCode(500, ApiResponse<object>.CreateFailure($"Failed to export/sync DEV_TEMPLATE schema changes to company: {ex.Message}", statusCode: 500));
+        }
+    }
+
+    /// <summary>
+    /// Exports/Syncs all schema changes and objects from DEV_TEMPLATE to all existing tenant company schemas.
+    /// </summary>
+    [HttpPost("sync-all-schemas-from-dev-template")]
+    [Authorize(Policy = "AdminOnly")]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status500InternalServerError)]
+    public async Task<ActionResult<ApiResponse<object>>> SyncAllCompanySchemasFromDevTemplate()
+    {
+        try
+        {
+            _logger.LogInformation("Exporting schema changes from DEV_TEMPLATE to all tenant company schemas");
+
+            await _oracleSchemaService.UpgradeExistingTenantSchemasAsync();
+
+            _logger.LogInformation("Successfully synced DEV_TEMPLATE changes to all tenant company schemas");
+
+            return Ok(ApiResponse<object>.CreateSuccess(
+                new
+                {
+                    SyncedFromSchema = "DEV_TEMPLATE",
+                    SyncedAtUtc = DateTime.UtcNow
+                },
+                "Successfully exported and synced all DEV_TEMPLATE changes to all tenant company schemas.",
+                200));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error syncing schemas from DEV_TEMPLATE for all companies");
+            return StatusCode(500, ApiResponse<object>.CreateFailure($"Failed to export/sync DEV_TEMPLATE schema changes to all companies: {ex.Message}", statusCode: 500));
+        }
+    }
 
     private static async Task<byte[]> ReadFileBytesAsync(IFormFile file)
     {

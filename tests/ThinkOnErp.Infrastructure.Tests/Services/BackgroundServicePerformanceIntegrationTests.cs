@@ -708,7 +708,7 @@ public class BackgroundServicePerformanceIntegrationTests : IDisposable
             .Returns(async (string endpoint, TimeSpan period) =>
             {
                 await Task.Delay(Random.Shared.Next(10, 50)); // Simulate statistics calculation
-                return new Domain.Models.PerformanceStatistics
+                return new ThinkOnErp.Domain.Models.PerformanceStatistics
                 {
                     Endpoint = endpoint,
                     RequestCount = Random.Shared.Next(100, 1000),
@@ -721,7 +721,7 @@ public class BackgroundServicePerformanceIntegrationTests : IDisposable
             .Returns(async (string endpoint, TimeSpan period) =>
             {
                 await Task.Delay(Random.Shared.Next(5, 25)); // Simulate percentile calculation
-                return new Domain.Models.PercentileMetrics
+                return new ThinkOnErp.Domain.Models.PercentileMetrics
                 {
                     P50 = Random.Shared.Next(50, 200),
                     P95 = Random.Shared.Next(200, 800),

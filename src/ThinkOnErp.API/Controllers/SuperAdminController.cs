@@ -32,6 +32,7 @@ public class SuperAdminController : ControllerBase
     private readonly IValidator<CreateSuperAdminDto> _createValidator;
     private readonly IValidator<SuperAdminChangePasswordDto> _changePasswordValidator;
     private readonly IOracleSchemaService _oracleSchemaService;
+    private readonly ICompanyRepository _companyRepository;
 
     public SuperAdminController(
         IMediator mediator, 
@@ -40,7 +41,8 @@ public class SuperAdminController : ControllerBase
         ISuperAdminRepository superAdminRepository,
         IValidator<CreateSuperAdminDto> createValidator,
         IValidator<SuperAdminChangePasswordDto> changePasswordValidator,
-        IOracleSchemaService oracleSchemaService)
+        IOracleSchemaService oracleSchemaService,
+        ICompanyRepository companyRepository)
     {
         _mediator = mediator ?? throw new ArgumentNullException(nameof(mediator));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
@@ -49,11 +51,9 @@ public class SuperAdminController : ControllerBase
         _createValidator = createValidator ?? throw new ArgumentNullException(nameof(createValidator));
         _changePasswordValidator = changePasswordValidator ?? throw new ArgumentNullException(nameof(changePasswordValidator));
         _oracleSchemaService = oracleSchemaService ?? throw new ArgumentNullException(nameof(oracleSchemaService));
+        _companyRepository = companyRepository ?? throw new ArgumentNullException(nameof(companyRepository));
     }
 
-    /// <summary>
-    /// Retrieves all active super admin accounts
-    /// </summary>
     [HttpGet]
     [ProducesResponseType(typeof(ApiResponse<List<SuperAdminDto>>), StatusCodes.Status200OK)]
     public async Task<ActionResult<ApiResponse<List<SuperAdminDto>>>> GetAllSuperAdmins()
@@ -603,6 +603,53 @@ public class SuperAdminController : ControllerBase
             {
                 _logger.LogError(ex, "Error syncing tenant schemas");
                 return StatusCode(500, ApiResponse<object>.CreateFailure($"Failed to sync tenant schemas: {ex.Message}", statusCode: 500));
+            }
+        }
+
+        /// <summary>
+        /// Syncs a specific tenant company's Oracle schema against the developer template.
+        /// </summary>
+        [HttpPost("companies/{companyId}/sync-tenant-schema")]
+        [Authorize(Policy = "SuperAdminOnly")]
+        [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status404NotFound)]
+        [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status500InternalServerError)]
+        public async Task<IActionResult> SyncCompanyTenantSchema(long companyId)
+        {
+            try
+            {
+                _logger.LogInformation("SuperAdmin requesting sync/upgrade of tenant schema for company ID {CompanyId}", companyId);
+                
+                var company = await _companyRepository.GetByIdAsync(companyId);
+
+                if (company == null)
+                {
+                    return NotFound(ApiResponse<object>.CreateFailure("Company not found", statusCode: 404));
+                }
+
+                if (string.IsNullOrWhiteSpace(company.CompanySchema))
+                {
+                    return BadRequest(ApiResponse<object>.CreateFailure("Company has no configured Oracle schema", statusCode: 400));
+                }
+
+                await _oracleSchemaService.SyncTenantSchemaAsync(company.CompanySchema, company.CompanySchema);
+
+                return Ok(ApiResponse<object>.CreateSuccess(
+                    new
+                    {
+                        CompanyId = company.Id,
+                        CompanyCode = company.CompanyCode,
+                        CompanySchema = company.CompanySchema,
+                        SyncedFromSchema = "DEV_TEMPLATE",
+                        SyncedAtUtc = DateTime.UtcNow
+                    },
+                    $"Tenant schema '{company.CompanySchema}' for company '{company.CompanyNameEn}' synced successfully with DEV_TEMPLATE",
+                    200));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error syncing tenant schema for company ID {CompanyId}", companyId);
+                return StatusCode(500, ApiResponse<object>.CreateFailure($"Failed to sync tenant schema: {ex.Message}", statusCode: 500));
             }
         }
 

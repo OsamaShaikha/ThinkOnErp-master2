@@ -99,6 +99,11 @@ public class SlaEscalationService : ISlaEscalationService
             
             return tickets;
         }
+        catch (Oracle.ManagedDataAccess.Client.OracleException ex) when (ex.Number == 942)
+        {
+            _logger.LogInformation("SLA escalation check skipped: SYS_REQUEST_TICKET table does not exist in master schema context.");
+            return new List<SysRequestTicket>();
+        }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error getting tickets approaching SLA deadline");

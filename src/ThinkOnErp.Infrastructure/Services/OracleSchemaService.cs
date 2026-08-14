@@ -30,6 +30,7 @@ public class OracleSchemaService : IOracleSchemaService
         "SYS_SUPER_ADMIN", "SYS_COMPANY", "SYS_SYSTEM", "SYS_SCREEN",
         "SYS_FEATURE", "SYS_SCREEN_FEATURE", "SYS_CURRENCY",
         "SYS_PERFORMANCE_METRICS", "SYS_SLOW_QUERIES", "SYS_SECURITY_THREATS", "SYS_FAILED_LOGINS",
+        "SYS_API_CATEGORIES", "SYS_API_ENDPOINTS", "SYS_REPORT_SCHEDULE",
         "__EFMigrationsHistory"
     };
 
@@ -443,7 +444,7 @@ public class OracleSchemaService : IOracleSchemaService
 
     private static readonly HashSet<string> TenantOnlyTables = new(StringComparer.OrdinalIgnoreCase)
     {
-        "ACCOUNT_CATEGORY", "GL_ACCOUNT", "GL_ACCOUNT_BRANCH",
+        "ACCOUNT_CATEGORY", "GL_ACCOUNT", "GL_ACCOUNT_BRANCH", "GL_ACCOUNT_STRUCTURE_CONFIG",
         "SYS_ROLE", "SYS_USERS", "SYS_USERS_ROLES", "SYS_USER_BRANCHES",
         "SYS_FISCAL_YEAR", "SYS_SAVED_SEARCH", "SYS_SEARCH_ANALYTICS",
         "SYS_ROLE_SCREEN_PERMISSIONS", "SYS_USER_SCREEN_PERMISSIONS",
@@ -506,6 +507,115 @@ public class OracleSchemaService : IOracleSchemaService
         schemaName = NormalizeOracleIdentifier(schemaName);
         _logger.LogInformation("Ensuring accounting schema objects in {SchemaName}", schemaName);
 
+        try
+        {
+            var migrateSql = $@"
+                DECLARE
+                    v_col NUMBER;
+                    v_type VARCHAR2(100);
+                BEGIN
+                    SELECT COUNT(*) INTO v_col FROM all_tables WHERE owner = '{schemaName}' AND table_name = 'GL_ACCOUNT';
+                    IF v_col > 0 THEN
+                        -- 1. Drop old PK on Id if not on ACCOUNT_CODE
+                        FOR pk IN (
+                            SELECT constraint_name 
+                            FROM all_constraints 
+                            WHERE owner = '{schemaName}' AND table_name = 'GL_ACCOUNT' AND constraint_type = 'P'
+                        ) LOOP
+                            SELECT COUNT(*) INTO v_col 
+                            FROM all_cons_columns 
+                            WHERE owner = '{schemaName}' AND constraint_name = pk.constraint_name AND column_name = 'ACCOUNT_CODE';
+                            
+                            IF v_col = 0 THEN
+                                BEGIN
+                                    EXECUTE IMMEDIATE 'ALTER TABLE ""{schemaName}"".""GL_ACCOUNT"" DROP CONSTRAINT ""' || pk.constraint_name || '"" CASCADE';
+                                EXCEPTION WHEN OTHERS THEN NULL;
+                                END;
+                            END IF;
+                        END LOOP;
+
+                        -- 2. Ensure PK on ACCOUNT_CODE
+                        SELECT COUNT(*) INTO v_col 
+                        FROM all_constraints c
+                        JOIN all_cons_columns cc ON c.owner = cc.owner AND c.constraint_name = cc.constraint_name
+                        WHERE c.owner = '{schemaName}' AND c.table_name = 'GL_ACCOUNT' AND c.constraint_type = 'P' AND cc.column_name = 'ACCOUNT_CODE';
+
+                        IF v_col = 0 THEN
+                            BEGIN
+                                EXECUTE IMMEDIATE 'ALTER TABLE ""{schemaName}"".""GL_ACCOUNT"" ADD CONSTRAINT ""PK_GL_ACC"" PRIMARY KEY (""ACCOUNT_CODE"")';
+                            EXCEPTION WHEN OTHERS THEN NULL;
+                            END;
+                        END IF;
+
+                        -- 3. Drop legacy PARENT_ACCOUNT_ID if present
+                        SELECT COUNT(*) INTO v_col FROM all_tab_cols WHERE owner = '{schemaName}' AND table_name = 'GL_ACCOUNT' AND column_name = 'PARENT_ACCOUNT_ID';
+                        IF v_col > 0 THEN
+                            BEGIN
+                                EXECUTE IMMEDIATE 'ALTER TABLE ""{schemaName}"".""GL_ACCOUNT"" DROP COLUMN ""PARENT_ACCOUNT_ID"" CASCADE CONSTRAINTS';
+                            EXCEPTION WHEN OTHERS THEN NULL;
+                            END;
+                        END IF;
+
+                        -- 4. Check PARENT_ACCOUNT_CODE column type
+                        SELECT COUNT(*) INTO v_col FROM all_tab_cols WHERE owner = '{schemaName}' AND table_name = 'GL_ACCOUNT' AND column_name = 'PARENT_ACCOUNT_CODE';
+                        IF v_col > 0 THEN
+                            SELECT data_type INTO v_type FROM all_tab_cols WHERE owner = '{schemaName}' AND table_name = 'GL_ACCOUNT' AND column_name = 'PARENT_ACCOUNT_CODE';
+                            IF v_type NOT IN ('NVARCHAR2', 'VARCHAR2') THEN
+                                EXECUTE IMMEDIATE 'ALTER TABLE ""{schemaName}"".""GL_ACCOUNT"" DROP COLUMN ""PARENT_ACCOUNT_CODE"" CASCADE CONSTRAINTS';
+                                EXECUTE IMMEDIATE 'ALTER TABLE ""{schemaName}"".""GL_ACCOUNT"" ADD ""PARENT_ACCOUNT_CODE"" NVARCHAR2(50)';
+                            END IF;
+                        ELSE
+                            EXECUTE IMMEDIATE 'ALTER TABLE ""{schemaName}"".""GL_ACCOUNT"" ADD ""PARENT_ACCOUNT_CODE"" NVARCHAR2(50)';
+                        END IF;
+
+                        -- 5. Check OLD_ACCOUNT_CODE column
+                        SELECT COUNT(*) INTO v_col FROM all_tab_cols WHERE owner = '{schemaName}' AND table_name = 'GL_ACCOUNT' AND column_name = 'OLD_ACCOUNT_CODE';
+                        IF v_col = 0 THEN
+                            EXECUTE IMMEDIATE 'ALTER TABLE ""{schemaName}"".""GL_ACCOUNT"" ADD ""OLD_ACCOUNT_CODE"" NVARCHAR2(50)';
+                        END IF;
+
+                        -- 6. Drop obsolete Id column if present
+                        SELECT COUNT(*) INTO v_col FROM all_tab_cols WHERE owner = '{schemaName}' AND table_name = 'GL_ACCOUNT' AND column_name = 'Id';
+                        IF v_col > 0 THEN
+                            BEGIN
+                                EXECUTE IMMEDIATE 'ALTER TABLE ""{schemaName}"".""GL_ACCOUNT"" DROP COLUMN ""Id"" CASCADE CONSTRAINTS';
+                            EXCEPTION WHEN OTHERS THEN NULL;
+                            END;
+                        END IF;
+
+                        -- 7. Drop obsolete CATEGORY_ID column if present
+                        SELECT COUNT(*) INTO v_col FROM all_tab_cols WHERE owner = '{schemaName}' AND table_name = 'GL_ACCOUNT' AND column_name = 'CATEGORY_ID';
+                        IF v_col > 0 THEN
+                            BEGIN
+                                EXECUTE IMMEDIATE 'ALTER TABLE ""{schemaName}"".""GL_ACCOUNT"" DROP COLUMN ""CATEGORY_ID"" CASCADE CONSTRAINTS';
+                            EXCEPTION WHEN OTHERS THEN NULL;
+                            END;
+                        END IF;
+
+                        -- 8. Drop obsolete COMPANY_ID column if present
+                        SELECT COUNT(*) INTO v_col FROM all_tab_cols WHERE owner = '{schemaName}' AND table_name = 'GL_ACCOUNT' AND column_name = 'COMPANY_ID';
+                        IF v_col > 0 THEN
+                            BEGIN
+                                EXECUTE IMMEDIATE 'ALTER TABLE ""{schemaName}"".""GL_ACCOUNT"" DROP COLUMN ""COMPANY_ID"" CASCADE CONSTRAINTS';
+                            EXCEPTION WHEN OTHERS THEN NULL;
+                            END;
+                        END IF;
+                    END IF;
+
+                    -- 9. Upgrade GL_ACCOUNT_BRANCH if legacy GL_ACCOUNT_ID column exists
+                    SELECT COUNT(*) INTO v_col FROM all_tab_cols WHERE owner = '{schemaName}' AND table_name = 'GL_ACCOUNT_BRANCH' AND column_name = 'GL_ACCOUNT_ID';
+                    IF v_col > 0 THEN
+                        EXECUTE IMMEDIATE 'DROP TABLE ""{schemaName}"".""GL_ACCOUNT_BRANCH"" CASCADE CONSTRAINTS';
+                    END IF;
+                END;";
+
+            await ExecuteRawAsync(connection, migrateSql);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Legacy accounting column migration warning for schema {SchemaName}", schemaName);
+        }
+
         var tableStatements = new (string Name, string Sql)[]
         {
             (
@@ -529,13 +639,10 @@ public class OracleSchemaService : IOracleSchemaService
                 $"""
                 CREATE TABLE "{schemaName}"."GL_ACCOUNT"
                 (
-                    "Id" NUMBER(19) GENERATED BY DEFAULT AS IDENTITY NOT NULL,
-                    "COMPANY_ID" NUMBER(19) NOT NULL,
                     "ACCOUNT_CODE" NVARCHAR2(50) NOT NULL,
                     "ACCOUNT_NAME_AR" NVARCHAR2(200) NOT NULL,
                     "ACCOUNT_NAME_EN" NVARCHAR2(200) NOT NULL,
-                    "PARENT_ACCOUNT_ID" NUMBER(19) NULL,
-                    "CATEGORY_ID" NUMBER(19) NOT NULL,
+                    "PARENT_ACCOUNT_CODE" NVARCHAR2(50) NULL,
                     "ACCOUNT_LEVEL" NUMBER(2) NOT NULL,
                     "ACCOUNT_TYPE" NVARCHAR2(10) NOT NULL,
                     "NORMAL_BALANCE" NVARCHAR2(1) NOT NULL,
@@ -547,7 +654,8 @@ public class OracleSchemaService : IOracleSchemaService
                     "IS_ACTIVE" NUMBER(1) DEFAULT 1 NOT NULL,
                     "DESCRIPTION" NVARCHAR2(1000) NULL,
                     "NOTES" NVARCHAR2(2000) NULL,
-                    CONSTRAINT "PK_GL_ACC" PRIMARY KEY ("Id")
+                    "OLD_ACCOUNT_CODE" NVARCHAR2(50) NULL,
+                    CONSTRAINT "PK_GL_ACC" PRIMARY KEY ("ACCOUNT_CODE")
                 )
                 """
             ),
@@ -556,10 +664,10 @@ public class OracleSchemaService : IOracleSchemaService
                 $"""
                 CREATE TABLE "{schemaName}"."GL_ACCOUNT_BRANCH"
                 (
-                    "GL_ACCOUNT_ID" NUMBER(19) NOT NULL,
+                    "ACCOUNT_CODE" NVARCHAR2(50) NOT NULL,
                     "BRANCH_ID" NUMBER(19) NOT NULL,
                     "IS_ACTIVE" NUMBER(1) DEFAULT 1 NOT NULL,
-                    CONSTRAINT "PK_GL_ACC_BRANCH" PRIMARY KEY ("GL_ACCOUNT_ID", "BRANCH_ID")
+                    CONSTRAINT "PK_GL_ACC_BRANCH" PRIMARY KEY ("ACCOUNT_CODE", "BRANCH_ID")
                 )
                 """
             )
@@ -599,19 +707,17 @@ public class OracleSchemaService : IOracleSchemaService
             ("CK_ACC_CATEGORY_BALANCE", $"ALTER TABLE \"{schemaName}\".\"ACCOUNT_CATEGORY\" ADD CONSTRAINT \"CK_ACC_CATEGORY_BALANCE\" CHECK (\"NORMAL_BALANCE\" IN ('D', 'C'))"),
             ("CK_ACC_CATEGORY_STATEMENT", $"ALTER TABLE \"{schemaName}\".\"ACCOUNT_CATEGORY\" ADD CONSTRAINT \"CK_ACC_CATEGORY_STATEMENT\" CHECK (\"FINANCIAL_STATEMENT\" IN ('BALANCE_SHEET', 'INCOME_STATEMENT'))"),
 
-            ("PK_GL_ACC", $"ALTER TABLE \"{schemaName}\".\"GL_ACCOUNT\" ADD CONSTRAINT \"PK_GL_ACC\" PRIMARY KEY (\"Id\")"),
-            ("UX_GL_ACCOUNT_COMP_CODE", $"ALTER TABLE \"{schemaName}\".\"GL_ACCOUNT\" ADD CONSTRAINT \"UX_GL_ACCOUNT_COMP_CODE\" UNIQUE (\"COMPANY_ID\", \"ACCOUNT_CODE\")"),
-            ("FK_GL_ACC_PARENT", $"ALTER TABLE \"{schemaName}\".\"GL_ACCOUNT\" ADD CONSTRAINT \"FK_GL_ACC_PARENT\" FOREIGN KEY (\"PARENT_ACCOUNT_ID\") REFERENCES \"{schemaName}\".\"GL_ACCOUNT\" (\"Id\")"),
-            ("FK_GL_ACC_CAT", $"ALTER TABLE \"{schemaName}\".\"GL_ACCOUNT\" ADD CONSTRAINT \"FK_GL_ACC_CAT\" FOREIGN KEY (\"CATEGORY_ID\") REFERENCES \"{schemaName}\".\"ACCOUNT_CATEGORY\" (\"Id\")"),
-            ("CK_GL_ACCOUNT_LEVEL", $"ALTER TABLE \"{schemaName}\".\"GL_ACCOUNT\" ADD CONSTRAINT \"CK_GL_ACCOUNT_LEVEL\" CHECK (\"ACCOUNT_LEVEL\" BETWEEN 1 AND 5)"),
+            ("PK_GL_ACC", $"ALTER TABLE \"{schemaName}\".\"GL_ACCOUNT\" ADD CONSTRAINT \"PK_GL_ACC\" PRIMARY KEY (\"ACCOUNT_CODE\")"),
+            ("FK_GL_ACC_PARENT", $"ALTER TABLE \"{schemaName}\".\"GL_ACCOUNT\" ADD CONSTRAINT \"FK_GL_ACC_PARENT\" FOREIGN KEY (\"PARENT_ACCOUNT_CODE\") REFERENCES \"{schemaName}\".\"GL_ACCOUNT\" (\"ACCOUNT_CODE\")"),
+            ("CK_GL_ACCOUNT_LEVEL", $"ALTER TABLE \"{schemaName}\".\"GL_ACCOUNT\" ADD CONSTRAINT \"CK_GL_ACCOUNT_LEVEL\" CHECK (\"ACCOUNT_LEVEL\" BETWEEN 1 AND 10)"),
             ("CK_GL_ACCOUNT_TYPE", $"ALTER TABLE \"{schemaName}\".\"GL_ACCOUNT\" ADD CONSTRAINT \"CK_GL_ACCOUNT_TYPE\" CHECK (\"ACCOUNT_TYPE\" IN ('HEADER', 'DETAIL'))"),
             ("CK_GL_ACCOUNT_BALANCE", $"ALTER TABLE \"{schemaName}\".\"GL_ACCOUNT\" ADD CONSTRAINT \"CK_GL_ACCOUNT_BALANCE\" CHECK (\"NORMAL_BALANCE\" IN ('D', 'C'))"),
             ("CK_GL_ACCOUNT_FLAGS", $"ALTER TABLE \"{schemaName}\".\"GL_ACCOUNT\" ADD CONSTRAINT \"CK_GL_ACCOUNT_FLAGS\" CHECK (\"IS_CONTRA\" IN (0, 1) AND \"IS_CONTROL_ACCOUNT\" IN (0, 1) AND \"IS_BRANCH_SPECIFIC\" IN (0, 1) AND \"IS_CLEARING\" IN (0, 1) AND \"IS_ACTIVE\" IN (0, 1))"),
             ("CK_GL_ACCOUNT_CONTROL_TYPE", $"ALTER TABLE \"{schemaName}\".\"GL_ACCOUNT\" ADD CONSTRAINT \"CK_GL_ACCOUNT_CONTROL_TYPE\" CHECK ((\"IS_CONTROL_ACCOUNT\" = 0 AND \"CONTROL_ACCOUNT_TYPE\" IS NULL) OR (\"IS_CONTROL_ACCOUNT\" = 1 AND \"CONTROL_ACCOUNT_TYPE\" IN ('AR', 'AP', 'INVENTORY')))"),
-            ("CK_GL_ACC_PARENT", $"ALTER TABLE \"{schemaName}\".\"GL_ACCOUNT\" ADD CONSTRAINT \"CK_GL_ACC_PARENT\" CHECK (\"PARENT_ACCOUNT_ID\" IS NULL OR \"PARENT_ACCOUNT_ID\" <> \"Id\")"),
+            ("CK_GL_ACC_PARENT", $"ALTER TABLE \"{schemaName}\".\"GL_ACCOUNT\" ADD CONSTRAINT \"CK_GL_ACC_PARENT\" CHECK (\"PARENT_ACCOUNT_CODE\" IS NULL OR \"PARENT_ACCOUNT_CODE\" <> \"ACCOUNT_CODE\")"),
 
-            ("PK_GL_ACC_BRANCH", $"ALTER TABLE \"{schemaName}\".\"GL_ACCOUNT_BRANCH\" ADD CONSTRAINT \"PK_GL_ACC_BRANCH\" PRIMARY KEY (\"GL_ACCOUNT_ID\", \"BRANCH_ID\")"),
-            ("FK_GLAB_ACC", $"ALTER TABLE \"{schemaName}\".\"GL_ACCOUNT_BRANCH\" ADD CONSTRAINT \"FK_GLAB_ACC\" FOREIGN KEY (\"GL_ACCOUNT_ID\") REFERENCES \"{schemaName}\".\"GL_ACCOUNT\" (\"Id\")"),
+            ("PK_GL_ACC_BRANCH", $"ALTER TABLE \"{schemaName}\".\"GL_ACCOUNT_BRANCH\" ADD CONSTRAINT \"PK_GL_ACC_BRANCH\" PRIMARY KEY (\"ACCOUNT_CODE\", \"BRANCH_ID\")"),
+            ("FK_GLAB_ACC", $"ALTER TABLE \"{schemaName}\".\"GL_ACCOUNT_BRANCH\" ADD CONSTRAINT \"FK_GLAB_ACC\" FOREIGN KEY (\"ACCOUNT_CODE\") REFERENCES \"{schemaName}\".\"GL_ACCOUNT\" (\"ACCOUNT_CODE\") ON DELETE CASCADE"),
             ("FK_GLAB_BRANCH", $"ALTER TABLE \"{schemaName}\".\"GL_ACCOUNT_BRANCH\" ADD CONSTRAINT \"FK_GLAB_BRANCH\" FOREIGN KEY (\"BRANCH_ID\") REFERENCES \"{schemaName}\".\"SYS_BRANCH\" (\"Id\")"),
             ("CK_GL_ACC_BRANCH_ACTIVE", $"ALTER TABLE \"{schemaName}\".\"GL_ACCOUNT_BRANCH\" ADD CONSTRAINT \"CK_GL_ACC_BRANCH_ACTIVE\" CHECK (\"IS_ACTIVE\" IN (0, 1))")
         };
@@ -623,9 +729,8 @@ public class OracleSchemaService : IOracleSchemaService
 
         var indexStatements = new (string Name, string Sql)[]
         {
-            ("IX_GL_ACCOUNT_PARENT", $"CREATE INDEX \"{schemaName}\".\"IX_GL_ACCOUNT_PARENT\" ON \"{schemaName}\".\"GL_ACCOUNT\" (\"PARENT_ACCOUNT_ID\")"),
-            ("IX_GL_ACCOUNT_COMP_CTRL", $"CREATE INDEX \"{schemaName}\".\"IX_GL_ACCOUNT_COMP_CTRL\" ON \"{schemaName}\".\"GL_ACCOUNT\" (\"COMPANY_ID\", \"IS_CONTROL_ACCOUNT\")"),
-            ("IX_GL_ACCOUNT_CATEGORY", $"CREATE INDEX \"{schemaName}\".\"IX_GL_ACCOUNT_CATEGORY\" ON \"{schemaName}\".\"GL_ACCOUNT\" (\"CATEGORY_ID\")"),
+            ("IX_GL_ACCOUNT_PARENT", $"CREATE INDEX \"{schemaName}\".\"IX_GL_ACCOUNT_PARENT\" ON \"{schemaName}\".\"GL_ACCOUNT\" (\"PARENT_ACCOUNT_CODE\")"),
+            ("IX_DEV_GL_ACC_OLD_CODE", $"CREATE INDEX \"{schemaName}\".\"IX_DEV_GL_ACC_OLD_CODE\" ON \"{schemaName}\".\"GL_ACCOUNT\" (\"OLD_ACCOUNT_CODE\")"),
             ("IX_GL_ACC_BRANCH_BRANCH", $"CREATE INDEX \"{schemaName}\".\"IX_GL_ACC_BRANCH_BRANCH\" ON \"{schemaName}\".\"GL_ACCOUNT_BRANCH\" (\"BRANCH_ID\")")
         };
 
@@ -633,6 +738,19 @@ public class OracleSchemaService : IOracleSchemaService
         {
             await ExecuteAccountingDdlAsync(connection, $"index {statement.Name}", statement.Sql);
         }
+
+        var autoRepairParentSql = $"""
+            UPDATE "{schemaName}"."GL_ACCOUNT" child
+            SET "PARENT_ACCOUNT_CODE" = (
+                SELECT parent."ACCOUNT_CODE"
+                FROM "{schemaName}"."GL_ACCOUNT" parent
+                WHERE parent."ACCOUNT_LEVEL" = child."ACCOUNT_LEVEL" - 1
+                  AND child."ACCOUNT_CODE" LIKE parent."ACCOUNT_CODE" || '%'
+                  AND ROWNUM = 1
+            )
+            WHERE child."ACCOUNT_LEVEL" > 1 AND child."PARENT_ACCOUNT_CODE" IS NULL
+            """;
+        await ExecuteRawAsync(connection, autoRepairParentSql);
 
         _logger.LogInformation("Accounting schema objects ensured in {SchemaName}", schemaName);
     }
@@ -804,6 +922,7 @@ public class OracleSchemaService : IOracleSchemaService
             {
                 _logger.LogInformation("Syncing schema: {Schema}", schema);
                 await CloneFromDeveloperSchemaAsync(masterConn, schema);
+                await SyncTableColumnsSchemaDiffAsync(masterConn, schema);
                 await EnsureAccountingSchemaAsync(masterConn, schema);
 
                 // Regenerate synonyms & table access grants to ensure everything is correct
@@ -826,6 +945,7 @@ public class OracleSchemaService : IOracleSchemaService
         
         await using var masterConn = await OpenMasterConnectionAsync();
         await CloneFromDeveloperSchemaAsync(masterConn, schemaName);
+        await SyncTableColumnsSchemaDiffAsync(masterConn, schemaName);
         await EnsureAccountingSchemaAsync(masterConn, schemaName);
         
         // Ensure access privileges and synonyms are up to date
@@ -838,6 +958,24 @@ public class OracleSchemaService : IOracleSchemaService
         _logger.LogInformation("Ensuring developer template schema exists: {SchemaName}", _devSchemaName);
 
         await using var masterConn = await OpenMasterConnectionAsync();
+
+        // Quick check: if DEV_TEMPLATE schema already exists and has GL_ACCOUNT table populated, skip full heavy provisioning
+        try
+        {
+            await using var checkCmd = masterConn.CreateCommand();
+            checkCmd.CommandText = $"SELECT COUNT(1) FROM \"{_devSchemaName}\".\"GL_ACCOUNT\"";
+            var countObj = await checkCmd.ExecuteScalarAsync();
+            var count = Convert.ToInt64(countObj);
+            if (count > 0)
+            {
+                _logger.LogInformation("Developer template schema {SchemaName} already provisioned ({Count} accounts found). Skipping startup auto-provisioning.", _devSchemaName, count);
+                return;
+            }
+        }
+        catch
+        {
+            // Table doesn't exist yet, proceed with full provisioning below
+        }
 
         // Enable Oracle 12c+ script mode
         await ExecuteRawAsync(masterConn, "ALTER SESSION SET \"_ORACLE_SCRIPT\" = TRUE");
@@ -1001,14 +1139,22 @@ public class OracleSchemaService : IOracleSchemaService
               AND (
                 (OBJECT_TYPE = 'TABLE' AND OBJECT_NAME NOT LIKE 'BIN$%') OR
                 (OBJECT_TYPE = 'INDEX' AND OBJECT_NAME NOT LIKE 'SYS_%') OR
-                (OBJECT_TYPE = 'SEQUENCE' AND OBJECT_NAME NOT LIKE 'ISEQ$$%')
+                (OBJECT_TYPE = 'SEQUENCE' AND OBJECT_NAME NOT LIKE 'ISEQ$$%') OR
+                (OBJECT_TYPE IN ('VIEW', 'PROCEDURE', 'FUNCTION', 'PACKAGE', 'PACKAGE BODY', 'TRIGGER', 'TYPE'))
               )
             ORDER BY 
               CASE OBJECT_TYPE 
-                WHEN 'SEQUENCE' THEN 1
-                WHEN 'TABLE' THEN 2
-                WHEN 'INDEX' THEN 3
-                ELSE 4
+                WHEN 'TYPE' THEN 1
+                WHEN 'SEQUENCE' THEN 2
+                WHEN 'TABLE' THEN 3
+                WHEN 'INDEX' THEN 4
+                WHEN 'VIEW' THEN 5
+                WHEN 'FUNCTION' THEN 6
+                WHEN 'PROCEDURE' THEN 7
+                WHEN 'PACKAGE' THEN 8
+                WHEN 'PACKAGE BODY' THEN 9
+                WHEN 'TRIGGER' THEN 10
+                ELSE 11
               END";
 
         await using (var cmd = connection.CreateCommand())
@@ -1063,7 +1209,7 @@ public class OracleSchemaService : IOracleSchemaService
             {
                 await using var cmd = connection.CreateCommand();
                 cmd.CommandText = "SELECT DBMS_METADATA.GET_DDL(:objType, :objName, :sourceSchema) FROM DUAL";
-                cmd.Parameters.Add(new OracleParameter("objType", obj.Type));
+                cmd.Parameters.Add(new OracleParameter("objType", obj.Type == "PACKAGE BODY" ? "PACKAGE_BODY" : obj.Type));
                 cmd.Parameters.Add(new OracleParameter("objName", obj.Name));
                 cmd.Parameters.Add(new OracleParameter("sourceSchema", _devSchemaName));
 
@@ -1084,6 +1230,18 @@ public class OracleSchemaService : IOracleSchemaService
             var replacement = $"\"{targetSchema}\".";
             ddl = ddl.Replace(pattern, replacement, StringComparison.OrdinalIgnoreCase);
             ddl = ddl.Replace($"\"{_devSchemaName}\"", $"\"{targetSchema}\"", StringComparison.OrdinalIgnoreCase);
+            ddl = System.Text.RegularExpressions.Regex.Replace(ddl, @"SHARING\s*=\s*\w+", "", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+
+            // For programmable routines (VIEW, FUNCTION, PROCEDURE, PACKAGE, TRIGGER, TYPE), ensure CREATE OR REPLACE
+            if (obj.Type is "VIEW" or "FUNCTION" or "PROCEDURE" or "PACKAGE" or "PACKAGE BODY" or "TRIGGER" or "TYPE")
+            {
+                if (ddl.TrimStart().StartsWith("CREATE ", StringComparison.OrdinalIgnoreCase) &&
+                    !ddl.TrimStart().StartsWith("CREATE OR REPLACE", StringComparison.OrdinalIgnoreCase))
+                {
+                    var trimmed = ddl.TrimStart();
+                    ddl = "CREATE OR REPLACE " + trimmed.Substring(7);
+                }
+            }
 
             _logger.LogDebug("Executing DDL for {Type} {TargetSchema}.{Name}", obj.Type, targetSchema, obj.Name);
             try
@@ -1101,6 +1259,109 @@ public class OracleSchemaService : IOracleSchemaService
                 _logger.LogWarning(ex, "Error creating cloned {Type} {TargetSchema}.{Name}. DDL was: {Ddl}", obj.Type, targetSchema, obj.Name, ddl);
             }
         }
+    }
+
+    private async Task SyncTableColumnsSchemaDiffAsync(OracleConnection connection, string targetSchema)
+    {
+        _logger.LogInformation("Performing comprehensive Schema Diff for table columns between {SourceSchema} and {TargetSchema}", _devSchemaName, targetSchema);
+
+        var diffSql = $@"
+            DECLARE
+                v_sql VARCHAR2(4000);
+            BEGIN
+                -- 1. Add missing columns to targetSchema tables
+                FOR r IN (
+                    SELECT 
+                        src.table_name,
+                        src.column_name,
+                        src.data_type,
+                        src.data_length,
+                        src.data_precision,
+                        src.data_scale,
+                        src.nullable,
+                        src.data_default
+                    FROM all_tab_cols src
+                    JOIN all_tables t ON src.owner = t.owner AND src.table_name = t.table_name
+                    LEFT JOIN all_tab_cols tgt 
+                        ON tgt.owner = '{targetSchema}' 
+                       AND tgt.table_name = src.table_name 
+                       AND tgt.column_name = src.column_name
+                    WHERE src.owner = '{_devSchemaName}'
+                      AND tgt.column_name IS NULL
+                      AND src.table_name IN (
+                          SELECT table_name FROM all_tables WHERE owner = '{targetSchema}'
+                      )
+                    ORDER BY src.table_name, src.column_id
+                ) LOOP
+                    v_sql := 'ALTER TABLE ""{targetSchema}"".""' || r.table_name || '"" ADD ""' || r.column_name || '"" ' || r.data_type;
+                    
+                    IF r.data_type IN ('VARCHAR2', 'NVARCHAR2', 'RAW', 'CHAR', 'NCHAR') THEN
+                        v_sql := v_sql || '(' || r.data_length || ')';
+                    ELSIF r.data_type = 'NUMBER' AND r.data_precision IS NOT NULL THEN
+                        IF r.data_scale IS NOT NULL AND r.data_scale > 0 THEN
+                            v_sql := v_sql || '(' || r.data_precision || ',' || r.data_scale || ')';
+                        ELSE
+                            v_sql := v_sql || '(' || r.data_precision || ')';
+                        END IF;
+                    END IF;
+
+                    IF r.data_default IS NOT NULL THEN
+                        v_sql := v_sql || ' DEFAULT ' || TRIM(r.data_default);
+                    END IF;
+
+                    IF r.nullable = 'N' AND r.data_default IS NOT NULL THEN
+                        v_sql := v_sql || ' NOT NULL';
+                    ELSE
+                        v_sql := v_sql || ' NULL';
+                    END IF;
+
+                    BEGIN
+                        EXECUTE IMMEDIATE v_sql;
+                    EXCEPTION WHEN OTHERS THEN 
+                        BEGIN
+                            v_sql := 'ALTER TABLE ""{targetSchema}"".""' || r.table_name || '"" ADD ""' || r.column_name || '"" ' || r.data_type;
+                            IF r.data_type IN ('VARCHAR2', 'NVARCHAR2', 'RAW', 'CHAR', 'NCHAR') THEN
+                                v_sql := v_sql || '(' || r.data_length || ')';
+                            ELSIF r.data_type = 'NUMBER' AND r.data_precision IS NOT NULL THEN
+                                IF r.data_scale IS NOT NULL AND r.data_scale > 0 THEN
+                                    v_sql := v_sql || '(' || r.data_precision || ',' || r.data_scale || ')';
+                                ELSE
+                                    v_sql := v_sql || '(' || r.data_precision || ')';
+                                END IF;
+                            END IF;
+                            v_sql := v_sql || ' NULL';
+                            EXECUTE IMMEDIATE v_sql;
+                        EXCEPTION WHEN OTHERS THEN NULL;
+                        END;
+                    END;
+                END LOOP;
+
+                -- 2. Expand mismatched column lengths if DEV_TEMPLATE column size is larger
+                FOR r IN (
+                    SELECT 
+                        src.table_name,
+                        src.column_name,
+                        src.data_type,
+                        src.data_length AS src_length,
+                        tgt.data_length AS tgt_length
+                    FROM all_tab_cols src
+                    JOIN all_tab_cols tgt 
+                        ON tgt.owner = '{targetSchema}' 
+                       AND tgt.table_name = src.table_name 
+                       AND tgt.column_name = src.column_name
+                    WHERE src.owner = '{_devSchemaName}'
+                      AND src.data_type IN ('VARCHAR2', 'NVARCHAR2', 'CHAR', 'NCHAR')
+                      AND src.data_type = tgt.data_type
+                      AND src.data_length > tgt.data_length
+                ) LOOP
+                    BEGIN
+                        EXECUTE IMMEDIATE 'ALTER TABLE ""{targetSchema}"".""' || r.table_name || '"" MODIFY (""' || r.column_name || '"" ' || r.data_type || '(' || r.src_length || '))';
+                    EXCEPTION WHEN OTHERS THEN NULL;
+                    END;
+                END LOOP;
+            END;";
+
+        await ExecuteRawAsync(connection, diffSql);
     }
 
     public async Task<(long BranchId, long FiscalYearId)> ProvisionTenantBranchAndFiscalYearAsync(

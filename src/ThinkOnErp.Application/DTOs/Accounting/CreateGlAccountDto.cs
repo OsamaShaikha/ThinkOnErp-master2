@@ -2,13 +2,13 @@ namespace ThinkOnErp.Application.DTOs.Accounting;
 
 public sealed class CreateGlAccountDto
 {
-    public string AccountCode { get; set; } = string.Empty;
+    public string? AccountCode { get; set; }
+    public string? OldAccountCode { get; set; }
     public string AccountNameAr { get; set; } = string.Empty;
     public string AccountNameEn { get; set; } = string.Empty;
-    public long? ParentAccountId { get; set; }
-    public long CategoryId { get; set; }
-    public string AccountType { get; set; } = string.Empty;
-    public string NormalBalance { get; set; } = string.Empty;
+    public string? ParentAccountCode { get; set; }
+    public string AccountType { get; set; } = "DETAIL";
+    public string? NormalBalance { get; set; }
     public bool IsContra { get; set; }
     public bool IsControlAccount { get; set; }
     public string? ControlAccountType { get; set; }

@@ -12,6 +12,7 @@ namespace ThinkOnErp.API.Controllers;
 /// </summary>
 [ApiController]
 [Route("api/accounting/gl-accounts")]
+[ApiExplorerSettings(GroupName = ThinkOnErp.API.Swagger.ApiCategories.Accounting)]
 [TenantScoped]
 [Authorize]
 public sealed class GlAccountsController : ControllerBase
@@ -49,6 +50,27 @@ public sealed class GlAccountsController : ControllerBase
     }
 
     /// <summary>
+    /// Returns categories (Level 1) and sub-categories (Level 2) for the current company.
+    /// </summary>
+    [HttpGet("categories")]
+    [ProducesResponseType(typeof(ApiResponse<List<GlAccountCategoryDto>>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status403Forbidden)]
+    public async Task<ActionResult<ApiResponse<List<GlAccountCategoryDto>>>> GetCategories(
+        CancellationToken cancellationToken)
+    {
+        var categories = (await _service.GetCategoriesAsync(cancellationToken)).ToList();
+
+        _logger.LogInformation(
+            "Retrieved {CategoryCount} categories for current company",
+            categories.Count);
+
+        return Ok(ApiResponse<List<GlAccountCategoryDto>>.CreateSuccess(
+            categories,
+            "Account categories and sub-categories retrieved successfully"));
+    }
+
+    /// <summary>
     /// Returns active detail accounts that may receive postings for the selected branch.
     /// </summary>
     [HttpGet("postable")]
@@ -74,21 +96,34 @@ public sealed class GlAccountsController : ControllerBase
     }
 
     /// <summary>
-    /// Returns one GL account from the current company's chart of accounts.
+    /// Generates the next sequential child account code under a specified parent account code.
     /// </summary>
-    /// <param name="id">Tenant-local GL account identifier.</param>
-    /// <param name="cancellationToken">Request cancellation token.</param>
-    [HttpGet("{id:long}")]
+    [HttpGet("next-child-code")]
+    [ProducesResponseType(typeof(ApiResponse<string>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<ApiResponse<string>>> GetNextChildCode(
+        [FromQuery] string parentAccountCode,
+        CancellationToken cancellationToken)
+    {
+        var nextCode = await _service.GetNextChildCodeAsync(parentAccountCode, cancellationToken);
+        return Ok(ApiResponse<string>.CreateSuccess(nextCode, "Next child code generated successfully"));
+    }
+
+    /// <summary>
+    /// Returns one GL account from the current company's chart of accounts by its code.
+    /// </summary>
+    [HttpGet("{accountCode}")]
     [ProducesResponseType(typeof(ApiResponse<GlAccountDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status403Forbidden)]
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status404NotFound)]
-    public async Task<ActionResult<ApiResponse<GlAccountDto>>> GetById(
-        long id,
+    public async Task<ActionResult<ApiResponse<GlAccountDto>>> GetByCode(
+        string accountCode,
         CancellationToken cancellationToken)
     {
-        var account = await _service.GetAccountAsync(id, cancellationToken);
+        var account = await _service.GetAccountByCodeAsync(accountCode, cancellationToken);
 
         return Ok(ApiResponse<GlAccountDto>.CreateSuccess(
             account,
@@ -117,8 +152,7 @@ public sealed class GlAccountsController : ControllerBase
         var account = await _service.CreateAccountAsync(request, cancellationToken);
 
         _logger.LogInformation(
-            "Created GL account {AccountId} with code {AccountCode}",
-            account.Id,
+            "Created GL account with code {AccountCode}",
             account.AccountCode);
 
         return StatusCode(
@@ -132,12 +166,7 @@ public sealed class GlAccountsController : ControllerBase
     /// <summary>
     /// Updates the editable attributes of one GL account.
     /// </summary>
-    /// <remarks>
-    /// Account code, parent, category, level, account type, and normal balance
-    /// are structural and cannot be changed after creation. Use the status
-    /// endpoint to activate or deactivate the account.
-    /// </remarks>
-    [HttpPut("{id:long}")]
+    [HttpPut("{accountCode}")]
     [Authorize(Policy = "TenantAdminOnly")]
     [ProducesResponseType(typeof(ApiResponse<GlAccountDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status400BadRequest)]
@@ -145,7 +174,7 @@ public sealed class GlAccountsController : ControllerBase
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status403Forbidden)]
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status404NotFound)]
     public async Task<ActionResult<ApiResponse<GlAccountDto>>> Update(
-        long id,
+        string accountCode,
         [FromBody] UpdateGlAccountDto? request,
         CancellationToken cancellationToken)
     {
@@ -155,11 +184,10 @@ public sealed class GlAccountsController : ControllerBase
                 "Account update data is required."));
         }
 
-        var account = await _service.UpdateAccountAsync(id, request, cancellationToken);
+        var account = await _service.UpdateAccountAsync(accountCode, request, cancellationToken);
 
         _logger.LogInformation(
-            "Updated GL account {AccountId} with code {AccountCode}",
-            account.Id,
+            "Updated GL account with code {AccountCode}",
             account.AccountCode);
 
         return Ok(ApiResponse<GlAccountDto>.CreateSuccess(
@@ -170,7 +198,7 @@ public sealed class GlAccountsController : ControllerBase
     /// <summary>
     /// Activates or deactivates an account in the current company's chart.
     /// </summary>
-    [HttpPatch("{id:long}/status")]
+    [HttpPatch("{accountCode}/status")]
     [Authorize(Policy = "TenantAdminOnly")]
     [ProducesResponseType(typeof(ApiResponse<GlAccountStatusDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiResponse<GlAccountStatusDto>), StatusCodes.Status400BadRequest)]
@@ -178,7 +206,7 @@ public sealed class GlAccountsController : ControllerBase
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status403Forbidden)]
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status404NotFound)]
     public async Task<ActionResult<ApiResponse<GlAccountStatusDto>>> UpdateStatus(
-        long id,
+        string accountCode,
         [FromBody] UpdateGlAccountStatusDto? request,
         CancellationToken cancellationToken)
     {
@@ -189,19 +217,19 @@ public sealed class GlAccountsController : ControllerBase
         }
 
         await _service.UpdateAccountStatusAsync(
-            id,
+            accountCode,
             request.IsActive.Value,
             cancellationToken);
 
         var result = new GlAccountStatusDto
         {
-            AccountId = id,
+            AccountCode = accountCode,
             IsActive = request.IsActive.Value
         };
 
         _logger.LogInformation(
-            "Updated GL account {AccountId} active status to {IsActive}",
-            id,
+            "Updated GL account {AccountCode} active status to {IsActive}",
+            accountCode,
             result.IsActive);
 
         return Ok(ApiResponse<GlAccountStatusDto>.CreateSuccess(
@@ -213,7 +241,7 @@ public sealed class GlAccountsController : ControllerBase
     /// Permanently deletes a non-root GL account that has no child accounts
     /// and is not referenced by database-enforced accounting data.
     /// </summary>
-    [HttpDelete("{id:long}")]
+    [HttpDelete("{accountCode}")]
     [Authorize(Policy = "TenantAdminOnly")]
     [ProducesResponseType(typeof(ApiResponse<GlAccountDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status400BadRequest)]
@@ -222,14 +250,13 @@ public sealed class GlAccountsController : ControllerBase
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status404NotFound)]
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status409Conflict)]
     public async Task<ActionResult<ApiResponse<GlAccountDto>>> Delete(
-        long id,
+        string accountCode,
         CancellationToken cancellationToken)
     {
-        var account = await _service.DeleteAccountAsync(id, cancellationToken);
+        var account = await _service.DeleteAccountAsync(accountCode, cancellationToken);
 
         _logger.LogInformation(
-            "Deleted GL account {AccountId} with code {AccountCode}",
-            account.Id,
+            "Deleted GL account with code {AccountCode}",
             account.AccountCode);
 
         return Ok(ApiResponse<GlAccountDto>.CreateSuccess(
@@ -237,3 +264,4 @@ public sealed class GlAccountsController : ControllerBase
             "GL account deleted successfully"));
     }
 }
+

@@ -120,7 +120,7 @@ public sealed class CoaExcelImportServiceTests
             AccountNameEn = $"Account {code}",
             AccountLevel = level,
             AccountType = accountType,
-            CategoryCode = "ASSETS",
+            CategoryCode = "1",
             NormalBalance = "D",
             FinancialStatement = "BALANCE_SHEET"
         };

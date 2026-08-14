@@ -2,13 +2,11 @@ namespace ThinkOnErp.Domain.Entities.Accounting;
 
 public class GlAccount
 {
-    public long Id { get; set; }
-    public long CompanyId { get; set; }
     public string AccountCode { get; set; } = string.Empty;
+    public string? OldAccountCode { get; set; }
     public string AccountNameAr { get; set; } = string.Empty;
     public string AccountNameEn { get; set; } = string.Empty;
-    public long? ParentAccountId { get; set; }
-    public long CategoryId { get; set; }
+    public string? ParentAccountCode { get; set; }
     public int AccountLevel { get; set; }
     public string AccountType { get; set; } = string.Empty;
     public string NormalBalance { get; set; } = string.Empty;
@@ -24,6 +22,5 @@ public class GlAccount
 
     public GlAccount? ParentAccount { get; set; }
     public ICollection<GlAccount> ChildrenAccounts { get; set; } = new List<GlAccount>();
-    public AccountCategory? Category { get; set; }
     public ICollection<GlAccountBranch> BranchLinks { get; set; } = new List<GlAccountBranch>();
 }

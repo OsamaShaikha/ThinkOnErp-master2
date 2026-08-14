@@ -7,6 +7,7 @@ namespace ThinkOnErp.Application.DTOs.Accounting;
 /// </summary>
 public sealed class UpdateGlAccountDto
 {
+    public string? OldAccountCode { get; set; }
     public string AccountNameAr { get; set; } = string.Empty;
     public string AccountNameEn { get; set; } = string.Empty;
     public bool IsContra { get; set; }

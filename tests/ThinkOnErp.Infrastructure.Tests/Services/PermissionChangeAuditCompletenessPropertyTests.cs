@@ -73,7 +73,7 @@ public class PermissionChangeAuditCompletenessPropertyTests : IDisposable
         // Setup legacy service with default implementations
         _mockLegacyService
             .Setup(l => l.DetermineBusinessModuleAsync(It.IsAny<string>(), It.IsAny<string?>()))
-            .ReturnsAsync("Permissions");
+            .ReturnsAsync(1L);
 
         _mockLegacyService
             .Setup(l => l.ExtractDeviceIdentifierAsync(It.IsAny<string>(), It.IsAny<string?>()))
