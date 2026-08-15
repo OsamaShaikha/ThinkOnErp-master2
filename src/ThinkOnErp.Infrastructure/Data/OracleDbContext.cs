@@ -191,51 +191,9 @@ public class OracleDbContext : DbContext
     {
         base.OnModelCreating(modelBuilder);
 
-        // Apply all entity configurations
-        modelBuilder.ApplyConfiguration(new SysRoleConfiguration());
-        modelBuilder.ApplyConfiguration(new SysCurrencyConfiguration());
-        modelBuilder.ApplyConfiguration(new SysCompanyConfiguration());
-        modelBuilder.ApplyConfiguration(new SysBranchConfiguration());
-        modelBuilder.ApplyConfiguration(new SysUserConfiguration());
-        modelBuilder.ApplyConfiguration(new SysFiscalYearConfiguration());
-        modelBuilder.ApplyConfiguration(new SysSuperAdminConfiguration());
-        modelBuilder.ApplyConfiguration(new SysSystemConfiguration());
-        modelBuilder.ApplyConfiguration(new SysScreenConfiguration());
-        modelBuilder.ApplyConfiguration(new SysFeatureConfiguration());
-        modelBuilder.ApplyConfiguration(new SysScreenFeatureConfiguration());
-        modelBuilder.ApplyConfiguration(new SysUserRoleConfiguration());
-        modelBuilder.ApplyConfiguration(new SysRequestTicketConfiguration());
-        modelBuilder.ApplyConfiguration(new SysTicketTypeConfiguration());
-        modelBuilder.ApplyConfiguration(new SysTicketPriorityConfiguration());
-        modelBuilder.ApplyConfiguration(new SysTicketStatusConfiguration());
-        modelBuilder.ApplyConfiguration(new SysTicketCategoryConfiguration());
-        modelBuilder.ApplyConfiguration(new SysTicketCommentConfiguration());
-        modelBuilder.ApplyConfiguration(new SysTicketAttachmentConfiguration());
-        modelBuilder.ApplyConfiguration(new SysTicketConfigConfiguration());
-        modelBuilder.ApplyConfiguration(new SysSavedSearchConfiguration());
-        modelBuilder.ApplyConfiguration(new SysSearchAnalyticsConfiguration());
-        modelBuilder.ApplyConfiguration(new SysDocumentConfiguration());
-        modelBuilder.ApplyConfiguration(new SysAuditLogConfiguration());
-        modelBuilder.ApplyConfiguration(new SysSecurityThreatConfiguration());
-        modelBuilder.ApplyConfiguration(new SysFailedLoginConfiguration());
-        modelBuilder.ApplyConfiguration(new SysSlowQueryConfiguration());
-        modelBuilder.ApplyConfiguration(new SysPerformanceMetricConfiguration());
-        modelBuilder.ApplyConfiguration(new SysReportScheduleConfiguration());
-        modelBuilder.ApplyConfiguration(new SysAuditLogArchiveConfiguration());
-        modelBuilder.ApplyConfiguration(new SysRetentionPolicyConfiguration());
-        modelBuilder.ApplyConfiguration(new SysCodeConfiguration());
-        modelBuilder.ApplyConfiguration(new SysSettingConfiguration());
-        modelBuilder.ApplyConfiguration(new SysBranchSystemConfiguration());
-        modelBuilder.ApplyConfiguration(new SysBranchScreenConfiguration());
-        modelBuilder.ApplyConfiguration(new SysBranchFeatureConfiguration());
-        modelBuilder.ApplyConfiguration(new SysRoleScreenPermissionConfiguration());
-        modelBuilder.ApplyConfiguration(new SysUserScreenPermissionConfiguration());
-        modelBuilder.ApplyConfiguration(new SysUserBranchConfiguration());
-        modelBuilder.ApplyConfiguration(new GlAccountConfiguration());
-        modelBuilder.ApplyConfiguration(new GlAccountBranchConfiguration());
-        modelBuilder.ApplyConfiguration(new GlAccountStructureConfigConfiguration());
-        modelBuilder.ApplyConfiguration(new Configurations.SysApiCategoryConfiguration());
-        modelBuilder.ApplyConfiguration(new Configurations.SysApiEndpointConfiguration());
+        // Apply all entity configurations in Infrastructure assembly automatically
+        modelBuilder.ApplyConfigurationsFromAssembly(typeof(OracleDbContext).Assembly);
+
         foreach (var entityType in modelBuilder.Model.GetEntityTypes())
         {
             foreach (var property in entityType.GetProperties())
