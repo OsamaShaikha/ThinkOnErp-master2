@@ -296,7 +296,7 @@ public class OracleSchemaService : IOracleSchemaService
 
         var sql = $"SELECT u.\"Id\", u.\"NAME_AR\", u.\"NAME_EN\", u.\"USER_NAME\", u.\"PASSWORD\", u.\"ROLE\", ub.\"BRANCH_ID\", u.\"COMPANY_ID\", " +
                   $"u.\"IS_ACTIVE\", u.\"IS_ADMIN\", u.\"CREATION_USER\", u.\"CREATION_DATE\", u.\"UPDATE_USER\", u.\"UPDATE_DATE\", " +
-                  $"u.\"REFRESH_TOKEN\", u.\"REFRESH_TOKEN_EXPIRY\", u.\"FORCE_LOGOUT_DATE\" " +
+                  $"u.\"REFRESH_TOKEN\", u.\"REFRESH_TOKEN_EXPIRY\", u.\"FORCE_LOGOUT_DATE\", u.\"PHONE\", u.\"PHONE2\", u.\"EMAIL\", u.\"LAST_LOGIN_DATE\" " +
                   $"FROM \"{schemaName}\".\"SYS_USERS\" u " +
                   $"LEFT JOIN \"{schemaName}\".\"SYS_USER_BRANCHES\" ub ON u.\"Id\" = ub.\"USER_ID\" AND ub.\"IS_PRIMARY\" = 1 " +
                   $"WHERE u.\"USER_NAME\" = :userName AND u.\"IS_ACTIVE\" = 1";
@@ -318,19 +318,48 @@ public class OracleSchemaService : IOracleSchemaService
                 RoleId = reader.IsDBNull(5) ? null : reader.GetInt64(5),
                 BranchId = reader.IsDBNull(6) ? null : reader.GetInt64(6),
                 CompanyId = reader.IsDBNull(7) ? null : reader.GetInt64(7),
-                IsActive = reader.GetInt64(8) == 1,
-                IsAdmin = reader.GetInt64(9) == 1,
+                IsActive = reader.IsDBNull(8) ? false : (reader.GetValue(8)?.ToString()?.Trim() is "1" or "Y" or "true" or "TRUE"),
+                IsAdmin = reader.IsDBNull(9) ? false : (reader.GetValue(9)?.ToString()?.Trim() is "1" or "Y" or "true" or "TRUE"),
                 CreationUser = reader.GetString(10),
                 CreationDate = reader.IsDBNull(11) ? null : reader.GetDateTime(11),
                 UpdateUser = reader.IsDBNull(12) ? null : reader.GetString(12),
                 UpdateDate = reader.IsDBNull(13) ? null : reader.GetDateTime(13),
                 RefreshToken = reader.IsDBNull(14) ? null : reader.GetString(14),
                 RefreshTokenExpiry = reader.IsDBNull(15) ? null : reader.GetDateTime(15),
-                ForceLogoutDate = reader.IsDBNull(16) ? null : reader.GetDateTime(16)
+                ForceLogoutDate = reader.IsDBNull(16) ? null : reader.GetDateTime(16),
+                Phone = reader.IsDBNull(17) ? null : reader.GetString(17),
+                Phone2 = reader.IsDBNull(18) ? null : reader.GetString(18),
+                Email = reader.IsDBNull(19) ? null : reader.GetString(19),
+                LastLoginDate = reader.IsDBNull(20) ? null : reader.GetDateTime(20)
             };
         }
 
         return null;
+    }
+
+    public async Task<List<long>> GetUserBranchIdsAsync(string schemaName, string schemaPassword, long userId)
+    {
+        schemaName = schemaName.ToUpperInvariant();
+
+        await using var tenantConn = await OpenTenantConnectionAsync(schemaName, schemaPassword);
+
+        var sql = $"SELECT \"BRANCH_ID\" FROM \"{schemaName}\".\"SYS_USER_BRANCHES\" WHERE \"USER_ID\" = :userId";
+
+        await using var cmd = tenantConn.CreateCommand();
+        cmd.CommandText = sql;
+        cmd.Parameters.Add(new OracleParameter("userId", userId));
+
+        var branchIds = new List<long>();
+        await using var reader = await cmd.ExecuteReaderAsync();
+        while (await reader.ReadAsync())
+        {
+            if (!reader.IsDBNull(0))
+            {
+                branchIds.Add(reader.GetInt64(0));
+            }
+        }
+
+        return branchIds;
     }
 
     private async Task BootstrapTablesFromEfModelAsync(OracleConnection connection, string schemaName)

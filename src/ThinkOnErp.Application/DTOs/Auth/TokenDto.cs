@@ -1,3 +1,5 @@
+using ThinkOnErp.Application.DTOs.User;
+
 namespace ThinkOnErp.Application.DTOs.Auth;
 
 /// <summary>
@@ -40,4 +42,9 @@ public class TokenDto
     /// Oracle schema name for this tenant
     /// </summary>
     public string? CompanySchema { get; set; }
+
+    /// <summary>
+    /// Authenticated user information
+    /// </summary>
+    public UserDto? User { get; set; }
 }

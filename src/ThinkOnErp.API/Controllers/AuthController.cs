@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Oracle.ManagedDataAccess.Client;
 using ThinkOnErp.Application.Common;
 using ThinkOnErp.Application.DTOs.Auth;
+using ThinkOnErp.Application.DTOs.User;
 using ThinkOnErp.Application.Features.Auth.Commands.Login;
 using ThinkOnErp.Domain.Entities;
 using ThinkOnErp.Domain.Interfaces;
@@ -155,6 +156,39 @@ public class AuthController : ControllerBase
 
             // Generate JWT token with company schema context
             var tokenDto = _jwtTokenService.GenerateToken(user, company.CompanyCode, company.CompanySchema);
+
+            // Retrieve assigned branches for user from tenant schema
+            List<long> branchIds = new();
+            try
+            {
+                branchIds = await _oracleSchemaService.GetUserBranchIdsAsync(company.CompanySchema!, company.CompanySchema!, user.Id);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Failed to load branch IDs for user {UserName} in schema {Schema}", user.UserName, company.CompanySchema);
+            }
+
+            tokenDto.User = new UserDto
+            {
+                UserId = user.Id,
+                NameAr = user.FullNameAr,
+                NameEn = user.FullNameEn,
+                UserName = user.UserName,
+                Phone = user.Phone,
+                Phone2 = user.Phone2,
+                RoleId = user.RoleId,
+                BranchId = user.BranchId,
+                BranchIds = branchIds,
+                PrimaryBranchId = user.BranchId,
+                Email = user.Email,
+                LastLoginDate = user.LastLoginDate,
+                IsActive = user.IsActive,
+                IsAdmin = user.IsAdmin,
+                CreationUser = user.CreationUser,
+                CreationDate = user.CreationDate,
+                UpdateUser = user.UpdateUser,
+                UpdateDate = user.UpdateDate
+            };
 
             // Save refresh token to tenant schema
             try

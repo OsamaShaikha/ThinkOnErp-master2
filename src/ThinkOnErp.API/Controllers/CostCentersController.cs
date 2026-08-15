@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using ThinkOnErp.API.Authorization;
 using ThinkOnErp.Application.Common;
 using ThinkOnErp.Application.DTOs.Accounting.CostCenters;
 using ThinkOnErp.Application.Services.Accounting;
@@ -9,6 +10,8 @@ namespace ThinkOnErp.API.Controllers;
 
 [ApiController]
 [Route("api/accounting/cost-centers")]
+[ApiExplorerSettings(GroupName = ThinkOnErp.API.Swagger.ApiCategories.Accounting)]
+[TenantScoped]
 [Authorize]
 public sealed class CostCentersController : ControllerBase
 {
