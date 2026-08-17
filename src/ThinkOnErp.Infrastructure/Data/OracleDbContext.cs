@@ -187,6 +187,10 @@ public class OracleDbContext : DbContext
     public DbSet<GlVoucherDetail> GlVoucherDetails => Set<GlVoucherDetail>();
     public DbSet<GlVoucherSerial> GlVoucherSerials => Set<GlVoucherSerial>();
 
+    // Opening balance staging (dedicated OB table)
+    public DbSet<GlOpeningBalanceHeader> GlOpeningBalanceHeaders => Set<GlOpeningBalanceHeader>();
+    public DbSet<GlOpeningBalanceDetail> GlOpeningBalanceDetails => Set<GlOpeningBalanceDetail>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
