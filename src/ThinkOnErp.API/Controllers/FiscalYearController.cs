@@ -1,4 +1,4 @@
-using MediatR;
+﻿using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using ThinkOnErp.API.Authorization;
@@ -10,7 +10,7 @@ using ThinkOnErp.Application.Features.FiscalYears.Commands.DeleteFiscalYear;
 using ThinkOnErp.Application.Features.FiscalYears.Commands.CloseFiscalYear;
 using ThinkOnErp.Application.Features.FiscalYears.Queries.GetAllFiscalYears;
 using ThinkOnErp.Application.Features.FiscalYears.Queries.GetFiscalYearById;
-using ThinkOnErp.Application.Features.FiscalYears.Queries.GetFiscalYearsByCompany;
+using ThinkOnErp.Application.Features.FiscalYears.Queries.GetFiscalYearsByBranch;
 
 namespace ThinkOnErp.API.Controllers;
 
@@ -27,11 +27,6 @@ public class FiscalYearController : ControllerBase
     private readonly IMediator _mediator;
     private readonly ILogger<FiscalYearController> _logger;
 
-    /// <summary>
-    /// Initializes a new instance of the FiscalYearController class.
-    /// </summary>
-    /// <param name="mediator">MediatR instance for sending commands and queries</param>
-    /// <param name="logger">Logger for controller operations</param>
     public FiscalYearController(IMediator mediator, ILogger<FiscalYearController> logger)
     {
         _mediator = mediator ?? throw new ArgumentNullException(nameof(mediator));
@@ -40,11 +35,7 @@ public class FiscalYearController : ControllerBase
 
     /// <summary>
     /// Retrieves all active fiscal years from the system.
-    /// Requires authentication.
     /// </summary>
-    /// <returns>ApiResponse containing list of FiscalYearDto objects</returns>
-    /// <response code="200">Returns the list of all active fiscal years</response>
-    /// <response code="401">User is not authenticated</response>
     [HttpGet]
     [ProducesResponseType(typeof(ApiResponse<List<FiscalYearDto>>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiResponse<List<FiscalYearDto>>), StatusCodes.Status401Unauthorized)]
@@ -73,13 +64,7 @@ public class FiscalYearController : ControllerBase
 
     /// <summary>
     /// Retrieves a specific fiscal year by its ID.
-    /// Requires authentication.
     /// </summary>
-    /// <param name="id">Unique identifier of the fiscal year</param>
-    /// <returns>ApiResponse containing FiscalYearDto object</returns>
-    /// <response code="200">Returns the requested fiscal year</response>
-    /// <response code="404">Fiscal year not found with the specified ID</response>
-    /// <response code="401">User is not authenticated</response>
     [HttpGet("{id}")]
     [ProducesResponseType(typeof(ApiResponse<FiscalYearDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiResponse<FiscalYearDto>), StatusCodes.Status404NotFound)]
@@ -116,26 +101,21 @@ public class FiscalYearController : ControllerBase
     }
 
     /// <summary>
-    /// Retrieves all fiscal years for a specific company.
-    /// Requires authentication.
+    /// Retrieves all fiscal years for a specific branch.
     /// </summary>
-    /// <param name="companyId">Unique identifier of the company</param>
-    /// <returns>ApiResponse containing list of FiscalYearDto objects</returns>
-    /// <response code="200">Returns the list of fiscal years for the company</response>
-    /// <response code="401">User is not authenticated</response>
-    [HttpGet("company/{companyId}")]
+    [HttpGet("branch/{branchId}")]
     [ProducesResponseType(typeof(ApiResponse<List<FiscalYearDto>>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiResponse<List<FiscalYearDto>>), StatusCodes.Status401Unauthorized)]
-    public async Task<ActionResult<ApiResponse<List<FiscalYearDto>>>> GetFiscalYearsByCompany(Int64 companyId)
+    public async Task<ActionResult<ApiResponse<List<FiscalYearDto>>>> GetFiscalYearsByBranch(Int64 branchId)
     {
         try
         {
-            _logger.LogInformation("Retrieving fiscal years for company ID: {CompanyId}", companyId);
+            _logger.LogInformation("Retrieving fiscal years for branch ID: {BranchId}", branchId);
 
-            var query = new GetFiscalYearsByCompanyQuery { CompanyId = companyId };
+            var query = new GetFiscalYearsByBranchQuery { BranchId = branchId };
             var fiscalYears = await _mediator.Send(query);
 
-            _logger.LogInformation("Retrieved {Count} fiscal years for company ID: {CompanyId}", fiscalYears.Count, companyId);
+            _logger.LogInformation("Retrieved {Count} fiscal years for branch ID: {BranchId}", fiscalYears.Count, branchId);
 
             return Ok(ApiResponse<List<FiscalYearDto>>.CreateSuccess(
                 fiscalYears,
@@ -144,21 +124,14 @@ public class FiscalYearController : ControllerBase
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error retrieving fiscal years for company ID: {CompanyId}", companyId);
+            _logger.LogError(ex, "Error retrieving fiscal years for branch ID: {BranchId}", branchId);
             throw;
         }
     }
 
     /// <summary>
     /// Creates a new fiscal year in the system.
-    /// Requires AdminOnly authorization.
     /// </summary>
-    /// <param name="command">Command containing fiscal year creation data</param>
-    /// <returns>ApiResponse containing the newly created fiscal year's ID</returns>
-    /// <response code="201">Fiscal year created successfully</response>
-    /// <response code="400">Validation errors in the request</response>
-    /// <response code="401">User is not authenticated</response>
-    /// <response code="403">User does not have admin privileges</response>
     [HttpPost]
     [Authorize(Policy = "AdminOnly")]
     [ProducesResponseType(typeof(ApiResponse<Int64>), StatusCodes.Status201Created)]
@@ -193,16 +166,7 @@ public class FiscalYearController : ControllerBase
 
     /// <summary>
     /// Updates an existing fiscal year in the system.
-    /// Requires AdminOnly authorization.
     /// </summary>
-    /// <param name="id">Unique identifier of the fiscal year to update</param>
-    /// <param name="command">Command containing updated fiscal year data</param>
-    /// <returns>ApiResponse containing the number of rows affected</returns>
-    /// <response code="200">Fiscal year updated successfully</response>
-    /// <response code="400">Validation errors or ID mismatch</response>
-    /// <response code="404">Fiscal year not found with the specified ID</response>
-    /// <response code="401">User is not authenticated</response>
-    /// <response code="403">User does not have admin privileges</response>
     [HttpPut("{id}")]
     [Authorize(Policy = "AdminOnly")]
     [ProducesResponseType(typeof(ApiResponse<Int64>), StatusCodes.Status200OK)]
@@ -245,14 +209,7 @@ public class FiscalYearController : ControllerBase
 
     /// <summary>
     /// Deletes (soft delete) a fiscal year from the system.
-    /// Requires AdminOnly authorization.
     /// </summary>
-    /// <param name="id">Unique identifier of the fiscal year to delete</param>
-    /// <returns>ApiResponse containing the number of rows affected</returns>
-    /// <response code="200">Fiscal year deleted successfully</response>
-    /// <response code="404">Fiscal year not found with the specified ID</response>
-    /// <response code="401">User is not authenticated</response>
-    /// <response code="403">User does not have admin privileges</response>
     [HttpDelete("{id}")]
     [Authorize(Policy = "AdminOnly")]
     [ProducesResponseType(typeof(ApiResponse<Int64>), StatusCodes.Status200OK)]
@@ -292,15 +249,7 @@ public class FiscalYearController : ControllerBase
 
     /// <summary>
     /// Closes a fiscal year, preventing further modifications.
-    /// Requires AdminOnly authorization.
     /// </summary>
-    /// <param name="id">Unique identifier of the fiscal year to close</param>
-    /// <param name="dto">Optional data for closing the fiscal year</param>
-    /// <returns>ApiResponse containing the number of rows affected</returns>
-    /// <response code="200">Fiscal year closed successfully</response>
-    /// <response code="404">Fiscal year not found with the specified ID</response>
-    /// <response code="401">User is not authenticated</response>
-    /// <response code="403">User does not have admin privileges</response>
     [HttpPost("{id}/close")]
     [Authorize(Policy = "AdminOnly")]
     [ProducesResponseType(typeof(ApiResponse<Int64>), StatusCodes.Status200OK)]
@@ -313,7 +262,6 @@ public class FiscalYearController : ControllerBase
         {
             _logger.LogInformation("Closing fiscal year with ID: {FiscalYearId}", id);
 
-            // Get current user from claims
             var currentUser = User.Identity?.Name ?? "system";
 
             var command = new CloseFiscalYearCommand 

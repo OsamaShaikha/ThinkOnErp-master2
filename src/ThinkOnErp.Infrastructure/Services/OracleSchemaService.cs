@@ -810,6 +810,9 @@ public class OracleSchemaService : IOracleSchemaService
                     "COST_CENTER_MGR_CODE" NVARCHAR2(50) NULL,
                     "COST_CENTER_MNR_CODE" NVARCHAR2(50) NULL,
                     "IS_SETTLEMENT" NUMBER(1) DEFAULT 0 NOT NULL,
+                    "PARTY_TYPE" NVARCHAR2(20) NULL,
+                    "PARTY_CODE" NVARCHAR2(50) NULL,
+                    "BRANCH_ID" NUMBER(19) NULL,
                     CONSTRAINT "PK_GL_VOUCHER_DETAIL" PRIMARY KEY ("ID")
                 )
                 """
@@ -825,6 +828,373 @@ public class OracleSchemaService : IOracleSchemaService
                     "VOUCHER_TYPE" NUMBER(6) NOT NULL,
                     "LAST_SERIAL_NO" NUMBER(19) DEFAULT 0 NOT NULL,
                     CONSTRAINT "PK_GL_VOUCHER_SERIAL" PRIMARY KEY ("BRANCH_ID", "SERIAL_YEAR", "SERIAL_MONTH", "VOUCHER_TYPE")
+                )
+                """
+            ),
+            (
+                "GL_FISCAL_PERIOD",
+                $"""
+                CREATE TABLE "{schemaName}"."GL_FISCAL_PERIOD"
+                (
+                    "ID" NUMBER(19) GENERATED ALWAYS AS IDENTITY NOT NULL,
+                    "FISCAL_YEAR_ID" NUMBER(19) NOT NULL,
+                    "PERIOD_NUMBER" NUMBER(3) NOT NULL,
+                    "PERIOD_NAME_AR" NVARCHAR2(200) NOT NULL,
+                    "PERIOD_NAME_EN" NVARCHAR2(200) NOT NULL,
+                    "START_DATE" DATE NOT NULL,
+                    "END_DATE" DATE NOT NULL,
+                    "STATUS" NVARCHAR2(20) DEFAULT 'OPEN' NOT NULL,
+                    "IS_ADJUSTMENT" NUMBER(1) DEFAULT 0 NOT NULL,
+                    "CLOSE_REASON" NVARCHAR2(500) NULL,
+                    "CLOSED_BY" NVARCHAR2(100) NULL,
+                    "CLOSED_DATE" DATE NULL,
+                    "CREATION_USER" NVARCHAR2(100) NOT NULL,
+                    "CREATION_DATE" TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
+                    "UPDATE_USER" NVARCHAR2(100) NULL,
+                    "UPDATE_DATE" TIMESTAMP NULL,
+                    CONSTRAINT "PK_GL_FISCAL_PERIOD" PRIMARY KEY ("ID")
+                )
+                """
+            ),
+            (
+                "GL_ACCOUNT_BALANCE",
+                $"""
+                CREATE TABLE "{schemaName}"."GL_ACCOUNT_BALANCE"
+                (
+                    "ID" NUMBER(19) GENERATED ALWAYS AS IDENTITY NOT NULL,
+                    "ACCOUNT_CODE" NVARCHAR2(50) NOT NULL,
+                    "BRANCH_ID" NUMBER(19) NOT NULL,
+                    "FISCAL_YEAR_ID" NUMBER(19) NOT NULL,
+                    "FISCAL_PERIOD_ID" NUMBER(19) NOT NULL,
+                    "CURRENCY_ID" NUMBER(19) NOT NULL,
+                    "OPENING_DEBIT" NUMBER(18,3) DEFAULT 0 NOT NULL,
+                    "OPENING_CREDIT" NUMBER(18,3) DEFAULT 0 NOT NULL,
+                    "PERIOD_DEBIT" NUMBER(18,3) DEFAULT 0 NOT NULL,
+                    "PERIOD_CREDIT" NUMBER(18,3) DEFAULT 0 NOT NULL,
+                    "CLOSING_DEBIT" NUMBER(18,3) DEFAULT 0 NOT NULL,
+                    "CLOSING_CREDIT" NUMBER(18,3) DEFAULT 0 NOT NULL,
+                    "LOCAL_OPENING_DEBIT" NUMBER(18,3) DEFAULT 0 NOT NULL,
+                    "LOCAL_OPENING_CREDIT" NUMBER(18,3) DEFAULT 0 NOT NULL,
+                    "LOCAL_PERIOD_DEBIT" NUMBER(18,3) DEFAULT 0 NOT NULL,
+                    "LOCAL_PERIOD_CREDIT" NUMBER(18,3) DEFAULT 0 NOT NULL,
+                    "LOCAL_CLOSING_DEBIT" NUMBER(18,3) DEFAULT 0 NOT NULL,
+                    "LOCAL_CLOSING_CREDIT" NUMBER(18,3) DEFAULT 0 NOT NULL,
+                    "CREATION_USER" NVARCHAR2(100) NOT NULL,
+                    "CREATION_DATE" TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
+                    "UPDATE_USER" NVARCHAR2(100) NULL,
+                    "UPDATE_DATE" TIMESTAMP NULL,
+                    CONSTRAINT "PK_GL_ACCOUNT_BALANCE" PRIMARY KEY ("ID")
+                )
+                """
+            ),
+            (
+                "CUSTOMER",
+                $"""
+                CREATE TABLE "{schemaName}"."CUSTOMER"
+                (
+                    "ID" NUMBER(19) GENERATED ALWAYS AS IDENTITY NOT NULL,
+                    "CUSTOMER_CODE" NVARCHAR2(50) NOT NULL,
+                    "NAME_AR" NVARCHAR2(200) NOT NULL,
+                    "NAME_EN" NVARCHAR2(200) NOT NULL,
+                    "AR_CONTROL_ACCOUNT_CODE" NVARCHAR2(50) DEFAULT '112101' NOT NULL,
+                    "DEFAULT_CURRENCY_ID" NUMBER(19) NULL,
+                    "CREDIT_LIMIT" NUMBER(18,3) NULL,
+                    "PAYMENT_TERMS_DAYS" NUMBER(5) DEFAULT 30 NOT NULL,
+                    "BRANCH_ID" NUMBER(19) NULL,
+                    "TAX_NUMBER" NVARCHAR2(50) NULL,
+                    "PHONE" NVARCHAR2(50) NULL,
+                    "EMAIL" NVARCHAR2(100) NULL,
+                    "ADDRESS" NVARCHAR2(500) NULL,
+                    "IS_ACTIVE" NUMBER(1) DEFAULT 1 NOT NULL,
+                    "CREATION_USER" NVARCHAR2(100) NOT NULL,
+                    "CREATION_DATE" TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
+                    "UPDATE_USER" NVARCHAR2(100) NULL,
+                    "UPDATE_DATE" TIMESTAMP NULL,
+                    CONSTRAINT "PK_CUSTOMER" PRIMARY KEY ("ID")
+                )
+                """
+            ),
+            (
+                "VENDOR",
+                $"""
+                CREATE TABLE "{schemaName}"."VENDOR"
+                (
+                    "ID" NUMBER(19) GENERATED ALWAYS AS IDENTITY NOT NULL,
+                    "VENDOR_CODE" NVARCHAR2(50) NOT NULL,
+                    "NAME_AR" NVARCHAR2(200) NOT NULL,
+                    "NAME_EN" NVARCHAR2(200) NOT NULL,
+                    "AP_CONTROL_ACCOUNT_CODE" NVARCHAR2(50) DEFAULT '211101' NOT NULL,
+                    "DEFAULT_CURRENCY_ID" NUMBER(19) NULL,
+                    "PAYMENT_TERMS_DAYS" NUMBER(5) DEFAULT 30 NOT NULL,
+                    "BRANCH_ID" NUMBER(19) NULL,
+                    "TAX_NUMBER" NVARCHAR2(50) NULL,
+                    "PHONE" NVARCHAR2(50) NULL,
+                    "EMAIL" NVARCHAR2(100) NULL,
+                    "ADDRESS" NVARCHAR2(500) NULL,
+                    "IS_ACTIVE" NUMBER(1) DEFAULT 1 NOT NULL,
+                    "CREATION_USER" NVARCHAR2(100) NOT NULL,
+                    "CREATION_DATE" TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
+                    "UPDATE_USER" NVARCHAR2(100) NULL,
+                    "UPDATE_DATE" TIMESTAMP NULL,
+                    CONSTRAINT "PK_VENDOR" PRIMARY KEY ("ID")
+                )
+                """
+            ),
+            (
+                "AR_SUBLEDGER_TRANSACTION",
+                $"""
+                CREATE TABLE "{schemaName}"."AR_SUBLEDGER_TRANSACTION"
+                (
+                    "ID" NUMBER(19) GENERATED ALWAYS AS IDENTITY NOT NULL,
+                    "CUSTOMER_CODE" NVARCHAR2(50) NOT NULL,
+                    "JOURNAL_LINE_ID" NUMBER(19) NOT NULL,
+                    "VOUCHER_ID" NUMBER(19) NOT NULL,
+                    "TRANSACTION_TYPE" NVARCHAR2(30) DEFAULT 'INVOICE' NOT NULL,
+                    "TRANSACTION_DATE" TIMESTAMP NOT NULL,
+                    "DUE_DATE" TIMESTAMP NULL,
+                    "AMOUNT" NUMBER(18,3) NOT NULL,
+                    "CURRENCY_ID" NUMBER(19) NOT NULL,
+                    "EXCHANGE_RATE" NUMBER(18,6) DEFAULT 1.0 NOT NULL,
+                    "LOCAL_AMOUNT" NUMBER(18,3) NOT NULL,
+                    "OPEN_AMOUNT" NUMBER(18,3) NOT NULL,
+                    "LOCAL_OPEN_AMOUNT" NUMBER(18,3) NOT NULL,
+                    "REFERENCE_NO" NVARCHAR2(100) NULL,
+                    "DESCRIPTION" NVARCHAR2(500) NULL,
+                    "CREATION_USER" NVARCHAR2(100) NOT NULL,
+                    "CREATION_DATE" TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
+                    "UPDATE_USER" NVARCHAR2(100) NULL,
+                    "UPDATE_DATE" TIMESTAMP NULL,
+                    CONSTRAINT "PK_AR_SUB_TX" PRIMARY KEY ("ID")
+                )
+                """
+            ),
+            (
+                "AR_CASH_APPLICATION",
+                $"""
+                CREATE TABLE "{schemaName}"."AR_CASH_APPLICATION"
+                (
+                    "ID" NUMBER(19) GENERATED ALWAYS AS IDENTITY NOT NULL,
+                    "PAYMENT_TRANSACTION_ID" NUMBER(19) NOT NULL,
+                    "INVOICE_TRANSACTION_ID" NUMBER(19) NOT NULL,
+                    "APPLIED_AMOUNT" NUMBER(18,3) NOT NULL,
+                    "LOCAL_APPLIED_AMOUNT" NUMBER(18,3) NOT NULL,
+                    "APPLIED_DATE" TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
+                    "NOTES" NVARCHAR2(500) NULL,
+                    "CREATION_USER" NVARCHAR2(100) NOT NULL,
+                    "CREATION_DATE" TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
+                    CONSTRAINT "PK_AR_CASH_APP" PRIMARY KEY ("ID")
+                )
+                """
+            ),
+            (
+                "AP_SUBLEDGER_TRANSACTION",
+                $"""
+                CREATE TABLE "{schemaName}"."AP_SUBLEDGER_TRANSACTION"
+                (
+                    "ID" NUMBER(19) GENERATED ALWAYS AS IDENTITY NOT NULL,
+                    "VENDOR_CODE" NVARCHAR2(50) NOT NULL,
+                    "JOURNAL_LINE_ID" NUMBER(19) NOT NULL,
+                    "VOUCHER_ID" NUMBER(19) NOT NULL,
+                    "TRANSACTION_TYPE" NVARCHAR2(30) DEFAULT 'BILL' NOT NULL,
+                    "TRANSACTION_DATE" TIMESTAMP NOT NULL,
+                    "DUE_DATE" TIMESTAMP NULL,
+                    "AMOUNT" NUMBER(18,3) NOT NULL,
+                    "CURRENCY_ID" NUMBER(19) NOT NULL,
+                    "EXCHANGE_RATE" NUMBER(18,6) DEFAULT 1.0 NOT NULL,
+                    "LOCAL_AMOUNT" NUMBER(18,3) NOT NULL,
+                    "OPEN_AMOUNT" NUMBER(18,3) NOT NULL,
+                    "LOCAL_OPEN_AMOUNT" NUMBER(18,3) NOT NULL,
+                    "REFERENCE_NO" NVARCHAR2(100) NULL,
+                    "DESCRIPTION" NVARCHAR2(500) NULL,
+                    "CREATION_USER" NVARCHAR2(100) NOT NULL,
+                    "CREATION_DATE" TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
+                    "UPDATE_USER" NVARCHAR2(100) NULL,
+                    "UPDATE_DATE" TIMESTAMP NULL,
+                    CONSTRAINT "PK_AP_SUB_TX" PRIMARY KEY ("ID")
+                )
+                """
+            ),
+            (
+                "AP_CASH_APPLICATION",
+                $"""
+                CREATE TABLE "{schemaName}"."AP_CASH_APPLICATION"
+                (
+                    "ID" NUMBER(19) GENERATED ALWAYS AS IDENTITY NOT NULL,
+                    "PAYMENT_TRANSACTION_ID" NUMBER(19) NOT NULL,
+                    "INVOICE_TRANSACTION_ID" NUMBER(19) NOT NULL,
+                    "APPLIED_AMOUNT" NUMBER(18,3) NOT NULL,
+                    "LOCAL_APPLIED_AMOUNT" NUMBER(18,3) NOT NULL,
+                    "APPLIED_DATE" TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
+                    "NOTES" NVARCHAR2(500) NULL,
+                    "CREATION_USER" NVARCHAR2(100) NOT NULL,
+                    "CREATION_DATE" TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
+                    CONSTRAINT "PK_AP_CASH_APP" PRIMARY KEY ("ID")
+                )
+                """
+            ),
+            (
+                "GL_PDC_REGISTER",
+                $"""
+                CREATE TABLE "{schemaName}"."GL_PDC_REGISTER"
+                (
+                    "ID" NUMBER(19) GENERATED ALWAYS AS IDENTITY NOT NULL,
+                    "BRANCH_ID" NUMBER(19) NOT NULL,
+                    "FISCAL_YEAR_ID" NUMBER(19) NOT NULL,
+                    "CHEQUE_TYPE" NVARCHAR2(20) DEFAULT 'RECEIVED' NOT NULL,
+                    "CHEQUE_NO" NVARCHAR2(50) NOT NULL,
+                    "CHEQUE_DATE" TIMESTAMP NOT NULL,
+                    "DUE_DATE" TIMESTAMP NOT NULL,
+                    "AMOUNT" NUMBER(18,3) NOT NULL,
+                    "LOCAL_AMOUNT" NUMBER(18,3) NOT NULL,
+                    "CURRENCY_ID" NUMBER(19) DEFAULT 1 NOT NULL,
+                    "EXCHANGE_RATE" NUMBER(18,6) DEFAULT 1.0 NOT NULL,
+                    "DRAWER_BANK_NAME" NVARCHAR2(150) NOT NULL,
+                    "DRAWER_BANK_ACC_NO" NVARCHAR2(50) NULL,
+                    "BENEFICIARY_NAME" NVARCHAR2(150) NULL,
+                    "PARTY_TYPE" NVARCHAR2(20) NULL,
+                    "PARTY_CODE" NVARCHAR2(50) NULL,
+                    "STATUS" NVARCHAR2(20) DEFAULT 'RECEIVED' NOT NULL,
+                    "INTERMEDIATE_ACCOUNT_CODE" NVARCHAR2(50) NULL,
+                    "DEPOSIT_BANK_ACCOUNT_CODE" NVARCHAR2(50) NULL,
+                    "DEPOSIT_DATE" TIMESTAMP NULL,
+                    "CLEARED_DATE" TIMESTAMP NULL,
+                    "BOUNCED_DATE" TIMESTAMP NULL,
+                    "BOUNCE_REASON" NVARCHAR2(250) NULL,
+                    "ORIGINATING_VOUCHER_ID" NUMBER(19) NULL,
+                    "CLEARING_VOUCHER_ID" NUMBER(19) NULL,
+                    "BOUNCE_VOUCHER_ID" NUMBER(19) NULL,
+                    "NOTES" NVARCHAR2(500) NULL,
+                    "CREATION_USER" NVARCHAR2(100) NOT NULL,
+                    "CREATION_DATE" TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
+                    "UPDATE_USER" NVARCHAR2(100) NULL,
+                    "UPDATE_DATE" TIMESTAMP NULL,
+                    CONSTRAINT "PK_GL_PDC_REGISTER" PRIMARY KEY ("ID")
+                )
+                """
+            ),
+            (
+                "GL_POSTING_RULE",
+                $"""
+                CREATE TABLE "{schemaName}"."GL_POSTING_RULE"
+                (
+                    "ID" NUMBER(19) GENERATED ALWAYS AS IDENTITY NOT NULL,
+                    "BRANCH_ID" NUMBER(19) NULL,
+                    "MODULE" NVARCHAR2(50) NOT NULL,
+                    "EVENT_TYPE" NVARCHAR2(50) NOT NULL,
+                    "EVENT_NAME_AR" NVARCHAR2(200) NOT NULL,
+                    "EVENT_NAME_EN" NVARCHAR2(200) NOT NULL,
+                    "DEBIT_ACCOUNT_CODE" NVARCHAR2(50) NOT NULL,
+                    "CREDIT_ACCOUNT_CODE" NVARCHAR2(50) NOT NULL,
+                    "DEFAULT_COST_CENTER_CODE" NVARCHAR2(50) NULL,
+                    "DEFAULT_VOUCHER_TYPE" NUMBER(6) DEFAULT 1 NOT NULL,
+                    "DESCRIPTION_TEMPLATE" NVARCHAR2(500) NULL,
+                    "IS_ACTIVE" NUMBER(1) DEFAULT 1 NOT NULL,
+                    "CREATION_USER" NVARCHAR2(100) NOT NULL,
+                    "CREATION_DATE" TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
+                    "UPDATE_USER" NVARCHAR2(100) NULL,
+                    "UPDATE_DATE" TIMESTAMP NULL,
+                    CONSTRAINT "PK_GL_POSTING_RULE" PRIMARY KEY ("ID")
+                )
+                """
+            ),
+            (
+                "BANK_ACCOUNT",
+                $"""
+                CREATE TABLE "{schemaName}"."BANK_ACCOUNT"
+                (
+                    "ID" NUMBER(19) GENERATED ALWAYS AS IDENTITY NOT NULL,
+                    "BRANCH_ID" NUMBER(19) NOT NULL,
+                    "ACCOUNT_NUMBER" NVARCHAR2(50) NOT NULL,
+                    "ACCOUNT_NAME_AR" NVARCHAR2(200) NOT NULL,
+                    "ACCOUNT_NAME_EN" NVARCHAR2(200) NOT NULL,
+                    "BANK_NAME" NVARCHAR2(150) NOT NULL,
+                    "BANK_BRANCH_NAME" NVARCHAR2(150) NULL,
+                    "IBAN" NVARCHAR2(50) NULL,
+                    "SWIFT_CODE" NVARCHAR2(30) NULL,
+                    "CURRENCY_ID" NUMBER(19) DEFAULT 1 NOT NULL,
+                    "GL_ACCOUNT_CODE" NVARCHAR2(50) DEFAULT '111201' NOT NULL,
+                    "OVERDRAFT_LIMIT" NUMBER(18,3) DEFAULT 0 NOT NULL,
+                    "OPENING_BALANCE" NUMBER(18,3) DEFAULT 0 NOT NULL,
+                    "CURRENT_BALANCE" NUMBER(18,3) DEFAULT 0 NOT NULL,
+                    "IS_ACTIVE" NUMBER(1) DEFAULT 1 NOT NULL,
+                    "CREATION_USER" NVARCHAR2(100) NOT NULL,
+                    "CREATION_DATE" TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
+                    "UPDATE_USER" NVARCHAR2(100) NULL,
+                    "UPDATE_DATE" TIMESTAMP NULL,
+                    CONSTRAINT "PK_BANK_ACCOUNT" PRIMARY KEY ("ID")
+                )
+                """
+            ),
+            (
+                "CASH_REGISTER",
+                $"""
+                CREATE TABLE "{schemaName}"."CASH_REGISTER"
+                (
+                    "ID" NUMBER(19) GENERATED ALWAYS AS IDENTITY NOT NULL,
+                    "BRANCH_ID" NUMBER(19) NOT NULL,
+                    "CODE" NVARCHAR2(50) NOT NULL,
+                    "NAME_AR" NVARCHAR2(200) NOT NULL,
+                    "NAME_EN" NVARCHAR2(200) NOT NULL,
+                    "REGISTER_TYPE" NVARCHAR2(30) DEFAULT 'MAIN' NOT NULL,
+                    "CUSTODIAN_NAME" NVARCHAR2(150) NULL,
+                    "GL_ACCOUNT_CODE" NVARCHAR2(50) DEFAULT '111101' NOT NULL,
+                    "CURRENCY_ID" NUMBER(19) DEFAULT 1 NOT NULL,
+                    "MIN_LIMIT" NUMBER(18,3) DEFAULT 0 NOT NULL,
+                    "MAX_LIMIT" NUMBER(18,3) DEFAULT 0 NOT NULL,
+                    "OPENING_BALANCE" NUMBER(18,3) DEFAULT 0 NOT NULL,
+                    "CURRENT_BALANCE" NUMBER(18,3) DEFAULT 0 NOT NULL,
+                    "IS_ACTIVE" NUMBER(1) DEFAULT 1 NOT NULL,
+                    "CREATION_USER" NVARCHAR2(100) NOT NULL,
+                    "CREATION_DATE" TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
+                    "UPDATE_USER" NVARCHAR2(100) NULL,
+                    "UPDATE_DATE" TIMESTAMP NULL,
+                    CONSTRAINT "PK_CASH_REGISTER" PRIMARY KEY ("ID")
+                )
+                """
+            ),
+            (
+                "BANK_RECONCILIATION",
+                $"""
+                CREATE TABLE "{schemaName}"."BANK_RECONCILIATION"
+                (
+                    "ID" NUMBER(19) GENERATED ALWAYS AS IDENTITY NOT NULL,
+                    "BANK_ACCOUNT_ID" NUMBER(19) NOT NULL,
+                    "FISCAL_YEAR_ID" NUMBER(19) NOT NULL,
+                    "FISCAL_PERIOD_ID" NUMBER(19) NOT NULL,
+                    "STATEMENT_DATE" TIMESTAMP NOT NULL,
+                    "STATEMENT_ENDING_BALANCE" NUMBER(18,3) DEFAULT 0 NOT NULL,
+                    "BOOK_ENDING_BALANCE" NUMBER(18,3) DEFAULT 0 NOT NULL,
+                    "TOTAL_RECONCILED_AMOUNT" NUMBER(18,3) DEFAULT 0 NOT NULL,
+                    "UNRECONCILED_DIFFERENCE" NUMBER(18,3) DEFAULT 0 NOT NULL,
+                    "STATUS" NVARCHAR2(30) DEFAULT 'DRAFT' NOT NULL,
+                    "NOTES" NVARCHAR2(500) NULL,
+                    "CREATION_USER" NVARCHAR2(100) NOT NULL,
+                    "CREATION_DATE" TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
+                    "UPDATE_USER" NVARCHAR2(100) NULL,
+                    "UPDATE_DATE" TIMESTAMP NULL,
+                    CONSTRAINT "PK_BANK_RECONCILIATION" PRIMARY KEY ("ID")
+                )
+                """
+            ),
+            (
+                "BANK_STATEMENT_LINE",
+                $"""
+                CREATE TABLE "{schemaName}"."BANK_STATEMENT_LINE"
+                (
+                    "ID" NUMBER(19) GENERATED ALWAYS AS IDENTITY NOT NULL,
+                    "RECONCILIATION_ID" NUMBER(19) NOT NULL,
+                    "TRANSACTION_DATE" TIMESTAMP NOT NULL,
+                    "VALUE_DATE" TIMESTAMP NULL,
+                    "REFERENCE_NO" NVARCHAR2(100) NULL,
+                    "CHEQUE_NO" NVARCHAR2(50) NULL,
+                    "DESCRIPTION" NVARCHAR2(500) NOT NULL,
+                    "DEBIT" NUMBER(18,3) DEFAULT 0 NOT NULL,
+                    "CREDIT" NUMBER(18,3) DEFAULT 0 NOT NULL,
+                    "BALANCE" NUMBER(18,3) DEFAULT 0 NOT NULL,
+                    "IS_RECONCILED" NUMBER(1) DEFAULT 0 NOT NULL,
+                    "RECONCILED_DATE" TIMESTAMP NULL,
+                    "MATCHED_VOUCHER_DETAIL_ID" NUMBER(19) NULL,
+                    CONSTRAINT "PK_BANK_STATEMENT_LINE" PRIMARY KEY ("ID")
                 )
                 """
             )
@@ -891,7 +1261,58 @@ public class OracleSchemaService : IOracleSchemaService
             ("FK_GL_VH_BRANCH", $"ALTER TABLE \"{schemaName}\".\"GL_VOUCHER_HEADER\" ADD CONSTRAINT \"FK_GL_VH_BRANCH\" FOREIGN KEY (\"BRANCH_ID\") REFERENCES \"{schemaName}\".\"SYS_BRANCH\" (\"Id\")"),
             ("FK_GL_VD_VH", $"ALTER TABLE \"{schemaName}\".\"GL_VOUCHER_DETAIL\" ADD CONSTRAINT \"FK_GL_VD_VH\" FOREIGN KEY (\"VOUCHER_ID\") REFERENCES \"{schemaName}\".\"GL_VOUCHER_HEADER\" (\"ID\") ON DELETE CASCADE"),
             ("FK_GL_VD_ACC", $"ALTER TABLE \"{schemaName}\".\"GL_VOUCHER_DETAIL\" ADD CONSTRAINT \"FK_GL_VD_ACC\" FOREIGN KEY (\"ACCOUNT_CODE\") REFERENCES \"{schemaName}\".\"GL_ACCOUNT\" (\"ACCOUNT_CODE\")"),
-            ("FK_GL_VD_CC", $"ALTER TABLE \"{schemaName}\".\"GL_VOUCHER_DETAIL\" ADD CONSTRAINT \"FK_GL_VD_CC\" FOREIGN KEY (\"COST_CENTER_CODE\") REFERENCES \"{schemaName}\".\"GL_COST_CENTER\" (\"COST_CENTER_CODE\")")
+            ("FK_GL_VD_CC", $"ALTER TABLE \"{schemaName}\".\"GL_VOUCHER_DETAIL\" ADD CONSTRAINT \"FK_GL_VD_CC\" FOREIGN KEY (\"COST_CENTER_CODE\") REFERENCES \"{schemaName}\".\"GL_COST_CENTER\" (\"COST_CENTER_CODE\")"),
+            ("FK_GL_VD_BRANCH", $"ALTER TABLE \"{schemaName}\".\"GL_VOUCHER_DETAIL\" ADD CONSTRAINT \"FK_GL_VD_BRANCH\" FOREIGN KEY (\"BRANCH_ID\") REFERENCES \"{schemaName}\".\"SYS_BRANCH\" (\"Id\")"),
+            ("FK_GL_FP_YEAR", $"ALTER TABLE \"{schemaName}\".\"GL_FISCAL_PERIOD\" ADD CONSTRAINT \"FK_GL_FP_YEAR\" FOREIGN KEY (\"FISCAL_YEAR_ID\") REFERENCES \"{schemaName}\".\"SYS_FISCAL_YEAR\" (\"Id\") ON DELETE CASCADE"),
+            ("UX_GL_FP_YEAR_NUM", $"ALTER TABLE \"{schemaName}\".\"GL_FISCAL_PERIOD\" ADD CONSTRAINT \"UX_GL_FP_YEAR_NUM\" UNIQUE (\"FISCAL_YEAR_ID\", \"PERIOD_NUMBER\")"),
+
+            ("UX_GL_ACC_BAL_DIM", $"ALTER TABLE \"{schemaName}\".\"GL_ACCOUNT_BALANCE\" ADD CONSTRAINT \"UX_GL_ACC_BAL_DIM\" UNIQUE (\"ACCOUNT_CODE\", \"BRANCH_ID\", \"FISCAL_YEAR_ID\", \"FISCAL_PERIOD_ID\", \"CURRENCY_ID\")"),
+            ("FK_GL_BAL_ACC", $"ALTER TABLE \"{schemaName}\".\"GL_ACCOUNT_BALANCE\" ADD CONSTRAINT \"FK_GL_BAL_ACC\" FOREIGN KEY (\"ACCOUNT_CODE\") REFERENCES \"{schemaName}\".\"GL_ACCOUNT\" (\"ACCOUNT_CODE\")"),
+            ("FK_GL_BAL_BR", $"ALTER TABLE \"{schemaName}\".\"GL_ACCOUNT_BALANCE\" ADD CONSTRAINT \"FK_GL_BAL_BR\" FOREIGN KEY (\"BRANCH_ID\") REFERENCES \"{schemaName}\".\"SYS_BRANCH\" (\"Id\")"),
+            ("FK_GL_BAL_FY", $"ALTER TABLE \"{schemaName}\".\"GL_ACCOUNT_BALANCE\" ADD CONSTRAINT \"FK_GL_BAL_FY\" FOREIGN KEY (\"FISCAL_YEAR_ID\") REFERENCES \"{schemaName}\".\"SYS_FISCAL_YEAR\" (\"Id\") ON DELETE CASCADE"),
+            ("FK_GL_BAL_FP", $"ALTER TABLE \"{schemaName}\".\"GL_ACCOUNT_BALANCE\" ADD CONSTRAINT \"FK_GL_BAL_FP\" FOREIGN KEY (\"FISCAL_PERIOD_ID\") REFERENCES \"{schemaName}\".\"GL_FISCAL_PERIOD\" (\"ID\") ON DELETE CASCADE"),
+
+            ("UX_CUSTOMER_CODE", $"ALTER TABLE \"{schemaName}\".\"CUSTOMER\" ADD CONSTRAINT \"UX_CUSTOMER_CODE\" UNIQUE (\"CUSTOMER_CODE\")"),
+            ("FK_CUST_AR_ACC", $"ALTER TABLE \"{schemaName}\".\"CUSTOMER\" ADD CONSTRAINT \"FK_CUST_AR_ACC\" FOREIGN KEY (\"AR_CONTROL_ACCOUNT_CODE\") REFERENCES \"{schemaName}\".\"GL_ACCOUNT\" (\"ACCOUNT_CODE\")"),
+            ("FK_CUST_BRANCH", $"ALTER TABLE \"{schemaName}\".\"CUSTOMER\" ADD CONSTRAINT \"FK_CUST_BRANCH\" FOREIGN KEY (\"BRANCH_ID\") REFERENCES \"{schemaName}\".\"SYS_BRANCH\" (\"Id\")"),
+
+            ("UX_VENDOR_CODE", $"ALTER TABLE \"{schemaName}\".\"VENDOR\" ADD CONSTRAINT \"UX_VENDOR_CODE\" UNIQUE (\"VENDOR_CODE\")"),
+            ("FK_VEND_AP_ACC", $"ALTER TABLE \"{schemaName}\".\"VENDOR\" ADD CONSTRAINT \"FK_VEND_AP_ACC\" FOREIGN KEY (\"AP_CONTROL_ACCOUNT_CODE\") REFERENCES \"{schemaName}\".\"GL_ACCOUNT\" (\"ACCOUNT_CODE\")"),
+            ("FK_VEND_BRANCH", $"ALTER TABLE \"{schemaName}\".\"VENDOR\" ADD CONSTRAINT \"FK_VEND_BRANCH\" FOREIGN KEY (\"BRANCH_ID\") REFERENCES \"{schemaName}\".\"SYS_BRANCH\" (\"Id\")"),
+
+            ("FK_AR_SUB_CUST", $"ALTER TABLE \"{schemaName}\".\"AR_SUBLEDGER_TRANSACTION\" ADD CONSTRAINT \"FK_AR_SUB_CUST\" FOREIGN KEY (\"CUSTOMER_CODE\") REFERENCES \"{schemaName}\".\"CUSTOMER\" (\"CUSTOMER_CODE\")"),
+            ("FK_AR_SUB_LINE", $"ALTER TABLE \"{schemaName}\".\"AR_SUBLEDGER_TRANSACTION\" ADD CONSTRAINT \"FK_AR_SUB_LINE\" FOREIGN KEY (\"JOURNAL_LINE_ID\") REFERENCES \"{schemaName}\".\"GL_VOUCHER_DETAIL\" (\"ID\") ON DELETE CASCADE"),
+            ("FK_AR_SUB_VH", $"ALTER TABLE \"{schemaName}\".\"AR_SUBLEDGER_TRANSACTION\" ADD CONSTRAINT \"FK_AR_SUB_VH\" FOREIGN KEY (\"VOUCHER_ID\") REFERENCES \"{schemaName}\".\"GL_VOUCHER_HEADER\" (\"ID\") ON DELETE CASCADE"),
+
+            ("FK_AP_SUB_VEND", $"ALTER TABLE \"{schemaName}\".\"AP_SUBLEDGER_TRANSACTION\" ADD CONSTRAINT \"FK_AP_SUB_VEND\" FOREIGN KEY (\"VENDOR_CODE\") REFERENCES \"{schemaName}\".\"VENDOR\" (\"VENDOR_CODE\")"),
+            ("FK_AP_SUB_LINE", $"ALTER TABLE \"{schemaName}\".\"AP_SUBLEDGER_TRANSACTION\" ADD CONSTRAINT \"FK_AP_SUB_LINE\" FOREIGN KEY (\"JOURNAL_LINE_ID\") REFERENCES \"{schemaName}\".\"GL_VOUCHER_DETAIL\" (\"ID\") ON DELETE CASCADE"),
+            ("FK_AP_SUB_VH", $"ALTER TABLE \"{schemaName}\".\"AP_SUBLEDGER_TRANSACTION\" ADD CONSTRAINT \"FK_AP_SUB_VH\" FOREIGN KEY (\"VOUCHER_ID\") REFERENCES \"{schemaName}\".\"GL_VOUCHER_HEADER\" (\"ID\") ON DELETE CASCADE"),
+
+            ("FK_PDC_BRANCH", $"ALTER TABLE \"{schemaName}\".\"GL_PDC_REGISTER\" ADD CONSTRAINT \"FK_PDC_BRANCH\" FOREIGN KEY (\"BRANCH_ID\") REFERENCES \"{schemaName}\".\"SYS_BRANCH\" (\"Id\")"),
+            ("FK_PDC_YEAR", $"ALTER TABLE \"{schemaName}\".\"GL_PDC_REGISTER\" ADD CONSTRAINT \"FK_PDC_YEAR\" FOREIGN KEY (\"FISCAL_YEAR_ID\") REFERENCES \"{schemaName}\".\"SYS_FISCAL_YEAR\" (\"Id\") ON DELETE CASCADE"),
+            ("FK_PDC_ORIGIN_VH", $"ALTER TABLE \"{schemaName}\".\"GL_PDC_REGISTER\" ADD CONSTRAINT \"FK_PDC_ORIGIN_VH\" FOREIGN KEY (\"ORIGINATING_VOUCHER_ID\") REFERENCES \"{schemaName}\".\"GL_VOUCHER_HEADER\" (\"ID\") ON DELETE SET NULL"),
+            ("FK_PDC_CLEAR_VH", $"ALTER TABLE \"{schemaName}\".\"GL_PDC_REGISTER\" ADD CONSTRAINT \"FK_PDC_CLEAR_VH\" FOREIGN KEY (\"CLEARING_VOUCHER_ID\") REFERENCES \"{schemaName}\".\"GL_VOUCHER_HEADER\" (\"ID\") ON DELETE SET NULL"),
+            ("FK_PDC_BOUNCE_VH", $"ALTER TABLE \"{schemaName}\".\"GL_PDC_REGISTER\" ADD CONSTRAINT \"FK_PDC_BOUNCE_VH\" FOREIGN KEY (\"BOUNCE_VOUCHER_ID\") REFERENCES \"{schemaName}\".\"GL_VOUCHER_HEADER\" (\"ID\") ON DELETE SET NULL"),
+
+            ("FK_PR_BRANCH", $"ALTER TABLE \"{schemaName}\".\"GL_POSTING_RULE\" ADD CONSTRAINT \"FK_PR_BRANCH\" FOREIGN KEY (\"BRANCH_ID\") REFERENCES \"{schemaName}\".\"SYS_BRANCH\" (\"Id\")"),
+            ("FK_PR_DEBIT_ACC", $"ALTER TABLE \"{schemaName}\".\"GL_POSTING_RULE\" ADD CONSTRAINT \"FK_PR_DEBIT_ACC\" FOREIGN KEY (\"DEBIT_ACCOUNT_CODE\") REFERENCES \"{schemaName}\".\"GL_ACCOUNT\" (\"ACCOUNT_CODE\")"),
+            ("FK_PR_CREDIT_ACC", $"ALTER TABLE \"{schemaName}\".\"GL_POSTING_RULE\" ADD CONSTRAINT \"FK_PR_CREDIT_ACC\" FOREIGN KEY (\"CREDIT_ACCOUNT_CODE\") REFERENCES \"{schemaName}\".\"GL_ACCOUNT\" (\"ACCOUNT_CODE\")"),
+            ("FK_PR_CC", $"ALTER TABLE \"{schemaName}\".\"GL_POSTING_RULE\" ADD CONSTRAINT \"FK_PR_CC\" FOREIGN KEY (\"DEFAULT_COST_CENTER_CODE\") REFERENCES \"{schemaName}\".\"GL_COST_CENTER\" (\"COST_CENTER_CODE\")"),
+
+            ("UX_BANK_ACC_NUM", $"ALTER TABLE \"{schemaName}\".\"BANK_ACCOUNT\" ADD CONSTRAINT \"UX_BANK_ACC_NUM\" UNIQUE (\"ACCOUNT_NUMBER\")"),
+            ("FK_BA_BRANCH", $"ALTER TABLE \"{schemaName}\".\"BANK_ACCOUNT\" ADD CONSTRAINT \"FK_BA_BRANCH\" FOREIGN KEY (\"BRANCH_ID\") REFERENCES \"{schemaName}\".\"SYS_BRANCH\" (\"Id\")"),
+            ("FK_BA_GL_ACC", $"ALTER TABLE \"{schemaName}\".\"BANK_ACCOUNT\" ADD CONSTRAINT \"FK_BA_GL_ACC\" FOREIGN KEY (\"GL_ACCOUNT_CODE\") REFERENCES \"{schemaName}\".\"GL_ACCOUNT\" (\"ACCOUNT_CODE\")"),
+
+            ("UX_CASH_REG_CODE", $"ALTER TABLE \"{schemaName}\".\"CASH_REGISTER\" ADD CONSTRAINT \"UX_CASH_REG_CODE\" UNIQUE (\"CODE\")"),
+            ("FK_CR_BRANCH", $"ALTER TABLE \"{schemaName}\".\"CASH_REGISTER\" ADD CONSTRAINT \"FK_CR_BRANCH\" FOREIGN KEY (\"BRANCH_ID\") REFERENCES \"{schemaName}\".\"SYS_BRANCH\" (\"Id\")"),
+            ("FK_CR_GL_ACC", $"ALTER TABLE \"{schemaName}\".\"CASH_REGISTER\" ADD CONSTRAINT \"FK_CR_GL_ACC\" FOREIGN KEY (\"GL_ACCOUNT_CODE\") REFERENCES \"{schemaName}\".\"GL_ACCOUNT\" (\"ACCOUNT_CODE\")"),
+
+            ("FK_BR_ACC", $"ALTER TABLE \"{schemaName}\".\"BANK_RECONCILIATION\" ADD CONSTRAINT \"FK_BR_ACC\" FOREIGN KEY (\"BANK_ACCOUNT_ID\") REFERENCES \"{schemaName}\".\"BANK_ACCOUNT\" (\"ID\") ON DELETE CASCADE"),
+            ("FK_BR_YEAR", $"ALTER TABLE \"{schemaName}\".\"BANK_RECONCILIATION\" ADD CONSTRAINT \"FK_BR_YEAR\" FOREIGN KEY (\"FISCAL_YEAR_ID\") REFERENCES \"{schemaName}\".\"SYS_FISCAL_YEAR\" (\"Id\") ON DELETE CASCADE"),
+            ("FK_BR_PERIOD", $"ALTER TABLE \"{schemaName}\".\"BANK_RECONCILIATION\" ADD CONSTRAINT \"FK_BR_PERIOD\" FOREIGN KEY (\"FISCAL_PERIOD_ID\") REFERENCES \"{schemaName}\".\"GL_FISCAL_PERIOD\" (\"ID\") ON DELETE CASCADE"),
+
+            ("FK_BSL_RECON", $"ALTER TABLE \"{schemaName}\".\"BANK_STATEMENT_LINE\" ADD CONSTRAINT \"FK_BSL_RECON\" FOREIGN KEY (\"RECONCILIATION_ID\") REFERENCES \"{schemaName}\".\"BANK_RECONCILIATION\" (\"ID\") ON DELETE CASCADE"),
+            ("FK_BSL_VD", $"ALTER TABLE \"{schemaName}\".\"BANK_STATEMENT_LINE\" ADD CONSTRAINT \"FK_BSL_VD\" FOREIGN KEY (\"MATCHED_VOUCHER_DETAIL_ID\") REFERENCES \"{schemaName}\".\"GL_VOUCHER_DETAIL\" (\"ID\") ON DELETE SET NULL")
         };
 
         foreach (var statement in constraintStatements)
@@ -908,7 +1329,9 @@ public class OracleSchemaService : IOracleSchemaService
             ("IX_GL_VH_DATE", $"CREATE INDEX \"{schemaName}\".\"IX_GL_VH_DATE\" ON \"{schemaName}\".\"GL_VOUCHER_HEADER\" (\"VOUCHER_DATE\")"),
             ("IX_GL_VH_TYPE", $"CREATE INDEX \"{schemaName}\".\"IX_GL_VH_TYPE\" ON \"{schemaName}\".\"GL_VOUCHER_HEADER\" (\"VOUCHER_TYPE\")"),
             ("IX_GL_VD_ACC", $"CREATE INDEX \"{schemaName}\".\"IX_GL_VD_ACC\" ON \"{schemaName}\".\"GL_VOUCHER_DETAIL\" (\"ACCOUNT_CODE\")"),
-            ("IX_GL_VD_CC", $"CREATE INDEX \"{schemaName}\".\"IX_GL_VD_CC\" ON \"{schemaName}\".\"GL_VOUCHER_DETAIL\" (\"COST_CENTER_CODE\")")
+            ("IX_GL_VD_CC", $"CREATE INDEX \"{schemaName}\".\"IX_GL_VD_CC\" ON \"{schemaName}\".\"GL_VOUCHER_DETAIL\" (\"COST_CENTER_CODE\")"),
+            ("IX_GL_FP_DATES", $"CREATE INDEX \"{schemaName}\".\"IX_GL_FP_DATES\" ON \"{schemaName}\".\"GL_FISCAL_PERIOD\" (\"START_DATE\", \"END_DATE\")"),
+            ("IX_GL_BAL_PERIOD", $"CREATE INDEX \"{schemaName}\".\"IX_GL_BAL_PERIOD\" ON \"{schemaName}\".\"GL_ACCOUNT_BALANCE\" (\"FISCAL_YEAR_ID\", \"FISCAL_PERIOD_ID\", \"BRANCH_ID\")")
         };
 
         foreach (var statement in indexStatements)

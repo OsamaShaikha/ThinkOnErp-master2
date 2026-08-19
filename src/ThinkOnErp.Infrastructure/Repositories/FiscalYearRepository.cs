@@ -16,9 +16,6 @@ public class FiscalYearRepository : IFiscalYearRepository
     public async Task<SysFiscalYear?> GetByIdAsync(long rowId) =>
         await _context.SysFiscalYears.FindAsync(rowId);
 
-    public async Task<List<SysFiscalYear>> GetByCompanyIdAsync(long companyId) =>
-        await _context.SysFiscalYears.Where(f => f.CompanyId == companyId).ToListAsync();
-
     public async Task<List<SysFiscalYear>> GetByBranchIdAsync(long branchId) =>
         await _context.SysFiscalYears.Where(f => f.BranchId == branchId).ToListAsync();
 
@@ -34,7 +31,6 @@ public class FiscalYearRepository : IFiscalYearRepository
         var existing = await _context.SysFiscalYears.FindAsync(fiscalYear.Id);
         if (existing == null) return 0;
 
-        existing.CompanyId = fiscalYear.CompanyId;
         existing.BranchId = fiscalYear.BranchId;
         existing.FiscalYearCode = fiscalYear.FiscalYearCode;
         existing.FiscalYearNameAr = fiscalYear.FiscalYearNameAr;

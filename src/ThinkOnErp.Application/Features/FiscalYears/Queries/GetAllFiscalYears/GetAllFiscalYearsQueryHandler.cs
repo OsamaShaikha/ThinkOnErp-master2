@@ -20,7 +20,6 @@ public class GetAllFiscalYearsQueryHandler : IRequestHandler<GetAllFiscalYearsQu
         return fiscalYears.Select(fy => new FiscalYearDto
         {
             FiscalYearId = fy.Id,
-            CompanyId = fy.CompanyId,
             BranchId = fy.BranchId,
             FiscalYearCode = fy.FiscalYearCode,
             FiscalYearNameAr = fy.FiscalYearNameAr,

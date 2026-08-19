@@ -153,7 +153,6 @@ public class SysFiscalYearConfiguration : IEntityTypeConfiguration<SysFiscalYear
         builder.ToTable("SYS_FISCAL_YEAR", t => t.ExcludeFromMigrations());
         builder.HasKey(e => e.Id);
         builder.Property(e => e.Id).ValueGeneratedOnAdd();
-        builder.Property(e => e.CompanyId).HasColumnName("COMPANY_ID").IsRequired();
         builder.Property(e => e.BranchId).HasColumnName("BRANCH_ID").IsRequired();
         builder.Property(e => e.FiscalYearCode).HasColumnName("FISCAL_YEAR_CODE").HasMaxLength(20).IsRequired();
 builder.Property(e => e.FiscalYearNameAr).HasColumnName("NAME_AR").HasMaxLength(200);
@@ -168,7 +167,6 @@ builder.Property(e => e.FiscalYearNameEn).HasColumnName("NAME_EN").HasMaxLength(
         builder.Property(e => e.UpdateDate).HasColumnName("UPDATE_DATE");
 
         // Navigation
-        builder.HasOne(e => e.Company).WithMany().HasForeignKey(e => e.CompanyId).OnDelete(DeleteBehavior.Restrict);
         builder.HasOne(e => e.Branch).WithMany().HasForeignKey(e => e.BranchId).OnDelete(DeleteBehavior.Restrict);
     }
 }

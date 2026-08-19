@@ -1,0 +1,1308 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ThinkOnErp - التقرير الشامل والمتكامل لواجهات الـ (APIs) لفريق الـ UI</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #2563eb;
+            --primary-dark: #1d4ed8;
+            --primary-light: #eff6ff;
+            --success: #10b981;
+            --success-light: #ecfdf5;
+            --warning: #f59e0b;
+            --warning-light: #fffbeb;
+            --danger: #ef4444;
+            --danger-light: #fef2f2;
+            --info: #06b6d4;
+            --info-light: #ecfeff;
+            --purple: #8b5cf6;
+            --purple-light: #f3e8ff;
+            --dark: #0f172a;
+            --card-bg: #ffffff;
+            --bg: #f8fafc;
+            --border: #e2e8f0;
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Tajawal', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg);
+            color: var(--text-main);
+            line-height: 1.6;
+            padding-bottom: 60px;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
+            color: white;
+            padding: 40px 20px;
+            text-align: center;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .header h1 {
+            font-size: 2.2rem;
+            font-weight: 800;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .badge-total {
+            display: inline-block;
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(8px);
+            padding: 6px 16px;
+            border-radius: 30px;
+            font-size: 0.95rem;
+            font-weight: bold;
+            margin-top: 15px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: -30px auto 0;
+            padding: 0 20px;
+        }
+
+        .quick-nav {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 15px 20px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 30px;
+            border: 1px solid var(--border);
+            position: sticky;
+            top: 15px;
+            z-index: 100;
+        }
+
+        .quick-nav a {
+            text-decoration: none;
+            color: var(--text-main);
+            font-weight: 600;
+            font-size: 0.85rem;
+            padding: 6px 12px;
+            border-radius: 8px;
+            background: var(--bg);
+            border: 1px solid var(--border);
+            transition: all 0.2s ease;
+        }
+
+        .quick-nav a:hover {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        .search-box {
+            width: 100%;
+            margin-top: 10px;
+            padding: 10px 16px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            font-size: 0.95rem;
+            background: #fff;
+            outline: none;
+        }
+
+        .search-box:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+        }
+
+        .card {
+            background: var(--card-bg);
+            border-radius: 14px;
+            padding: 25px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.03);
+            border: 1px solid var(--border);
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid var(--border);
+        }
+
+        .card-title {
+            font-size: 1.35rem;
+            font-weight: 700;
+            color: var(--dark);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .standards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+            margin-top: 15px;
+        }
+
+        .standard-item {
+            background: var(--bg);
+            padding: 16px;
+            border-radius: 10px;
+            border: 1px solid var(--border);
+        }
+
+        .standard-item h4 {
+            color: var(--primary);
+            margin-bottom: 8px;
+            font-size: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .standard-item code {
+            background: #e2e8f0;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.85rem;
+            direction: ltr;
+            display: inline-block;
+        }
+
+        .table-responsive {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.92rem;
+            text-align: right;
+        }
+
+        th, td {
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--border);
+            vertical-align: middle;
+        }
+
+        th {
+            background-color: var(--bg);
+            color: var(--text-muted);
+            font-weight: 700;
+            white-space: nowrap;
+        }
+
+        tr:hover {
+            background-color: rgba(241, 245, 249, 0.6);
+        }
+
+        .method {
+            display: inline-block;
+            font-size: 0.75rem;
+            font-weight: 800;
+            padding: 4px 8px;
+            border-radius: 6px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            white-space: nowrap;
+        }
+
+        .method-get { background: #dbeafe; color: #1e40af; }
+        .method-post { background: #d1fae5; color: #065f46; }
+        .method-put { background: #fef3c7; color: #92400e; }
+        .method-delete { background: #fee2e2; color: #991b1b; }
+        .method-patch { background: #f3e8ff; color: #6b21a8; }
+
+        .endpoint {
+            font-family: monospace;
+            font-size: 0.88rem;
+            direction: ltr;
+            text-align: left;
+            background: #f1f5f9;
+            padding: 4px 8px;
+            border-radius: 6px;
+            color: #0f172a;
+            border: 1px solid #e2e8f0;
+            font-weight: 600;
+        }
+
+        .tag-new {
+            background: #10b981;
+            color: white;
+            font-size: 0.75rem;
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-weight: bold;
+        }
+
+        .tag-mod {
+            background: #f59e0b;
+            color: white;
+            font-size: 0.75rem;
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-weight: bold;
+        }
+
+        .tag-full {
+            background: #3b82f6;
+            color: white;
+            font-size: 0.75rem;
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-weight: bold;
+        }
+
+        .code-box {
+            background: #0f172a;
+            color: #38bdf8;
+            padding: 16px;
+            border-radius: 10px;
+            direction: ltr;
+            text-align: left;
+            font-family: monospace;
+            font-size: 0.86rem;
+            overflow-x: auto;
+            margin-top: 10px;
+            line-height: 1.5;
+        }
+
+        .sitemap-tree {
+            background: #0f172a;
+            color: #38bdf8;
+            padding: 20px;
+            border-radius: 10px;
+            font-family: monospace;
+            font-size: 0.95rem;
+            line-height: 1.8;
+            direction: ltr;
+            text-align: left;
+            overflow-x: auto;
+        }
+
+        .highlight-box {
+            background: #eff6ff;
+            border-right: 4px solid var(--primary);
+            padding: 14px 18px;
+            border-radius: 6px;
+            margin-bottom: 15px;
+            font-size: 0.92rem;
+            color: #1e3a8a;
+        }
+
+        .types-badge-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-top: 8px;
+        }
+
+        .type-pill {
+            background: #f1f5f9;
+            border: 1px solid #cbd5e1;
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: #334155;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h1>📑 التقرير الشامل والموثق لواجهات الـ (APIs) لتسليمه لفريق الـ UI</h1>
+        <p>دليل التكامل الشامل لكافة واجهات الـ (APIs) في النظام المالي والمحاسبي ThinkOnErp: سندات القبض والصرف بأنواعها، قيود اليومية، العملاء والموردين، الحقول المحاسبية، الشيكات، البنوك، التسويات، الإقفال، والتقارير.</p>
+        <div class="badge-total">⚡ إجمالي الـ Endpoints المكتملة والمبنية بنجاح: 346 Endpoint</div>
+    </div>
+
+    <div class="container">
+
+        <!-- Navigation Bar -->
+        <div class="quick-nav">
+            <a href="#standards">⚙️ المعايير الأساسية</a>
+            <a href="#receipts">💵 سندات القبض (كاملة)</a>
+            <a href="#payments">💸 سندات الصرف (كاملة)</a>
+            <a href="#journal-vouchers">📝 قيود اليومية (GL)</a>
+            <a href="#modified-lines">🔄 حقول أسطر القيود (Party & Branch)</a>
+            <a href="#parties">👥 العملاء والموردين (AR/AP)</a>
+            <a href="#pdc">💳 الشيكات الآجلة (PDC)</a>
+            <a href="#reports">📊 التقارير والقوائم المالية</a>
+            <a href="#posting-rules">⚙️ قواعد الترحيل الآلي</a>
+            <a href="#banking">🏦 البنوك والخزائن</a>
+            <a href="#reconciliation">⚖️ التسويات البنكية</a>
+            <a href="#closing">🔒 الإقفال السنوي والتدوير</a>
+            <a href="#subledger">💰 تسوية الفواتير والسداد</a>
+            <a href="#sitemap">🗺️ خريطة شاشات الواجهة</a>
+            <input type="text" id="apiSearch" class="search-box" placeholder="🔍 ابحث بالمسار، أو الوظيفة، أو اسم الوحدة، أو اسم الحقل...">
+        </div>
+
+        <!-- Integration Standards -->
+        <div class="card" id="standards">
+            <div class="card-header">
+                <div class="card-title">⚙️ معايير وقواعد التكامل الأساسية (Integration Standards)</div>
+            </div>
+            <div class="standards-grid">
+                <div class="standard-item">
+                    <h4>🌐 الرابط الأساسي (Base URL)</h4>
+                    <p><code>http://localhost:5000</code> أو مسار الخادم المعتمد.</p>
+                </div>
+                <div class="standard-item">
+                    <h4>🔑 الترويسات الإجبارية (Headers)</h4>
+                    <p><code>Authorization: Bearer {JWT_TOKEN}</code></p>
+                    <p><code>X-Company-Id: {CompanyId}</code> (لتوجيه البيانات للشركة).</p>
+                    <p><code>Content-Type: application/json</code></p>
+                </div>
+                <div class="standard-item">
+                    <h4>📦 تغليف الاستجابة (Response Wrapper)</h4>
+                    <p>جميع المخرجات مغلفة بـ <code>ApiResponse&lt;T&gt;</code> وتحتوي على <code>success</code>, <code>statusCode</code>, <code>data</code>, <code>message</code>.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section: Complete Receipt Vouchers -->
+        <div class="card" id="receipts">
+            <div class="card-header">
+                <div class="card-title">💵 سندات القبض المتخصصة بالكامل (Receipt Vouchers Hub) <span class="tag-full">FULL MODULE</span></div>
+            </div>
+            <div class="highlight-box">
+                <strong>الهدف التشغيلي:</strong> إدارة عمليات التحصيل النقدي والبنكي والشيكات من العملاء أو الإيرادات المتنوعة وتوليد قيود الـ GL وتحديث كشوف الحسابات والأستاذ المساعد.
+                <div class="types-badge-container">
+                    <span class="type-pill">💵 نقدي (Cash - 111101)</span>
+                    <span class="type-pill">🏦 تحويل بنكي / شبكة (Bank Transfer / Card - 111201)</span>
+                    <span class="type-pill">💳 شيك آجل برسم التحصيل (PDC Cheque - 111301)</span>
+                </div>
+            </div>
+            <div class="table-responsive">
+                <table class="api-table">
+                    <thead>
+                        <tr>
+                            <th>الطريقة</th>
+                            <th>المسار (Endpoint)</th>
+                            <th>الوظيفة والهدف لشاشة الـ UI</th>
+                            <th>المدخلات (Request / Query)</th>
+                            <th>المخرجات (Response)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><span class="method method-get">GET</span></td>
+                            <td><span class="endpoint">/api/accounting/receipts</span></td>
+                            <td><strong>استعراض وفلترة سندات القبض</strong> مع البحث والترقيم (Pagination)</td>
+                            <td><code>branchId</code>, <code>status</code> (1: Draft, 2: Review, 3: Posted), <code>partyCode</code>, <code>fromDate</code>, <code>toDate</code>, <code>pageIndex</code>, <code>pageSize</code></td>
+                            <td><code>PagedResultDto&lt;ReceiptVoucherDto&gt;</code></td>
+                        </tr>
+                        <tr>
+                            <td><span class="method method-get">GET</span></td>
+                            <td><span class="endpoint">/api/accounting/receipts/{id}</span></td>
+                            <td><strong>جلب تفاصيل سند قبض محدد</strong> مع الأسطر والقيد المحاسبي</td>
+                            <td><code>id</code></td>
+                            <td><code>ReceiptVoucherDto</code></td>
+                        </tr>
+                        <tr>
+                            <td><span class="method method-post">POST</span></td>
+                            <td><span class="endpoint">/api/accounting/receipts</span></td>
+                            <td><strong>إنشاء سند قبض جديد</strong> (نقدي / شيك / بنكي)</td>
+                            <td><code>CreateReceiptVoucherDto</code>: التاريخ، الفرع، الحساب المدين (صندوق/بنك)، الأسطر الدائنة (العميل/الإيراد)، رقم الشيك/المرجع</td>
+                            <td><code>ReceiptVoucherDto</code> (201 Created)</td>
+                        </tr>
+                        <tr>
+                            <td><span class="method method-put">PUT</span></td>
+                            <td><span class="endpoint">/api/accounting/receipts/{id}</span></td>
+                            <td><strong>تعديل سند قبض غير مرحل</strong> <span class="tag-mod">MODIFIED</span></td>
+                            <td><code>UpdateReceiptVoucherDto</code></td>
+                            <td><code>ReceiptVoucherDto</code></td>
+                        </tr>
+                        <tr>
+                            <td><span class="method method-post">POST</span></td>
+                            <td><span class="endpoint">/api/accounting/receipts/{id}/post</span></td>
+                            <td><strong>ترحيل سند القبض</strong> إلى الأستاذ العام وتحديث كشف حساب العميل</td>
+                            <td><code>id</code></td>
+                            <td><code>ReceiptVoucherDto</code> (Status: 3 - POSTED)</td>
+                        </tr>
+                        <tr>
+                            <td><span class="method method-delete">DELETE</span></td>
+                            <td><span class="endpoint">/api/accounting/receipts/{id}</span></td>
+                            <td><strong>حذف أو إلغاء سند القبض</strong> <span class="tag-mod">MODIFIED</span></td>
+                            <td><code>id</code></td>
+                            <td><code>bool</code></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <h4 style="margin-top: 15px; margin-bottom: 8px;">نموذج إنشاء سند قبض (CreateReceiptVoucherDto):</h4>
+            <div class="code-box">
+{
+  "branchId": 1,
+  "fiscalYearId": 1,
+  "voucherDate": "2026-08-19T00:00:00Z",
+  "cashOrBankCode": "111201", // حساب البنك المحصل فيه
+  "referenceNo": "TRX-98745",
+  "description": "قبض دفعة من العميل شركة النور",
+  "details": [
+    {
+      "accountCode": "112101", // حساب مراقبة ذمم العملاء
+      "amount": 5000.00,
+      "partyType": "CUSTOMER",
+      "partyCode": "CUST-001",
+      "costCenterCode": "CC-SALES-01",
+      "description": "سداد جزء من فاتورة مبيعات رقم INV-2026-01"
+    }
+  ]
+}
+            </div>
+        </div>
+
+        <!-- Section: Complete Payment Vouchers -->
+        <div class="card" id="payments">
+            <div class="card-header">
+                <div class="card-title">💸 سندات الصرف المتخصصة بالكامل (Payment Vouchers Hub) <span class="tag-full">FULL MODULE</span></div>
+            </div>
+            <div class="highlight-box">
+                <strong>الهدف التشغيلي:</strong> إدارة عمليات السداد للموردين أو سداد المصروفات والمشتريات وتصفية العهد النقدية وإصدار الشيكات والتحويلات البنكية.
+                <div class="types-badge-container">
+                    <span class="type-pill">💵 نقدي من الصندوق (Cash - 111101)</span>
+                    <span class="type-pill">🏦 تحويل بنكي صادر (Bank Outward - 111201)</span>
+                    <span class="type-pill">💳 شيك صادر آجل (PDC Issued - 211201)</span>
+                    <span class="type-pill">💼 صرف من عهدة نقدية (Petty Cash)</span>
+                </div>
+            </div>
+            <div class="table-responsive">
+                <table class="api-table">
+                    <thead>
+                        <tr>
+                            <th>الطريقة</th>
+                            <th>المسار (Endpoint)</th>
+                            <th>الوظيفة والهدف لشاشة الـ UI</th>
+                            <th>المدخلات (Request / Query)</th>
+                            <th>المخرجات (Response)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><span class="method method-get">GET</span></td>
+                            <td><span class="endpoint">/api/accounting/payments</span></td>
+                            <td><strong>استعراض وفلترة سندات الصرف</strong> مع البحث والترقيم</td>
+                            <td><code>branchId</code>, <code>status</code> (1: Draft, 2: Review, 3: Posted), <code>partyCode</code>, <code>fromDate</code>, <code>toDate</code>, <code>pageIndex</code>, <code>pageSize</code></td>
+                            <td><code>PagedResultDto&lt;PaymentVoucherDto&gt;</code></td>
+                        </tr>
+                        <tr>
+                            <td><span class="method method-get">GET</span></td>
+                            <td><span class="endpoint">/api/accounting/payments/{id}</span></td>
+                            <td><strong>جلب تفاصيل سند صرف محدد</strong> مع الأسطر والقيد المحاسبي</td>
+                            <td><code>id</code></td>
+                            <td><code>PaymentVoucherDto</code></td>
+                        </tr>
+                        <tr>
+                            <td><span class="method method-post">POST</span></td>
+                            <td><span class="endpoint">/api/accounting/payments</span></td>
+                            <td><strong>إنشاء سند صرف جديد</strong> (نقدي / شيك / بنكي / عهدة)</td>
+                            <td><code>CreatePaymentVoucherDto</code>: التاريخ، الفرع، الحساب الدائن (صندوق/بنك)، الأسطر المدينة (المورد/المصروف)</td>
+                            <td><code>PaymentVoucherDto</code> (201 Created)</td>
+                        </tr>
+                        <tr>
+                            <td><span class="method method-put">PUT</span></td>
+                            <td><span class="endpoint">/api/accounting/payments/{id}</span></td>
+                            <td><strong>تعديل سند صرف غير مرحل</strong> <span class="tag-mod">MODIFIED</span></td>
+                            <td><code>UpdatePaymentVoucherDto</code></td>
+                            <td><code>PaymentVoucherDto</code></td>
+                        </tr>
+                        <tr>
+                            <td><span class="method method-post">POST</span></td>
+                            <td><span class="endpoint">/api/accounting/payments/{id}/post</span></td>
+                            <td><strong>ترحيل سند الصرف</strong> إلى الأستاذ العام وتحديث حساب المورد</td>
+                            <td><code>id</code></td>
+                            <td><code>PaymentVoucherDto</code> (Status: 3 - POSTED)</td>
+                        </tr>
+                        <tr>
+                            <td><span class="method method-delete">DELETE</span></td>
+                            <td><span class="endpoint">/api/accounting/payments/{id}</span></td>
+                            <td><strong>حذف أو إلغاء سند الصرف</strong> <span class="tag-mod">MODIFIED</span></td>
+                            <td><code>id</code></td>
+                            <td><code>bool</code></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <h4 style="margin-top: 15px; margin-bottom: 8px;">نموذج إنشاء سند صرف (CreatePaymentVoucherDto):</h4>
+            <div class="code-box">
+{
+  "branchId": 1,
+  "fiscalYearId": 1,
+  "voucherDate": "2026-08-19T00:00:00Z",
+  "cashOrBankCode": "111101", // حساب الصندوق المصروف منه
+  "referenceNo": "PAY-5421",
+  "description": "دفعة نقدية لمورد المواد الأولية",
+  "details": [
+    {
+      "accountCode": "211101", // حساب مراقبة ذمم الموردين
+      "amount": 3200.00,
+      "partyType": "VENDOR",
+      "partyCode": "VEND-001",
+      "costCenterCode": "CC-PURCH-01",
+      "description": "سداد دفعة للمورد شركة التقنية"
+    }
+  ]
+}
+            </div>
+        </div>
+
+        <!-- Section: General Journal Vouchers (GL) -->
+        <div class="card" id="journal-vouchers">
+            <div class="card-header">
+                <div class="card-title">📝 قيود اليومية العامة (Journal Vouchers Hub) <span class="tag-full">FULL MODULE</span></div>
+            </div>
+            <div class="table-responsive">
+                <table class="api-table">
+                    <thead>
+                        <tr>
+                            <th>الطريقة</th>
+                            <th>المسار (Endpoint)</th>
+                            <th>الوظيفة والهدف</th>
+                            <th>المدخلات</th>
+                            <th>المخرجات</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><span class="method method-get">GET</span></td>
+                            <td><span class="endpoint">/api/accounting/vouchers</span></td>
+                            <td>استعراض وفلترة قيود اليومية العامة</td>
+                            <td><code>branchId</code>, <code>year</code>, <code>month</code>, <code>typeCode</code>, <code>status</code>, <code>fromDate</code>, <code>toDate</code>, <code>pageIndex</code>, <code>pageSize</code></td>
+                            <td><code>PagedResultDto&lt;GlVoucherHeaderDto&gt;</code></td>
+                        </tr>
+                        <tr>
+                            <td><span class="method method-get">GET</span></td>
+                            <td><span class="endpoint">/api/accounting/vouchers/{id}</span></td>
+                            <td>تفاصيل قيد محدد مع كافة أسطره المدينة والدائنة</td>
+                            <td><code>id</code></td>
+                            <td><code>GlVoucherHeaderDto</code></td>
+                        </tr>
+                        <tr>
+                            <td><span class="method method-post">POST</span></td>
+                            <td><span class="endpoint">/api/accounting/vouchers</span></td>
+                            <td><strong>إنشاء قيد يومية عام متوازن</strong></td>
+                            <td><code>CreateGlVoucherDto</code> (مع دعم <code>branchId</code>, <code>partyType</code>, <code>partyCode</code>, <code>costCenterCode</code> في كل سطر)</td>
+                            <td><code>GlVoucherHeaderDto</code> (201 Created)</td>
+                        </tr>
+                        <tr>
+                            <td><span class="method method-put">PUT</span></td>
+                            <td><span class="endpoint">/api/accounting/vouchers/{id}</span></td>
+                            <td><strong>تعديل قيد يومية مسودة</strong></td>
+                            <td><code>UpdateGlVoucherDto</code></td>
+                            <td><code>GlVoucherHeaderDto</code></td>
+                        </tr>
+                        <tr>
+                            <td><span class="method method-post">POST</span></td>
+                            <td><span class="endpoint">/api/accounting/vouchers/{id}/review</span></td>
+                            <td><strong>اعتماد ومراجعة القيد (Review)</strong></td>
+                            <td><code>id</code></td>
+                            <td><code>GlVoucherHeaderDto</code> (Status: 2 - UNDER_REVIEW)</td>
+                        </tr>
+                        <tr>
+                            <td><span class="method method-post">POST</span></td>
+                            <td><span class="endpoint">/api/accounting/vouchers/{id}/post</span></td>
+                            <td><strong>ترحيل القيد (Post)</strong> إلى الأستاذ العام وتحديث الأرصدة</td>
+                            <td><code>id</code></td>
+                            <td><code>GlVoucherHeaderDto</code> (Status: 3 - POSTED)</td>
+                        </tr>
+                        <tr>
+                            <td><span class="method method-post">POST</span></td>
+                            <td><span class="endpoint">/api/accounting/vouchers/{id}/unpost</span></td>
+                            <td><strong>إلغاء ترحيل القيد (Unpost)</strong> للتعديل (بترخيص)</td>
+                            <td><code>id</code></td>
+                            <td><code>GlVoucherHeaderDto</code></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Section: Modified Journal & Voucher Lines (Party & Branch) -->
+        <div class="card" id="modified-lines">
+            <div class="card-header">
+                <div class="card-title">🔄 الحقول الجوهرية المضافة على أسطر القيود والسندات <span class="tag-mod">MODIFIED</span></div>
+            </div>
+            <div class="table-responsive">
+                <table class="api-table">
+                    <thead>
+                        <tr>
+                            <th>اسم الحقل في الـ JSON</th>
+                            <th>النوع (Data Type)</th>
+                            <th>إجباري؟</th>
+                            <th>الوصف والوظيفة لشاشة الـ UI</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>branchId</code></td>
+                            <td><code>number / null</code></td>
+                            <td>اختياري</td>
+                            <td><strong>معرف الفرع للسطر</strong>: لتسجيل حركات بين الفروع (Inter-branch Allocations).</td>
+                        </tr>
+                        <tr>
+                            <td><code>partyType</code></td>
+                            <td><code>string / null</code></td>
+                            <td>إجباري عند حساب مراقبة</td>
+                            <td><strong>نوع الطرف</strong>: <code>"CUSTOMER"</code> (عميل)، <code>"VENDOR"</code> (مورد)، <code>"EMPLOYEE"</code> (موظف)، <code>"OTHER"</code>.</td>
+                        </tr>
+                        <tr>
+                            <td><code>partyCode</code></td>
+                            <td><code>string / null</code></td>
+                            <td>إجباري عند حساب مراقبة</td>
+                            <td><strong>رمز الطرف المحدد</strong> (مثل رمز العميل <code>CUST-001</code> أو المورد <code>VEND-001</code>) لتحديث كشف حسابه فوراً في الأستاذ المساعد.</td>
+                        </tr>
+                        <tr>
+                            <td><code>costCenterCode</code></td>
+                            <td><code>string / null</code></td>
+                            <td>اختياري</td>
+                            <td><strong>مركز التكلفة التحليلي</strong>: رمز مركز التكلفة المرتبط بالسطر.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Section: Customers & Vendors Management -->
+        <div class="card" id="parties">
+            <div class="card-header">
+                <div class="card-title">👥 إدارة العملاء والموردين (Customers & Vendors Management) <span class="tag-new">NEW</span></div>
+            </div>
+            <p style="margin-bottom: 15px; color: var(--text-muted);">تعريف بطاقات العملاء والموردين، سقف الائتمان، فترات السداد، والربط بحسابات المراقبة (AR/AP Control Accounts).</p>
+            <div class="table-responsive">
+                <table class="api-table">
+                    <thead>
+                        <tr>
+                            <th>الطريقة</th>
+                            <th>المسار (Endpoint)</th>
+                            <th>الوحدة</th>
+                            <th>المدخلات (Request / Query)</th>
+                            <th>الاستجابة (Response)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><span class="method method-get">GET</span></td>
+                            <td><span class="endpoint">/api/accounting/customers</span></td>
+                            <td>العملاء</td>
+                            <td><code>branchId</code>, <code>searchKeyword</code>, <code>activeOnly</code></td>
+                            <td>قائمة العملاء <code>CustomerDto[]</code></td>
+                        </tr>
+                        <tr>
+                            <td><span class="method method-get">GET</span></td>
+                            <td><span class="endpoint">/api/accounting/customers/{code}</span></td>
+                            <td>العملاء</td>
+                            <td><code>code</code></td>
+                            <td>بيانات العميل التفصيلية <code>CustomerDto</code></td>
+                        </tr>
+                        <tr>
+                            <td><span class="method method-post">POST</span></td>
+                            <td><span class="endpoint">/api/accounting/customers</span></td>
+                            <td>العملاء</td>
+                            <td><code>CreateCustomerDto</code> (الرمز، الاسم، الفرع، حساب الذمم <code>112101</code>، سقف الائتمان، مهلة السداد، الرقم الضريبي)</td>
+                            <td><code>CustomerDto</code> (201 Created)</td>
+                        </tr>
+                        <tr>
+                            <td><span class="method method-put">PUT</span></td>
+                            <td><span class="endpoint">/api/accounting/customers/{code}</span></td>
+                            <td>العملاء</td>
+                            <td><code>UpdateCustomerDto</code></td>
+                            <td><code>CustomerDto</code></td>
+                        </tr>
+                        <tr>
+                            <td><span class="method method-patch">PATCH</span></td>
+                            <td><span class="endpoint">/api/accounting/customers/{code}/status</span></td>
+                            <td>العملاء</td>
+                            <td>Query: <code>isActive=true/false</code></td>
+                            <td>تفعيل أو تعطيل العميل</td>
+                        </tr>
+                        <tr>
+                            <td><span class="method method-get">GET</span></td>
+                            <td><span class="endpoint">/api/accounting/vendors</span></td>
+                            <td>الموردين</td>
+                            <td><code>branchId</code>, <code>searchKeyword</code>, <code>activeOnly</code></td>
+                            <td>قائمة الموردين <code>VendorDto[]</code></td>
+                        </tr>
+                        <tr>
+                            <td><span class="method method-get">GET</span></td>
+                            <td><span class="endpoint">/api/accounting/vendors/{code}</span></td>
+                            <td>الموردين</td>
+                            <td><code>code</code></td>
+                            <td>بيانات المورد التفصيلية <code>VendorDto</code></td>
+                        </tr>
+                        <tr>
+                            <td><span class="method method-post">POST</span></td>
+                            <td><span class="endpoint">/api/accounting/vendors</span></td>
+                            <td>الموردين</td>
+                            <td><code>CreateVendorDto</code> (الرمز، الاسم، الفرع، حساب الذمم <code>211101</code>، سقف الائتمان، مهلة السداد، الرقم الضريبي)</td>
+                            <td><code>VendorDto</code> (201 Created)</td>
+                        </tr>
+                        <tr>
+                            <td><span class="method method-put">PUT</span></td>
+                            <td><span class="endpoint">/api/accounting/vendors/{code}</span></td>
+                            <td>الموردين</td>
+                            <td><code>UpdateVendorDto</code></td>
+                            <td><code>VendorDto</code></td>
+                        </tr>
+                        <tr>
+                            <td><span class="method method-patch">PATCH</span></td>
+                            <td><span class="endpoint">/api/accounting/vendors/{code}/status</span></td>
+                            <td>الموردين</td>
+                            <td>Query: <code>isActive=true/false</code></td>
+                            <td>تفعيل أو تعطيل المورد</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Section: PDC Register -->
+        <div class="card" id="pdc">
+            <div class="card-header">
+                <div class="card-title">💳 سجل الشيكات الآجلة (PDC Register) <span class="tag-new">NEW</span></div>
+            </div>
+            <p style="margin-bottom: 15px; color: var(--text-muted);">إدارة دورة حياة الشيكات الواردة والصادرة وتوليد قيود الإيداع والتحصيل والارتداد آلياً.</p>
+            <div class="table-responsive">
+                <table class="api-table">
+                    <thead>
+                        <tr>
+                            <th>الطريقة</th>
+                            <th>المسار (Endpoint)</th>
+                            <th>الوظيفة والهدف</th>
+                            <th>المدخلات (Request / Query)</th>
+                            <th>الاستجابة (Response)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><span class="method method-get">GET</span></td>
+                            <td><span class="endpoint">/api/accounting/pdc</span></td>
+                            <td>استعراض وفلترة الشيكات الآجلة</td>
+                            <td><code>branchId</code>, <code>chequeType</code>, <code>status</code>, <code>partyCode</code>, <code>fromDueDate</code>, <code>toDueDate</code></td>
+                            <td><code>IReadOnlyList&lt;PdcRegisterDto&gt;</code></td>
+                        </tr>
+                        <tr>
+                            <td><span class="method method-get">GET</span></td>
+                            <td><span class="endpoint">/api/accounting/pdc/{id}</span></td>
+                            <td>تفاصيل شيك محدد مع أرقام القيود</td>
+                            <td><code>id</code></td>
+                            <td><code>PdcRegisterDto</code></td>
+                        </tr>
+                        <tr>
+                            <td><span class="method method-post">POST</span></td>
+                            <td><span class="endpoint">/api/accounting/pdc</span></td>
+                            <td>تسجيل شيك آجل جديد (وارد/صادر)</td>
+                            <td><code>CreatePdcDto</code> (الرقم، البنك، الاستحقاق، المبلغ، الطرف)</td>
+                            <td><code>PdcRegisterDto</code> (201 Created)</td>
+                        </tr>
+                        <tr>
+                            <td><span class="method method-post">POST</span></td>
+                            <td><span class="endpoint">/api/accounting/pdc/{id}/deposit</span></td>
+                            <td>إيداع الشيك في البنك للتحصيل</td>
+                            <td><code>DepositPdcDto</code> (<code>depositBankAccountCode</code>, <code>depositDate</code>)</td>
+                            <td><code>PdcRegisterDto</code> (Status: DEPOSITED)</td>
+                        </tr>
+                        <tr>
+                            <td><span class="method method-post">POST</span></td>
+                            <td><span class="endpoint">/api/accounting/pdc/{id}/clear</span></td>
+                            <td>تحصيل الشيك وتوليد قيد الإيداع آلياً</td>
+                            <td><code>ClearPdcDto</code> (<code>depositBankAccountCode</code>, <code>clearedDate</code>)</td>
+                            <td><code>PdcRegisterDto</code> (Status: CLEARED + قيد GL)</td>
+                        </tr>
+                        <tr>
+                            <td><span class="method method-post">POST</span></td>
+                            <td><span class="endpoint">/api/accounting/pdc/{id}/bounce</span></td>
+                            <td>إثبات ارتداد الشيك وعكس القيد والرسوم</td>
+                            <td><code>BouncePdcDto</code> (<code>bounceReason</code>, <code>bankCharges</code>, <code>bouncedDate</code>)</td>
+                            <td><code>PdcRegisterDto</code> (Status: BOUNCED + قيد عكسي)</td>
+                        </tr>
+                        <tr>
+                            <td><span class="method method-post">POST</span></td>
+                            <td><span class="endpoint">/api/accounting/pdc/{id}/cancel</span></td>
+                            <td>إلغاء أو إرجاع الشيك</td>
+                            <td>Query: <code>reason</code></td>
+                            <td><code>PdcRegisterDto</code> (Status: CANCELLED)</td>
+                        </tr>
+                        <tr>
+                            <td><span class="method method-get">GET</span></td>
+                            <td><span class="endpoint">/api/accounting/pdc/upcoming-maturities</span></td>
+                            <td>تنبيهات استحقاقات الشيكات القادمة</td>
+                            <td><code>branchId</code>, <code>daysAhead</code> (افتراضي 30)</td>
+                            <td><code>UpcomingMaturitySummaryDto</code> (شيكات 7 و 30 يوماً)</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Section: Core Financial Reports -->
+        <div class="card" id="reports">
+            <div class="card-header">
+                <div class="card-title">📊 مركز التقارير والقوائم المالية الختامية (Financial Reports Hub) <span class="tag-new">NEW</span></div>
+            </div>
+            <div class="table-responsive">
+                <table class="api-table">
+                    <thead>
+                        <tr>
+                            <th>الطريقة</th>
+                            <th>المسار (Endpoint)</th>
+                            <th>التقرير المالي</th>
+                            <th>الفلاتر والمدخلات</th>
+                            <th>محتويات المخرجات</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><span class="method method-get">GET</span></td>
+                            <td><span class="endpoint">/api/accounting/reports/gl-statement</span></td>
+                            <td>كشف الحساب العام (General Ledger Statement)</td>
+                            <td><code>accountCode</code>, <code>branchId</code>, <code>fromDate</code>, <code>toDate</code>, <code>costCenterCode</code></td>
+                            <td>رصيد افتتاحي + حركات تفصيلية + رصيد تراكمي Running Balance.</td>
+                        </tr>
+                        <tr>
+                            <td><span class="method method-get">GET</span></td>
+                            <td><span class="endpoint">/api/accounting/reports/income-statement</span></td>
+                            <td>قائمة الدخل (Income Statement / P&L)</td>
+                            <td><code>branchId</code>, <code>fiscalYearId</code>, <code>fromDate</code>, <code>toDate</code></td>
+                            <td>الإيرادات، تكلفة المبيعات، مجمل الربح، المصروفات التشغيلية، وصافي الربح/الخسارة.</td>
+                        </tr>
+                        <tr>
+                            <td><span class="method method-get">GET</span></td>
+                            <td><span class="endpoint">/api/accounting/reports/balance-sheet</span></td>
+                            <td>الميزانية العمومية (Balance Sheet)</td>
+                            <td><code>branchId</code>, <code>fiscalYearId</code>, <code>asOfDate</code></td>
+                            <td>الأصول، الالتزامات، حقوق الملكية، أرباح الفترة، وفحص التوازن الآلي.</td>
+                        </tr>
+                        <tr>
+                            <td><span class="method method-get">GET</span></td>
+                            <td><span class="endpoint">/api/accounting/reports/customer-statement/{code}</span></td>
+                            <td>كشف حساب العميل التفصيلي</td>
+                            <td><code>code</code>, <code>fromDate</code>, <code>toDate</code></td>
+                            <td>حركات العميل التفصيلية وفواتيره وسندات السداد والرصيد المتبقي.</td>
+                        </tr>
+                        <tr>
+                            <td><span class="method method-get">GET</span></td>
+                            <td><span class="endpoint">/api/accounting/reports/vendor-statement/{code}</span></td>
+                            <td>كشف حساب المورد التفصيلي</td>
+                            <td><code>code</code>, <code>fromDate</code>, <code>toDate</code></td>
+                            <td>حركات المورد وفواتير الشراء وسندات الصرف والرصيد المتبقي.</td>
+                        </tr>
+                        <tr>
+                            <td><span class="method method-get">GET</span></td>
+                            <td><span class="endpoint">/api/accounting/reports/ar-aging</span></td>
+                            <td>تقرير أعمار ديون العملاء (AR Aging)</td>
+                            <td><code>asOfDate</code></td>
+                            <td>تقسيم المديونيات لفترات: الحالي، 1-30، 31-60، 61-90، 90+ يوم.</td>
+                        </tr>
+                        <tr>
+                            <td><span class="method method-get">GET</span></td>
+                            <td><span class="endpoint">/api/accounting/reports/ap-aging</span></td>
+                            <td>تقرير أعمار ديون الموردين (AP Aging)</td>
+                            <td><code>asOfDate</code></td>
+                            <td>تقسيم مستحقات الموردين لفترات الاستحقاق.</td>
+                        </tr>
+                        <tr>
+                            <td><span class="method method-get">GET</span></td>
+                            <td><span class="endpoint">/api/accounting/balances/trial-balance</span></td>
+                            <td>ميزان المراجعة بالمجاميع والأرصدة</td>
+                            <td><code>branchId</code>, <code>fiscalYearId</code>, <code>fiscalPeriodId</code></td>
+                            <td>أرصدة افتتاحية + مجاميع الحركة + الأرصدة الختامية مع فحص التوازن.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Section: Posting Rules Engine -->
+        <div class="card" id="posting-rules">
+            <div class="card-header">
+                <div class="card-title">⚙️ محرك وقواعد الترحيل التلقائي (Automatic Posting Rules Engine) <span class="tag-new">NEW</span></div>
+            </div>
+            <div class="table-responsive">
+                <table class="api-table">
+                    <thead>
+                        <tr>
+                            <th>الطريقة</th>
+                            <th>المسار (Endpoint)</th>
+                            <th>الوظيفة والهدف</th>
+                            <th>المدخلات</th>
+                            <th>المخرجات</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><span class="method method-get">GET</span></td>
+                            <td><span class="endpoint">/api/accounting/posting-rules</span></td>
+                            <td>استرجاع كافة قواعد الترحيل</td>
+                            <td><code>module</code>, <code>branchId</code></td>
+                            <td><code>IReadOnlyList&lt;PostingRuleDto&gt;</code></td>
+                        </tr>
+                        <tr>
+                            <td><span class="method method-get">GET</span></td>
+                            <td><span class="endpoint">/api/accounting/posting-rules/{id}</span></td>
+                            <td>جلب تفاصيل قاعدة ترحيل محددة</td>
+                            <td><code>id</code></td>
+                            <td><code>PostingRuleDto</code></td>
+                        </tr>
+                        <tr>
+                            <td><span class="method method-post">POST</span></td>
+                            <td><span class="endpoint">/api/accounting/posting-rules</span></td>
+                            <td>إنشاء قاعدة ترحيل مخصصة جديدة</td>
+                            <td><code>CreatePostingRuleDto</code></td>
+                            <td><code>PostingRuleDto</code> (201 Created)</td>
+                        </tr>
+                        <tr>
+                            <td><span class="method method-put">PUT</span></td>
+                            <td><span class="endpoint">/api/accounting/posting-rules/{id}</span></td>
+                            <td>تعديل وتخصيص حسابات قاعدة ترحيل</td>
+                            <td><code>UpdatePostingRuleDto</code> (تعديل الحساب المدين/الدائن)</td>
+                            <td><code>PostingRuleDto</code></td>
+                        </tr>
+                        <tr>
+                            <td><span class="method method-delete">DELETE</span></td>
+                            <td><span class="endpoint">/api/accounting/posting-rules/{id}</span></td>
+                            <td>حذف قاعدة ترحيل</td>
+                            <td><code>id</code></td>
+                            <td><code>bool</code></td>
+                        </tr>
+                        <tr>
+                            <td><span class="method method-post">POST</span></td>
+                            <td><span class="endpoint">/api/accounting/posting-rules/seed-defaults</span></td>
+                            <td>زرع القواعد القياسية الافتراضية للشركة</td>
+                            <td><code>branchId</code> (اختياري)</td>
+                            <td><code>bool</code></td>
+                        </tr>
+                        <tr>
+                            <td><span class="method method-post">POST</span></td>
+                            <td><span class="endpoint">/api/accounting/posting-rules/post-event</span></td>
+                            <td>محرك الترحيل الآلي المباشر لأي حركة</td>
+                            <td><code>AutomaticPostingEventRequest</code></td>
+                            <td><code>GlVoucherHeaderDto</code> (يرحل القيد فوراً)</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Section: Banking & Cash Registers -->
+        <div class="card" id="banking">
+            <div class="card-header">
+                <div class="card-title">🏦 إدارة الحسابات البنكية والخزائن النقدية (Banks & Cash Registers) <span class="tag-new">NEW</span></div>
+            </div>
+            <div class="table-responsive">
+                <table class="api-table">
+                    <thead>
+                        <tr>
+                            <th>الطريقة</th>
+                            <th>المسار (Endpoint)</th>
+                            <th>الوحدة</th>
+                            <th>المدخلات</th>
+                            <th>المخرجات</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><span class="method method-get">GET</span></td>
+                            <td><span class="endpoint">/api/accounting/bank-accounts</span></td>
+                            <td>الحسابات البنكية</td>
+                            <td><code>branchId</code>, <code>activeOnly</code></td>
+                            <td>قائمة الحسابات البنكية الجارية <code>BankAccountDto[]</code></td>
+                        </tr>
+                        <tr>
+                            <td><span class="method method-get">GET</span></td>
+                            <td><span class="endpoint">/api/accounting/bank-accounts/{id}</span></td>
+                            <td>الحسابات البنكية</td>
+                            <td><code>id</code></td>
+                            <td>بيانات الحساب البنكي <code>BankAccountDto</code></td>
+                        </tr>
+                        <tr>
+                            <td><span class="method method-post">POST</span></td>
+                            <td><span class="endpoint">/api/accounting/bank-accounts</span></td>
+                            <td>الحسابات البنكية</td>
+                            <td><code>CreateBankAccountDto</code> (الرقم، البنك، IBAN، SWIFT، الحساب)</td>
+                            <td><code>BankAccountDto</code> (201 Created)</td>
+                        </tr>
+                        <tr>
+                            <td><span class="method method-put">PUT</span></td>
+                            <td><span class="endpoint">/api/accounting/bank-accounts/{id}</span></td>
+                            <td>الحسابات البنكية</td>
+                            <td><code>UpdateBankAccountDto</code></td>
+                            <td><code>BankAccountDto</code></td>
+                        </tr>
+                        <tr>
+                            <td><span class="method method-get">GET</span></td>
+                            <td><span class="endpoint">/api/accounting/cash-registers</span></td>
+                            <td>الخزائن والصناديق</td>
+                            <td><code>branchId</code>, <code>activeOnly</code></td>
+                            <td>قائمة الخزائن والعهد <code>CashRegisterDto[]</code></td>
+                        </tr>
+                        <tr>
+                            <td><span class="method method-get">GET</span></td>
+                            <td><span class="endpoint">/api/accounting/cash-registers/{id}</span></td>
+                            <td>الخزائن والصناديق</td>
+                            <td><code>id</code></td>
+                            <td>بيانات الخزينة <code>CashRegisterDto</code></td>
+                        </tr>
+                        <tr>
+                            <td><span class="method method-post">POST</span></td>
+                            <td><span class="endpoint">/api/accounting/cash-registers</span></td>
+                            <td>الخزائن والصناديق</td>
+                            <td><code>CreateCashRegisterDto</code> (الرمز، الاسم، النوع، أمين العهدة، الحساب)</td>
+                            <td><code>CashRegisterDto</code> (201 Created)</td>
+                        </tr>
+                        <tr>
+                            <td><span class="method method-put">PUT</span></td>
+                            <td><span class="endpoint">/api/accounting/cash-registers/{id}</span></td>
+                            <td>الخزائن والصناديق</td>
+                            <td><code>UpdateCashRegisterDto</code></td>
+                            <td><code>CashRegisterDto</code></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Section: Bank Reconciliation -->
+        <div class="card" id="reconciliation">
+            <div class="card-header">
+                <div class="card-title">⚖️ مطابقة وتسوية كشوف الحسابات البنكية (Bank Reconciliation) <span class="tag-new">NEW</span></div>
+            </div>
+            <div class="table-responsive">
+                <table class="api-table">
+                    <thead>
+                        <tr>
+                            <th>الطريقة</th>
+                            <th>المسار (Endpoint)</th>
+                            <th>الوظيفة والهدف</th>
+                            <th>المدخلات</th>
+                            <th>المخرجات</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><span class="method method-get">GET</span></td>
+                            <td><span class="endpoint">/api/accounting/bank-reconciliations</span></td>
+                            <td>استعراض مذكرات التسوية البنكية</td>
+                            <td><code>bankAccountId</code>, <code>fiscalYearId</code></td>
+                            <td><code>BankReconciliationDto[]</code></td>
+                        </tr>
+                        <tr>
+                            <td><span class="method method-get">GET</span></td>
+                            <td><span class="endpoint">/api/accounting/bank-reconciliations/{id}</span></td>
+                            <td>تفاصيل مذكرة التسوية وأسطر الكشف</td>
+                            <td><code>id</code></td>
+                            <td><code>BankReconciliationDto</code></td>
+                        </tr>
+                        <tr>
+                            <td><span class="method method-post">POST</span></td>
+                            <td><span class="endpoint">/api/accounting/bank-reconciliations</span></td>
+                            <td>إنشاء مذكرة تسوية واستيراد كشف البنك</td>
+                            <td><code>CreateBankReconciliationDto</code> (الحساب، الرصيد الختامي، أسطر الحركات)</td>
+                            <td><code>BankReconciliationDto</code> (201 Created)</td>
+                        </tr>
+                        <tr>
+                            <td><span class="method method-post">POST</span></td>
+                            <td><span class="endpoint">/api/accounting/bank-reconciliations/{id}/auto-reconcile</span></td>
+                            <td>زر المطابقة الآلية الذكية مع قيود الـ GL</td>
+                            <td><code>id</code></td>
+                            <td><code>AutoReconcileResultDto</code> (عدد الأسطر المطابقة، المبالغ، الفارق)</td>
+                        </tr>
+                        <tr>
+                            <td><span class="method method-post">POST</span></td>
+                            <td><span class="endpoint">/api/accounting/bank-reconciliations/{id}/manual-match</span></td>
+                            <td>المطابقة اليدوية لسطر كشف مع سطر قيد</td>
+                            <td><code>ManualMatchLineDto</code> (<code>statementLineId</code>, <code>voucherDetailId</code>)</td>
+                            <td><code>BankReconciliationDto</code></td>
+                        </tr>
+                        <tr>
+                            <td><span class="method method-get">GET</span></td>
+                            <td><span class="endpoint">/api/accounting/bank-reconciliations/{id}/statement-report</span></td>
+                            <td>تقرير مذكرة تسوية البنك الرسمية</td>
+                            <td><code>id</code></td>
+                            <td><code>BankReconciliationStatementDto</code> (رصيد الدفاتر ± معلقات = رصيد البنك)</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Section: Fiscal Closing -->
+        <div class="card" id="closing">
+            <div class="card-header">
+                <div class="card-title">🔒 إقفال الفترات والسنة المالية وتدوير الأرصدة الافتتاحية (Fiscal Period & Year-End Closing) <span class="tag-new">NEW</span></div>
+            </div>
+            <div class="table-responsive">
+                <table class="api-table">
+                    <thead>
+                        <tr>
+                            <th>الطريقة</th>
+                            <th>المسار (Endpoint)</th>
+                            <th>الوظيفة والهدف</th>
+                            <th>المدخلات</th>
+                            <th>المخرجات</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><span class="method method-get">GET</span></td>
+                            <td><span class="endpoint">/api/accounting/closing/periods/{id}/validate</span></td>
+                            <td>فحص جاهزية الفترة المالية الشهرية للإقفال</td>
+                            <td><code>periodId</code></td>
+                            <td><code>PreClosingPeriodValidationDto</code> (فحص المسودات والقيود المعلقة)</td>
+                        </tr>
+                        <tr>
+                            <td><span class="method method-post">POST</span></td>
+                            <td><span class="endpoint">/api/accounting/closing/periods/{id}/close</span></td>
+                            <td>إقفال الفترة المالية الشهرية وقفل القيود</td>
+                            <td><code>ExecutePeriodCloseRequest</code> (<code>reason</code>)</td>
+                            <td><code>bool</code></td>
+                        </tr>
+                        <tr>
+                            <td><span class="method method-post">POST</span></td>
+                            <td><span class="endpoint">/api/accounting/closing/periods/{id}/reopen</span></td>
+                            <td>إعادة فتح الفترة المالية رسمياً</td>
+                            <td><code>ExecutePeriodReopenRequest</code> (<code>reason</code> إجباري)</td>
+                            <td><code>bool</code></td>
+                        </tr>
+                        <tr>
+                            <td><span class="method method-get">GET</span></td>
+                            <td><span class="endpoint">/api/accounting/closing/years/{id}/validate</span></td>
+                            <td>التدقيق المحاسبي الشامل قبل الإقفال السنوي</td>
+                            <td><code>yearId</code></td>
+                            <td><code>PreClosingYearValidationDto</code> (توازن ميزان المراجعة، إقفال الأشهر، صافي الربح المتوقع)</td>
+                        </tr>
+                        <tr>
+                            <td><span class="method method-post">POST</span></td>
+                            <td><span class="endpoint">/api/accounting/closing/years/{id}/execute</span></td>
+                            <td>تنفيذ الإقفال السنوي وتوليد القيد الافتتاحي</td>
+                            <td><code>ExecuteYearEndCloseRequest</code> (الأرباح المبقاة <code>310301</code>، معرف السنة الجديدة)</td>
+                            <td><code>YearEndClosingResultDto</code> (أرقام قيود الإقفال والقيد الافتتاحي وتدوير الأرصدة)</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Section: Subledger & Cash Matching -->
+        <div class="card" id="subledger">
+            <div class="card-header">
+                <div class="card-title">💰 الأستاذ المساعد وتسوية الفواتير والمطابقات (AR/AP Subledger Matching) <span class="tag-new">NEW</span></div>
+            </div>
+            <div class="table-responsive">
+                <table class="api-table">
+                    <thead>
+                        <tr>
+                            <th>الطريقة</th>
+                            <th>المسار (Endpoint)</th>
+                            <th>الوظيفة والهدف</th>
+                            <th>المدخلات</th>
+                            <th>المخرجات</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><span class="method method-get">GET</span></td>
+                            <td><span class="endpoint">/api/accounting/subledger/customers/{code}/open-items</span></td>
+                            <td>الفواتير المفتوحة للعميل غير المسددة</td>
+                            <td><code>customerCode</code></td>
+                            <td>قائمة فواتير البيع المفتوحة بالرصيد المتبقي وأعمارها.</td>
+                        </tr>
+                        <tr>
+                            <td><span class="method method-get">GET</span></td>
+                            <td><span class="endpoint">/api/accounting/subledger/vendors/{code}/open-items</span></td>
+                            <td>فواتير الشراء المفتوحة للمورد</td>
+                            <td><code>vendorCode</code></td>
+                            <td>قائمة فواتير الشراء المفتوحة بالرصيد المتبقي وأعمارها.</td>
+                        </tr>
+                        <tr>
+                            <td><span class="method method-post">POST</span></td>
+                            <td><span class="endpoint">/api/accounting/subledger/apply-cash</span></td>
+                            <td>تسوية سداد فاتورة بسند قبض أو صرف</td>
+                            <td><code>CashApplicationDto</code> (معرف الفاتورة، معرف السند، المبلغ)</td>
+                            <td>تحديث الرصيد المتبقي للفاتورة آلياً.</td>
+                        </tr>
+                        <tr>
+                            <td><span class="method method-post">POST</span></td>
+                            <td><span class="endpoint">/api/accounting/subledger/auto-match</span></td>
+                            <td>المطابقة والتسوية الآلية للدفعات (FIFO)</td>
+                            <td><code>AutoMatchRequest</code> (الطرف، الحساب)</td>
+                            <td>تسوية أقدم الفواتير المفتوحة أولاً بأول.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- UI Component Sitemap -->
+        <div class="card" id="sitemap">
+            <div class="card-header">
+                <div class="card-title">🗺️ خريطة شاشات الواجهة المقترحة (Frontend Component Map)</div>
+            </div>
+            <div class="sitemap-tree">
+📂 النظام المالي والمحاسبي (Accounting Module)
+├── 📄 دليل الحسابات (Chart of Accounts)
+├── 🏢 مراكز التكلفة الهيكلية (Cost Centers)
+├── 📝 قيود اليومية العامة (Journal Vouchers) [WITH Inter-Branch & Party Support]
+├── 💵 سندات القبض المتخصصة (Receipt Vouchers Hub) [Cash, Cheque, Bank Transfer]
+├── 💸 سندات الصرف المتخصصة (Payment Vouchers Hub) [Cash, Cheque, Bank Outward, Petty Cash]
+├── 👥 إدارة بطاقات العملاء (Customers Management) [AR Control Account & Credit Limit]
+├── 👥 إدارة بطاقات الموردين (Vendors Management) [AP Control Account & Payment Terms]
+├── 💳 سجل الشيكات الآجلة (PDC Cheques Register) [Clear, Bounce, Maturity Dashboard]
+├── 🏦 إدارة البنوك والخزائن النقدية (Banks & Cash Boxes) [IBAN, Overdraft, Custodians]
+├── ⚖️ مطابقة وتسوية كشوف البنك (Bank Reconciliation) [Auto-Reconciliation Engine]
+├── 💰 تسوية الفواتير وسداد الذمم (AR/AP Subledger Matching) [Cash Application & FIFO]
+├── ⚙️ إعدادات وقواعد الترحيل التلقائي (Posting Rules Config) [Configurable Account Mapping]
+├── 🔒 إقفال الفترات وإقفال نهاية السنة (Fiscal Year Closing) [Pre-closing Audit & Roll-forward]
+└── 📊 مركز التقارير والقوائم المالية (Financial Reports Hub)
+    ├── كشف الحساب العام (General Ledger Statement)
+    ├── ميزان المراجعة بالمجاميع والأرصدة (Trial Balance)
+    ├── قائمة الدخل / الأرباح والخسائر (Income Statement)
+    ├── الميزانية العمومية / المركز المالي (Balance Sheet)
+    ├── كشوف حسابات العملاء والموردين التفصيلية (Party Statements)
+    └── تقارير أعمار الديون (AR / AP Aging Reports)
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // Live search filter
+        document.getElementById('apiSearch').addEventListener('input', function(e) {
+            const query = e.target.value.toLowerCase().trim();
+            const rows = document.querySelectorAll('.api-table tbody tr');
+            
+            rows.forEach(row => {
+                const text = row.innerText.toLowerCase();
+                if (text.includes(query)) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+        });
+    </script>
+</body>
+</html>

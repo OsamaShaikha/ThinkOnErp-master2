@@ -12,4 +12,19 @@ public sealed class CreateGlVoucherDetailDto
     public string? CostCenterCode { get; set; }
     public string? CostCenterMgrCode { get; set; }
     public string? CostCenterMnrCode { get; set; }
+
+    /// <summary>
+    /// Party type: CUSTOMER, VENDOR, etc. Required when account is a control account (AR/AP).
+    /// </summary>
+    public string? PartyType { get; set; }
+
+    /// <summary>
+    /// Party code (customer/vendor code). Required when account is a control account (AR/AP).
+    /// </summary>
+    public string? PartyCode { get; set; }
+
+    /// <summary>
+    /// Line-level branch ID. Optional — defaults to voucher header BranchId if not specified.
+    /// </summary>
+    public long? BranchId { get; set; }
 }

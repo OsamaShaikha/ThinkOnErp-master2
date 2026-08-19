@@ -23,7 +23,6 @@ public class GetFiscalYearByIdQueryHandler : IRequestHandler<GetFiscalYearByIdQu
         return new FiscalYearDto
         {
             FiscalYearId = fiscalYear.Id,
-            CompanyId = fiscalYear.CompanyId,
             BranchId = fiscalYear.BranchId,
             FiscalYearCode = fiscalYear.FiscalYearCode,
             FiscalYearNameAr = fiscalYear.FiscalYearNameAr,

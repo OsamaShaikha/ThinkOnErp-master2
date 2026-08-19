@@ -95,15 +95,24 @@ public class SwaggerCategoryLoader
             return string.Equals(documentName, targetCategory, StringComparison.OrdinalIgnoreCase);
         }
 
-        // 4. Dynamic Route Fallback Conventions
-        if (string.Equals(documentName, ApiCategories.Accounting, StringComparison.OrdinalIgnoreCase) && relativePath?.StartsWith("api/accounting", StringComparison.OrdinalIgnoreCase) == true)
-            return true;
-        if (string.Equals(documentName, ApiCategories.SuperAdmin, StringComparison.OrdinalIgnoreCase) && relativePath?.StartsWith("api/superadmin", StringComparison.OrdinalIgnoreCase) == true)
-            return true;
-        if (string.Equals(documentName, ApiCategories.Auth, StringComparison.OrdinalIgnoreCase) && relativePath?.StartsWith("api/auth", StringComparison.OrdinalIgnoreCase) == true)
-            return true;
-        if (string.Equals(documentName, ApiCategories.Company, StringComparison.OrdinalIgnoreCase) && relativePath?.StartsWith("api/companies", StringComparison.OrdinalIgnoreCase) == true)
-            return true;
+        // 4. Dynamic Route Fallback Conventions (Exclusive matching)
+        if (relativePath?.StartsWith("api/accounting", StringComparison.OrdinalIgnoreCase) == true)
+            return string.Equals(documentName, ApiCategories.Accounting, StringComparison.OrdinalIgnoreCase);
+
+        if (relativePath?.StartsWith("api/superadmin", StringComparison.OrdinalIgnoreCase) == true)
+            return string.Equals(documentName, ApiCategories.SuperAdmin, StringComparison.OrdinalIgnoreCase);
+
+        if (relativePath?.StartsWith("api/auth", StringComparison.OrdinalIgnoreCase) == true)
+            return string.Equals(documentName, ApiCategories.Auth, StringComparison.OrdinalIgnoreCase);
+
+        if (relativePath?.StartsWith("api/companies", StringComparison.OrdinalIgnoreCase) == true || relativePath?.StartsWith("api/branches", StringComparison.OrdinalIgnoreCase) == true)
+            return string.Equals(documentName, ApiCategories.Company, StringComparison.OrdinalIgnoreCase);
+
+        if (relativePath?.StartsWith("api/audit", StringComparison.OrdinalIgnoreCase) == true)
+            return string.Equals(documentName, ApiCategories.Audit, StringComparison.OrdinalIgnoreCase);
+
+        if (relativePath?.StartsWith("api/tickets", StringComparison.OrdinalIgnoreCase) == true || relativePath?.StartsWith("api/support", StringComparison.OrdinalIgnoreCase) == true)
+            return string.Equals(documentName, ApiCategories.Support, StringComparison.OrdinalIgnoreCase);
 
         return string.Equals(documentName, ApiCategories.System, StringComparison.OrdinalIgnoreCase);
     }
@@ -290,7 +299,7 @@ public class SwaggerCategoryLoader
         {
             (ApiCategories.SuperAdmin, "1. SuperAdmin API", "Platform-wide management: super admin accounts, company/branch registry, schema provisioning & sync.", 1, "SuperAdminController,SuperAdminAuthController"),
             (ApiCategories.Company, "2. Company & Tenant Management API", "Tenant-specific company management: company registration, default branch configuration, branch access, company permissions, and DEV_TEMPLATE schema export.", 2, "CompanyController,BranchController,BranchAccessController,CompanyPermissionsController"),
-            (ApiCategories.Accounting, "3. Accounting & COA API", "Accounting operations: chart of accounts CRUD, level 1/2 categories, next child code generator, COA Excel validation/import, postable accounts, fiscal years, and currency reference data.", 3, "GlAccountsController,AccountCategoriesController,CoaImportController,CurrencyController,FiscalYearController"),
+            (ApiCategories.Accounting, "3. Accounting & COA API", "Accounting operations: chart of accounts CRUD, level 1/2 categories, next child code generator, COA Excel validation/import, postable accounts, fiscal years, vouchers, receipts, payments, customers, vendors, PDC cheques, bank accounts, cash registers, bank reconciliations, fiscal closing, and financial reports.", 3, "GlAccountsController,AccountCategoriesController,CoaImportController,CurrencyController,FiscalYearController,CostCentersController,GlVouchersController,ReceiptsController,PaymentsController,CustomersController,VendorsController,PdcController,PdcRegisterController,BankAccountsController,CashRegistersController,BankReconciliationController,PostingRulesController,AccountBalancesController,FiscalClosingController,SubledgerController,GlReportsController,FinancialReportsController,GlAccountStructureController,VoucherTypesController"),
             (ApiCategories.Auth, "4. Auth & Security API", "Authentication and Authorization: login, JWT tokens, user management, roles, and fine-grained permissions.", 4, "AuthController,UsersController,RolesController,PermissionsController"),
             (ApiCategories.Audit, "5. Audit & Security Monitoring API", "Audit and monitoring: audit logs, entity audit trail, audit health, threat alerts, performance metrics, compliance reporting, and key management.", 5, "AuditLogsController,AuditTrailController,AuditHealthController,AlertsController,MonitoringController,ComplianceController,KeyManagementController"),
             (ApiCategories.Support, "6. Tickets & Support API", "Customer support & ticket management: support tickets, ticket status, and ticket types.", 6, "TicketsController,TicketTypesController"),

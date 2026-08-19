@@ -43,6 +43,17 @@ public static class DependencyInjection
         services.AddScoped<ICoaExcelImportService, CoaExcelImportService>();
         services.AddScoped<IGlVoucherService, GlVoucherService>();
         services.AddScoped<IGlCostCenterService, GlCostCenterService>();
+        services.AddScoped<IGlFiscalPeriodService, GlFiscalPeriodService>();
+        services.AddScoped<IGlAccountBalanceService, GlAccountBalanceService>();
+        services.AddScoped<ICustomerService, CustomerService>();
+        services.AddScoped<IVendorService, VendorService>();
+        services.AddScoped<ISubledgerService, SubledgerService>();
+        services.AddScoped<IReceiptPaymentVoucherService, ReceiptPaymentVoucherService>();
+        services.AddScoped<IPdcService, PdcService>();
+        services.AddScoped<IFinancialReportsService, FinancialReportsService>();
+        services.AddScoped<IPostingRuleService, PostingRuleService>();
+        services.AddScoped<IBankingService, BankingService>();
+        services.AddScoped<IFiscalClosingService, FiscalClosingService>();
 
         return services;
     }

@@ -153,4 +153,13 @@ public static class SysCodeKeys
         public const int Arabic = 1;
         public const int English = 2;
     }
+
+    public static class PartyTypes
+    {
+        public const int Mgr = 16;
+        public const int Customer = 1;
+        public const int Vendor = 2;
+        public const int Employee = 3;
+        public const int Other = 4;
+    }
 }

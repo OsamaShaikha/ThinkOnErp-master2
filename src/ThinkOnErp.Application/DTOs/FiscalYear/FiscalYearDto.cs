@@ -12,16 +12,6 @@ public class FiscalYearDto
     public Int64 FiscalYearId { get; set; }
 
     /// <summary>
-    /// Company ID this fiscal year belongs to
-    /// </summary>
-    public Int64 CompanyId { get; set; }
-
-    /// <summary>
-    /// Company name (English) for display purposes
-    /// </summary>
-    public string? CompanyName { get; set; }
-
-    /// <summary>
     /// Branch ID this fiscal year belongs to
     /// </summary>
     public Int64 BranchId { get; set; }

@@ -31,6 +31,25 @@ public static class ApiSwaggerDocuments
         ["CoaImport"] = Accounting,
         ["Currency"] = Accounting,
         ["FiscalYear"] = Accounting,
+        ["CostCenters"] = Accounting,
+        ["GlVouchers"] = Accounting,
+        ["Receipts"] = Accounting,
+        ["Payments"] = Accounting,
+        ["Customers"] = Accounting,
+        ["Vendors"] = Accounting,
+        ["Pdc"] = Accounting,
+        ["PdcRegister"] = Accounting,
+        ["BankAccounts"] = Accounting,
+        ["CashRegisters"] = Accounting,
+        ["BankReconciliation"] = Accounting,
+        ["PostingRules"] = Accounting,
+        ["AccountBalances"] = Accounting,
+        ["FiscalClosing"] = Accounting,
+        ["Subledger"] = Accounting,
+        ["GlReports"] = Accounting,
+        ["FinancialReports"] = Accounting,
+        ["GlAccountStructure"] = Accounting,
+        ["VoucherTypes"] = Accounting,
 
         // Auth & User Management
         ["Auth"] = Auth,
@@ -85,17 +104,26 @@ public static class ApiSwaggerDocuments
             return string.Equals(documentName, targetCategory, StringComparison.OrdinalIgnoreCase);
         }
 
-        // 3. Fallback Route matching
-        if (string.Equals(documentName, Accounting, StringComparison.OrdinalIgnoreCase) && relativePath?.StartsWith("api/accounting", StringComparison.OrdinalIgnoreCase) == true)
-            return true;
-        if (string.Equals(documentName, SuperAdmin, StringComparison.OrdinalIgnoreCase) && relativePath?.StartsWith("api/superadmin", StringComparison.OrdinalIgnoreCase) == true)
-            return true;
-        if (string.Equals(documentName, Auth, StringComparison.OrdinalIgnoreCase) && relativePath?.StartsWith("api/auth", StringComparison.OrdinalIgnoreCase) == true)
-            return true;
-        if (string.Equals(documentName, Company, StringComparison.OrdinalIgnoreCase) && relativePath?.StartsWith("api/companies", StringComparison.OrdinalIgnoreCase) == true)
-            return true;
+        // 3. Exclusive Route Prefix matching
+        if (relativePath?.StartsWith("api/accounting", StringComparison.OrdinalIgnoreCase) == true)
+            return string.Equals(documentName, Accounting, StringComparison.OrdinalIgnoreCase);
 
-        // Default fallback to System document
+        if (relativePath?.StartsWith("api/superadmin", StringComparison.OrdinalIgnoreCase) == true)
+            return string.Equals(documentName, SuperAdmin, StringComparison.OrdinalIgnoreCase);
+
+        if (relativePath?.StartsWith("api/auth", StringComparison.OrdinalIgnoreCase) == true)
+            return string.Equals(documentName, Auth, StringComparison.OrdinalIgnoreCase);
+
+        if (relativePath?.StartsWith("api/companies", StringComparison.OrdinalIgnoreCase) == true || relativePath?.StartsWith("api/branches", StringComparison.OrdinalIgnoreCase) == true)
+            return string.Equals(documentName, Company, StringComparison.OrdinalIgnoreCase);
+
+        if (relativePath?.StartsWith("api/audit", StringComparison.OrdinalIgnoreCase) == true)
+            return string.Equals(documentName, Audit, StringComparison.OrdinalIgnoreCase);
+
+        if (relativePath?.StartsWith("api/tickets", StringComparison.OrdinalIgnoreCase) == true || relativePath?.StartsWith("api/support", StringComparison.OrdinalIgnoreCase) == true)
+            return string.Equals(documentName, Support, StringComparison.OrdinalIgnoreCase);
+
+        // Default fallback to System document only if no other category claimed it
         return string.Equals(documentName, System, StringComparison.OrdinalIgnoreCase);
     }
 }

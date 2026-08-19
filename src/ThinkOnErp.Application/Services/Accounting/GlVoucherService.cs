@@ -12,6 +12,10 @@ public sealed class GlVoucherService : IGlVoucherService
     private readonly IGlVoucherRepository _voucherRepository;
     private readonly IGlAccountRepository _accountRepository;
     private readonly IGlCostCenterRepository _costCenterRepository;
+    private readonly IGlFiscalPeriodRepository _periodRepository;
+    private readonly IGlAccountBalanceRepository _balanceRepository;
+    private readonly IArSubledgerRepository _arSubledgerRepository;
+    private readonly IApSubledgerRepository _apSubledgerRepository;
     private readonly ICurrentTenantContext _tenantContext;
     private readonly ILogger<GlVoucherService> _logger;
 
@@ -19,12 +23,20 @@ public sealed class GlVoucherService : IGlVoucherService
         IGlVoucherRepository voucherRepository,
         IGlAccountRepository accountRepository,
         IGlCostCenterRepository costCenterRepository,
+        IGlFiscalPeriodRepository periodRepository,
+        IGlAccountBalanceRepository balanceRepository,
+        IArSubledgerRepository arSubledgerRepository,
+        IApSubledgerRepository apSubledgerRepository,
         ICurrentTenantContext tenantContext,
         ILogger<GlVoucherService> logger)
     {
         _voucherRepository = voucherRepository;
         _accountRepository = accountRepository;
         _costCenterRepository = costCenterRepository;
+        _periodRepository = periodRepository;
+        _balanceRepository = balanceRepository;
+        _arSubledgerRepository = arSubledgerRepository;
+        _apSubledgerRepository = apSubledgerRepository;
         _tenantContext = tenantContext;
         _logger = logger;
     }
@@ -143,6 +155,39 @@ public sealed class GlVoucherService : IGlVoucherService
                 }
             }
 
+            // --- Control Account Validation: require partyType + partyCode ---
+            if (account.IsControlAccount)
+            {
+                if (string.IsNullOrWhiteSpace(detail.PartyType) || string.IsNullOrWhiteSpace(detail.PartyCode))
+                {
+                    var expectedParty = account.ControlAccountType switch
+                    {
+                        "AR" => "CUSTOMER",
+                        "AP" => "VENDOR",
+                        _ => "الطرف المعني"
+                    };
+                    throw new AccountingException(
+                        $"الحساب ({detail.AccountCode} - {account.AccountNameAr}) هو حساب ضابط ({account.ControlAccountType}). يجب تحديد نوع الطرف (partyType) وكود الطرف (partyCode) — مثلاً partyType='{expectedParty}'.",
+                        "GL_VOUCHER_CONTROL_ACCOUNT_PARTY_REQUIRED");
+                }
+
+                // Validate partyType matches control account type
+                var validPartyType = account.ControlAccountType switch
+                {
+                    "AR" => detail.PartyType!.Equals("CUSTOMER", StringComparison.OrdinalIgnoreCase),
+                    "AP" => detail.PartyType!.Equals("VENDOR", StringComparison.OrdinalIgnoreCase),
+                    _ => true // Other control types accept any partyType
+                };
+
+                if (!validPartyType)
+                {
+                    var expected = account.ControlAccountType == "AR" ? "CUSTOMER" : "VENDOR";
+                    throw new AccountingException(
+                        $"الحساب ({detail.AccountCode}) من نوع ({account.ControlAccountType}) يتطلب partyType='{expected}' وليس '{detail.PartyType}'.",
+                        "GL_VOUCHER_CONTROL_ACCOUNT_PARTY_TYPE_MISMATCH");
+                }
+            }
+
             totalDebit += detail.Debit * detail.ExchangeRate;
             totalCredit += detail.Credit * detail.ExchangeRate;
         }
@@ -155,6 +200,19 @@ public sealed class GlVoucherService : IGlVoucherService
         var voucherDate = dto.VoucherDate == default ? DateTime.UtcNow : dto.VoucherDate;
         var year = voucherDate.Year;
         var month = voucherDate.Month;
+
+        var period = await _periodRepository.GetPeriodByDateAsync(dto.FiscalYearId, voucherDate, cancellationToken);
+        if (period != null)
+        {
+            if (period.Status == "HARD_CLOSE")
+            {
+                throw new AccountingException($"لا يمكن إنشاء السند بتاريخ ({voucherDate:yyyy-MM-dd}) لأن الفترة المالية ({period.PeriodNameAr}) مقفلة نهائياً (HARD_CLOSE).", "GL_FISCAL_PERIOD_HARD_CLOSED");
+            }
+            if (period.Status == "SOFT_CLOSE")
+            {
+                throw new AccountingException($"الفترة المالية ({period.PeriodNameAr}) مقفلة جزئياً (SOFT_CLOSE). يتطلب الترحيل فيها صلاحيات مشرف وتبرير معتمد.", "GL_FISCAL_PERIOD_SOFT_CLOSED");
+            }
+        }
 
         var nextNo = await _voucherRepository.GenerateNextSerialNoAsync(
             dto.BranchId,
@@ -204,7 +262,10 @@ public sealed class GlVoucherService : IGlVoucherService
                 ExchangeRate = d.ExchangeRate,
                 CostCenterCode = d.CostCenterCode,
                 CostCenterMgrCode = d.CostCenterMgrCode,
-                CostCenterMnrCode = d.CostCenterMnrCode
+                CostCenterMnrCode = d.CostCenterMnrCode,
+                PartyType = d.PartyType?.ToUpperInvariant(),
+                PartyCode = d.PartyCode,
+                BranchId = d.BranchId ?? dto.BranchId
             });
         }
 
@@ -267,11 +328,104 @@ public sealed class GlVoucherService : IGlVoucherService
             throw new AccountingException("لا يمكن ترحيل سند معكوس.", "GL_VOUCHER_CANNOT_POST_REVERSED");
         }
 
+        var postPeriod = await _periodRepository.GetPeriodByDateAsync(voucher.FiscalYearId, voucher.VoucherDate, cancellationToken);
+        if (postPeriod != null)
+        {
+            if (postPeriod.Status == "HARD_CLOSE")
+            {
+                throw new AccountingException($"لا يمكن ترحيل السند رقم ({voucher.VoucherNo}) لأن الفترة المالية ({postPeriod.PeriodNameAr}) مقفلة نهائياً (HARD_CLOSE).", "GL_FISCAL_PERIOD_HARD_CLOSED");
+            }
+            if (postPeriod.Status == "SOFT_CLOSE")
+            {
+                throw new AccountingException($"الفترة المالية ({postPeriod.PeriodNameAr}) مقفلة جزئياً (SOFT_CLOSE). يتطلب الترحيل فيها صلاحيات مشرف وتبرير معتمد.", "GL_FISCAL_PERIOD_SOFT_CLOSED");
+            }
+        }
+
         voucher.Status = 3; // Posted
         voucher.PostUser = username;
         voucher.PostDate = DateTime.UtcNow;
         voucher.UpdateUser = username;
         voucher.UpdateDate = DateTime.UtcNow;
+
+        if (postPeriod != null)
+        {
+            foreach (var detail in voucher.Details)
+            {
+                var lineBranchId = detail.BranchId ?? voucher.BranchId;
+                await _balanceRepository.UpdateBalanceFromVoucherAsync(
+                    voucher.FiscalYearId,
+                    postPeriod.Id,
+                    lineBranchId,
+                    detail.AccountCode,
+                    detail.CurrencyId,
+                    detail.Debit,
+                    detail.Credit,
+                    detail.LocalDebit,
+                    detail.LocalCredit,
+                    isAddition: true,
+                    username: username,
+                    cancellationToken: cancellationToken);
+            }
+        }
+
+        // Subledger Integration: Generate AR / AP entries
+        foreach (var detail in voucher.Details)
+        {
+            if (string.IsNullOrWhiteSpace(detail.PartyCode)) continue;
+
+            if (string.Equals(detail.PartyType, "CUSTOMER", StringComparison.OrdinalIgnoreCase))
+            {
+                var netAmount = detail.Debit - detail.Credit;
+                var localAmount = detail.LocalDebit - detail.LocalCredit;
+                var txType = netAmount >= 0 ? "INVOICE" : "RECEIPT";
+
+                await _arSubledgerRepository.AddTransactionAsync(new ArSubledgerTransaction
+                {
+                    CustomerCode = detail.PartyCode,
+                    JournalLineId = detail.Id,
+                    VoucherId = voucher.Id,
+                    TransactionType = txType,
+                    TransactionDate = voucher.VoucherDate,
+                    DueDate = voucher.VoucherDate.AddDays(30),
+                    Amount = netAmount,
+                    CurrencyId = detail.CurrencyId,
+                    ExchangeRate = detail.ExchangeRate,
+                    LocalAmount = localAmount,
+                    OpenAmount = netAmount,
+                    LocalOpenAmount = localAmount,
+                    ReferenceNo = voucher.SourceRefId?.ToString() ?? voucher.VoucherNo.ToString(),
+                    Description = detail.Description,
+                    CreationUser = username,
+                    CreationDate = DateTime.UtcNow
+                }, cancellationToken);
+            }
+            else if (string.Equals(detail.PartyType, "VENDOR", StringComparison.OrdinalIgnoreCase))
+            {
+                var netAmount = detail.Credit - detail.Debit;
+                var localAmount = detail.LocalCredit - detail.LocalDebit;
+                var txType = netAmount >= 0 ? "BILL" : "PAYMENT";
+
+                await _apSubledgerRepository.AddTransactionAsync(new ApSubledgerTransaction
+                {
+                    VendorCode = detail.PartyCode,
+                    JournalLineId = detail.Id,
+                    VoucherId = voucher.Id,
+                    TransactionType = txType,
+                    TransactionDate = voucher.VoucherDate,
+                    DueDate = voucher.VoucherDate.AddDays(30),
+                    Amount = netAmount,
+                    CurrencyId = detail.CurrencyId,
+                    ExchangeRate = detail.ExchangeRate,
+                    LocalAmount = localAmount,
+                    OpenAmount = netAmount,
+                    LocalOpenAmount = localAmount,
+                    ReferenceNo = voucher.SourceRefId?.ToString() ?? voucher.VoucherNo.ToString(),
+                    Description = detail.Description,
+                    CreationUser = username,
+                    CreationDate = DateTime.UtcNow
+                }, cancellationToken);
+            }
+        }
 
         await _voucherRepository.SaveChangesAsync(cancellationToken);
 
@@ -361,7 +515,10 @@ public sealed class GlVoucherService : IGlVoucherService
                 ExchangeRate = detail.ExchangeRate,
                 CostCenterCode = detail.CostCenterCode,
                 CostCenterMgrCode = detail.CostCenterMgrCode,
-                CostCenterMnrCode = detail.CostCenterMnrCode
+                CostCenterMnrCode = detail.CostCenterMnrCode,
+                PartyType = detail.PartyType,
+                PartyCode = detail.PartyCode,
+                BranchId = detail.BranchId ?? originalVoucher.BranchId
             });
         }
 

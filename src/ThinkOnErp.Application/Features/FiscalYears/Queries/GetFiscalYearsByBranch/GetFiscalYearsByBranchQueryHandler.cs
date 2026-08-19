@@ -1,26 +1,26 @@
-using MediatR;
+﻿using MediatR;
 using ThinkOnErp.Application.DTOs.FiscalYear;
 using ThinkOnErp.Domain.Interfaces;
 
-namespace ThinkOnErp.Application.Features.FiscalYears.Queries.GetFiscalYearsByCompany;
+namespace ThinkOnErp.Application.Features.FiscalYears.Queries.GetFiscalYearsByBranch;
 
-public class GetFiscalYearsByCompanyQueryHandler : IRequestHandler<GetFiscalYearsByCompanyQuery, List<FiscalYearDto>>
+public class GetFiscalYearsByBranchQueryHandler : IRequestHandler<GetFiscalYearsByBranchQuery, List<FiscalYearDto>>
 {
     private readonly IFiscalYearRepository _fiscalYearRepository;
 
-    public GetFiscalYearsByCompanyQueryHandler(IFiscalYearRepository fiscalYearRepository)
+    public GetFiscalYearsByBranchQueryHandler(IFiscalYearRepository fiscalYearRepository)
     {
         _fiscalYearRepository = fiscalYearRepository;
     }
 
-    public async Task<List<FiscalYearDto>> Handle(GetFiscalYearsByCompanyQuery request, CancellationToken cancellationToken)
+    public async Task<List<FiscalYearDto>> Handle(GetFiscalYearsByBranchQuery request, CancellationToken cancellationToken)
     {
-        var fiscalYears = await _fiscalYearRepository.GetByCompanyIdAsync(request.CompanyId);
+        var fiscalYears = await _fiscalYearRepository.GetByBranchIdAsync(request.BranchId);
 
         return fiscalYears.Select(fy => new FiscalYearDto
         {
             FiscalYearId = fy.Id,
-            CompanyId = fy.CompanyId,
+            BranchId = fy.BranchId,
             FiscalYearCode = fy.FiscalYearCode,
             FiscalYearNameAr = fy.FiscalYearNameAr,
             FiscalYearNameEn = fy.FiscalYearNameEn,

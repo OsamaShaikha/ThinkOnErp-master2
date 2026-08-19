@@ -186,6 +186,20 @@ public class OracleDbContext : DbContext
     public DbSet<GlVoucherHeader> GlVoucherHeaders => Set<GlVoucherHeader>();
     public DbSet<GlVoucherDetail> GlVoucherDetails => Set<GlVoucherDetail>();
     public DbSet<GlVoucherSerial> GlVoucherSerials => Set<GlVoucherSerial>();
+    public DbSet<GlFiscalPeriod> GlFiscalPeriods => Set<GlFiscalPeriod>();
+    public DbSet<GlAccountBalance> GlAccountBalances => Set<GlAccountBalance>();
+    public DbSet<Customer> Customers => Set<Customer>();
+    public DbSet<Vendor> Vendors => Set<Vendor>();
+    public DbSet<ArSubledgerTransaction> ArSubledgerTransactions => Set<ArSubledgerTransaction>();
+    public DbSet<ArCashApplication> ArCashApplications => Set<ArCashApplication>();
+    public DbSet<ApSubledgerTransaction> ApSubledgerTransactions => Set<ApSubledgerTransaction>();
+    public DbSet<ApCashApplication> ApCashApplications => Set<ApCashApplication>();
+    public DbSet<GlPdcRegister> PdcRegisters => Set<GlPdcRegister>();
+    public DbSet<GlPostingRule> PostingRules => Set<GlPostingRule>();
+    public DbSet<BankAccount> BankAccounts => Set<BankAccount>();
+    public DbSet<CashRegister> CashRegisters => Set<CashRegister>();
+    public DbSet<BankReconciliation> BankReconciliations => Set<BankReconciliation>();
+    public DbSet<BankStatementLine> BankStatementLines => Set<BankStatementLine>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

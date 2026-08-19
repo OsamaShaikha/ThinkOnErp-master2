@@ -7,11 +7,6 @@ namespace ThinkOnErp.Application.DTOs.FiscalYear;
 public class UpdateFiscalYearDto
 {
     /// <summary>
-    /// Company ID this fiscal year belongs to (required)
-    /// </summary>
-    public Int64 CompanyId { get; set; }
-
-    /// <summary>
     /// Branch ID this fiscal year belongs to (required)
     /// </summary>
     public Int64 BranchId { get; set; }

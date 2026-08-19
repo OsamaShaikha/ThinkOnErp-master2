@@ -23,13 +23,6 @@ public interface IFiscalYearRepository
     /// <returns>The SysFiscalYear entity if found, null otherwise</returns>
     Task<SysFiscalYear?> GetByIdAsync(Int64 rowId);
 
-    /// <summary>
-    /// Retrieves all fiscal years for a specific company.
-    /// Calls SP_SYS_FISCAL_YEAR_SELECT_BY_COMPANY stored procedure.
-    /// </summary>
-    /// <param name="companyId">The company ID to retrieve fiscal years for</param>
-    /// <returns>A list of SysFiscalYear entities for the specified company</returns>
-    Task<List<SysFiscalYear>> GetByCompanyIdAsync(Int64 companyId);
 
     /// <summary>
     /// Retrieves all fiscal years for a specific branch.

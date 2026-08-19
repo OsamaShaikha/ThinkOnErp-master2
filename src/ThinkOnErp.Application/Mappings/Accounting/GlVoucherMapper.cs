@@ -101,7 +101,12 @@ public static class GlVoucherMapper
             CostCenterMnrCode = entity.CostCenterMnrCode,
             CostCenterNameAr = entity.CostCenter?.NameAr,
             CostCenterNameEn = entity.CostCenter?.NameEn,
-            IsSettlement = entity.IsSettlement
+            IsSettlement = entity.IsSettlement,
+            PartyType = entity.PartyType,
+            PartyCode = entity.PartyCode,
+            BranchId = entity.BranchId,
+            BranchNameAr = entity.Branch?.BranchNameAr,
+            BranchNameEn = entity.Branch?.BranchNameEn
         };
     }
 }

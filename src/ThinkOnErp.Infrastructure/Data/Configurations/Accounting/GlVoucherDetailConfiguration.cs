@@ -89,6 +89,17 @@ public sealed class GlVoucherDetailConfiguration : IEntityTypeConfiguration<GlVo
             .HasColumnType("NUMBER(1)")
             .HasDefaultValue(false);
 
+        builder.Property(d => d.PartyType)
+            .HasColumnName("PARTY_TYPE")
+            .HasMaxLength(20);
+
+        builder.Property(d => d.PartyCode)
+            .HasColumnName("PARTY_CODE")
+            .HasMaxLength(50);
+
+        builder.Property(d => d.BranchId)
+            .HasColumnName("BRANCH_ID");
+
         builder.HasOne(d => d.Account)
             .WithMany()
             .HasForeignKey(d => d.AccountCode)
@@ -97,6 +108,11 @@ public sealed class GlVoucherDetailConfiguration : IEntityTypeConfiguration<GlVo
         builder.HasOne(d => d.CostCenter)
             .WithMany()
             .HasForeignKey(d => d.CostCenterCode)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasOne(d => d.Branch)
+            .WithMany()
+            .HasForeignKey(d => d.BranchId)
             .OnDelete(DeleteBehavior.Restrict);
     }
 }

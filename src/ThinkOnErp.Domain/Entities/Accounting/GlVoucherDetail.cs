@@ -23,7 +23,23 @@ public sealed class GlVoucherDetail
     public string? CostCenterMnrCode { get; set; }
     public bool IsSettlement { get; set; }
 
+    /// <summary>
+    /// Party type: CUSTOMER, VENDOR, EMPLOYEE, etc. Required when account is a control account.
+    /// </summary>
+    public string? PartyType { get; set; }
+
+    /// <summary>
+    /// Party code (customer/vendor/employee code). Required when account is a control account.
+    /// </summary>
+    public string? PartyCode { get; set; }
+
+    /// <summary>
+    /// Line-level branch ID for inter-branch transactions or branch allocations. Defaults to header BranchId.
+    /// </summary>
+    public long? BranchId { get; set; }
+
     public GlVoucherHeader Header { get; set; } = null!;
     public GlAccount Account { get; set; } = null!;
     public GlCostCenter? CostCenter { get; set; }
+    public SysBranch? Branch { get; set; }
 }

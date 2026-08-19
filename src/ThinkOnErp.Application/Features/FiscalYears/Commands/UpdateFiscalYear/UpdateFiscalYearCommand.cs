@@ -7,7 +7,6 @@ public class UpdateFiscalYearCommand : IRequest<Int64>
 {
     [JsonIgnore]
     public Int64 FiscalYearId { get; set; }
-    public Int64 CompanyId { get; set; }
     public Int64 BranchId { get; set; }
     public string FiscalYearCode { get; set; } = string.Empty;
     public string? FiscalYearNameAr { get; set; }

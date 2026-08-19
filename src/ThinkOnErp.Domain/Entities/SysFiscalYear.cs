@@ -3,7 +3,6 @@ namespace ThinkOnErp.Domain.Entities;
 public class SysFiscalYear
 {
     public Int64 Id { get; set; }
-    public Int64 CompanyId { get; set; }
     public Int64 BranchId { get; set; }
     public string FiscalYearCode { get; set; } = string.Empty;
     public string? FiscalYearNameAr { get; set; }
@@ -16,6 +15,6 @@ public class SysFiscalYear
     public DateTime? CreationDate { get; set; }
     public string? UpdateUser { get; set; }
     public DateTime? UpdateDate { get; set; }
-    public SysCompany? Company { get; set; }
     public SysBranch? Branch { get; set; }
+    public ICollection<ThinkOnErp.Domain.Entities.Accounting.GlFiscalPeriod> Periods { get; set; } = new List<ThinkOnErp.Domain.Entities.Accounting.GlFiscalPeriod>();
 }

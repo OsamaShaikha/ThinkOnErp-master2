@@ -26,4 +26,11 @@ public sealed class GlVoucherDetailDto
     public string? CostCenterNameAr { get; set; }
     public string? CostCenterNameEn { get; set; }
     public bool IsSettlement { get; set; }
+
+    public string? PartyType { get; set; }
+    public string? PartyCode { get; set; }
+
+    public long? BranchId { get; set; }
+    public string? BranchNameAr { get; set; }
+    public string? BranchNameEn { get; set; }
 }
