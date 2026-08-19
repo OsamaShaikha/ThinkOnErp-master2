@@ -201,6 +201,10 @@ public class OracleDbContext : DbContext
     public DbSet<BankReconciliation> BankReconciliations => Set<BankReconciliation>();
     public DbSet<BankStatementLine> BankStatementLines => Set<BankStatementLine>();
 
+    // Opening balance staging (dedicated OB table)
+    public DbSet<GlOpeningBalanceHeader> GlOpeningBalanceHeaders => Set<GlOpeningBalanceHeader>();
+    public DbSet<GlOpeningBalanceDetail> GlOpeningBalanceDetails => Set<GlOpeningBalanceDetail>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);

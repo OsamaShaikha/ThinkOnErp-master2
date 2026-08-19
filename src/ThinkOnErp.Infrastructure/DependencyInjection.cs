@@ -109,7 +109,8 @@ public static class DependencyInjection
         services.AddScoped<IUserRepository, UserRepository>();
         services.AddScoped<IAuthRepository, AuthRepository>();
         services.AddScoped<IFiscalYearRepository, FiscalYearRepository>();
-        
+        services.AddScoped<IAccountStatementRepository, AccountStatementRepository>();
+
         // Register permission system repositories
         services.AddScoped<ISuperAdminRepository, SuperAdminRepository>();
         services.AddScoped<ISystemRepository, SystemRepository>();
@@ -153,6 +154,7 @@ public static class DependencyInjection
         services.AddScoped<ICurrentTenantContext, HttpCurrentTenantContext>();
         services.AddScoped<ICoaWorkbookReader, XlsxCoaWorkbookReader>();
         services.AddScoped<IGlVoucherRepository, GlVoucherRepository>();
+        services.AddScoped<IGlOpeningBalanceRepository, GlOpeningBalanceRepository>();
         services.AddScoped<IGlCostCenterRepository, GlCostCenterRepository>();
         services.AddScoped<IGlFiscalPeriodRepository, GlFiscalPeriodRepository>();
         services.AddScoped<IGlAccountBalanceRepository, GlAccountBalanceRepository>();

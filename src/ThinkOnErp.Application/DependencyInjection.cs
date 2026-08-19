@@ -4,7 +4,7 @@ using Microsoft.Extensions.DependencyInjection;
 using System.Reflection;
 using ThinkOnErp.Application.Behaviors;
 using ThinkOnErp.Application.Services;
-using ThinkOnErp.Application.Services.Accounting;
+using ThinkOnErp.Application.Services.Accounting; 
 
 namespace ThinkOnErp.Application;
 
@@ -53,7 +53,7 @@ public static class DependencyInjection
         services.AddScoped<IFinancialReportsService, FinancialReportsService>();
         services.AddScoped<IPostingRuleService, PostingRuleService>();
         services.AddScoped<IBankingService, BankingService>();
-        services.AddScoped<IFiscalClosingService, FiscalClosingService>();
+        services.AddScoped<IFiscalClosingService, FiscalClosingService>(); 
 
         return services;
     }
