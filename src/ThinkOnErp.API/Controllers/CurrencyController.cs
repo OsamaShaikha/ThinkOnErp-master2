@@ -1,11 +1,12 @@
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using ThinkOnErp.API.Authorization;
 using ThinkOnErp.Application.Common;
 using ThinkOnErp.Application.DTOs.Currency;
 using ThinkOnErp.Application.Features.Currencies.Commands.CreateCurrency;
-using ThinkOnErp.Application.Features.Currencies.Commands.UpdateCurrency;
 using ThinkOnErp.Application.Features.Currencies.Commands.DeleteCurrency;
+using ThinkOnErp.Application.Features.Currencies.Commands.UpdateCurrency;
 using ThinkOnErp.Application.Features.Currencies.Queries.GetAllCurrencies;
 using ThinkOnErp.Application.Features.Currencies.Queries.GetCurrencyById;
 
@@ -17,7 +18,9 @@ namespace ThinkOnErp.API.Controllers;
 /// </summary>
 [ApiController]
 [Route("api/currencies")]
-[Authorize(Policy = "SuperAdminOnly")]
+[TenantScoped]
+[Authorize]
+
 public class CurrencyController : ControllerBase
 {
     private readonly IMediator _mediator;
