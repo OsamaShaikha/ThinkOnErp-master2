@@ -1197,6 +1197,54 @@ public class OracleSchemaService : IOracleSchemaService
                     CONSTRAINT "PK_BANK_STATEMENT_LINE" PRIMARY KEY ("ID")
                 )
                 """
+            ),
+            (
+                "GL_OPENING_BALANCE_HEADER",
+                $"""
+                CREATE TABLE "{schemaName}"."GL_OPENING_BALANCE_HEADER"
+                (
+                    "ID" NUMBER(19) GENERATED ALWAYS AS IDENTITY NOT NULL,
+                    "BRANCH_ID" NUMBER(19) NOT NULL,
+                    "FISCAL_YEAR_ID" NUMBER(19) NOT NULL,
+                    "AS_OF_DATE" TIMESTAMP NOT NULL,
+                    "DESCRIPTION" NVARCHAR2(500) NULL,
+                    "STATUS" NUMBER(1) DEFAULT 1 NOT NULL,
+                    "TOTAL_DEBIT" NUMBER(18,3) DEFAULT 0 NOT NULL,
+                    "TOTAL_CREDIT" NUMBER(18,3) DEFAULT 0 NOT NULL,
+                    "OB_VOUCHER_ID" NUMBER(19) NULL,
+                    "CREATION_USER" NVARCHAR2(100) NOT NULL,
+                    "CREATION_DATE" TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
+                    "UPDATE_USER" NVARCHAR2(100) NULL,
+                    "UPDATE_DATE" TIMESTAMP NULL,
+                    CONSTRAINT "PK_GL_OB_HDR" PRIMARY KEY ("ID")
+                )
+                """
+            ),
+            (
+                "GL_OPENING_BALANCE_DETAIL",
+                $"""
+                CREATE TABLE "{schemaName}"."GL_OPENING_BALANCE_DETAIL"
+                (
+                    "ID" NUMBER(19) GENERATED ALWAYS AS IDENTITY NOT NULL,
+                    "HEADER_ID" NUMBER(19) NOT NULL,
+                    "LINE_SER" NUMBER(5) NOT NULL,
+                    "ACCOUNT_CODE" NVARCHAR2(50) NOT NULL,
+                    "DEBIT_AMOUNT" NUMBER(18,3) DEFAULT 0 NOT NULL,
+                    "CREDIT_AMOUNT" NUMBER(18,3) DEFAULT 0 NOT NULL,
+                    "LOCAL_DEBIT" NUMBER(18,3) DEFAULT 0 NOT NULL,
+                    "LOCAL_CREDIT" NUMBER(18,3) DEFAULT 0 NOT NULL,
+                    "CURRENCY_ID" NUMBER(19) DEFAULT 1 NOT NULL,
+                    "EXCHANGE_RATE" NUMBER(18,6) DEFAULT 1 NOT NULL,
+                    "DESCRIPTION" NVARCHAR2(500) NULL,
+                    "COST_CENTER_CODE" NVARCHAR2(50) NULL,
+                    "PARTY_TYPE" NVARCHAR2(20) NULL,
+                    "PARTY_CODE" NVARCHAR2(50) NULL,
+                    "NOTES" NVARCHAR2(500) NULL,
+                    "CREATION_USER" NVARCHAR2(100) NOT NULL,
+                    "CREATION_DATE" TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
+                    CONSTRAINT "PK_GL_OB_DTL" PRIMARY KEY ("ID")
+                )
+                """
             )
         };
 
@@ -1214,7 +1262,8 @@ public class OracleSchemaService : IOracleSchemaService
             $"ALTER TABLE \"{schemaName}\".\"GL_ACCOUNT\" MODIFY (\"IS_BRANCH_SPECIFIC\" DEFAULT 0)",
             $"ALTER TABLE \"{schemaName}\".\"GL_ACCOUNT\" MODIFY (\"IS_CLEARING\" DEFAULT 0)",
             $"ALTER TABLE \"{schemaName}\".\"GL_ACCOUNT\" MODIFY (\"IS_ACTIVE\" DEFAULT 1)",
-            $"ALTER TABLE \"{schemaName}\".\"GL_ACCOUNT_BRANCH\" MODIFY (\"IS_ACTIVE\" DEFAULT 1)"
+            $"ALTER TABLE \"{schemaName}\".\"GL_ACCOUNT_BRANCH\" MODIFY (\"IS_ACTIVE\" DEFAULT 1)",
+            $"ALTER TABLE \"{schemaName}\".\"GL_OPENING_BALANCE_DETAIL\" ADD \"DESCRIPTION\" NVARCHAR2(500) NULL"
         };
 
         foreach (var statement in defaultStatements)
@@ -1233,7 +1282,7 @@ public class OracleSchemaService : IOracleSchemaService
             ("PK_ACC_CAT", $"ALTER TABLE \"{schemaName}\".\"ACCOUNT_CATEGORY\" ADD CONSTRAINT \"PK_ACC_CAT\" PRIMARY KEY (\"Id\")"),
             ("UX_ACC_CATEGORY_CODE", $"ALTER TABLE \"{schemaName}\".\"ACCOUNT_CATEGORY\" ADD CONSTRAINT \"UX_ACC_CATEGORY_CODE\" UNIQUE (\"CATEGORY_CODE\")"),
             ("CK_ACC_CATEGORY_CODE", $"ALTER TABLE \"{schemaName}\".\"ACCOUNT_CATEGORY\" ADD CONSTRAINT \"CK_ACC_CATEGORY_CODE\" CHECK (\"CATEGORY_CODE\" BETWEEN 1 AND 8)"),
-            ("CK_ACC_CATEGORY_BALANCE", $"ALTER TABLE \"{schemaName}\".\"ACCOUNT_CATEGORY\" CHECK (\"NORMAL_BALANCE\" IN ('D', 'C'))"),
+            ("CK_ACC_CATEGORY_BALANCE", $"ALTER TABLE \"{schemaName}\".\"ACCOUNT_CATEGORY\" ADD CONSTRAINT \"CK_ACC_CATEGORY_BALANCE\" CHECK (\"NORMAL_BALANCE\" IN ('D', 'C'))"),
             ("CK_ACC_CATEGORY_STATEMENT", $"ALTER TABLE \"{schemaName}\".\"ACCOUNT_CATEGORY\" ADD CONSTRAINT \"CK_ACC_CATEGORY_STATEMENT\" CHECK (\"FINANCIAL_STATEMENT\" IN ('BALANCE_SHEET', 'INCOME_STATEMENT'))"),
 
             ("PK_GL_ACC", $"ALTER TABLE \"{schemaName}\".\"GL_ACCOUNT\" ADD CONSTRAINT \"PK_GL_ACC\" PRIMARY KEY (\"ACCOUNT_CODE\")"),
@@ -1312,7 +1361,15 @@ public class OracleSchemaService : IOracleSchemaService
             ("FK_BR_PERIOD", $"ALTER TABLE \"{schemaName}\".\"BANK_RECONCILIATION\" ADD CONSTRAINT \"FK_BR_PERIOD\" FOREIGN KEY (\"FISCAL_PERIOD_ID\") REFERENCES \"{schemaName}\".\"GL_FISCAL_PERIOD\" (\"ID\") ON DELETE CASCADE"),
 
             ("FK_BSL_RECON", $"ALTER TABLE \"{schemaName}\".\"BANK_STATEMENT_LINE\" ADD CONSTRAINT \"FK_BSL_RECON\" FOREIGN KEY (\"RECONCILIATION_ID\") REFERENCES \"{schemaName}\".\"BANK_RECONCILIATION\" (\"ID\") ON DELETE CASCADE"),
-            ("FK_BSL_VD", $"ALTER TABLE \"{schemaName}\".\"BANK_STATEMENT_LINE\" ADD CONSTRAINT \"FK_BSL_VD\" FOREIGN KEY (\"MATCHED_VOUCHER_DETAIL_ID\") REFERENCES \"{schemaName}\".\"GL_VOUCHER_DETAIL\" (\"ID\") ON DELETE SET NULL")
+            ("FK_BSL_VD", $"ALTER TABLE \"{schemaName}\".\"BANK_STATEMENT_LINE\" ADD CONSTRAINT \"FK_BSL_VD\" FOREIGN KEY (\"MATCHED_VOUCHER_DETAIL_ID\") REFERENCES \"{schemaName}\".\"GL_VOUCHER_DETAIL\" (\"ID\") ON DELETE SET NULL"),
+
+            ("FK_GL_OB_BR", $"ALTER TABLE \"{schemaName}\".\"GL_OPENING_BALANCE_HEADER\" ADD CONSTRAINT \"FK_GL_OB_BR\" FOREIGN KEY (\"BRANCH_ID\") REFERENCES \"{schemaName}\".\"SYS_BRANCH\" (\"Id\")"),
+            ("FK_GL_OB_FY", $"ALTER TABLE \"{schemaName}\".\"GL_OPENING_BALANCE_HEADER\" ADD CONSTRAINT \"FK_GL_OB_FY\" FOREIGN KEY (\"FISCAL_YEAR_ID\") REFERENCES \"{schemaName}\".\"SYS_FISCAL_YEAR\" (\"Id\") ON DELETE CASCADE"),
+            ("FK_GL_OB_VH", $"ALTER TABLE \"{schemaName}\".\"GL_OPENING_BALANCE_HEADER\" ADD CONSTRAINT \"FK_GL_OB_VH\" FOREIGN KEY (\"OB_VOUCHER_ID\") REFERENCES \"{schemaName}\".\"GL_VOUCHER_HEADER\" (\"ID\") ON DELETE SET NULL"),
+
+            ("FK_GL_OB_HDR", $"ALTER TABLE \"{schemaName}\".\"GL_OPENING_BALANCE_DETAIL\" ADD CONSTRAINT \"FK_GL_OB_HDR\" FOREIGN KEY (\"HEADER_ID\") REFERENCES \"{schemaName}\".\"GL_OPENING_BALANCE_HEADER\" (\"ID\") ON DELETE CASCADE"),
+            ("FK_GL_OB_ACC", $"ALTER TABLE \"{schemaName}\".\"GL_OPENING_BALANCE_DETAIL\" ADD CONSTRAINT \"FK_GL_OB_ACC\" FOREIGN KEY (\"ACCOUNT_CODE\") REFERENCES \"{schemaName}\".\"GL_ACCOUNT\" (\"ACCOUNT_CODE\")"),
+            ("FK_GL_OB_CC", $"ALTER TABLE \"{schemaName}\".\"GL_OPENING_BALANCE_DETAIL\" ADD CONSTRAINT \"FK_GL_OB_CC\" FOREIGN KEY (\"COST_CENTER_CODE\") REFERENCES \"{schemaName}\".\"GL_COST_CENTER\" (\"COST_CENTER_CODE\")")
         };
 
         foreach (var statement in constraintStatements)
@@ -1331,7 +1388,10 @@ public class OracleSchemaService : IOracleSchemaService
             ("IX_GL_VD_ACC", $"CREATE INDEX \"{schemaName}\".\"IX_GL_VD_ACC\" ON \"{schemaName}\".\"GL_VOUCHER_DETAIL\" (\"ACCOUNT_CODE\")"),
             ("IX_GL_VD_CC", $"CREATE INDEX \"{schemaName}\".\"IX_GL_VD_CC\" ON \"{schemaName}\".\"GL_VOUCHER_DETAIL\" (\"COST_CENTER_CODE\")"),
             ("IX_GL_FP_DATES", $"CREATE INDEX \"{schemaName}\".\"IX_GL_FP_DATES\" ON \"{schemaName}\".\"GL_FISCAL_PERIOD\" (\"START_DATE\", \"END_DATE\")"),
-            ("IX_GL_BAL_PERIOD", $"CREATE INDEX \"{schemaName}\".\"IX_GL_BAL_PERIOD\" ON \"{schemaName}\".\"GL_ACCOUNT_BALANCE\" (\"FISCAL_YEAR_ID\", \"FISCAL_PERIOD_ID\", \"BRANCH_ID\")")
+            ("IX_GL_BAL_PERIOD", $"CREATE INDEX \"{schemaName}\".\"IX_GL_BAL_PERIOD\" ON \"{schemaName}\".\"GL_ACCOUNT_BALANCE\" (\"FISCAL_YEAR_ID\", \"FISCAL_PERIOD_ID\", \"BRANCH_ID\")"),
+            ("IX_GL_OB_BRANCH", $"CREATE INDEX \"{schemaName}\".\"IX_GL_OB_BRANCH\" ON \"{schemaName}\".\"GL_OPENING_BALANCE_HEADER\" (\"BRANCH_ID\", \"FISCAL_YEAR_ID\")"),
+            ("IX_GL_OB_DTL_HDR", $"CREATE INDEX \"{schemaName}\".\"IX_GL_OB_DTL_HDR\" ON \"{schemaName}\".\"GL_OPENING_BALANCE_DETAIL\" (\"HEADER_ID\")"),
+            ("IX_GL_OB_DTL_ACC", $"CREATE INDEX \"{schemaName}\".\"IX_GL_OB_DTL_ACC\" ON \"{schemaName}\".\"GL_OPENING_BALANCE_DETAIL\" (\"ACCOUNT_CODE\")")
         };
 
         foreach (var statement in indexStatements)

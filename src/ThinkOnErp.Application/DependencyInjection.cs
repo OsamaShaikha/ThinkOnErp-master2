@@ -54,6 +54,8 @@ public static class DependencyInjection
         services.AddScoped<IPostingRuleService, PostingRuleService>();
         services.AddScoped<IBankingService, BankingService>();
         services.AddScoped<IFiscalClosingService, FiscalClosingService>(); 
+        services.AddScoped<IOpeningBalanceService, OpeningBalanceService>();
+        services.AddScoped<IAccountStatementService, AccountStatementService>();
 
         return services;
     }

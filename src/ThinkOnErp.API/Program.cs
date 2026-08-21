@@ -289,6 +289,7 @@ try
     builder.Services.AddSwaggerGen(options =>
     {
         options.OperationFilter<ThinkOnErp.API.Swagger.TenantCompanyHeaderOperationFilter>();
+        options.OperationFilter<ThinkOnErp.API.Swagger.SwaggerScopeBadgeOperationFilter>();
 
         // Add JWT Bearer authentication to Swagger
         options.AddSecurityDefinition("Bearer", new Microsoft.OpenApi.Models.OpenApiSecurityScheme

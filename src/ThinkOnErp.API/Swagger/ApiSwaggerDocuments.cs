@@ -50,6 +50,8 @@ public static class ApiSwaggerDocuments
         ["FinancialReports"] = Accounting,
         ["GlAccountStructure"] = Accounting,
         ["VoucherTypes"] = Accounting,
+        ["OpeningBalances"] = Accounting,
+        ["AccountStatement"] = Accounting,
 
         // Auth & User Management
         ["Auth"] = Auth,
