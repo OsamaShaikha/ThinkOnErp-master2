@@ -77,7 +77,7 @@ public sealed class ReceiptPaymentVoucherService : IReceiptPaymentVoucherService
         {
             BranchId = dto.BranchId,
             FiscalYearId = dto.FiscalYearId,
-            VoucherType = 2, // RECEIPT
+            VoucherType = 102, // RECEIPT (RV)
             VoucherDate = dto.VoucherDate,
             Description = dto.Description ?? $"سند قبض {(partyCode != null ? "- عميل " + partyCode : "")}",
             Details = new List<CreateGlVoucherDetailDto>
@@ -143,7 +143,7 @@ public sealed class ReceiptPaymentVoucherService : IReceiptPaymentVoucherService
     public async Task<ReceiptVoucherDto> UpdateReceiptVoucherAsync(long voucherId, UpdateReceiptVoucherDto dto, string username, CancellationToken cancellationToken = default)
     {
         var voucher = await _voucherRepository.GetByIdAsync(voucherId, cancellationToken);
-        if (voucher == null || voucher.VoucherType != 2)
+        if (voucher == null || (voucher.VoucherType != 102 && voucher.VoucherType != 2))
         {
             throw new AccountingNotFoundException($"سند القبض رقم ({voucherId}) غير موجود.", "RECEIPT_NOT_FOUND");
         }
@@ -221,7 +221,7 @@ public sealed class ReceiptPaymentVoucherService : IReceiptPaymentVoucherService
     public async Task<bool> DeleteReceiptVoucherAsync(long voucherId, string username, CancellationToken cancellationToken = default)
     {
         var voucher = await _voucherRepository.GetByIdAsync(voucherId, cancellationToken);
-        if (voucher == null || voucher.VoucherType != 2)
+        if (voucher == null || (voucher.VoucherType != 102 && voucher.VoucherType != 2))
         {
             throw new AccountingNotFoundException($"سند القبض رقم ({voucherId}) غير موجود.", "RECEIPT_NOT_FOUND");
         }
@@ -260,7 +260,7 @@ public sealed class ReceiptPaymentVoucherService : IReceiptPaymentVoucherService
     public async Task<ReceiptVoucherDto> GetReceiptVoucherByIdAsync(long voucherId, CancellationToken cancellationToken = default)
     {
         var voucher = await _voucherRepository.GetByIdAsync(voucherId, cancellationToken);
-        if (voucher == null || voucher.VoucherType != 2)
+        if (voucher == null || (voucher.VoucherType != 102 && voucher.VoucherType != 2))
         {
             throw new AccountingNotFoundException($"سند القبض رقم ({voucherId}) غير موجود.", "RECEIPT_NOT_FOUND");
         }
@@ -278,11 +278,11 @@ public sealed class ReceiptPaymentVoucherService : IReceiptPaymentVoucherService
         var settled = new List<ReceiptSettledInvoiceDto>();
         if (voucher.Status == 3 && customer != null)
         {
-            var openPayments = await _arRepository.GetTransactionsAsync(customer.CustomerCode, null, null, onlyOpen: false, cancellationToken);
-            var payTx = openPayments.FirstOrDefault(t => t.VoucherId == voucher.Id);
-            if (payTx != null)
+            var openReceipts = await _arRepository.GetTransactionsAsync(customer.CustomerCode, null, null, onlyOpen: false, cancellationToken);
+            var recTx = openReceipts.FirstOrDefault(t => t.VoucherId == voucher.Id);
+            if (recTx != null)
             {
-                var apps = await _arRepository.GetApplicationsByPaymentIdAsync(payTx.Id, cancellationToken);
+                var apps = await _arRepository.GetApplicationsByPaymentIdAsync(recTx.Id, cancellationToken);
                 settled = apps.Select(a => new ReceiptSettledInvoiceDto
                 {
                     ApplicationId = a.Id,
@@ -295,6 +295,10 @@ public sealed class ReceiptPaymentVoucherService : IReceiptPaymentVoucherService
             }
         }
 
+        var paymentMethod = "Cash";
+        if (debitLine?.Account?.ControlAccountType == "BANK") paymentMethod = "BankTransfer";
+        else if (debitLine?.Account?.ControlAccountType == "PDC") paymentMethod = "Cheque";
+
         return new ReceiptVoucherDto
         {
             VoucherId = voucher.Id,
@@ -303,6 +307,7 @@ public sealed class ReceiptPaymentVoucherService : IReceiptPaymentVoucherService
             BranchNameAr = voucher.Details.FirstOrDefault()?.Branch?.BranchNameAr,
             BranchNameEn = voucher.Details.FirstOrDefault()?.Branch?.BranchNameEn,
             VoucherDate = voucher.VoucherDate,
+            PaymentMethod = paymentMethod,
             CashOrBankAccountCode = debitLine?.AccountCode ?? string.Empty,
             CashOrBankAccountNameAr = debitLine?.Account?.AccountNameAr,
             CashOrBankAccountNameEn = debitLine?.Account?.AccountNameEn,
@@ -336,7 +341,7 @@ public sealed class ReceiptPaymentVoucherService : IReceiptPaymentVoucherService
             branchId: branchId,
             year: null,
             month: null,
-            typeCode: 2, // RECEIPT
+            typeCode: 102, // RECEIPT (RV)
             status: null,
             fromDate: fromDate,
             toDate: toDate,
@@ -420,7 +425,7 @@ public sealed class ReceiptPaymentVoucherService : IReceiptPaymentVoucherService
         {
             BranchId = dto.BranchId,
             FiscalYearId = dto.FiscalYearId,
-            VoucherType = 3, // PAYMENT
+            VoucherType = 103, // PAYMENT (PV)
             VoucherDate = dto.VoucherDate,
             Description = dto.Description ?? $"سند صرف {(partyCode != null ? "- مورد " + partyCode : "")}",
             Details = new List<CreateGlVoucherDetailDto>
@@ -486,7 +491,7 @@ public sealed class ReceiptPaymentVoucherService : IReceiptPaymentVoucherService
     public async Task<PaymentVoucherDto> UpdatePaymentVoucherAsync(long voucherId, UpdatePaymentVoucherDto dto, string username, CancellationToken cancellationToken = default)
     {
         var voucher = await _voucherRepository.GetByIdAsync(voucherId, cancellationToken);
-        if (voucher == null || voucher.VoucherType != 3)
+        if (voucher == null || (voucher.VoucherType != 103 && voucher.VoucherType != 3))
         {
             throw new AccountingNotFoundException($"سند الصرف رقم ({voucherId}) غير موجود.", "PAYMENT_NOT_FOUND");
         }
@@ -564,7 +569,7 @@ public sealed class ReceiptPaymentVoucherService : IReceiptPaymentVoucherService
     public async Task<bool> DeletePaymentVoucherAsync(long voucherId, string username, CancellationToken cancellationToken = default)
     {
         var voucher = await _voucherRepository.GetByIdAsync(voucherId, cancellationToken);
-        if (voucher == null || voucher.VoucherType != 3)
+        if (voucher == null || (voucher.VoucherType != 103 && voucher.VoucherType != 3))
         {
             throw new AccountingNotFoundException($"سند الصرف رقم ({voucherId}) غير موجود.", "PAYMENT_NOT_FOUND");
         }
@@ -603,7 +608,7 @@ public sealed class ReceiptPaymentVoucherService : IReceiptPaymentVoucherService
     public async Task<PaymentVoucherDto> GetPaymentVoucherByIdAsync(long voucherId, CancellationToken cancellationToken = default)
     {
         var voucher = await _voucherRepository.GetByIdAsync(voucherId, cancellationToken);
-        if (voucher == null || voucher.VoucherType != 3)
+        if (voucher == null || (voucher.VoucherType != 103 && voucher.VoucherType != 3))
         {
             throw new AccountingNotFoundException($"سند الصرف رقم ({voucherId}) غير موجود.", "PAYMENT_NOT_FOUND");
         }
@@ -681,7 +686,7 @@ public sealed class ReceiptPaymentVoucherService : IReceiptPaymentVoucherService
             branchId: branchId,
             year: null,
             month: null,
-            typeCode: 3, // PAYMENT
+            typeCode: 103, // PAYMENT (PV)
             status: null,
             fromDate: fromDate,
             toDate: toDate,

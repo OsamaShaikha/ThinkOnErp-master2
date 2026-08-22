@@ -68,6 +68,16 @@ public sealed class GlOpeningBalanceDetailConfiguration : IEntityTypeConfigurati
             .HasColumnType("NVARCHAR2(500)")
             .HasMaxLength(500);
 
+        builder.Property(d => d.CreationUser)
+            .HasColumnName("CREATION_USER")
+            .HasColumnType("NVARCHAR2(100)")
+            .HasMaxLength(100)
+            .IsRequired();
+
+        builder.Property(d => d.CreationDate)
+            .HasColumnName("CREATION_DATE")
+            .IsRequired();
+
         // Unique line number per header
         builder.HasIndex(d => new { d.HeaderId, d.LineSer })
             .IsUnique()

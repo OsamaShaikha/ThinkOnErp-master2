@@ -211,18 +211,6 @@ public class OracleDbContext : DbContext
 
         // Apply all entity configurations in Infrastructure assembly automatically
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(OracleDbContext).Assembly);
-
-        foreach (var entityType in modelBuilder.Model.GetEntityTypes())
-        {
-            foreach (var property in entityType.GetProperties())
-            {
-                if (property.ClrType == typeof(bool))
-                {
-                    property.SetColumnType("NUMBER(1)");
-                    property.SetValueConverter((Microsoft.EntityFrameworkCore.Storage.ValueConversion.ValueConverter?)null);
-                }
-            }
-        }
     }
 
 }

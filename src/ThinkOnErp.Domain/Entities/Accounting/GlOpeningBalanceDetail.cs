@@ -23,6 +23,8 @@ public sealed class GlOpeningBalanceDetail
     public decimal ExchangeRate { get; set; } = 1.0m;
 
     public string? Description { get; set; }
+    public string CreationUser { get; set; } = string.Empty;
+    public DateTime CreationDate { get; set; } = DateTime.UtcNow;
 
     // Navigation
     public GlOpeningBalanceHeader Header { get; set; } = null!;

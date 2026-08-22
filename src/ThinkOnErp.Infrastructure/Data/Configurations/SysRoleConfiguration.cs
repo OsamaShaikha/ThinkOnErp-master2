@@ -280,7 +280,7 @@ public class SysCodeConfiguration : IEntityTypeConfiguration<SysCode>
         builder.Property(e => e.CodeLang).HasColumnName("CODE_LANG").IsRequired();
         builder.Property(e => e.CodeDesc).HasColumnName("CODE_DESC").HasMaxLength(1000);
         builder.Property(e => e.CodeValue).HasColumnName("CODE_VALUE").HasMaxLength(200);
-        builder.Property(e => e.IsActive).HasColumnName("IS_ACTIVE").HasColumnType("NUMBER(1)").HasDefaultValue(true);
+        builder.Property(e => e.IsActive).HasColumnName("IS_ACTIVE").HasColumnType("NUMBER(3)").HasDefaultValue(1);
         builder.Property(e => e.CreationUser).HasColumnName("CREATION_USER").HasMaxLength(100).IsRequired();
         builder.Property(e => e.CreationDate).HasColumnName("CREATION_DATE");
         builder.Property(e => e.UpdateUser).HasColumnName("UPDATE_USER").HasMaxLength(100);
@@ -309,7 +309,7 @@ public class SysUserBranchConfiguration : IEntityTypeConfiguration<SysUserBranch
         builder.Property(e => e.Id).ValueGeneratedOnAdd();
         builder.Property(e => e.UserId).HasColumnName("USER_ID").IsRequired();
         builder.Property(e => e.BranchId).HasColumnName("BRANCH_ID").IsRequired();
-        builder.Property(e => e.IsPrimary).HasColumnName("IS_PRIMARY").HasConversion<string>(v => v ? "Y" : "N", v => v == "Y").HasMaxLength(1);
+        builder.Property(e => e.IsPrimary).HasColumnName("IS_PRIMARY").HasColumnType("NUMBER(1)");
         builder.Property(e => e.AssignedBy).HasColumnName("ASSIGNED_BY").HasMaxLength(100).IsRequired();
         builder.Property(e => e.AssignedAt).HasColumnName("ASSIGNED_AT").IsRequired();
 

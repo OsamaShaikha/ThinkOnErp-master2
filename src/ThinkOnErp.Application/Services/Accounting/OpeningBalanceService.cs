@@ -81,7 +81,7 @@ public sealed class OpeningBalanceService : IOpeningBalanceService
         // 4. Add initial lines if provided
         if (dto.Lines.Count > 0)
         {
-            await ValidateAndAttachLines(header, dto.Lines, companyId, cancellationToken);
+            await ValidateAndAttachLines(header, dto.Lines, companyId, username, cancellationToken);
             RecalculateTotals(header);
         }
 
@@ -139,7 +139,7 @@ public sealed class OpeningBalanceService : IOpeningBalanceService
         var companyId = _tenantContext.GetRequiredCompanyId();
         var header = await GetDraftOrThrowAsync(headerId, cancellationToken);
 
-        await ValidateAndAttachLines(header, new[] { line }, companyId, cancellationToken);
+        await ValidateAndAttachLines(header, new[] { line }, companyId, username, cancellationToken);
 
         RecalculateTotals(header);
         header.UpdateUser = username;
@@ -366,6 +366,7 @@ public sealed class OpeningBalanceService : IOpeningBalanceService
         GlOpeningBalanceHeader header,
         IEnumerable<OpeningBalanceLineDto> lines,
         long companyId,
+        string username,
         CancellationToken cancellationToken)
     {
         int nextSer = header.Details.Count > 0
@@ -397,7 +398,9 @@ public sealed class OpeningBalanceService : IOpeningBalanceService
                 LocalCredit = line.CreditAmount,
                 CurrencyId = 1,
                 ExchangeRate = 1.0m,
-                Description = line.Description
+                Description = line.Description,
+                CreationUser = username,
+                CreationDate = DateTime.UtcNow
             });
         }
     }

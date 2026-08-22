@@ -315,7 +315,7 @@ public sealed class FiscalClosingService : IFiscalClosingService
         {
             BranchId = year.BranchId,
             FiscalYearId = year.Id,
-            VoucherType = 1, // General Journal
+            VoucherType = 301, // Fiscal Year Closing Journal (CLS)
             VoucherDate = year.EndDate,
             Description = $"قيد الإقفال السنوي وتصفير الإيرادات والمصروفات للسنة المالية {yearNumber}",
             Details = closingDetails
@@ -371,7 +371,7 @@ public sealed class FiscalClosingService : IFiscalClosingService
                     {
                         BranchId = nextYear.BranchId,
                         FiscalYearId = nextYear.Id,
-                        VoucherType = 1, // General Journal / Opening
+                        VoucherType = 302, // Opening Balance Journal (OB)
                         VoucherDate = nextYear.StartDate,
                         Description = $"القيد الافتتاحي وتدوير أرصدة الميزانية العمومية للسنة المالية {nextYearNum}",
                         Details = openingDetails

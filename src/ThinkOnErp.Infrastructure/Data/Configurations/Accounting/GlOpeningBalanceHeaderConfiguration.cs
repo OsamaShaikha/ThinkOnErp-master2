@@ -38,7 +38,7 @@ public sealed class GlOpeningBalanceHeaderConfiguration : IEntityTypeConfigurati
 
         builder.Property(h => h.Status)
             .HasColumnName("STATUS")
-            .HasColumnType("NUMBER(1)")
+            .HasColumnType("NUMBER(3)")
             .HasDefaultValue(1)
             .IsRequired();
 
