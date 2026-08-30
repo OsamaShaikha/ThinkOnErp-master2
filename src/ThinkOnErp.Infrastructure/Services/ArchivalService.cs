@@ -17,7 +17,7 @@ namespace ThinkOnErp.Infrastructure.Services;
 /// </summary>
 public class ArchivalService : IArchivalService
 {
-    private readonly OracleDbContext _dbContext;
+    private readonly AuditDbContext _dbContext;
     private readonly ILogger<ArchivalService> _logger;
     private readonly ArchivalOptions _options;
     private readonly ICompressionService _compressionService;
@@ -25,7 +25,7 @@ public class ArchivalService : IArchivalService
     private IExternalStorageProvider? _externalStorageProvider;
 
     public ArchivalService(
-        OracleDbContext dbContext,
+        AuditDbContext dbContext,
         ILogger<ArchivalService> logger,
         IOptions<ArchivalOptions> options,
         ICompressionService compressionService,

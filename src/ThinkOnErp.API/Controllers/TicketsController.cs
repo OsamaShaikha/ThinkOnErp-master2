@@ -1,23 +1,25 @@
+using System.Security.Claims;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using ThinkOnErp.API.Authorization;
 using ThinkOnErp.Application.Common;
 using ThinkOnErp.Application.DTOs.Ticket;
-using ThinkOnErp.Application.Features.Tickets.Commands.CreateTicket;
-using ThinkOnErp.Application.Features.Tickets.Commands.UpdateTicket;
-using ThinkOnErp.Application.Features.Tickets.Commands.AssignTicket;
-using ThinkOnErp.Application.Features.Tickets.Commands.UpdateTicketStatus;
 using ThinkOnErp.Application.Features.Tickets.Commands.AddTicketComment;
-using ThinkOnErp.Application.Features.Tickets.Commands.UploadAttachment;
+using ThinkOnErp.Application.Features.Tickets.Commands.AssignTicket;
+using ThinkOnErp.Application.Features.Tickets.Commands.CreateTicket;
 using ThinkOnErp.Application.Features.Tickets.Commands.DownloadAttachment;
-using ThinkOnErp.Application.Features.Tickets.Queries.GetTickets;
+using ThinkOnErp.Application.Features.Tickets.Commands.UpdateTicket;
+using ThinkOnErp.Application.Features.Tickets.Commands.UpdateTicketStatus;
+using ThinkOnErp.Application.Features.Tickets.Commands.UploadAttachment;
+using ThinkOnErp.Application.Features.Tickets.Queries.GetSlaComplianceReport;
+using ThinkOnErp.Application.Features.Tickets.Queries.GetTicketAttachments;
 using ThinkOnErp.Application.Features.Tickets.Queries.GetTicketById;
 using ThinkOnErp.Application.Features.Tickets.Queries.GetTicketComments;
-using ThinkOnErp.Application.Features.Tickets.Queries.GetTicketAttachments;
+using ThinkOnErp.Application.Features.Tickets.Queries.GetTickets;
 using ThinkOnErp.Application.Features.Tickets.Queries.GetTicketVolumeReport;
-using ThinkOnErp.Application.Features.Tickets.Queries.GetSlaComplianceReport;
 using ThinkOnErp.Application.Features.Tickets.Queries.GetWorkloadReport;
+using ThinkOnErp.Domain.Constants;
 
 namespace ThinkOnErp.API.Controllers;
 
@@ -34,11 +36,6 @@ public class TicketsController : ControllerBase
     private readonly IMediator _mediator;
     private readonly ILogger<TicketsController> _logger;
 
-    /// <summary>
-    /// Initializes a new instance of the TicketsController class.
-    /// </summary>
-    /// <param name="mediator">MediatR instance for sending commands and queries</param>
-    /// <param name="logger">Logger for controller operations</param>
     public TicketsController(IMediator mediator, ILogger<TicketsController> logger)
     {
         _mediator = mediator ?? throw new ArgumentNullException(nameof(mediator));
@@ -49,10 +46,6 @@ public class TicketsController : ControllerBase
     /// Retrieves tickets with filtering, sorting, and pagination.
     /// Requires authentication.
     /// </summary>
-    /// <param name="query">Query parameters for filtering and pagination</param>
-    /// <returns>ApiResponse containing paged list of TicketDto objects</returns>
-    /// <response code="200">Returns the list of tickets matching the criteria</response>
-    /// <response code="401">User is not authenticated</response>
     [HttpGet]
     [ProducesResponseType(typeof(ApiResponse<PagedResult<TicketDto>>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiResponse<PagedResult<TicketDto>>), StatusCodes.Status401Unauthorized)]
@@ -60,17 +53,24 @@ public class TicketsController : ControllerBase
     {
         try
         {
+            var isSuperAdmin = string.Equals(User.FindFirst("isSuperAdmin")?.Value, "true", StringComparison.OrdinalIgnoreCase);
+            if (!isSuperAdmin)
+            {
+                var companyIdClaim = User.FindFirst("companyId")?.Value;
+                if (query.CompanyId == null && long.TryParse(companyIdClaim, out var cId))
+                {
+                    query.CompanyId = cId;
+                }
+            }
+
             _logger.LogInformation("Retrieving tickets with filters - Page: {Page}, PageSize: {PageSize}", 
                 query.Page, query.PageSize);
 
             var result = await _mediator.Send(query);
 
-            _logger.LogInformation("Retrieved {Count} tickets out of {Total} total", 
-                result.Items.Count, result.TotalCount);
-
             return Ok(ApiResponse<PagedResult<TicketDto>>.CreateSuccess(
                 result,
-                "Tickets retrieved successfully",
+                ResponseCodes.DataRetrieved,
                 200));
         }
         catch (Exception ex)
@@ -84,12 +84,6 @@ public class TicketsController : ControllerBase
     /// Retrieves a specific ticket by its ID with full details.
     /// Requires authentication and authorization to view the ticket.
     /// </summary>
-    /// <param name="id">Unique identifier of the ticket</param>
-    /// <returns>ApiResponse containing TicketDetailDto object</returns>
-    /// <response code="200">Returns the requested ticket with full details</response>
-    /// <response code="404">Ticket not found with the specified ID</response>
-    /// <response code="401">User is not authenticated</response>
-    /// <response code="403">User does not have permission to view this ticket</response>
     [HttpGet("{id}")]
     [ProducesResponseType(typeof(ApiResponse<TicketDetailDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiResponse<TicketDetailDto>), StatusCodes.Status404NotFound)]
@@ -108,15 +102,13 @@ public class TicketsController : ControllerBase
             {
                 _logger.LogWarning("Ticket not found with ID: {TicketId}", id);
                 return NotFound(ApiResponse<TicketDetailDto>.CreateFailure(
-                    "No ticket found with the specified identifier",
+                    ErrorCodes.EntityNotFound,
                     statusCode: 404));
             }
 
-            _logger.LogInformation("Retrieved ticket with ID: {TicketId}", id);
-
             return Ok(ApiResponse<TicketDetailDto>.CreateSuccess(
                 ticket,
-                "Ticket retrieved successfully",
+                ResponseCodes.DataRetrieved,
                 200));
         }
         catch (Exception ex)
@@ -128,13 +120,8 @@ public class TicketsController : ControllerBase
 
     /// <summary>
     /// Creates a new ticket with optional file attachments.
-    /// Requires authentication.
+    /// Auto-populates CompanyId, BranchId, RequesterId, and CreationUser from authenticated token claims if omitted.
     /// </summary>
-    /// <param name="command">Command containing ticket creation data</param>
-    /// <returns>ApiResponse containing the newly created ticket's ID</returns>
-    /// <response code="201">Ticket created successfully</response>
-    /// <response code="400">Validation errors in the request</response>
-    /// <response code="401">User is not authenticated</response>
     [HttpPost]
     [ProducesResponseType(typeof(ApiResponse<Int64>), StatusCodes.Status201Created)]
     [ProducesResponseType(typeof(ApiResponse<Int64>), StatusCodes.Status400BadRequest)]
@@ -145,8 +132,28 @@ public class TicketsController : ControllerBase
         {
             _logger.LogInformation("Creating new ticket: {TitleEn}", command.TitleEn);
 
+            // Auto-populate context from authenticated claims if not explicitly passed
+            var companyIdClaim = User.FindFirst("companyId")?.Value;
+            if (command.CompanyId <= 0 && long.TryParse(companyIdClaim, out var cId))
+            {
+                command.CompanyId = cId;
+            }
+
+            var branchIdClaim = User.FindFirst("branchId")?.Value;
+            if (command.BranchId <= 0 && long.TryParse(branchIdClaim, out var bId))
+            {
+                command.BranchId = bId;
+            }
+
+            var userIdClaim = User.FindFirst("userId")?.Value 
+                ?? User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (command.RequesterId <= 0 && long.TryParse(userIdClaim, out var uId))
+            {
+                command.RequesterId = uId;
+            }
+
             // Set creation user from authenticated user
-            command.CreationUser = User.Identity?.Name ?? "system";
+            command.CreationUser = User.Identity?.Name ?? User.FindFirst("userName")?.Value ?? "system";
 
             var ticketId = await _mediator.Send(command);
 
@@ -157,7 +164,7 @@ public class TicketsController : ControllerBase
                 new { id = ticketId },
                 ApiResponse<Int64>.CreateSuccess(
                     ticketId,
-                    "Ticket created successfully",
+                    ResponseCodes.RecordCreated,
                     201));
         }
         catch (ArgumentException ex)
@@ -183,16 +190,7 @@ public class TicketsController : ControllerBase
 
     /// <summary>
     /// Updates an existing ticket.
-    /// Requires authentication and authorization to update the ticket.
     /// </summary>
-    /// <param name="id">Unique identifier of the ticket to update</param>
-    /// <param name="command">Command containing updated ticket data</param>
-    /// <returns>ApiResponse containing the number of rows affected</returns>
-    /// <response code="200">Ticket updated successfully</response>
-    /// <response code="400">Validation errors or ID mismatch</response>
-    /// <response code="404">Ticket not found with the specified ID</response>
-    /// <response code="401">User is not authenticated</response>
-    /// <response code="403">User does not have permission to update this ticket</response>
     [HttpPut("{id}")]
     [ProducesResponseType(typeof(ApiResponse<Int64>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiResponse<Int64>), StatusCodes.Status400BadRequest)]
@@ -204,7 +202,7 @@ public class TicketsController : ControllerBase
         try
         {
             command.TicketId = id;
-            command.UpdateUser = User.Identity?.Name ?? "system";
+            command.UpdateUser = User.Identity?.Name ?? User.FindFirst("userName")?.Value ?? "system";
 
             _logger.LogInformation("Updating ticket with ID: {TicketId}", id);
 
@@ -214,15 +212,13 @@ public class TicketsController : ControllerBase
             {
                 _logger.LogWarning("Ticket not found for update with ID: {TicketId}", id);
                 return NotFound(ApiResponse<Int64>.CreateFailure(
-                    "No ticket found with the specified identifier",
+                    ErrorCodes.EntityNotFound,
                     statusCode: 404));
             }
 
-            _logger.LogInformation("Ticket updated successfully with ID: {TicketId}", id);
-
             return Ok(ApiResponse<Int64>.CreateSuccess(
                 rowsAffected,
-                "Ticket updated successfully",
+                ResponseCodes.RecordUpdated,
                 200));
         }
         catch (ArgumentException ex)
@@ -241,14 +237,7 @@ public class TicketsController : ControllerBase
 
     /// <summary>
     /// Deletes (soft delete) a ticket from the system.
-    /// Requires AdminOnly authorization.
     /// </summary>
-    /// <param name="id">Unique identifier of the ticket to delete</param>
-    /// <returns>ApiResponse containing the number of rows affected</returns>
-    /// <response code="200">Ticket deleted successfully</response>
-    /// <response code="404">Ticket not found with the specified ID</response>
-    /// <response code="401">User is not authenticated</response>
-    /// <response code="403">User does not have admin privileges</response>
     [HttpDelete("{id}")]
     [Authorize(Policy = "AdminOnly")]
     [ProducesResponseType(typeof(ApiResponse<Int64>), StatusCodes.Status200OK)]
@@ -261,11 +250,10 @@ public class TicketsController : ControllerBase
         {
             _logger.LogInformation("Deleting ticket with ID: {TicketId}", id);
 
-            // Create a soft delete command by updating IsActive to false
             var command = new UpdateTicketCommand
             {
                 TicketId = id,
-                UpdateUser = User.Identity?.Name ?? "system"
+                UpdateUser = User.Identity?.Name ?? User.FindFirst("userName")?.Value ?? "system"
             };
 
             var rowsAffected = await _mediator.Send(command);
@@ -274,15 +262,13 @@ public class TicketsController : ControllerBase
             {
                 _logger.LogWarning("Ticket not found for deletion with ID: {TicketId}", id);
                 return NotFound(ApiResponse<Int64>.CreateFailure(
-                    "No ticket found with the specified identifier",
+                    ErrorCodes.EntityNotFound,
                     statusCode: 404));
             }
 
-            _logger.LogInformation("Ticket deleted successfully with ID: {TicketId}", id);
-
             return Ok(ApiResponse<Int64>.CreateSuccess(
                 rowsAffected,
-                "Ticket deleted successfully",
+                ResponseCodes.RecordDeleted,
                 200));
         }
         catch (Exception ex)
@@ -294,16 +280,7 @@ public class TicketsController : ControllerBase
 
     /// <summary>
     /// Assigns a ticket to a support staff member.
-    /// Requires AdminOnly authorization.
     /// </summary>
-    /// <param name="id">Unique identifier of the ticket to assign</param>
-    /// <param name="command">Command containing assignment data</param>
-    /// <returns>ApiResponse containing the number of rows affected</returns>
-    /// <response code="200">Ticket assigned successfully</response>
-    /// <response code="400">Validation errors or ID mismatch</response>
-    /// <response code="404">Ticket not found with the specified ID</response>
-    /// <response code="401">User is not authenticated</response>
-    /// <response code="403">User does not have admin privileges</response>
     [HttpPut("{id}/assign")]
     [Authorize(Policy = "AdminOnly")]
     [ProducesResponseType(typeof(ApiResponse<Int64>), StatusCodes.Status200OK)]
@@ -316,7 +293,7 @@ public class TicketsController : ControllerBase
         try
         {
             command.TicketId = id;
-            command.UpdateUser = User.Identity?.Name ?? "system";
+            command.UpdateUser = User.Identity?.Name ?? User.FindFirst("userName")?.Value ?? "system";
 
             _logger.LogInformation("Assigning ticket {TicketId} to user {AssigneeId}", id, command.AssigneeId);
 
@@ -326,15 +303,13 @@ public class TicketsController : ControllerBase
             {
                 _logger.LogWarning("Ticket not found for assignment with ID: {TicketId}", id);
                 return NotFound(ApiResponse<Int64>.CreateFailure(
-                    "No ticket found with the specified identifier",
+                    ErrorCodes.EntityNotFound,
                     statusCode: 404));
             }
 
-            _logger.LogInformation("Ticket assigned successfully with ID: {TicketId}", id);
-
             return Ok(ApiResponse<Int64>.CreateSuccess(
                 rowsAffected,
-                "Ticket assigned successfully",
+                ResponseCodes.RecordUpdated,
                 200));
         }
         catch (ArgumentException ex)
@@ -353,16 +328,7 @@ public class TicketsController : ControllerBase
 
     /// <summary>
     /// Updates the status of a ticket with workflow validation.
-    /// Requires authentication and authorization to update the ticket.
     /// </summary>
-    /// <param name="id">Unique identifier of the ticket</param>
-    /// <param name="command">Command containing new status data</param>
-    /// <returns>ApiResponse containing the number of rows affected</returns>
-    /// <response code="200">Ticket status updated successfully</response>
-    /// <response code="400">Validation errors, ID mismatch, or invalid status transition</response>
-    /// <response code="404">Ticket not found with the specified ID</response>
-    /// <response code="401">User is not authenticated</response>
-    /// <response code="403">User does not have permission to update this ticket</response>
     [HttpPut("{id}/status")]
     [ProducesResponseType(typeof(ApiResponse<Int64>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiResponse<Int64>), StatusCodes.Status400BadRequest)]
@@ -374,7 +340,7 @@ public class TicketsController : ControllerBase
         try
         {
             command.TicketId = id;
-            command.UpdateUser = User.Identity?.Name ?? "system";
+            command.UpdateUser = User.Identity?.Name ?? User.FindFirst("userName")?.Value ?? "system";
 
             _logger.LogInformation("Updating status for ticket {TicketId} to status {NewStatusId}", id, command.NewStatusId);
 
@@ -384,15 +350,13 @@ public class TicketsController : ControllerBase
             {
                 _logger.LogWarning("Ticket not found for status update with ID: {TicketId}", id);
                 return NotFound(ApiResponse<Int64>.CreateFailure(
-                    "No ticket found with the specified identifier",
+                    ErrorCodes.EntityNotFound,
                     statusCode: 404));
             }
 
-            _logger.LogInformation("Ticket status updated successfully with ID: {TicketId}", id);
-
             return Ok(ApiResponse<Int64>.CreateSuccess(
                 rowsAffected,
-                "Ticket status updated successfully",
+                ResponseCodes.StatusUpdated,
                 200));
         }
         catch (ArgumentException ex)
@@ -418,16 +382,7 @@ public class TicketsController : ControllerBase
 
     /// <summary>
     /// Adds a comment to a ticket.
-    /// Requires authentication and authorization to comment on the ticket.
     /// </summary>
-    /// <param name="id">Unique identifier of the ticket</param>
-    /// <param name="command">Command containing comment data</param>
-    /// <returns>ApiResponse containing the newly created comment's ID</returns>
-    /// <response code="201">Comment added successfully</response>
-    /// <response code="400">Validation errors or ID mismatch</response>
-    /// <response code="404">Ticket not found with the specified ID</response>
-    /// <response code="401">User is not authenticated</response>
-    /// <response code="403">User does not have permission to comment on this ticket</response>
     [HttpPost("{id}/comments")]
     [ProducesResponseType(typeof(ApiResponse<Int64>), StatusCodes.Status201Created)]
     [ProducesResponseType(typeof(ApiResponse<Int64>), StatusCodes.Status400BadRequest)]
@@ -439,7 +394,7 @@ public class TicketsController : ControllerBase
         try
         {
             command.TicketId = id;
-            command.CreationUser = User.Identity?.Name ?? "system";
+            command.CreationUser = User.Identity?.Name ?? User.FindFirst("userName")?.Value ?? "system";
 
             _logger.LogInformation("Adding comment to ticket {TicketId}", id);
 
@@ -452,7 +407,7 @@ public class TicketsController : ControllerBase
                 new { id },
                 ApiResponse<Int64>.CreateSuccess(
                     commentId,
-                    "Comment added successfully",
+                    ResponseCodes.RecordCreated,
                     201));
         }
         catch (ArgumentException ex)
@@ -478,14 +433,7 @@ public class TicketsController : ControllerBase
 
     /// <summary>
     /// Retrieves all comments for a specific ticket.
-    /// Requires authentication and authorization to view the ticket.
     /// </summary>
-    /// <param name="id">Unique identifier of the ticket</param>
-    /// <returns>ApiResponse containing list of TicketCommentDto objects</returns>
-    /// <response code="200">Returns the list of comments for the ticket</response>
-    /// <response code="404">Ticket not found with the specified ID</response>
-    /// <response code="401">User is not authenticated</response>
-    /// <response code="403">User does not have permission to view this ticket</response>
     [HttpGet("{id}/comments")]
     [ProducesResponseType(typeof(ApiResponse<List<TicketCommentDto>>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiResponse<List<TicketCommentDto>>), StatusCodes.Status404NotFound)]
@@ -500,11 +448,9 @@ public class TicketsController : ControllerBase
             var query = new GetTicketCommentsQuery(id);
             var comments = await _mediator.Send(query);
 
-            _logger.LogInformation("Retrieved {Count} comments for ticket {TicketId}", comments.Count, id);
-
             return Ok(ApiResponse<List<TicketCommentDto>>.CreateSuccess(
                 comments,
-                "Comments retrieved successfully",
+                ResponseCodes.DataRetrieved,
                 200));
         }
         catch (Exception ex)
@@ -516,16 +462,7 @@ public class TicketsController : ControllerBase
 
     /// <summary>
     /// Uploads a file attachment to a ticket.
-    /// Requires authentication and authorization to attach files to the ticket.
     /// </summary>
-    /// <param name="id">Unique identifier of the ticket</param>
-    /// <param name="command">Command containing attachment data (Base64 encoded file)</param>
-    /// <returns>ApiResponse containing the newly created attachment's ID</returns>
-    /// <response code="201">Attachment uploaded successfully</response>
-    /// <response code="400">Validation errors, ID mismatch, or file validation failure</response>
-    /// <response code="404">Ticket not found with the specified ID</response>
-    /// <response code="401">User is not authenticated</response>
-    /// <response code="403">User does not have permission to attach files to this ticket</response>
     [HttpPost("{id}/attachments")]
     [ProducesResponseType(typeof(ApiResponse<Int64>), StatusCodes.Status201Created)]
     [ProducesResponseType(typeof(ApiResponse<Int64>), StatusCodes.Status400BadRequest)]
@@ -537,21 +474,18 @@ public class TicketsController : ControllerBase
         try
         {
             command.TicketId = id;
-            command.CreationUser = User.Identity?.Name ?? "system";
+            command.CreationUser = User.Identity?.Name ?? User.FindFirst("userName")?.Value ?? "system";
 
             _logger.LogInformation("Uploading attachment to ticket {TicketId}, file: {FileName}", id, command.FileName);
 
             var attachmentId = await _mediator.Send(command);
-
-            _logger.LogInformation("Attachment uploaded successfully to ticket {TicketId} with attachment ID: {AttachmentId}", 
-                id, attachmentId);
 
             return CreatedAtAction(
                 nameof(GetAttachments),
                 new { id },
                 ApiResponse<Int64>.CreateSuccess(
                     attachmentId,
-                    "Attachment uploaded successfully",
+                    ResponseCodes.FileUploaded,
                     201));
         }
         catch (ArgumentException ex)
@@ -577,14 +511,7 @@ public class TicketsController : ControllerBase
 
     /// <summary>
     /// Retrieves all attachments for a specific ticket.
-    /// Requires authentication and authorization to view the ticket.
     /// </summary>
-    /// <param name="id">Unique identifier of the ticket</param>
-    /// <returns>ApiResponse containing list of TicketAttachmentDto objects</returns>
-    /// <response code="200">Returns the list of attachments for the ticket</response>
-    /// <response code="404">Ticket not found with the specified ID</response>
-    /// <response code="401">User is not authenticated</response>
-    /// <response code="403">User does not have permission to view this ticket</response>
     [HttpGet("{id}/attachments")]
     [ProducesResponseType(typeof(ApiResponse<List<TicketAttachmentDto>>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiResponse<List<TicketAttachmentDto>>), StatusCodes.Status404NotFound)]
@@ -599,11 +526,9 @@ public class TicketsController : ControllerBase
             var query = new GetTicketAttachmentsQuery(id);
             var attachments = await _mediator.Send(query);
 
-            _logger.LogInformation("Retrieved {Count} attachments for ticket {TicketId}", attachments.Count, id);
-
             return Ok(ApiResponse<List<TicketAttachmentDto>>.CreateSuccess(
                 attachments,
-                "Attachments retrieved successfully",
+                ResponseCodes.DataRetrieved,
                 200));
         }
         catch (Exception ex)
@@ -615,16 +540,7 @@ public class TicketsController : ControllerBase
 
     /// <summary>
     /// Downloads a specific attachment file from a ticket.
-    /// Requires authentication and authorization to view the ticket.
-    /// Returns the file with proper content-type headers.
     /// </summary>
-    /// <param name="id">Unique identifier of the ticket</param>
-    /// <param name="attachmentId">Unique identifier of the attachment</param>
-    /// <returns>File content with appropriate content-type header</returns>
-    /// <response code="200">Returns the file content</response>
-    /// <response code="404">Ticket or attachment not found</response>
-    /// <response code="401">User is not authenticated</response>
-    /// <response code="403">User does not have permission to download this attachment</response>
     [HttpGet("{id}/attachments/{attachmentId}")]
     [ProducesResponseType(typeof(FileContentResult), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status404NotFound)]
@@ -639,7 +555,7 @@ public class TicketsController : ControllerBase
             var command = new DownloadAttachmentCommand(
                 id, 
                 attachmentId,
-                User.Identity?.Name ?? "system"
+                User.Identity?.Name ?? User.FindFirst("userName")?.Value ?? "system"
             );
             
             var result = await _mediator.Send(command);
@@ -648,11 +564,9 @@ public class TicketsController : ControllerBase
             {
                 _logger.LogWarning("Attachment not found: TicketId {TicketId}, AttachmentId {AttachmentId}", id, attachmentId);
                 return NotFound(ApiResponse<object>.CreateFailure(
-                    "Attachment not found",
+                    ErrorCodes.EntityNotFound,
                     statusCode: 404));
             }
-
-            _logger.LogInformation("Attachment downloaded successfully: {FileName}", result.FileName);
 
             return File(result.FileContent, result.MimeType, result.FileName);
         }
@@ -672,16 +586,7 @@ public class TicketsController : ControllerBase
 
     /// <summary>
     /// Retrieves ticket volume report with time-based filtering and grouping.
-    /// Requires AdminOnly authorization.
-    /// Supports export to PDF and Excel formats via format parameter.
     /// </summary>
-    /// <param name="query">Query parameters for report generation</param>
-    /// <param name="format">Export format: json (default), pdf, excel</param>
-    /// <returns>ApiResponse containing list of TicketVolumeReportDto objects or file download</returns>
-    /// <response code="200">Returns the ticket volume report data</response>
-    /// <response code="400">Validation errors in query parameters</response>
-    /// <response code="401">User is not authenticated</response>
-    /// <response code="403">User does not have admin privileges</response>
     [HttpGet("reports/volume")]
     [Authorize(Policy = "AdminOnly")]
     [ProducesResponseType(typeof(ApiResponse<List<TicketVolumeReportDto>>), StatusCodes.Status200OK)]
@@ -699,21 +604,9 @@ public class TicketsController : ControllerBase
 
             var result = await _mediator.Send(query);
 
-            _logger.LogInformation("Ticket volume report generated successfully with {Count} data points", result.Count);
-
-            // TODO: Implement PDF and Excel export functionality
-            // For now, only JSON format is supported
-            if (format.ToLower() == "pdf" || format.ToLower() == "excel")
-            {
-                _logger.LogWarning("Export format {Format} requested but not yet implemented", format);
-                return BadRequest(ApiResponse<List<TicketVolumeReportDto>>.CreateFailure(
-                    $"Export format '{format}' is not yet implemented. Currently only 'json' format is supported.",
-                    statusCode: 400));
-            }
-
             return Ok(ApiResponse<List<TicketVolumeReportDto>>.CreateSuccess(
                 result,
-                "Ticket volume report generated successfully",
+                ResponseCodes.DataRetrieved,
                 200));
         }
         catch (ArgumentException ex)
@@ -732,16 +625,7 @@ public class TicketsController : ControllerBase
 
     /// <summary>
     /// Retrieves SLA compliance report with priority and type breakdown.
-    /// Requires AdminOnly authorization.
-    /// Supports export to PDF and Excel formats via format parameter.
     /// </summary>
-    /// <param name="query">Query parameters for report generation</param>
-    /// <param name="format">Export format: json (default), pdf, excel</param>
-    /// <returns>ApiResponse containing list of SlaComplianceReportDto objects or file download</returns>
-    /// <response code="200">Returns the SLA compliance report data</response>
-    /// <response code="400">Validation errors in query parameters</response>
-    /// <response code="401">User is not authenticated</response>
-    /// <response code="403">User does not have admin privileges</response>
     [HttpGet("reports/sla-compliance")]
     [Authorize(Policy = "AdminOnly")]
     [ProducesResponseType(typeof(ApiResponse<List<SlaComplianceReportDto>>), StatusCodes.Status200OK)]
@@ -759,21 +643,9 @@ public class TicketsController : ControllerBase
 
             var result = await _mediator.Send(query);
 
-            _logger.LogInformation("SLA compliance report generated successfully with {Count} data points", result.Count);
-
-            // TODO: Implement PDF and Excel export functionality
-            // For now, only JSON format is supported
-            if (format.ToLower() == "pdf" || format.ToLower() == "excel")
-            {
-                _logger.LogWarning("Export format {Format} requested but not yet implemented", format);
-                return BadRequest(ApiResponse<List<SlaComplianceReportDto>>.CreateFailure(
-                    $"Export format '{format}' is not yet implemented. Currently only 'json' format is supported.",
-                    statusCode: 400));
-            }
-
             return Ok(ApiResponse<List<SlaComplianceReportDto>>.CreateSuccess(
                 result,
-                "SLA compliance report generated successfully",
+                ResponseCodes.DataRetrieved,
                 200));
         }
         catch (ArgumentException ex)
@@ -792,16 +664,7 @@ public class TicketsController : ControllerBase
 
     /// <summary>
     /// Retrieves workload report showing ticket distribution per assignee.
-    /// Requires AdminOnly authorization.
-    /// Supports export to PDF and Excel formats via format parameter.
     /// </summary>
-    /// <param name="query">Query parameters for report generation</param>
-    /// <param name="format">Export format: json (default), pdf, excel</param>
-    /// <returns>ApiResponse containing list of WorkloadReportDto objects or file download</returns>
-    /// <response code="200">Returns the workload report data</response>
-    /// <response code="400">Validation errors in query parameters</response>
-    /// <response code="401">User is not authenticated</response>
-    /// <response code="403">User does not have admin privileges</response>
     [HttpGet("reports/workload")]
     [Authorize(Policy = "AdminOnly")]
     [ProducesResponseType(typeof(ApiResponse<List<WorkloadReportDto>>), StatusCodes.Status200OK)]
@@ -819,21 +682,9 @@ public class TicketsController : ControllerBase
 
             var result = await _mediator.Send(query);
 
-            _logger.LogInformation("Workload report generated successfully with {Count} assignees", result.Count);
-
-            // TODO: Implement PDF and Excel export functionality
-            // For now, only JSON format is supported
-            if (format.ToLower() == "pdf" || format.ToLower() == "excel")
-            {
-                _logger.LogWarning("Export format {Format} requested but not yet implemented", format);
-                return BadRequest(ApiResponse<List<WorkloadReportDto>>.CreateFailure(
-                    $"Export format '{format}' is not yet implemented. Currently only 'json' format is supported.",
-                    statusCode: 400));
-            }
-
             return Ok(ApiResponse<List<WorkloadReportDto>>.CreateSuccess(
                 result,
-                "Workload report generated successfully",
+                ResponseCodes.DataRetrieved,
                 200));
         }
         catch (ArgumentException ex)
@@ -852,35 +703,23 @@ public class TicketsController : ControllerBase
 
     /// <summary>
     /// Retrieves saved searches for the current user.
-    /// This is a convenience endpoint that redirects to /api/saved-searches.
-    /// Requires authentication.
     /// </summary>
-    /// <returns>Redirect to SavedSearchesController</returns>
-    /// <response code="307">Temporary redirect to /api/saved-searches</response>
-    /// <response code="401">User is not authenticated</response>
     [HttpGet("search/saved")]
     [ProducesResponseType(StatusCodes.Status307TemporaryRedirect)]
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status401Unauthorized)]
     public IActionResult GetSavedSearches()
     {
-        _logger.LogInformation("Redirecting GET /api/tickets/search/saved to /api/saved-searches");
         return RedirectPermanent("/api/saved-searches");
     }
 
     /// <summary>
     /// Creates a new saved search.
-    /// This is a convenience endpoint that redirects to /api/saved-searches.
-    /// Requires authentication.
     /// </summary>
-    /// <returns>Redirect to SavedSearchesController</returns>
-    /// <response code="307">Temporary redirect to /api/saved-searches</response>
-    /// <response code="401">User is not authenticated</response>
     [HttpPost("search/save")]
     [ProducesResponseType(StatusCodes.Status307TemporaryRedirect)]
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status401Unauthorized)]
     public IActionResult SaveSearch()
     {
-        _logger.LogInformation("Redirecting POST /api/tickets/search/save to /api/saved-searches");
         return RedirectPermanent("/api/saved-searches");
     }
 }

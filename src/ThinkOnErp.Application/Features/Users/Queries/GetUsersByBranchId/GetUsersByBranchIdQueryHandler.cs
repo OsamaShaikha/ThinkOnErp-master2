@@ -45,6 +45,7 @@ public class GetUsersByBranchIdQueryHandler : IRequestHandler<GetUsersByBranchId
                 LastLoginDate = u.LastLoginDate,
                 IsActive = u.IsActive,
                 IsAdmin = u.IsAdmin,
+                DefaultLang = u.DefaultLang,
                 CreationUser = u.CreationUser,
                 CreationDate = u.CreationDate,
                 UpdateUser = u.UpdateUser,

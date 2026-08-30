@@ -8,7 +8,7 @@ public class SysTicketTypeConfiguration : IEntityTypeConfiguration<SysTicketType
 {
     public void Configure(EntityTypeBuilder<SysTicketType> builder)
     {
-        builder.ToTable("SYS_TICKET_TYPE", t => t.ExcludeFromMigrations());
+        builder.ToTable("SYS_TICKET_TYPE", "THINKON_SUPPORT");
         builder.HasKey(e => e.Id);
         builder.Property(e => e.Id).ValueGeneratedOnAdd();
         builder.Property(e => e.TypeNameAr).HasColumnName("TYPE_NAME_AR").HasMaxLength(200).IsRequired();
@@ -17,7 +17,7 @@ public class SysTicketTypeConfiguration : IEntityTypeConfiguration<SysTicketType
         builder.Property(e => e.DescriptionEn).HasColumnName("DESCRIPTION_EN").HasMaxLength(500);
         builder.Property(e => e.DefaultPriorityId).HasColumnName("DEFAULT_PRIORITY_ID").IsRequired();
         builder.Property(e => e.SlaTargetHours).HasColumnName("SLA_TARGET_HOURS").HasColumnType("NUMBER");
-        builder.Property(e => e.IsActive).HasColumnName("IS_ACTIVE").HasConversion<string>(v => v ? "Y" : "N", v => v == "Y").HasMaxLength(1);
+        builder.Property(e => e.IsActive).HasColumnName("IS_ACTIVE").HasColumnType("NUMBER(1)").IsRequired();
         builder.Property(e => e.CreationUser).HasColumnName("CREATION_USER").HasMaxLength(100).IsRequired();
         builder.Property(e => e.CreationDate).HasColumnName("CREATION_DATE");
         builder.Property(e => e.UpdateUser).HasColumnName("UPDATE_USER").HasMaxLength(100);
@@ -31,7 +31,7 @@ public class SysTicketPriorityConfiguration : IEntityTypeConfiguration<SysTicket
 {
     public void Configure(EntityTypeBuilder<SysTicketPriority> builder)
     {
-        builder.ToTable("SYS_TICKET_PRIORITY", t => t.ExcludeFromMigrations());
+        builder.ToTable("SYS_TICKET_PRIORITY", "THINKON_SUPPORT");
         builder.HasKey(e => e.Id);
         builder.Property(e => e.Id).ValueGeneratedOnAdd();
         builder.Property(e => e.PriorityNameAr).HasColumnName("PRIORITY_NAME_AR").HasMaxLength(200).IsRequired();
@@ -39,7 +39,7 @@ public class SysTicketPriorityConfiguration : IEntityTypeConfiguration<SysTicket
         builder.Property(e => e.PriorityLevel).HasColumnName("PRIORITY_LEVEL").IsRequired();
         builder.Property(e => e.SlaTargetHours).HasColumnName("SLA_TARGET_HOURS").HasColumnType("NUMBER");
         builder.Property(e => e.EscalationThresholdHours).HasColumnName("ESCALATION_THRESHOLD_HOURS").HasColumnType("NUMBER");
-        builder.Property(e => e.IsActive).HasColumnName("IS_ACTIVE").HasConversion<string>(v => v ? "Y" : "N", v => v == "Y").HasMaxLength(1);
+        builder.Property(e => e.IsActive).HasColumnName("IS_ACTIVE").HasColumnType("NUMBER(1)").IsRequired();
         builder.Property(e => e.CreationUser).HasColumnName("CREATION_USER").HasMaxLength(100).IsRequired();
         builder.Property(e => e.CreationDate).HasColumnName("CREATION_DATE");
     }
@@ -49,7 +49,7 @@ public class SysTicketStatusConfiguration : IEntityTypeConfiguration<SysTicketSt
 {
     public void Configure(EntityTypeBuilder<SysTicketStatus> builder)
     {
-        builder.ToTable("SYS_TICKET_STATUS", t => t.ExcludeFromMigrations());
+        builder.ToTable("SYS_TICKET_STATUS", "THINKON_SUPPORT");
         builder.HasKey(e => e.Id);
         builder.Property(e => e.Id).ValueGeneratedOnAdd();
         builder.Property(e => e.StatusNameAr).HasColumnName("STATUS_NAME_AR").HasMaxLength(200).IsRequired();
@@ -57,8 +57,8 @@ public class SysTicketStatusConfiguration : IEntityTypeConfiguration<SysTicketSt
         builder.Property(e => e.StatusCode).HasColumnName("STATUS_CODE").HasMaxLength(50).IsRequired();
         builder.HasIndex(e => e.StatusCode).IsUnique();
         builder.Property(e => e.DisplayOrder).HasColumnName("DISPLAY_ORDER");
-        builder.Property(e => e.IsFinalStatus).HasColumnName("IS_FINAL_STATUS").HasConversion<string>(v => v ? "Y" : "N", v => v == "Y").HasMaxLength(1);
-        builder.Property(e => e.IsActive).HasColumnName("IS_ACTIVE").HasConversion<string>(v => v ? "Y" : "N", v => v == "Y").HasMaxLength(1);
+        builder.Property(e => e.IsFinalStatus).HasColumnName("IS_FINAL_STATUS").HasColumnType("NUMBER(1)").IsRequired();
+        builder.Property(e => e.IsActive).HasColumnName("IS_ACTIVE").HasColumnType("NUMBER(1)").IsRequired();
         builder.Property(e => e.CreationUser).HasColumnName("CREATION_USER").HasMaxLength(100).IsRequired();
         builder.Property(e => e.CreationDate).HasColumnName("CREATION_DATE");
     }
@@ -68,7 +68,7 @@ public class SysTicketCategoryConfiguration : IEntityTypeConfiguration<SysTicket
 {
     public void Configure(EntityTypeBuilder<SysTicketCategory> builder)
     {
-        builder.ToTable("SYS_TICKET_CATEGORY", t => t.ExcludeFromMigrations());
+        builder.ToTable("SYS_TICKET_CATEGORY", "THINKON_SUPPORT");
         builder.HasKey(e => e.Id);
         builder.Property(e => e.Id).ValueGeneratedOnAdd();
         builder.Property(e => e.CategoryNameAr).HasColumnName("CATEGORY_NAME_AR").HasMaxLength(200).IsRequired();
@@ -76,7 +76,7 @@ public class SysTicketCategoryConfiguration : IEntityTypeConfiguration<SysTicket
         builder.Property(e => e.DescriptionAr).HasColumnName("DESCRIPTION_AR").HasMaxLength(500);
         builder.Property(e => e.DescriptionEn).HasColumnName("DESCRIPTION_EN").HasMaxLength(500);
         builder.Property(e => e.DisplayOrder).HasColumnName("DISPLAY_ORDER");
-        builder.Property(e => e.IsActive).HasColumnName("IS_ACTIVE").HasConversion<string>(v => v ? "Y" : "N", v => v == "Y").HasMaxLength(1);
+        builder.Property(e => e.IsActive).HasColumnName("IS_ACTIVE").HasColumnType("NUMBER(1)").IsRequired();
         builder.Property(e => e.CreationUser).HasColumnName("CREATION_USER").HasMaxLength(100).IsRequired();
         builder.Property(e => e.CreationDate).HasColumnName("CREATION_DATE");
         builder.Property(e => e.UpdateUser).HasColumnName("UPDATE_USER").HasMaxLength(100);
@@ -88,12 +88,12 @@ public class SysTicketCommentConfiguration : IEntityTypeConfiguration<SysTicketC
 {
     public void Configure(EntityTypeBuilder<SysTicketComment> builder)
     {
-        builder.ToTable("SYS_TICKET_COMMENT", t => t.ExcludeFromMigrations());
+        builder.ToTable("SYS_TICKET_COMMENT", "THINKON_SUPPORT");
         builder.HasKey(e => e.Id);
         builder.Property(e => e.Id).ValueGeneratedOnAdd();
         builder.Property(e => e.TicketId).HasColumnName("TICKET_ID").IsRequired();
         builder.Property(e => e.CommentText).HasColumnName("COMMENT_TEXT").HasMaxLength(2000).IsRequired();
-        builder.Property(e => e.IsInternal).HasColumnName("IS_INTERNAL").HasConversion<string>(v => v ? "Y" : "N", v => v == "Y").HasMaxLength(1);
+        builder.Property(e => e.IsInternal).HasColumnName("IS_INTERNAL").HasColumnType("NUMBER(1)").IsRequired();
         builder.Property(e => e.CreationUser).HasColumnName("CREATION_USER").HasMaxLength(100).IsRequired();
         builder.Property(e => e.CreationDate).HasColumnName("CREATION_DATE");
 
@@ -105,7 +105,7 @@ public class SysTicketAttachmentConfiguration : IEntityTypeConfiguration<SysTick
 {
     public void Configure(EntityTypeBuilder<SysTicketAttachment> builder)
     {
-        builder.ToTable("SYS_TICKET_ATTACHMENT", t => t.ExcludeFromMigrations());
+        builder.ToTable("SYS_TICKET_ATTACHMENT", "THINKON_SUPPORT");
         builder.HasKey(e => e.Id);
         builder.Property(e => e.Id).ValueGeneratedOnAdd();
         builder.Property(e => e.TicketId).HasColumnName("TICKET_ID").IsRequired();
@@ -124,7 +124,7 @@ public class SysRequestTicketConfiguration : IEntityTypeConfiguration<SysRequest
 {
     public void Configure(EntityTypeBuilder<SysRequestTicket> builder)
     {
-        builder.ToTable("SYS_REQUEST_TICKET", t => t.ExcludeFromMigrations());
+        builder.ToTable("SYS_REQUEST_TICKET", "THINKON_SUPPORT");
         builder.HasKey(e => e.Id);
         builder.Property(e => e.Id).ValueGeneratedOnAdd();
         builder.Property(e => e.TitleAr).HasColumnName("TITLE_AR").HasMaxLength(200).IsRequired();
@@ -140,7 +140,7 @@ public class SysRequestTicketConfiguration : IEntityTypeConfiguration<SysRequest
         builder.Property(e => e.TicketCategoryId).HasColumnName("TICKET_CATEGORY_ID");
         builder.Property(e => e.ExpectedResolutionDate).HasColumnName("EXPECTED_RESOLUTION_DATE");
         builder.Property(e => e.ActualResolutionDate).HasColumnName("ACTUAL_RESOLUTION_DATE");
-        builder.Property(e => e.IsActive).HasColumnName("IS_ACTIVE").HasConversion<string>(v => v ? "Y" : "N", v => v == "Y").HasMaxLength(1);
+        builder.Property(e => e.IsActive).HasColumnName("IS_ACTIVE").HasColumnType("NUMBER(1)").IsRequired();
         builder.Property(e => e.CreationUser).HasColumnName("CREATION_USER").HasMaxLength(100).IsRequired();
         builder.Property(e => e.CreationDate).HasColumnName("CREATION_DATE");
         builder.Property(e => e.UpdateUser).HasColumnName("UPDATE_USER").HasMaxLength(100);
@@ -168,7 +168,7 @@ public class SysTicketConfigConfiguration : IEntityTypeConfiguration<SysTicketCo
 {
     public void Configure(EntityTypeBuilder<SysTicketConfig> builder)
     {
-        builder.ToTable("SYS_TICKET_CONFIG", t => t.ExcludeFromMigrations());
+        builder.ToTable("SYS_TICKET_CONFIG", "THINKON_SUPPORT");
         builder.HasKey(e => e.Id);
         builder.Property(e => e.Id).ValueGeneratedOnAdd();
         builder.Property(e => e.ConfigKey).HasColumnName("CONFIG_KEY").HasMaxLength(100).IsRequired();
@@ -177,7 +177,7 @@ public class SysTicketConfigConfiguration : IEntityTypeConfiguration<SysTicketCo
         builder.Property(e => e.DescriptionAr).HasColumnName("DESCRIPTION_AR").HasMaxLength(500);
         builder.Property(e => e.DescriptionEn).HasColumnName("DESCRIPTION_EN").HasMaxLength(500);
         builder.Property(e => e.ConfigType).HasColumnName("CONFIG_TYPE").HasMaxLength(50).IsRequired();
-        builder.Property(e => e.IsActive).HasColumnName("IS_ACTIVE").HasConversion<string>(v => v ? "Y" : "N", v => v == "Y").HasMaxLength(1);
+        builder.Property(e => e.IsActive).HasColumnName("IS_ACTIVE").HasColumnType("NUMBER(1)").IsRequired();
         builder.Property(e => e.CreationUser).HasColumnName("CREATION_USER").HasMaxLength(100).IsRequired();
         builder.Property(e => e.CreationDate).HasColumnName("CREATION_DATE");
         builder.Property(e => e.UpdateUser).HasColumnName("UPDATE_USER").HasMaxLength(100);
@@ -196,11 +196,11 @@ public class SysSavedSearchConfiguration : IEntityTypeConfiguration<SysSavedSear
         builder.Property(e => e.UserId).HasColumnName("USER_ID").IsRequired();
         builder.Property(e => e.SearchCriteria).HasColumnName("SEARCH_CRITERIA").HasColumnType("CLOB").IsRequired();
         builder.Property(e => e.SearchDescription).HasColumnName("SEARCH_DESCRIPTION").HasMaxLength(500);
-        builder.Property(e => e.IsPublic).HasColumnName("IS_PUBLIC").HasConversion<string>(v => v ? "Y" : "N", v => v == "Y").HasMaxLength(1);
-        builder.Property(e => e.IsDefault).HasColumnName("IS_DEFAULT").HasConversion<string>(v => v ? "Y" : "N", v => v == "Y").HasMaxLength(1);
+        builder.Property(e => e.IsPublic).HasColumnName("IS_PUBLIC").HasColumnType("NUMBER(1)").IsRequired();
+        builder.Property(e => e.IsDefault).HasColumnName("IS_DEFAULT").HasColumnType("NUMBER(1)").IsRequired();
         builder.Property(e => e.UsageCount).HasColumnName("USAGE_COUNT");
         builder.Property(e => e.LastUsedDate).HasColumnName("LAST_USED_DATE");
-        builder.Property(e => e.IsActive).HasColumnName("IS_ACTIVE").HasConversion<string>(v => v ? "Y" : "N", v => v == "Y").HasMaxLength(1);
+        builder.Property(e => e.IsActive).HasColumnName("IS_ACTIVE").HasColumnType("NUMBER(1)").IsRequired();
         builder.Property(e => e.CreationUser).HasColumnName("CREATION_USER").HasMaxLength(100).IsRequired();
         builder.Property(e => e.CreationDate).HasColumnName("CREATION_DATE");
         builder.Property(e => e.UpdateUser).HasColumnName("UPDATE_USER").HasMaxLength(100);

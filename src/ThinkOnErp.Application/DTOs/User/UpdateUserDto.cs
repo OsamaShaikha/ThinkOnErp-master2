@@ -51,4 +51,9 @@ public class UpdateUserDto
     /// Administrator flag - true for admin users
     /// </summary>
     public bool IsAdmin { get; set; }
+
+    /// <summary>
+    /// User preferred default language (1 = Arabic, 2 = English)
+    /// </summary>
+    public int DefaultLang { get; set; } = 1;
 }

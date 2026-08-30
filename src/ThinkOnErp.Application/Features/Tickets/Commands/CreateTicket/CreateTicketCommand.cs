@@ -25,18 +25,21 @@ public class CreateTicketCommand : IRequest<Int64>
     public string Description { get; set; } = string.Empty;
 
     /// <summary>
-    /// Foreign key to SYS_COMPANY table
+    /// Foreign key to SYS_COMPANY table (auto-populated from token)
     /// </summary>
+    [JsonIgnore]
     public Int64 CompanyId { get; set; }
 
     /// <summary>
-    /// Foreign key to SYS_BRANCH table
+    /// Foreign key to SYS_BRANCH table (auto-populated from token)
     /// </summary>
+    [JsonIgnore]
     public Int64 BranchId { get; set; }
 
     /// <summary>
-    /// Foreign key to SYS_USERS table (requester)
+    /// Foreign key to SYS_USERS table / requester (auto-populated from token)
     /// </summary>
+    [JsonIgnore]
     public Int64 RequesterId { get; set; }
 
     /// <summary>

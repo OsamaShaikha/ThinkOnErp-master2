@@ -162,4 +162,9 @@ public static class SysCodeKeys
         public const int Employee = 3;
         public const int Other = 4;
     }
+
+    public static class ValidationErrors
+    {
+        public const int Mgr = 30;
+    }
 }

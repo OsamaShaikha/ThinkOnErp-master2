@@ -1,9 +1,10 @@
-﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using ThinkOnErp.API.Authorization;
 using ThinkOnErp.Application.Common;
 using ThinkOnErp.Application.DTOs.Accounting.Closing;
 using ThinkOnErp.Application.Services.Accounting;
+using ThinkOnErp.Domain.Constants;
 
 namespace ThinkOnErp.API.Controllers;
 
@@ -31,7 +32,7 @@ public class FiscalClosingController : ControllerBase
         var result = await _closingService.ValidatePeriodClosingAsync(periodId, cancellationToken);
         return Ok(ApiResponse<PreClosingPeriodValidationDto>.CreateSuccess(
             result,
-            result.IsReadyToClose ? "الفترة المالية جاهزة للإقفال" : "توجد ملاحظات محاسبية تمنع إقفال الفترة",
+            ResponseCodes.OperationSuccessful,
             200));
     }
 
@@ -47,7 +48,7 @@ public class FiscalClosingController : ControllerBase
         var result = await _closingService.ClosePeriodAsync(periodId, request, username, cancellationToken);
         return Ok(ApiResponse<bool>.CreateSuccess(
             result,
-            "تم إقفال الفترة المالية وقفل ترحيل القيود بنجاح",
+            ResponseCodes.FiscalPeriodHardClosed,
             200));
     }
 
@@ -63,7 +64,7 @@ public class FiscalClosingController : ControllerBase
         var result = await _closingService.ReopenPeriodAsync(periodId, request, username, cancellationToken);
         return Ok(ApiResponse<bool>.CreateSuccess(
             result,
-            "تم إعادة فتح الفترة المالية رسمياً بنجاح",
+            ResponseCodes.FiscalPeriodReopened,
             200));
     }
 
@@ -76,7 +77,7 @@ public class FiscalClosingController : ControllerBase
         var result = await _closingService.ValidateYearEndClosingAsync(yearId, cancellationToken);
         return Ok(ApiResponse<PreClosingYearValidationDto>.CreateSuccess(
             result,
-            result.IsReadyToClose ? "السنة المالية جاهزة للإقفال السنوي وتوليد القيود الختامية" : "توجد متطلبات محاسبية تمنع الإقفال السنوي",
+            ResponseCodes.OperationSuccessful,
             200));
     }
 
@@ -92,7 +93,7 @@ public class FiscalClosingController : ControllerBase
         var result = await _closingService.ExecuteYearEndClosingAsync(yearId, request, username, cancellationToken);
         return Ok(ApiResponse<YearEndClosingResultDto>.CreateSuccess(
             result,
-            "تم تنفيذ الإقفال السنوي وتصفير الإيرادات والمصروفات وترحيل الأرباح المبقاة وتدوير الأرصدة بنجاح",
+            ResponseCodes.FiscalYearClosed,
             200));
     }
 }

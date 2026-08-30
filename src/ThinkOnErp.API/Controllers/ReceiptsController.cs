@@ -4,6 +4,7 @@ using ThinkOnErp.API.Authorization;
 using ThinkOnErp.Application.Common;
 using ThinkOnErp.Application.DTOs.Accounting.Vouchers;
 using ThinkOnErp.Application.Services.Accounting;
+using ThinkOnErp.Domain.Constants;
 
 namespace ThinkOnErp.API.Controllers;
 
@@ -34,7 +35,7 @@ public class ReceiptsController : ControllerBase
         var receipts = await _voucherService.GetReceiptVouchersAsync(branchId, fromDate, toDate, customerCode, cancellationToken);
         return Ok(ApiResponse<IReadOnlyList<ReceiptVoucherDto>>.CreateSuccess(
             receipts,
-            "تم استرجاع قائمة سندات القبض بنجاح",
+            ResponseCodes.ReceiptVouchersRetrieved,
             200));
     }
 
@@ -47,7 +48,7 @@ public class ReceiptsController : ControllerBase
         var receipt = await _voucherService.GetReceiptVoucherByIdAsync(id, cancellationToken);
         return Ok(ApiResponse<ReceiptVoucherDto>.CreateSuccess(
             receipt,
-            "تم استرجاع بيانات سند القبض بنجاح",
+            ResponseCodes.DataRetrieved,
             200));
     }
 
@@ -62,7 +63,7 @@ public class ReceiptsController : ControllerBase
         var receipt = await _voucherService.CreateReceiptVoucherAsync(dto, username, cancellationToken);
         return StatusCode(StatusCodes.Status201Created, ApiResponse<ReceiptVoucherDto>.CreateSuccess(
             receipt,
-            "تم إنشاء وترحيل سند القبض بنجاح",
+            ResponseCodes.ReceiptVoucherCreated,
             201));
     }
 
@@ -78,7 +79,7 @@ public class ReceiptsController : ControllerBase
         var receipt = await _voucherService.UpdateReceiptVoucherAsync(id, dto, username, cancellationToken);
         return Ok(ApiResponse<ReceiptVoucherDto>.CreateSuccess(
             receipt,
-            "تم تعديل سند القبض بنجاح",
+            ResponseCodes.ReceiptVoucherUpdated,
             200));
     }
 
@@ -93,7 +94,7 @@ public class ReceiptsController : ControllerBase
         var result = await _voucherService.DeleteReceiptVoucherAsync(id, username, cancellationToken);
         return Ok(ApiResponse<bool>.CreateSuccess(
             result,
-            "تم إلغاء/حذف سند القبض بنجاح",
+            ResponseCodes.ReceiptVoucherDeleted,
             200));
     }
 }

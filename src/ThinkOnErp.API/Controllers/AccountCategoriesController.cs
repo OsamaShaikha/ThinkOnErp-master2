@@ -4,6 +4,7 @@ using ThinkOnErp.API.Authorization;
 using ThinkOnErp.Application.Common;
 using ThinkOnErp.Application.DTOs.Accounting;
 using ThinkOnErp.Application.Services.Accounting;
+using ThinkOnErp.Domain.Constants;
 
 namespace ThinkOnErp.API.Controllers;
 
@@ -46,6 +47,6 @@ public sealed class AccountCategoriesController : ControllerBase
 
         return Ok(ApiResponse<List<GlAccountCategoryDto>>.CreateSuccess(
             categories,
-            "Account categories and sub-categories retrieved successfully"));
+            ResponseCodes.CategoriesRetrieved));
     }
 }

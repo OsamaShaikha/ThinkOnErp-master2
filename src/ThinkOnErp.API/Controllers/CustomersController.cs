@@ -1,9 +1,10 @@
-﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using ThinkOnErp.API.Authorization;
 using ThinkOnErp.Application.Common;
 using ThinkOnErp.Application.DTOs.Accounting.Parties;
 using ThinkOnErp.Application.Services.Accounting;
+using ThinkOnErp.Domain.Constants;
 
 namespace ThinkOnErp.API.Controllers;
 
@@ -31,7 +32,7 @@ public class CustomersController : ControllerBase
         var customers = await _customerService.GetAllAsync(filter, cancellationToken);
         return Ok(ApiResponse<IReadOnlyList<CustomerDto>>.CreateSuccess(
             customers,
-            "تم استرجاع قائمة العملاء بنجاح",
+            ResponseCodes.DataRetrieved,
             200));
     }
 
@@ -45,7 +46,7 @@ public class CustomersController : ControllerBase
         var customer = await _customerService.GetByCodeAsync(code, cancellationToken);
         return Ok(ApiResponse<CustomerDto>.CreateSuccess(
             customer,
-            "تم استرجاع بيانات العميل بنجاح",
+            ResponseCodes.DataRetrieved,
             200));
     }
 
@@ -63,7 +64,7 @@ public class CustomersController : ControllerBase
             new { code = created.CustomerCode },
             ApiResponse<CustomerDto>.CreateSuccess(
                 created,
-                "تم إنشاء العميل بنجاح",
+                ResponseCodes.RecordCreated,
                 201));
     }
 
@@ -79,7 +80,7 @@ public class CustomersController : ControllerBase
         var updated = await _customerService.UpdateAsync(code, dto, username, cancellationToken);
         return Ok(ApiResponse<CustomerDto>.CreateSuccess(
             updated,
-            "تم تحديث بيانات العميل بنجاح",
+            ResponseCodes.RecordUpdated,
             200));
     }
 
@@ -95,7 +96,7 @@ public class CustomersController : ControllerBase
         var result = await _customerService.SetStatusAsync(code, isActive, username, cancellationToken);
         return Ok(ApiResponse<bool>.CreateSuccess(
             result,
-            $"تم تعديل حالة العميل إلى {(isActive ? "نشط" : "غير نشط")} بنجاح",
+            ResponseCodes.StatusUpdated,
             200));
     }
 }

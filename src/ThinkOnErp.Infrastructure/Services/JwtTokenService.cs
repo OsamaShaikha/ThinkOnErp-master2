@@ -65,6 +65,8 @@ public class JwtTokenService
             new("companyId", user.CompanyId?.ToString() ?? "0"),
             new("branchId", user.BranchId?.ToString() ?? "0"),
             new("isAdmin", user.IsAdmin.ToString().ToLower()),
+            new("lang", (user.DefaultLang > 0 ? user.DefaultLang : 1).ToString()),
+            new("defaultLang", (user.DefaultLang > 0 ? user.DefaultLang : 1).ToString()),
             new(
                 JwtRegisteredClaimNames.Iat,
                 new DateTimeOffset(issuedAt).ToUnixTimeSeconds().ToString(),

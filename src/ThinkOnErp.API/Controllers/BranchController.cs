@@ -11,6 +11,7 @@ using ThinkOnErp.Application.Features.Branches.Commands.SetBranchStatus;
 using ThinkOnErp.Application.Features.Branches.Queries.GetAllBranches;
 using ThinkOnErp.Application.Features.Branches.Queries.GetBranchById;
 using ThinkOnErp.Application.Features.Branches.Queries.GetBranchesByCompanyId;
+using ThinkOnErp.Domain.Constants;
 using ThinkOnErp.Domain.Interfaces;
 using ThinkOnErp.Infrastructure.Services;
 
@@ -89,7 +90,7 @@ public class BranchController : ControllerBase
 
             return Ok(ApiResponse<List<BranchDto>>.CreateSuccess(
                 branches,
-                "Branches retrieved successfully with logos",
+                ResponseCodes.DataRetrieved,
                 200));
         }
         catch (Exception ex)
@@ -116,7 +117,7 @@ public class BranchController : ControllerBase
             {
                 _logger.LogWarning("Branch not found with ID: {BranchId}", id);
                 return NotFound(ApiResponse<BranchDto>.CreateFailure(
-                    "No branch found with the specified identifier",
+                    ErrorCodes.EntityNotFound,
                     statusCode: 404));
             }
 
@@ -134,7 +135,7 @@ public class BranchController : ControllerBase
 
             return Ok(ApiResponse<BranchDto>.CreateSuccess(
                 branch,
-                "Branch retrieved successfully with logo",
+                ResponseCodes.DataRetrieved,
                 200));
         }
         catch (Exception ex)
@@ -196,7 +197,7 @@ public class BranchController : ControllerBase
                 new { id = branchId },
                 ApiResponse<Int64>.CreateSuccess(
                     branchId,
-                    "Branch created successfully with logo",
+                    ResponseCodes.BranchCreated,
                     201));
         }
         catch (Exception ex)
@@ -225,7 +226,7 @@ public class BranchController : ControllerBase
             if (!await VerifySuperAdminPinAsync())
             {
                 return StatusCode(StatusCodes.Status403Forbidden, ApiResponse<Int64>.CreateFailure(
-                    "Invalid or missing Super Admin PIN. Please provide it in the 'X-SuperAdmin-PIN' header.", 
+                    ErrorCodes.UnauthorizedAction, 
                     statusCode: 403));
             }
 
@@ -234,7 +235,7 @@ public class BranchController : ControllerBase
             {
                 _logger.LogWarning("Branch not found for update with ID: {BranchId}", id);
                 return NotFound(ApiResponse<Int64>.CreateFailure(
-                    "No branch found with the specified identifier",
+                    ErrorCodes.EntityNotFound,
                     statusCode: 404));
             }
 
@@ -284,7 +285,7 @@ public class BranchController : ControllerBase
             {
                 _logger.LogWarning("Branch not found for update with ID: {BranchId}", id);
                 return NotFound(ApiResponse<Int64>.CreateFailure(
-                    "No branch found with the specified identifier",
+                    ErrorCodes.EntityNotFound,
                     statusCode: 404));
             }
 
@@ -292,7 +293,7 @@ public class BranchController : ControllerBase
 
             return Ok(ApiResponse<Int64>.CreateSuccess(
                 rowsAffected,
-                "Branch updated successfully with logo",
+                ResponseCodes.BranchUpdated,
                 200));
         }
         catch (Exception ex)
@@ -317,7 +318,7 @@ public class BranchController : ControllerBase
             if (!await VerifySuperAdminPinAsync())
             {
                 return StatusCode(StatusCodes.Status403Forbidden, ApiResponse<Int64>.CreateFailure(
-                    "Invalid or missing Super Admin PIN. Please provide it in the 'X-SuperAdmin-PIN' header.", 
+                    ErrorCodes.UnauthorizedAction, 
                     statusCode: 403));
             }
 
@@ -326,7 +327,7 @@ public class BranchController : ControllerBase
             {
                 _logger.LogWarning("Branch not found for deletion with ID: {BranchId}", id);
                 return NotFound(ApiResponse<Int64>.CreateFailure(
-                    "No branch found with the specified identifier",
+                    ErrorCodes.EntityNotFound,
                     statusCode: 404));
             }
 
@@ -347,7 +348,7 @@ public class BranchController : ControllerBase
             {
                 _logger.LogWarning("Branch not found for deletion with ID: {BranchId}", id);
                 return NotFound(ApiResponse<Int64>.CreateFailure(
-                    "No branch found with the specified identifier",
+                    ErrorCodes.EntityNotFound,
                     statusCode: 404));
             }
 
@@ -355,7 +356,7 @@ public class BranchController : ControllerBase
 
             return Ok(ApiResponse<Int64>.CreateSuccess(
                 rowsAffected,
-                "Branch deleted successfully",
+                ResponseCodes.RecordDeleted,
                 200));
         }
         catch (Exception ex)
@@ -390,7 +391,7 @@ public class BranchController : ControllerBase
 
             return Ok(ApiResponse<List<BranchDto>>.CreateSuccess(
                 branches,
-                "Branches retrieved successfully with logos",
+                ResponseCodes.DataRetrieved,
                 200));
         }
         catch (Exception ex)
@@ -418,10 +419,9 @@ public class BranchController : ControllerBase
             var success = await _mediator.Send(command);
             if (!success)
             {
-                return NotFound(ApiResponse<bool>.CreateFailure("Branch not found", statusCode: 404));
+                return NotFound(ApiResponse<bool>.CreateFailure(ErrorCodes.EntityNotFound, statusCode: 404));
             }
-            var actionStr = dto.IsActive ? "activated" : "deactivated";
-            return Ok(ApiResponse<bool>.CreateSuccess(true, $"Branch {actionStr} successfully", 200));
+            return Ok(ApiResponse<bool>.CreateSuccess(true, ResponseCodes.StatusUpdated, 200));
         }
         catch (Exception ex)
         {

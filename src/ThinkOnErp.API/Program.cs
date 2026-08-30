@@ -279,7 +279,11 @@ try
     builder.Services.AddInfrastructure(builder.Configuration);
 
     // Add services to the container.
-    builder.Services.AddControllers();
+    builder.Services.AddControllers(options =>
+    {
+        options.Filters.Add<ThinkOnErp.API.Filters.DynamicValidationActionFilter>();
+        options.Filters.Add<ThinkOnErp.API.Filters.LocalizedApiResponseFilter>();
+    });
     
     // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
     builder.Services.AddEndpointsApiExplorer();

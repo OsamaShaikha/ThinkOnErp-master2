@@ -6,6 +6,7 @@ using ThinkOnErp.Application.DTOs.BranchProvisioning;
 using ThinkOnErp.Application.DTOs.Feature;
 using ThinkOnErp.Application.DTOs.Module;
 using ThinkOnErp.Application.DTOs.Screen;
+using ThinkOnErp.Domain.Constants;
 using ThinkOnErp.Domain.Entities;
 using ThinkOnErp.Domain.Interfaces;
 
@@ -61,7 +62,7 @@ public class BranchAccessController : ControllerBase
     {
         var branch = await _branchRepo.GetByIdAsync(branchId);
         if (branch == null)
-            return (null, NotFound(ApiResponse<object>.CreateFailure("Branch not found", statusCode: 404)));
+            return (null, NotFound(ApiResponse<object>.CreateFailure(ErrorCodes.EntityNotFound, statusCode: 404)));
 
         if (!CanAccessBranch(branch))
         {
@@ -137,7 +138,7 @@ public class BranchAccessController : ControllerBase
                 }).ToList()
             };
 
-            return Ok(ApiResponse<BranchProvisioningStateDto>.CreateSuccess(dto, "Provisioning state retrieved successfully", 200));
+            return Ok(ApiResponse<BranchProvisioningStateDto>.CreateSuccess(dto, ResponseCodes.DataRetrieved, 200));
         }
         catch (Exception ex)
         {
@@ -175,7 +176,7 @@ public class BranchAccessController : ControllerBase
                 UpdateDate = s.UpdateDate
             }).ToList();
 
-            return Ok(ApiResponse<List<ModuleDto>>.CreateSuccess(dtos, "Systems retrieved successfully", 200));
+            return Ok(ApiResponse<List<ModuleDto>>.CreateSuccess(dtos, ResponseCodes.DataRetrieved, 200));
         }
         catch (Exception ex)
         {
@@ -202,7 +203,7 @@ public class BranchAccessController : ControllerBase
             await _branchSystemRepo.AssignSystemsToBranchAsync(branchId, dto.SystemIds, grantedBy);
             _logger.LogInformation("Systems assigned to branch {BranchId}: {Count} systems", branchId, dto.SystemIds.Count);
 
-            return Ok(ApiResponse<object>.CreateSuccess(new { }, "Systems assigned successfully", 200));
+            return Ok(ApiResponse<object>.CreateSuccess(new { }, ResponseCodes.RecordUpdated, 200));
         }
         catch (Exception ex)
         {
@@ -243,7 +244,7 @@ public class BranchAccessController : ControllerBase
                 UpdateDate = s.UpdateDate
             }).ToList();
 
-            return Ok(ApiResponse<List<ScreenDto>>.CreateSuccess(dtos, "Screens retrieved successfully", 200));
+            return Ok(ApiResponse<List<ScreenDto>>.CreateSuccess(dtos, ResponseCodes.DataRetrieved, 200));
         }
         catch (Exception ex)
         {
@@ -264,7 +265,7 @@ public class BranchAccessController : ControllerBase
                 return branchError;
 
             var ids = await _branchScreenRepo.GetRevokedScreenIdsAsync(branchId);
-            return Ok(ApiResponse<List<long>>.CreateSuccess(ids, "Revoked screen IDs retrieved successfully", 200));
+            return Ok(ApiResponse<List<long>>.CreateSuccess(ids, ResponseCodes.DataRetrieved, 200));
         }
         catch (Exception ex)
         {
@@ -290,7 +291,7 @@ public class BranchAccessController : ControllerBase
             await _branchScreenRepo.RevokeScreenAsync(branchId, screenId, revokedBy);
             _logger.LogInformation("Screen {ScreenId} revoked from branch {BranchId}", screenId, branchId);
 
-            return Ok(ApiResponse<object>.CreateSuccess(new { }, "Screen revoked successfully", 200));
+            return Ok(ApiResponse<object>.CreateSuccess(new { }, ResponseCodes.RecordUpdated, 200));
         }
         catch (Exception ex)
         {
@@ -313,7 +314,7 @@ public class BranchAccessController : ControllerBase
             await _branchScreenRepo.AllowScreenAsync(branchId, screenId);
             _logger.LogInformation("Screen {ScreenId} re-allowed for branch {BranchId}", screenId, branchId);
 
-            return Ok(ApiResponse<object>.CreateSuccess(new { }, "Screen re-allowed successfully", 200));
+            return Ok(ApiResponse<object>.CreateSuccess(new { }, ResponseCodes.RecordUpdated, 200));
         }
         catch (Exception ex)
         {
@@ -351,7 +352,7 @@ public class BranchAccessController : ControllerBase
                 UpdateDate = f.UpdateDate
             }).ToList();
 
-            return Ok(ApiResponse<List<FeatureDto>>.CreateSuccess(dtos, "Features retrieved successfully", 200));
+            return Ok(ApiResponse<List<FeatureDto>>.CreateSuccess(dtos, ResponseCodes.DataRetrieved, 200));
         }
         catch (Exception ex)
         {
@@ -378,7 +379,7 @@ public class BranchAccessController : ControllerBase
                 FeatureId = r.FeatureId
             }).ToList();
 
-            return Ok(ApiResponse<List<RevokedFeatureDto>>.CreateSuccess(dtos, "Revoked features retrieved successfully", 200));
+            return Ok(ApiResponse<List<RevokedFeatureDto>>.CreateSuccess(dtos, ResponseCodes.DataRetrieved, 200));
         }
         catch (Exception ex)
         {
@@ -404,7 +405,7 @@ public class BranchAccessController : ControllerBase
             await _branchFeatureRepo.RevokeFeatureAsync(branchId, screenId, featureId, revokedBy);
             _logger.LogInformation("Feature {FeatureId} on screen {ScreenId} revoked from branch {BranchId}", featureId, screenId, branchId);
 
-            return Ok(ApiResponse<object>.CreateSuccess(new { }, "Feature revoked successfully", 200));
+            return Ok(ApiResponse<object>.CreateSuccess(new { }, ResponseCodes.RecordUpdated, 200));
         }
         catch (Exception ex)
         {
@@ -427,7 +428,7 @@ public class BranchAccessController : ControllerBase
             await _branchFeatureRepo.AllowFeatureAsync(branchId, screenId, featureId);
             _logger.LogInformation("Feature {FeatureId} on screen {ScreenId} re-allowed for branch {BranchId}", featureId, screenId, branchId);
 
-            return Ok(ApiResponse<object>.CreateSuccess(new { }, "Feature re-allowed successfully", 200));
+            return Ok(ApiResponse<object>.CreateSuccess(new { }, ResponseCodes.RecordUpdated, 200));
         }
         catch (Exception ex)
         {

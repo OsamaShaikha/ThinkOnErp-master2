@@ -1,10 +1,11 @@
-﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using ThinkOnErp.API.Authorization;
 using ThinkOnErp.Application.Common;
 using ThinkOnErp.Application.DTOs.Accounting.Reports;
 using ThinkOnErp.Application.DTOs.Accounting.Subledger;
 using ThinkOnErp.Application.Services.Accounting;
+using ThinkOnErp.Domain.Constants;
 
 namespace ThinkOnErp.API.Controllers;
 
@@ -35,7 +36,7 @@ public class FinancialReportsController : ControllerBase
         var statement = await _reportsService.GetGeneralLedgerStatementAsync(filter, cancellationToken);
         return Ok(ApiResponse<GlStatementDto>.CreateSuccess(
             statement,
-            $"تم استخراج كشف الحساب العام لحساب ({filter.AccountCode}) بنجاح",
+            ResponseCodes.AccountStatementGenerated,
             200));
     }
 
@@ -48,7 +49,7 @@ public class FinancialReportsController : ControllerBase
         var incomeStatement = await _reportsService.GetIncomeStatementAsync(filter, cancellationToken);
         return Ok(ApiResponse<IncomeStatementDto>.CreateSuccess(
             incomeStatement,
-            "تم استخراج قائمة الدخل (الأرباح والخسائر) بنجاح",
+            ResponseCodes.IncomeStatementGenerated,
             200));
     }
 
@@ -61,7 +62,7 @@ public class FinancialReportsController : ControllerBase
         var balanceSheet = await _reportsService.GetBalanceSheetAsync(filter, cancellationToken);
         return Ok(ApiResponse<BalanceSheetDto>.CreateSuccess(
             balanceSheet,
-            "تم استخراج الميزانية العمومية (قائمة المركز المالي) بنجاح",
+            ResponseCodes.BalanceSheetGenerated,
             200));
     }
 
@@ -78,7 +79,7 @@ public class FinancialReportsController : ControllerBase
         var statement = await _reportsService.GetCustomerStatementAsync(customerCode, from, to, cancellationToken);
         return Ok(ApiResponse<StatementOfAccountDto>.CreateSuccess(
             statement,
-            "تم استخراج كشف حساب العميل بنجاح",
+            ResponseCodes.AccountStatementGenerated,
             200));
     }
 
@@ -95,7 +96,7 @@ public class FinancialReportsController : ControllerBase
         var statement = await _reportsService.GetVendorStatementAsync(vendorCode, from, to, cancellationToken);
         return Ok(ApiResponse<StatementOfAccountDto>.CreateSuccess(
             statement,
-            "تم استخراج كشف حساب المورد بنجاح",
+            ResponseCodes.AccountStatementGenerated,
             200));
     }
 
@@ -109,7 +110,7 @@ public class FinancialReportsController : ControllerBase
         var report = await _reportsService.GetArAgingReportAsync(date, cancellationToken);
         return Ok(ApiResponse<AgingReportDto>.CreateSuccess(
             report,
-            "تم استخراج تقرير أعمار ديون العملاء بنجاح",
+            ResponseCodes.AgingReportGenerated,
             200));
     }
 
@@ -123,7 +124,7 @@ public class FinancialReportsController : ControllerBase
         var report = await _reportsService.GetApAgingReportAsync(date, cancellationToken);
         return Ok(ApiResponse<AgingReportDto>.CreateSuccess(
             report,
-            "تم استخراج تقرير أعمار ديون الموردين بنجاح",
+            ResponseCodes.AgingReportGenerated,
             200));
     }
 }

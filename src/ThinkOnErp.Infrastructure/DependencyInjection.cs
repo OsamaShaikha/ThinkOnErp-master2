@@ -15,6 +15,8 @@ using ThinkOnErp.Infrastructure.Repositories.Accounting;
 using ThinkOnErp.Infrastructure.Services;
 using ThinkOnErp.Infrastructure.Services.Accounting;
 using ThinkOnErp.Application.Services.Accounting;
+using ThinkOnErp.Domain.Interfaces.Inventory;
+using ThinkOnErp.Infrastructure.Repositories.Inventory;
 
 
 namespace ThinkOnErp.Infrastructure;
@@ -64,6 +66,20 @@ public static class DependencyInjection
             options.UseOracle(connectionString, b =>
             {
                 b.MigrationsAssembly(typeof(OracleDbContext).Assembly.FullName);
+                b.UseOracleSQLCompatibility(OracleSQLCompatibility.DatabaseVersion19);
+            }));
+
+        services.AddDbContext<AuditDbContext>(options =>
+            options.UseOracle(connectionString, b =>
+            {
+                b.MigrationsAssembly(typeof(AuditDbContext).Assembly.FullName);
+                b.UseOracleSQLCompatibility(OracleSQLCompatibility.DatabaseVersion19);
+            }));
+
+        services.AddDbContext<SupportDbContext>(options =>
+            options.UseOracle(connectionString, b =>
+            {
+                b.MigrationsAssembly(typeof(SupportDbContext).Assembly.FullName);
                 b.UseOracleSQLCompatibility(OracleSQLCompatibility.DatabaseVersion19);
             }));
 
@@ -165,6 +181,22 @@ public static class DependencyInjection
         services.AddScoped<IPdcRepository, PdcRepository>();
         services.AddScoped<IPostingRuleRepository, PostingRuleRepository>();
         services.AddScoped<IBankingRepository, BankingRepository>();
+        services.AddScoped<ITaxRepository, TaxRepository>();
+
+        // Register inventory repositories
+        services.AddScoped<IInvItemRepository, InvItemRepository>();
+        services.AddScoped<IInvWarehouseRepository, InvWarehouseRepository>();
+        services.AddScoped<IInvStockLedgerRepository, InvStockLedgerRepository>();
+        services.AddScoped<IInvStockBalanceRepository, InvStockBalanceRepository>();
+        services.AddScoped<IInvCostLayerRepository, InvCostLayerRepository>();
+        services.AddScoped<IInvLotSerialRepository, InvLotSerialRepository>();
+        services.AddScoped<IInvReservationRepository, InvReservationRepository>();
+        services.AddScoped<IInvCountRepository, InvCountRepository>();
+        services.AddScoped<IInvOpeningBalanceRepository, InvOpeningBalanceRepository>();
+        services.AddScoped<ITrxDocumentRepository, TrxDocumentRepository>();
+        services.AddScoped<ITrxTypeRepository, TrxTypeRepository>();
+        services.AddScoped<IInvItemGroupRepository, InvItemGroupRepository>();
+        services.AddScoped<IInvBomRepository, InvBomRepository>();
 
         // Register audit logging services
         services.AddScoped<IAuditRepository, AuditRepository>();
@@ -247,6 +279,10 @@ public static class DependencyInjection
 
         // Register multi-tenant access control services
         services.AddScoped<IMultiTenantAccessService, MultiTenantAccessService>();
+
+        // Register Centralized Database-Driven Localization & Dynamic Validation Rule Services
+        services.AddSingleton<ThinkOnErp.Application.Services.Localization.ILocalizationService, ThinkOnErp.Infrastructure.Services.Localization.DbLocalizationService>();
+        services.AddSingleton<ThinkOnErp.Application.Services.Validation.IValidationRuleCacheService, ThinkOnErp.Infrastructure.Services.Validation.ValidationRuleCacheService>();
 
         // Register key management services
         services.AddSingleton<KeyManagementService>();

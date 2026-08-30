@@ -1,29 +1,38 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ThinkOnErp API UI Integration Portal</title>
-    <!-- Google Fonts Inter -->
+    <title>توثيق محرك الضرائب | ThinkOnErp Tax Engine API Documentation</title>
+    <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;850&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
-    
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&family=Fira+Code:wght@400;500;600&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg-primary: #0b0f19;
-            --bg-secondary: #111827;
-            --bg-tertiary: #1f2937;
-            --accent-primary: #6366f1;
-            --accent-glow: rgba(99, 102, 241, 0.15);
-            --text-primary: #f3f4f6;
-            --text-secondary: #9ca3af;
-            --border-color: rgba(255, 255, 255, 0.08);
+            --bg-base: #0b0f19;
+            --bg-sidebar: #111827;
+            --bg-card: #161f30;
+            --bg-card-header: #1f2b42;
+            --bg-code: #090d16;
+            --border: rgba(255, 255, 255, 0.08);
+            --border-active: #3b82f6;
             
-            --color-get: #10b981;
-            --color-post: #3b82f6;
-            --color-put: #f59e0b;
-            --color-delete: #ef4444;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --text-dim: #64748b;
+            
+            --accent-blue: #3b82f6;
+            --accent-cyan: #06b6d4;
+            --accent-green: #10b981;
+            --accent-amber: #f59e0b;
+            --accent-purple: #8b5cf6;
+            --accent-red: #ef4444;
+
+            --badge-post: #3b82f6;
+            --badge-get: #10b981;
+            --badge-put: #f59e0b;
+            --badge-delete: #ef4444;
         }
 
         * {
@@ -33,35 +42,25 @@
         }
 
         body {
-            font-family: 'Inter', sans-serif;
-            background-color: var(--bg-primary);
-            color: var(--text-primary);
+            font-family: 'Cairo', sans-serif;
+            background-color: var(--bg-base);
+            color: var(--text-main);
             display: flex;
             height: 100vh;
             overflow: hidden;
         }
 
-        /* Scrollbar styles */
-        ::-webkit-scrollbar {
-            width: 8px;
-            height: 8px;
-        }
-        ::-webkit-scrollbar-track {
-            background: var(--bg-primary);
-        }
-        ::-webkit-scrollbar-thumb {
-            background: var(--bg-tertiary);
-            border-radius: 4px;
-        }
-        ::-webkit-scrollbar-thumb:hover {
-            background: var(--accent-primary);
-        }
+        /* Scrollbars */
+        ::-webkit-scrollbar { width: 7px; height: 7px; }
+        ::-webkit-scrollbar-track { background: var(--bg-base); }
+        ::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--accent-blue); }
 
-        /* Sidebar styling */
+        /* Sidebar */
         aside {
-            width: 320px;
-            background-color: var(--bg-secondary);
-            border-right: 1px solid var(--border-color);
+            width: 340px;
+            background-color: var(--bg-sidebar);
+            border-left: 1px solid var(--border);
             display: flex;
             flex-direction: column;
             flex-shrink: 0;
@@ -69,98 +68,116 @@
         }
 
         .brand {
-            padding: 24px;
-            border-bottom: 1px solid var(--border-color);
+            padding: 24px 20px;
+            border-bottom: 1px solid var(--border);
             display: flex;
             align-items: center;
             gap: 12px;
         }
 
-        .brand-logo {
-            width: 32px;
-            height: 32px;
-            background: linear-gradient(135deg, #6366f1, #a855f7);
-            border-radius: 8px;
-            box-shadow: 0 0 15px var(--accent-glow);
+        .brand-icon {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.3rem;
+            color: #fff;
+            box-shadow: 0 0 16px rgba(59, 130, 246, 0.35);
         }
 
-        .brand-name {
-            font-size: 1.1rem;
-            font-weight: 700;
-            letter-spacing: -0.025em;
-            background: linear-gradient(to right, #fff, #a855f7);
+        .brand-text h1 {
+            font-size: 1.15rem;
+            font-weight: 800;
+            background: linear-gradient(to left, #fff, #93c5fd);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
         }
 
-        .search-container {
-            padding: 16px;
-            border-bottom: 1px solid var(--border-color);
+        .brand-text span {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            display: block;
         }
 
-        .search-input {
+        .search-box {
+            padding: 14px 16px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .search-box input {
             width: 100%;
-            background-color: var(--bg-primary);
-            border: 1px solid var(--border-color);
+            background: var(--bg-base);
+            border: 1px solid var(--border);
+            padding: 8px 14px;
             border-radius: 8px;
-            padding: 10px 14px;
-            color: #fff;
-            font-size: 0.9rem;
+            color: var(--text-main);
+            font-family: 'Cairo', sans-serif;
+            font-size: 0.88rem;
             outline: none;
-            transition: all 0.2s ease;
+            transition: border-color 0.2s;
         }
 
-        .search-input:focus {
-            border-color: var(--accent-primary);
-            box-shadow: 0 0 10px rgba(99, 102, 241, 0.25);
+        .search-box input:focus {
+            border-color: var(--accent-blue);
         }
 
-        .nav-sections {
+        .nav-list {
             flex: 1;
             overflow-y: auto;
-            padding: 16px;
+            padding: 14px 12px;
         }
 
-        .nav-category {
-            margin-bottom: 24px;
-        }
-
-        .nav-category-title {
-            font-size: 0.75rem;
-            font-weight: 700;
+        .nav-group-title {
+            font-size: 0.72rem;
+            font-weight: 800;
+            color: var(--text-dim);
             text-transform: uppercase;
             letter-spacing: 0.05em;
-            color: var(--text-secondary);
-            margin-bottom: 10px;
-            padding-left: 8px;
+            padding: 10px 10px 4px;
         }
 
-        .nav-item {
+        .nav-link {
+            padding: 9px 12px;
+            border-radius: 8px;
+            font-size: 0.88rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            cursor: pointer;
             display: flex;
             align-items: center;
-            padding: 8px 12px;
-            font-size: 0.875rem;
-            font-weight: 500;
-            color: var(--text-secondary);
-            text-decoration: none;
-            border-radius: 6px;
-            cursor: pointer;
+            justify-content: space-between;
+            margin-bottom: 3px;
             transition: all 0.2s ease;
-            margin-bottom: 4px;
         }
 
-        .nav-item:hover, .nav-item.active {
-            background-color: var(--bg-tertiary);
+        .nav-link:hover {
+            background-color: rgba(255, 255, 255, 0.04);
             color: #fff;
         }
 
-        .nav-item.active {
-            border-left: 3px solid var(--accent-primary);
-            border-top-left-radius: 0;
-            border-bottom-left-radius: 0;
+        .nav-link.active {
+            background: linear-gradient(90deg, rgba(59, 130, 246, 0.15), transparent);
+            border-right: 3px solid var(--accent-blue);
+            color: #93c5fd;
         }
 
-        /* Main Workspace Panel */
+        .verb-tag {
+            font-family: 'Fira Code', monospace;
+            font-size: 0.68rem;
+            font-weight: 800;
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
+
+        .tag-post { background: rgba(59, 130, 246, 0.2); color: #60a5fa; }
+        .tag-get { background: rgba(16, 185, 129, 0.2); color: #34d399; }
+        .tag-put { background: rgba(245, 158, 11, 0.2); color: #fbbf24; }
+        .tag-delete { background: rgba(239, 68, 68, 0.2); color: #f87171; }
+
+        /* Main View */
         main {
             flex: 1;
             display: flex;
@@ -169,256 +186,381 @@
         }
 
         header {
-            background-color: var(--bg-secondary);
-            border-bottom: 1px solid var(--border-color);
-            padding: 20px 40px;
+            background-color: var(--bg-sidebar);
+            border-bottom: 1px solid var(--border);
+            padding: 16px 36px;
             display: flex;
             justify-content: space-between;
             align-items: center;
         }
 
-        .header-title {
-            font-size: 1.5rem;
+        .header-title-group h2 {
+            font-size: 1.35rem;
             font-weight: 800;
-            letter-spacing: -0.03em;
+            color: #f8fafc;
         }
 
-        .header-meta {
+        .header-title-group span {
+            font-size: 0.82rem;
+            color: var(--text-muted);
+        }
+
+        .header-badges {
             display: flex;
-            gap: 16px;
+            gap: 10px;
         }
 
-        .badge {
+        .badge-pill {
             font-size: 0.75rem;
-            font-weight: 600;
-            padding: 4px 10px;
+            font-weight: 700;
+            padding: 4px 12px;
             border-radius: 20px;
-            background-color: var(--bg-tertiary);
-            border: 1px solid var(--border-color);
-            color: var(--text-secondary);
+            border: 1px solid var(--border);
+            background: rgba(255, 255, 255, 0.03);
+            color: var(--text-muted);
+        }
+
+        .badge-pill.status {
+            border-color: var(--accent-green);
+            color: var(--accent-green);
+            background: rgba(16, 185, 129, 0.1);
         }
 
         .content-area {
             flex: 1;
-            padding: 40px;
+            padding: 32px 36px;
             overflow-y: auto;
-            background-color: var(--bg-primary);
+            background-color: var(--bg-base);
         }
 
-        .intro-section {
-            margin-bottom: 40px;
-            background: linear-gradient(135deg, rgba(99, 102, 241, 0.05) 0%, rgba(17, 24, 39, 0.5) 100%);
-            border: 1px solid var(--border-color);
+        /* Documentation Cards */
+        .section-view {
+            display: none;
+            max-width: 1050px;
+            margin: 0 auto;
+        }
+
+        .section-view.active {
+            display: block;
+            animation: fadeIn 0.2s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(4px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .endpoint-card {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border);
             border-radius: 12px;
-            padding: 30px;
-        }
-
-        .intro-section h2 {
-            margin-bottom: 12px;
-            font-size: 1.4rem;
-        }
-
-        .intro-section p {
-            color: var(--text-secondary);
-            font-size: 0.95rem;
-            line-height: 1.6;
-            margin-bottom: 16px;
-        }
-
-        /* Cards and List layout */
-        .api-card {
-            background-color: var(--bg-secondary);
-            border: 1px solid var(--border-color);
-            border-radius: 10px;
-            margin-bottom: 24px;
+            margin-bottom: 28px;
             overflow: hidden;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
         }
 
-        .api-card-header {
+        .endpoint-header {
             padding: 16px 24px;
-            background-color: rgba(255, 255, 255, 0.02);
-            border-bottom: 1px solid var(--border-color);
+            background-color: var(--bg-card-header);
+            border-bottom: 1px solid var(--border);
             display: flex;
             align-items: center;
             justify-content: space-between;
-            cursor: pointer;
         }
 
-        .api-card-title-group {
+        .endpoint-route {
             display: flex;
             align-items: center;
-            gap: 16px;
+            gap: 12px;
         }
 
         .method-badge {
             font-family: 'Fira Code', monospace;
-            font-size: 0.8rem;
-            font-weight: 700;
-            padding: 4px 8px;
-            border-radius: 4px;
-            text-align: center;
-            min-width: 70px;
+            font-size: 0.78rem;
+            font-weight: 800;
+            padding: 4px 10px;
+            border-radius: 6px;
         }
 
-        .method-GET {
-            background-color: rgba(16, 185, 129, 0.1);
-            color: var(--color-get);
-            border: 1px solid rgba(16, 185, 129, 0.2);
-        }
+        .badge-POST { background: rgba(59, 130, 246, 0.25); color: #60a5fa; border: 1px solid #3b82f6; }
+        .badge-GET { background: rgba(16, 185, 129, 0.25); color: #34d399; border: 1px solid #10b981; }
+        .badge-PUT { background: rgba(245, 158, 11, 0.25); color: #fbbf24; border: 1px solid #f59e0b; }
+        .badge-DELETE { background: rgba(239, 68, 68, 0.25); color: #f87171; border: 1px solid #ef4444; }
 
-        .method-POST {
-            background-color: rgba(59, 130, 246, 0.1);
-            color: var(--color-post);
-            border: 1px solid rgba(59, 130, 246, 0.2);
-        }
-
-        .method-PUT {
-            background-color: rgba(245, 158, 11, 0.1);
-            color: var(--color-put);
-            border: 1px solid rgba(245, 158, 11, 0.2);
-        }
-
-        .method-DELETE {
-            background-color: rgba(239, 68, 68, 0.1);
-            color: var(--color-delete);
-            border: 1px solid rgba(239, 68, 68, 0.2);
-        }
-
-        .api-route-path {
+        .route-text {
             font-family: 'Fira Code', monospace;
             font-size: 0.95rem;
-            font-weight: 500;
+            font-weight: 600;
+            color: #f8fafc;
+            direction: ltr;
         }
 
-        .api-action-name {
-            font-size: 0.85rem;
-            color: var(--text-secondary);
-        }
-
-        .api-card-details {
+        .endpoint-body {
             padding: 24px;
+        }
+
+        .ui-note-box {
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.08) 0%, rgba(139, 92, 246, 0.04) 100%);
+            border-right: 4px solid var(--accent-blue);
+            border-radius: 8px;
+            padding: 16px 20px;
+            margin-bottom: 22px;
+        }
+
+        .ui-note-box h4 {
+            color: #93c5fd;
+            font-size: 0.95rem;
+            margin-bottom: 6px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .ui-note-box p {
+            font-size: 0.9rem;
+            color: #cbd5e1;
+            line-height: 1.7;
+            margin: 0;
+        }
+
+        .meta-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 24px;
-            border-top: 1px solid var(--border-color);
+            gap: 16px;
+            margin-bottom: 22px;
         }
 
-        .api-info-panel h4 {
-            margin-bottom: 12px;
-            font-size: 0.9rem;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-            color: var(--text-secondary);
-        }
-
-        .param-table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 0.875rem;
-        }
-
-        .param-table th, .param-table td {
-            padding: 8px 12px;
-            text-align: left;
-            border-bottom: 1px solid var(--border-color);
-        }
-
-        .param-table th {
-            color: var(--text-secondary);
-            font-weight: 600;
-        }
-
-        /* Code block container */
-        .code-container {
-            background-color: var(--bg-primary);
-            border: 1px solid var(--border-color);
+        .meta-item {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid var(--border);
             border-radius: 8px;
-            padding: 16px;
-            position: relative;
-            max-height: 250px;
-            overflow-y: auto;
+            padding: 12px 16px;
         }
 
-        .code-block {
+        .meta-label {
+            font-size: 0.78rem;
+            color: var(--text-dim);
+            margin-bottom: 4px;
+            font-weight: 700;
+        }
+
+        .meta-val {
             font-family: 'Fira Code', monospace;
             font-size: 0.85rem;
-            color: #34d399;
-            white-space: pre-wrap;
+            color: #f59e0b;
+        }
+
+        .code-panel {
+            margin-bottom: 20px;
+        }
+
+        .code-panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .code-panel-title {
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            gap: 6px;
         }
 
         .copy-btn {
-            position: absolute;
-            top: 12px;
-            right: 12px;
-            background-color: var(--bg-tertiary);
-            border: 1px solid var(--border-color);
-            color: var(--text-primary);
-            padding: 4px 8px;
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid var(--border);
+            color: #cbd5e1;
+            padding: 4px 12px;
+            border-radius: 6px;
+            font-family: 'Cairo', sans-serif;
             font-size: 0.75rem;
-            border-radius: 4px;
+            font-weight: 600;
             cursor: pointer;
-            transition: all 0.2s ease;
+            transition: all 0.2s;
         }
 
         .copy-btn:hover {
-            background-color: var(--accent-primary);
+            background: var(--accent-blue);
+            color: white;
+            border-color: var(--accent-blue);
         }
 
-        /* Table styles for seeding */
-        .seeding-table {
+        .code-box {
+            background-color: var(--bg-code);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 16px;
+            direction: ltr;
+            text-align: left;
+            overflow-x: auto;
+            max-height: 380px;
+        }
+
+        .code-box pre {
+            font-family: 'Fira Code', monospace;
+            font-size: 0.84rem;
+            color: #e2e8f0;
+            line-height: 1.55;
+            white-space: pre;
+        }
+
+        /* Tables */
+        table {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 16px;
+            margin-top: 10px;
+            font-size: 0.88rem;
+        }
+
+        th, td {
+            padding: 10px 14px;
+            text-align: right;
+            border-bottom: 1px solid var(--border);
+        }
+
+        th {
+            background: rgba(255, 255, 255, 0.03);
+            color: var(--text-muted);
+            font-weight: 700;
+            font-size: 0.82rem;
+        }
+
+        td {
+            color: #cbd5e1;
+        }
+
+        /* Interactive Simulator */
+        .simulator-box {
+            background: rgba(59, 130, 246, 0.04);
+            border: 1px solid rgba(59, 130, 246, 0.2);
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 24px;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+            margin-bottom: 16px;
+        }
+
+        .form-field label {
+            display: block;
+            font-size: 0.82rem;
+            font-weight: 700;
+            color: var(--text-muted);
+            margin-bottom: 6px;
+        }
+
+        .form-field input, .form-field select {
+            width: 100%;
+            background: var(--bg-sidebar);
+            border: 1px solid var(--border);
+            padding: 9px 12px;
+            border-radius: 8px;
+            color: #fff;
+            font-family: 'Cairo', sans-serif;
             font-size: 0.9rem;
-            border: 1px solid var(--border-color);
+            outline: none;
         }
 
-        .seeding-table th, .seeding-table td {
-            padding: 12px;
-            text-align: left;
-            border-bottom: 1px solid var(--border-color);
+        .form-field input:focus, .form-field select:focus {
+            border-color: var(--accent-blue);
         }
 
-        .seeding-table th {
-            background-color: var(--bg-secondary);
-            font-weight: 600;
+        .calc-results {
+            background: var(--bg-sidebar);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 16px;
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+            text-align: center;
+            margin-top: 16px;
+        }
+
+        .calc-res-item h5 {
+            font-size: 0.78rem;
+            color: var(--text-muted);
+            margin-bottom: 4px;
+        }
+
+        .calc-res-item p {
+            font-family: 'Fira Code', monospace;
+            font-size: 1.15rem;
+            font-weight: 800;
         }
     </style>
 </head>
 <body>
 
-    <!-- Sidebar Navigation -->
+    <!-- Sidebar Navigation (Tax Engine Exclusively) -->
     <aside>
         <div class="brand">
-            <div class="brand-logo"></div>
-            <div class="brand-name">ThinkOnErp UI Docs</div>
+            <div class="brand-icon">⚡</div>
+            <div class="brand-text">
+                <h1>محرك الضرائب</h1>
+                <span>ThinkOnErp Tax Engine Portal</span>
+            </div>
         </div>
-        
-        <div class="search-container">
-            <input type="text" id="searchBox" class="search-input" placeholder="Search routes, actions..." oninput="filterApis()">
+
+        <div class="search-box">
+            <input type="text" id="filterInput" placeholder="بحث في واجهات محرك الضرائب..." oninput="filterNav()">
         </div>
 
-        <div class="nav-sections">
-            <div class="nav-category">
-                <div class="nav-category-title">GETTING STARTED</div>
-                <div class="nav-item active" onclick="showSection('intro')">Introduction & Auth</div>
-                <div class="nav-item" onclick="showSection('owner-types')">Owner & Document Codes</div>
+        <div class="nav-list" id="navList">
+            <div class="nav-group-title">دليل وتدفقات الواجهات (GUIDE)</div>
+            <div class="nav-link active" onclick="switchTab('tab-overview')">
+                <span>💡 نظرة عامة والمعمارية</span>
+            </div>
+            <div class="nav-link" onclick="switchTab('tab-simulator')">
+                <span>🧮 المحاكي التفاعلي المباشر</span>
             </div>
 
-            <div class="nav-category">
-                <div class="nav-category-title">SUPERADMIN APIS</div>
-                <div id="superadmin-nav-list"></div>
+            <div class="nav-group-title">عمليات الاحتساب والإقرار (CORE)</div>
+            <div class="nav-link" onclick="switchTab('tab-calculate')">
+                <span>احتساب الضرائب (Calculate)</span>
+                <span class="verb-tag tag-post">POST</span>
+            </div>
+            <div class="nav-link" onclick="switchTab('tab-declaration-templates')">
+                <span>نماذج إقرارات الدول (Templates)</span>
+                <span class="verb-tag tag-get">GET</span>
+            </div>
+            <div class="nav-link" onclick="switchTab('tab-vat-declaration')">
+                <span>الإقرار الضريبي (Tax Return)</span>
+                <span class="verb-tag tag-get">GET</span>
+            </div>
+            <div class="nav-link" onclick="switchTab('tab-zatca-qr')">
+                <span>كود الفاتورة (ZATCA QR)</span>
+                <span class="verb-tag tag-post">POST</span>
             </div>
 
-            <div class="nav-category">
-                <div class="nav-category-title">TENANT / COMPANY APIS</div>
-                <div id="company-nav-list"></div>
+            <div class="nav-group-title">إعدادات النسب والفئات (TAX SETUP)</div>
+            <div class="nav-link" onclick="switchTab('tab-rates-list')">
+                <span>قائمة النسب الضريبية</span>
+                <span class="verb-tag tag-get">GET</span>
             </div>
-
-            <div class="nav-category">
-                <div class="nav-category-title">SHARED APIS</div>
-                <div class="nav-item" onclick="showControllerDetails('DocumentsController')">Documents API</div>
+            <div class="nav-link" onclick="switchTab('tab-rates-code')">
+                <span>استعلام النسبة بالكود</span>
+                <span class="verb-tag tag-get">GET</span>
+            </div>
+            <div class="nav-link" onclick="switchTab('tab-rates-crud')">
+                <span>إنشاء / تعديل / حذف نسبة</span>
+                <span class="verb-tag tag-post">CRUD</span>
+            </div>
+            <div class="nav-link" onclick="switchTab('tab-categories')">
+                <span>فئات الضرائب (Categories)</span>
+                <span class="verb-tag tag-get">GET/POST</span>
+            </div>
+            <div class="nav-link" onclick="switchTab('tab-groups')">
+                <span>المجموعات المركبة (Groups)</span>
+                <span class="verb-tag tag-get">GET/POST</span>
             </div>
         </div>
     </aside>
@@ -426,2587 +568,845 @@
     <!-- Main Workspace -->
     <main>
         <header>
-            <div id="headerTitle" class="header-title">Developer Integration Portal</div>
-            <div class="header-meta">
-                <div class="badge">API version: v1.0</div>
-                <div class="badge" style="border-color: #34d399; color: #34d399;">Active</div>
+            <div class="header-title-group">
+                <h2 id="topHeaderTitle">نظرة عامة على محرك الضرائب</h2>
+                <span>ThinkOnErp Enterprise Tax & ZATCA Engine Documentation</span>
+            </div>
+            <div class="header-badges">
+                <div class="badge-pill">Prefix: /api/accounting/tax</div>
+                <div class="badge-pill status">ZATCA Compliant • 100% Verified</div>
             </div>
         </header>
 
-        <div class="content-area" id="contentArea">
-            <!-- Dynamic Content Injected here -->
-        </div>
-    </main>
+        <div class="content-area">
 
-    <!-- Injected serialized API data -->
-    <script>
-        const apiData = {
-  "controllers": [
-    {
-      "name": "AlertsController",
-      "clean_name": "Alerts",
-      "base_route": "api/alerts",
-      "class_auth": "AdminOnly",
-      "methods": [
-        {
-          "verb": "GET",
-          "path": "/api/alerts/rules",
-          "name": "",
-          "params": "",
-          "auth": "AdminOnly",
-          "payload": null
-        },
-        {
-          "verb": "POST",
-          "path": "/api/alerts/rules",
-          "name": "CreateAlertRule",
-          "params": "[FromBody] CreateAlertRuleDto createDto",
-          "auth": "AdminOnly",
-          "payload": {
-            "name": "New Alerts",
-            "description": "Creation payload for Alerts",
-            "isActive": 1
-          }
-        },
-        {
-          "verb": "PUT",
-          "path": "/api/alerts/rules/{id}",
-          "name": "UpdateAlertRule",
-          "params": "long id, [FromBody] UpdateAlertRuleDto updateDto",
-          "auth": "AdminOnly",
-          "payload": {
-            "id": 1,
-            "name": "Updated Alerts",
-            "description": "Updated payload details",
-            "isActive": 1
-          }
-        },
-        {
-          "verb": "DELETE",
-          "path": "/api/alerts/rules/{id}",
-          "name": "DeleteAlertRule",
-          "params": "long id",
-          "auth": "AdminOnly",
-          "payload": null
-        },
-        {
-          "verb": "GET",
-          "path": "/api/alerts/history",
-          "name": "",
-          "params": "",
-          "auth": "AdminOnly",
-          "payload": null
-        },
-        {
-          "verb": "POST",
-          "path": "/api/alerts/{id}/acknowledge",
-          "name": "",
-          "params": "",
-          "auth": "AdminOnly",
-          "payload": {
-            "name": "New Alerts",
-            "description": "Creation payload for Alerts",
-            "isActive": 1
-          }
-        },
-        {
-          "verb": "POST",
-          "path": "/api/alerts/{id}/resolve",
-          "name": "",
-          "params": "",
-          "auth": "AdminOnly",
-          "payload": {
-            "name": "New Alerts",
-            "description": "Creation payload for Alerts",
-            "isActive": 1
-          }
-        },
-        {
-          "verb": "POST",
-          "path": "/api/alerts/test/email",
-          "name": "TestEmailNotification",
-          "params": "[FromBody] string[] recipients",
-          "auth": "AdminOnly",
-          "payload": {
-            "name": "New Alerts",
-            "description": "Creation payload for Alerts",
-            "isActive": 1
-          }
-        },
-        {
-          "verb": "POST",
-          "path": "/api/alerts/test/webhook",
-          "name": "TestWebhookNotification",
-          "params": "[FromBody] string webhookUrl",
-          "auth": "AdminOnly",
-          "payload": {
-            "name": "New Alerts",
-            "description": "Creation payload for Alerts",
-            "isActive": 1
-          }
-        },
-        {
-          "verb": "POST",
-          "path": "/api/alerts/test/sms",
-          "name": "TestSmsNotification",
-          "params": "[FromBody] string[] phoneNumbers",
-          "auth": "AdminOnly",
-          "payload": {
-            "name": "New Alerts",
-            "description": "Creation payload for Alerts",
-            "isActive": 1
-          }
-        }
-      ]
-    },
-    {
-      "name": "AuditHealthController",
-      "clean_name": "AuditHealth",
-      "base_route": "api/audithealth",
-      "class_auth": "AdminOnly",
-      "methods": [
-        {
-          "verb": "GET",
-          "path": "/api/audithealth/status",
-          "name": "GetHealthStatus",
-          "params": "",
-          "auth": "AdminOnly",
-          "payload": null
-        },
-        {
-          "verb": "GET",
-          "path": "/api/audithealth/metrics",
-          "name": "",
-          "params": "",
-          "auth": "AdminOnly",
-          "payload": null
-        },
-        {
-          "verb": "POST",
-          "path": "/api/audithealth/replay-fallback",
-          "name": "ReplayFallbackEvents",
-          "params": "",
-          "auth": "AdminOnly",
-          "payload": {
-            "name": "New AuditHealth",
-            "description": "Creation payload for AuditHealth",
-            "isActive": 1
-          }
-        }
-      ]
-    },
-    {
-      "name": "AuditLogsController",
-      "clean_name": "AuditLogs",
-      "base_route": "api/auditlogs",
-      "class_auth": "AdminOnly",
-      "methods": [
-        {
-          "verb": "GET",
-          "path": "/api/auditlogs/legacy",
-          "name": "",
-          "params": "",
-          "auth": "AdminOnly",
-          "payload": null
-        },
-        {
-          "verb": "GET",
-          "path": "/api/auditlogs/dashboard",
-          "name": "",
-          "params": "",
-          "auth": "AdminOnly",
-          "payload": null
-        },
-        {
-          "verb": "GET",
-          "path": "/api/auditlogs/{id}",
-          "name": "",
-          "params": "",
-          "auth": "AdminOnly",
-          "payload": null
-        },
-        {
-          "verb": "PUT",
-          "path": "/api/auditlogs/legacy/{id}/status",
-          "name": "",
-          "params": "",
-          "auth": "SuperAdminOnly",
-          "payload": {
-            "id": 1,
-            "name": "Updated AuditLogs",
-            "description": "Updated payload details",
-            "isActive": 1
-          }
-        },
-        {
-          "verb": "GET",
-          "path": "/api/auditlogs/{id}/status",
-          "name": "",
-          "params": "",
-          "auth": "AdminOnly",
-          "payload": null
-        },
-        {
-          "verb": "POST",
-          "path": "/api/auditlogs/transform",
-          "name": "",
-          "params": "",
-          "auth": "AdminOnly",
-          "payload": {
-            "name": "New AuditLogs",
-            "description": "Creation payload for AuditLogs",
-            "isActive": 1
-          }
-        },
-        {
-          "verb": "GET",
-          "path": "/api/auditlogs/correlation/{correlationId}",
-          "name": "",
-          "params": "",
-          "auth": "AdminOnly",
-          "payload": null
-        },
-        {
-          "verb": "GET",
-          "path": "/api/auditlogs/entity/{entityType}/{entityId}",
-          "name": "",
-          "params": "",
-          "auth": "AdminOnly",
-          "payload": null
-        },
-        {
-          "verb": "GET",
-          "path": "/api/auditlogs/replay/user/{userId}",
-          "name": "",
-          "params": "",
-          "auth": "AdminOnly",
-          "payload": null
-        },
-        {
-          "verb": "GET",
-          "path": "/api/auditlogs/query",
-          "name": "",
-          "params": "",
-          "auth": "AdminOnly",
-          "payload": null
-        },
-        {
-          "verb": "GET",
-          "path": "/api/auditlogs/search",
-          "name": "",
-          "params": "",
-          "auth": "AdminOnly",
-          "payload": null
-        },
-        {
-          "verb": "GET",
-          "path": "/api/auditlogs/export/csv",
-          "name": "",
-          "params": "",
-          "auth": "AdminOnly",
-          "payload": null
-        },
-        {
-          "verb": "GET",
-          "path": "/api/auditlogs/legacy/export/csv",
-          "name": "",
-          "params": "",
-          "auth": "AdminOnly",
-          "payload": null
-        },
-        {
-          "verb": "GET",
-          "path": "/api/auditlogs/export/json",
-          "name": "",
-          "params": "",
-          "auth": "AdminOnly",
-          "payload": null
-        }
-      ]
-    },
-    {
-      "name": "AuditTrailController",
-      "clean_name": "AuditTrail",
-      "base_route": "api/audit-trail",
-      "class_auth": "AdminOnly",
-      "methods": [
-        {
-          "verb": "GET",
-          "path": "/api/audit-trail/tickets/{ticketId}",
-          "name": "",
-          "params": "",
-          "auth": "AdminOnly",
-          "payload": null
-        },
-        {
-          "verb": "POST",
-          "path": "/api/audit-trail/search",
-          "name": "",
-          "params": "",
-          "auth": "AdminOnly",
-          "payload": {
-            "name": "New AuditTrail",
-            "description": "Creation payload for AuditTrail",
-            "isActive": 1
-          }
-        },
-        {
-          "verb": "POST",
-          "path": "/api/audit-trail/export",
-          "name": "ExportAuditTrail",
-          "params": "[FromBody] AuditTrailExportDto exportDto",
-          "auth": "AdminOnly",
-          "payload": {
-            "name": "New AuditTrail",
-            "description": "Creation payload for AuditTrail",
-            "isActive": 1
-          }
-        },
-        {
-          "verb": "GET",
-          "path": "/api/audit-trail/statistics",
-          "name": "",
-          "params": "",
-          "auth": "AdminOnly",
-          "payload": null
-        }
-      ]
-    },
-    {
-      "name": "AuthController",
-      "clean_name": "Auth",
-      "base_route": "api/auth",
-      "class_auth": null,
-      "methods": [
-        {
-          "verb": "POST",
-          "path": "/api/auth/login",
-          "name": "",
-          "params": "",
-          "auth": "None",
-          "payload": {
-            "name": "New Auth",
-            "description": "Creation payload for Auth",
-            "isActive": 1
-          }
-        },
-        {
-          "verb": "POST",
-          "path": "/api/auth/refresh",
-          "name": "",
-          "params": "",
-          "auth": "None",
-          "payload": {
-            "name": "New Auth",
-            "description": "Creation payload for Auth",
-            "isActive": 1
-          }
-        }
-      ]
-    },
-    {
-      "name": "BranchAccessController",
-      "clean_name": "BranchAccess",
-      "base_route": "api/branches/{branchId}/access",
-      "class_auth": "AdminOnly",
-      "methods": [
-        {
-          "verb": "GET",
-          "path": "/api/branches/{branchId}/access/state",
-          "name": "",
-          "params": "",
-          "auth": "AdminOnly",
-          "payload": null
-        },
-        {
-          "verb": "GET",
-          "path": "/api/branches/{branchId}/access/systems",
-          "name": "",
-          "params": "",
-          "auth": "AdminOnly",
-          "payload": null
-        },
-        {
-          "verb": "PUT",
-          "path": "/api/branches/{branchId}/access/systems",
-          "name": "",
-          "params": "",
-          "auth": "AdminOnly",
-          "payload": {
-            "id": 1,
-            "name": "Updated BranchAccess",
-            "description": "Updated payload details",
-            "isActive": 1
-          }
-        },
-        {
-          "verb": "GET",
-          "path": "/api/branches/{branchId}/access/screens",
-          "name": "",
-          "params": "",
-          "auth": "AdminOnly",
-          "payload": null
-        },
-        {
-          "verb": "GET",
-          "path": "/api/branches/{branchId}/access/screens/revoked",
-          "name": "",
-          "params": "",
-          "auth": "AdminOnly",
-          "payload": null
-        },
-        {
-          "verb": "POST",
-          "path": "/api/branches/{branchId}/access/screens/{screenId}/revoke",
-          "name": "",
-          "params": "",
-          "auth": "AdminOnly",
-          "payload": {
-            "name": "New BranchAccess",
-            "description": "Creation payload for BranchAccess",
-            "isActive": 1
-          }
-        },
-        {
-          "verb": "DELETE",
-          "path": "/api/branches/{branchId}/access/screens/{screenId}/revoke",
-          "name": "",
-          "params": "",
-          "auth": "AdminOnly",
-          "payload": null
-        },
-        {
-          "verb": "GET",
-          "path": "/api/branches/{branchId}/access/screens/{screenId}/features",
-          "name": "",
-          "params": "",
-          "auth": "AdminOnly",
-          "payload": null
-        },
-        {
-          "verb": "GET",
-          "path": "/api/branches/{branchId}/access/features/revoked",
-          "name": "",
-          "params": "",
-          "auth": "AdminOnly",
-          "payload": null
-        },
-        {
-          "verb": "POST",
-          "path": "/api/branches/{branchId}/access/screens/{screenId}/features/{featureId}/revoke",
-          "name": "",
-          "params": "",
-          "auth": "AdminOnly",
-          "payload": {
-            "name": "New BranchAccess",
-            "description": "Creation payload for BranchAccess",
-            "isActive": 1
-          }
-        },
-        {
-          "verb": "DELETE",
-          "path": "/api/branches/{branchId}/access/screens/{screenId}/features/{featureId}/revoke",
-          "name": "",
-          "params": "",
-          "auth": "AdminOnly",
-          "payload": null
-        }
-      ]
-    },
-    {
-      "name": "BranchController",
-      "clean_name": "Branch",
-      "base_route": "api/branches",
-      "class_auth": "Authorized",
-      "methods": [
-        {
-          "verb": "GET",
-          "path": "/api/branches",
-          "name": "",
-          "params": "",
-          "auth": "Authorized",
-          "payload": null
-        },
-        {
-          "verb": "GET",
-          "path": "/api/branches/{id}",
-          "name": "",
-          "params": "",
-          "auth": "Authorized",
-          "payload": null
-        },
-        {
-          "verb": "POST",
-          "path": "/api/branches",
-          "name": "",
-          "params": "",
-          "auth": "AdminOnly",
-          "payload": {
-            "name": "New Branch",
-            "description": "Creation payload for Branch",
-            "isActive": 1
-          }
-        },
-        {
-          "verb": "PUT",
-          "path": "/api/branches/{id}",
-          "name": "",
-          "params": "",
-          "auth": "AdminOnly",
-          "payload": {
-            "id": 1,
-            "name": "Updated Branch",
-            "description": "Updated payload details",
-            "isActive": 1
-          }
-        },
-        {
-          "verb": "DELETE",
-          "path": "/api/branches/{id}",
-          "name": "",
-          "params": "",
-          "auth": "AdminOnly",
-          "payload": null
-        },
-        {
-          "verb": "GET",
-          "path": "/api/branches/company/{companyId}",
-          "name": "",
-          "params": "",
-          "auth": "Authorized",
-          "payload": null
-        }
-      ]
-    },
-    {
-      "name": "CompanyController",
-      "clean_name": "Company",
-      "base_route": "api/companies",
-      "class_auth": "Authorized",
-      "methods": [
-        {
-          "verb": "GET",
-          "path": "/api/companies",
-          "name": "",
-          "params": "",
-          "auth": "Authorized",
-          "payload": null
-        },
-        {
-          "verb": "GET",
-          "path": "/api/companies/{id}",
-          "name": "",
-          "params": "",
-          "auth": "Authorized",
-          "payload": null
-        },
-        {
-          "verb": "POST",
-          "path": "/api/companies",
-          "name": "",
-          "params": "",
-          "auth": "AdminOnly",
-          "payload": {
-            "name": "New Company",
-            "description": "Creation payload for Company",
-            "isActive": 1
-          }
-        },
-        {
-          "verb": "PUT",
-          "path": "/api/companies/{id}",
-          "name": "",
-          "params": "",
-          "auth": "AdminOnly",
-          "payload": {
-            "id": 1,
-            "name": "Updated Company",
-            "description": "Updated payload details",
-            "isActive": 1
-          }
-        },
-        {
-          "verb": "DELETE",
-          "path": "/api/companies/{id}",
-          "name": "",
-          "params": "",
-          "auth": "AdminOnly",
-          "payload": null
-        }
-      ]
-    },
-    {
-      "name": "CompanyPermissionsController",
-      "clean_name": "CompanyPermissions",
-      "base_route": "api/branches/{branchId:long}/permissions",
-      "class_auth": "AdminOnly",
-      "methods": [
-        {
-          "verb": "GET",
-          "path": "/api/branches/{branchId:long}/permissions/roles/{roleId:long}",
-          "name": "",
-          "params": "",
-          "auth": "AdminOnly",
-          "payload": null
-        },
-        {
-          "verb": "PUT",
-          "path": "/api/branches/{branchId:long}/permissions/roles/{roleId:long}",
-          "name": "",
-          "params": "",
-          "auth": "AdminOnly",
-          "payload": {
-            "id": 1,
-            "name": "Updated CompanyPermissions",
-            "description": "Updated payload details",
-            "isActive": 1
-          }
-        },
-        {
-          "verb": "DELETE",
-          "path": "/api/branches/{branchId:long}/permissions/roles/{roleId:long}/screens/{screenId:long}/features/{featureId:long}",
-          "name": "",
-          "params": "",
-          "auth": "AdminOnly",
-          "payload": null
-        },
-        {
-          "verb": "GET",
-          "path": "/api/branches/{branchId:long}/permissions/users/{userId:long}",
-          "name": "",
-          "params": "",
-          "auth": "AdminOnly",
-          "payload": null
-        },
-        {
-          "verb": "PUT",
-          "path": "/api/branches/{branchId:long}/permissions/users/{userId:long}",
-          "name": "",
-          "params": "",
-          "auth": "AdminOnly",
-          "payload": {
-            "id": 1,
-            "name": "Updated CompanyPermissions",
-            "description": "Updated payload details",
-            "isActive": 1
-          }
-        },
-        {
-          "verb": "DELETE",
-          "path": "/api/branches/{branchId:long}/permissions/users/{userId:long}/screens/{screenId:long}/features/{featureId:long}",
-          "name": "",
-          "params": "",
-          "auth": "AdminOnly",
-          "payload": null
-        }
-      ]
-    },
-    {
-      "name": "ComplianceController",
-      "clean_name": "Compliance",
-      "base_route": "api/compliance",
-      "class_auth": "AdminOnly",
-      "methods": [
-        {
-          "verb": "GET",
-          "path": "/api/compliance/gdpr/access-report",
-          "name": "",
-          "params": "",
-          "auth": "AdminOnly",
-          "payload": null
-        },
-        {
-          "verb": "GET",
-          "path": "/api/compliance/gdpr/data-export",
-          "name": "",
-          "params": "",
-          "auth": "AdminOnly",
-          "payload": null
-        },
-        {
-          "verb": "GET",
-          "path": "/api/compliance/sox/financial-access",
-          "name": "",
-          "params": "",
-          "auth": "AdminOnly",
-          "payload": null
-        },
-        {
-          "verb": "GET",
-          "path": "/api/compliance/sox/segregation-of-duties",
-          "name": "",
-          "params": "",
-          "auth": "AdminOnly",
-          "payload": null
-        },
-        {
-          "verb": "GET",
-          "path": "/api/compliance/iso27001/security-report",
-          "name": "",
-          "params": "",
-          "auth": "AdminOnly",
-          "payload": null
-        },
-        {
-          "verb": "GET",
-          "path": "/api/compliance/user-activity",
-          "name": "",
-          "params": "",
-          "auth": "AdminOnly",
-          "payload": null
-        },
-        {
-          "verb": "GET",
-          "path": "/api/compliance/data-modification",
-          "name": "",
-          "params": "",
-          "auth": "AdminOnly",
-          "payload": null
-        }
-      ]
-    },
-    {
-      "name": "ConfigurationController",
-      "clean_name": "Configuration",
-      "base_route": "api/configuration",
-      "class_auth": "AdminOnly",
-      "methods": [
-        {
-          "verb": "GET",
-          "path": "/api/configuration/all",
-          "name": "",
-          "params": "",
-          "auth": "AdminOnly",
-          "payload": null
-        },
-        {
-          "verb": "GET",
-          "path": "/api/configuration/sla-settings",
-          "name": "",
-          "params": "",
-          "auth": "AdminOnly",
-          "payload": null
-        },
-        {
-          "verb": "PUT",
-          "path": "/api/configuration/sla-settings",
-          "name": "",
-          "params": "",
-          "auth": "AdminOnly",
-          "payload": {
-            "id": 1,
-            "name": "Updated Configuration",
-            "description": "Updated payload details",
-            "isActive": 1
-          }
-        },
-        {
-          "verb": "GET",
-          "path": "/api/configuration/file-attachments",
-          "name": "",
-          "params": "",
-          "auth": "AdminOnly",
-          "payload": null
-        },
-        {
-          "verb": "GET",
-          "path": "/api/configuration/notifications",
-          "name": "",
-          "params": "",
-          "auth": "AdminOnly",
-          "payload": null
-        },
-        {
-          "verb": "GET",
-          "path": "/api/configuration/workflow",
-          "name": "",
-          "params": "",
-          "auth": "AdminOnly",
-          "payload": null
-        },
-        {
-          "verb": "PUT",
-          "path": "/api/configuration/{key}",
-          "name": "",
-          "params": "",
-          "auth": "AdminOnly",
-          "payload": {
-            "id": 1,
-            "name": "Updated Configuration",
-            "description": "Updated payload details",
-            "isActive": 1
-          }
-        }
-      ]
-    },
-    {
-      "name": "CurrencyController",
-      "clean_name": "Currency",
-      "base_route": "api/currencies",
-      "class_auth": "SuperAdminOnly",
-      "methods": [
-        {
-          "verb": "GET",
-          "path": "/api/currencies",
-          "name": "",
-          "params": "",
-          "auth": "SuperAdminOnly",
-          "payload": null
-        },
-        {
-          "verb": "GET",
-          "path": "/api/currencies/{id}",
-          "name": "",
-          "params": "",
-          "auth": "SuperAdminOnly",
-          "payload": null
-        },
-        {
-          "verb": "POST",
-          "path": "/api/currencies",
-          "name": "",
-          "params": "",
-          "auth": "SuperAdminOnly",
-          "payload": {
-            "name": "New Currency",
-            "description": "Creation payload for Currency",
-            "isActive": 1
-          }
-        },
-        {
-          "verb": "PUT",
-          "path": "/api/currencies/{id}",
-          "name": "",
-          "params": "",
-          "auth": "SuperAdminOnly",
-          "payload": {
-            "id": 1,
-            "name": "Updated Currency",
-            "description": "Updated payload details",
-            "isActive": 1
-          }
-        },
-        {
-          "verb": "DELETE",
-          "path": "/api/currencies/{id}",
-          "name": "",
-          "params": "",
-          "auth": "SuperAdminOnly",
-          "payload": null
-        }
-      ]
-    },
-    {
-      "name": "DocumentsController",
-      "clean_name": "Documents",
-      "base_route": "api/documents",
-      "class_auth": "Authorized",
-      "methods": [
-        {
-          "verb": "GET",
-          "path": "/api/documents/metadata",
-          "name": "",
-          "params": "",
-          "auth": "Anonymous",
-          "payload": null
-        },
-        {
-          "verb": "POST",
-          "path": "/api/documents/upload",
-          "name": "",
-          "params": "",
-          "auth": "Authorized",
-          "payload": {
-            "name": "New Documents",
-            "description": "Creation payload for Documents",
-            "isActive": 1
-          }
-        },
-        {
-          "verb": "POST",
-          "path": "/api/documents/upload-bulk",
-          "name": "",
-          "params": "",
-          "auth": "Authorized",
-          "payload": {
-            "name": "New Documents",
-            "description": "Creation payload for Documents",
-            "isActive": 1
-          }
-        },
-        {
-          "verb": "GET",
-          "path": "/api/documents",
-          "name": "",
-          "params": "",
-          "auth": "Authorized",
-          "payload": null
-        },
-        {
-          "verb": "GET",
-          "path": "/api/documents/{id}",
-          "name": "",
-          "params": "",
-          "auth": "Authorized",
-          "payload": null
-        },
-        {
-          "verb": "GET",
-          "path": "/api/documents/{id}/download",
-          "name": "Download",
-          "params": "long id",
-          "auth": "Authorized",
-          "payload": null
-        },
-        {
-          "verb": "PUT",
-          "path": "/api/documents/{id}",
-          "name": "",
-          "params": "",
-          "auth": "Authorized",
-          "payload": {
-            "id": 1,
-            "name": "Updated Documents",
-            "description": "Updated payload details",
-            "isActive": 1
-          }
-        },
-        {
-          "verb": "DELETE",
-          "path": "/api/documents/{id}",
-          "name": "",
-          "params": "",
-          "auth": "Authorized",
-          "payload": null
-        },
-        {
-          "verb": "POST",
-          "path": "/api/documents/bulk-delete",
-          "name": "",
-          "params": "",
-          "auth": "Authorized",
-          "payload": {
-            "name": "New Documents",
-            "description": "Creation payload for Documents",
-            "isActive": 1
-          }
-        },
-        {
-          "verb": "GET",
-          "path": "/api/documents/company/{companyId}",
-          "name": "",
-          "params": "",
-          "auth": "Authorized",
-          "payload": null
-        },
-        {
-          "verb": "GET",
-          "path": "/api/documents/branch/{branchId}",
-          "name": "",
-          "params": "",
-          "auth": "Authorized",
-          "payload": null
-        },
-        {
-          "verb": "GET",
-          "path": "/api/documents/my",
-          "name": "",
-          "params": "",
-          "auth": "Authorized",
-          "payload": null
-        }
-      ]
-    },
-    {
-      "name": "FeaturesController",
-      "clean_name": "Features",
-      "base_route": "api/features",
-      "class_auth": "AdminOnly",
-      "methods": [
-        {
-          "verb": "GET",
-          "path": "/api/features",
-          "name": "",
-          "params": "",
-          "auth": "AdminOnly",
-          "payload": null
-        },
-        {
-          "verb": "GET",
-          "path": "/api/features/{id}",
-          "name": "",
-          "params": "",
-          "auth": "AdminOnly",
-          "payload": null
-        },
-        {
-          "verb": "POST",
-          "path": "/api/features",
-          "name": "",
-          "params": "",
-          "auth": "AdminOnly",
-          "payload": {
-            "name": "New Features",
-            "description": "Creation payload for Features",
-            "isActive": 1
-          }
-        },
-        {
-          "verb": "PUT",
-          "path": "/api/features/{id}",
-          "name": "",
-          "params": "",
-          "auth": "AdminOnly",
-          "payload": {
-            "id": 1,
-            "name": "Updated Features",
-            "description": "Updated payload details",
-            "isActive": 1
-          }
-        },
-        {
-          "verb": "DELETE",
-          "path": "/api/features/{id}",
-          "name": "",
-          "params": "",
-          "auth": "AdminOnly",
-          "payload": null
-        }
-      ]
-    },
-    {
-      "name": "FiscalYearController",
-      "clean_name": "FiscalYear",
-      "base_route": "api/fiscalyears",
-      "class_auth": "Authorized",
-      "methods": [
-        {
-          "verb": "GET",
-          "path": "/api/fiscalyears",
-          "name": "",
-          "params": "",
-          "auth": "Authorized",
-          "payload": null
-        },
-        {
-          "verb": "GET",
-          "path": "/api/fiscalyears/{id}",
-          "name": "",
-          "params": "",
-          "auth": "Authorized",
-          "payload": null
-        },
-        {
-          "verb": "GET",
-          "path": "/api/fiscalyears/company/{companyId}",
-          "name": "",
-          "params": "",
-          "auth": "Authorized",
-          "payload": null
-        },
-        {
-          "verb": "POST",
-          "path": "/api/fiscalyears",
-          "name": "",
-          "params": "",
-          "auth": "AdminOnly",
-          "payload": {
-            "name": "New FiscalYear",
-            "description": "Creation payload for FiscalYear",
-            "isActive": 1
-          }
-        },
-        {
-          "verb": "PUT",
-          "path": "/api/fiscalyears/{id}",
-          "name": "",
-          "params": "",
-          "auth": "AdminOnly",
-          "payload": {
-            "id": 1,
-            "name": "Updated FiscalYear",
-            "description": "Updated payload details",
-            "isActive": 1
-          }
-        },
-        {
-          "verb": "DELETE",
-          "path": "/api/fiscalyears/{id}",
-          "name": "",
-          "params": "",
-          "auth": "AdminOnly",
-          "payload": null
-        },
-        {
-          "verb": "POST",
-          "path": "/api/fiscalyears/{id}/close",
-          "name": "",
-          "params": "",
-          "auth": "AdminOnly",
-          "payload": {
-            "name": "New FiscalYear",
-            "description": "Creation payload for FiscalYear",
-            "isActive": 1
-          }
-        }
-      ]
-    },
-    {
-      "name": "HealthController",
-      "clean_name": "Health",
-      "base_route": "api/health",
-      "class_auth": null,
-      "methods": [
-        {
-          "verb": "GET",
-          "path": "/api/health",
-          "name": "",
-          "params": "",
-          "auth": "None",
-          "payload": null
-        },
-        {
-          "verb": "GET",
-          "path": "/api/health/detailed",
-          "name": "",
-          "params": "",
-          "auth": "None",
-          "payload": null
-        }
-      ]
-    },
-    {
-      "name": "KeyManagementController",
-      "clean_name": "KeyManagement",
-      "base_route": "api/keymanagement",
-      "class_auth": "AdminOnly",
-      "methods": [
-        {
-          "verb": "GET",
-          "path": "/api/keymanagement/rotation-status",
-          "name": "GetRotationStatus",
-          "params": "",
-          "auth": "AdminOnly",
-          "payload": null
-        },
-        {
-          "verb": "POST",
-          "path": "/api/keymanagement/rotate-encryption-key",
-          "name": "RotateEncryptionKey",
-          "params": "",
-          "auth": "AdminOnly",
-          "payload": {
-            "name": "New KeyManagement",
-            "description": "Creation payload for KeyManagement",
-            "isActive": 1
-          }
-        },
-        {
-          "verb": "POST",
-          "path": "/api/keymanagement/rotate-signing-key",
-          "name": "RotateSigningKey",
-          "params": "",
-          "auth": "AdminOnly",
-          "payload": {
-            "name": "New KeyManagement",
-            "description": "Creation payload for KeyManagement",
-            "isActive": 1
-          }
-        },
-        {
-          "verb": "GET",
-          "path": "/api/keymanagement/validate",
-          "name": "ValidateKeys",
-          "params": "",
-          "auth": "AdminOnly",
-          "payload": null
-        },
-        {
-          "verb": "GET",
-          "path": "/api/keymanagement/encryption-key-version",
-          "name": "GetEncryptionKeyVersion",
-          "params": "",
-          "auth": "AdminOnly",
-          "payload": null
-        },
-        {
-          "verb": "GET",
-          "path": "/api/keymanagement/signing-key-version",
-          "name": "GetSigningKeyVersion",
-          "params": "",
-          "auth": "AdminOnly",
-          "payload": null
-        }
-      ]
-    },
-    {
-      "name": "ModulesController",
-      "clean_name": "Modules",
-      "base_route": "api/modules",
-      "class_auth": "AdminOnly",
-      "methods": [
-        {
-          "verb": "GET",
-          "path": "/api/modules",
-          "name": "",
-          "params": "",
-          "auth": "AdminOnly",
-          "payload": null
-        },
-        {
-          "verb": "GET",
-          "path": "/api/modules/{id}",
-          "name": "",
-          "params": "",
-          "auth": "AdminOnly",
-          "payload": null
-        },
-        {
-          "verb": "POST",
-          "path": "/api/modules",
-          "name": "",
-          "params": "",
-          "auth": "AdminOnly",
-          "payload": {
-            "name": "New Modules",
-            "description": "Creation payload for Modules",
-            "isActive": 1
-          }
-        },
-        {
-          "verb": "PUT",
-          "path": "/api/modules/{id}",
-          "name": "",
-          "params": "",
-          "auth": "AdminOnly",
-          "payload": {
-            "id": 1,
-            "name": "Updated Modules",
-            "description": "Updated payload details",
-            "isActive": 1
-          }
-        },
-        {
-          "verb": "DELETE",
-          "path": "/api/modules/{id}",
-          "name": "",
-          "params": "",
-          "auth": "AdminOnly",
-          "payload": null
-        }
-      ]
-    },
-    {
-      "name": "MonitoringController",
-      "clean_name": "Monitoring",
-      "base_route": "api/monitoring",
-      "class_auth": "AdminOnly",
-      "methods": [
-        {
-          "verb": "GET",
-          "path": "/api/monitoring/health",
-          "name": "GetSystemHealth",
-          "params": "",
-          "auth": "Anonymous",
-          "payload": null
-        },
-        {
-          "verb": "GET",
-          "path": "/api/monitoring/memory",
-          "name": "GetMemoryMetrics",
-          "params": "",
-          "auth": "AdminOnly",
-          "payload": null
-        },
-        {
-          "verb": "GET",
-          "path": "/api/monitoring/memory/pressure",
-          "name": "GetMemoryPressure",
-          "params": "",
-          "auth": "AdminOnly",
-          "payload": null
-        },
-        {
-          "verb": "GET",
-          "path": "/api/monitoring/memory/recommendations",
-          "name": "GetMemoryOptimizationRecommendations",
-          "params": "",
-          "auth": "AdminOnly",
-          "payload": null
-        },
-        {
-          "verb": "POST",
-          "path": "/api/monitoring/memory/optimize",
-          "name": "OptimizeMemory",
-          "params": "",
-          "auth": "AdminOnly",
-          "payload": {
-            "name": "New Monitoring",
-            "description": "Creation payload for Monitoring",
-            "isActive": 1
-          }
-        },
-        {
-          "verb": "POST",
-          "path": "/api/monitoring/memory/gc",
-          "name": "",
-          "params": "",
-          "auth": "AdminOnly",
-          "payload": {
-            "name": "New Monitoring",
-            "description": "Creation payload for Monitoring",
-            "isActive": 1
-          }
-        },
-        {
-          "verb": "GET",
-          "path": "/api/monitoring/performance/endpoint",
-          "name": "",
-          "params": "",
-          "auth": "AdminOnly",
-          "payload": null
-        },
-        {
-          "verb": "GET",
-          "path": "/api/monitoring/performance/slow-requests",
-          "name": "",
-          "params": "",
-          "auth": "AdminOnly",
-          "payload": null
-        },
-        {
-          "verb": "GET",
-          "path": "/api/monitoring/performance/slow-queries",
-          "name": "",
-          "params": "",
-          "auth": "AdminOnly",
-          "payload": null
-        },
-        {
-          "verb": "GET",
-          "path": "/api/monitoring/audit-queue-depth",
-          "name": "",
-          "params": "",
-          "auth": "AdminOnly",
-          "payload": null
-        },
-        {
-          "verb": "GET",
-          "path": "/api/monitoring/security/threats",
-          "name": "",
-          "params": "",
-          "auth": "AdminOnly",
-          "payload": null
-        },
-        {
-          "verb": "GET",
-          "path": "/api/monitoring/security/daily-summary",
-          "name": "GetDailySecuritySummary",
-          "params": "[FromQuery] DateTime? date = null",
-          "auth": "AdminOnly",
-          "payload": null
-        },
-        {
-          "verb": "GET",
-          "path": "/api/monitoring/security/check-failed-logins",
-          "name": "CheckFailedLoginPattern",
-          "params": "[FromQuery] string ipAddress",
-          "auth": "AdminOnly",
-          "payload": null
-        },
-        {
-          "verb": "GET",
-          "path": "/api/monitoring/security/failed-login-count",
-          "name": "GetFailedLoginCount",
-          "params": "[FromQuery] string username",
-          "auth": "AdminOnly",
-          "payload": null
-        },
-        {
-          "verb": "POST",
-          "path": "/api/monitoring/security/check-sql-injection",
-          "name": "CheckSqlInjection",
-          "params": "[FromBody] string input",
-          "auth": "AdminOnly",
-          "payload": {
-            "name": "New Monitoring",
-            "description": "Creation payload for Monitoring",
-            "isActive": 1
-          }
-        },
-        {
-          "verb": "POST",
-          "path": "/api/monitoring/security/check-xss",
-          "name": "CheckXss",
-          "params": "[FromBody] string input",
-          "auth": "AdminOnly",
-          "payload": {
-            "name": "New Monitoring",
-            "description": "Creation payload for Monitoring",
-            "isActive": 1
-          }
-        },
-        {
-          "verb": "GET",
-          "path": "/api/monitoring/security/check-anomalous-activity",
-          "name": "CheckAnomalousActivity",
-          "params": "[FromQuery] long userId",
-          "auth": "AdminOnly",
-          "payload": null
-        },
-        {
-          "verb": "GET",
-          "path": "/api/monitoring/performance/connection-pool",
-          "name": "GetConnectionPoolMetrics",
-          "params": "",
-          "auth": "AdminOnly",
-          "payload": null
-        },
-        {
-          "verb": "GET",
-          "path": "/api/monitoring/audit/metrics",
-          "name": "GetAuditMetrics",
-          "params": "",
-          "auth": "AdminOnly",
-          "payload": null
-        },
-        {
-          "verb": "GET",
-          "path": "/api/monitoring/audit/fallback-status",
-          "name": "",
-          "params": "",
-          "auth": "AdminOnly",
-          "payload": null
-        },
-        {
-          "verb": "POST",
-          "path": "/api/monitoring/audit/replay-fallback",
-          "name": "ReplayFallbackEvents",
-          "params": "",
-          "auth": "AdminOnly",
-          "payload": {
-            "name": "New Monitoring",
-            "description": "Creation payload for Monitoring",
-            "isActive": 1
-          }
-        },
-        {
-          "verb": "POST",
-          "path": "/api/monitoring/test-alert",
-          "name": "",
-          "params": "",
-          "auth": "AdminOnly",
-          "payload": {
-            "name": "New Monitoring",
-            "description": "Creation payload for Monitoring",
-            "isActive": 1
-          }
-        }
-      ]
-    },
-    {
-      "name": "PermissionsController",
-      "clean_name": "Permissions",
-      "base_route": "api/permissions",
-      "class_auth": "Authorized",
-      "methods": [
-        {
-          "verb": "GET",
-          "path": "/api/permissions/check",
-          "name": "",
-          "params": "",
-          "auth": "Authorized",
-          "payload": null
-        },
-        {
-          "verb": "GET",
-          "path": "/api/permissions/my-screens",
-          "name": "",
-          "params": "",
-          "auth": "Authorized",
-          "payload": null
-        }
-      ]
-    },
-    {
-      "name": "RolesController",
-      "clean_name": "Roles",
-      "base_route": "api/roles",
-      "class_auth": "Authorized",
-      "methods": [
-        {
-          "verb": "GET",
-          "path": "/api/roles",
-          "name": "",
-          "params": "",
-          "auth": "Authorized",
-          "payload": null
-        },
-        {
-          "verb": "GET",
-          "path": "/api/roles/{id}",
-          "name": "",
-          "params": "",
-          "auth": "Authorized",
-          "payload": null
-        },
-        {
-          "verb": "POST",
-          "path": "/api/roles",
-          "name": "",
-          "params": "",
-          "auth": "AdminOnly",
-          "payload": {
-            "name": "New Roles",
-            "description": "Creation payload for Roles",
-            "isActive": 1
-          }
-        },
-        {
-          "verb": "PUT",
-          "path": "/api/roles/{id}",
-          "name": "",
-          "params": "",
-          "auth": "AdminOnly",
-          "payload": {
-            "id": 1,
-            "name": "Updated Roles",
-            "description": "Updated payload details",
-            "isActive": 1
-          }
-        },
-        {
-          "verb": "DELETE",
-          "path": "/api/roles/{id}",
-          "name": "",
-          "params": "",
-          "auth": "AdminOnly",
-          "payload": null
-        }
-      ]
-    },
-    {
-      "name": "SavedSearchesController",
-      "clean_name": "SavedSearches",
-      "base_route": "api/saved-searches",
-      "class_auth": "Authorized",
-      "methods": [
-        {
-          "verb": "GET",
-          "path": "/api/saved-searches",
-          "name": "",
-          "params": "",
-          "auth": "Authorized",
-          "payload": null
-        },
-        {
-          "verb": "POST",
-          "path": "/api/saved-searches",
-          "name": "",
-          "params": "",
-          "auth": "Authorized",
-          "payload": {
-            "name": "New SavedSearches",
-            "description": "Creation payload for SavedSearches",
-            "isActive": 1
-          }
-        }
-      ]
-    },
-    {
-      "name": "ScreensController",
-      "clean_name": "Screens",
-      "base_route": "api/screens",
-      "class_auth": "AdminOnly",
-      "methods": [
-        {
-          "verb": "GET",
-          "path": "/api/screens",
-          "name": "",
-          "params": "",
-          "auth": "AdminOnly",
-          "payload": null
-        },
-        {
-          "verb": "GET",
-          "path": "/api/screens/bysystem/{systemId}",
-          "name": "",
-          "params": "",
-          "auth": "AdminOnly",
-          "payload": null
-        },
-        {
-          "verb": "GET",
-          "path": "/api/screens/{id}",
-          "name": "",
-          "params": "",
-          "auth": "AdminOnly",
-          "payload": null
-        },
-        {
-          "verb": "POST",
-          "path": "/api/screens",
-          "name": "",
-          "params": "",
-          "auth": "AdminOnly",
-          "payload": {
-            "name": "New Screens",
-            "description": "Creation payload for Screens",
-            "isActive": 1
-          }
-        },
-        {
-          "verb": "PUT",
-          "path": "/api/screens/{id}",
-          "name": "",
-          "params": "",
-          "auth": "AdminOnly",
-          "payload": {
-            "id": 1,
-            "name": "Updated Screens",
-            "description": "Updated payload details",
-            "isActive": 1
-          }
-        },
-        {
-          "verb": "GET",
-          "path": "/api/screens/{screenId}/features",
-          "name": "",
-          "params": "",
-          "auth": "AdminOnly",
-          "payload": null
-        },
-        {
-          "verb": "POST",
-          "path": "/api/screens/{screenId}/features",
-          "name": "",
-          "params": "",
-          "auth": "AdminOnly",
-          "payload": {
-            "name": "New Screens",
-            "description": "Creation payload for Screens",
-            "isActive": 1
-          }
-        },
-        {
-          "verb": "DELETE",
-          "path": "/api/screens/{screenId}/features/{featureId}",
-          "name": "",
-          "params": "",
-          "auth": "AdminOnly",
-          "payload": null
-        },
-        {
-          "verb": "DELETE",
-          "path": "/api/screens/{id}",
-          "name": "",
-          "params": "",
-          "auth": "AdminOnly",
-          "payload": null
-        }
-      ]
-    },
-    {
-      "name": "SuperAdminAuthController",
-      "clean_name": "SuperAdminAuth",
-      "base_route": "api/auth",
-      "class_auth": null,
-      "methods": [
-        {
-          "verb": "POST",
-          "path": "/api/auth/superadmin/login",
-          "name": "",
-          "params": "",
-          "auth": "None",
-          "payload": {
-            "name": "New SuperAdminAuth",
-            "description": "Creation payload for SuperAdminAuth",
-            "isActive": 1
-          }
-        },
-        {
-          "verb": "POST",
-          "path": "/api/auth/superadmin/refresh",
-          "name": "",
-          "params": "",
-          "auth": "None",
-          "payload": {
-            "name": "New SuperAdminAuth",
-            "description": "Creation payload for SuperAdminAuth",
-            "isActive": 1
-          }
-        }
-      ]
-    },
-    {
-      "name": "SuperAdminController",
-      "clean_name": "SuperAdmin",
-      "base_route": "api/superadmins",
-      "class_auth": "AdminOnly",
-      "methods": [
-        {
-          "verb": "GET",
-          "path": "/api/superadmins",
-          "name": "",
-          "params": "",
-          "auth": "AdminOnly",
-          "payload": null
-        },
-        {
-          "verb": "GET",
-          "path": "/api/superadmins/{id}",
-          "name": "",
-          "params": "",
-          "auth": "AdminOnly",
-          "payload": null
-        },
-        {
-          "verb": "POST",
-          "path": "/api/superadmins",
-          "name": "",
-          "params": "",
-          "auth": "AdminOnly",
-          "payload": {
-            "name": "New SuperAdmin",
-            "description": "Creation payload for SuperAdmin",
-            "isActive": 1
-          }
-        },
-        {
-          "verb": "PUT",
-          "path": "/api/superadmins/{id}",
-          "name": "",
-          "params": "",
-          "auth": "AdminOnly",
-          "payload": {
-            "id": 1,
-            "name": "Updated SuperAdmin",
-            "description": "Updated payload details",
-            "isActive": 1
-          }
-        },
-        {
-          "verb": "DELETE",
-          "path": "/api/superadmins/{id}",
-          "name": "",
-          "params": "",
-          "auth": "AdminOnly",
-          "payload": null
-        },
-        {
-          "verb": "PUT",
-          "path": "/api/superadmins/{id}/change-password",
-          "name": "",
-          "params": "",
-          "auth": "AdminOnly",
-          "payload": {
-            "id": 1,
-            "name": "Updated SuperAdmin",
-            "description": "Updated payload details",
-            "isActive": 1
-          }
-        },
-        {
-          "verb": "POST",
-          "path": "/api/superadmins/{id}/reset-password",
-          "name": "",
-          "params": "",
-          "auth": "AdminOnly",
-          "payload": {
-            "name": "New SuperAdmin",
-            "description": "Creation payload for SuperAdmin",
-            "isActive": 1
-          }
-        },
-        {
-          "verb": "GET",
-          "path": "/api/superadmins/dashboard",
-          "name": "",
-          "params": "",
-          "auth": "AdminOnly",
-          "payload": null
-        },
-        {
-          "verb": "POST",
-          "path": "/api/superadmins/provision-dev-schema",
-          "name": "ProvisionDeveloperSchema",
-          "params": "",
-          "auth": "SuperAdminOnly",
-          "payload": {
-            "name": "New SuperAdmin",
-            "description": "Creation payload for SuperAdmin",
-            "isActive": 1
-          }
-        },
-        {
-          "verb": "POST",
-          "path": "/api/superadmins/sync-tenant-schemas",
-          "name": "SyncTenantSchemas",
-          "params": "",
-          "auth": "SuperAdminOnly",
-          "payload": {
-            "name": "New SuperAdmin",
-            "description": "Creation payload for SuperAdmin",
-            "isActive": 1
-          }
-        }
-      ]
-    },
-    {
-      "name": "SysCodesController",
-      "clean_name": "SysCodes",
-      "base_route": "api/syscodes",
-      "class_auth": "SuperAdminOnly",
-      "methods": [
-        {
-          "verb": "GET",
-          "path": "/api/syscodes",
-          "name": "",
-          "params": "",
-          "auth": "SuperAdminOnly",
-          "payload": null
-        },
-        {
-          "verb": "GET",
-          "path": "/api/syscodes/groups",
-          "name": "",
-          "params": "",
-          "auth": "SuperAdminOnly",
-          "payload": null
-        },
-        {
-          "verb": "GET",
-          "path": "/api/syscodes/definitions",
-          "name": "",
-          "params": "",
-          "auth": "SuperAdminOnly",
-          "payload": null
-        },
-        {
-          "verb": "GET",
-          "path": "/api/syscodes/groups/{codeMgr}",
-          "name": "",
-          "params": "",
-          "auth": "SuperAdminOnly",
-          "payload": null
-        },
-        {
-          "verb": "GET",
-          "path": "/api/syscodes/groups/{codeMgr}/items/{codeMnr}/langs/{codeLang}",
-          "name": "",
-          "params": "",
-          "auth": "SuperAdminOnly",
-          "payload": null
-        },
-        {
-          "verb": "POST",
-          "path": "/api/syscodes",
-          "name": "",
-          "params": "",
-          "auth": "SuperAdminOnly",
-          "payload": {
-            "name": "New SysCodes",
-            "description": "Creation payload for SysCodes",
-            "isActive": 1
-          }
-        },
-        {
-          "verb": "PUT",
-          "path": "/api/syscodes/groups/{codeMgr}/items/{codeMnr}/langs/{codeLang}",
-          "name": "",
-          "params": "",
-          "auth": "SuperAdminOnly",
-          "payload": {
-            "id": 1,
-            "name": "Updated SysCodes",
-            "description": "Updated payload details",
-            "isActive": 1
-          }
-        },
-        {
-          "verb": "DELETE",
-          "path": "/api/syscodes/groups/{codeMgr}/items/{codeMnr}/langs/{codeLang}",
-          "name": "",
-          "params": "",
-          "auth": "SuperAdminOnly",
-          "payload": null
-        }
-      ]
-    },
-    {
-      "name": "SysSettingsController",
-      "clean_name": "SysSettings",
-      "base_route": "api/syssettings",
-      "class_auth": "SuperAdminOnly",
-      "methods": [
-        {
-          "verb": "GET",
-          "path": "/api/syssettings",
-          "name": "",
-          "params": "",
-          "auth": "SuperAdminOnly",
-          "payload": null
-        },
-        {
-          "verb": "GET",
-          "path": "/api/syssettings/{settingCode}",
-          "name": "",
-          "params": "",
-          "auth": "SuperAdminOnly",
-          "payload": null
-        },
-        {
-          "verb": "POST",
-          "path": "/api/syssettings",
-          "name": "",
-          "params": "",
-          "auth": "SuperAdminOnly",
-          "payload": {
-            "name": "New SysSettings",
-            "description": "Creation payload for SysSettings",
-            "isActive": 1
-          }
-        },
-        {
-          "verb": "PUT",
-          "path": "/api/syssettings/{settingCode}",
-          "name": "",
-          "params": "",
-          "auth": "SuperAdminOnly",
-          "payload": {
-            "id": 1,
-            "name": "Updated SysSettings",
-            "description": "Updated payload details",
-            "isActive": 1
-          }
-        },
-        {
-          "verb": "DELETE",
-          "path": "/api/syssettings/{settingCode}",
-          "name": "",
-          "params": "",
-          "auth": "SuperAdminOnly",
-          "payload": null
-        }
-      ]
-    },
-    {
-      "name": "TicketTypesController",
-      "clean_name": "TicketTypes",
-      "base_route": "api/ticket-types",
-      "class_auth": "Authorized",
-      "methods": [
-        {
-          "verb": "GET",
-          "path": "/api/ticket-types",
-          "name": "",
-          "params": "",
-          "auth": "Authorized",
-          "payload": null
-        },
-        {
-          "verb": "GET",
-          "path": "/api/ticket-types/{id}",
-          "name": "",
-          "params": "",
-          "auth": "Authorized",
-          "payload": null
-        },
-        {
-          "verb": "POST",
-          "path": "/api/ticket-types",
-          "name": "",
-          "params": "",
-          "auth": "AdminOnly",
-          "payload": {
-            "name": "New TicketTypes",
-            "description": "Creation payload for TicketTypes",
-            "isActive": 1
-          }
-        },
-        {
-          "verb": "PUT",
-          "path": "/api/ticket-types/{id}",
-          "name": "",
-          "params": "",
-          "auth": "AdminOnly",
-          "payload": {
-            "id": 1,
-            "name": "Updated TicketTypes",
-            "description": "Updated payload details",
-            "isActive": 1
-          }
-        },
-        {
-          "verb": "DELETE",
-          "path": "/api/ticket-types/{id}",
-          "name": "",
-          "params": "",
-          "auth": "AdminOnly",
-          "payload": null
-        }
-      ]
-    },
-    {
-      "name": "TicketsController",
-      "clean_name": "Tickets",
-      "base_route": "api/tickets",
-      "class_auth": "Authorized",
-      "methods": [
-        {
-          "verb": "GET",
-          "path": "/api/tickets",
-          "name": "",
-          "params": "",
-          "auth": "Authorized",
-          "payload": null
-        },
-        {
-          "verb": "GET",
-          "path": "/api/tickets/{id}",
-          "name": "",
-          "params": "",
-          "auth": "Authorized",
-          "payload": null
-        },
-        {
-          "verb": "POST",
-          "path": "/api/tickets",
-          "name": "",
-          "params": "",
-          "auth": "Authorized",
-          "payload": {
-            "name": "New Tickets",
-            "description": "Creation payload for Tickets",
-            "isActive": 1
-          }
-        },
-        {
-          "verb": "PUT",
-          "path": "/api/tickets/{id}",
-          "name": "",
-          "params": "",
-          "auth": "Authorized",
-          "payload": {
-            "id": 1,
-            "name": "Updated Tickets",
-            "description": "Updated payload details",
-            "isActive": 1
-          }
-        },
-        {
-          "verb": "DELETE",
-          "path": "/api/tickets/{id}",
-          "name": "",
-          "params": "",
-          "auth": "AdminOnly",
-          "payload": null
-        },
-        {
-          "verb": "PUT",
-          "path": "/api/tickets/{id}/assign",
-          "name": "",
-          "params": "",
-          "auth": "AdminOnly",
-          "payload": {
-            "id": 1,
-            "name": "Updated Tickets",
-            "description": "Updated payload details",
-            "isActive": 1
-          }
-        },
-        {
-          "verb": "PUT",
-          "path": "/api/tickets/{id}/status",
-          "name": "",
-          "params": "",
-          "auth": "Authorized",
-          "payload": {
-            "id": 1,
-            "name": "Updated Tickets",
-            "description": "Updated payload details",
-            "isActive": 1
-          }
-        },
-        {
-          "verb": "POST",
-          "path": "/api/tickets/{id}/comments",
-          "name": "",
-          "params": "",
-          "auth": "Authorized",
-          "payload": {
-            "name": "New Tickets",
-            "description": "Creation payload for Tickets",
-            "isActive": 1
-          }
-        },
-        {
-          "verb": "GET",
-          "path": "/api/tickets/{id}/comments",
-          "name": "",
-          "params": "",
-          "auth": "Authorized",
-          "payload": null
-        },
-        {
-          "verb": "POST",
-          "path": "/api/tickets/{id}/attachments",
-          "name": "",
-          "params": "",
-          "auth": "Authorized",
-          "payload": {
-            "name": "New Tickets",
-            "description": "Creation payload for Tickets",
-            "isActive": 1
-          }
-        },
-        {
-          "verb": "GET",
-          "path": "/api/tickets/{id}/attachments",
-          "name": "",
-          "params": "",
-          "auth": "Authorized",
-          "payload": null
-        },
-        {
-          "verb": "GET",
-          "path": "/api/tickets/{id}/attachments/{attachmentId}",
-          "name": "DownloadAttachment",
-          "params": "Int64 id, Int64 attachmentId",
-          "auth": "Authorized",
-          "payload": null
-        },
-        {
-          "verb": "GET",
-          "path": "/api/tickets/reports/volume",
-          "name": "",
-          "params": "",
-          "auth": "AdminOnly",
-          "payload": null
-        },
-        {
-          "verb": "GET",
-          "path": "/api/tickets/reports/sla-compliance",
-          "name": "",
-          "params": "",
-          "auth": "AdminOnly",
-          "payload": null
-        },
-        {
-          "verb": "GET",
-          "path": "/api/tickets/reports/workload",
-          "name": "",
-          "params": "",
-          "auth": "AdminOnly",
-          "payload": null
-        },
-        {
-          "verb": "GET",
-          "path": "/api/tickets/search/saved",
-          "name": "",
-          "params": "",
-          "auth": "Authorized",
-          "payload": null
-        },
-        {
-          "verb": "POST",
-          "path": "/api/tickets/search/save",
-          "name": "",
-          "params": "",
-          "auth": "Authorized",
-          "payload": {
-            "name": "New Tickets",
-            "description": "Creation payload for Tickets",
-            "isActive": 1
-          }
-        }
-      ]
-    },
-    {
-      "name": "UsersController",
-      "clean_name": "Users",
-      "base_route": "api/users",
-      "class_auth": "Authorized",
-      "methods": [
-        {
-          "verb": "GET",
-          "path": "/api/users",
-          "name": "",
-          "params": "",
-          "auth": "AdminOnly",
-          "payload": null
-        },
-        {
-          "verb": "GET",
-          "path": "/api/users/{id}",
-          "name": "",
-          "params": "",
-          "auth": "AdminOnly",
-          "payload": null
-        },
-        {
-          "verb": "POST",
-          "path": "/api/users",
-          "name": "",
-          "params": "",
-          "auth": "AdminOnly",
-          "payload": {
-            "name": "New Users",
-            "description": "Creation payload for Users",
-            "isActive": 1
-          }
-        },
-        {
-          "verb": "PUT",
-          "path": "/api/users/{id}",
-          "name": "",
-          "params": "",
-          "auth": "AdminOnly",
-          "payload": {
-            "id": 1,
-            "name": "Updated Users",
-            "description": "Updated payload details",
-            "isActive": 1
-          }
-        },
-        {
-          "verb": "DELETE",
-          "path": "/api/users/{id}",
-          "name": "",
-          "params": "",
-          "auth": "AdminOnly",
-          "payload": null
-        },
-        {
-          "verb": "PUT",
-          "path": "/api/users/{id}/change-password",
-          "name": "",
-          "params": "",
-          "auth": "Authorized",
-          "payload": {
-            "id": 1,
-            "name": "Updated Users",
-            "description": "Updated payload details",
-            "isActive": 1
-          }
-        },
-        {
-          "verb": "GET",
-          "path": "/api/users/branch/{branchId}",
-          "name": "",
-          "params": "",
-          "auth": "AdminOnly",
-          "payload": null
-        },
-        {
-          "verb": "GET",
-          "path": "/api/users/company/{companyId}",
-          "name": "",
-          "params": "",
-          "auth": "AdminOnly",
-          "payload": null
-        },
-        {
-          "verb": "POST",
-          "path": "/api/users/{id}/force-logout",
-          "name": "",
-          "params": "",
-          "auth": "AdminOnly",
-          "payload": {
-            "name": "New Users",
-            "description": "Creation payload for Users",
-            "isActive": 1
-          }
-        },
-        {
-          "verb": "POST",
-          "path": "/api/users/{id}/reset-password",
-          "name": "",
-          "params": "",
-          "auth": "AdminOnly",
-          "payload": {
-            "name": "New Users",
-            "description": "Creation payload for Users",
-            "isActive": 1
-          }
-        }
-      ]
-    }
-  ],
-  "superadmin_list": [
-    "SuperAdminAuthController",
-    "AlertsController",
-    "AuditHealthController",
-    "AuditTrailController",
-    "CompanyController",
-    "ConfigurationController",
-    "HealthController",
-    "FeaturesController",
-    "KeyManagementController",
-    "ModulesController",
-    "MonitoringController",
-    "ScreensController",
-    "SuperAdminController",
-    "AuditLogsController",
-    "SysCodesController",
-    "SysSettingsController",
-    "CurrencyController"
-  ]
-};
-        
-        let currentSection = 'intro';
-        let currentControllerName = null;
-
-        // Render Sidebar Navigation
-        function initNav() {
-            const superadminList = document.getElementById('superadmin-nav-list');
-            const companyList = document.getElementById('company-nav-list');
-
-            superadminList.innerHTML = '';
-            companyList.innerHTML = '';
-
-            apiData.controllers.forEach(c => {
-                if (c.name === 'DocumentsController') return; // Rendered statically
-                
-                const item = document.createElement('div');
-                item.className = 'nav-item';
-                item.textContent = c.clean_name;
-                item.onclick = () => showControllerDetails(c.name);
-
-                if (apiData.superadmin_list.includes(c.name)) {
-                    superadminList.appendChild(item);
-                } else {
-                    companyList.appendChild(item);
-                }
-            });
-        }
-
-        // Display introductory details
-        function showIntro() {
-            const area = document.getElementById('contentArea');
-            document.getElementById('headerTitle').textContent = 'API Integration Introduction';
-            
-            area.innerHTML = `
-                <div class="intro-section">
-                    <h2>API Base & Routing</h2>
-                    <p>All platform APIs are hosted locally or on test environments on port <strong>5000 (HTTP)</strong> / <strong>5001 (HTTPS)</strong>.</p>
-                    <p>The system splits APIs into two distinct OpenApi document scopes: <strong>SuperAdmin</strong> (platform-wide registry, key rotation, system metrics) and <strong>Company</strong> (tenant accounts, user auth, branch fiscal years).</p>
-                </div>
-
-                <div class="intro-section" style="border-left: 4px solid var(--accent-primary)">
-                    <h2>JWT Bearer Authentication</h2>
-                    <p>To access authenticated routes, retrieve a token using the credentials endpoint. Send the token inside the HTTP Headers:</p>
-                    <div class="code-container" style="max-height: 120px;">
-                        <span class="code-block">Authorization: Bearer &lt;your_jwt_token&gt;</span>
+            <!-- 1. Overview Section -->
+            <section id="tab-overview" class="section-view active">
+                <div class="endpoint-card">
+                    <div class="endpoint-header">
+                        <h3 style="color: #93c5fd; font-size: 1.15rem;">معمارية محرك الضرائب لمطوري الواجهات (Tax Engine UI Architecture)</h3>
                     </div>
-                </div>
+                    <div class="endpoint-body">
+                        <div class="ui-note-box">
+                            <h4>🎯 الهدف الأساسي من المحرك في الـ Frontend:</h4>
+                            <p>محرك الضرائب هو نقطة الارتكاز لجميع عمليات احتساب القيمة المضافة وفك الأسعار الشاملة وغير الشاملة وتوليد قيود اليومية المقترحة وكود الفاتورة الإلكترونية ZATCA QR. لا تحتاج الواجهة لأي معادلات رياضية معقدة، بل ترسل البيانات للمحرك وتستقبل التفقيط المحاسبي الكامل بدقة السنت.</p>
+                        </div>
 
-                <div class="intro-section">
-                    <h2>Global Response Envelope</h2>
-                    <p>Every response returned by the API is packed into a standard envelope layout:</p>
-                    <div class="code-container">
-                        <span class="code-block">${JSON.stringify({
-                            "success": true,
-                            "message": "Operation completed successfully.",
-                            "data": { "id": 12, "details": "..." },
-                            "statusCode": 200,
-                            "errors": null
-                        }, null, 2)}</span>
-                    </div>
-                </div>
-            `;
-            setActiveNavItem('intro');
-        }
-
-        // Display Owner Type & Document Type details
-        function showOwnerTypes() {
-            const area = document.getElementById('contentArea');
-            document.getElementById('headerTitle').textContent = 'SYS_CODE Seeding Mappings';
-            
-            area.innerHTML = `
-                <div class="intro-section">
-                    <h2>Owner Types (CODE_MGR = 2)</h2>
-                    <p>For file upload attachments, <code>OwnerType</code> is represented as a number (derived from <code>SYS_CODE</code>) rather than a string.</p>
-                    
-                    <table class="seeding-table" style="margin-bottom: 40px;">
-                        <thead>
-                            <tr>
-                                <th>Owner Type Code (CodeMnr)</th>
-                                <th>Value Name</th>
-                                <th>Arabic Label</th>
-                                <th>English Label</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr><td><strong>1</strong></td><td>Company</td><td>شركة</td><td>Company</td></tr>
-                            <tr><td><strong>2</strong></td><td>Branch</td><td>فرع</td><td>Branch</td></tr>
-                            <tr><td><strong>3</strong></td><td>SuperAdmin</td><td>المشرف العام</td><td>Super Admin</td></tr>
-                        </tbody>
-                    </table>
-
-                    <h2>Document Types (CODE_MGR = 1)</h2>
-                    <p>For attachment classifications, <code>DocumentType</code> (formerly Category) is represented as a number (derived from <code>SYS_CODE</code>) rather than a string.</p>
-                    
-                    <table class="seeding-table">
-                        <thead>
-                            <tr>
-                                <th>Document Type Code (CodeMnr)</th>
-                                <th>Value Name</th>
-                                <th>Arabic Label</th>
-                                <th>English Label</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr><td><strong>1</strong></td><td>Contracts</td><td>عقود</td><td>Contracts</td></tr>
-                            <tr><td><strong>2</strong></td><td>Reports</td><td>تقارير</td><td>Reports</td></tr>
-                            <tr><td><strong>3</strong></td><td>Invoices</td><td>فواتير</td><td>Invoices</td></tr>
-                            <tr><td><strong>4</strong></td><td>Receipts</td><td>إيصالات</td><td>Receipts</td></tr>
-                            <tr><td><strong>5</strong></td><td>Identification</td><td>بطاقات هوية</td><td>Identification</td></tr>
-                            <tr><td><strong>6</strong></td><td>Certificates</td><td>شهادات</td><td>Certificates</td></tr>
-                            <tr><td><strong>7</strong></td><td>Financial</td><td>مالي</td><td>Financial</td></tr>
-                            <tr><td><strong>8</strong></td><td>HR</td><td>الموارد البشرية</td><td>HR</td></tr>
-                            <tr><td><strong>9</strong></td><td>Legal</td><td>قانوني</td><td>Legal</td></tr>
-                            <tr><td><strong>10</strong></td><td>Technical</td><td>تقني</td><td>Technical</td></tr>
-                            <tr><td><strong>11</strong></td><td>Marketing</td><td>تسويق</td><td>Marketing</td></tr>
-                            <tr><td><strong>12</strong></td><td>Other</td><td>أخرى</td><td>Other</td></tr>
-                        </tbody>
-                    </table>
-                </div>
-            `;
-            setActiveNavItem('owner-types');
-        }
-
-        function showControllerDetails(name) {
-            currentControllerName = name;
-            currentSection = 'controller';
-            setActiveNavItem(null);
-            
-            const controller = apiData.controllers.find(c => c.name === name);
-            if (!controller) return;
-
-            document.getElementById('headerTitle').textContent = controller.clean_name + ' Controller Endpoints';
-            const area = document.getElementById('contentArea');
-            
-            let html = `
-                <div class="intro-section" style="margin-bottom: 24px;">
-                    <h2>${controller.clean_name} Controller</h2>
-                    <p>Route Prefix: <code>/${controller.base_route}</code></p>
-                    <p>Access Policy: <code>${controller.class_auth || 'None'}</code></p>
-                </div>
-            `;
-
-            if (controller.methods.length === 0) {
-                html += '<p>No actions available in this controller.</p>';
-            } else {
-                controller.methods.forEach((m, idx) => {
-                    let payloadStr = m.payload ? JSON.stringify(m.payload, null, 2) : '// No body payload required';
-                    if (typeof m.payload === 'string') payloadStr = m.payload;
-                    
-                    html += `
-                        <div class="api-card">
-                            <div class="api-card-header" onclick="toggleDetails('card-details-${idx}')">
-                                <div class="api-card-title-group">
-                                    <span class="method-badge method-${m.verb}">${m.verb}</span>
-                                    <span class="api-route-path">${m.path}</span>
-                                </div>
-                                <span class="api-action-name">${m.name || 'Anonymous Action'}</span>
+                        <div class="meta-grid">
+                            <div class="meta-item">
+                                <div class="meta-label">الـ Base Route الموحد:</div>
+                                <div class="meta-val">/api/accounting/tax</div>
                             </div>
-                            <div class="api-card-details" id="card-details-${idx}">
-                                <div class="api-info-panel">
-                                    <h4>Action Parameters</h4>
-                                    <div style="margin-bottom: 16px;">
-                                        <p style="font-size: 0.9rem; color: var(--text-secondary);">Method Parameters:</p>
-                                        <code style="font-size: 0.85rem; font-family: 'Fira Code', monospace; color: #f59e0b;">${m.params || 'None'}</code>
-                                    </div>
-                                    <div style="margin-bottom: 16px;">
-                                        <p style="font-size: 0.9rem; color: var(--text-secondary);">Access Requirement:</p>
-                                        <span class="badge" style="margin-top: 4px; display: inline-block;">${m.auth}</span>
-                                    </div>
+                            <div class="meta-item">
+                                <div class="meta-label">نظام الحماية والتوثيق:</div>
+                                <div class="meta-val">Authorization: Bearer &lt;token&gt; (Tenant-Scoped)</div>
+                            </div>
+                        </div>
+
+                        <h4 style="color: #60a5fa; margin-bottom: 12px;">🗺️ خريطة شاشات الـ UI المرتبطة بمحرك الضرائب:</h4>
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>شاشة الـ UI</th>
+                                    <th>الـ Endpoint المستدعى</th>
+                                    <th>وقت وطريقة الاستدعاء</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><strong>فواتير المبيعات / المشتريات</strong></td>
+                                    <td><code>POST /api/accounting/tax/calculate</code></td>
+                                    <td>عند إدخال الأصناف أو تعديل الكمية والسعر والخصم أو تبديل خيار (شامل الضريبة).</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>طباعة ومعاينة الفاتورة</strong></td>
+                                    <td><code>POST /api/accounting/tax/zatca-qr</code></td>
+                                    <td>عند فتح شاشة الطباعة أو إصدار PDF لتوليد الـ QR Code المعتمد لهيئة الزكاة.</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>لوحة الإقرار الضريبي</strong></td>
+                                    <td><code>GET /api/accounting/tax/vat-declaration</code></td>
+                                    <td>عند اختيار الفرع والفترة لاستخراج مربعات الإقرار (Boxes 1-16) وصافي المستحق.</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>القوائم المنسدلة للنسب</strong></td>
+                                    <td><code>GET /api/accounting/tax/rates</code></td>
+                                    <td>عند تحميل شاشة الفاتورة لتعبئة قائمة اختيار النسبة (15%, 5%, 0%, معفى).</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 2. Live Simulator Section -->
+            <section id="tab-simulator" class="section-view">
+                <div class="endpoint-card">
+                    <div class="endpoint-header">
+                        <h3 style="color: #93c5fd; font-size: 1.15rem;">🧮 المحاكي التفاعلي لاحتساب الضرائب (Live Tax Simulator)</h3>
+                    </div>
+                    <div class="endpoint-body">
+                        <p style="color: var(--text-muted); margin-bottom: 16px; font-size: 0.9rem;">
+                            يمكن لمطور الواجهة تجربة الحسابات مباشرة لمعاينة كيفية إرسال واستقبال البيانات مع المحرك:
+                        </p>
+
+                        <div class="simulator-box">
+                            <div class="form-grid">
+                                <div class="form-field">
+                                    <label>نوع العملية:</label>
+                                    <select id="simIsSales">
+                                        <option value="true">مبيعات (ضريبة مخرجات Output VAT)</option>
+                                        <option value="false">مشتريات (ضريبة مدخلات Input VAT)</option>
+                                    </select>
                                 </div>
-                                
-                                <div class="api-info-panel">
-                                    <h4>JSON Request Payload / Scheme</h4>
-                                    <div class="code-container">
-                                        <button class="copy-btn" onclick="copyCode(this)">Copy</button>
-                                        <pre class="code-block">${payloadStr}</pre>
-                                    </div>
+                                <div class="form-field">
+                                    <label>طريقة التسعير:</label>
+                                    <select id="simIsInclusive" onchange="runSimulator()">
+                                        <option value="false">غير شامل الضريبة (Exclusive +15%)</option>
+                                        <option value="true">شامل الضريبة (Inclusive - فك الضريبة)</option>
+                                    </select>
+                                </div>
+                                <div class="form-field">
+                                    <label>النسبة الضريبية:</label>
+                                    <select id="simTaxRate" onchange="runSimulator()">
+                                        <option value="15">VAT_15 (15% القياسية)</option>
+                                        <option value="5">VAT_5 (5% المخفضة)</option>
+                                        <option value="0">VAT_0 (0% الصفرية)</option>
+                                        <option value="0">VAT_EXEMPT (معفى من الضريبة)</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="form-grid">
+                                <div class="form-field">
+                                    <label>الكمية (Quantity):</label>
+                                    <input type="number" id="simQty" value="2" min="1" oninput="runSimulator()">
+                                </div>
+                                <div class="form-field">
+                                    <label>سعر الوحدة (Unit Price):</label>
+                                    <input type="number" id="simPrice" value="500" min="0" step="0.01" oninput="runSimulator()">
+                                </div>
+                                <div class="form-field">
+                                    <label>الخصم التجاري (Discount):</label>
+                                    <input type="number" id="simDiscount" value="100" min="0" step="0.01" oninput="runSimulator()">
+                                </div>
+                            </div>
+
+                            <div class="calc-results">
+                                <div class="calc-res-item">
+                                    <h5>المبلغ الأساسي (Net Base)</h5>
+                                    <p id="resSubtotal" style="color: #f8fafc;">900.00 ر.س</p>
+                                </div>
+                                <div class="calc-res-item">
+                                    <h5>إجمالي الخصم (Discount)</h5>
+                                    <p id="resDiscount" style="color: #f59e0b;">100.00 ر.س</p>
+                                </div>
+                                <div class="calc-res-item">
+                                    <h5>مبلغ الضريبة (VAT Amount)</h5>
+                                    <p id="resTax" style="color: #60a5fa;">135.00 ر.س</p>
+                                </div>
+                                <div class="calc-res-item">
+                                    <h5>الإجمالي النهائي (Grand Total)</h5>
+                                    <p id="resGrand" style="color: #34d399;">1,035.00 ر.س</p>
                                 </div>
                             </div>
                         </div>
-                    `;
-                });
-            }
+                    </div>
+                </div>
+            </section>
 
-            area.innerHTML = html;
+            <!-- 3. POST /calculate Section -->
+            <section id="tab-calculate" class="section-view">
+                <div class="endpoint-card">
+                    <div class="endpoint-header">
+                        <div class="endpoint-route">
+                            <span class="method-badge badge-POST">POST</span>
+                            <span class="route-text">/api/accounting/tax/calculate</span>
+                        </div>
+                        <span style="font-weight: 700; color: #93c5fd;">احتساب وتفقيط الضرائب لحظياً</span>
+                    </div>
+                    <div class="endpoint-body">
+                        <div class="ui-note-box">
+                            <h4>💡 تعليمات مطور الواجهة (UI Integration Guide):</h4>
+                            <p>
+                                1. في جدول سطور الفاتورة، اربط هذا الـ API مع حدث التغيير (onChange) للكمية، السعر، الخصم، وكود النسبة، مع إضافة Debounce (300ms).<br>
+                                2. عند تفعيل خيار <code>isInclusive: true</code>، سيقوم السيرفر بفك الضريبة من السعر تلقائياً وإعادة السعر الصافي بدون ضريبة في <code>netBaseAmount</code>.<br>
+                                3. استخدم <code>data.lines[i].taxAmount</code> لعرض ضريبة السطر، و <code>data.lines[i].lineTotal</code> لعرض إجمالي السطر، و <code>data.grandTotalAmount</code> في فوتر الفاتورة.
+                            </p>
+                        </div>
+
+                        <div class="meta-grid">
+                            <div class="meta-item">
+                                <div class="meta-label">الـ Request Body Required:</div>
+                                <div class="meta-val">TaxCalculationRequestDto (JSON)</div>
+                            </div>
+                            <div class="meta-item">
+                                <div class="meta-label">الـ Response Type:</div>
+                                <div class="meta-val">ApiResponse&lt;TaxCalculationResultDto&gt;</div>
+                            </div>
+                        </div>
+
+                        <!-- Request Payload -->
+                        <div class="code-panel">
+                            <div class="code-panel-header">
+                                <span class="code-panel-title">📤 جسم الطلب (JSON Request Payload):</span>
+                                <button class="copy-btn" onclick="copySnippet('calc-req')">نسخ الطلب</button>
+                            </div>
+                            <div class="code-box">
+                                <pre id="calc-req">{
+  "isSales": true,
+  "isInclusive": false,
+  "exchangeRate": 1.0,
+  "lines": [
+    {
+      "lineNumber": 1,
+      "itemCode": "ITM-001",
+      "itemName": "خدمات استشارية / توريد بضاعة",
+      "quantity": 2.0,
+      "unitPrice": 500.0,
+      "discountAmount": 100.0,
+      "taxRateCode": "VAT_15"
+    },
+    {
+      "lineNumber": 2,
+      "itemCode": "EXP-002",
+      "itemName": "بضاعة مصدرة للخارج (نسبة صفرية)",
+      "quantity": 1.0,
+      "unitPrice": 2000.0,
+      "discountAmount": 0.0,
+      "taxRateCode": "VAT_0"
+    }
+  ]
+}</pre>
+                            </div>
+                        </div>
+
+                        <!-- Expected Response -->
+                        <div class="code-panel">
+                            <div class="code-panel-header">
+                                <span class="code-panel-title" style="color: #34d399;">📥 الاستجابة المتوقعة (Expected Response 200 OK):</span>
+                                <button class="copy-btn" onclick="copySnippet('calc-res')">نسخ الاستجابة</button>
+                            </div>
+                            <div class="code-box">
+                                <pre id="calc-res" style="color: #a7f3d0;">{
+  "success": true,
+  "message": "تم احتساب الضرائب بنجاح",
+  "statusCode": 200,
+  "data": {
+    "subtotalAmount": 2900.0,
+    "totalDiscountAmount": 100.0,
+    "totalTaxAmount": 135.0,
+    "grandTotalAmount": 3035.0,
+    "lines": [
+      {
+        "lineNumber": 1,
+        "itemCode": "ITM-001",
+        "itemName": "خدمات استشارية / توريد بضاعة",
+        "quantity": 2.0,
+        "unitPrice": 500.0,
+        "grossAmount": 1000.0,
+        "discountAmount": 100.0,
+        "netBaseAmount": 900.0,
+        "taxRateCode": "VAT_15",
+        "taxRatePercent": 15.0,
+        "taxAmount": 135.0,
+        "lineTotal": 1035.0,
+        "isExempt": false,
+        "isZeroRated": false
+      },
+      {
+        "lineNumber": 2,
+        "itemCode": "EXP-002",
+        "itemName": "بضاعة مصدرة للخارج (نسبة صفرية)",
+        "quantity": 1.0,
+        "unitPrice": 2000.0,
+        "grossAmount": 2000.0,
+        "discountAmount": 0.0,
+        "netBaseAmount": 2000.0,
+        "taxRateCode": "VAT_0",
+        "taxRatePercent": 0.0,
+        "taxAmount": 0.0,
+        "lineTotal": 2000.0,
+        "isExempt": false,
+        "isZeroRated": true
+      }
+    ],
+    "suggestedJournalLines": [
+      {
+        "accountCode": "213101",
+        "accountNameAr": "ضريبة القيمة المضافة المحصلة (المخرجات)",
+        "accountNameEn": "Output VAT Payable",
+        "debitAmount": 0.0,
+        "creditAmount": 135.0,
+        "description": "ضريبة مبيعات مستحقة (15%)"
+      }
+    ]
+  },
+  "errors": null
+}</pre>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 4. GET /declaration/templates Section -->
+            <section id="tab-declaration-templates" class="section-view">
+                <div class="endpoint-card">
+                    <div class="endpoint-header">
+                        <div class="endpoint-route">
+                            <span class="method-badge badge-GET">GET</span>
+                            <span class="route-text">/api/accounting/tax/declaration/templates</span>
+                        </div>
+                        <span style="font-weight: 700; color: #60a5fa;">استعلام نماذج الإقرارات الضريبية لجميع الدول (Multi-Country Templates)</span>
+                    </div>
+                    <div class="endpoint-body">
+                        <div class="ui-note-box">
+                            <h4>💡 تعليمات مطور الواجهة:</h4>
+                            <p>
+                                استخدم هذا الـ API لجلب قائمة <strong>نماذج الإقرارات الضريبية المتاحة في النظام</strong> (السعودية والخليج 🇸🇦، الأردن 🇯🇴، مصر 🇪🇬، بريطانيا وأوروبا 🇬🇧، والنموذج العالمي 🌐). يتيح للواجهة بناء قائمة منسدلة (Dropdown) أو تبويبات لعرض هيكل كل إقرار وأقسامه ومربعاته تلقائياً.
+                            </p>
+                        </div>
+
+                        <div class="meta-grid">
+                            <div class="meta-item">
+                                <div class="meta-label">الـ Route:</div>
+                                <div class="meta-val">/api/accounting/tax/declaration/templates</div>
+                            </div>
+                            <div class="meta-item">
+                                <div class="meta-label">الـ Response Type:</div>
+                                <div class="meta-val">ApiResponse&lt;IReadOnlyList&lt;TaxDeclarationTemplateDto&gt;&gt;</div>
+                            </div>
+                        </div>
+
+                        <div class="code-panel">
+                            <div class="code-panel-header">
+                                <span class="code-panel-title" style="color: #34d399;">📥 الاستجابة المتوقعة (Expected Response 200 OK):</span>
+                                <button class="copy-btn" onclick="copySnippet('tmpl-res')">نسخ الاستجابة</button>
+                            </div>
+                            <div class="code-box">
+                                <pre id="tmpl-res" style="color: #a7f3d0;">{
+  "success": true,
+  "message": "تم استرجاع نماذج الإقرارات الضريبية بنجاح",
+  "statusCode": 200,
+  "data": [
+    {
+      "templateCode": "GCC_ZATCA_16",
+      "countryCode": "SA",
+      "countryNameAr": "المملكة العربية السعودية ودول الخليج",
+      "countryNameEn": "Saudi Arabia & GCC Countries",
+      "flagEmoji": "🇸🇦",
+      "titleAr": "إقرار ضريبة القيمة المضافة (16 مربعاً) - هيئة الزكاة والضريبة والجمارك",
+      "titleEn": "Official 16-Box VAT Declaration - ZATCA & GCC",
+      "taxAuthorityNameAr": "هيئة الزكاة والضريبة والجمارك (ZATCA)",
+      "defaultCurrencyCode": "SAR",
+      "sections": [ ... ]
+    },
+    {
+      "templateCode": "JO_SALES_TAX",
+      "countryCode": "JO",
+      "countryNameAr": "المملكة الأردنية الهاشمية",
+      "flagEmoji": "🇯🇴",
+      "titleAr": "إقرار الضريبة العامة على المبيعات - دائرة ضريبة الدخل والمبيعات",
+      "taxAuthorityNameAr": "دائرة ضريبة الدخل والمبيعات (ISTD)",
+      "defaultCurrencyCode": "JOD"
+    },
+    {
+      "templateCode": "EG_VAT_FORM_10",
+      "countryCode": "EG",
+      "countryNameAr": "جمهورية مصر العربية",
+      "flagEmoji": "🇪🇬",
+      "titleAr": "إقرار ضريبة القيمة المضافة وضريبة الجدول (نموذج 10)",
+      "taxAuthorityNameAr": "مصلحة الضرائب المصرية (ETA)",
+      "defaultCurrencyCode": "EGP"
+    },
+    {
+      "templateCode": "UK_EU_VAT_9",
+      "countryCode": "GB",
+      "countryNameAr": "المملكة المتحدة والاتحاد الأوروبي",
+      "flagEmoji": "🇬🇧",
+      "titleAr": "إقرار ضريبة القيمة المضافة القياسي (9 مربعات) - HMRC",
+      "defaultCurrencyCode": "GBP"
+    },
+    {
+      "templateCode": "GLOBAL_GENERIC",
+      "countryCode": "GLOBAL",
+      "countryNameAr": "النموذج الضريبي العالمي الموحد",
+      "flagEmoji": "🌐",
+      "titleAr": "الإقرار الضريبي العالمي الموحد",
+      "defaultCurrencyCode": "USD"
+    }
+  ]
+}</pre>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 5. GET /vat-declaration Section -->
+            <section id="tab-vat-declaration" class="section-view">
+                <div class="endpoint-card">
+                    <div class="endpoint-header">
+                        <div class="endpoint-route">
+                            <span class="method-badge badge-GET">GET</span>
+                            <span class="route-text">/api/accounting/tax/declaration</span>
+                        </div>
+                        <span style="font-weight: 700; color: #34d399;">استخراج الإقرار الضريبي المخصص حسب الدولة (Multi-Country Tax Return)</span>
+                    </div>
+                    <div class="endpoint-body">
+                        <div class="ui-note-box">
+                            <h4>💡 تعليمات مطور الواجهة:</h4>
+                            <p>
+                                يتيح هذا الـ API توليد الإقرار الضريبي المعتمد لأي دولة. يمكنك تمرير <code>templateCode</code> لاختيار النموذج (مثل <code>GCC_ZATCA_16</code>, <code>JO_SALES_TAX</code>, <code>EG_VAT_FORM_10</code>, <code>UK_EU_VAT_9</code>, <code>GLOBAL_GENERIC</code>)، أو تركه فارغاً ليعتمد النظام دولة الشركة المسجلة تلقائياً.
+                            </p>
+                        </div>
+
+                        <div class="meta-grid">
+                            <div class="meta-item">
+                                <div class="meta-label">معاملات الاستعلام (Query Parameters):</div>
+                                <div class="meta-val">?templateCode=GCC_ZATCA_16&branchId=1&fromDate=2026-08-01&toDate=2026-08-31</div>
+                            </div>
+                            <div class="meta-item">
+                                <div class="meta-label">الـ Response Type:</div>
+                                <div class="meta-val">ApiResponse&lt;VatDeclarationDto&gt;</div>
+                            </div>
+                        </div>
+
+                        <div class="code-panel">
+                            <div class="code-panel-header">
+                                <span class="code-panel-title" style="color: #34d399;">📥 الاستجابة المتوقعة (Expected Response 200 OK):</span>
+                                <button class="copy-btn" onclick="copySnippet('vat-res')">نسخ الاستجابة</button>
+                            </div>
+                            <div class="code-box">
+                                <pre id="vat-res" style="color: #a7f3d0;">{
+  "success": true,
+  "message": "تم استخراج نموذج الإقرار الضريبي بنجاح",
+  "statusCode": 200,
+  "data": {
+    "templateCode": "GCC_ZATCA_16",
+    "countryCode": "SA",
+    "templateTitleAr": "إقرار ضريبة القيمة المضافة (ZATCA 16 Boxes)",
+    "taxAuthorityNameAr": "هيئة الزكاة والضريبة والجمارك (ZATCA)",
+    "currencyCode": "SAR",
+    "branchNameAr": "الفرع الرئيسي",
+    "fromDate": "2026-08-01T00:00:00Z",
+    "toDate": "2026-08-31T23:59:59Z",
+    "sections": [
+      {
+        "sectionKey": "OUTPUT_VAT_SALES",
+        "titleAr": "ضريبة المخرجات (المبيعات)",
+        "totalBaseAmount": 185000.0,
+        "totalTaxAmount": 22500.0,
+        "boxes": [
+          { "boxNumber": 1, "boxKey": "VAT_BOX_STD_SALES", "titleAr": "المبيعات الخاضعة للنسبة الأساسية (15%)", "baseAmount": 150000.0, "vatAmount": 22500.0 },
+          { "boxNumber": 3, "boxKey": "VAT_BOX_ZERO_SALES", "titleAr": "المبيعات الخاضعة للنسبة الصفرية (0%)", "baseAmount": 25000.0, "vatAmount": 0.0 },
+          { "boxNumber": 5, "boxKey": "VAT_BOX_EXEMPT_SALES", "titleAr": "المبيعات المعفاة من الضريبة", "baseAmount": 10000.0, "vatAmount": 0.0 },
+          { "boxNumber": 6, "boxKey": "VAT_BOX_TOTAL_OUTPUT", "titleAr": "إجمالي ضريبة المخرجات", "baseAmount": 185000.0, "vatAmount": 22500.0 }
+        ]
+      },
+      {
+        "sectionKey": "INPUT_VAT_PURCHASES",
+        "titleAr": "ضريبة المدخلات (المشتريات)",
+        "totalBaseAmount": 88000.0,
+        "totalTaxAmount": 12000.0,
+        "boxes": [
+          { "boxNumber": 7, "boxKey": "VAT_BOX_STD_PURCH", "titleAr": "المشتريات الخاضعة للنسبة الأساسية (15%)", "baseAmount": 80000.0, "vatAmount": 12000.0 },
+          { "boxNumber": 12, "boxKey": "VAT_BOX_TOTAL_INPUT", "titleAr": "إجمالي ضريبة المدخلات القابلة للخصم", "baseAmount": 88000.0, "vatAmount": 12000.0 }
+        ]
+      },
+      {
+        "sectionKey": "NET_VAT_SETTLEMENT",
+        "titleAr": "صافي الضريبة والسداد",
+        "totalBaseAmount": 0.0,
+        "totalTaxAmount": 10500.0,
+        "boxes": [
+          { "boxNumber": 13, "boxKey": "VAT_BOX_NET_DUE", "titleAr": "صافي الضريبة المستحقة للفترة الحالية", "baseAmount": 0.0, "vatAmount": 10500.0 },
+          { "boxNumber": 16, "boxKey": "VAT_BOX_TOTAL_PAYABLE", "titleAr": "صافي الضريبة الواجب سدادها", "baseAmount": 0.0, "vatAmount": 10500.0 }
+        ]
+      }
+    ],
+    "totalSalesBaseAmount": 185000.0,
+    "totalOutputVatAmount": 22500.0,
+    "totalPurchasesBaseAmount": 88000.0,
+    "totalInputVatAmount": 12000.0,
+    "netVatDueAmount": 10500.0,
+    "netVatStatus": "مستحق السداد للهيئة"
+  },
+  "errors": null
+}</pre>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 5. POST /zatca-qr Section -->
+            <section id="tab-zatca-qr" class="section-view">
+                <div class="endpoint-card">
+                    <div class="endpoint-header">
+                        <div class="endpoint-route">
+                            <span class="method-badge badge-POST">POST</span>
+                            <span class="route-text">/api/accounting/tax/zatca-qr</span>
+                        </div>
+                        <span style="font-weight: 700; color: #93c5fd;">توليد كود الفاتورة الإلكترونية المعتمد</span>
+                    </div>
+                    <div class="endpoint-body">
+                        <div class="ui-note-box">
+                            <h4>💡 تعليمات مطور الواجهة:</h4>
+                            <p>
+                                أرسل بيانات الفاتورة المكتملة إلى هذا الـ API واحصل على نص <code>qrBase64</code> المشفر بهيكل TLV المعتمد من هيئة الزكاة والضريبة والجمارك (ZATCA). مرر النص مباشرة إلى أي مكون QR Code مثل <code>&lt;QRCode value={data.qrBase64} /&gt;</code> لطباعته في أسفل الفاتورة أو إيصال نقطة البيع.
+                            </p>
+                        </div>
+
+                        <div class="code-panel">
+                            <div class="code-panel-header">
+                                <span class="code-panel-title">📤 جسم الطلب (Request Payload):</span>
+                                <button class="copy-btn" onclick="copySnippet('qr-req')">نسخ الطلب</button>
+                            </div>
+                            <div class="code-box">
+                                <pre id="qr-req">{
+  "sellerName": "شركة التفكير الرقمي المحدودة",
+  "taxRegistrationNumber": "310123456700003",
+  "invoiceTimestamp": "2026-08-25T14:30:00Z",
+  "invoiceTotalWithVat": 1150.0,
+  "vatTotal": 150.0
+}</pre>
+                            </div>
+                        </div>
+
+                        <div class="code-panel">
+                            <div class="code-panel-header">
+                                <span class="code-panel-title" style="color: #34d399;">📥 الاستجابة المتوقعة (Expected Response 200 OK):</span>
+                                <button class="copy-btn" onclick="copySnippet('qr-res')">نسخ الاستجابة</button>
+                            </div>
+                            <div class="code-box">
+                                <pre id="qr-res" style="color: #a7f3d0;">{
+  "success": true,
+  "message": "تم توليد رمز الاستجابة السريعة (QR Code) بنجاح",
+  "statusCode": 200,
+  "data": {
+    "qrBase64": "ATXYtNix2YPYqSDYp9mE2KrZgdmD2YrYsSDYp9mE2LHZgtmF2Yog2KfZhNmF2K3Yr9mI2K/YqQIPMzEwMTIzNDU2NzAwMDAzAxQyMDI2LTA4LTI1VDE0OjMwOjAwWgQHMTE1MC4wMAUGMTUwLjAw",
+    "sellerName": "شركة التفكير الرقمي المحدودة",
+    "taxRegistrationNumber": "310123456700003",
+    "formattedTimestamp": "2026-08-25T14:30:00Z",
+    "invoiceTotalWithVat": 1150.0,
+    "vatTotal": 150.0
+  },
+  "errors": null
+}</pre>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 6. GET /rates Section -->
+            <section id="tab-rates-list" class="section-view">
+                <div class="endpoint-card">
+                    <div class="endpoint-header">
+                        <div class="endpoint-route">
+                            <span class="method-badge badge-GET">GET</span>
+                            <span class="route-text">/api/accounting/tax/rates</span>
+                        </div>
+                        <span style="font-weight: 700; color: #34d399;">استعلام قائمة النسب الضريبية للقوائم المنسدلة</span>
+                    </div>
+                    <div class="endpoint-body">
+                        <div class="ui-note-box">
+                            <h4>💡 تعليمات مطور الواجهة:</h4>
+                            <p>
+                                استدعِ هذا الـ API عند تهيئة شاشات الفواتير أو تعريف المنتجات لملء القائمة المنسدلة (Tax Rates Select Dropdown). أظهر للمستخدم <code>nameAr</code> والقيمة <code>taxRateCode</code>.
+                            </p>
+                        </div>
+
+                        <div class="code-panel">
+                            <div class="code-panel-header">
+                                <span class="code-panel-title" style="color: #34d399;">📥 الاستجابة المتوقعة (Expected Response 200 OK):</span>
+                                <button class="copy-btn" onclick="copySnippet('rates-res')">نسخ الاستجابة</button>
+                            </div>
+                            <div class="code-box">
+                                <pre id="rates-res" style="color: #a7f3d0;">{
+  "success": true,
+  "message": "تم استرجاع النسب الضريبية بنجاح",
+  "statusCode": 200,
+  "data": [
+    {
+      "id": 1,
+      "taxRateCode": "VAT_15",
+      "nameAr": "ضريبة القيمة المضافة القياسية (15%)",
+      "nameEn": "Standard VAT (15%)",
+      "ratePercent": 15.0,
+      "rateType": "PERCENTAGE",
+      "salesTaxGlAccountCode": "213101",
+      "purchaseTaxGlAccountCode": "113101",
+      "isExempt": false,
+      "isZeroRated": false,
+      "isActive": true
+    },
+    {
+      "id": 2,
+      "taxRateCode": "VAT_0",
+      "nameAr": "ضريبة القيمة المضافة الصفرية (0%)",
+      "nameEn": "Zero Rated VAT (0%)",
+      "ratePercent": 0.0,
+      "rateType": "PERCENTAGE",
+      "isExempt": false,
+      "isZeroRated": true,
+      "exemptionReasonCode": "VATEX-SA-32",
+      "isActive": true
+    },
+    {
+      "id": 3,
+      "taxRateCode": "VAT_EXEMPT",
+      "nameAr": "معفى من الضريبة",
+      "nameEn": "VAT Exempt",
+      "ratePercent": 0.0,
+      "rateType": "PERCENTAGE",
+      "isExempt": true,
+      "isZeroRated": false,
+      "exemptionReasonCode": "VATEX-SA-29-7",
+      "isActive": true
+    }
+  ],
+  "errors": null
+}</pre>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 7. GET /rates/code/{code} Section -->
+            <section id="tab-rates-code" class="section-view">
+                <div class="endpoint-card">
+                    <div class="endpoint-header">
+                        <div class="endpoint-route">
+                            <span class="method-badge badge-GET">GET</span>
+                            <span class="route-text">/api/accounting/tax/rates/code/{code}</span>
+                        </div>
+                        <span style="font-weight: 700; color: #34d399;">استعلام النسبة الضريبية بالكود</span>
+                    </div>
+                    <div class="endpoint-body">
+                        <div class="ui-note-box">
+                            <h4>💡 تعليمات مطور الواجهة:</h4>
+                            <p>جلب تفاصيل نسبة محددة بواسطة رمزها (مثل: <code>VAT_15</code>, <code>VAT_0</code>, <code>VAT_EXEMPT</code>).</p>
+                        </div>
+                        <div class="code-panel">
+                            <div class="code-panel-header">
+                                <span class="code-panel-title" style="color: #34d399;">📥 مثال الاستجابة (GET /api/accounting/tax/rates/code/VAT_15):</span>
+                                <button class="copy-btn" onclick="copySnippet('code-res')">نسخ الاستجابة</button>
+                            </div>
+                            <div class="code-box">
+                                <pre id="code-res" style="color: #a7f3d0;">{
+  "success": true,
+  "message": "تم استرجاع النسبة الضريبية بنجاح",
+  "statusCode": 200,
+  "data": {
+    "id": 1,
+    "taxRateCode": "VAT_15",
+    "nameAr": "ضريبة القيمة المضافة القياسية (15%)",
+    "ratePercent": 15.0,
+    "salesTaxGlAccountCode": "213101",
+    "purchaseTaxGlAccountCode": "113101",
+    "isActive": true
+  },
+  "errors": null
+}</pre>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 8. Tax Rates CRUD Section -->
+            <section id="tab-rates-crud" class="section-view">
+                <div class="endpoint-card">
+                    <div class="endpoint-header">
+                        <h3 style="color: #93c5fd; font-size: 1.15rem;">إدارة النسب الضريبية (Tax Rates CRUD)</h3>
+                    </div>
+                    <div class="endpoint-body">
+                        <div class="ui-note-box">
+                            <h4>💡 تعليمات مطور الواجهة:</h4>
+                            <p>تُستخدم في شاشة <strong>إعدادات الضرائب (Tax Setup Admin Panel)</strong> لإنشاء وتعديل وحذف النسب الضريبية للشركة.</p>
+                        </div>
+
+                        <h4 style="color: #60a5fa; margin-bottom: 12px;">1. إنشاء نسبة جديدة: <code>POST /api/accounting/tax/rates</code></h4>
+                        <div class="code-panel">
+                            <div class="code-box">
+                                <pre>{
+  "taxRateCode": "VAT_5",
+  "taxCategoryId": 1,
+  "nameAr": "ضريبة القيمة المضافة المخفضة (5%)",
+  "nameEn": "Reduced VAT (5%)",
+  "ratePercent": 5.0,
+  "rateType": "PERCENTAGE",
+  "salesTaxGlAccountCode": "213101",
+  "purchaseTaxGlAccountCode": "113101",
+  "isExempt": false,
+  "isZeroRated": false,
+  "displayOrder": 4
+}</pre>
+                            </div>
+                        </div>
+
+                        <h4 style="color: #fbbf24; margin: 20px 0 12px;">2. تعديل نسبة: <code>PUT /api/accounting/tax/rates/{id}</code></h4>
+                        <h4 style="color: #f87171; margin: 20px 0 12px;">3. حذف نسبة: <code>DELETE /api/accounting/tax/rates/{id}</code></h4>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 9. Categories Section -->
+            <section id="tab-categories" class="section-view">
+                <div class="endpoint-card">
+                    <div class="endpoint-header">
+                        <h3 style="color: #93c5fd; font-size: 1.15rem;">فئات الضرائب (Tax Categories CRUD)</h3>
+                    </div>
+                    <div class="endpoint-body">
+                        <div class="ui-note-box">
+                            <h4>💡 تعليمات مطور الواجهة:</h4>
+                            <p>تصنيفات الضرائب العامة (مثل: VAT ضريبة القيمة المضافة، WHT ضريبة الاستقطاع، EXCISE الضريبة الانتقائية).</p>
+                        </div>
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Method</th>
+                                    <th>Route</th>
+                                    <th>الوصف</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><span class="method-badge badge-GET">GET</span></td>
+                                    <td style="font-family: monospace; direction: ltr; text-align: left;">/api/accounting/tax/categories</td>
+                                    <td>استرجاع جميع الفئات الضريبية</td>
+                                </tr>
+                                <tr>
+                                    <td><span class="method-badge badge-POST">POST</span></td>
+                                    <td style="font-family: monospace; direction: ltr; text-align: left;">/api/accounting/tax/categories</td>
+                                    <td>إنشاء فئة ضريبية جديدة</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 10. Groups Section -->
+            <section id="tab-groups" class="section-view">
+                <div class="endpoint-card">
+                    <div class="endpoint-header">
+                        <h3 style="color: #93c5fd; font-size: 1.15rem;">المجموعات الضريبية المركبة (Tax Groups CRUD)</h3>
+                    </div>
+                    <div class="endpoint-body">
+                        <div class="ui-note-box">
+                            <h4>💡 تعليمات مطور الواجهة:</h4>
+                            <p>تُستخدم عند تطبيق أكثر من ضريبة على نفس الصنف بترتيب معين أو بطريقة تراكمية (Compound Tax).</p>
+                        </div>
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Method</th>
+                                    <th>Route</th>
+                                    <th>الوصف</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><span class="method-badge badge-GET">GET</span></td>
+                                    <td style="font-family: monospace; direction: ltr; text-align: left;">/api/accounting/tax/groups</td>
+                                    <td>استرجاع المجموعات الضريبية</td>
+                                </tr>
+                                <tr>
+                                    <td><span class="method-badge badge-POST">POST</span></td>
+                                    <td style="font-family: monospace; direction: ltr; text-align: left;">/api/accounting/tax/groups</td>
+                                    <td>إنشاء مجموعة ضريبية مركبة</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+        </div>
+    </main>
+
+    <script>
+        function switchTab(tabId) {
+            document.querySelectorAll('.section-view').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.nav-link').forEach(el => el.classList.remove('active'));
+
+            const targetSection = document.getElementById(tabId);
+            if (targetSection) targetSection.classList.add('active');
+
+            const activeNav = Array.from(document.querySelectorAll('.nav-link')).find(el => el.getAttribute('onclick')?.includes(tabId));
+            if (activeNav) activeNav.classList.add('active');
+
+            const titles = {
+                'tab-overview': 'نظرة عامة على محرك الضرائب',
+                'tab-simulator': 'المحاكي التفاعلي لاحتساب الضرائب',
+                'tab-calculate': 'احتساب الضرائب (POST /calculate)',
+                'tab-vat-declaration': 'الإقرار الضريبي الرسمي (GET /vat-declaration)',
+                'tab-zatca-qr': 'كود الفاتورة الإلكترونية (POST /zatca-qr)',
+                'tab-rates-list': 'قائمة النسب الضريبية (GET /rates)',
+                'tab-rates-code': 'استعلام النسبة بالكود (GET /rates/code)',
+                'tab-rates-crud': 'إدارة النسب الضريبية (Tax Rates CRUD)',
+                'tab-categories': 'فئات الضرائب (Tax Categories)',
+                'tab-groups': 'المجموعات الضريبية (Tax Groups)'
+            };
+            document.getElementById('topHeaderTitle').textContent = titles[tabId] || 'توثيق محرك الضرائب';
         }
 
-        function toggleDetails(id) {
-            const el = document.getElementById(id);
-            if (el.style.display === 'none' || !el.style.display) {
-                el.style.display = 'grid';
+        function copySnippet(id) {
+            const pre = document.getElementById(id);
+            if (!pre) return;
+            navigator.clipboard.writeText(pre.textContent).then(() => {
+                const btn = event.target;
+                const origText = btn.textContent;
+                btn.textContent = 'تم النسخ!';
+                btn.style.background = '#10b981';
+                setTimeout(() => {
+                    btn.textContent = origText;
+                    btn.style.background = '';
+                }, 1500);
+            });
+        }
+
+        function runSimulator() {
+            const isInclusive = document.getElementById('simIsInclusive').value === 'true';
+            const ratePercent = parseFloat(document.getElementById('simTaxRate').value) || 0;
+            const qty = parseFloat(document.getElementById('simQty').value) || 1;
+            const unitPrice = parseFloat(document.getElementById('simPrice').value) || 0;
+            const discount = parseFloat(document.getElementById('simDiscount').value) || 0;
+
+            const gross = qty * unitPrice;
+            const netGross = Math.max(0, gross - discount);
+
+            let netBase = 0;
+            let tax = 0;
+
+            if (isInclusive && ratePercent > 0) {
+                netBase = netGross / (1.0 + (ratePercent / 100.0));
+                tax = netGross - netBase;
             } else {
-                el.style.display = 'none';
-            }
-        }
-
-        function copyCode(btn) {
-            const text = btn.nextElementSibling.textContent;
-            navigator.clipboard.writeText(text).then(() => {
-                btn.textContent = 'Copied!';
-                setTimeout(() => { btn.textContent = 'Copy'; }, 1500);
-            });
-        }
-
-        function setActiveNavItem(selector) {
-            document.querySelectorAll('.nav-item').forEach(item => {
-                item.classList.remove('active');
-                if (selector && item.textContent.trim().toLowerCase().includes(selector.toLowerCase())) {
-                    item.classList.add('active');
-                }
-            });
-        }
-
-        function showSection(section) {
-            currentSection = section;
-            currentControllerName = null;
-            if (section === 'intro') showIntro();
-            if (section === 'owner-types') showOwnerTypes();
-        }
-
-        function filterApis() {
-            const searchStr = document.getElementById('searchBox').value.toLowerCase();
-            if (!searchStr) {
-                initNav();
-                return;
+                netBase = netGross;
+                tax = ratePercent > 0 ? (netBase * (ratePercent / 100.0)) : 0;
             }
 
-            const superadminList = document.getElementById('superadmin-nav-list');
-            const companyList = document.getElementById('company-nav-list');
+            const grandTotal = netBase + tax;
 
-            superadminList.innerHTML = '';
-            companyList.innerHTML = '';
-
-            apiData.controllers.forEach(c => {
-                const controllerMatch = c.clean_name.toLowerCase().includes(searchStr);
-                const routeMatch = c.methods.some(m => m.path.toLowerCase().includes(searchStr) || m.name.toLowerCase().includes(searchStr));
-
-                if (controllerMatch || routeMatch) {
-                    const item = document.createElement('div');
-                    item.className = 'nav-item';
-                    item.textContent = c.clean_name;
-                    item.onclick = () => showControllerDetails(c.name);
-
-                    if (apiData.superadmin_list.includes(c.name)) {
-                        superadminList.appendChild(item);
-                    } else {
-                        companyList.appendChild(item);
-                    }
-                }
-            });
+            document.getElementById('resSubtotal').textContent = netBase.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' ر.س';
+            document.getElementById('resDiscount').textContent = discount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' ر.س';
+            document.getElementById('resTax').textContent = tax.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' ر.س';
+            document.getElementById('resGrand').textContent = grandTotal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' ر.س';
         }
 
-        initNav();
-        showIntro();
+        function filterNav() {
+            const q = document.getElementById('filterInput').value.toLowerCase();
+            document.querySelectorAll('.nav-link').forEach(link => {
+                const text = link.textContent.toLowerCase();
+                link.style.display = text.includes(q) ? 'flex' : 'none';
+            });
+        }
     </script>
 </body>
 </html>

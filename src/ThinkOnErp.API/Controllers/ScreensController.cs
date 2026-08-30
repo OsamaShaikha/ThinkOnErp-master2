@@ -14,6 +14,7 @@ using ThinkOnErp.Application.Features.Screens.Commands.DeleteScreen;
 using ThinkOnErp.Application.Features.Screens.Queries.GetAllScreens;
 using ThinkOnErp.Application.Features.Screens.Queries.GetScreenById;
 using ThinkOnErp.Application.Features.Screens.Queries.GetScreensBySystemId;
+using ThinkOnErp.Domain.Constants;
 
 namespace ThinkOnErp.API.Controllers;
 
@@ -39,7 +40,7 @@ public class ScreensController : ControllerBase
         {
             _logger.LogInformation("Retrieving all screens");
             var screens = await _mediator.Send(new GetAllScreensQuery());
-            return Ok(ApiResponse<List<ScreenDto>>.CreateSuccess(screens, "Screens retrieved successfully", 200));
+            return Ok(ApiResponse<List<ScreenDto>>.CreateSuccess(screens, ResponseCodes.DataRetrieved, 200));
         }
         catch (Exception ex)
         {
@@ -56,7 +57,7 @@ public class ScreensController : ControllerBase
         {
             _logger.LogInformation("Retrieving screens for system ID: {SystemId}", systemId);
             var screens = await _mediator.Send(new GetScreensBySystemIdQuery { SystemId = systemId });
-            return Ok(ApiResponse<List<ScreenDto>>.CreateSuccess(screens, "Screens retrieved successfully", 200));
+            return Ok(ApiResponse<List<ScreenDto>>.CreateSuccess(screens, ResponseCodes.DataRetrieved, 200));
         }
         catch (Exception ex)
         {
@@ -75,8 +76,8 @@ public class ScreensController : ControllerBase
             _logger.LogInformation("Retrieving screen with ID: {ScreenId}", id);
             var screen = await _mediator.Send(new GetScreenByIdQuery { ScreenId = id });
             if (screen == null)
-                return NotFound(ApiResponse<ScreenDto>.CreateFailure("No screen found with the specified identifier", statusCode: 404));
-            return Ok(ApiResponse<ScreenDto>.CreateSuccess(screen, "Screen retrieved successfully", 200));
+                return NotFound(ApiResponse<ScreenDto>.CreateFailure(ErrorCodes.EntityNotFound, statusCode: 404));
+            return Ok(ApiResponse<ScreenDto>.CreateSuccess(screen, ResponseCodes.DataRetrieved, 200));
         }
         catch (Exception ex)
         {
@@ -118,7 +119,7 @@ public class ScreensController : ControllerBase
             _logger.LogInformation("Creating new screen: {ScreenCode}", command.ScreenCode);
             var screenId = await _mediator.Send(command);
             return CreatedAtAction(nameof(GetScreenById), new { id = screenId },
-                ApiResponse<long>.CreateSuccess(screenId, "Screen created successfully", 201));
+                ApiResponse<long>.CreateSuccess(screenId, ResponseCodes.RecordCreated, 201));
         }
         catch (Exception ex)
         {
@@ -163,8 +164,8 @@ public class ScreensController : ControllerBase
             _logger.LogInformation("Updating screen with ID: {ScreenId}", id);
             var rowsAffected = await _mediator.Send(command);
             if (rowsAffected == 0)
-                return NotFound(ApiResponse<long>.CreateFailure("No screen found with the specified identifier", statusCode: 404));
-            return Ok(ApiResponse<long>.CreateSuccess(rowsAffected, "Screen updated successfully", 200));
+                return NotFound(ApiResponse<long>.CreateFailure(ErrorCodes.EntityNotFound, statusCode: 404));
+            return Ok(ApiResponse<long>.CreateSuccess(rowsAffected, ResponseCodes.RecordUpdated, 200));
         }
         catch (Exception ex)
         {
@@ -181,7 +182,7 @@ public class ScreensController : ControllerBase
         {
             _logger.LogInformation("Retrieving features for screen ID: {ScreenId}", screenId);
             var features = await _mediator.Send(new GetFeaturesByScreenIdQuery { ScreenId = screenId });
-            return Ok(ApiResponse<List<FeatureDto>>.CreateSuccess(features, "Features retrieved successfully", 200));
+            return Ok(ApiResponse<List<FeatureDto>>.CreateSuccess(features, ResponseCodes.DataRetrieved, 200));
         }
         catch (Exception ex)
         {
@@ -206,7 +207,7 @@ public class ScreensController : ControllerBase
             };
             _logger.LogInformation("Assigning features to screen ID: {ScreenId}", screenId);
             await _mediator.Send(command);
-            return Ok(ApiResponse<bool>.CreateSuccess(true, "Features assigned successfully", 200));
+            return Ok(ApiResponse<bool>.CreateSuccess(true, ResponseCodes.RecordUpdated, 200));
         }
         catch (Exception ex)
         {
@@ -229,7 +230,7 @@ public class ScreensController : ControllerBase
             };
             _logger.LogInformation("Removing feature {FeatureId} from screen ID: {ScreenId}", featureId, screenId);
             await _mediator.Send(command);
-            return Ok(ApiResponse<bool>.CreateSuccess(true, "Feature removed from screen successfully", 200));
+            return Ok(ApiResponse<bool>.CreateSuccess(true, ResponseCodes.RecordUpdated, 200));
         }
         catch (Exception ex)
         {
@@ -253,8 +254,8 @@ public class ScreensController : ControllerBase
             _logger.LogInformation("Deleting screen with ID: {ScreenId}", id);
             var rowsAffected = await _mediator.Send(command);
             if (rowsAffected == 0)
-                return NotFound(ApiResponse<long>.CreateFailure("No screen found with the specified identifier", statusCode: 404));
-            return Ok(ApiResponse<long>.CreateSuccess(rowsAffected, "Screen deleted successfully", 200));
+                return NotFound(ApiResponse<long>.CreateFailure(ErrorCodes.EntityNotFound, statusCode: 404));
+            return Ok(ApiResponse<long>.CreateSuccess(rowsAffected, ResponseCodes.RecordDeleted, 200));
         }
         catch (Exception ex)
         {

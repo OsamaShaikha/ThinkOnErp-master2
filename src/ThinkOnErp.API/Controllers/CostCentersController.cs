@@ -4,6 +4,7 @@ using ThinkOnErp.API.Authorization;
 using ThinkOnErp.Application.Common;
 using ThinkOnErp.Application.DTOs.Accounting.CostCenters;
 using ThinkOnErp.Application.Services.Accounting;
+using ThinkOnErp.Domain.Constants;
 using ThinkOnErp.Domain.Exceptions;
 
 namespace ThinkOnErp.API.Controllers;
@@ -30,7 +31,7 @@ public sealed class CostCentersController : ControllerBase
     public async Task<ActionResult<ApiResponse<IReadOnlyList<GlCostCenterDto>>>> GetAll(CancellationToken cancellationToken)
     {
         var list = await _costCenterService.GetAllAsync(cancellationToken);
-        return Ok(ApiResponse<IReadOnlyList<GlCostCenterDto>>.CreateSuccess(list, "Cost centers retrieved successfully.", StatusCodes.Status200OK));
+        return Ok(ApiResponse<IReadOnlyList<GlCostCenterDto>>.CreateSuccess(list, ResponseCodes.CostCentersRetrieved, StatusCodes.Status200OK));
     }
 
     /// <summary>
@@ -41,7 +42,7 @@ public sealed class CostCentersController : ControllerBase
     public async Task<ActionResult<ApiResponse<IReadOnlyList<GlCostCenterTreeDto>>>> GetTree(CancellationToken cancellationToken)
     {
         var tree = await _costCenterService.GetTreeAsync(cancellationToken);
-        return Ok(ApiResponse<IReadOnlyList<GlCostCenterTreeDto>>.CreateSuccess(tree, "Cost center tree retrieved successfully.", StatusCodes.Status200OK));
+        return Ok(ApiResponse<IReadOnlyList<GlCostCenterTreeDto>>.CreateSuccess(tree, ResponseCodes.CostCenterTreeRetrieved, StatusCodes.Status200OK));
     }
 
     /// <summary>
@@ -55,10 +56,10 @@ public sealed class CostCentersController : ControllerBase
         var center = await _costCenterService.GetByCodeAsync(costCenterCode, cancellationToken);
         if (center == null)
         {
-            return NotFound(ApiResponse<object>.CreateFailure($"Cost center ({costCenterCode}) not found.", statusCode: StatusCodes.Status404NotFound));
+            return NotFound(ApiResponse<object>.CreateFailure(ErrorCodes.CostCenterNotFound, statusCode: StatusCodes.Status404NotFound));
         }
 
-        return Ok(ApiResponse<GlCostCenterDto>.CreateSuccess(center, "Cost center retrieved successfully.", StatusCodes.Status200OK));
+        return Ok(ApiResponse<GlCostCenterDto>.CreateSuccess(center, ResponseCodes.DataRetrieved, StatusCodes.Status200OK));
     }
 
     /// <summary>
@@ -72,14 +73,14 @@ public sealed class CostCentersController : ControllerBase
         if (!ModelState.IsValid)
         {
             var errors = ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage).ToList();
-            return BadRequest(ApiResponse<object>.CreateFailure("Validation failed.", errors, StatusCodes.Status400BadRequest));
+            return BadRequest(ApiResponse<object>.CreateFailure(ErrorCodes.ValidationError, errors, StatusCodes.Status400BadRequest));
         }
 
         try
         {
             var username = User.Identity?.Name ?? "SYSTEM";
             var created = await _costCenterService.CreateAsync(dto, username, cancellationToken);
-            return CreatedAtAction(nameof(GetByCode), new { costCenterCode = created.CostCenterCode }, ApiResponse<GlCostCenterDto>.CreateSuccess(created, "Cost center created successfully.", StatusCodes.Status201Created));
+            return CreatedAtAction(nameof(GetByCode), new { costCenterCode = created.CostCenterCode }, ApiResponse<GlCostCenterDto>.CreateSuccess(created, ResponseCodes.CostCenterCreated, StatusCodes.Status201Created));
         }
         catch (AccountingException ex)
         {
@@ -99,14 +100,14 @@ public sealed class CostCentersController : ControllerBase
         if (!ModelState.IsValid)
         {
             var errors = ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage).ToList();
-            return BadRequest(ApiResponse<object>.CreateFailure("Validation failed.", errors, StatusCodes.Status400BadRequest));
+            return BadRequest(ApiResponse<object>.CreateFailure(ErrorCodes.ValidationError, errors, StatusCodes.Status400BadRequest));
         }
 
         try
         {
             var username = User.Identity?.Name ?? "SYSTEM";
             var updated = await _costCenterService.UpdateAsync(costCenterCode, dto, username, cancellationToken);
-            return Ok(ApiResponse<GlCostCenterDto>.CreateSuccess(updated, "Cost center updated successfully.", StatusCodes.Status200OK));
+            return Ok(ApiResponse<GlCostCenterDto>.CreateSuccess(updated, ResponseCodes.CostCenterUpdated, StatusCodes.Status200OK));
         }
         catch (AccountingNotFoundException ex)
         {
@@ -130,7 +131,7 @@ public sealed class CostCentersController : ControllerBase
         {
             var username = User.Identity?.Name ?? "SYSTEM";
             var updated = await _costCenterService.SetActiveStatusAsync(costCenterCode, isActive, username, cancellationToken);
-            return Ok(ApiResponse<GlCostCenterDto>.CreateSuccess(updated, $"Cost center active status updated to {isActive}.", StatusCodes.Status200OK));
+            return Ok(ApiResponse<GlCostCenterDto>.CreateSuccess(updated, ResponseCodes.StatusUpdated, StatusCodes.Status200OK));
         }
         catch (AccountingNotFoundException ex)
         {

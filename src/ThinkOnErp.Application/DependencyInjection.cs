@@ -4,7 +4,8 @@ using Microsoft.Extensions.DependencyInjection;
 using System.Reflection;
 using ThinkOnErp.Application.Behaviors;
 using ThinkOnErp.Application.Services;
-using ThinkOnErp.Application.Services.Accounting; 
+using ThinkOnErp.Application.Services.Accounting;
+using ThinkOnErp.Application.Services.Accounting.Tax;
 
 namespace ThinkOnErp.Application;
 
@@ -56,6 +57,29 @@ public static class DependencyInjection
         services.AddScoped<IFiscalClosingService, FiscalClosingService>(); 
         services.AddScoped<IOpeningBalanceService, OpeningBalanceService>();
         services.AddScoped<IAccountStatementService, AccountStatementService>();
+        services.AddScoped<ITaxEngineService, TaxEngineService>();
+        services.AddScoped<ThinkOnErp.Application.Services.Validation.IDynamicValidationEngine, ThinkOnErp.Application.Services.Validation.DynamicValidationEngine>();
+
+        // Inventory & Unified Trade Documents Engine
+        services.AddScoped<ThinkOnErp.Application.Services.Inventory.IInvItemService, ThinkOnErp.Application.Services.Inventory.InvItemService>();
+        services.AddScoped<ThinkOnErp.Application.Services.Inventory.IInvWarehouseService, ThinkOnErp.Application.Services.Inventory.InvWarehouseService>();
+        services.AddScoped<ThinkOnErp.Application.Services.Inventory.IInvStockLedgerService, ThinkOnErp.Application.Services.Inventory.InvStockLedgerService>();
+        services.AddScoped<ThinkOnErp.Application.Services.Inventory.IInvCostingEngine, ThinkOnErp.Application.Services.Inventory.InvCostingEngine>();
+        services.AddScoped<ThinkOnErp.Application.Services.Inventory.IInvAtpCalculator, ThinkOnErp.Application.Services.Inventory.InvAtpCalculator>();
+        services.AddScoped<ThinkOnErp.Application.Services.Inventory.IInvReconciliationService, ThinkOnErp.Application.Services.Inventory.InvReconciliationService>();
+        services.AddScoped<ThinkOnErp.Application.Services.Inventory.ITrxDocumentService, ThinkOnErp.Application.Services.Inventory.TrxDocumentService>();
+        services.AddScoped<ThinkOnErp.Application.Services.Inventory.IInvItemGroupService, ThinkOnErp.Application.Services.Inventory.InvItemGroupService>();
+        services.AddScoped<ThinkOnErp.Application.Services.Inventory.IInvBomService, ThinkOnErp.Application.Services.Inventory.InvBomService>();
+        services.AddScoped<ThinkOnErp.Application.Services.Inventory.IInvOpeningBalanceService, ThinkOnErp.Application.Services.Inventory.InvOpeningBalanceService>();
+
+        // Inventory Validators
+        services.AddScoped<FluentValidation.IValidator<ThinkOnErp.Application.DTOs.Inventory.Documents.CreateTrxDocumentDto>, ThinkOnErp.Application.Validators.Inventory.CreateTrxDocumentDtoValidator>();
+        services.AddScoped<FluentValidation.IValidator<ThinkOnErp.Application.DTOs.Inventory.Items.CreateInvItemDto>, ThinkOnErp.Application.Validators.Inventory.CreateInvItemDtoValidator>();
+        services.AddScoped<FluentValidation.IValidator<ThinkOnErp.Application.DTOs.Inventory.ItemGroups.CreateInvItemGroupDto>, ThinkOnErp.Application.Validators.Inventory.CreateInvItemGroupDtoValidator>();
+        services.AddScoped<FluentValidation.IValidator<ThinkOnErp.Application.DTOs.Inventory.Bom.CreateInvBomDto>, ThinkOnErp.Application.Validators.Inventory.CreateInvBomDtoValidator>();
+        services.AddScoped<FluentValidation.IValidator<ThinkOnErp.Application.DTOs.Inventory.Warehouses.CreateInvWarehouseDto>, ThinkOnErp.Application.Validators.Inventory.CreateInvWarehouseDtoValidator>();
+        services.AddScoped<FluentValidation.IValidator<ThinkOnErp.Application.DTOs.Inventory.OpeningBalance.CreateOpeningBatchDto>, ThinkOnErp.Application.Validators.Inventory.CreateOpeningBatchDtoValidator>();
+        services.AddScoped<FluentValidation.IValidator<ThinkOnErp.Application.DTOs.Inventory.StockMovements.StockMovementRequestDto>, ThinkOnErp.Application.Validators.Inventory.StockMovementRequestDtoValidator>();
 
         return services;
     }

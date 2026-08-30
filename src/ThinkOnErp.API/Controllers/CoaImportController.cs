@@ -4,6 +4,7 @@ using ThinkOnErp.API.Authorization;
 using ThinkOnErp.Application.Common;
 using ThinkOnErp.Application.DTOs.Accounting;
 using ThinkOnErp.Application.Services.Accounting;
+using ThinkOnErp.Domain.Constants;
 
 namespace ThinkOnErp.API.Controllers;
 
@@ -63,8 +64,8 @@ public sealed class CoaImportController : ControllerBase
             result.Errors.Count);
 
         var message = result.IsValid
-            ? "Chart-of-accounts workbook is valid"
-            : "Chart-of-accounts workbook validation completed with errors";
+            ? ResponseCodes.OperationSuccessful
+            : ErrorCodes.OperationFailed;
 
         return Ok(ApiResponse<CoaImportResultDto>.CreateSuccess(result, message));
     }
@@ -96,7 +97,7 @@ public sealed class CoaImportController : ControllerBase
         if (defaultBranchId <= 0)
         {
             return BadRequest(ApiResponse<CoaImportResultDto>.CreateFailure(
-                "A positive defaultBranchId is required."));
+                ErrorCodes.FieldRequired));
         }
 
         var safeFileName = Path.GetFileName(file!.FileName);
@@ -126,7 +127,7 @@ public sealed class CoaImportController : ControllerBase
                 statusCode,
                 CreateFailureWithResult(
                     result,
-                    "Chart-of-accounts import was rejected",
+                    ErrorCodes.OperationFailed,
                     statusCode));
         }
 
@@ -140,7 +141,7 @@ public sealed class CoaImportController : ControllerBase
             StatusCodes.Status201Created,
             ApiResponse<CoaImportResultDto>.CreateSuccess(
                 result,
-                "Chart of accounts imported successfully",
+                ResponseCodes.CoaImported,
                 StatusCodes.Status201Created));
     }
 

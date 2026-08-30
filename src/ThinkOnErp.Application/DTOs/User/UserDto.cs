@@ -78,6 +78,11 @@ public class UserDto
     public bool IsAdmin { get; set; }
 
     /// <summary>
+    /// User preferred default language (1 = Arabic, 2 = English)
+    /// </summary>
+    public int DefaultLang { get; set; } = 1;
+
+    /// <summary>
     /// Username of the user who created this record
     /// </summary>
     public string CreationUser { get; set; } = string.Empty;

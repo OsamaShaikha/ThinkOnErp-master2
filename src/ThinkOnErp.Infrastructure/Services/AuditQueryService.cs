@@ -26,7 +26,8 @@ namespace ThinkOnErp.Infrastructure.Services;
 public class AuditQueryService : IAuditQueryService
 {
     private readonly IAuditRepository _auditRepository;
-    private readonly OracleDbContext _dbContext;
+    private readonly AuditDbContext _dbContext;
+    private readonly OracleDbContext _oracleDbContext;
     private readonly IServiceScopeFactory _serviceScopeFactory;
     private readonly ILogger<AuditQueryService> _logger;
     private readonly IDistributedCache? _cache;
@@ -46,7 +47,8 @@ public class AuditQueryService : IAuditQueryService
     
     public AuditQueryService(
         IAuditRepository auditRepository,
-        OracleDbContext dbContext,
+        AuditDbContext dbContext,
+        OracleDbContext oracleDbContext,
         IServiceScopeFactory serviceScopeFactory,
         ILogger<AuditQueryService> logger,
         IHttpContextAccessor httpContextAccessor,
@@ -55,6 +57,7 @@ public class AuditQueryService : IAuditQueryService
     {
         _auditRepository = auditRepository ?? throw new ArgumentNullException(nameof(auditRepository));
         _dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
+        _oracleDbContext = oracleDbContext ?? throw new ArgumentNullException(nameof(oracleDbContext));
         _serviceScopeFactory = serviceScopeFactory ?? throw new ArgumentNullException(nameof(serviceScopeFactory));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _httpContextAccessor = httpContextAccessor ?? throw new ArgumentNullException(nameof(httpContextAccessor));
@@ -543,7 +546,7 @@ public class AuditQueryService : IAuditQueryService
                         chunk.StartDate, chunk.EndDate);
 
                     using var scope = _serviceScopeFactory.CreateScope();
-                    var context = scope.ServiceProvider.GetRequiredService<OracleDbContext>();
+                    var context = scope.ServiceProvider.GetRequiredService<AuditDbContext>();
 
                     var results = await context.SysAuditLogs
                         .AsNoTracking()
@@ -706,7 +709,7 @@ public class AuditQueryService : IAuditQueryService
                 try
                 {
                     using var scope = _serviceScopeFactory.CreateScope();
-                    var context = scope.ServiceProvider.GetRequiredService<OracleDbContext>();
+                    var context = scope.ServiceProvider.GetRequiredService<AuditDbContext>();
                     var query = ApplyQueryFilters(context.SysAuditLogs.AsQueryable(), chunkFilter);
                     return await query.CountAsync(cancellationToken);
                 }
@@ -740,7 +743,7 @@ public class AuditQueryService : IAuditQueryService
                         chunk.StartDate, chunk.EndDate);
 
                     using var scope = _serviceScopeFactory.CreateScope();
-                    var context = scope.ServiceProvider.GetRequiredService<OracleDbContext>();
+                    var context = scope.ServiceProvider.GetRequiredService<AuditDbContext>();
                     var query = ApplyQueryFilters(context.SysAuditLogs.AsQueryable(), chunkFilter);
 
                     var results = await query
@@ -1047,7 +1050,7 @@ public class AuditQueryService : IAuditQueryService
         {
             if (entry.CompanyId.HasValue)
             {
-                entry.CompanyName = _dbContext.SysCompanies
+                entry.CompanyName = _oracleDbContext.SysCompanies
                     .Where(c => c.Id == entry.CompanyId.Value)
                     .Select(c => c.CompanyNameEn ?? c.CompanyNameAr)
                     .FirstOrDefault();
@@ -1055,7 +1058,7 @@ public class AuditQueryService : IAuditQueryService
 
             if (entry.BranchId.HasValue)
             {
-                entry.BranchName = _dbContext.SysBranches
+                entry.BranchName = _oracleDbContext.SysBranches
                     .Where(b => b.Id == entry.BranchId.Value)
                     .Select(b => b.BranchNameEn ?? b.BranchNameAr)
                     .FirstOrDefault();
@@ -1064,11 +1067,11 @@ public class AuditQueryService : IAuditQueryService
             if (entry.ActorId > 0)
             {
                 entry.ActorName = string.Equals(entry.ActorType, "SUPER_ADMIN", StringComparison.OrdinalIgnoreCase)
-                    ? _dbContext.SysSuperAdmins
+                    ? _oracleDbContext.SysSuperAdmins
                         .Where(u => u.Id == entry.ActorId)
                         .Select(u => u.NameEn ?? u.NameAr ?? u.UserName)
                         .FirstOrDefault()
-                    : _dbContext.SysUsers
+                    : _oracleDbContext.SysUsers
                         .Where(u => u.Id == entry.ActorId)
                         .Select(u => u.FullNameEn ?? u.FullNameAr ?? u.UserName)
                         .FirstOrDefault();

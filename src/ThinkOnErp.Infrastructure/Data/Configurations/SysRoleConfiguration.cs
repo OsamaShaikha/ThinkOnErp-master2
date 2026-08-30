@@ -136,6 +136,7 @@ builder.Property(e => e.FullNameEn).HasColumnName("NAME_EN").HasMaxLength(200).I
         builder.Property(e => e.LastLoginDate).HasColumnName("LAST_LOGIN_DATE");
         builder.Property(e => e.IsActive).HasColumnName("IS_ACTIVE").HasConversion<string>(v => v ? "1" : "0", v => v == "1" || v == "Y" || v == "true").HasMaxLength(1);
         builder.Property(e => e.IsAdmin).HasColumnName("IS_ADMIN").HasConversion<string>(v => v ? "1" : "0", v => v == "1" || v == "Y" || v == "true").HasMaxLength(1);
+        builder.Property(e => e.DefaultLang).HasColumnName("DEFAULT_LANG").HasColumnType("NUMBER(3)").HasDefaultValue(1);
         builder.Property(e => e.CreationUser).HasColumnName("CREATION_USER").HasMaxLength(100).IsRequired();
         builder.Property(e => e.CreationDate).HasColumnName("CREATION_DATE");
         builder.Property(e => e.UpdateUser).HasColumnName("UPDATE_USER").HasMaxLength(100);

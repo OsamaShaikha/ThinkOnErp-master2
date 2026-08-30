@@ -25,7 +25,19 @@ public class TicketRepository : ITicketRepository
     {
         try
         {
-            var query = _context.SysRequestTickets.Where(t => t.IsActive).AsQueryable();
+            var query = _context.SysRequestTickets
+                .Include(t => t.Company)
+                .Include(t => t.Branch)
+                .Include(t => t.Requester)
+                .Include(t => t.Assignee)
+                .Include(t => t.TicketType)
+                .Include(t => t.TicketStatus)
+                .Include(t => t.TicketPriority)
+                .Include(t => t.TicketCategory)
+                .Include(t => t.Comments)
+                .Include(t => t.Attachments)
+                .Where(t => t.IsActive)
+                .AsQueryable();
 
             if (companyId.HasValue) query = query.Where(t => t.CompanyId == companyId.Value);
             if (branchId.HasValue) query = query.Where(t => t.BranchId == branchId.Value);
@@ -57,6 +69,7 @@ public class TicketRepository : ITicketRepository
     public async Task<SysRequestTicket?> GetByIdAsync(long rowId) =>
         await _context.SysRequestTickets
             .Include(t => t.Company).Include(t => t.Branch)
+            .Include(t => t.Requester).Include(t => t.Assignee)
             .Include(t => t.TicketType).Include(t => t.TicketStatus)
             .Include(t => t.TicketPriority).Include(t => t.TicketCategory)
             .Include(t => t.Comments).Include(t => t.Attachments)
@@ -152,7 +165,18 @@ public class TicketRepository : ITicketRepository
 
     public async Task<(List<SysRequestTicket> Tickets, int TotalCount)> SearchTicketsAsync(string searchTerm, long? companyId = null, long? branchId = null, int page = 1, int pageSize = 20)
     {
-        var query = _context.SysRequestTickets.Where(t => t.IsActive && (t.TitleAr.Contains(searchTerm) || t.TitleEn.Contains(searchTerm) || t.Description.Contains(searchTerm)));
+        var query = _context.SysRequestTickets
+            .Include(t => t.Company)
+            .Include(t => t.Branch)
+            .Include(t => t.Requester)
+            .Include(t => t.Assignee)
+            .Include(t => t.TicketType)
+            .Include(t => t.TicketStatus)
+            .Include(t => t.TicketPriority)
+            .Include(t => t.TicketCategory)
+            .Include(t => t.Comments)
+            .Include(t => t.Attachments)
+            .Where(t => t.IsActive && (t.TitleAr.Contains(searchTerm) || t.TitleEn.Contains(searchTerm) || t.Description.Contains(searchTerm)));
         if (companyId.HasValue) query = query.Where(t => t.CompanyId == companyId.Value);
         if (branchId.HasValue) query = query.Where(t => t.BranchId == branchId.Value);
         var total = await query.CountAsync();
@@ -198,7 +222,20 @@ public class TicketRepository : ITicketRepository
         string? slaStatus = null, string filterLogic = "AND", bool includeInactive = false,
         int page = 1, int pageSize = 20, string sortBy = "RELEVANCE", string sortDirection = "DESC")
     {
-        var query = includeInactive ? _context.SysRequestTickets.AsQueryable() : _context.SysRequestTickets.Where(t => t.IsActive).AsQueryable();
+        var baseQuery = _context.SysRequestTickets
+            .Include(t => t.Company)
+            .Include(t => t.Branch)
+            .Include(t => t.Requester)
+            .Include(t => t.Assignee)
+            .Include(t => t.TicketType)
+            .Include(t => t.TicketStatus)
+            .Include(t => t.TicketPriority)
+            .Include(t => t.TicketCategory)
+            .Include(t => t.Comments)
+            .Include(t => t.Attachments)
+            .AsQueryable();
+
+        var query = includeInactive ? baseQuery : baseQuery.Where(t => t.IsActive);
 
         if (companyId.HasValue) query = query.Where(t => t.CompanyId == companyId.Value);
         if (branchId.HasValue) query = query.Where(t => t.BranchId == branchId.Value);

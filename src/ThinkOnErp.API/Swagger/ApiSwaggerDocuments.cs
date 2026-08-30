@@ -125,6 +125,9 @@ public static class ApiSwaggerDocuments
         if (relativePath?.StartsWith("api/tickets", StringComparison.OrdinalIgnoreCase) == true || relativePath?.StartsWith("api/support", StringComparison.OrdinalIgnoreCase) == true)
             return string.Equals(documentName, Support, StringComparison.OrdinalIgnoreCase);
 
+        if (relativePath?.StartsWith("api/inventory", StringComparison.OrdinalIgnoreCase) == true || relativePath?.StartsWith("api/documents", StringComparison.OrdinalIgnoreCase) == true)
+            return string.Equals(documentName, ApiCategories.Inventory, StringComparison.OrdinalIgnoreCase);
+
         // Default fallback to System document only if no other category claimed it
         return string.Equals(documentName, System, StringComparison.OrdinalIgnoreCase);
     }

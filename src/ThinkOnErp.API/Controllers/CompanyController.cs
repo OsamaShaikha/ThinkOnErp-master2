@@ -1,6 +1,7 @@
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using ThinkOnErp.Domain.Constants;
 using ThinkOnErp.Domain.Interfaces;
 using ThinkOnErp.Infrastructure.Services;
 using ThinkOnErp.Application.Common;
@@ -59,7 +60,7 @@ public class CompanyController : ControllerBase
 
             return Ok(ApiResponse<List<CompanyDto>>.CreateSuccess(
                 companies,
-                "Companies retrieved successfully with logos",
+                ResponseCodes.DataRetrieved,
                 200));
         }
         catch (Exception ex)
@@ -86,7 +87,7 @@ public class CompanyController : ControllerBase
             {
                 _logger.LogWarning("Company not found with ID: {CompanyId}", id);
                 return NotFound(ApiResponse<CompanyDto>.CreateFailure(
-                    "No company found with the specified identifier",
+                    ErrorCodes.EntityNotFound,
                     statusCode: 404));
             }
 
@@ -94,7 +95,7 @@ public class CompanyController : ControllerBase
 
             return Ok(ApiResponse<CompanyDto>.CreateSuccess(
                 company,
-                "Company retrieved successfully with logo",
+                ResponseCodes.DataRetrieved,
                 200));
         }
         catch (Exception ex)
@@ -160,7 +161,7 @@ public class CompanyController : ControllerBase
                 new { id = result.CompanyId },
                 ApiResponse<CreateCompanyWithBranchResult>.CreateSuccess(
                     result,
-                    "Company and default branch created successfully with logos",
+                    ResponseCodes.CompanyCreated,
                     201));
         }
         catch (ArgumentException ex)
@@ -203,7 +204,7 @@ public class CompanyController : ControllerBase
             if (!await VerifySuperAdminPinAsync())
             {
                 return StatusCode(StatusCodes.Status403Forbidden, ApiResponse<Int64>.CreateFailure(
-                    "Invalid or missing Super Admin PIN. Please provide it in the 'X-SuperAdmin-PIN' header.", 
+                    ErrorCodes.UnauthorizedAction, 
                     statusCode: 403));
             }
 
@@ -228,7 +229,7 @@ public class CompanyController : ControllerBase
             {
                 _logger.LogWarning("Company not found for update with ID: {CompanyId}", id);
                 return NotFound(ApiResponse<Int64>.CreateFailure(
-                    "No company found with the specified identifier",
+                    ErrorCodes.EntityNotFound,
                     statusCode: 404));
             }
 
@@ -236,7 +237,7 @@ public class CompanyController : ControllerBase
 
             return Ok(ApiResponse<Int64>.CreateSuccess(
                 rowsAffected,
-                "Company updated successfully with logo",
+                ResponseCodes.CompanyUpdated,
                 200));
         }
         catch (Exception ex)
@@ -261,7 +262,7 @@ public class CompanyController : ControllerBase
             if (!await VerifySuperAdminPinAsync())
             {
                 return StatusCode(StatusCodes.Status403Forbidden, ApiResponse<Int64>.CreateFailure(
-                    "Invalid or missing Super Admin PIN. Please provide it in the 'X-SuperAdmin-PIN' header.", 
+                    ErrorCodes.UnauthorizedAction, 
                     statusCode: 403));
             }
 
@@ -272,7 +273,7 @@ public class CompanyController : ControllerBase
             {
                 _logger.LogWarning("Company not found for deletion with ID: {CompanyId}", id);
                 return NotFound(ApiResponse<Int64>.CreateFailure(
-                    "No company found with the specified identifier",
+                    ErrorCodes.EntityNotFound,
                     statusCode: 404));
             }
 
@@ -280,7 +281,7 @@ public class CompanyController : ControllerBase
 
             return Ok(ApiResponse<Int64>.CreateSuccess(
                 rowsAffected,
-                "Company deleted successfully",
+                ResponseCodes.RecordDeleted,
                 200));
         }
         catch (Exception ex)
@@ -308,10 +309,9 @@ public class CompanyController : ControllerBase
             var success = await _mediator.Send(command);
             if (!success)
             {
-                return NotFound(ApiResponse<bool>.CreateFailure("Company not found", statusCode: 404));
+                return NotFound(ApiResponse<bool>.CreateFailure(ErrorCodes.EntityNotFound, statusCode: 404));
             }
-            var actionStr = dto.IsActive ? "activated" : "deactivated";
-            return Ok(ApiResponse<bool>.CreateSuccess(true, $"Company {actionStr} successfully", 200));
+            return Ok(ApiResponse<bool>.CreateSuccess(true, ResponseCodes.StatusUpdated, 200));
         }
         catch (Exception ex)
         {

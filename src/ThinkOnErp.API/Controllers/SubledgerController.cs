@@ -4,6 +4,7 @@ using ThinkOnErp.API.Authorization;
 using ThinkOnErp.Application.Common;
 using ThinkOnErp.Application.DTOs.Accounting.Subledger;
 using ThinkOnErp.Application.Services.Accounting;
+using ThinkOnErp.Domain.Constants;
 
 namespace ThinkOnErp.API.Controllers;
 
@@ -34,7 +35,7 @@ public class SubledgerController : ControllerBase
         var transactions = await _subledgerService.GetArTransactionsAsync(customerCode, fromDate, toDate, onlyOpen, cancellationToken);
         return Ok(ApiResponse<IReadOnlyList<SubledgerTransactionDto>>.CreateSuccess(
             transactions,
-            "تم استرجاع حركات دفتر الأستاذ المساعد للعملاء بنجاح",
+            ResponseCodes.SubledgerTransactionsRetrieved,
             200));
     }
 
@@ -50,7 +51,7 @@ public class SubledgerController : ControllerBase
         var transactions = await _subledgerService.GetApTransactionsAsync(vendorCode, fromDate, toDate, onlyOpen, cancellationToken);
         return Ok(ApiResponse<IReadOnlyList<SubledgerTransactionDto>>.CreateSuccess(
             transactions,
-            "تم استرجاع حركات دفتر الأستاذ المساعد للموردين بنجاح",
+            ResponseCodes.SubledgerTransactionsRetrieved,
             200));
     }
 
@@ -63,7 +64,7 @@ public class SubledgerController : ControllerBase
         var invoices = await _subledgerService.GetArOpenInvoicesAsync(customerCode, cancellationToken);
         return Ok(ApiResponse<IReadOnlyList<OpenInvoiceDto>>.CreateSuccess(
             invoices,
-            "تم استرجاع قائمة فواتير العميل المفتوحة بنجاح",
+            ResponseCodes.DataRetrieved,
             200));
     }
 
@@ -76,7 +77,7 @@ public class SubledgerController : ControllerBase
         var bills = await _subledgerService.GetApOpenBillsAsync(vendorCode, cancellationToken);
         return Ok(ApiResponse<IReadOnlyList<OpenInvoiceDto>>.CreateSuccess(
             bills,
-            "تم استرجاع قائمة فواتير المورد المفتوحة بنجاح",
+            ResponseCodes.DataRetrieved,
             200));
     }
 
@@ -89,7 +90,7 @@ public class SubledgerController : ControllerBase
         var payments = await _subledgerService.GetArOpenPaymentsAsync(customerCode, cancellationToken);
         return Ok(ApiResponse<IReadOnlyList<OpenInvoiceDto>>.CreateSuccess(
             payments,
-            "تم استرجاع سندات قبض العميل المفتوحة بنجاح",
+            ResponseCodes.DataRetrieved,
             200));
     }
 
@@ -102,7 +103,7 @@ public class SubledgerController : ControllerBase
         var payments = await _subledgerService.GetApOpenPaymentsAsync(vendorCode, cancellationToken);
         return Ok(ApiResponse<IReadOnlyList<OpenInvoiceDto>>.CreateSuccess(
             payments,
-            "تم استرجاع سندات صرف المورد المفتوحة بنجاح",
+            ResponseCodes.DataRetrieved,
             200));
     }
 
@@ -117,7 +118,7 @@ public class SubledgerController : ControllerBase
         var results = await _subledgerService.ApplyArCashAsync(dto, username, cancellationToken);
         return Ok(ApiResponse<List<CashApplicationResultDto>>.CreateSuccess(
             results,
-            "تمت مطابقة وتسوية سداد العميل بنجاح",
+            ResponseCodes.CashApplied,
             200));
     }
 
@@ -132,7 +133,7 @@ public class SubledgerController : ControllerBase
         var results = await _subledgerService.ApplyApCashAsync(dto, username, cancellationToken);
         return Ok(ApiResponse<List<CashApplicationResultDto>>.CreateSuccess(
             results,
-            "تمت مطابقة وتسوية سداد المورد بنجاح",
+            ResponseCodes.CashApplied,
             200));
     }
 
@@ -147,7 +148,7 @@ public class SubledgerController : ControllerBase
         var results = await _subledgerService.AutoApplyArCashAsync(dto, username, cancellationToken);
         return Ok(ApiResponse<List<CashApplicationResultDto>>.CreateSuccess(
             results,
-            "تمت المطابقة والتسوية التلقائية بحسب الأقدمية (FIFO) لسداد العميل بنجاح",
+            ResponseCodes.CashApplied,
             200));
     }
 
@@ -162,7 +163,7 @@ public class SubledgerController : ControllerBase
         var results = await _subledgerService.AutoApplyApCashAsync(dto, username, cancellationToken);
         return Ok(ApiResponse<List<CashApplicationResultDto>>.CreateSuccess(
             results,
-            "تمت المطابقة والتسوية التلقائية بحسب الأقدمية (FIFO) لسداد المورد بنجاح",
+            ResponseCodes.CashApplied,
             200));
     }
 
@@ -177,7 +178,7 @@ public class SubledgerController : ControllerBase
         var result = await _subledgerService.UnapplyArCashAsync(applicationId, username, cancellationToken);
         return Ok(ApiResponse<bool>.CreateSuccess(
             result,
-            "تم إلغاء حركة تسوية العميل واستعادة المبالغ المفتوحة بنجاح",
+            ResponseCodes.CashUnapplied,
             200));
     }
 
@@ -192,7 +193,7 @@ public class SubledgerController : ControllerBase
         var result = await _subledgerService.UnapplyApCashAsync(applicationId, username, cancellationToken);
         return Ok(ApiResponse<bool>.CreateSuccess(
             result,
-            "تم إلغاء حركة تسوية المورد واستعادة المبالغ المفتوحة بنجاح",
+            ResponseCodes.CashUnapplied,
             200));
     }
 
@@ -205,7 +206,7 @@ public class SubledgerController : ControllerBase
         var details = await _subledgerService.GetArApplicationsByInvoiceAsync(invoiceId, cancellationToken);
         return Ok(ApiResponse<IReadOnlyList<CashApplicationDetailDto>>.CreateSuccess(
             details,
-            "تم استرجاع سجل سدادات الفاتورة بنجاح",
+            ResponseCodes.DataRetrieved,
             200));
     }
 
@@ -218,7 +219,7 @@ public class SubledgerController : ControllerBase
         var details = await _subledgerService.GetArApplicationsByPaymentAsync(paymentId, cancellationToken);
         return Ok(ApiResponse<IReadOnlyList<CashApplicationDetailDto>>.CreateSuccess(
             details,
-            "تم استرجاع سجل تسويات سند القبض بنجاح",
+            ResponseCodes.DataRetrieved,
             200));
     }
 
@@ -231,7 +232,7 @@ public class SubledgerController : ControllerBase
         var details = await _subledgerService.GetApApplicationsByBillAsync(billId, cancellationToken);
         return Ok(ApiResponse<IReadOnlyList<CashApplicationDetailDto>>.CreateSuccess(
             details,
-            "تم استرجاع سجل سدادات فاتورة الشراء بنجاح",
+            ResponseCodes.DataRetrieved,
             200));
     }
 
@@ -244,7 +245,7 @@ public class SubledgerController : ControllerBase
         var details = await _subledgerService.GetApApplicationsByPaymentAsync(paymentId, cancellationToken);
         return Ok(ApiResponse<IReadOnlyList<CashApplicationDetailDto>>.CreateSuccess(
             details,
-            "تم استرجاع سجل تسويات سند الصرف بنجاح",
+            ResponseCodes.DataRetrieved,
             200));
     }
 
@@ -261,7 +262,7 @@ public class SubledgerController : ControllerBase
         var statement = await _subledgerService.GetCustomerStatementAsync(customerCode, from, to, cancellationToken);
         return Ok(ApiResponse<StatementOfAccountDto>.CreateSuccess(
             statement,
-            "تم استخراج كشف حساب العميل بنجاح",
+            ResponseCodes.AccountStatementGenerated,
             200));
     }
 
@@ -278,7 +279,7 @@ public class SubledgerController : ControllerBase
         var statement = await _subledgerService.GetVendorStatementAsync(vendorCode, from, to, cancellationToken);
         return Ok(ApiResponse<StatementOfAccountDto>.CreateSuccess(
             statement,
-            "تم استخراج كشف حساب المورد بنجاح",
+            ResponseCodes.AccountStatementGenerated,
             200));
     }
 
@@ -292,7 +293,7 @@ public class SubledgerController : ControllerBase
         var report = await _subledgerService.GetArAgingReportAsync(date, cancellationToken);
         return Ok(ApiResponse<AgingReportDto>.CreateSuccess(
             report,
-            "تم استخراج تقرير أعمار ديون العملاء بنجاح",
+            ResponseCodes.AgingReportGenerated,
             200));
     }
 
@@ -306,7 +307,7 @@ public class SubledgerController : ControllerBase
         var report = await _subledgerService.GetApAgingReportAsync(date, cancellationToken);
         return Ok(ApiResponse<AgingReportDto>.CreateSuccess(
             report,
-            "تم استخراج تقرير أعمار ديون الموردين بنجاح",
+            ResponseCodes.AgingReportGenerated,
             200));
     }
 
@@ -319,7 +320,7 @@ public class SubledgerController : ControllerBase
         var result = await _subledgerService.ReconcileArAsync(fiscalYearId, cancellationToken);
         return Ok(ApiResponse<SubledgerReconciliationDto>.CreateSuccess(
             result,
-            "تمت مطابقة دفتر أستاذ العملاء مع الأستاذ العام بنجاح",
+            ResponseCodes.SubledgerReconciled,
             200));
     }
 
@@ -332,7 +333,7 @@ public class SubledgerController : ControllerBase
         var result = await _subledgerService.ReconcileApAsync(fiscalYearId, cancellationToken);
         return Ok(ApiResponse<SubledgerReconciliationDto>.CreateSuccess(
             result,
-            "تمت مطابقة دفتر أستاذ الموردين مع الأستاذ العام بنجاح",
+            ResponseCodes.SubledgerReconciled,
             200));
     }
 }

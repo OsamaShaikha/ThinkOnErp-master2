@@ -1,9 +1,10 @@
-﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using ThinkOnErp.API.Authorization;
 using ThinkOnErp.Application.Common;
 using ThinkOnErp.Application.DTOs.Accounting.Pdc;
 using ThinkOnErp.Application.Services.Accounting;
+using ThinkOnErp.Domain.Constants;
 
 namespace ThinkOnErp.API.Controllers;
 
@@ -31,7 +32,7 @@ public class PdcController : ControllerBase
         var cheques = await _pdcService.GetChequesAsync(filter, cancellationToken);
         return Ok(ApiResponse<IReadOnlyList<PdcRegisterDto>>.CreateSuccess(
             cheques,
-            "تم استرجاع قائمة الشيكات الآجلة بنجاح",
+            ResponseCodes.DataRetrieved,
             200));
     }
 
@@ -44,7 +45,7 @@ public class PdcController : ControllerBase
         var cheque = await _pdcService.GetByIdAsync(id, cancellationToken);
         return Ok(ApiResponse<PdcRegisterDto>.CreateSuccess(
             cheque,
-            "تم استرجاع بيانات الشيك بنجاح",
+            ResponseCodes.DataRetrieved,
             200));
     }
 
@@ -59,7 +60,7 @@ public class PdcController : ControllerBase
         var cheque = await _pdcService.CreatePdcAsync(dto, username, cancellationToken);
         return StatusCode(StatusCodes.Status201Created, ApiResponse<PdcRegisterDto>.CreateSuccess(
             cheque,
-            "تم تسجيل الشيك الآجل بنجاح",
+            ResponseCodes.PdcIssued,
             201));
     }
 
@@ -75,7 +76,7 @@ public class PdcController : ControllerBase
         var result = await _pdcService.DepositChequeAsync(id, dto, username, cancellationToken);
         return Ok(ApiResponse<PdcRegisterDto>.CreateSuccess(
             result,
-            "تم إيداع الشيك في البنك للتحصيل بنجاح",
+            ResponseCodes.PdcDeposited,
             200));
     }
 
@@ -91,7 +92,7 @@ public class PdcController : ControllerBase
         var result = await _pdcService.ClearChequeAsync(id, dto, username, cancellationToken);
         return Ok(ApiResponse<PdcRegisterDto>.CreateSuccess(
             result,
-            "تم تحصيل الشيك وقيده بالبنك بنجاح",
+            ResponseCodes.PdcCleared,
             200));
     }
 
@@ -107,7 +108,7 @@ public class PdcController : ControllerBase
         var result = await _pdcService.BounceChequeAsync(id, dto, username, cancellationToken);
         return Ok(ApiResponse<PdcRegisterDto>.CreateSuccess(
             result,
-            "تم إثبات ارتداد الشيك وعكس القيد بنجاح",
+            ResponseCodes.PdcBounced,
             200));
     }
 
@@ -123,7 +124,7 @@ public class PdcController : ControllerBase
         var result = await _pdcService.CancelChequeAsync(id, username, reason, cancellationToken);
         return Ok(ApiResponse<PdcRegisterDto>.CreateSuccess(
             result,
-            "تم إلغاء/إرجاع الشيك بنجاح",
+            ResponseCodes.OperationSuccessful,
             200));
     }
 
@@ -137,7 +138,7 @@ public class PdcController : ControllerBase
         var summary = await _pdcService.GetUpcomingMaturitiesAsync(branchId, daysAhead, cancellationToken);
         return Ok(ApiResponse<UpcomingMaturitySummaryDto>.CreateSuccess(
             summary,
-            "تم استرجاع تقرير وتنبيهات استحقاقات الشيكات القادمة بنجاح",
+            ResponseCodes.DataRetrieved,
             200));
     }
 }

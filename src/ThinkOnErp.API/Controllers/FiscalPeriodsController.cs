@@ -1,9 +1,10 @@
-﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using ThinkOnErp.API.Authorization;
 using ThinkOnErp.Application.Common;
 using ThinkOnErp.Application.DTOs.Accounting.FiscalPeriods;
 using ThinkOnErp.Application.Services.Accounting;
+using ThinkOnErp.Domain.Constants;
 
 namespace ThinkOnErp.API.Controllers;
 
@@ -35,7 +36,7 @@ public class FiscalPeriodsController : ControllerBase
         var periods = await _periodService.GetPeriodsByFiscalYearIdAsync(fiscalYearId, cancellationToken);
         return Ok(ApiResponse<IReadOnlyList<GlFiscalPeriodDto>>.CreateSuccess(
             periods,
-            "تم استرجاع الفترات المالية بنجاح",
+            ResponseCodes.FiscalPeriodsRetrieved,
             200));
     }
 
@@ -55,7 +56,7 @@ public class FiscalPeriodsController : ControllerBase
         var periods = await _periodService.GeneratePeriodsAsync(fiscalYearId, includeAdjustment, username, cancellationToken);
         return StatusCode(StatusCodes.Status201Created, ApiResponse<IReadOnlyList<GlFiscalPeriodDto>>.CreateSuccess(
             periods,
-            "تم توليد الفترات المالية بنجاح",
+            ResponseCodes.FiscalPeriodsGenerated,
             201));
     }
 
@@ -73,13 +74,13 @@ public class FiscalPeriodsController : ControllerBase
         if (period == null)
         {
             return NotFound(ApiResponse<GlFiscalPeriodDto>.CreateFailure(
-                $"الفترة المالية رقم ({id}) غير موجودة.",
+                ErrorCodes.FiscalPeriodNotFound,
                 statusCode: 404));
         }
 
         return Ok(ApiResponse<GlFiscalPeriodDto>.CreateSuccess(
             period,
-            "تم استرجاع الفترة المالية بنجاح",
+            ResponseCodes.DataRetrieved,
             200));
     }
 
@@ -97,7 +98,7 @@ public class FiscalPeriodsController : ControllerBase
         var result = await _periodService.SoftClosePeriodAsync(id, username, dto?.Reason, cancellationToken);
         return Ok(ApiResponse<GlFiscalPeriodDto>.CreateSuccess(
             result,
-            "تم الإقفال المرن للفترة المالية بنجاح",
+            ResponseCodes.FiscalPeriodSoftClosed,
             200));
     }
 
@@ -115,7 +116,7 @@ public class FiscalPeriodsController : ControllerBase
         var result = await _periodService.HardClosePeriodAsync(id, username, dto?.Reason, cancellationToken);
         return Ok(ApiResponse<GlFiscalPeriodDto>.CreateSuccess(
             result,
-            "تم الإقفال النهائي للفترة المالية بنجاح",
+            ResponseCodes.FiscalPeriodHardClosed,
             200));
     }
 
@@ -133,7 +134,7 @@ public class FiscalPeriodsController : ControllerBase
         var result = await _periodService.ReopenPeriodAsync(id, username, dto?.Reason, cancellationToken);
         return Ok(ApiResponse<GlFiscalPeriodDto>.CreateSuccess(
             result,
-            "تمت إعادة فتح الفترة المالية بنجاح",
+            ResponseCodes.FiscalPeriodReopened,
             200));
     }
 }

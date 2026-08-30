@@ -1,4 +1,4 @@
-﻿using MediatR;
+using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using ThinkOnErp.API.Authorization;
@@ -11,6 +11,7 @@ using ThinkOnErp.Application.Features.FiscalYears.Commands.CloseFiscalYear;
 using ThinkOnErp.Application.Features.FiscalYears.Queries.GetAllFiscalYears;
 using ThinkOnErp.Application.Features.FiscalYears.Queries.GetFiscalYearById;
 using ThinkOnErp.Application.Features.FiscalYears.Queries.GetFiscalYearsByBranch;
+using ThinkOnErp.Domain.Constants;
 
 namespace ThinkOnErp.API.Controllers;
 
@@ -52,7 +53,7 @@ public class FiscalYearController : ControllerBase
 
             return Ok(ApiResponse<List<FiscalYearDto>>.CreateSuccess(
                 fiscalYears,
-                "Fiscal years retrieved successfully",
+                ResponseCodes.FiscalYearsRetrieved,
                 200));
         }
         catch (Exception ex)
@@ -82,7 +83,7 @@ public class FiscalYearController : ControllerBase
             {
                 _logger.LogWarning("Fiscal year not found with ID: {FiscalYearId}", id);
                 return NotFound(ApiResponse<FiscalYearDto>.CreateFailure(
-                    "No fiscal year found with the specified identifier",
+                    ErrorCodes.FiscalYearNotFound,
                     statusCode: 404));
             }
 
@@ -90,7 +91,7 @@ public class FiscalYearController : ControllerBase
 
             return Ok(ApiResponse<FiscalYearDto>.CreateSuccess(
                 fiscalYear,
-                "Fiscal year retrieved successfully",
+                ResponseCodes.DataRetrieved,
                 200));
         }
         catch (Exception ex)
@@ -119,7 +120,7 @@ public class FiscalYearController : ControllerBase
 
             return Ok(ApiResponse<List<FiscalYearDto>>.CreateSuccess(
                 fiscalYears,
-                "Fiscal years retrieved successfully",
+                ResponseCodes.FiscalYearsRetrieved,
                 200));
         }
         catch (Exception ex)
@@ -154,7 +155,7 @@ public class FiscalYearController : ControllerBase
                 new { id = fiscalYearId },
                 ApiResponse<Int64>.CreateSuccess(
                     fiscalYearId,
-                    "Fiscal year created successfully",
+                    ResponseCodes.FiscalYearCreated,
                     201));
         }
         catch (Exception ex)
@@ -189,7 +190,7 @@ public class FiscalYearController : ControllerBase
             {
                 _logger.LogWarning("Fiscal year not found for update with ID: {FiscalYearId}", id);
                 return NotFound(ApiResponse<Int64>.CreateFailure(
-                    "No fiscal year found with the specified identifier",
+                    ErrorCodes.FiscalYearNotFound,
                     statusCode: 404));
             }
 
@@ -197,7 +198,7 @@ public class FiscalYearController : ControllerBase
 
             return Ok(ApiResponse<Int64>.CreateSuccess(
                 rowsAffected,
-                "Fiscal year updated successfully",
+                ResponseCodes.FiscalYearUpdated,
                 200));
         }
         catch (Exception ex)
@@ -229,7 +230,7 @@ public class FiscalYearController : ControllerBase
             {
                 _logger.LogWarning("Fiscal year not found for deletion with ID: {FiscalYearId}", id);
                 return NotFound(ApiResponse<Int64>.CreateFailure(
-                    "No fiscal year found with the specified identifier",
+                    ErrorCodes.FiscalYearNotFound,
                     statusCode: 404));
             }
 
@@ -237,7 +238,7 @@ public class FiscalYearController : ControllerBase
 
             return Ok(ApiResponse<Int64>.CreateSuccess(
                 rowsAffected,
-                "Fiscal year deleted successfully",
+                ResponseCodes.FiscalYearDeleted,
                 200));
         }
         catch (Exception ex)
@@ -276,7 +277,7 @@ public class FiscalYearController : ControllerBase
             {
                 _logger.LogWarning("Fiscal year not found for closing with ID: {FiscalYearId}", id);
                 return NotFound(ApiResponse<Int64>.CreateFailure(
-                    "No fiscal year found with the specified identifier",
+                    ErrorCodes.FiscalYearNotFound,
                     statusCode: 404));
             }
 
@@ -284,7 +285,7 @@ public class FiscalYearController : ControllerBase
 
             return Ok(ApiResponse<Int64>.CreateSuccess(
                 rowsAffected,
-                "Fiscal year closed successfully",
+                ResponseCodes.FiscalYearClosed,
                 200));
         }
         catch (Exception ex)

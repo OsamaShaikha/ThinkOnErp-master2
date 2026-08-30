@@ -1,9 +1,10 @@
-﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using ThinkOnErp.API.Authorization;
 using ThinkOnErp.Application.Common;
 using ThinkOnErp.Application.DTOs.Accounting.Banking;
 using ThinkOnErp.Application.Services.Accounting;
+using ThinkOnErp.Domain.Constants;
 
 namespace ThinkOnErp.API.Controllers;
 
@@ -32,7 +33,7 @@ public class CashRegistersController : ControllerBase
         var list = await _bankingService.GetCashRegistersAsync(branchId, activeOnly, cancellationToken);
         return Ok(ApiResponse<IReadOnlyList<CashRegisterDto>>.CreateSuccess(
             list,
-            "تم استرجاع قائمة الخزائن والصناديق النقدية بنجاح",
+            ResponseCodes.CashRegistersRetrieved,
             200));
     }
 
@@ -45,7 +46,7 @@ public class CashRegistersController : ControllerBase
         var reg = await _bankingService.GetCashRegisterByIdAsync(id, cancellationToken);
         return Ok(ApiResponse<CashRegisterDto>.CreateSuccess(
             reg,
-            "تم استرجاع بيانات الخزينة النقدية بنجاح",
+            ResponseCodes.DataRetrieved,
             200));
     }
 
@@ -60,7 +61,7 @@ public class CashRegistersController : ControllerBase
         var reg = await _bankingService.CreateCashRegisterAsync(dto, username, cancellationToken);
         return StatusCode(StatusCodes.Status201Created, ApiResponse<CashRegisterDto>.CreateSuccess(
             reg,
-            "تم إنشاء الخزينة/الصندوق النقدي بنجاح",
+            ResponseCodes.CashRegisterCreated,
             201));
     }
 
@@ -76,7 +77,7 @@ public class CashRegistersController : ControllerBase
         var reg = await _bankingService.UpdateCashRegisterAsync(id, dto, username, cancellationToken);
         return Ok(ApiResponse<CashRegisterDto>.CreateSuccess(
             reg,
-            "تم تحديث بيانات الخزينة النقدية بنجاح",
+            ResponseCodes.CashRegisterUpdated,
             200));
     }
 }

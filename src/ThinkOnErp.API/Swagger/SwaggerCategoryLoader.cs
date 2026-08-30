@@ -114,6 +114,9 @@ public class SwaggerCategoryLoader
         if (relativePath?.StartsWith("api/tickets", StringComparison.OrdinalIgnoreCase) == true || relativePath?.StartsWith("api/support", StringComparison.OrdinalIgnoreCase) == true)
             return string.Equals(documentName, ApiCategories.Support, StringComparison.OrdinalIgnoreCase);
 
+        if (relativePath?.StartsWith("api/inventory", StringComparison.OrdinalIgnoreCase) == true || relativePath?.StartsWith("api/documents", StringComparison.OrdinalIgnoreCase) == true)
+            return string.Equals(documentName, ApiCategories.Inventory, StringComparison.OrdinalIgnoreCase);
+
         return string.Equals(documentName, ApiCategories.System, StringComparison.OrdinalIgnoreCase);
     }
 
@@ -303,7 +306,8 @@ public class SwaggerCategoryLoader
             (ApiCategories.Auth, "4. Auth & Security API", "Authentication and Authorization: login, JWT tokens, user management, roles, and fine-grained permissions.", 4, "AuthController,UsersController,RolesController,PermissionsController"),
             (ApiCategories.Audit, "5. Audit & Security Monitoring API", "Audit and monitoring: audit logs, entity audit trail, audit health, threat alerts, performance metrics, compliance reporting, and key management.", 5, "AuditLogsController,AuditTrailController,AuditHealthController,AlertsController,MonitoringController,ComplianceController,KeyManagementController"),
             (ApiCategories.Support, "6. Tickets & Support API", "Customer support & ticket management: support tickets, ticket status, and ticket types.", 6, "TicketsController,TicketTypesController"),
-            (ApiCategories.System, "7. System Settings & Codes API", "System configuration & metadata: system lookup codes, global settings, modules, screens, feature toggles, health checks, document uploads, and saved searches.", 7, "SysCodesController,SysSettingsController,ModulesController,ScreensController,FeaturesController,HealthController,DocumentsController,ConfigurationController,SavedSearchesController")
+            (ApiCategories.System, "7. System Settings & Codes API", "System configuration & metadata: system lookup codes, global settings, modules, screens, feature toggles, health checks, document uploads, and saved searches.", 7, "SysCodesController,SysSettingsController,ModulesController,ScreensController,FeaturesController,HealthController,DocumentsController,ConfigurationController,SavedSearchesController"),
+            (ApiCategories.Inventory, "8. Inventory & Trade Documents API", "Inventory management, items master, main/sub groups, BOM kits & assemblies, warehouses, stock movements, FIFO costing, and universal trade documents.", 8, "TrxDocumentsController,InvItemsController,InvItemGroupsController,InvBomController,InvWarehousesController,InvStockController,InvOpeningBalancesController")
         };
 
         foreach (var d in defaults)

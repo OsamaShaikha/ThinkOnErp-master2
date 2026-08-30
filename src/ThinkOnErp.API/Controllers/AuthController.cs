@@ -184,6 +184,7 @@ public class AuthController : ControllerBase
                 LastLoginDate = user.LastLoginDate,
                 IsActive = user.IsActive,
                 IsAdmin = user.IsAdmin,
+                DefaultLang = user.DefaultLang,
                 CreationUser = user.CreationUser,
                 CreationDate = user.CreationDate,
                 UpdateUser = user.UpdateUser,

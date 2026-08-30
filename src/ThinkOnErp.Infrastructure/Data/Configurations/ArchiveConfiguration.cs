@@ -8,9 +8,9 @@ public class SysAuditLogArchiveConfiguration : IEntityTypeConfiguration<SysAudit
 {
     public void Configure(EntityTypeBuilder<SysAuditLogArchive> builder)
     {
-        builder.ToTable("SYS_AUDIT_LOG_ARCHIVE");
+        builder.ToTable("SYS_AUDIT_LOG_ARCHIVE", "THINKON_AUDIT");
         builder.HasKey(e => e.Id);
-        builder.Property(e => e.Id).ValueGeneratedOnAdd();
+        builder.Property(e => e.Id).HasColumnName("ID").ValueGeneratedOnAdd();
         builder.Property(e => e.ActorType).HasColumnName("ACTOR_TYPE").HasMaxLength(50).IsRequired();
         builder.Property(e => e.ActorId).HasColumnName("ACTOR_ID").IsRequired();
         builder.Property(e => e.CompanyId).HasColumnName("COMPANY_ID");
@@ -49,9 +49,9 @@ public class SysRetentionPolicyConfiguration : IEntityTypeConfiguration<SysReten
 {
     public void Configure(EntityTypeBuilder<SysRetentionPolicy> builder)
     {
-        builder.ToTable("SYS_RETENTION_POLICIES", t => t.ExcludeFromMigrations());
+        builder.ToTable("SYS_RETENTION_POLICIES", "THINKON_AUDIT");
         builder.HasKey(e => e.Id);
-        builder.Property(e => e.Id).ValueGeneratedOnAdd();
+        builder.Property(e => e.Id).HasColumnName("ID").ValueGeneratedOnAdd();
         builder.Property(e => e.EventCategory).HasColumnName("EVENT_CATEGORY").HasMaxLength(50).IsRequired();
         builder.Property(e => e.RetentionDays).HasColumnName("RETENTION_DAYS").IsRequired();
         builder.Property(e => e.ArchiveEnabled).HasColumnName("ARCHIVE_ENABLED").IsRequired();

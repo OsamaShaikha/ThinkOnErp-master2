@@ -1,9 +1,10 @@
-﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using ThinkOnErp.API.Authorization;
 using ThinkOnErp.Application.Common;
 using ThinkOnErp.Application.DTOs.Accounting.Balances;
 using ThinkOnErp.Application.Services.Accounting;
+using ThinkOnErp.Domain.Constants;
 
 namespace ThinkOnErp.API.Controllers;
 
@@ -36,7 +37,7 @@ public class AccountBalancesController : ControllerBase
         var balances = await _balanceService.GetBalancesAsync(filter, cancellationToken);
         return Ok(ApiResponse<IReadOnlyList<GlAccountBalanceDto>>.CreateSuccess(
             balances,
-            "تم استرجاع أرصدة الحسابات بنجاح",
+            ResponseCodes.AccountBalancesRetrieved,
             200));
     }
 
@@ -55,7 +56,7 @@ public class AccountBalancesController : ControllerBase
         var report = await _balanceService.GetTrialBalanceAsync(fiscalYearId, fromPeriodId, toPeriodId, branchId, cancellationToken);
         return Ok(ApiResponse<TrialBalanceReportDto>.CreateSuccess(
             report,
-            "تم استخراج ميزان المراجعة بنجاح",
+            ResponseCodes.TrialBalanceGenerated,
             200));
     }
 
@@ -73,7 +74,7 @@ public class AccountBalancesController : ControllerBase
         await _balanceService.RecalculateBalancesAsync(fiscalYearId, username, cancellationToken);
         return Ok(ApiResponse<bool>.CreateSuccess(
             true,
-            "تمت إعادة احتساب وتحديث أرصدة الحسابات بنجاح",
+            ResponseCodes.OperationSuccessful,
             200));
     }
 }

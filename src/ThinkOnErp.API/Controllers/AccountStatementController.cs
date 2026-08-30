@@ -4,6 +4,7 @@ using ThinkOnErp.API.Authorization;
 using ThinkOnErp.Application.Common;
 using ThinkOnErp.Application.DTOs.Accounting.AccountStatement;
 using ThinkOnErp.Application.Services.Accounting;
+using ThinkOnErp.Domain.Constants;
 
 namespace ThinkOnErp.API.Controllers;
 
@@ -45,7 +46,7 @@ public sealed class AccountStatementController : ControllerBase
         if (string.IsNullOrWhiteSpace(request.AccountCode))
         {
             return BadRequest(ApiResponse<object>.CreateFailure(
-                "رقم الحساب مطلوب لإنشاء كشف الحساب.",
+                ErrorCodes.FieldRequired,
                 statusCode: 400));
         }
 
@@ -53,7 +54,7 @@ public sealed class AccountStatementController : ControllerBase
 
         return Ok(ApiResponse<AccountStatementReportDto>.CreateSuccess(
             report,
-            $"تم استخراج كشف حساب الحساب {report.AccountCode} ({report.AccountNameAr}) بنجاح."));
+            ResponseCodes.AccountStatementGenerated));
     }
 
     /// <summary>
@@ -71,6 +72,6 @@ public sealed class AccountStatementController : ControllerBase
 
         return Ok(ApiResponse<IReadOnlyList<AccountStatementSummaryDto>>.CreateSuccess(
             summaryList,
-            $"تم استخراج التقرير الإجمالي لعدد {summaryList.Count} حساب بنجاح."));
+            ResponseCodes.AccountStatementGenerated));
     }
 }

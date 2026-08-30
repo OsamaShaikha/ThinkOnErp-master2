@@ -9,6 +9,7 @@ using ThinkOnErp.Application.Features.Roles.Commands.UpdateRole;
 using ThinkOnErp.Application.Features.Roles.Commands.DeleteRole;
 using ThinkOnErp.Application.Features.Roles.Queries.GetAllRoles;
 using ThinkOnErp.Application.Features.Roles.Queries.GetRoleById;
+using ThinkOnErp.Domain.Constants;
 
 namespace ThinkOnErp.API.Controllers;
 
@@ -25,24 +26,12 @@ public class RolesController : ControllerBase
     private readonly IMediator _mediator;
     private readonly ILogger<RolesController> _logger;
 
-    /// <summary>
-    /// Initializes a new instance of the RolesController class.
-    /// </summary>
-    /// <param name="mediator">MediatR instance for sending commands and queries</param>
-    /// <param name="logger">Logger for controller operations</param>
     public RolesController(IMediator mediator, ILogger<RolesController> logger)
     {
         _mediator = mediator ?? throw new ArgumentNullException(nameof(mediator));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
-    /// <summary>
-    /// Retrieves all active roles from the system.
-    /// Requires authentication.
-    /// </summary>
-    /// <returns>ApiResponse containing list of RoleDto objects</returns>
-    /// <response code="200">Returns the list of all active roles</response>
-    /// <response code="401">User is not authenticated</response>
     [HttpGet]
     [ProducesResponseType(typeof(ApiResponse<List<RoleDto>>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiResponse<List<RoleDto>>), StatusCodes.Status401Unauthorized)]
@@ -59,7 +48,7 @@ public class RolesController : ControllerBase
 
             return Ok(ApiResponse<List<RoleDto>>.CreateSuccess(
                 roles,
-                "Roles retrieved successfully",
+                ResponseCodes.DataRetrieved,
                 200));
         }
         catch (Exception ex)
@@ -69,15 +58,6 @@ public class RolesController : ControllerBase
         }
     }
 
-    /// <summary>
-    /// Retrieves a specific role by its ID.
-    /// Requires authentication.
-    /// </summary>
-    /// <param name="id">Unique identifier of the role</param>
-    /// <returns>ApiResponse containing RoleDto object</returns>
-    /// <response code="200">Returns the requested role</response>
-    /// <response code="404">Role not found with the specified ID</response>
-    /// <response code="401">User is not authenticated</response>
     [HttpGet("{id}")]
     [ProducesResponseType(typeof(ApiResponse<RoleDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiResponse<RoleDto>), StatusCodes.Status404NotFound)]
@@ -95,7 +75,7 @@ public class RolesController : ControllerBase
             {
                 _logger.LogWarning("Role not found with ID: {RoleId}", id);
                 return NotFound(ApiResponse<RoleDto>.CreateFailure(
-                    "No role found with the specified identifier",
+                    ErrorCodes.EntityNotFound,
                     statusCode: 404));
             }
 
@@ -103,7 +83,7 @@ public class RolesController : ControllerBase
 
             return Ok(ApiResponse<RoleDto>.CreateSuccess(
                 role,
-                "Role retrieved successfully",
+                ResponseCodes.DataRetrieved,
                 200));
         }
         catch (Exception ex)
@@ -113,16 +93,6 @@ public class RolesController : ControllerBase
         }
     }
 
-    /// <summary>
-    /// Creates a new role in the system.
-    /// Requires AdminOnly authorization.
-    /// </summary>
-    /// <param name="command">Command containing role creation data</param>
-    /// <returns>ApiResponse containing the newly created role's ID</returns>
-    /// <response code="201">Role created successfully</response>
-    /// <response code="400">Validation errors in the request</response>
-    /// <response code="401">User is not authenticated</response>
-    /// <response code="403">User does not have admin privileges</response>
     [HttpPost]
     [Authorize(Policy = "AdminOnly")]
     [ProducesResponseType(typeof(ApiResponse<Int64>), StatusCodes.Status201Created)]
@@ -145,7 +115,7 @@ public class RolesController : ControllerBase
                 new { id = roleId },
                 ApiResponse<Int64>.CreateSuccess(
                     roleId,
-                    "Role created successfully",
+                    ResponseCodes.RecordCreated,
                     201));
         }
         catch (Exception ex)
@@ -155,18 +125,6 @@ public class RolesController : ControllerBase
         }
     }
 
-    /// <summary>
-    /// Updates an existing role in the system.
-    /// Requires AdminOnly authorization.
-    /// </summary>
-    /// <param name="id">Unique identifier of the role to update</param>
-    /// <param name="command">Command containing updated role data</param>
-    /// <returns>ApiResponse containing the number of rows affected</returns>
-    /// <response code="200">Role updated successfully</response>
-    /// <response code="400">Validation errors or ID mismatch</response>
-    /// <response code="404">Role not found with the specified ID</response>
-    /// <response code="401">User is not authenticated</response>
-    /// <response code="403">User does not have admin privileges</response>
     [HttpPut("{id}")]
     [Authorize(Policy = "AdminOnly")]
     [ProducesResponseType(typeof(ApiResponse<Int64>), StatusCodes.Status200OK)]
@@ -189,7 +147,7 @@ public class RolesController : ControllerBase
             {
                 _logger.LogWarning("Role not found for update with ID: {RoleId}", id);
                 return NotFound(ApiResponse<Int64>.CreateFailure(
-                    "No role found with the specified identifier",
+                    ErrorCodes.EntityNotFound,
                     statusCode: 404));
             }
 
@@ -197,7 +155,7 @@ public class RolesController : ControllerBase
 
             return Ok(ApiResponse<Int64>.CreateSuccess(
                 rowsAffected,
-                "Role updated successfully",
+                ResponseCodes.RecordUpdated,
                 200));
         }
         catch (Exception ex)
@@ -207,16 +165,6 @@ public class RolesController : ControllerBase
         }
     }
 
-    /// <summary>
-    /// Deletes (soft delete) a role from the system.
-    /// Requires AdminOnly authorization.
-    /// </summary>
-    /// <param name="id">Unique identifier of the role to delete</param>
-    /// <returns>ApiResponse containing the number of rows affected</returns>
-    /// <response code="200">Role deleted successfully</response>
-    /// <response code="404">Role not found with the specified ID</response>
-    /// <response code="401">User is not authenticated</response>
-    /// <response code="403">User does not have admin privileges</response>
     [HttpDelete("{id}")]
     [Authorize(Policy = "AdminOnly")]
     [ProducesResponseType(typeof(ApiResponse<Int64>), StatusCodes.Status200OK)]
@@ -236,7 +184,7 @@ public class RolesController : ControllerBase
             {
                 _logger.LogWarning("Role not found for deletion with ID: {RoleId}", id);
                 return NotFound(ApiResponse<Int64>.CreateFailure(
-                    "No role found with the specified identifier",
+                    ErrorCodes.EntityNotFound,
                     statusCode: 404));
             }
 
@@ -244,7 +192,7 @@ public class RolesController : ControllerBase
 
             return Ok(ApiResponse<Int64>.CreateSuccess(
                 rowsAffected,
-                "Role deleted successfully",
+                ResponseCodes.RecordDeleted,
                 200));
         }
         catch (Exception ex)

@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using ThinkOnErp.API.Authorization;
 using ThinkOnErp.Application.Common;
+using ThinkOnErp.Domain.Constants;
 using ThinkOnErp.Domain.Entities;
 using ThinkOnErp.Domain.Interfaces;
 using ThinkOnErp.Domain.Models;
@@ -78,22 +79,22 @@ public class PermissionsController : ControllerBase
             if (!HasTenantContext())
             {
                 return BadRequest(ApiResponse<object>.CreateFailure(
-                    "Select a company using X-Company-Id or X-Company-Code",
+                    ErrorCodes.CompanyContextRequired,
                     statusCode: 400));
             }
 
             return Ok(ApiResponse<object>.CreateSuccess(
                 new { allowed = true },
-                "SuperAdmin has all tenant permissions",
+                ResponseCodes.OperationSuccessful,
                 200));
         }
 
         var userId = GetCurrentUserId();
         if (userId == 0)
-            return Unauthorized(ApiResponse<object>.CreateFailure("Invalid user", statusCode: 401));
+            return Unauthorized(ApiResponse<object>.CreateFailure(ErrorCodes.UnauthorizedAction, statusCode: 401));
 
         var allowed = await _permissionService.CanAccessByCodeAsync(userId, screenCode, featureCode);
-        return Ok(ApiResponse<object>.CreateSuccess(new { allowed }, "Permission check completed", 200));
+        return Ok(ApiResponse<object>.CreateSuccess(new { allowed }, ResponseCodes.OperationSuccessful, 200));
     }
 
     [HttpGet("my-screens")]
@@ -104,27 +105,27 @@ public class PermissionsController : ControllerBase
             if (!HasTenantContext())
             {
                 return BadRequest(ApiResponse<List<object>>.CreateFailure(
-                    "Select a company using X-Company-Id or X-Company-Code",
+                    ErrorCodes.CompanyContextRequired,
                     statusCode: 400));
             }
 
             var superAdminScreens = await GetAllActiveScreensAsync();
             return Ok(ApiResponse<List<object>>.CreateSuccess(
                 superAdminScreens,
-                "All active screens retrieved for SuperAdmin",
+                ResponseCodes.DataRetrieved,
                 200));
         }
 
         var userId = GetCurrentUserId();
         if (userId == 0)
-            return Unauthorized(ApiResponse<List<object>>.CreateFailure("Invalid user", statusCode: 401));
+            return Unauthorized(ApiResponse<List<object>>.CreateFailure(ErrorCodes.UnauthorizedAction, statusCode: 401));
 
         var user = await _userRepo.GetByIdAsync(userId);
         if (user == null || !user.IsActive)
-            return NotFound(ApiResponse<List<object>>.CreateFailure("User not found", statusCode: 404));
+            return NotFound(ApiResponse<List<object>>.CreateFailure(ErrorCodes.EntityNotFound, statusCode: 404));
 
         if (user.BranchId == null)
-            return Ok(ApiResponse<List<object>>.CreateSuccess(new List<object>(), "No screens available", 200));
+            return Ok(ApiResponse<List<object>>.CreateSuccess(new List<object>(), ResponseCodes.DataRetrieved, 200));
 
         var branchId = user.BranchId.Value;
 
@@ -206,7 +207,7 @@ public class PermissionsController : ControllerBase
             }
         }
 
-        return Ok(ApiResponse<List<object>>.CreateSuccess(result, "Screens retrieved", 200));
+        return Ok(ApiResponse<List<object>>.CreateSuccess(result, ResponseCodes.DataRetrieved, 200));
     }
 
     private async Task<List<object>> GetAllActiveScreensAsync()

@@ -9,6 +9,7 @@ using ThinkOnErp.Application.Features.Currencies.Commands.DeleteCurrency;
 using ThinkOnErp.Application.Features.Currencies.Commands.UpdateCurrency;
 using ThinkOnErp.Application.Features.Currencies.Queries.GetAllCurrencies;
 using ThinkOnErp.Application.Features.Currencies.Queries.GetCurrencyById;
+using ThinkOnErp.Domain.Constants;
 
 namespace ThinkOnErp.API.Controllers;
 
@@ -20,30 +21,17 @@ namespace ThinkOnErp.API.Controllers;
 [Route("api/currencies")]
 [TenantScoped]
 [Authorize]
-
 public class CurrencyController : ControllerBase
 {
     private readonly IMediator _mediator;
     private readonly ILogger<CurrencyController> _logger;
 
-    /// <summary>
-    /// Initializes a new instance of the CurrencyController class.
-    /// </summary>
-    /// <param name="mediator">MediatR instance for sending commands and queries</param>
-    /// <param name="logger">Logger for controller operations</param>
     public CurrencyController(IMediator mediator, ILogger<CurrencyController> logger)
     {
         _mediator = mediator ?? throw new ArgumentNullException(nameof(mediator));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
-    /// <summary>
-    /// Retrieves all active currencies from the system.
-    /// Requires authentication.
-    /// </summary>
-    /// <returns>ApiResponse containing list of CurrencyDto objects</returns>
-    /// <response code="200">Returns the list of all active currencies</response>
-    /// <response code="401">User is not authenticated</response>
     [HttpGet]
     [ProducesResponseType(typeof(ApiResponse<List<CurrencyDto>>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiResponse<List<CurrencyDto>>), StatusCodes.Status401Unauthorized)]
@@ -60,7 +48,7 @@ public class CurrencyController : ControllerBase
 
             return Ok(ApiResponse<List<CurrencyDto>>.CreateSuccess(
                 currencies,
-                "Currencies retrieved successfully",
+                ResponseCodes.DataRetrieved,
                 200));
         }
         catch (Exception ex)
@@ -70,15 +58,6 @@ public class CurrencyController : ControllerBase
         }
     }
 
-    /// <summary>
-    /// Retrieves a specific currency by its ID.
-    /// Requires authentication.
-    /// </summary>
-    /// <param name="id">Unique identifier of the currency</param>
-    /// <returns>ApiResponse containing CurrencyDto object</returns>
-    /// <response code="200">Returns the requested currency</response>
-    /// <response code="404">Currency not found with the specified ID</response>
-    /// <response code="401">User is not authenticated</response>
     [HttpGet("{id}")]
     [ProducesResponseType(typeof(ApiResponse<CurrencyDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiResponse<CurrencyDto>), StatusCodes.Status404NotFound)]
@@ -96,7 +75,7 @@ public class CurrencyController : ControllerBase
             {
                 _logger.LogWarning("Currency not found with ID: {CurrencyId}", id);
                 return NotFound(ApiResponse<CurrencyDto>.CreateFailure(
-                    "No currency found with the specified identifier",
+                    ErrorCodes.EntityNotFound,
                     statusCode: 404));
             }
 
@@ -104,7 +83,7 @@ public class CurrencyController : ControllerBase
 
             return Ok(ApiResponse<CurrencyDto>.CreateSuccess(
                 currency,
-                "Currency retrieved successfully",
+                ResponseCodes.DataRetrieved,
                 200));
         }
         catch (Exception ex)
@@ -114,16 +93,6 @@ public class CurrencyController : ControllerBase
         }
     }
 
-    /// <summary>
-    /// Creates a new currency in the system.
-    /// Requires AdminOnly authorization.
-    /// </summary>
-    /// <param name="command">Command containing currency creation data</param>
-    /// <returns>ApiResponse containing the newly created currency's ID</returns>
-    /// <response code="201">Currency created successfully</response>
-    /// <response code="400">Validation errors in the request</response>
-    /// <response code="401">User is not authenticated</response>
-    /// <response code="403">User does not have super admin privileges</response>
     [HttpPost]
     [ProducesResponseType(typeof(ApiResponse<Int64>), StatusCodes.Status201Created)]
     [ProducesResponseType(typeof(ApiResponse<Int64>), StatusCodes.Status400BadRequest)]
@@ -145,7 +114,7 @@ public class CurrencyController : ControllerBase
                 new { id = currencyId },
                 ApiResponse<Int64>.CreateSuccess(
                     currencyId,
-                    "Currency created successfully",
+                    ResponseCodes.RecordCreated,
                     201));
         }
         catch (Exception ex)
@@ -155,18 +124,6 @@ public class CurrencyController : ControllerBase
         }
     }
 
-    /// <summary>
-    /// Updates an existing currency in the system.
-    /// Requires AdminOnly authorization.
-    /// </summary>
-    /// <param name="id">Unique identifier of the currency to update</param>
-    /// <param name="command">Command containing updated currency data</param>
-    /// <returns>ApiResponse containing the number of rows affected</returns>
-    /// <response code="200">Currency updated successfully</response>
-    /// <response code="400">Validation errors or ID mismatch</response>
-    /// <response code="404">Currency not found with the specified ID</response>
-    /// <response code="401">User is not authenticated</response>
-    /// <response code="403">User does not have super admin privileges</response>
     [HttpPut("{id}")]
     [ProducesResponseType(typeof(ApiResponse<Int64>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiResponse<Int64>), StatusCodes.Status400BadRequest)]
@@ -188,7 +145,7 @@ public class CurrencyController : ControllerBase
             {
                 _logger.LogWarning("Currency not found for update with ID: {CurrencyId}", id);
                 return NotFound(ApiResponse<Int64>.CreateFailure(
-                    "No currency found with the specified identifier",
+                    ErrorCodes.EntityNotFound,
                     statusCode: 404));
             }
 
@@ -196,7 +153,7 @@ public class CurrencyController : ControllerBase
 
             return Ok(ApiResponse<Int64>.CreateSuccess(
                 rowsAffected,
-                "Currency updated successfully",
+                ResponseCodes.RecordUpdated,
                 200));
         }
         catch (Exception ex)
@@ -206,16 +163,6 @@ public class CurrencyController : ControllerBase
         }
     }
 
-    /// <summary>
-    /// Deletes (soft delete) a currency from the system.
-    /// Requires AdminOnly authorization.
-    /// </summary>
-    /// <param name="id">Unique identifier of the currency to delete</param>
-    /// <returns>ApiResponse containing the number of rows affected</returns>
-    /// <response code="200">Currency deleted successfully</response>
-    /// <response code="404">Currency not found with the specified ID</response>
-    /// <response code="401">User is not authenticated</response>
-    /// <response code="403">User does not have super admin privileges</response>
     [HttpDelete("{id}")]
     [ProducesResponseType(typeof(ApiResponse<int>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiResponse<int>), StatusCodes.Status404NotFound)]
@@ -234,15 +181,15 @@ public class CurrencyController : ControllerBase
             {
                 _logger.LogWarning("Currency not found for deletion with ID: {CurrencyId}", id);
                 return NotFound(ApiResponse<Int64>.CreateFailure(
-                    "No currency found with the specified identifier",
+                    ErrorCodes.EntityNotFound,
                     statusCode: 404));
             }
 
             _logger.LogInformation("Currency deleted successfully with ID: {CurrencyId}", id);
 
-            return Ok(ApiResponse<Int64>.CreateSuccess(
-                rowsAffected,
-                "Currency deleted successfully",
+            return Ok(ApiResponse<int>.CreateSuccess(
+                (int)rowsAffected,
+                ResponseCodes.RecordDeleted,
                 200));
         }
         catch (Exception ex)

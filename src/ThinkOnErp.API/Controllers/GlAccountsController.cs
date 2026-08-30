@@ -4,6 +4,7 @@ using ThinkOnErp.API.Authorization;
 using ThinkOnErp.Application.Common;
 using ThinkOnErp.Application.DTOs.Accounting;
 using ThinkOnErp.Application.Services.Accounting;
+using ThinkOnErp.Domain.Constants;
 
 namespace ThinkOnErp.API.Controllers;
 
@@ -46,7 +47,7 @@ public sealed class GlAccountsController : ControllerBase
 
         return Ok(ApiResponse<List<GlAccountTreeDto>>.CreateSuccess(
             tree,
-            "Chart of accounts retrieved successfully"));
+            ResponseCodes.CoaTreeRetrieved));
     }
 
     /// <summary>
@@ -67,7 +68,7 @@ public sealed class GlAccountsController : ControllerBase
 
         return Ok(ApiResponse<List<GlAccountCategoryDto>>.CreateSuccess(
             categories,
-            "Account categories and sub-categories retrieved successfully"));
+            ResponseCodes.CategoriesRetrieved));
     }
 
     /// <summary>
@@ -92,7 +93,7 @@ public sealed class GlAccountsController : ControllerBase
 
         return Ok(ApiResponse<List<GlAccountDto>>.CreateSuccess(
             accounts,
-            "Postable accounts retrieved successfully"));
+            ResponseCodes.DataRetrieved));
     }
 
     /// <summary>
@@ -107,7 +108,7 @@ public sealed class GlAccountsController : ControllerBase
         CancellationToken cancellationToken)
     {
         var nextCode = await _service.GetNextChildCodeAsync(parentAccountCode, cancellationToken);
-        return Ok(ApiResponse<string>.CreateSuccess(nextCode, "Next child code generated successfully"));
+        return Ok(ApiResponse<string>.CreateSuccess(nextCode, ResponseCodes.DataRetrieved));
     }
 
     /// <summary>
@@ -127,7 +128,7 @@ public sealed class GlAccountsController : ControllerBase
 
         return Ok(ApiResponse<GlAccountDto>.CreateSuccess(
             account,
-            "GL account retrieved successfully"));
+            ResponseCodes.DataRetrieved));
     }
 
     /// <summary>
@@ -146,7 +147,7 @@ public sealed class GlAccountsController : ControllerBase
         if (request is null)
         {
             return BadRequest(ApiResponse<GlAccountDto>.CreateFailure(
-                "Account data is required."));
+                ErrorCodes.FieldRequired));
         }
 
         var account = await _service.CreateAccountAsync(request, cancellationToken);
@@ -159,7 +160,7 @@ public sealed class GlAccountsController : ControllerBase
             StatusCodes.Status201Created,
             ApiResponse<GlAccountDto>.CreateSuccess(
                 account,
-                "GL account created successfully",
+                ResponseCodes.AccountCreated,
                 StatusCodes.Status201Created));
     }
 
@@ -181,7 +182,7 @@ public sealed class GlAccountsController : ControllerBase
         if (request is null)
         {
             return BadRequest(ApiResponse<GlAccountDto>.CreateFailure(
-                "Account update data is required."));
+                ErrorCodes.FieldRequired));
         }
 
         var account = await _service.UpdateAccountAsync(accountCode, request, cancellationToken);
@@ -192,7 +193,7 @@ public sealed class GlAccountsController : ControllerBase
 
         return Ok(ApiResponse<GlAccountDto>.CreateSuccess(
             account,
-            "GL account updated successfully"));
+            ResponseCodes.AccountUpdated));
     }
 
     /// <summary>
@@ -213,7 +214,7 @@ public sealed class GlAccountsController : ControllerBase
         if (request?.IsActive is null)
         {
             return BadRequest(ApiResponse<GlAccountStatusDto>.CreateFailure(
-                "The isActive value is required."));
+                ErrorCodes.FieldRequired));
         }
 
         await _service.UpdateAccountStatusAsync(
@@ -234,7 +235,7 @@ public sealed class GlAccountsController : ControllerBase
 
         return Ok(ApiResponse<GlAccountStatusDto>.CreateSuccess(
             result,
-            "GL account status updated successfully"));
+            ResponseCodes.StatusUpdated));
     }
 
     /// <summary>
@@ -261,7 +262,7 @@ public sealed class GlAccountsController : ControllerBase
 
         return Ok(ApiResponse<GlAccountDto>.CreateSuccess(
             account,
-            "GL account deleted successfully"));
+            ResponseCodes.AccountDeleted));
     }
 }
 

@@ -1,4 +1,4 @@
-﻿using System.Text;
+using System.Text;
 using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -12,13 +12,13 @@ namespace ThinkOnErp.Infrastructure.Services;
 
 public class AuditTrailService : IAuditTrailService
 {
-    private readonly OracleDbContext _context;
+    private readonly AuditDbContext _context;
     private readonly ILogger<AuditTrailService> _logger;
     private readonly IAuditLogger _auditLogger;
     private readonly ISysCodeService _sysCodeService;
 
     public AuditTrailService(
-        OracleDbContext context,
+        AuditDbContext context,
         ILogger<AuditTrailService> logger,
         IAuditLogger auditLogger,
         ISysCodeService sysCodeService)

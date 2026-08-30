@@ -14,8 +14,9 @@ using ThinkOnErp.Application.Features.Users.Queries.GetAllUsers;
 using ThinkOnErp.Application.Features.Users.Queries.GetUserById;
 using ThinkOnErp.Application.Features.Users.Queries.GetUsersByBranchId;
 using ThinkOnErp.Application.Features.Users.Queries.GetUsersByCompanyId;
-using ThinkOnErp.Infrastructure.Services;
+using ThinkOnErp.Domain.Constants;
 using ThinkOnErp.Domain.Interfaces;
+using ThinkOnErp.Infrastructure.Services;
 
 namespace ThinkOnErp.API.Controllers;
 
@@ -34,13 +35,6 @@ public class UsersController : ControllerBase
     private readonly PasswordHashingService _passwordHashingService;
     private readonly IUserRepository _userRepository;
 
-    /// <summary>
-    /// Initializes a new instance of the UsersController class.
-    /// </summary>
-    /// <param name="mediator">MediatR instance for sending commands and queries</param>
-    /// <param name="logger">Logger for controller operations</param>
-    /// <param name="passwordHashingService">Service for password hashing</param>
-    /// <param name="userRepository">Repository for user operations</param>
     public UsersController(
         IMediator mediator, 
         ILogger<UsersController> logger,
@@ -53,14 +47,6 @@ public class UsersController : ControllerBase
         _userRepository = userRepository ?? throw new ArgumentNullException(nameof(userRepository));
     }
 
-    /// <summary>
-    /// Retrieves all active users from the system.
-    /// Requires AdminOnly authorization.
-    /// </summary>
-    /// <returns>ApiResponse containing list of UserDto objects</returns>
-    /// <response code="200">Returns the list of all active users</response>
-    /// <response code="401">User is not authenticated</response>
-    /// <response code="403">User does not have admin privileges</response>
     [HttpGet]
     [Authorize(Policy = "AdminOnly")]
     [ProducesResponseType(typeof(ApiResponse<List<UserDto>>), StatusCodes.Status200OK)]
@@ -79,7 +65,7 @@ public class UsersController : ControllerBase
 
             return Ok(ApiResponse<List<UserDto>>.CreateSuccess(
                 users,
-                "Users retrieved successfully",
+                ResponseCodes.DataRetrieved,
                 200));
         }
         catch (Exception ex)
@@ -89,16 +75,6 @@ public class UsersController : ControllerBase
         }
     }
 
-    /// <summary>
-    /// Retrieves a specific user by their ID.
-    /// Requires AdminOnly authorization.
-    /// </summary>
-    /// <param name="id">Unique identifier of the user</param>
-    /// <returns>ApiResponse containing UserDto object</returns>
-    /// <response code="200">Returns the requested user</response>
-    /// <response code="404">User not found with the specified ID</response>
-    /// <response code="401">User is not authenticated</response>
-    /// <response code="403">User does not have admin privileges</response>
     [HttpGet("{id}")]
     [Authorize(Policy = "AdminOnly")]
     [ProducesResponseType(typeof(ApiResponse<UserDto>), StatusCodes.Status200OK)]
@@ -118,7 +94,7 @@ public class UsersController : ControllerBase
             {
                 _logger.LogWarning("User not found with ID: {UserId}", id);
                 return NotFound(ApiResponse<UserDto>.CreateFailure(
-                    "No user found with the specified identifier",
+                    ErrorCodes.EntityNotFound,
                     statusCode: 404));
             }
 
@@ -126,7 +102,7 @@ public class UsersController : ControllerBase
 
             return Ok(ApiResponse<UserDto>.CreateSuccess(
                 user,
-                "User retrieved successfully",
+                ResponseCodes.DataRetrieved,
                 200));
         }
         catch (Exception ex)
@@ -136,16 +112,6 @@ public class UsersController : ControllerBase
         }
     }
 
-    /// <summary>
-    /// Creates a new user in the system.
-    /// Requires AdminOnly authorization.
-    /// </summary>
-    /// <param name="command">Command containing user creation data</param>
-    /// <returns>ApiResponse containing the newly created user's ID</returns>
-    /// <response code="201">User created successfully</response>
-    /// <response code="400">Validation errors in the request</response>
-    /// <response code="401">User is not authenticated</response>
-    /// <response code="403">User does not have admin privileges</response>
     [HttpPost]
     [Authorize(Policy = "AdminOnly")]
     [ProducesResponseType(typeof(ApiResponse<Int64>), StatusCodes.Status201Created)]
@@ -159,7 +125,6 @@ public class UsersController : ControllerBase
             command.CreationUser = User.Identity?.Name ?? "system";
             _logger.LogInformation("Creating new user: {UserName}", command.UserName);
 
-            // Hash the password before creating the user
             command.Password = _passwordHashingService.HashPassword(command.Password);
 
             var userId = await _mediator.Send(command);
@@ -169,9 +134,9 @@ public class UsersController : ControllerBase
             return CreatedAtAction(
                 nameof(GetUserById),
                 new { id = userId },
-                ApiResponse<decimal>.CreateSuccess(
+                ApiResponse<Int64>.CreateSuccess(
                     userId,
-                    "User created successfully",
+                    ResponseCodes.RecordCreated,
                     201));
         }
         catch (Exception ex)
@@ -181,18 +146,6 @@ public class UsersController : ControllerBase
         }
     }
 
-    /// <summary>
-    /// Updates an existing user in the system.
-    /// Requires AdminOnly authorization.
-    /// </summary>
-    /// <param name="id">Unique identifier of the user to update</param>
-    /// <param name="command">Command containing updated user data</param>
-    /// <returns>ApiResponse containing the number of rows affected</returns>
-    /// <response code="200">User updated successfully</response>
-    /// <response code="400">Validation errors or ID mismatch</response>
-    /// <response code="404">User not found with the specified ID</response>
-    /// <response code="401">User is not authenticated</response>
-    /// <response code="403">User does not have admin privileges</response>
     [HttpPut("{id}")]
     [Authorize(Policy = "AdminOnly")]
     [ProducesResponseType(typeof(ApiResponse<Int64>), StatusCodes.Status200OK)]
@@ -215,7 +168,7 @@ public class UsersController : ControllerBase
             {
                 _logger.LogWarning("User not found for update with ID: {UserId}", id);
                 return NotFound(ApiResponse<Int64>.CreateFailure(
-                    "No user found with the specified identifier",
+                    ErrorCodes.EntityNotFound,
                     statusCode: 404));
             }
 
@@ -223,7 +176,7 @@ public class UsersController : ControllerBase
 
             return Ok(ApiResponse<Int64>.CreateSuccess(
                 rowsAffected,
-                "User updated successfully",
+                ResponseCodes.RecordUpdated,
                 200));
         }
         catch (Exception ex)
@@ -233,16 +186,6 @@ public class UsersController : ControllerBase
         }
     }
 
-    /// <summary>
-    /// Deletes (soft delete) a user from the system.
-    /// Requires AdminOnly authorization.
-    /// </summary>
-    /// <param name="id">Unique identifier of the user to delete</param>
-    /// <returns>ApiResponse containing the number of rows affected</returns>
-    /// <response code="200">User deleted successfully</response>
-    /// <response code="404">User not found with the specified ID</response>
-    /// <response code="401">User is not authenticated</response>
-    /// <response code="403">User does not have admin privileges</response>
     [HttpDelete("{id}")]
     [Authorize(Policy = "AdminOnly")]
     [ProducesResponseType(typeof(ApiResponse<Int64>), StatusCodes.Status200OK)]
@@ -262,7 +205,7 @@ public class UsersController : ControllerBase
             {
                 _logger.LogWarning("User not found for deletion with ID: {UserId}", id);
                 return NotFound(ApiResponse<Int64>.CreateFailure(
-                    "No user found with the specified identifier",
+                    ErrorCodes.EntityNotFound,
                     statusCode: 404));
             }
 
@@ -270,7 +213,7 @@ public class UsersController : ControllerBase
 
             return Ok(ApiResponse<Int64>.CreateSuccess(
                 rowsAffected,
-                "User deleted successfully",
+                ResponseCodes.RecordDeleted,
                 200));
         }
         catch (Exception ex)
@@ -281,15 +224,41 @@ public class UsersController : ControllerBase
     }
 
     /// <summary>
-    /// Changes the password for a specific user.
-    /// Requires authentication (not AdminOnly - users can change their own password).
+    /// Updates preferred language of the currently authenticated user.
     /// </summary>
-    /// <param name="id">Unique identifier of the user</param>
-    /// <param name="dto">DTO containing password change data</param>
-    /// <returns>ApiResponse containing success status</returns>
-    /// <response code="200">Password changed successfully</response>
-    /// <response code="400">Validation errors or ID mismatch</response>
-    /// <response code="401">User is not authenticated</response>
+    [HttpPatch("language")]
+    [ProducesResponseType(typeof(ApiResponse<bool>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<bool>), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ApiResponse<bool>), StatusCodes.Status401Unauthorized)]
+    public async Task<ActionResult<ApiResponse<bool>>> UpdateUserLanguage([FromBody] UpdateUserLanguageDto dto)
+    {
+        try
+        {
+            var userIdClaim = User.FindFirst("userId")?.Value;
+            if (!long.TryParse(userIdClaim, out var userId))
+            {
+                return Unauthorized(ApiResponse<bool>.CreateFailure(ErrorCodes.UnauthorizedAction, statusCode: 401));
+            }
+
+            var user = await _userRepository.GetByIdAsync(userId);
+            if (user == null)
+            {
+                return NotFound(ApiResponse<bool>.CreateFailure(ErrorCodes.EntityNotFound, statusCode: 404));
+            }
+
+            user.DefaultLang = dto.DefaultLang > 0 ? dto.DefaultLang : 1;
+            user.UpdateUser = User.Identity?.Name ?? "system";
+            await _userRepository.UpdateAsync(user);
+
+            return Ok(ApiResponse<bool>.CreateSuccess(true, ResponseCodes.RecordUpdated, 200));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error updating user language");
+            throw;
+        }
+    }
+
     [HttpPut("{id}/change-password")]
     [ProducesResponseType(typeof(ApiResponse<bool>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiResponse<bool>), StatusCodes.Status400BadRequest)]
@@ -300,39 +269,33 @@ public class UsersController : ControllerBase
         {
             _logger.LogInformation("Changing password for user with ID: {UserId}", id);
 
-            // Get user to verify current password
             var user = await _userRepository.GetByIdAsync(id);
-            
             if (user == null)
             {
                 _logger.LogWarning("User not found with ID: {UserId}", id);
                 return NotFound(ApiResponse<bool>.CreateFailure(
-                    "User not found",
+                    ErrorCodes.EntityNotFound,
                     statusCode: 404));
             }
 
-            // Verify current password
             if (!_passwordHashingService.VerifyPassword(dto.CurrentPassword, user.Password))
             {
                 _logger.LogWarning("Current password verification failed for user ID: {UserId}", id);
                 return BadRequest(ApiResponse<bool>.CreateFailure(
-                    "Current password is incorrect",
+                    ErrorCodes.InvalidCredentials,
                     statusCode: 400));
             }
 
-            // Verify new password and confirm password match
             if (dto.NewPassword != dto.ConfirmPassword)
             {
                 _logger.LogWarning("New password and confirm password do not match for user ID: {UserId}", id);
                 return BadRequest(ApiResponse<bool>.CreateFailure(
-                    "New password and confirm password do not match",
+                    ErrorCodes.ValidationError,
                     statusCode: 400));
             }
 
-            // Hash the new password
             var newPasswordHash = _passwordHashingService.HashPassword(dto.NewPassword);
 
-            // Update password in database using the new ChangePasswordAsync method
             var rowsAffected = await _userRepository.ChangePasswordAsync(
                 id,
                 newPasswordHash,
@@ -342,7 +305,7 @@ public class UsersController : ControllerBase
             {
                 _logger.LogWarning("Password change failed for user with ID: {UserId}", id);
                 return BadRequest(ApiResponse<bool>.CreateFailure(
-                    "Password change failed",
+                    ErrorCodes.SystemError,
                     statusCode: 400));
             }
 
@@ -350,7 +313,7 @@ public class UsersController : ControllerBase
 
             return Ok(ApiResponse<bool>.CreateSuccess(
                 true,
-                "Password changed successfully",
+                ResponseCodes.RecordUpdated,
                 200));
         }
         catch (Exception ex)
@@ -360,15 +323,6 @@ public class UsersController : ControllerBase
         }
     }
 
-    /// <summary>
-    /// Retrieves all active users for a specific branch.
-    /// Requires AdminOnly authorization.
-    /// </summary>
-    /// <param name="branchId">Unique identifier of the branch</param>
-    /// <returns>ApiResponse containing list of UserDto objects for the specified branch</returns>
-    /// <response code="200">Returns the list of users for the branch</response>
-    /// <response code="401">User is not authenticated</response>
-    /// <response code="403">User does not have admin privileges</response>
     [HttpGet("branch/{branchId}")]
     [Authorize(Policy = "AdminOnly")]
     [ProducesResponseType(typeof(ApiResponse<List<UserDto>>), StatusCodes.Status200OK)]
@@ -387,7 +341,7 @@ public class UsersController : ControllerBase
 
             return Ok(ApiResponse<List<UserDto>>.CreateSuccess(
                 users,
-                "Users retrieved successfully",
+                ResponseCodes.DataRetrieved,
                 200));
         }
         catch (Exception ex)
@@ -397,15 +351,6 @@ public class UsersController : ControllerBase
         }
     }
 
-    /// <summary>
-    /// Retrieves all active users for a specific company (through branches).
-    /// Requires AdminOnly authorization.
-    /// </summary>
-    /// <param name="companyId">Unique identifier of the company</param>
-    /// <returns>ApiResponse containing list of UserDto objects for the specified company</returns>
-    /// <response code="200">Returns the list of users for the company</response>
-    /// <response code="401">User is not authenticated</response>
-    /// <response code="403">User does not have admin privileges</response>
     [HttpGet("company/{companyId}")]
     [Authorize(Policy = "AdminOnly")]
     [ProducesResponseType(typeof(ApiResponse<List<UserDto>>), StatusCodes.Status200OK)]
@@ -424,7 +369,7 @@ public class UsersController : ControllerBase
 
             return Ok(ApiResponse<List<UserDto>>.CreateSuccess(
                 users,
-                "Users retrieved successfully",
+                ResponseCodes.DataRetrieved,
                 200));
         }
         catch (Exception ex)
@@ -434,16 +379,6 @@ public class UsersController : ControllerBase
         }
     }
 
-    /// <summary>
-    /// Forces logout of a user by invalidating all their tokens.
-    /// Requires AdminOnly authorization.
-    /// </summary>
-    /// <param name="id">Unique identifier of the user to force logout</param>
-    /// <returns>ApiResponse containing success status</returns>
-    /// <response code="200">User forced logout successfully</response>
-    /// <response code="404">User not found with the specified ID</response>
-    /// <response code="401">User is not authenticated</response>
-    /// <response code="403">User does not have admin privileges</response>
     [HttpPost("{id}/force-logout")]
     [Authorize(Policy = "AdminOnly")]
     [ProducesResponseType(typeof(ApiResponse<int>), StatusCodes.Status200OK)]
@@ -454,7 +389,6 @@ public class UsersController : ControllerBase
     {
         try
         {
-            // Get the admin username from claims
             var adminUserName = User.Claims.FirstOrDefault(c => c.Type == "userName")?.Value ?? "Unknown";
 
             _logger.LogInformation("Admin {AdminUser} forcing logout for user ID: {UserId}", adminUserName, id);
@@ -471,7 +405,7 @@ public class UsersController : ControllerBase
             {
                 _logger.LogWarning("User not found for force logout with ID: {UserId}", id);
                 return NotFound(ApiResponse<int>.CreateFailure(
-                    "No user found with the specified identifier",
+                    ErrorCodes.EntityNotFound,
                     statusCode: 404));
             }
 
@@ -479,7 +413,7 @@ public class UsersController : ControllerBase
 
             return Ok(ApiResponse<int>.CreateSuccess(
                 rowsAffected,
-                "User forced logout successfully. All active sessions have been terminated.",
+                ResponseCodes.StatusUpdated,
                 200));
         }
         catch (Exception ex)
@@ -489,17 +423,6 @@ public class UsersController : ControllerBase
         }
     }
 
-    /// <summary>
-    /// Resets the password for a specific user (admin-initiated)
-    /// Generates a secure temporary password
-    /// Requires AdminOnly authorization.
-    /// </summary>
-    /// <param name="id">Unique identifier of the user</param>
-    /// <returns>ApiResponse containing the temporary password</returns>
-    /// <response code="200">Password reset successfully with temporary password</response>
-    /// <response code="404">User not found</response>
-    /// <response code="401">User is not authenticated</response>
-    /// <response code="403">User does not have admin privileges</response>
     [HttpPost("{id}/reset-password")]
     [Authorize(Policy = "AdminOnly")]
     [ProducesResponseType(typeof(ApiResponse<UserResetPasswordDto>), StatusCodes.Status200OK)]
@@ -510,23 +433,19 @@ public class UsersController : ControllerBase
     {
         try
         {
-            // Get the admin username from claims
             var adminUserName = User.Claims.FirstOrDefault(c => c.Type == "userName")?.Value ?? "system";
 
             _logger.LogInformation("Admin {AdminUser} resetting password for user ID: {UserId}", adminUserName, id);
 
-            // Verify user exists
             var user = await _userRepository.GetByIdAsync(id);
-            
             if (user == null)
             {
                 _logger.LogWarning("User not found with ID: {UserId}", id);
                 return NotFound(ApiResponse<UserResetPasswordDto>.CreateFailure(
-                    "User not found",
+                    ErrorCodes.EntityNotFound,
                     statusCode: 404));
             }
 
-            // Generate temporary password using the command handler
             var command = new ResetUserPasswordCommand
             {
                 UserId = id,
@@ -534,11 +453,8 @@ public class UsersController : ControllerBase
             };
 
             var temporaryPassword = await _mediator.Send(command);
-
-            // Hash the temporary password
             var temporaryPasswordHash = _passwordHashingService.HashPassword(temporaryPassword);
 
-            // Update password in database
             var rowsAffected = await _userRepository.ChangePasswordAsync(
                 id,
                 temporaryPasswordHash,
@@ -548,7 +464,7 @@ public class UsersController : ControllerBase
             {
                 _logger.LogWarning("Password reset failed for user with ID: {UserId}", id);
                 return BadRequest(ApiResponse<UserResetPasswordDto>.CreateFailure(
-                    "Password reset failed",
+                    ErrorCodes.SystemError,
                     statusCode: 400));
             }
 
@@ -562,7 +478,7 @@ public class UsersController : ControllerBase
 
             return Ok(ApiResponse<UserResetPasswordDto>.CreateSuccess(
                 result,
-                "Password reset successfully",
+                ResponseCodes.RecordUpdated,
                 200));
         }
         catch (InvalidOperationException ex)

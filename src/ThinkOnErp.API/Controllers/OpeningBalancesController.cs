@@ -5,6 +5,7 @@ using ThinkOnErp.API.Authorization;
 using ThinkOnErp.Application.Common;
 using ThinkOnErp.Application.DTOs.Accounting.OpeningBalances;
 using ThinkOnErp.Application.Services.Accounting;
+using ThinkOnErp.Domain.Constants;
 
 namespace ThinkOnErp.API.Controllers;
 
@@ -18,8 +19,6 @@ namespace ThinkOnErp.API.Controllers;
 [ApiExplorerSettings(GroupName = ThinkOnErp.API.Swagger.ApiCategories.Accounting)]
 [TenantScoped]
 [Authorize]
-
-
 public sealed class OpeningBalancesController : ControllerBase
 {
     private readonly IOpeningBalanceService _service;
@@ -47,11 +46,11 @@ public sealed class OpeningBalancesController : ControllerBase
         var result = await _service.GetByFiscalYearAsync(branchId, fiscalYearId, cancellationToken);
         if (result == null)
             return NotFound(ApiResponse<object>.CreateFailure(
-                $"لم يتم العثور على أرصدة افتتاحية للفرع ({branchId}) والسنة المالية ({fiscalYearId}).",
+                ErrorCodes.OpeningBalanceNotFound,
                 statusCode: 404));
 
         return Ok(ApiResponse<OpeningBalanceHeaderDto>.CreateSuccess(
-            result, "تم استرجاع الأرصدة الافتتاحية بنجاح"));
+            result, ResponseCodes.OpeningBalanceRetrieved));
     }
 
     /// <summary>
@@ -65,7 +64,7 @@ public sealed class OpeningBalancesController : ControllerBase
     {
         var results = await _service.GetAllByBranchAsync(branchId, cancellationToken);
         return Ok(ApiResponse<IReadOnlyList<OpeningBalanceHeaderDto>>.CreateSuccess(
-            results, "تم استرجاع قائمة الأرصدة الافتتاحية بنجاح"));
+            results, ResponseCodes.OpeningBalanceRetrieved));
     }
 
     /// <summary>
@@ -81,10 +80,10 @@ public sealed class OpeningBalancesController : ControllerBase
         var result = await _service.GetByIdAsync(id, cancellationToken);
         if (result == null)
             return NotFound(ApiResponse<object>.CreateFailure(
-                $"قيد الأرصدة الافتتاحية ({id}) غير موجود.", statusCode: 404));
+                ErrorCodes.OpeningBalanceNotFound, statusCode: 404));
 
         return Ok(ApiResponse<OpeningBalanceHeaderDto>.CreateSuccess(
-            result, "تم استرجاع قيد الأرصدة الافتتاحية بنجاح"));
+            result, ResponseCodes.OpeningBalanceRetrieved));
     }
 
     /// <summary>
@@ -105,7 +104,7 @@ public sealed class OpeningBalancesController : ControllerBase
             nameof(GetById),
             new { id = result.Id },
             ApiResponse<OpeningBalanceHeaderDto>.CreateSuccess(
-                result, "تم إنشاء قيد الأرصدة الافتتاحية بنجاح", 201));
+                result, ResponseCodes.OpeningBalanceCreated, 201));
     }
 
     /// <summary>
@@ -123,7 +122,7 @@ public sealed class OpeningBalancesController : ControllerBase
         var username = User.FindFirstValue(ClaimTypes.Name) ?? User.Identity?.Name ?? "API_USER";
         var result = await _service.AddLineAsync(id, line, username, cancellationToken);
         return Ok(ApiResponse<OpeningBalanceHeaderDto>.CreateSuccess(
-            result, "تم إضافة السطر بنجاح"));
+            result, ResponseCodes.RecordCreated));
     }
 
     /// <summary>
@@ -142,7 +141,7 @@ public sealed class OpeningBalancesController : ControllerBase
         var username = User.FindFirstValue(ClaimTypes.Name) ?? User.Identity?.Name ?? "API_USER";
         var result = await _service.UpdateLineAsync(id, lineId, line, username, cancellationToken);
         return Ok(ApiResponse<OpeningBalanceHeaderDto>.CreateSuccess(
-            result, "تم تحديث السطر بنجاح"));
+            result, ResponseCodes.RecordUpdated));
     }
 
     /// <summary>
@@ -159,7 +158,7 @@ public sealed class OpeningBalancesController : ControllerBase
         var username = User.FindFirstValue(ClaimTypes.Name) ?? User.Identity?.Name ?? "API_USER";
         var result = await _service.DeleteLineAsync(id, lineId, username, cancellationToken);
         return Ok(ApiResponse<OpeningBalanceHeaderDto>.CreateSuccess(
-            result, "تم حذف السطر بنجاح"));
+            result, ResponseCodes.RecordDeleted));
     }
 
     /// <summary>
@@ -178,6 +177,6 @@ public sealed class OpeningBalancesController : ControllerBase
         var username = User.FindFirstValue(ClaimTypes.Name) ?? User.Identity?.Name ?? "API_USER";
         var result = await _service.ConfirmAsync(id, username, cancellationToken);
         return Ok(ApiResponse<OpeningBalanceHeaderDto>.CreateSuccess(
-            result, "تم تأكيد الأرصدة الافتتاحية وتوليد القيد المحاسبي بنجاح"));
+            result, ResponseCodes.OpeningBalanceConfirmed));
     }
 }

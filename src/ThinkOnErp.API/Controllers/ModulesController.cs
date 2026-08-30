@@ -8,6 +8,7 @@ using ThinkOnErp.Application.Features.Modules.Commands.UpdateModule;
 using ThinkOnErp.Application.Features.Modules.Commands.DeleteModule;
 using ThinkOnErp.Application.Features.Modules.Queries.GetAllModules;
 using ThinkOnErp.Application.Features.Modules.Queries.GetModuleById;
+using ThinkOnErp.Domain.Constants;
 
 namespace ThinkOnErp.API.Controllers;
 
@@ -33,7 +34,7 @@ public class ModulesController : ControllerBase
         {
             _logger.LogInformation("Retrieving all modules");
             var modules = await _mediator.Send(new GetAllModulesQuery());
-            return Ok(ApiResponse<List<ModuleDto>>.CreateSuccess(modules, "Modules retrieved successfully", 200));
+            return Ok(ApiResponse<List<ModuleDto>>.CreateSuccess(modules, ResponseCodes.DataRetrieved, 200));
         }
         catch (Exception ex)
         {
@@ -54,10 +55,10 @@ public class ModulesController : ControllerBase
 
             if (module == null)
             {
-                return NotFound(ApiResponse<ModuleDto>.CreateFailure("No module found with the specified identifier", statusCode: 404));
+                return NotFound(ApiResponse<ModuleDto>.CreateFailure(ErrorCodes.EntityNotFound, statusCode: 404));
             }
 
-            return Ok(ApiResponse<ModuleDto>.CreateSuccess(module, "Module retrieved successfully", 200));
+            return Ok(ApiResponse<ModuleDto>.CreateSuccess(module, ResponseCodes.DataRetrieved, 200));
         }
         catch (Exception ex)
         {
@@ -77,7 +78,7 @@ public class ModulesController : ControllerBase
             _logger.LogInformation("Creating new module: {ModuleCode}", command.ModuleCode);
             var moduleId = await _mediator.Send(command);
             return CreatedAtAction(nameof(GetModuleById), new { id = moduleId },
-                ApiResponse<long>.CreateSuccess(moduleId, "Module created successfully", 201));
+                ApiResponse<long>.CreateSuccess(moduleId, ResponseCodes.RecordCreated, 201));
         }
         catch (Exception ex)
         {
@@ -101,10 +102,10 @@ public class ModulesController : ControllerBase
 
             if (rowsAffected == 0)
             {
-                return NotFound(ApiResponse<long>.CreateFailure("No module found with the specified identifier", statusCode: 404));
+                return NotFound(ApiResponse<long>.CreateFailure(ErrorCodes.EntityNotFound, statusCode: 404));
             }
 
-            return Ok(ApiResponse<long>.CreateSuccess(rowsAffected, "Module updated successfully", 200));
+            return Ok(ApiResponse<long>.CreateSuccess(rowsAffected, ResponseCodes.RecordUpdated, 200));
         }
         catch (Exception ex)
         {
@@ -127,10 +128,10 @@ public class ModulesController : ControllerBase
 
             if (rowsAffected == 0)
             {
-                return NotFound(ApiResponse<long>.CreateFailure("No module found with the specified identifier", statusCode: 404));
+                return NotFound(ApiResponse<long>.CreateFailure(ErrorCodes.EntityNotFound, statusCode: 404));
             }
 
-            return Ok(ApiResponse<long>.CreateSuccess(rowsAffected, "Module deleted successfully", 200));
+            return Ok(ApiResponse<long>.CreateSuccess(rowsAffected, ResponseCodes.RecordDeleted, 200));
         }
         catch (Exception ex)
         {

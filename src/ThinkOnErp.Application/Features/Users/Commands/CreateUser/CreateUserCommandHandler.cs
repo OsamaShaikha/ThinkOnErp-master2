@@ -60,6 +60,7 @@ public class CreateUserCommandHandler : IRequestHandler<CreateUserCommand, Int64
             CompanyId = primaryBranch?.CompanyId,
             Email = request.Email,
             IsAdmin = request.IsAdmin,
+            DefaultLang = request.DefaultLang > 0 ? request.DefaultLang : 1,
             IsActive = true,
             CreationUser = request.CreationUser,
             CreationDate = DateTime.UtcNow

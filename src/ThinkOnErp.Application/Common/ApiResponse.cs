@@ -1,6 +1,19 @@
 namespace ThinkOnErp.Application.Common;
 
-public class ApiResponse<T>
+/// <summary>
+/// Common non-generic interface for uniform API response inspection and localization.
+/// </summary>
+public interface IApiResponse
+{
+    bool Success { get; set; }
+    int StatusCode { get; set; }
+    string Message { get; set; }
+    List<string>? Errors { get; set; }
+    DateTime Timestamp { get; set; }
+    string TraceId { get; set; }
+}
+
+public class ApiResponse<T> : IApiResponse
 {
     public bool Success { get; set; }
     public int StatusCode { get; set; }
@@ -10,7 +23,7 @@ public class ApiResponse<T>
     public DateTime Timestamp { get; set; }
     public string TraceId { get; set; } = string.Empty;
 
-    public static ApiResponse<T> CreateSuccess(T data, string message, int statusCode = 200)
+    public static ApiResponse<T> CreateSuccess(T data, string message = "", int statusCode = 200)
     {
         return new ApiResponse<T>
         {

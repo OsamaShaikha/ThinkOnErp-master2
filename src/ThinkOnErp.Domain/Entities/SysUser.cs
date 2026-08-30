@@ -16,6 +16,7 @@ public class SysUser
     public DateTime? LastLoginDate { get; set; }
     public bool IsActive { get; set; }
     public bool IsAdmin { get; set; }
+    public int DefaultLang { get; set; } = 1;
     public string CreationUser { get; set; } = string.Empty;
     public DateTime? CreationDate { get; set; }
     public string? UpdateUser { get; set; }

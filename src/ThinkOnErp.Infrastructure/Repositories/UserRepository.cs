@@ -51,6 +51,7 @@ public class UserRepository : IUserRepository
         existing.CompanyId = user.CompanyId;
         existing.Email = user.Email;
         existing.IsAdmin = user.IsAdmin;
+        existing.DefaultLang = user.DefaultLang;
         existing.UpdateUser = user.UpdateUser;
         existing.UpdateDate = DateTime.Now;
 

@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using ThinkOnErp.API.Authorization;
 using ThinkOnErp.Application.Common;
+using ThinkOnErp.Domain.Constants;
 using ThinkOnErp.Domain.Entities;
 using ThinkOnErp.Domain.Interfaces;
 using ThinkOnErp.Infrastructure.Data;
@@ -76,7 +77,7 @@ public class CompanyPermissionsController : ControllerBase
             .FirstOrDefaultAsync();
 
         if (branch == null)
-            return NotFound(ApiResponse<object>.CreateFailure("Branch not found", statusCode: 404));
+            return NotFound(ApiResponse<object>.CreateFailure(ErrorCodes.EntityNotFound, statusCode: 404));
 
         if (IsSuperAdmin())
             return null;
@@ -111,7 +112,7 @@ public class CompanyPermissionsController : ControllerBase
             p.FeatureId,
             p.IsGranted
         }).ToList<object>();
-        return Ok(ApiResponse<List<object>>.CreateSuccess(result, "Role permissions retrieved", 200));
+        return Ok(ApiResponse<List<object>>.CreateSuccess(result, ResponseCodes.DataRetrieved, 200));
     }
 
     [HttpPut("roles/{roleId:long}")]
@@ -143,7 +144,7 @@ public class CompanyPermissionsController : ControllerBase
         }).ToList();
 
         await _rolePermRepo.BulkSetAsync(branchId, roleId, permissions);
-        return Ok(ApiResponse<object>.CreateSuccess(new { }, "Role permissions updated", 200));
+        return Ok(ApiResponse<object>.CreateSuccess(new { }, ResponseCodes.RecordUpdated, 200));
     }
 
     [HttpDelete("roles/{roleId:long}/screens/{screenId:long}/features/{featureId:long}")]
@@ -155,7 +156,7 @@ public class CompanyPermissionsController : ControllerBase
             return branchError;
 
         await _rolePermRepo.DeleteAsync(branchId, roleId, screenId, featureId);
-        return Ok(ApiResponse<object>.CreateSuccess(new { }, "Role permission entry removed", 200));
+        return Ok(ApiResponse<object>.CreateSuccess(new { }, ResponseCodes.RecordDeleted, 200));
     }
 
     // ─────────────── User permission overrides ───────────────
@@ -174,7 +175,7 @@ public class CompanyPermissionsController : ControllerBase
             p.FeatureId,
             p.IsGranted
         }).ToList<object>();
-        return Ok(ApiResponse<List<object>>.CreateSuccess(result, "User permissions retrieved", 200));
+        return Ok(ApiResponse<List<object>>.CreateSuccess(result, ResponseCodes.DataRetrieved, 200));
     }
 
     [HttpPut("users/{userId:long}")]
@@ -206,7 +207,7 @@ public class CompanyPermissionsController : ControllerBase
         }).ToList();
 
         await _userPermRepo.BulkSetAsync(branchId, userId, permissions);
-        return Ok(ApiResponse<object>.CreateSuccess(new { }, "User permissions updated", 200));
+        return Ok(ApiResponse<object>.CreateSuccess(new { }, ResponseCodes.RecordUpdated, 200));
     }
 
     [HttpDelete("users/{userId:long}/screens/{screenId:long}/features/{featureId:long}")]
@@ -218,7 +219,7 @@ public class CompanyPermissionsController : ControllerBase
             return branchError;
 
         await _userPermRepo.DeleteAsync(branchId, userId, screenId, featureId);
-        return Ok(ApiResponse<object>.CreateSuccess(new { }, "User permission override removed", 200));
+        return Ok(ApiResponse<object>.CreateSuccess(new { }, ResponseCodes.RecordDeleted, 200));
     }
 
     private async Task<string?> ValidateBranchPermissionsScopeAsync(long branchId, List<BulkPermissionDto> dtos)

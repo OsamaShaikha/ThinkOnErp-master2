@@ -4,6 +4,7 @@ using ThinkOnErp.API.Authorization;
 using ThinkOnErp.Application.Common;
 using ThinkOnErp.Application.DTOs.Accounting.Vouchers;
 using ThinkOnErp.Application.Services.Accounting;
+using ThinkOnErp.Domain.Constants;
 
 namespace ThinkOnErp.API.Controllers;
 
@@ -34,7 +35,7 @@ public class PaymentsController : ControllerBase
         var payments = await _voucherService.GetPaymentVouchersAsync(branchId, fromDate, toDate, vendorCode, cancellationToken);
         return Ok(ApiResponse<IReadOnlyList<PaymentVoucherDto>>.CreateSuccess(
             payments,
-            "تم استرجاع قائمة سندات الصرف بنجاح",
+            ResponseCodes.PaymentVouchersRetrieved,
             200));
     }
 
@@ -47,7 +48,7 @@ public class PaymentsController : ControllerBase
         var payment = await _voucherService.GetPaymentVoucherByIdAsync(id, cancellationToken);
         return Ok(ApiResponse<PaymentVoucherDto>.CreateSuccess(
             payment,
-            "تم استرجاع بيانات سند الصرف بنجاح",
+            ResponseCodes.DataRetrieved,
             200));
     }
 
@@ -62,7 +63,7 @@ public class PaymentsController : ControllerBase
         var payment = await _voucherService.CreatePaymentVoucherAsync(dto, username, cancellationToken);
         return StatusCode(StatusCodes.Status201Created, ApiResponse<PaymentVoucherDto>.CreateSuccess(
             payment,
-            "تم إنشاء وترحيل سند الصرف بنجاح",
+            ResponseCodes.PaymentVoucherCreated,
             201));
     }
 
@@ -78,7 +79,7 @@ public class PaymentsController : ControllerBase
         var payment = await _voucherService.UpdatePaymentVoucherAsync(id, dto, username, cancellationToken);
         return Ok(ApiResponse<PaymentVoucherDto>.CreateSuccess(
             payment,
-            "تم تعديل سند الصرف بنجاح",
+            ResponseCodes.PaymentVoucherUpdated,
             200));
     }
 
@@ -93,7 +94,7 @@ public class PaymentsController : ControllerBase
         var result = await _voucherService.DeletePaymentVoucherAsync(id, username, cancellationToken);
         return Ok(ApiResponse<bool>.CreateSuccess(
             result,
-            "تم إلغاء/حذف سند الصرف بنجاح",
+            ResponseCodes.PaymentVoucherDeleted,
             200));
     }
 }

@@ -22,12 +22,839 @@ namespace ThinkOnErp.Infrastructure.Migrations
 
             OracleModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
+            modelBuilder.Entity("ThinkOnErp.Domain.Entities.Accounting.ApCashApplication", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("NUMBER(19)")
+                        .HasColumnName("ID");
+
+                    OraclePropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<decimal>("AppliedAmount")
+                        .HasColumnType("NUMBER(18,3)")
+                        .HasColumnName("APPLIED_AMOUNT");
+
+                    b.Property<DateTime>("AppliedDate")
+                        .HasColumnType("TIMESTAMP(7)")
+                        .HasColumnName("APPLIED_DATE");
+
+                    b.Property<DateTime>("CreationDate")
+                        .HasColumnType("TIMESTAMP(7)")
+                        .HasColumnName("CREATION_DATE");
+
+                    b.Property<string>("CreationUser")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("NVARCHAR2(100)")
+                        .HasColumnName("CREATION_USER");
+
+                    b.Property<long>("InvoiceTransactionId")
+                        .HasColumnType("NUMBER(19)")
+                        .HasColumnName("INVOICE_TRANSACTION_ID");
+
+                    b.Property<decimal>("LocalAppliedAmount")
+                        .HasColumnType("NUMBER(18,3)")
+                        .HasColumnName("LOCAL_APPLIED_AMOUNT");
+
+                    b.Property<string>("Notes")
+                        .HasMaxLength(500)
+                        .HasColumnType("NVARCHAR2(500)")
+                        .HasColumnName("NOTES");
+
+                    b.Property<long>("PaymentTransactionId")
+                        .HasColumnType("NUMBER(19)")
+                        .HasColumnName("PAYMENT_TRANSACTION_ID");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("InvoiceTransactionId");
+
+                    b.HasIndex("PaymentTransactionId");
+
+                    b.ToTable("AP_CASH_APPLICATION", (string)null);
+                });
+
+            modelBuilder.Entity("ThinkOnErp.Domain.Entities.Accounting.ApSubledgerTransaction", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("NUMBER(19)")
+                        .HasColumnName("ID");
+
+                    OraclePropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<decimal>("Amount")
+                        .HasColumnType("NUMBER(18,3)")
+                        .HasColumnName("AMOUNT");
+
+                    b.Property<DateTime>("CreationDate")
+                        .HasColumnType("TIMESTAMP(7)")
+                        .HasColumnName("CREATION_DATE");
+
+                    b.Property<string>("CreationUser")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("NVARCHAR2(100)")
+                        .HasColumnName("CREATION_USER");
+
+                    b.Property<long>("CurrencyId")
+                        .HasColumnType("NUMBER(19)")
+                        .HasColumnName("CURRENCY_ID");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(500)
+                        .HasColumnType("NVARCHAR2(500)")
+                        .HasColumnName("DESCRIPTION");
+
+                    b.Property<DateTime?>("DueDate")
+                        .HasColumnType("TIMESTAMP(7)")
+                        .HasColumnName("DUE_DATE");
+
+                    b.Property<decimal>("ExchangeRate")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("NUMBER(18,6)")
+                        .HasDefaultValue(1.0m)
+                        .HasColumnName("EXCHANGE_RATE");
+
+                    b.Property<long>("JournalLineId")
+                        .HasColumnType("NUMBER(19)")
+                        .HasColumnName("JOURNAL_LINE_ID");
+
+                    b.Property<decimal>("LocalAmount")
+                        .HasColumnType("NUMBER(18,3)")
+                        .HasColumnName("LOCAL_AMOUNT");
+
+                    b.Property<decimal>("LocalOpenAmount")
+                        .HasColumnType("NUMBER(18,3)")
+                        .HasColumnName("LOCAL_OPEN_AMOUNT");
+
+                    b.Property<decimal>("OpenAmount")
+                        .HasColumnType("NUMBER(18,3)")
+                        .HasColumnName("OPEN_AMOUNT");
+
+                    b.Property<string>("ReferenceNo")
+                        .HasMaxLength(100)
+                        .HasColumnType("NVARCHAR2(100)")
+                        .HasColumnName("REFERENCE_NO");
+
+                    b.Property<DateTime>("TransactionDate")
+                        .HasColumnType("TIMESTAMP(7)")
+                        .HasColumnName("TRANSACTION_DATE");
+
+                    b.Property<string>("TransactionType")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(30)
+                        .HasColumnType("NVARCHAR2(30)")
+                        .HasDefaultValue("BILL")
+                        .HasColumnName("TRANSACTION_TYPE");
+
+                    b.Property<DateTime?>("UpdateDate")
+                        .HasColumnType("TIMESTAMP(7)")
+                        .HasColumnName("UPDATE_DATE");
+
+                    b.Property<string>("UpdateUser")
+                        .HasMaxLength(100)
+                        .HasColumnType("NVARCHAR2(100)")
+                        .HasColumnName("UPDATE_USER");
+
+                    b.Property<string>("VendorCode")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("NVARCHAR2(50)")
+                        .HasColumnName("VENDOR_CODE");
+
+                    b.Property<long>("VoucherId")
+                        .HasColumnType("NUMBER(19)")
+                        .HasColumnName("VOUCHER_ID");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CurrencyId");
+
+                    b.HasIndex("JournalLineId");
+
+                    b.HasIndex("TransactionDate")
+                        .HasDatabaseName("IX_AP_SUB_DATE");
+
+                    b.HasIndex("VendorCode")
+                        .HasDatabaseName("IX_AP_SUB_VEND");
+
+                    b.HasIndex("VoucherId");
+
+                    b.HasIndex("VendorCode", "OpenAmount")
+                        .HasDatabaseName("IX_AP_SUB_VEND_OPEN");
+
+                    b.ToTable("AP_SUBLEDGER_TRANSACTION", (string)null);
+                });
+
+            modelBuilder.Entity("ThinkOnErp.Domain.Entities.Accounting.ArCashApplication", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("NUMBER(19)")
+                        .HasColumnName("ID");
+
+                    OraclePropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<decimal>("AppliedAmount")
+                        .HasColumnType("NUMBER(18,3)")
+                        .HasColumnName("APPLIED_AMOUNT");
+
+                    b.Property<DateTime>("AppliedDate")
+                        .HasColumnType("TIMESTAMP(7)")
+                        .HasColumnName("APPLIED_DATE");
+
+                    b.Property<DateTime>("CreationDate")
+                        .HasColumnType("TIMESTAMP(7)")
+                        .HasColumnName("CREATION_DATE");
+
+                    b.Property<string>("CreationUser")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("NVARCHAR2(100)")
+                        .HasColumnName("CREATION_USER");
+
+                    b.Property<long>("InvoiceTransactionId")
+                        .HasColumnType("NUMBER(19)")
+                        .HasColumnName("INVOICE_TRANSACTION_ID");
+
+                    b.Property<decimal>("LocalAppliedAmount")
+                        .HasColumnType("NUMBER(18,3)")
+                        .HasColumnName("LOCAL_APPLIED_AMOUNT");
+
+                    b.Property<string>("Notes")
+                        .HasMaxLength(500)
+                        .HasColumnType("NVARCHAR2(500)")
+                        .HasColumnName("NOTES");
+
+                    b.Property<long>("PaymentTransactionId")
+                        .HasColumnType("NUMBER(19)")
+                        .HasColumnName("PAYMENT_TRANSACTION_ID");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("InvoiceTransactionId");
+
+                    b.HasIndex("PaymentTransactionId");
+
+                    b.ToTable("AR_CASH_APPLICATION", (string)null);
+                });
+
+            modelBuilder.Entity("ThinkOnErp.Domain.Entities.Accounting.ArSubledgerTransaction", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("NUMBER(19)")
+                        .HasColumnName("ID");
+
+                    OraclePropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<decimal>("Amount")
+                        .HasColumnType("NUMBER(18,3)")
+                        .HasColumnName("AMOUNT");
+
+                    b.Property<DateTime>("CreationDate")
+                        .HasColumnType("TIMESTAMP(7)")
+                        .HasColumnName("CREATION_DATE");
+
+                    b.Property<string>("CreationUser")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("NVARCHAR2(100)")
+                        .HasColumnName("CREATION_USER");
+
+                    b.Property<long>("CurrencyId")
+                        .HasColumnType("NUMBER(19)")
+                        .HasColumnName("CURRENCY_ID");
+
+                    b.Property<string>("CustomerCode")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("NVARCHAR2(50)")
+                        .HasColumnName("CUSTOMER_CODE");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(500)
+                        .HasColumnType("NVARCHAR2(500)")
+                        .HasColumnName("DESCRIPTION");
+
+                    b.Property<DateTime?>("DueDate")
+                        .HasColumnType("TIMESTAMP(7)")
+                        .HasColumnName("DUE_DATE");
+
+                    b.Property<decimal>("ExchangeRate")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("NUMBER(18,6)")
+                        .HasDefaultValue(1.0m)
+                        .HasColumnName("EXCHANGE_RATE");
+
+                    b.Property<long>("JournalLineId")
+                        .HasColumnType("NUMBER(19)")
+                        .HasColumnName("JOURNAL_LINE_ID");
+
+                    b.Property<decimal>("LocalAmount")
+                        .HasColumnType("NUMBER(18,3)")
+                        .HasColumnName("LOCAL_AMOUNT");
+
+                    b.Property<decimal>("LocalOpenAmount")
+                        .HasColumnType("NUMBER(18,3)")
+                        .HasColumnName("LOCAL_OPEN_AMOUNT");
+
+                    b.Property<decimal>("OpenAmount")
+                        .HasColumnType("NUMBER(18,3)")
+                        .HasColumnName("OPEN_AMOUNT");
+
+                    b.Property<string>("ReferenceNo")
+                        .HasMaxLength(100)
+                        .HasColumnType("NVARCHAR2(100)")
+                        .HasColumnName("REFERENCE_NO");
+
+                    b.Property<DateTime>("TransactionDate")
+                        .HasColumnType("TIMESTAMP(7)")
+                        .HasColumnName("TRANSACTION_DATE");
+
+                    b.Property<string>("TransactionType")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(30)
+                        .HasColumnType("NVARCHAR2(30)")
+                        .HasDefaultValue("INVOICE")
+                        .HasColumnName("TRANSACTION_TYPE");
+
+                    b.Property<DateTime?>("UpdateDate")
+                        .HasColumnType("TIMESTAMP(7)")
+                        .HasColumnName("UPDATE_DATE");
+
+                    b.Property<string>("UpdateUser")
+                        .HasMaxLength(100)
+                        .HasColumnType("NVARCHAR2(100)")
+                        .HasColumnName("UPDATE_USER");
+
+                    b.Property<long>("VoucherId")
+                        .HasColumnType("NUMBER(19)")
+                        .HasColumnName("VOUCHER_ID");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CurrencyId");
+
+                    b.HasIndex("CustomerCode")
+                        .HasDatabaseName("IX_AR_SUB_CUST");
+
+                    b.HasIndex("JournalLineId");
+
+                    b.HasIndex("TransactionDate")
+                        .HasDatabaseName("IX_AR_SUB_DATE");
+
+                    b.HasIndex("VoucherId");
+
+                    b.HasIndex("CustomerCode", "OpenAmount")
+                        .HasDatabaseName("IX_AR_SUB_CUST_OPEN");
+
+                    b.ToTable("AR_SUBLEDGER_TRANSACTION", (string)null);
+                });
+
+            modelBuilder.Entity("ThinkOnErp.Domain.Entities.Accounting.BankAccount", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("NUMBER(19)")
+                        .HasColumnName("ID");
+
+                    OraclePropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<string>("AccountNameAr")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("NVARCHAR2(200)")
+                        .HasColumnName("ACCOUNT_NAME_AR");
+
+                    b.Property<string>("AccountNameEn")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("NVARCHAR2(200)")
+                        .HasColumnName("ACCOUNT_NAME_EN");
+
+                    b.Property<string>("AccountNumber")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("NVARCHAR2(50)")
+                        .HasColumnName("ACCOUNT_NUMBER");
+
+                    b.Property<string>("BankBranchName")
+                        .HasMaxLength(150)
+                        .HasColumnType("NVARCHAR2(150)")
+                        .HasColumnName("BANK_BRANCH_NAME");
+
+                    b.Property<string>("BankName")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("NVARCHAR2(150)")
+                        .HasColumnName("BANK_NAME");
+
+                    b.Property<long>("BranchId")
+                        .HasColumnType("NUMBER(19)")
+                        .HasColumnName("BRANCH_ID");
+
+                    b.Property<DateTime>("CreationDate")
+                        .HasColumnType("TIMESTAMP(7)")
+                        .HasColumnName("CREATION_DATE");
+
+                    b.Property<string>("CreationUser")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("NVARCHAR2(50)")
+                        .HasColumnName("CREATION_USER");
+
+                    b.Property<long>("CurrencyId")
+                        .HasColumnType("NUMBER(19)")
+                        .HasColumnName("CURRENCY_ID");
+
+                    b.Property<decimal>("CurrentBalance")
+                        .HasPrecision(18, 3)
+                        .HasColumnType("DECIMAL(18,3)")
+                        .HasColumnName("CURRENT_BALANCE");
+
+                    b.Property<string>("GlAccountCode")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("NVARCHAR2(50)")
+                        .HasColumnName("GL_ACCOUNT_CODE");
+
+                    b.Property<string>("Iban")
+                        .HasMaxLength(50)
+                        .HasColumnType("NVARCHAR2(50)")
+                        .HasColumnName("IBAN");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("NUMBER(1)")
+                        .HasColumnName("IS_ACTIVE");
+
+                    b.Property<decimal>("OpeningBalance")
+                        .HasPrecision(18, 3)
+                        .HasColumnType("DECIMAL(18,3)")
+                        .HasColumnName("OPENING_BALANCE");
+
+                    b.Property<decimal>("OverdraftLimit")
+                        .HasPrecision(18, 3)
+                        .HasColumnType("DECIMAL(18,3)")
+                        .HasColumnName("OVERDRAFT_LIMIT");
+
+                    b.Property<string>("SwiftCode")
+                        .HasMaxLength(30)
+                        .HasColumnType("NVARCHAR2(30)")
+                        .HasColumnName("SWIFT_CODE");
+
+                    b.Property<DateTime?>("UpdateDate")
+                        .HasColumnType("TIMESTAMP(7)")
+                        .HasColumnName("UPDATE_DATE");
+
+                    b.Property<string>("UpdateUser")
+                        .HasMaxLength(50)
+                        .HasColumnType("NVARCHAR2(50)")
+                        .HasColumnName("UPDATE_USER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AccountNumber")
+                        .IsUnique()
+                        .HasDatabaseName("UX_BANK_ACC_NUM");
+
+                    b.HasIndex("BranchId");
+
+                    b.HasIndex("CurrencyId");
+
+                    b.HasIndex("GlAccountCode");
+
+                    b.ToTable("BANK_ACCOUNT", (string)null);
+                });
+
+            modelBuilder.Entity("ThinkOnErp.Domain.Entities.Accounting.BankReconciliation", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("NUMBER(19)")
+                        .HasColumnName("ID");
+
+                    OraclePropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<long>("BankAccountId")
+                        .HasColumnType("NUMBER(19)")
+                        .HasColumnName("BANK_ACCOUNT_ID");
+
+                    b.Property<decimal>("BookEndingBalance")
+                        .HasPrecision(18, 3)
+                        .HasColumnType("DECIMAL(18,3)")
+                        .HasColumnName("BOOK_ENDING_BALANCE");
+
+                    b.Property<DateTime>("CreationDate")
+                        .HasColumnType("TIMESTAMP(7)")
+                        .HasColumnName("CREATION_DATE");
+
+                    b.Property<string>("CreationUser")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("NVARCHAR2(50)")
+                        .HasColumnName("CREATION_USER");
+
+                    b.Property<long>("FiscalPeriodId")
+                        .HasColumnType("NUMBER(19)")
+                        .HasColumnName("FISCAL_PERIOD_ID");
+
+                    b.Property<long>("FiscalYearId")
+                        .HasColumnType("NUMBER(19)")
+                        .HasColumnName("FISCAL_YEAR_ID");
+
+                    b.Property<string>("Notes")
+                        .HasMaxLength(500)
+                        .HasColumnType("NVARCHAR2(500)")
+                        .HasColumnName("NOTES");
+
+                    b.Property<DateTime>("StatementDate")
+                        .HasColumnType("TIMESTAMP(7)")
+                        .HasColumnName("STATEMENT_DATE");
+
+                    b.Property<decimal>("StatementEndingBalance")
+                        .HasPrecision(18, 3)
+                        .HasColumnType("DECIMAL(18,3)")
+                        .HasColumnName("STATEMENT_ENDING_BALANCE");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("NVARCHAR2(30)")
+                        .HasColumnName("STATUS");
+
+                    b.Property<decimal>("TotalReconciledAmount")
+                        .HasPrecision(18, 3)
+                        .HasColumnType("DECIMAL(18,3)")
+                        .HasColumnName("TOTAL_RECONCILED_AMOUNT");
+
+                    b.Property<decimal>("UnreconciledDifference")
+                        .HasPrecision(18, 3)
+                        .HasColumnType("DECIMAL(18,3)")
+                        .HasColumnName("UNRECONCILED_DIFFERENCE");
+
+                    b.Property<DateTime?>("UpdateDate")
+                        .HasColumnType("TIMESTAMP(7)")
+                        .HasColumnName("UPDATE_DATE");
+
+                    b.Property<string>("UpdateUser")
+                        .HasMaxLength(50)
+                        .HasColumnType("NVARCHAR2(50)")
+                        .HasColumnName("UPDATE_USER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BankAccountId");
+
+                    b.HasIndex("FiscalPeriodId");
+
+                    b.HasIndex("FiscalYearId");
+
+                    b.ToTable("BANK_RECONCILIATION", (string)null);
+                });
+
+            modelBuilder.Entity("ThinkOnErp.Domain.Entities.Accounting.BankStatementLine", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("NUMBER(19)")
+                        .HasColumnName("ID");
+
+                    OraclePropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<decimal>("Balance")
+                        .HasPrecision(18, 3)
+                        .HasColumnType("DECIMAL(18,3)")
+                        .HasColumnName("BALANCE");
+
+                    b.Property<string>("ChequeNo")
+                        .HasMaxLength(50)
+                        .HasColumnType("NVARCHAR2(50)")
+                        .HasColumnName("CHEQUE_NO");
+
+                    b.Property<decimal>("Credit")
+                        .HasPrecision(18, 3)
+                        .HasColumnType("DECIMAL(18,3)")
+                        .HasColumnName("CREDIT");
+
+                    b.Property<decimal>("Debit")
+                        .HasPrecision(18, 3)
+                        .HasColumnType("DECIMAL(18,3)")
+                        .HasColumnName("DEBIT");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("NVARCHAR2(500)")
+                        .HasColumnName("DESCRIPTION");
+
+                    b.Property<bool>("IsReconciled")
+                        .HasColumnType("NUMBER(1)")
+                        .HasColumnName("IS_RECONCILED");
+
+                    b.Property<long?>("MatchedVoucherDetailId")
+                        .HasColumnType("NUMBER(19)")
+                        .HasColumnName("MATCHED_VOUCHER_DETAIL_ID");
+
+                    b.Property<DateTime?>("ReconciledDate")
+                        .HasColumnType("TIMESTAMP(7)")
+                        .HasColumnName("RECONCILED_DATE");
+
+                    b.Property<long>("ReconciliationId")
+                        .HasColumnType("NUMBER(19)")
+                        .HasColumnName("RECONCILIATION_ID");
+
+                    b.Property<string>("ReferenceNo")
+                        .HasMaxLength(100)
+                        .HasColumnType("NVARCHAR2(100)")
+                        .HasColumnName("REFERENCE_NO");
+
+                    b.Property<DateTime>("TransactionDate")
+                        .HasColumnType("TIMESTAMP(7)")
+                        .HasColumnName("TRANSACTION_DATE");
+
+                    b.Property<DateTime?>("ValueDate")
+                        .HasColumnType("TIMESTAMP(7)")
+                        .HasColumnName("VALUE_DATE");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("MatchedVoucherDetailId");
+
+                    b.HasIndex("ReconciliationId");
+
+                    b.ToTable("BANK_STATEMENT_LINE", (string)null);
+                });
+
+            modelBuilder.Entity("ThinkOnErp.Domain.Entities.Accounting.CashRegister", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("NUMBER(19)")
+                        .HasColumnName("ID");
+
+                    OraclePropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<long>("BranchId")
+                        .HasColumnType("NUMBER(19)")
+                        .HasColumnName("BRANCH_ID");
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("NVARCHAR2(50)")
+                        .HasColumnName("CODE");
+
+                    b.Property<DateTime>("CreationDate")
+                        .HasColumnType("TIMESTAMP(7)")
+                        .HasColumnName("CREATION_DATE");
+
+                    b.Property<string>("CreationUser")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("NVARCHAR2(50)")
+                        .HasColumnName("CREATION_USER");
+
+                    b.Property<long>("CurrencyId")
+                        .HasColumnType("NUMBER(19)")
+                        .HasColumnName("CURRENCY_ID");
+
+                    b.Property<decimal>("CurrentBalance")
+                        .HasPrecision(18, 3)
+                        .HasColumnType("DECIMAL(18,3)")
+                        .HasColumnName("CURRENT_BALANCE");
+
+                    b.Property<string>("CustodianName")
+                        .HasMaxLength(150)
+                        .HasColumnType("NVARCHAR2(150)")
+                        .HasColumnName("CUSTODIAN_NAME");
+
+                    b.Property<string>("GlAccountCode")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("NVARCHAR2(50)")
+                        .HasColumnName("GL_ACCOUNT_CODE");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("NUMBER(1)")
+                        .HasColumnName("IS_ACTIVE");
+
+                    b.Property<decimal>("MaxLimit")
+                        .HasPrecision(18, 3)
+                        .HasColumnType("DECIMAL(18,3)")
+                        .HasColumnName("MAX_LIMIT");
+
+                    b.Property<decimal>("MinLimit")
+                        .HasPrecision(18, 3)
+                        .HasColumnType("DECIMAL(18,3)")
+                        .HasColumnName("MIN_LIMIT");
+
+                    b.Property<string>("NameAr")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("NVARCHAR2(200)")
+                        .HasColumnName("NAME_AR");
+
+                    b.Property<string>("NameEn")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("NVARCHAR2(200)")
+                        .HasColumnName("NAME_EN");
+
+                    b.Property<decimal>("OpeningBalance")
+                        .HasPrecision(18, 3)
+                        .HasColumnType("DECIMAL(18,3)")
+                        .HasColumnName("OPENING_BALANCE");
+
+                    b.Property<string>("RegisterType")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("NVARCHAR2(30)")
+                        .HasColumnName("REGISTER_TYPE");
+
+                    b.Property<DateTime?>("UpdateDate")
+                        .HasColumnType("TIMESTAMP(7)")
+                        .HasColumnName("UPDATE_DATE");
+
+                    b.Property<string>("UpdateUser")
+                        .HasMaxLength(50)
+                        .HasColumnType("NVARCHAR2(50)")
+                        .HasColumnName("UPDATE_USER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BranchId");
+
+                    b.HasIndex("Code")
+                        .IsUnique()
+                        .HasDatabaseName("UX_CASH_REG_CODE");
+
+                    b.HasIndex("CurrencyId");
+
+                    b.HasIndex("GlAccountCode");
+
+                    b.ToTable("CASH_REGISTER", (string)null);
+                });
+
+            modelBuilder.Entity("ThinkOnErp.Domain.Entities.Accounting.Customer", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("NUMBER(19)")
+                        .HasColumnName("ID");
+
+                    OraclePropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<string>("Address")
+                        .HasMaxLength(500)
+                        .HasColumnType("NVARCHAR2(500)")
+                        .HasColumnName("ADDRESS");
+
+                    b.Property<string>("ArControlAccountCode")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(50)
+                        .HasColumnType("NVARCHAR2(50)")
+                        .HasDefaultValue("112101")
+                        .HasColumnName("AR_CONTROL_ACCOUNT_CODE");
+
+                    b.Property<long?>("BranchId")
+                        .HasColumnType("NUMBER(19)")
+                        .HasColumnName("BRANCH_ID");
+
+                    b.Property<DateTime>("CreationDate")
+                        .HasColumnType("TIMESTAMP(7)")
+                        .HasColumnName("CREATION_DATE");
+
+                    b.Property<string>("CreationUser")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("NVARCHAR2(100)")
+                        .HasColumnName("CREATION_USER");
+
+                    b.Property<decimal?>("CreditLimit")
+                        .HasColumnType("NUMBER(18,3)")
+                        .HasColumnName("CREDIT_LIMIT");
+
+                    b.Property<string>("CustomerCode")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("NVARCHAR2(50)")
+                        .HasColumnName("CUSTOMER_CODE");
+
+                    b.Property<long?>("DefaultCurrencyId")
+                        .HasColumnType("NUMBER(19)")
+                        .HasColumnName("DEFAULT_CURRENCY_ID");
+
+                    b.Property<string>("Email")
+                        .HasMaxLength(100)
+                        .HasColumnType("NVARCHAR2(100)")
+                        .HasColumnName("EMAIL");
+
+                    b.Property<bool>("IsActive")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("NUMBER(1)")
+                        .HasDefaultValue(true)
+                        .HasColumnName("IS_ACTIVE");
+
+                    b.Property<string>("NameAr")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("NVARCHAR2(200)")
+                        .HasColumnName("NAME_AR");
+
+                    b.Property<string>("NameEn")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("NVARCHAR2(200)")
+                        .HasColumnName("NAME_EN");
+
+                    b.Property<int>("PaymentTermsDays")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("NUMBER(10)")
+                        .HasDefaultValue(30)
+                        .HasColumnName("PAYMENT_TERMS_DAYS");
+
+                    b.Property<string>("Phone")
+                        .HasMaxLength(50)
+                        .HasColumnType("NVARCHAR2(50)")
+                        .HasColumnName("PHONE");
+
+                    b.Property<string>("TaxNumber")
+                        .HasMaxLength(50)
+                        .HasColumnType("NVARCHAR2(50)")
+                        .HasColumnName("TAX_NUMBER");
+
+                    b.Property<DateTime?>("UpdateDate")
+                        .HasColumnType("TIMESTAMP(7)")
+                        .HasColumnName("UPDATE_DATE");
+
+                    b.Property<string>("UpdateUser")
+                        .HasMaxLength(100)
+                        .HasColumnType("NVARCHAR2(100)")
+                        .HasColumnName("UPDATE_USER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ArControlAccountCode");
+
+                    b.HasIndex("BranchId");
+
+                    b.HasIndex("CustomerCode")
+                        .IsUnique()
+                        .HasDatabaseName("UX_CUSTOMER_CODE");
+
+                    b.HasIndex("DefaultCurrencyId");
+
+                    b.ToTable("CUSTOMER", (string)null);
+                });
+
             modelBuilder.Entity("ThinkOnErp.Domain.Entities.Accounting.GlAccount", b =>
                 {
-                    b.Property<long>("CompanyId")
-                        .HasColumnType("NUMBER(19)")
-                        .HasColumnName("COMPANY_ID");
-
                     b.Property<string>("AccountCode")
                         .HasMaxLength(50)
                         .HasColumnType("NVARCHAR2(50)")
@@ -96,17 +923,25 @@ namespace ThinkOnErp.Infrastructure.Migrations
                         .HasColumnType("NVARCHAR2(2000)")
                         .HasColumnName("NOTES");
 
+                    b.Property<string>("OldAccountCode")
+                        .HasMaxLength(50)
+                        .HasColumnType("NVARCHAR2(50)")
+                        .HasColumnName("OLD_ACCOUNT_CODE");
+
                     b.Property<string>("ParentAccountCode")
                         .HasMaxLength(50)
                         .HasColumnType("NVARCHAR2(50)")
                         .HasColumnName("PARENT_ACCOUNT_CODE");
 
-                    b.HasKey("CompanyId", "AccountCode");
+                    b.HasKey("AccountCode");
 
-                    b.HasIndex("CompanyId", "IsControlAccount")
-                        .HasDatabaseName("IX_GL_ACCOUNT_COMP_CTRL");
+                    b.HasIndex("IsControlAccount")
+                        .HasDatabaseName("IX_GL_ACCOUNT_CTRL");
 
-                    b.HasIndex("CompanyId", "ParentAccountCode")
+                    b.HasIndex("OldAccountCode")
+                        .HasDatabaseName("IX_GL_ACCOUNT_OLD_CODE");
+
+                    b.HasIndex("ParentAccountCode")
                         .HasDatabaseName("IX_GL_ACCOUNT_PARENT");
 
                     b.ToTable("GL_ACCOUNT", null, t =>
@@ -125,12 +960,148 @@ namespace ThinkOnErp.Infrastructure.Migrations
                         });
                 });
 
+            modelBuilder.Entity("ThinkOnErp.Domain.Entities.Accounting.GlAccountBalance", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("NUMBER(19)")
+                        .HasColumnName("ID");
+
+                    OraclePropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<string>("AccountCode")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("NVARCHAR2(50)")
+                        .HasColumnName("ACCOUNT_CODE");
+
+                    b.Property<long>("BranchId")
+                        .HasColumnType("NUMBER(19)")
+                        .HasColumnName("BRANCH_ID");
+
+                    b.Property<decimal>("ClosingCredit")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("NUMBER(18,3)")
+                        .HasDefaultValue(0m)
+                        .HasColumnName("CLOSING_CREDIT");
+
+                    b.Property<decimal>("ClosingDebit")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("NUMBER(18,3)")
+                        .HasDefaultValue(0m)
+                        .HasColumnName("CLOSING_DEBIT");
+
+                    b.Property<DateTime>("CreationDate")
+                        .HasColumnType("TIMESTAMP(7)")
+                        .HasColumnName("CREATION_DATE");
+
+                    b.Property<string>("CreationUser")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("NVARCHAR2(100)")
+                        .HasColumnName("CREATION_USER");
+
+                    b.Property<long>("CurrencyId")
+                        .HasColumnType("NUMBER(19)")
+                        .HasColumnName("CURRENCY_ID");
+
+                    b.Property<long>("FiscalPeriodId")
+                        .HasColumnType("NUMBER(19)")
+                        .HasColumnName("FISCAL_PERIOD_ID");
+
+                    b.Property<long>("FiscalYearId")
+                        .HasColumnType("NUMBER(19)")
+                        .HasColumnName("FISCAL_YEAR_ID");
+
+                    b.Property<decimal>("LocalClosingCredit")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("NUMBER(18,3)")
+                        .HasDefaultValue(0m)
+                        .HasColumnName("LOCAL_CLOSING_CREDIT");
+
+                    b.Property<decimal>("LocalClosingDebit")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("NUMBER(18,3)")
+                        .HasDefaultValue(0m)
+                        .HasColumnName("LOCAL_CLOSING_DEBIT");
+
+                    b.Property<decimal>("LocalOpeningCredit")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("NUMBER(18,3)")
+                        .HasDefaultValue(0m)
+                        .HasColumnName("LOCAL_OPENING_CREDIT");
+
+                    b.Property<decimal>("LocalOpeningDebit")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("NUMBER(18,3)")
+                        .HasDefaultValue(0m)
+                        .HasColumnName("LOCAL_OPENING_DEBIT");
+
+                    b.Property<decimal>("LocalPeriodCredit")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("NUMBER(18,3)")
+                        .HasDefaultValue(0m)
+                        .HasColumnName("LOCAL_PERIOD_CREDIT");
+
+                    b.Property<decimal>("LocalPeriodDebit")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("NUMBER(18,3)")
+                        .HasDefaultValue(0m)
+                        .HasColumnName("LOCAL_PERIOD_DEBIT");
+
+                    b.Property<decimal>("OpeningCredit")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("NUMBER(18,3)")
+                        .HasDefaultValue(0m)
+                        .HasColumnName("OPENING_CREDIT");
+
+                    b.Property<decimal>("OpeningDebit")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("NUMBER(18,3)")
+                        .HasDefaultValue(0m)
+                        .HasColumnName("OPENING_DEBIT");
+
+                    b.Property<decimal>("PeriodCredit")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("NUMBER(18,3)")
+                        .HasDefaultValue(0m)
+                        .HasColumnName("PERIOD_CREDIT");
+
+                    b.Property<decimal>("PeriodDebit")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("NUMBER(18,3)")
+                        .HasDefaultValue(0m)
+                        .HasColumnName("PERIOD_DEBIT");
+
+                    b.Property<DateTime?>("UpdateDate")
+                        .HasColumnType("TIMESTAMP(7)")
+                        .HasColumnName("UPDATE_DATE");
+
+                    b.Property<string>("UpdateUser")
+                        .HasMaxLength(100)
+                        .HasColumnType("NVARCHAR2(100)")
+                        .HasColumnName("UPDATE_USER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BranchId");
+
+                    b.HasIndex("CurrencyId");
+
+                    b.HasIndex("FiscalPeriodId");
+
+                    b.HasIndex("FiscalYearId", "FiscalPeriodId", "BranchId")
+                        .HasDatabaseName("IX_GL_ACC_BAL_PERIOD");
+
+                    b.HasIndex("AccountCode", "BranchId", "FiscalYearId", "FiscalPeriodId", "CurrencyId")
+                        .IsUnique()
+                        .HasDatabaseName("UX_GL_ACC_BAL_DIM");
+
+                    b.ToTable("GL_ACCOUNT_BALANCE", (string)null);
+                });
+
             modelBuilder.Entity("ThinkOnErp.Domain.Entities.Accounting.GlAccountBranch", b =>
                 {
-                    b.Property<long>("CompanyId")
-                        .HasColumnType("NUMBER(19)")
-                        .HasColumnName("COMPANY_ID");
-
                     b.Property<string>("AccountCode")
                         .HasMaxLength(50)
                         .HasColumnType("NVARCHAR2(50)")
@@ -144,7 +1115,7 @@ namespace ThinkOnErp.Infrastructure.Migrations
                         .HasColumnType("NUMBER(1)")
                         .HasColumnName("IS_ACTIVE");
 
-                    b.HasKey("CompanyId", "AccountCode", "BranchId");
+                    b.HasKey("AccountCode", "BranchId");
 
                     b.HasIndex("BranchId")
                         .HasDatabaseName("IX_GL_ACC_BRANCH_BRANCH");
@@ -157,11 +1128,3900 @@ namespace ThinkOnErp.Infrastructure.Migrations
                         });
                 });
 
+            modelBuilder.Entity("ThinkOnErp.Domain.Entities.Accounting.GlAccountStructureConfig", b =>
+                {
+                    b.Property<int>("LevelNumber")
+                        .HasColumnType("NUMBER(10)")
+                        .HasColumnName("LEVEL_NUMBER");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(500)
+                        .HasColumnType("NVARCHAR2(500)")
+                        .HasColumnName("DESCRIPTION");
+
+                    b.Property<int>("DigitLength")
+                        .HasColumnType("NUMBER(10)")
+                        .HasColumnName("DIGIT_LENGTH");
+
+                    b.Property<bool>("IsActive")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("NUMBER(1)")
+                        .HasDefaultValue(true)
+                        .HasColumnName("IS_ACTIVE");
+
+                    b.Property<string>("LevelNameAr")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("NVARCHAR2(100)")
+                        .HasColumnName("LEVEL_NAME_AR");
+
+                    b.Property<string>("LevelNameEn")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("NVARCHAR2(100)")
+                        .HasColumnName("LEVEL_NAME_EN");
+
+                    b.HasKey("LevelNumber");
+
+                    b.ToTable("GL_ACCOUNT_STRUCTURE_CONFIG", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            LevelNumber = 1,
+                            Description = "خانة واحدة للحسابات الرئيسية (1: الأصول، 2: الخصوم، 3: حقوق الملكية...)",
+                            DigitLength = 1,
+                            IsActive = true,
+                            LevelNameAr = "المستوى الأول - الحسابات الرئيسية العالية",
+                            LevelNameEn = "Level 1 - Main Primary Accounts"
+                        },
+                        new
+                        {
+                            LevelNumber = 2,
+                            Description = "خانة واحدة إضافية للفئات الرئيسية (11: الأصول المتداولة، 12: الأصول غير المتداولة...)",
+                            DigitLength = 1,
+                            IsActive = true,
+                            LevelNameAr = "المستوى الثاني - الفئات الرئيسية",
+                            LevelNameEn = "Level 2 - Main Categories"
+                        },
+                        new
+                        {
+                            LevelNumber = 3,
+                            Description = "خانة واحدة إضافية للمجموعات الفرعية (111: النقدية وما في حكمها...)",
+                            DigitLength = 1,
+                            IsActive = true,
+                            LevelNameAr = "المستوى الثالث - المجموعات الفرعية",
+                            LevelNameEn = "Level 3 - Sub Groups"
+                        },
+                        new
+                        {
+                            LevelNumber = 4,
+                            Description = "خانة واحدة إضافية للحسابات التجميعية (1111: البنوك...)",
+                            DigitLength = 1,
+                            IsActive = true,
+                            LevelNameAr = "المستوى الرابع - الحسابات التجميعية",
+                            LevelNameEn = "Level 4 - Summary Accounts"
+                        },
+                        new
+                        {
+                            LevelNumber = 5,
+                            Description = "خانة أو خانتان تفصيلية للحسابات الفرعية للتسجيل والترحيل المباشر (111101: بنك الاتحاد - حساب جاري...)",
+                            DigitLength = 2,
+                            IsActive = true,
+                            LevelNameAr = "المستوى الخامس - الحسابات الفرعية التفصيلية",
+                            LevelNameEn = "Level 5 - Detail Sub Accounts"
+                        });
+                });
+
+            modelBuilder.Entity("ThinkOnErp.Domain.Entities.Accounting.GlCostCenter", b =>
+                {
+                    b.Property<string>("CostCenterCode")
+                        .HasMaxLength(50)
+                        .HasColumnType("NVARCHAR2(50)")
+                        .HasColumnName("COST_CENTER_CODE");
+
+                    b.Property<int>("CostCenterLevel")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("NUMBER(10)")
+                        .HasDefaultValue(1)
+                        .HasColumnName("COST_CENTER_LEVEL");
+
+                    b.Property<string>("CostCenterType")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(20)
+                        .HasColumnType("NVARCHAR2(20)")
+                        .HasDefaultValue("DETAIL")
+                        .HasColumnName("COST_CENTER_TYPE");
+
+                    b.Property<DateTime>("CreationDate")
+                        .HasColumnType("TIMESTAMP(7)")
+                        .HasColumnName("CREATION_DATE");
+
+                    b.Property<string>("CreationUser")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("NVARCHAR2(100)")
+                        .HasColumnName("CREATION_USER");
+
+                    b.Property<bool>("IsActive")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("NUMBER(1)")
+                        .HasDefaultValue(true)
+                        .HasColumnName("IS_ACTIVE");
+
+                    b.Property<bool>("IsPostable")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("NUMBER(1)")
+                        .HasDefaultValue(true)
+                        .HasColumnName("IS_POSTABLE");
+
+                    b.Property<string>("NameAr")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("NVARCHAR2(200)")
+                        .HasColumnName("NAME_AR");
+
+                    b.Property<string>("NameEn")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("NVARCHAR2(200)")
+                        .HasColumnName("NAME_EN");
+
+                    b.Property<string>("ParentCostCenterCode")
+                        .HasMaxLength(50)
+                        .HasColumnType("NVARCHAR2(50)")
+                        .HasColumnName("PARENT_COST_CENTER_CODE");
+
+                    b.Property<DateTime?>("UpdateDate")
+                        .HasColumnType("TIMESTAMP(7)")
+                        .HasColumnName("UPDATE_DATE");
+
+                    b.Property<string>("UpdateUser")
+                        .HasMaxLength(100)
+                        .HasColumnType("NVARCHAR2(100)")
+                        .HasColumnName("UPDATE_USER");
+
+                    b.HasKey("CostCenterCode");
+
+                    b.HasIndex("ParentCostCenterCode");
+
+                    b.ToTable("GL_COST_CENTER", (string)null);
+                });
+
+            modelBuilder.Entity("ThinkOnErp.Domain.Entities.Accounting.GlFiscalPeriod", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("NUMBER(19)")
+                        .HasColumnName("ID");
+
+                    OraclePropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<string>("CloseReason")
+                        .HasMaxLength(500)
+                        .HasColumnType("NVARCHAR2(500)")
+                        .HasColumnName("CLOSE_REASON");
+
+                    b.Property<string>("ClosedBy")
+                        .HasMaxLength(100)
+                        .HasColumnType("NVARCHAR2(100)")
+                        .HasColumnName("CLOSED_BY");
+
+                    b.Property<DateTime?>("ClosedDate")
+                        .HasColumnType("TIMESTAMP(7)")
+                        .HasColumnName("CLOSED_DATE");
+
+                    b.Property<DateTime>("CreationDate")
+                        .HasColumnType("TIMESTAMP(7)")
+                        .HasColumnName("CREATION_DATE");
+
+                    b.Property<string>("CreationUser")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("NVARCHAR2(100)")
+                        .HasColumnName("CREATION_USER");
+
+                    b.Property<DateTime>("EndDate")
+                        .HasColumnType("TIMESTAMP(7)")
+                        .HasColumnName("END_DATE");
+
+                    b.Property<long>("FiscalYearId")
+                        .HasColumnType("NUMBER(19)")
+                        .HasColumnName("FISCAL_YEAR_ID");
+
+                    b.Property<bool>("IsAdjustment")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("NUMBER(1)")
+                        .HasDefaultValue(false)
+                        .HasColumnName("IS_ADJUSTMENT");
+
+                    b.Property<string>("PeriodNameAr")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("NVARCHAR2(200)")
+                        .HasColumnName("PERIOD_NAME_AR");
+
+                    b.Property<string>("PeriodNameEn")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("NVARCHAR2(200)")
+                        .HasColumnName("PERIOD_NAME_EN");
+
+                    b.Property<int>("PeriodNumber")
+                        .HasColumnType("NUMBER(10)")
+                        .HasColumnName("PERIOD_NUMBER");
+
+                    b.Property<DateTime>("StartDate")
+                        .HasColumnType("TIMESTAMP(7)")
+                        .HasColumnName("START_DATE");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(20)
+                        .HasColumnType("NVARCHAR2(20)")
+                        .HasDefaultValue("OPEN")
+                        .HasColumnName("STATUS");
+
+                    b.Property<DateTime?>("UpdateDate")
+                        .HasColumnType("TIMESTAMP(7)")
+                        .HasColumnName("UPDATE_DATE");
+
+                    b.Property<string>("UpdateUser")
+                        .HasMaxLength(100)
+                        .HasColumnType("NVARCHAR2(100)")
+                        .HasColumnName("UPDATE_USER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("FiscalYearId", "PeriodNumber")
+                        .IsUnique()
+                        .HasDatabaseName("UX_GL_FP_YEAR_NUM");
+
+                    b.ToTable("GL_FISCAL_PERIOD", (string)null);
+                });
+
+            modelBuilder.Entity("ThinkOnErp.Domain.Entities.Accounting.GlOpeningBalanceDetail", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("NUMBER(19)")
+                        .HasColumnName("ID");
+
+                    OraclePropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<string>("AccountCode")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("NVARCHAR2(50)")
+                        .HasColumnName("ACCOUNT_CODE");
+
+                    b.Property<DateTime>("CreationDate")
+                        .HasColumnType("TIMESTAMP(7)")
+                        .HasColumnName("CREATION_DATE");
+
+                    b.Property<string>("CreationUser")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("NVARCHAR2(100)")
+                        .HasColumnName("CREATION_USER");
+
+                    b.Property<decimal>("CreditAmount")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("NUMBER(18,3)")
+                        .HasDefaultValue(0m)
+                        .HasColumnName("CREDIT_AMOUNT");
+
+                    b.Property<long>("CurrencyId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("NUMBER(19)")
+                        .HasDefaultValue(1L)
+                        .HasColumnName("CURRENCY_ID");
+
+                    b.Property<decimal>("DebitAmount")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("NUMBER(18,3)")
+                        .HasDefaultValue(0m)
+                        .HasColumnName("DEBIT_AMOUNT");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(500)
+                        .HasColumnType("NVARCHAR2(500)")
+                        .HasColumnName("DESCRIPTION");
+
+                    b.Property<decimal>("ExchangeRate")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("NUMBER(14,6)")
+                        .HasDefaultValue(1.0m)
+                        .HasColumnName("EXCHANGE_RATE");
+
+                    b.Property<long>("HeaderId")
+                        .HasColumnType("NUMBER(19)")
+                        .HasColumnName("HEADER_ID");
+
+                    b.Property<short>("LineSer")
+                        .HasColumnType("NUMBER(5)")
+                        .HasColumnName("LINE_SER");
+
+                    b.Property<decimal>("LocalCredit")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("NUMBER(18,3)")
+                        .HasDefaultValue(0m)
+                        .HasColumnName("LOCAL_CREDIT");
+
+                    b.Property<decimal>("LocalDebit")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("NUMBER(18,3)")
+                        .HasDefaultValue(0m)
+                        .HasColumnName("LOCAL_DEBIT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AccountCode")
+                        .HasDatabaseName("IX_GL_OB_DETAIL_ACCOUNT");
+
+                    b.HasIndex("HeaderId", "LineSer")
+                        .IsUnique()
+                        .HasDatabaseName("UX_GL_OB_DETAIL_LINE");
+
+                    b.ToTable("GL_OPENING_BALANCE_DETAIL", null, t =>
+                        {
+                            t.ExcludeFromMigrations();
+                        });
+                });
+
+            modelBuilder.Entity("ThinkOnErp.Domain.Entities.Accounting.GlOpeningBalanceHeader", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("NUMBER(19)")
+                        .HasColumnName("ID");
+
+                    OraclePropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<DateTime>("AsOfDate")
+                        .HasColumnType("TIMESTAMP(7)")
+                        .HasColumnName("AS_OF_DATE");
+
+                    b.Property<long>("BranchId")
+                        .HasColumnType("NUMBER(19)")
+                        .HasColumnName("BRANCH_ID");
+
+                    b.Property<DateTime>("CreationDate")
+                        .HasColumnType("TIMESTAMP(7)")
+                        .HasColumnName("CREATION_DATE");
+
+                    b.Property<string>("CreationUser")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("NVARCHAR2(100)")
+                        .HasColumnName("CREATION_USER");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(500)
+                        .HasColumnType("NVARCHAR2(500)")
+                        .HasColumnName("DESCRIPTION");
+
+                    b.Property<long>("FiscalYearId")
+                        .HasColumnType("NUMBER(19)")
+                        .HasColumnName("FISCAL_YEAR_ID");
+
+                    b.Property<long?>("ObVoucherId")
+                        .HasColumnType("NUMBER(19)")
+                        .HasColumnName("OB_VOUCHER_ID");
+
+                    b.Property<byte>("Status")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("NUMBER(3)")
+                        .HasDefaultValue((byte)1)
+                        .HasColumnName("STATUS");
+
+                    b.Property<decimal>("TotalCredit")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("NUMBER(18,3)")
+                        .HasDefaultValue(0m)
+                        .HasColumnName("TOTAL_CREDIT");
+
+                    b.Property<decimal>("TotalDebit")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("NUMBER(18,3)")
+                        .HasDefaultValue(0m)
+                        .HasColumnName("TOTAL_DEBIT");
+
+                    b.Property<DateTime?>("UpdateDate")
+                        .HasColumnType("TIMESTAMP(7)")
+                        .HasColumnName("UPDATE_DATE");
+
+                    b.Property<string>("UpdateUser")
+                        .HasMaxLength(100)
+                        .HasColumnType("NVARCHAR2(100)")
+                        .HasColumnName("UPDATE_USER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BranchId", "FiscalYearId")
+                        .IsUnique()
+                        .HasDatabaseName("UX_GL_OB_BRANCH_YEAR");
+
+                    b.ToTable("GL_OPENING_BALANCE_HEADER", null, t =>
+                        {
+                            t.ExcludeFromMigrations();
+                        });
+                });
+
+            modelBuilder.Entity("ThinkOnErp.Domain.Entities.Accounting.GlPdcRegister", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("NUMBER(19)")
+                        .HasColumnName("ID");
+
+                    OraclePropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<decimal>("Amount")
+                        .HasPrecision(18, 3)
+                        .HasColumnType("DECIMAL(18,3)")
+                        .HasColumnName("AMOUNT");
+
+                    b.Property<string>("BeneficiaryName")
+                        .HasMaxLength(150)
+                        .HasColumnType("NVARCHAR2(150)")
+                        .HasColumnName("BENEFICIARY_NAME");
+
+                    b.Property<string>("BounceReason")
+                        .HasMaxLength(250)
+                        .HasColumnType("NVARCHAR2(250)")
+                        .HasColumnName("BOUNCE_REASON");
+
+                    b.Property<long?>("BounceVoucherId")
+                        .HasColumnType("NUMBER(19)")
+                        .HasColumnName("BOUNCE_VOUCHER_ID");
+
+                    b.Property<DateTime?>("BouncedDate")
+                        .HasColumnType("TIMESTAMP(7)")
+                        .HasColumnName("BOUNCED_DATE");
+
+                    b.Property<long>("BranchId")
+                        .HasColumnType("NUMBER(19)")
+                        .HasColumnName("BRANCH_ID");
+
+                    b.Property<DateTime>("ChequeDate")
+                        .HasColumnType("TIMESTAMP(7)")
+                        .HasColumnName("CHEQUE_DATE");
+
+                    b.Property<string>("ChequeNumber")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("NVARCHAR2(50)")
+                        .HasColumnName("CHEQUE_NO");
+
+                    b.Property<string>("ChequeType")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("NVARCHAR2(20)")
+                        .HasColumnName("CHEQUE_TYPE");
+
+                    b.Property<DateTime?>("ClearedDate")
+                        .HasColumnType("TIMESTAMP(7)")
+                        .HasColumnName("CLEARED_DATE");
+
+                    b.Property<long?>("ClearingVoucherId")
+                        .HasColumnType("NUMBER(19)")
+                        .HasColumnName("CLEARING_VOUCHER_ID");
+
+                    b.Property<DateTime>("CreationDate")
+                        .HasColumnType("TIMESTAMP(7)")
+                        .HasColumnName("CREATION_DATE");
+
+                    b.Property<string>("CreationUser")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("NVARCHAR2(50)")
+                        .HasColumnName("CREATION_USER");
+
+                    b.Property<long>("CurrencyId")
+                        .HasColumnType("NUMBER(19)")
+                        .HasColumnName("CURRENCY_ID");
+
+                    b.Property<string>("DepositBankAccountCode")
+                        .HasMaxLength(50)
+                        .HasColumnType("NVARCHAR2(50)")
+                        .HasColumnName("DEPOSIT_BANK_ACCOUNT_CODE");
+
+                    b.Property<DateTime?>("DepositDate")
+                        .HasColumnType("TIMESTAMP(7)")
+                        .HasColumnName("DEPOSIT_DATE");
+
+                    b.Property<string>("DrawerBankAccountNo")
+                        .HasMaxLength(50)
+                        .HasColumnType("NVARCHAR2(50)")
+                        .HasColumnName("DRAWER_BANK_ACC_NO");
+
+                    b.Property<string>("DrawerBankName")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("NVARCHAR2(150)")
+                        .HasColumnName("DRAWER_BANK_NAME");
+
+                    b.Property<DateTime>("DueDate")
+                        .HasColumnType("TIMESTAMP(7)")
+                        .HasColumnName("DUE_DATE");
+
+                    b.Property<decimal>("ExchangeRate")
+                        .HasPrecision(18, 6)
+                        .HasColumnType("DECIMAL(18,6)")
+                        .HasColumnName("EXCHANGE_RATE");
+
+                    b.Property<long>("FiscalYearId")
+                        .HasColumnType("NUMBER(19)")
+                        .HasColumnName("FISCAL_YEAR_ID");
+
+                    b.Property<string>("IntermediateAccountCode")
+                        .HasMaxLength(50)
+                        .HasColumnType("NVARCHAR2(50)")
+                        .HasColumnName("INTERMEDIATE_ACCOUNT_CODE");
+
+                    b.Property<decimal>("LocalAmount")
+                        .HasPrecision(18, 3)
+                        .HasColumnType("DECIMAL(18,3)")
+                        .HasColumnName("LOCAL_AMOUNT");
+
+                    b.Property<string>("Notes")
+                        .HasMaxLength(500)
+                        .HasColumnType("NVARCHAR2(500)")
+                        .HasColumnName("NOTES");
+
+                    b.Property<long?>("OriginatingVoucherId")
+                        .HasColumnType("NUMBER(19)")
+                        .HasColumnName("ORIGINATING_VOUCHER_ID");
+
+                    b.Property<string>("PartyCode")
+                        .HasMaxLength(50)
+                        .HasColumnType("NVARCHAR2(50)")
+                        .HasColumnName("PARTY_CODE");
+
+                    b.Property<string>("PartyType")
+                        .HasMaxLength(20)
+                        .HasColumnType("NVARCHAR2(20)")
+                        .HasColumnName("PARTY_TYPE");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("NVARCHAR2(20)")
+                        .HasColumnName("STATUS");
+
+                    b.Property<DateTime?>("UpdateDate")
+                        .HasColumnType("TIMESTAMP(7)")
+                        .HasColumnName("UPDATE_DATE");
+
+                    b.Property<string>("UpdateUser")
+                        .HasMaxLength(50)
+                        .HasColumnType("NVARCHAR2(50)")
+                        .HasColumnName("UPDATE_USER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BounceVoucherId");
+
+                    b.HasIndex("ClearingVoucherId");
+
+                    b.HasIndex("CurrencyId");
+
+                    b.HasIndex("FiscalYearId");
+
+                    b.HasIndex("OriginatingVoucherId");
+
+                    b.HasIndex("DueDate", "Status")
+                        .HasDatabaseName("IX_PDC_DUE_STATUS");
+
+                    b.HasIndex("PartyType", "PartyCode")
+                        .HasDatabaseName("IX_PDC_PARTY");
+
+                    b.HasIndex("BranchId", "ChequeType", "ChequeNumber")
+                        .HasDatabaseName("IX_PDC_BR_TYPE_NO");
+
+                    b.ToTable("GL_PDC_REGISTER", (string)null);
+                });
+
+            modelBuilder.Entity("ThinkOnErp.Domain.Entities.Accounting.GlPostingRule", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("NUMBER(19)")
+                        .HasColumnName("ID");
+
+                    OraclePropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<long?>("BranchId")
+                        .HasColumnType("NUMBER(19)")
+                        .HasColumnName("BRANCH_ID");
+
+                    b.Property<DateTime>("CreationDate")
+                        .HasColumnType("TIMESTAMP(7)")
+                        .HasColumnName("CREATION_DATE");
+
+                    b.Property<string>("CreationUser")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("NVARCHAR2(50)")
+                        .HasColumnName("CREATION_USER");
+
+                    b.Property<string>("CreditAccountCode")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("NVARCHAR2(50)")
+                        .HasColumnName("CREDIT_ACCOUNT_CODE");
+
+                    b.Property<string>("DebitAccountCode")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("NVARCHAR2(50)")
+                        .HasColumnName("DEBIT_ACCOUNT_CODE");
+
+                    b.Property<string>("DefaultCostCenterCode")
+                        .HasMaxLength(50)
+                        .HasColumnType("NVARCHAR2(50)")
+                        .HasColumnName("DEFAULT_COST_CENTER_CODE");
+
+                    b.Property<int>("DefaultVoucherType")
+                        .HasColumnType("NUMBER(10)")
+                        .HasColumnName("DEFAULT_VOUCHER_TYPE");
+
+                    b.Property<string>("DescriptionTemplate")
+                        .HasMaxLength(500)
+                        .HasColumnType("NVARCHAR2(500)")
+                        .HasColumnName("DESCRIPTION_TEMPLATE");
+
+                    b.Property<string>("EventNameAr")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("NVARCHAR2(200)")
+                        .HasColumnName("EVENT_NAME_AR");
+
+                    b.Property<string>("EventNameEn")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("NVARCHAR2(200)")
+                        .HasColumnName("EVENT_NAME_EN");
+
+                    b.Property<string>("EventType")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("NVARCHAR2(50)")
+                        .HasColumnName("EVENT_TYPE");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("NUMBER(1)")
+                        .HasColumnName("IS_ACTIVE");
+
+                    b.Property<string>("Module")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("NVARCHAR2(50)")
+                        .HasColumnName("MODULE");
+
+                    b.Property<DateTime?>("UpdateDate")
+                        .HasColumnType("TIMESTAMP(7)")
+                        .HasColumnName("UPDATE_DATE");
+
+                    b.Property<string>("UpdateUser")
+                        .HasMaxLength(50)
+                        .HasColumnType("NVARCHAR2(50)")
+                        .HasColumnName("UPDATE_USER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BranchId");
+
+                    b.HasIndex("CreditAccountCode");
+
+                    b.HasIndex("DebitAccountCode");
+
+                    b.HasIndex("DefaultCostCenterCode");
+
+                    b.HasIndex("Module", "EventType", "BranchId")
+                        .HasDatabaseName("IX_POSTING_MOD_EVT_BR");
+
+                    b.ToTable("GL_POSTING_RULE", (string)null);
+                });
+
+            modelBuilder.Entity("ThinkOnErp.Domain.Entities.Accounting.GlVoucherDetail", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("NUMBER(19)")
+                        .HasColumnName("ID");
+
+                    OraclePropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<string>("AccountCode")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("NVARCHAR2(50)")
+                        .HasColumnName("ACCOUNT_CODE");
+
+                    b.Property<decimal>("BaseCredit")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("NUMBER(18,3)")
+                        .HasDefaultValue(0m)
+                        .HasColumnName("BASE_CREDIT");
+
+                    b.Property<decimal>("BaseDebit")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("NUMBER(18,3)")
+                        .HasDefaultValue(0m)
+                        .HasColumnName("BASE_DEBIT");
+
+                    b.Property<long?>("BranchId")
+                        .HasColumnType("NUMBER(19)")
+                        .HasColumnName("BRANCH_ID");
+
+                    b.Property<string>("CostCenterCode")
+                        .HasMaxLength(50)
+                        .HasColumnType("NVARCHAR2(50)")
+                        .HasColumnName("COST_CENTER_CODE");
+
+                    b.Property<string>("CostCenterMgrCode")
+                        .HasMaxLength(50)
+                        .HasColumnType("NVARCHAR2(50)")
+                        .HasColumnName("COST_CENTER_MGR_CODE");
+
+                    b.Property<string>("CostCenterMnrCode")
+                        .HasMaxLength(50)
+                        .HasColumnType("NVARCHAR2(50)")
+                        .HasColumnName("COST_CENTER_MNR_CODE");
+
+                    b.Property<decimal>("Credit")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("NUMBER(18,3)")
+                        .HasDefaultValue(0m)
+                        .HasColumnName("CREDIT");
+
+                    b.Property<long>("CurrencyId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("NUMBER(19)")
+                        .HasDefaultValue(1L)
+                        .HasColumnName("CURRENCY_ID");
+
+                    b.Property<decimal>("Debit")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("NUMBER(18,3)")
+                        .HasDefaultValue(0m)
+                        .HasColumnName("DEBIT");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(1000)
+                        .HasColumnType("NVARCHAR2(1000)")
+                        .HasColumnName("DESCRIPTION");
+
+                    b.Property<decimal>("ExchangeRate")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("NUMBER(14,6)")
+                        .HasDefaultValue(1.0m)
+                        .HasColumnName("EXCHANGE_RATE");
+
+                    b.Property<bool>("IsSettlement")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("NUMBER(1)")
+                        .HasDefaultValue(false)
+                        .HasColumnName("IS_SETTLEMENT");
+
+                    b.Property<int>("LineSer")
+                        .HasColumnType("NUMBER(10)")
+                        .HasColumnName("LINE_SER");
+
+                    b.Property<decimal>("LocalCredit")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("NUMBER(18,3)")
+                        .HasDefaultValue(0m)
+                        .HasColumnName("LOCAL_CREDIT");
+
+                    b.Property<decimal>("LocalDebit")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("NUMBER(18,3)")
+                        .HasDefaultValue(0m)
+                        .HasColumnName("LOCAL_DEBIT");
+
+                    b.Property<string>("PartyCode")
+                        .HasMaxLength(50)
+                        .HasColumnType("NVARCHAR2(50)")
+                        .HasColumnName("PARTY_CODE");
+
+                    b.Property<string>("PartyType")
+                        .HasMaxLength(20)
+                        .HasColumnType("NVARCHAR2(20)")
+                        .HasColumnName("PARTY_TYPE");
+
+                    b.Property<long>("VoucherId")
+                        .HasColumnType("NUMBER(19)")
+                        .HasColumnName("VOUCHER_ID");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AccountCode");
+
+                    b.HasIndex("BranchId");
+
+                    b.HasIndex("CostCenterCode");
+
+                    b.HasIndex("VoucherId");
+
+                    b.ToTable("GL_VOUCHER_DETAIL", (string)null);
+                });
+
+            modelBuilder.Entity("ThinkOnErp.Domain.Entities.Accounting.GlVoucherHeader", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("NUMBER(19)")
+                        .HasColumnName("ID");
+
+                    OraclePropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<long>("BranchId")
+                        .HasColumnType("NUMBER(19)")
+                        .HasColumnName("BRANCH_ID");
+
+                    b.Property<DateTime>("CreationDate")
+                        .HasColumnType("TIMESTAMP(7)")
+                        .HasColumnName("CREATION_DATE");
+
+                    b.Property<string>("CreationUser")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("NVARCHAR2(100)")
+                        .HasColumnName("CREATION_USER");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(2000)
+                        .HasColumnType("NVARCHAR2(2000)")
+                        .HasColumnName("DESCRIPTION");
+
+                    b.Property<long>("FiscalYearId")
+                        .HasColumnType("NUMBER(19)")
+                        .HasColumnName("FISCAL_YEAR_ID");
+
+                    b.Property<bool>("IsAutoRecord")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("NUMBER(1)")
+                        .HasDefaultValue(false)
+                        .HasColumnName("IS_AUTO_RECORD");
+
+                    b.Property<bool>("IsReversed")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("NUMBER(1)")
+                        .HasDefaultValue(false)
+                        .HasColumnName("IS_REVERSED");
+
+                    b.Property<bool>("IsReviewed")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("NUMBER(1)")
+                        .HasDefaultValue(false)
+                        .HasColumnName("IS_REVIEWED");
+
+                    b.Property<bool>("IsStandby")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("NUMBER(1)")
+                        .HasDefaultValue(false)
+                        .HasColumnName("IS_STANDBY");
+
+                    b.Property<DateTime?>("PostDate")
+                        .HasColumnType("TIMESTAMP(7)")
+                        .HasColumnName("POST_DATE");
+
+                    b.Property<string>("PostUser")
+                        .HasMaxLength(100)
+                        .HasColumnType("NVARCHAR2(100)")
+                        .HasColumnName("POST_USER");
+
+                    b.Property<DateTime?>("ReverseDate")
+                        .HasColumnType("TIMESTAMP(7)")
+                        .HasColumnName("REVERSE_DATE");
+
+                    b.Property<string>("ReverseUser")
+                        .HasMaxLength(100)
+                        .HasColumnType("NVARCHAR2(100)")
+                        .HasColumnName("REVERSE_USER");
+
+                    b.Property<DateTime?>("ReviewDate")
+                        .HasColumnType("TIMESTAMP(7)")
+                        .HasColumnName("REVIEW_DATE");
+
+                    b.Property<string>("ReviewUser")
+                        .HasMaxLength(100)
+                        .HasColumnType("NVARCHAR2(100)")
+                        .HasColumnName("REVIEW_USER");
+
+                    b.Property<long?>("SourceRefId")
+                        .HasColumnType("NUMBER(19)")
+                        .HasColumnName("SOURCE_REF_ID");
+
+                    b.Property<string>("SourceSystemCode")
+                        .HasMaxLength(100)
+                        .HasColumnType("NVARCHAR2(100)")
+                        .HasColumnName("SOURCE_SYSTEM_CODE");
+
+                    b.Property<int>("Status")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("NUMBER(10)")
+                        .HasDefaultValue(1)
+                        .HasColumnName("STATUS");
+
+                    b.Property<decimal>("TotalAmount")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("NUMBER(18,3)")
+                        .HasDefaultValue(0m)
+                        .HasColumnName("TOTAL_AMOUNT");
+
+                    b.Property<decimal>("TotalLocalCredit")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("NUMBER(18,3)")
+                        .HasDefaultValue(0m)
+                        .HasColumnName("TOTAL_LOCAL_CREDIT");
+
+                    b.Property<decimal>("TotalLocalDebit")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("NUMBER(18,3)")
+                        .HasDefaultValue(0m)
+                        .HasColumnName("TOTAL_LOCAL_DEBIT");
+
+                    b.Property<DateTime?>("UnpostDate")
+                        .HasColumnType("TIMESTAMP(7)")
+                        .HasColumnName("UNPOST_DATE");
+
+                    b.Property<string>("UnpostUser")
+                        .HasMaxLength(100)
+                        .HasColumnType("NVARCHAR2(100)")
+                        .HasColumnName("UNPOST_USER");
+
+                    b.Property<DateTime?>("UpdateDate")
+                        .HasColumnType("TIMESTAMP(7)")
+                        .HasColumnName("UPDATE_DATE");
+
+                    b.Property<string>("UpdateUser")
+                        .HasMaxLength(100)
+                        .HasColumnType("NVARCHAR2(100)")
+                        .HasColumnName("UPDATE_USER");
+
+                    b.Property<DateTime>("VoucherDate")
+                        .HasColumnType("TIMESTAMP(7)")
+                        .HasColumnName("VOUCHER_DATE");
+
+                    b.Property<int>("VoucherMonth")
+                        .HasColumnType("NUMBER(10)")
+                        .HasColumnName("VOUCHER_MONTH");
+
+                    b.Property<long>("VoucherNo")
+                        .HasColumnType("NUMBER(19)")
+                        .HasColumnName("VOUCHER_NO");
+
+                    b.Property<int>("VoucherType")
+                        .HasColumnType("NUMBER(10)")
+                        .HasColumnName("VOUCHER_TYPE");
+
+                    b.Property<int>("VoucherYear")
+                        .HasColumnType("NUMBER(10)")
+                        .HasColumnName("VOUCHER_YEAR");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BranchId", "VoucherYear", "VoucherMonth", "VoucherType", "VoucherNo")
+                        .IsUnique()
+                        .HasDatabaseName("UX_GL_VOUCHER_NO");
+
+                    b.ToTable("GL_VOUCHER_HEADER", (string)null);
+                });
+
+            modelBuilder.Entity("ThinkOnErp.Domain.Entities.Accounting.GlVoucherSerial", b =>
+                {
+                    b.Property<long>("BranchId")
+                        .HasColumnType("NUMBER(19)")
+                        .HasColumnName("BRANCH_ID");
+
+                    b.Property<int>("SerialYear")
+                        .HasColumnType("NUMBER(10)")
+                        .HasColumnName("SERIAL_YEAR");
+
+                    b.Property<int>("SerialMonth")
+                        .HasColumnType("NUMBER(10)")
+                        .HasColumnName("SERIAL_MONTH");
+
+                    b.Property<int>("VoucherType")
+                        .HasColumnType("NUMBER(10)")
+                        .HasColumnName("VOUCHER_TYPE");
+
+                    b.Property<long>("LastSerialNo")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("NUMBER(19)")
+                        .HasDefaultValue(0L)
+                        .HasColumnName("LAST_SERIAL_NO");
+
+                    b.HasKey("BranchId", "SerialYear", "SerialMonth", "VoucherType");
+
+                    b.ToTable("GL_VOUCHER_SERIAL", (string)null);
+                });
+
+            modelBuilder.Entity("ThinkOnErp.Domain.Entities.Accounting.GlVoucherType", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("NUMBER(19)")
+                        .HasColumnName("ID");
+
+                    OraclePropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<bool>("AllowManualEntry")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("NUMBER(1)")
+                        .HasDefaultValue(true)
+                        .HasColumnName("ALLOW_MANUAL_ENTRY");
+
+                    b.Property<string>("Category")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("NVARCHAR2(20)")
+                        .HasColumnName("CATEGORY");
+
+                    b.Property<DateTime>("CreationDate")
+                        .HasColumnType("TIMESTAMP(7)")
+                        .HasColumnName("CREATION_DATE");
+
+                    b.Property<string>("CreationUser")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("NVARCHAR2(100)")
+                        .HasColumnName("CREATION_USER");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(500)
+                        .HasColumnType("NVARCHAR2(500)")
+                        .HasColumnName("DESCRIPTION");
+
+                    b.Property<int>("DisplayOrder")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("NUMBER(10)")
+                        .HasDefaultValue(1)
+                        .HasColumnName("DISPLAY_ORDER");
+
+                    b.Property<bool>("IsActive")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("NUMBER(1)")
+                        .HasDefaultValue(true)
+                        .HasColumnName("IS_ACTIVE");
+
+                    b.Property<bool>("IsSystem")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("NUMBER(1)")
+                        .HasDefaultValue(false)
+                        .HasColumnName("IS_SYSTEM");
+
+                    b.Property<string>("NameAr")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("NVARCHAR2(200)")
+                        .HasColumnName("NAME_AR");
+
+                    b.Property<string>("NameEn")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("NVARCHAR2(200)")
+                        .HasColumnName("NAME_EN");
+
+                    b.Property<string>("Prefix")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("NVARCHAR2(10)")
+                        .HasColumnName("PREFIX");
+
+                    b.Property<bool>("RequiresReview")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("NUMBER(1)")
+                        .HasDefaultValue(true)
+                        .HasColumnName("REQUIRES_REVIEW");
+
+                    b.Property<string>("SerialResetPolicy")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(20)
+                        .HasColumnType("NVARCHAR2(20)")
+                        .HasDefaultValue("MONTHLY")
+                        .HasColumnName("SERIAL_RESET_POLICY");
+
+                    b.Property<int>("TypeCode")
+                        .HasColumnType("NUMBER(10)")
+                        .HasColumnName("TYPE_CODE");
+
+                    b.Property<string>("TypeKey")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("NVARCHAR2(20)")
+                        .HasColumnName("TYPE_KEY");
+
+                    b.Property<DateTime?>("UpdateDate")
+                        .HasColumnType("TIMESTAMP(7)")
+                        .HasColumnName("UPDATE_DATE");
+
+                    b.Property<string>("UpdateUser")
+                        .HasMaxLength(100)
+                        .HasColumnType("NVARCHAR2(100)")
+                        .HasColumnName("UPDATE_USER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TypeCode")
+                        .IsUnique()
+                        .HasDatabaseName("UX_GL_VOUCHER_TYPE_CODE");
+
+                    b.HasIndex("TypeKey")
+                        .IsUnique()
+                        .HasDatabaseName("UX_GL_VOUCHER_TYPE_KEY");
+
+                    b.ToTable("GL_VOUCHER_TYPE", (string)null);
+                });
+
+            modelBuilder.Entity("ThinkOnErp.Domain.Entities.Accounting.TaxCategory", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("NUMBER(19)")
+                        .HasColumnName("ID");
+
+                    OraclePropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<string>("CategoryCode")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("NVARCHAR2(50)")
+                        .HasColumnName("CATEGORY_CODE");
+
+                    b.Property<DateTime>("CreationDate")
+                        .HasColumnType("TIMESTAMP(7)")
+                        .HasColumnName("CREATION_DATE");
+
+                    b.Property<string>("CreationUser")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("NVARCHAR2(100)")
+                        .HasColumnName("CREATION_USER");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(500)
+                        .HasColumnType("NVARCHAR2(500)")
+                        .HasColumnName("DESCRIPTION");
+
+                    b.Property<int>("DisplayOrder")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("NUMBER(10)")
+                        .HasDefaultValue(1)
+                        .HasColumnName("DISPLAY_ORDER");
+
+                    b.Property<bool>("IsActive")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("NUMBER(1)")
+                        .HasDefaultValue(true)
+                        .HasColumnName("IS_ACTIVE");
+
+                    b.Property<string>("NameAr")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("NVARCHAR2(150)")
+                        .HasColumnName("NAME_AR");
+
+                    b.Property<string>("NameEn")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("NVARCHAR2(150)")
+                        .HasColumnName("NAME_EN");
+
+                    b.Property<DateTime?>("UpdateDate")
+                        .HasColumnType("TIMESTAMP(7)")
+                        .HasColumnName("UPDATE_DATE");
+
+                    b.Property<string>("UpdateUser")
+                        .HasMaxLength(100)
+                        .HasColumnType("NVARCHAR2(100)")
+                        .HasColumnName("UPDATE_USER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CategoryCode")
+                        .IsUnique()
+                        .HasDatabaseName("UX_TAX_CAT_CODE");
+
+                    b.ToTable("TAX_CATEGORY", (string)null);
+                });
+
+            modelBuilder.Entity("ThinkOnErp.Domain.Entities.Accounting.TaxGroup", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("NUMBER(19)")
+                        .HasColumnName("ID");
+
+                    OraclePropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<DateTime>("CreationDate")
+                        .HasColumnType("TIMESTAMP(7)")
+                        .HasColumnName("CREATION_DATE");
+
+                    b.Property<string>("CreationUser")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("NVARCHAR2(100)")
+                        .HasColumnName("CREATION_USER");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(500)
+                        .HasColumnType("NVARCHAR2(500)")
+                        .HasColumnName("DESCRIPTION");
+
+                    b.Property<string>("GroupCode")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("NVARCHAR2(50)")
+                        .HasColumnName("GROUP_CODE");
+
+                    b.Property<bool>("IsActive")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("NUMBER(1)")
+                        .HasDefaultValue(true)
+                        .HasColumnName("IS_ACTIVE");
+
+                    b.Property<string>("NameAr")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("NVARCHAR2(150)")
+                        .HasColumnName("NAME_AR");
+
+                    b.Property<string>("NameEn")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("NVARCHAR2(150)")
+                        .HasColumnName("NAME_EN");
+
+                    b.Property<DateTime?>("UpdateDate")
+                        .HasColumnType("TIMESTAMP(7)")
+                        .HasColumnName("UPDATE_DATE");
+
+                    b.Property<string>("UpdateUser")
+                        .HasMaxLength(100)
+                        .HasColumnType("NVARCHAR2(100)")
+                        .HasColumnName("UPDATE_USER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("GroupCode")
+                        .IsUnique()
+                        .HasDatabaseName("UX_TAX_GRP_CODE");
+
+                    b.ToTable("TAX_GROUP", (string)null);
+                });
+
+            modelBuilder.Entity("ThinkOnErp.Domain.Entities.Accounting.TaxGroupItem", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("NUMBER(19)")
+                        .HasColumnName("ID");
+
+                    OraclePropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<int>("ApplicationOrder")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("NUMBER(10)")
+                        .HasDefaultValue(1)
+                        .HasColumnName("APPLICATION_ORDER");
+
+                    b.Property<bool>("IsCompound")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("NUMBER(1)")
+                        .HasDefaultValue(false)
+                        .HasColumnName("IS_COMPOUND");
+
+                    b.Property<long>("TaxGroupId")
+                        .HasColumnType("NUMBER(19)")
+                        .HasColumnName("TAX_GROUP_ID");
+
+                    b.Property<long>("TaxRateId")
+                        .HasColumnType("NUMBER(19)")
+                        .HasColumnName("TAX_RATE_ID");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TaxRateId");
+
+                    b.HasIndex("TaxGroupId", "TaxRateId")
+                        .IsUnique()
+                        .HasDatabaseName("UX_TAX_GRP_ITEM");
+
+                    b.ToTable("TAX_GROUP_ITEM", (string)null);
+                });
+
+            modelBuilder.Entity("ThinkOnErp.Domain.Entities.Accounting.TaxRate", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("NUMBER(19)")
+                        .HasColumnName("ID");
+
+                    OraclePropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<DateTime>("CreationDate")
+                        .HasColumnType("TIMESTAMP(7)")
+                        .HasColumnName("CREATION_DATE");
+
+                    b.Property<string>("CreationUser")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("NVARCHAR2(100)")
+                        .HasColumnName("CREATION_USER");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(500)
+                        .HasColumnType("NVARCHAR2(500)")
+                        .HasColumnName("DESCRIPTION");
+
+                    b.Property<int>("DisplayOrder")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("NUMBER(10)")
+                        .HasDefaultValue(1)
+                        .HasColumnName("DISPLAY_ORDER");
+
+                    b.Property<string>("ExemptionReasonAr")
+                        .HasMaxLength(300)
+                        .HasColumnType("NVARCHAR2(300)")
+                        .HasColumnName("EXEMPTION_REASON_AR");
+
+                    b.Property<string>("ExemptionReasonCode")
+                        .HasMaxLength(50)
+                        .HasColumnType("NVARCHAR2(50)")
+                        .HasColumnName("EXEMPTION_REASON_CODE");
+
+                    b.Property<string>("ExemptionReasonEn")
+                        .HasMaxLength(300)
+                        .HasColumnType("NVARCHAR2(300)")
+                        .HasColumnName("EXEMPTION_REASON_EN");
+
+                    b.Property<bool>("IsActive")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("NUMBER(1)")
+                        .HasDefaultValue(true)
+                        .HasColumnName("IS_ACTIVE");
+
+                    b.Property<bool>("IsExempt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("NUMBER(1)")
+                        .HasDefaultValue(false)
+                        .HasColumnName("IS_EXEMPT");
+
+                    b.Property<bool>("IsZeroRated")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("NUMBER(1)")
+                        .HasDefaultValue(false)
+                        .HasColumnName("IS_ZERO_RATED");
+
+                    b.Property<string>("NameAr")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("NVARCHAR2(150)")
+                        .HasColumnName("NAME_AR");
+
+                    b.Property<string>("NameEn")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("NVARCHAR2(150)")
+                        .HasColumnName("NAME_EN");
+
+                    b.Property<string>("PurchaseTaxGlAccountCode")
+                        .HasMaxLength(50)
+                        .HasColumnType("NVARCHAR2(50)")
+                        .HasColumnName("PURCHASE_TAX_GL_ACCOUNT_CODE");
+
+                    b.Property<decimal>("RatePercent")
+                        .HasPrecision(8, 4)
+                        .HasColumnType("DECIMAL(8,4)")
+                        .HasColumnName("RATE_PERCENT");
+
+                    b.Property<string>("RateType")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(30)
+                        .HasColumnType("NVARCHAR2(30)")
+                        .HasDefaultValue("PERCENTAGE")
+                        .HasColumnName("RATE_TYPE");
+
+                    b.Property<string>("SalesTaxGlAccountCode")
+                        .HasMaxLength(50)
+                        .HasColumnType("NVARCHAR2(50)")
+                        .HasColumnName("SALES_TAX_GL_ACCOUNT_CODE");
+
+                    b.Property<long>("TaxCategoryId")
+                        .HasColumnType("NUMBER(19)")
+                        .HasColumnName("TAX_CATEGORY_ID");
+
+                    b.Property<string>("TaxRateCode")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("NVARCHAR2(50)")
+                        .HasColumnName("TAX_RATE_CODE");
+
+                    b.Property<DateTime?>("UpdateDate")
+                        .HasColumnType("TIMESTAMP(7)")
+                        .HasColumnName("UPDATE_DATE");
+
+                    b.Property<string>("UpdateUser")
+                        .HasMaxLength(100)
+                        .HasColumnType("NVARCHAR2(100)")
+                        .HasColumnName("UPDATE_USER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PurchaseTaxGlAccountCode");
+
+                    b.HasIndex("SalesTaxGlAccountCode");
+
+                    b.HasIndex("TaxCategoryId");
+
+                    b.HasIndex("TaxRateCode")
+                        .IsUnique()
+                        .HasDatabaseName("UX_TAX_RATE_CODE");
+
+                    b.ToTable("TAX_RATE", (string)null);
+                });
+
+            modelBuilder.Entity("ThinkOnErp.Domain.Entities.Accounting.TaxTransaction", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("NUMBER(19)")
+                        .HasColumnName("ID");
+
+                    OraclePropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<decimal>("BaseAmount")
+                        .HasPrecision(18, 3)
+                        .HasColumnType("DECIMAL(18,3)")
+                        .HasColumnName("BASE_AMOUNT");
+
+                    b.Property<long>("BranchId")
+                        .HasColumnType("NUMBER(19)")
+                        .HasColumnName("BRANCH_ID");
+
+                    b.Property<DateTime>("CreationDate")
+                        .HasColumnType("TIMESTAMP(7)")
+                        .HasColumnName("CREATION_DATE");
+
+                    b.Property<string>("CreationUser")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("NVARCHAR2(100)")
+                        .HasColumnName("CREATION_USER");
+
+                    b.Property<long>("CurrencyId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("NUMBER(19)")
+                        .HasDefaultValue(1L)
+                        .HasColumnName("CURRENCY_ID");
+
+                    b.Property<DateTime>("DocumentDate")
+                        .HasColumnType("TIMESTAMP(7)")
+                        .HasColumnName("DOCUMENT_DATE");
+
+                    b.Property<decimal>("ExchangeRate")
+                        .ValueGeneratedOnAdd()
+                        .HasPrecision(14, 6)
+                        .HasColumnType("DECIMAL(14,6)")
+                        .HasDefaultValue(1.0m)
+                        .HasColumnName("EXCHANGE_RATE");
+
+                    b.Property<long>("FiscalYearId")
+                        .HasColumnType("NUMBER(19)")
+                        .HasColumnName("FISCAL_YEAR_ID");
+
+                    b.Property<long?>("GlVoucherId")
+                        .HasColumnType("NUMBER(19)")
+                        .HasColumnName("GL_VOUCHER_ID");
+
+                    b.Property<bool>("IsRecoverable")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("NUMBER(1)")
+                        .HasDefaultValue(true)
+                        .HasColumnName("IS_RECOVERABLE");
+
+                    b.Property<bool>("IsSalesTax")
+                        .HasColumnType("NUMBER(1)")
+                        .HasColumnName("IS_SALES_TAX");
+
+                    b.Property<decimal>("LocalBaseAmount")
+                        .HasPrecision(18, 3)
+                        .HasColumnType("DECIMAL(18,3)")
+                        .HasColumnName("LOCAL_BASE_AMOUNT");
+
+                    b.Property<decimal>("LocalTaxAmount")
+                        .HasPrecision(18, 3)
+                        .HasColumnType("DECIMAL(18,3)")
+                        .HasColumnName("LOCAL_TAX_AMOUNT");
+
+                    b.Property<string>("Notes")
+                        .HasMaxLength(500)
+                        .HasColumnType("NVARCHAR2(500)")
+                        .HasColumnName("NOTES");
+
+                    b.Property<string>("PartyCode")
+                        .HasMaxLength(50)
+                        .HasColumnType("NVARCHAR2(50)")
+                        .HasColumnName("PARTY_CODE");
+
+                    b.Property<string>("PartyName")
+                        .HasMaxLength(200)
+                        .HasColumnType("NVARCHAR2(200)")
+                        .HasColumnName("PARTY_NAME");
+
+                    b.Property<string>("PartyTaxNumber")
+                        .HasMaxLength(50)
+                        .HasColumnType("NVARCHAR2(50)")
+                        .HasColumnName("PARTY_TAX_NUMBER");
+
+                    b.Property<string>("PartyType")
+                        .HasMaxLength(20)
+                        .HasColumnType("NVARCHAR2(20)")
+                        .HasColumnName("PARTY_TYPE");
+
+                    b.Property<long>("SourceDocumentId")
+                        .HasColumnType("NUMBER(19)")
+                        .HasColumnName("SOURCE_DOCUMENT_ID");
+
+                    b.Property<string>("SourceDocumentNo")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("NVARCHAR2(50)")
+                        .HasColumnName("SOURCE_DOCUMENT_NO");
+
+                    b.Property<string>("SourceModule")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("NVARCHAR2(30)")
+                        .HasColumnName("SOURCE_MODULE");
+
+                    b.Property<decimal>("TaxAmount")
+                        .HasPrecision(18, 3)
+                        .HasColumnType("DECIMAL(18,3)")
+                        .HasColumnName("TAX_AMOUNT");
+
+                    b.Property<DateTime>("TaxDate")
+                        .HasColumnType("TIMESTAMP(7)")
+                        .HasColumnName("TAX_DATE");
+
+                    b.Property<string>("TaxGlAccountCode")
+                        .HasMaxLength(50)
+                        .HasColumnType("NVARCHAR2(50)")
+                        .HasColumnName("TAX_GL_ACCOUNT_CODE");
+
+                    b.Property<decimal>("TaxPercent")
+                        .HasPrecision(8, 4)
+                        .HasColumnType("DECIMAL(8,4)")
+                        .HasColumnName("TAX_PERCENT");
+
+                    b.Property<long>("TaxRateId")
+                        .HasColumnType("NUMBER(19)")
+                        .HasColumnName("TAX_RATE_ID");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("GlVoucherId");
+
+                    b.HasIndex("TaxRateId");
+
+                    b.HasIndex("BranchId", "FiscalYearId")
+                        .HasDatabaseName("IX_TAX_TX_BRANCH_YR");
+
+                    b.HasIndex("SourceModule", "SourceDocumentId")
+                        .HasDatabaseName("IX_TAX_TX_SRC_DOC");
+
+                    b.HasIndex("TaxDate", "IsSalesTax")
+                        .HasDatabaseName("IX_TAX_TX_DATE_TYPE");
+
+                    b.ToTable("TAX_TRANSACTION", (string)null);
+                });
+
+            modelBuilder.Entity("ThinkOnErp.Domain.Entities.Accounting.Vendor", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("NUMBER(19)")
+                        .HasColumnName("ID");
+
+                    OraclePropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<string>("Address")
+                        .HasMaxLength(500)
+                        .HasColumnType("NVARCHAR2(500)")
+                        .HasColumnName("ADDRESS");
+
+                    b.Property<string>("ApControlAccountCode")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(50)
+                        .HasColumnType("NVARCHAR2(50)")
+                        .HasDefaultValue("211101")
+                        .HasColumnName("AP_CONTROL_ACCOUNT_CODE");
+
+                    b.Property<long?>("BranchId")
+                        .HasColumnType("NUMBER(19)")
+                        .HasColumnName("BRANCH_ID");
+
+                    b.Property<DateTime>("CreationDate")
+                        .HasColumnType("TIMESTAMP(7)")
+                        .HasColumnName("CREATION_DATE");
+
+                    b.Property<string>("CreationUser")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("NVARCHAR2(100)")
+                        .HasColumnName("CREATION_USER");
+
+                    b.Property<long?>("DefaultCurrencyId")
+                        .HasColumnType("NUMBER(19)")
+                        .HasColumnName("DEFAULT_CURRENCY_ID");
+
+                    b.Property<string>("Email")
+                        .HasMaxLength(100)
+                        .HasColumnType("NVARCHAR2(100)")
+                        .HasColumnName("EMAIL");
+
+                    b.Property<bool>("IsActive")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("NUMBER(1)")
+                        .HasDefaultValue(true)
+                        .HasColumnName("IS_ACTIVE");
+
+                    b.Property<string>("NameAr")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("NVARCHAR2(200)")
+                        .HasColumnName("NAME_AR");
+
+                    b.Property<string>("NameEn")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("NVARCHAR2(200)")
+                        .HasColumnName("NAME_EN");
+
+                    b.Property<int>("PaymentTermsDays")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("NUMBER(10)")
+                        .HasDefaultValue(30)
+                        .HasColumnName("PAYMENT_TERMS_DAYS");
+
+                    b.Property<string>("Phone")
+                        .HasMaxLength(50)
+                        .HasColumnType("NVARCHAR2(50)")
+                        .HasColumnName("PHONE");
+
+                    b.Property<string>("TaxNumber")
+                        .HasMaxLength(50)
+                        .HasColumnType("NVARCHAR2(50)")
+                        .HasColumnName("TAX_NUMBER");
+
+                    b.Property<DateTime?>("UpdateDate")
+                        .HasColumnType("TIMESTAMP(7)")
+                        .HasColumnName("UPDATE_DATE");
+
+                    b.Property<string>("UpdateUser")
+                        .HasMaxLength(100)
+                        .HasColumnType("NVARCHAR2(100)")
+                        .HasColumnName("UPDATE_USER");
+
+                    b.Property<string>("VendorCode")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("NVARCHAR2(50)")
+                        .HasColumnName("VENDOR_CODE");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ApControlAccountCode");
+
+                    b.HasIndex("BranchId");
+
+                    b.HasIndex("DefaultCurrencyId");
+
+                    b.HasIndex("VendorCode")
+                        .IsUnique()
+                        .HasDatabaseName("UX_VENDOR_CODE");
+
+                    b.ToTable("VENDOR", (string)null);
+                });
+
+            modelBuilder.Entity("ThinkOnErp.Domain.Entities.Inventory.InvBin", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("NUMBER(19)")
+                        .HasColumnName("ID");
+
+                    OraclePropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<string>("BinCode")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("NVARCHAR2(50)")
+                        .HasColumnName("BIN_CODE");
+
+                    b.Property<bool>("IsActive")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("NUMBER(1)")
+                        .HasDefaultValue(false)
+                        .HasColumnName("IS_ACTIVE");
+
+                    b.Property<decimal?>("MaxVolume")
+                        .HasColumnType("NUMBER(18,4)")
+                        .HasColumnName("MAX_VOLUME");
+
+                    b.Property<decimal?>("MaxWeight")
+                        .HasColumnType("NUMBER(14,4)")
+                        .HasColumnName("MAX_WEIGHT");
+
+                    b.Property<long>("ZoneId")
+                        .HasColumnType("NUMBER(19)")
+                        .HasColumnName("ZONE_ID");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ZoneId");
+
+                    b.ToTable("INV_BIN", (string)null);
+                });
+
+            modelBuilder.Entity("ThinkOnErp.Domain.Entities.Inventory.InvBomHeader", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("NUMBER(19)")
+                        .HasColumnName("ID");
+
+                    OraclePropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<string>("BomCode")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("NVARCHAR2(30)")
+                        .HasColumnName("BOM_CODE");
+
+                    b.Property<string>("BomNameAr")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("NVARCHAR2(200)")
+                        .HasColumnName("BOM_NAME_AR");
+
+                    b.Property<string>("BomNameEn")
+                        .HasMaxLength(200)
+                        .HasColumnType("NVARCHAR2(200)")
+                        .HasColumnName("BOM_NAME_EN");
+
+                    b.Property<int>("BomType")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("NUMBER(10)")
+                        .HasDefaultValue(1)
+                        .HasColumnName("BOM_TYPE_CODE");
+
+                    b.Property<long>("BranchId")
+                        .HasColumnType("NUMBER(19)")
+                        .HasColumnName("BRANCH_ID");
+
+                    b.Property<DateTime>("CreationDate")
+                        .HasColumnType("TIMESTAMP")
+                        .HasColumnName("CREATION_DATE");
+
+                    b.Property<string>("CreationUser")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("NVARCHAR2(100)")
+                        .HasColumnName("CREATION_USER");
+
+                    b.Property<bool>("IsActive")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("NUMBER(1)")
+                        .HasDefaultValue(true)
+                        .HasColumnName("IS_ACTIVE");
+
+                    b.Property<bool>("IsDefault")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("NUMBER(1)")
+                        .HasDefaultValue(true)
+                        .HasColumnName("IS_DEFAULT");
+
+                    b.Property<decimal>("LaborCost")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("NUMBER(18,4)")
+                        .HasDefaultValue(0m)
+                        .HasColumnName("LABOR_COST");
+
+                    b.Property<string>("Notes")
+                        .HasMaxLength(1000)
+                        .HasColumnType("NVARCHAR2(1000)")
+                        .HasColumnName("NOTES");
+
+                    b.Property<decimal>("OutputQty")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("NUMBER(14,4)")
+                        .HasDefaultValue(1m)
+                        .HasColumnName("OUTPUT_QTY");
+
+                    b.Property<decimal>("OverheadCost")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("NUMBER(18,4)")
+                        .HasDefaultValue(0m)
+                        .HasColumnName("OVERHEAD_COST");
+
+                    b.Property<long>("ParentItemId")
+                        .HasColumnType("NUMBER(19)")
+                        .HasColumnName("PARENT_ITEM_ID");
+
+                    b.Property<string>("UomCode")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("NVARCHAR2(20)")
+                        .HasColumnName("UOM_CODE");
+
+                    b.Property<DateTime?>("UpdateDate")
+                        .HasColumnType("TIMESTAMP")
+                        .HasColumnName("UPDATE_DATE");
+
+                    b.Property<string>("UpdateUser")
+                        .HasMaxLength(100)
+                        .HasColumnType("NVARCHAR2(100)")
+                        .HasColumnName("UPDATE_USER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BomCode")
+                        .IsUnique();
+
+                    b.HasIndex("ParentItemId");
+
+                    b.ToTable("INV_BOM_HEADER", (string)null);
+                });
+
+            modelBuilder.Entity("ThinkOnErp.Domain.Entities.Inventory.InvBomLine", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("NUMBER(19)")
+                        .HasColumnName("ID");
+
+                    OraclePropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<bool>("AllowSubstitute")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("NUMBER(1)")
+                        .HasDefaultValue(false)
+                        .HasColumnName("ALLOW_SUBSTITUTE");
+
+                    b.Property<long>("BomId")
+                        .HasColumnType("NUMBER(19)")
+                        .HasColumnName("BOM_ID");
+
+                    b.Property<long>("ComponentItemId")
+                        .HasColumnType("NUMBER(19)")
+                        .HasColumnName("COMPONENT_ITEM_ID");
+
+                    b.Property<decimal>("CostSharePercent")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("NUMBER(7,4)")
+                        .HasDefaultValue(0m)
+                        .HasColumnName("COST_SHARE_PERCENT");
+
+                    b.Property<int>("LineNo")
+                        .HasColumnType("NUMBER(10)")
+                        .HasColumnName("LINE_NO");
+
+                    b.Property<string>("Notes")
+                        .HasMaxLength(500)
+                        .HasColumnType("NVARCHAR2(500)")
+                        .HasColumnName("NOTES");
+
+                    b.Property<decimal>("Quantity")
+                        .HasColumnType("NUMBER(14,4)")
+                        .HasColumnName("QUANTITY");
+
+                    b.Property<decimal>("ScrapPercent")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("NUMBER(7,4)")
+                        .HasDefaultValue(0m)
+                        .HasColumnName("SCRAP_PERCENT");
+
+                    b.Property<long?>("SubstituteItemId")
+                        .HasColumnType("NUMBER(19)")
+                        .HasColumnName("SUBSTITUTE_ITEM_ID");
+
+                    b.Property<string>("UomCode")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("NVARCHAR2(20)")
+                        .HasColumnName("UOM_CODE");
+
+                    b.Property<decimal>("UomFactor")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("NUMBER(18,6)")
+                        .HasDefaultValue(1m)
+                        .HasColumnName("UOM_FACTOR");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BomId");
+
+                    b.HasIndex("ComponentItemId");
+
+                    b.HasIndex("SubstituteItemId");
+
+                    b.ToTable("INV_BOM_LINE", (string)null);
+                });
+
+            modelBuilder.Entity("ThinkOnErp.Domain.Entities.Inventory.InvCostLayer", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("NUMBER(19)")
+                        .HasColumnName("ID");
+
+                    OraclePropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<DateTime>("CreationDate")
+                        .HasColumnType("TIMESTAMP(7)")
+                        .HasColumnName("CREATION_DATE");
+
+                    b.Property<long>("ItemId")
+                        .HasColumnType("NUMBER(19)")
+                        .HasColumnName("ITEM_ID");
+
+                    b.Property<long?>("LotId")
+                        .HasColumnType("NUMBER(19)")
+                        .HasColumnName("LOT_ID");
+
+                    b.Property<DateTime>("ReceivedDate")
+                        .HasColumnType("TIMESTAMP(7)")
+                        .HasColumnName("RECEIVED_DATE");
+
+                    b.Property<decimal>("ReceivedQty")
+                        .HasColumnType("NUMBER(14,4)")
+                        .HasColumnName("RECEIVED_QTY");
+
+                    b.Property<decimal>("RemainingQty")
+                        .HasColumnType("NUMBER(14,4)")
+                        .HasColumnName("REMAINING_QTY");
+
+                    b.Property<long?>("SourceLedgerId")
+                        .HasColumnType("NUMBER(19)")
+                        .HasColumnName("SOURCE_LEDGER_ID");
+
+                    b.Property<decimal>("UnitCost")
+                        .HasColumnType("NUMBER(18,4)")
+                        .HasColumnName("UNIT_COST");
+
+                    b.Property<long>("WarehouseId")
+                        .HasColumnType("NUMBER(19)")
+                        .HasColumnName("WAREHOUSE_ID");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ItemId");
+
+                    b.HasIndex("WarehouseId");
+
+                    b.ToTable("INV_COST_LAYER", (string)null);
+                });
+
+            modelBuilder.Entity("ThinkOnErp.Domain.Entities.Inventory.InvCountLine", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("NUMBER(19)")
+                        .HasColumnName("ID");
+
+                    OraclePropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<long?>("BinId")
+                        .HasColumnType("NUMBER(19)")
+                        .HasColumnName("BIN_ID");
+
+                    b.Property<long>("CountSessionId")
+                        .HasColumnType("NUMBER(19)")
+                        .HasColumnName("COUNT_SESSION_ID");
+
+                    b.Property<DateTime?>("CountedAt")
+                        .HasColumnType("TIMESTAMP(7)")
+                        .HasColumnName("COUNTED_AT");
+
+                    b.Property<string>("CountedBy")
+                        .HasMaxLength(100)
+                        .HasColumnType("NVARCHAR2(100)")
+                        .HasColumnName("COUNTED_BY");
+
+                    b.Property<decimal>("CountedQty")
+                        .HasColumnType("NUMBER(14,4)")
+                        .HasColumnName("COUNTED_QTY");
+
+                    b.Property<long>("ItemId")
+                        .HasColumnType("NUMBER(19)")
+                        .HasColumnName("ITEM_ID");
+
+                    b.Property<long?>("LotId")
+                        .HasColumnType("NUMBER(19)")
+                        .HasColumnName("LOT_ID");
+
+                    b.Property<string>("Status")
+                        .HasMaxLength(100)
+                        .HasColumnType("NVARCHAR2(100)")
+                        .HasColumnName("STATUS");
+
+                    b.Property<decimal>("SystemQty")
+                        .HasColumnType("NUMBER(14,4)")
+                        .HasColumnName("SYSTEM_QTY");
+
+                    b.Property<decimal>("VarianceQty")
+                        .HasColumnType("NUMBER(14,4)")
+                        .HasColumnName("VARIANCE_QTY");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BinId");
+
+                    b.HasIndex("CountSessionId");
+
+                    b.HasIndex("ItemId");
+
+                    b.ToTable("INV_COUNT_LINE", (string)null);
+                });
+
+            modelBuilder.Entity("ThinkOnErp.Domain.Entities.Inventory.InvCountSession", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("NUMBER(19)")
+                        .HasColumnName("ID");
+
+                    OraclePropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<long>("BranchId")
+                        .HasColumnType("NUMBER(19)")
+                        .HasColumnName("BRANCH_ID");
+
+                    b.Property<string>("CountType")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("NVARCHAR2(100)")
+                        .HasColumnName("COUNT_TYPE");
+
+                    b.Property<DateTime>("CreationDate")
+                        .HasColumnType("TIMESTAMP(7)")
+                        .HasColumnName("CREATION_DATE");
+
+                    b.Property<string>("CreationUser")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("NVARCHAR2(100)")
+                        .HasColumnName("CREATION_USER");
+
+                    b.Property<DateTime?>("EndDate")
+                        .HasColumnType("TIMESTAMP(7)")
+                        .HasColumnName("END_DATE");
+
+                    b.Property<bool>("FreezeStock")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("NUMBER(1)")
+                        .HasDefaultValue(false)
+                        .HasColumnName("FREEZE_STOCK");
+
+                    b.Property<bool>("IsBlindCount")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("NUMBER(1)")
+                        .HasDefaultValue(false)
+                        .HasColumnName("IS_BLIND_COUNT");
+
+                    b.Property<string>("SessionNo")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("NVARCHAR2(100)")
+                        .HasColumnName("SESSION_NO");
+
+                    b.Property<DateTime>("StartDate")
+                        .HasColumnType("TIMESTAMP(7)")
+                        .HasColumnName("START_DATE");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("NVARCHAR2(50)")
+                        .HasColumnName("STATUS");
+
+                    b.Property<DateTime?>("UpdateDate")
+                        .HasColumnType("TIMESTAMP(7)")
+                        .HasColumnName("UPDATE_DATE");
+
+                    b.Property<string>("UpdateUser")
+                        .HasMaxLength(100)
+                        .HasColumnType("NVARCHAR2(100)")
+                        .HasColumnName("UPDATE_USER");
+
+                    b.Property<long>("WarehouseId")
+                        .HasColumnType("NUMBER(19)")
+                        .HasColumnName("WAREHOUSE_ID");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("WarehouseId");
+
+                    b.ToTable("INV_COUNT_SESSION", (string)null);
+                });
+
+            modelBuilder.Entity("ThinkOnErp.Domain.Entities.Inventory.InvItem", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("NUMBER(19)")
+                        .HasColumnName("ID");
+
+                    OraclePropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<bool>("AllowNegativeStock")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("NUMBER(1)")
+                        .HasDefaultValue(false)
+                        .HasColumnName("ALLOW_NEGATIVE_STOCK");
+
+                    b.Property<long>("BranchId")
+                        .HasColumnType("NUMBER(19)")
+                        .HasColumnName("BRANCH_ID");
+
+                    b.Property<string>("CostingMethod")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(20)
+                        .HasColumnType("NVARCHAR2(20)")
+                        .HasDefaultValue("WeightedAverage")
+                        .HasColumnName("COSTING_METHOD");
+
+                    b.Property<string>("CountryOfOrigin")
+                        .HasMaxLength(3)
+                        .HasColumnType("NVARCHAR2(3)")
+                        .HasColumnName("COUNTRY_OF_ORIGIN");
+
+                    b.Property<DateTime>("CreationDate")
+                        .HasColumnType("TIMESTAMP")
+                        .HasColumnName("CREATION_DATE");
+
+                    b.Property<string>("CreationUser")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("NVARCHAR2(100)")
+                        .HasColumnName("CREATION_USER");
+
+                    b.Property<bool>("ExpiryTracking")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("NUMBER(1)")
+                        .HasDefaultValue(false)
+                        .HasColumnName("EXPIRY_TRACKING");
+
+                    b.Property<string>("GlCogsAccount")
+                        .HasMaxLength(50)
+                        .HasColumnType("NVARCHAR2(50)")
+                        .HasColumnName("GL_COGS_ACCOUNT");
+
+                    b.Property<string>("GlControlAccount")
+                        .HasMaxLength(50)
+                        .HasColumnType("NVARCHAR2(50)")
+                        .HasColumnName("GL_CONTROL_ACCOUNT");
+
+                    b.Property<string>("GlRevenueAccount")
+                        .HasMaxLength(50)
+                        .HasColumnType("NVARCHAR2(50)")
+                        .HasColumnName("GL_REVENUE_ACCOUNT");
+
+                    b.Property<string>("HsCode")
+                        .HasMaxLength(20)
+                        .HasColumnType("NVARCHAR2(20)")
+                        .HasColumnName("HS_CODE");
+
+                    b.Property<bool>("IsActive")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("NUMBER(1)")
+                        .HasDefaultValue(true)
+                        .HasColumnName("IS_ACTIVE");
+
+                    b.Property<string>("ItemCode")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("NVARCHAR2(30)")
+                        .HasColumnName("ITEM_CODE");
+
+                    b.Property<string>("ItemNameAr")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("NVARCHAR2(200)")
+                        .HasColumnName("ITEM_NAME_AR");
+
+                    b.Property<string>("ItemNameEn")
+                        .HasMaxLength(200)
+                        .HasColumnType("NVARCHAR2(200)")
+                        .HasColumnName("ITEM_NAME_EN");
+
+                    b.Property<string>("ItemType")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("NVARCHAR2(20)")
+                        .HasColumnName("ITEM_TYPE");
+
+                    b.Property<int>("LeadTimeDays")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("NUMBER(10)")
+                        .HasDefaultValue(0)
+                        .HasColumnName("LEAD_TIME_DAYS");
+
+                    b.Property<bool>("LotTracking")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("NUMBER(1)")
+                        .HasDefaultValue(false)
+                        .HasColumnName("LOT_TRACKING");
+
+                    b.Property<long>("MainGroupId")
+                        .HasColumnType("NUMBER(19)")
+                        .HasColumnName("MAIN_GROUP_ID");
+
+                    b.Property<decimal>("MinOrderQty")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("NUMBER(14,4)")
+                        .HasDefaultValue(0m)
+                        .HasColumnName("MIN_ORDER_QTY");
+
+                    b.Property<string>("Notes")
+                        .HasMaxLength(2000)
+                        .HasColumnType("NVARCHAR2(2000)")
+                        .HasColumnName("NOTES");
+
+                    b.Property<decimal>("ReorderPoint")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("NUMBER(14,4)")
+                        .HasDefaultValue(0m)
+                        .HasColumnName("REORDER_POINT");
+
+                    b.Property<decimal>("SafetyStock")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("NUMBER(14,4)")
+                        .HasDefaultValue(0m)
+                        .HasColumnName("SAFETY_STOCK");
+
+                    b.Property<bool>("SerialTracking")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("NUMBER(1)")
+                        .HasDefaultValue(false)
+                        .HasColumnName("SERIAL_TRACKING");
+
+                    b.Property<int?>("ShelfLifeDays")
+                        .HasColumnType("NUMBER(10)")
+                        .HasColumnName("SHELF_LIFE_DAYS");
+
+                    b.Property<decimal>("StandardCost")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("NUMBER(18,4)")
+                        .HasDefaultValue(0m)
+                        .HasColumnName("STANDARD_COST");
+
+                    b.Property<long?>("SubGroupId")
+                        .HasColumnType("NUMBER(19)")
+                        .HasColumnName("SUB_GROUP_ID");
+
+                    b.Property<string>("UomBase")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("NVARCHAR2(20)")
+                        .HasColumnName("UOM_BASE");
+
+                    b.Property<DateTime?>("UpdateDate")
+                        .HasColumnType("TIMESTAMP")
+                        .HasColumnName("UPDATE_DATE");
+
+                    b.Property<string>("UpdateUser")
+                        .HasMaxLength(100)
+                        .HasColumnType("NVARCHAR2(100)")
+                        .HasColumnName("UPDATE_USER");
+
+                    b.Property<decimal>("Weight")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("NUMBER(14,4)")
+                        .HasDefaultValue(0m)
+                        .HasColumnName("WEIGHT");
+
+                    b.Property<string>("WeightUnit")
+                        .HasMaxLength(10)
+                        .HasColumnType("NVARCHAR2(10)")
+                        .HasColumnName("WEIGHT_UNIT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ItemCode")
+                        .IsUnique();
+
+                    b.HasIndex("SubGroupId");
+
+                    b.HasIndex("MainGroupId", "SubGroupId");
+
+                    b.ToTable("INV_ITEM", (string)null);
+                });
+
+            modelBuilder.Entity("ThinkOnErp.Domain.Entities.Inventory.InvItemBarcode", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("NUMBER(19)")
+                        .HasColumnName("ID");
+
+                    OraclePropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<string>("Barcode")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("NVARCHAR2(100)")
+                        .HasColumnName("BARCODE");
+
+                    b.Property<string>("BarcodeType")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("NVARCHAR2(50)")
+                        .HasColumnName("BARCODE_TYPE");
+
+                    b.Property<long>("ItemId")
+                        .HasColumnType("NUMBER(19)")
+                        .HasColumnName("ITEM_ID");
+
+                    b.Property<string>("UomCode")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("NVARCHAR2(50)")
+                        .HasColumnName("UOM_CODE");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ItemId");
+
+                    b.ToTable("INV_ITEM_BARCODE", (string)null);
+                });
+
+            modelBuilder.Entity("ThinkOnErp.Domain.Entities.Inventory.InvItemGroup", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("NUMBER(19)")
+                        .HasColumnName("ID");
+
+                    OraclePropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<long?>("BranchId")
+                        .HasColumnType("NUMBER(19)")
+                        .HasColumnName("BRANCH_ID");
+
+                    b.Property<DateTime>("CreationDate")
+                        .HasColumnType("TIMESTAMP")
+                        .HasColumnName("CREATION_DATE");
+
+                    b.Property<string>("CreationUser")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("NVARCHAR2(100)")
+                        .HasColumnName("CREATION_USER");
+
+                    b.Property<string>("GlAdjustmentAccount")
+                        .HasMaxLength(50)
+                        .HasColumnType("NVARCHAR2(50)")
+                        .HasColumnName("GL_ADJUSTMENT_ACCOUNT");
+
+                    b.Property<string>("GlCogsAccount")
+                        .HasMaxLength(50)
+                        .HasColumnType("NVARCHAR2(50)")
+                        .HasColumnName("GL_COGS_ACCOUNT");
+
+                    b.Property<string>("GlControlAccount")
+                        .HasMaxLength(50)
+                        .HasColumnType("NVARCHAR2(50)")
+                        .HasColumnName("GL_CONTROL_ACCOUNT");
+
+                    b.Property<string>("GlRevenueAccount")
+                        .HasMaxLength(50)
+                        .HasColumnType("NVARCHAR2(50)")
+                        .HasColumnName("GL_REVENUE_ACCOUNT");
+
+                    b.Property<string>("GroupCode")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("NVARCHAR2(30)")
+                        .HasColumnName("GROUP_CODE");
+
+                    b.Property<int>("GroupLevel")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("NUMBER(10)")
+                        .HasDefaultValue(1)
+                        .HasColumnName("GROUP_LEVEL");
+
+                    b.Property<string>("GroupNameAr")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("NVARCHAR2(150)")
+                        .HasColumnName("GROUP_NAME_AR");
+
+                    b.Property<string>("GroupNameEn")
+                        .HasMaxLength(150)
+                        .HasColumnType("NVARCHAR2(150)")
+                        .HasColumnName("GROUP_NAME_EN");
+
+                    b.Property<bool>("IsActive")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("NUMBER(1)")
+                        .HasDefaultValue(true)
+                        .HasColumnName("IS_ACTIVE");
+
+                    b.Property<long?>("ParentGroupId")
+                        .HasColumnType("NUMBER(19)")
+                        .HasColumnName("PARENT_GROUP_ID");
+
+                    b.Property<DateTime?>("UpdateDate")
+                        .HasColumnType("TIMESTAMP")
+                        .HasColumnName("UPDATE_DATE");
+
+                    b.Property<string>("UpdateUser")
+                        .HasMaxLength(100)
+                        .HasColumnType("NVARCHAR2(100)")
+                        .HasColumnName("UPDATE_USER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("GroupCode")
+                        .IsUnique();
+
+                    b.HasIndex("ParentGroupId");
+
+                    b.ToTable("INV_ITEM_GROUP", (string)null);
+                });
+
+            modelBuilder.Entity("ThinkOnErp.Domain.Entities.Inventory.InvItemUomConversion", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("NUMBER(19)")
+                        .HasColumnName("ID");
+
+                    OraclePropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<decimal>("ConversionFactor")
+                        .HasColumnType("NUMBER(18,4)")
+                        .HasColumnName("CONVERSION_FACTOR");
+
+                    b.Property<bool>("IsDefaultPurchase")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("NUMBER(1)")
+                        .HasDefaultValue(false)
+                        .HasColumnName("IS_DEFAULT_PURCHASE");
+
+                    b.Property<bool>("IsDefaultSales")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("NUMBER(1)")
+                        .HasDefaultValue(false)
+                        .HasColumnName("IS_DEFAULT_SALES");
+
+                    b.Property<long>("ItemId")
+                        .HasColumnType("NUMBER(19)")
+                        .HasColumnName("ITEM_ID");
+
+                    b.Property<string>("UomCode")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("NVARCHAR2(50)")
+                        .HasColumnName("UOM_CODE");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ItemId");
+
+                    b.ToTable("INV_ITEM_UOM_CONVERSION", (string)null);
+                });
+
+            modelBuilder.Entity("ThinkOnErp.Domain.Entities.Inventory.InvLotMaster", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("NUMBER(19)")
+                        .HasColumnName("ID");
+
+                    OraclePropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<DateTime?>("ExpiryDate")
+                        .HasColumnType("TIMESTAMP(7)")
+                        .HasColumnName("EXPIRY_DATE");
+
+                    b.Property<long>("ItemId")
+                        .HasColumnType("NUMBER(19)")
+                        .HasColumnName("ITEM_ID");
+
+                    b.Property<string>("LotNumber")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("NVARCHAR2(100)")
+                        .HasColumnName("LOT_NUMBER");
+
+                    b.Property<DateTime?>("ManufacturingDate")
+                        .HasColumnType("TIMESTAMP(7)")
+                        .HasColumnName("MANUFACTURING_DATE");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("NVARCHAR2(50)")
+                        .HasColumnName("STATUS");
+
+                    b.Property<string>("SupplierLot")
+                        .HasMaxLength(100)
+                        .HasColumnType("NVARCHAR2(100)")
+                        .HasColumnName("SUPPLIER_LOT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ItemId");
+
+                    b.ToTable("INV_LOT_MASTER", (string)null);
+                });
+
+            modelBuilder.Entity("ThinkOnErp.Domain.Entities.Inventory.InvOpeningBatch", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("NUMBER(19)")
+                        .HasColumnName("ID");
+
+                    OraclePropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<DateTime>("BatchDate")
+                        .HasColumnType("TIMESTAMP")
+                        .HasColumnName("BATCH_DATE");
+
+                    b.Property<string>("BatchNo")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("NVARCHAR2(30)")
+                        .HasColumnName("BATCH_NO");
+
+                    b.Property<long>("BranchId")
+                        .HasColumnType("NUMBER(19)")
+                        .HasColumnName("BRANCH_ID");
+
+                    b.Property<DateTime>("CreationDate")
+                        .HasColumnType("TIMESTAMP")
+                        .HasColumnName("CREATION_DATE");
+
+                    b.Property<string>("CreationUser")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("NVARCHAR2(100)")
+                        .HasColumnName("CREATION_USER");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(300)
+                        .HasColumnType("NVARCHAR2(300)")
+                        .HasColumnName("DESCRIPTION");
+
+                    b.Property<long>("FiscalYearId")
+                        .HasColumnType("NUMBER(19)")
+                        .HasColumnName("FISCAL_YEAR_ID");
+
+                    b.Property<long?>("JournalEntryId")
+                        .HasColumnType("NUMBER(19)")
+                        .HasColumnName("JOURNAL_ENTRY_ID");
+
+                    b.Property<DateTime?>("PostedAt")
+                        .HasColumnType("TIMESTAMP")
+                        .HasColumnName("POSTED_AT");
+
+                    b.Property<string>("PostedBy")
+                        .HasMaxLength(100)
+                        .HasColumnType("NVARCHAR2(100)")
+                        .HasColumnName("POSTED_BY");
+
+                    b.Property<int>("StatusCode")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("NUMBER(10)")
+                        .HasDefaultValue(1)
+                        .HasColumnName("STATUS_CODE");
+
+                    b.Property<decimal>("TotalQuantity")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("NUMBER(14,4)")
+                        .HasDefaultValue(0m)
+                        .HasColumnName("TOTAL_QUANTITY");
+
+                    b.Property<decimal>("TotalValuationAmount")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("NUMBER(18,4)")
+                        .HasDefaultValue(0m)
+                        .HasColumnName("TOTAL_VALUATION_AMOUNT");
+
+                    b.Property<DateTime?>("UpdateDate")
+                        .HasColumnType("TIMESTAMP")
+                        .HasColumnName("UPDATE_DATE");
+
+                    b.Property<string>("UpdateUser")
+                        .HasMaxLength(100)
+                        .HasColumnType("NVARCHAR2(100)")
+                        .HasColumnName("UPDATE_USER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BatchNo")
+                        .IsUnique();
+
+                    b.ToTable("INV_OPENING_BATCH", (string)null);
+                });
+
+            modelBuilder.Entity("ThinkOnErp.Domain.Entities.Inventory.InvOpeningLine", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("NUMBER(19)")
+                        .HasColumnName("ID");
+
+                    OraclePropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<decimal>("BaseQuantity")
+                        .HasColumnType("NUMBER(14,4)")
+                        .HasColumnName("BASE_QUANTITY");
+
+                    b.Property<long>("BatchId")
+                        .HasColumnType("NUMBER(19)")
+                        .HasColumnName("BATCH_ID");
+
+                    b.Property<long?>("BinId")
+                        .HasColumnType("NUMBER(19)")
+                        .HasColumnName("BIN_ID");
+
+                    b.Property<long>("BranchId")
+                        .HasColumnType("NUMBER(19)")
+                        .HasColumnName("BRANCH_ID");
+
+                    b.Property<DateTime?>("ExpiryDate")
+                        .HasColumnType("TIMESTAMP(7)")
+                        .HasColumnName("EXPIRY_DATE");
+
+                    b.Property<long>("ItemId")
+                        .HasColumnType("NUMBER(19)")
+                        .HasColumnName("ITEM_ID");
+
+                    b.Property<string>("LotNumber")
+                        .HasMaxLength(50)
+                        .HasColumnType("NVARCHAR2(50)")
+                        .HasColumnName("LOT_NUMBER");
+
+                    b.Property<string>("Notes")
+                        .HasMaxLength(500)
+                        .HasColumnType("NVARCHAR2(500)")
+                        .HasColumnName("NOTES");
+
+                    b.Property<decimal>("Quantity")
+                        .HasColumnType("NUMBER(14,4)")
+                        .HasColumnName("QUANTITY");
+
+                    b.Property<string>("SerialNumber")
+                        .HasMaxLength(100)
+                        .HasColumnType("NVARCHAR2(100)")
+                        .HasColumnName("SERIAL_NUMBER");
+
+                    b.Property<decimal>("TotalCost")
+                        .HasColumnType("NUMBER(18,4)")
+                        .HasColumnName("TOTAL_COST");
+
+                    b.Property<decimal>("UnitCost")
+                        .HasColumnType("NUMBER(18,4)")
+                        .HasColumnName("UNIT_COST");
+
+                    b.Property<string>("UomCode")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("NVARCHAR2(20)")
+                        .HasColumnName("UOM_CODE");
+
+                    b.Property<decimal>("UomFactor")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("NUMBER(18,6)")
+                        .HasDefaultValue(1m)
+                        .HasColumnName("UOM_FACTOR");
+
+                    b.Property<long>("WarehouseId")
+                        .HasColumnType("NUMBER(19)")
+                        .HasColumnName("WAREHOUSE_ID");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BatchId");
+
+                    b.HasIndex("ItemId");
+
+                    b.HasIndex("WarehouseId");
+
+                    b.ToTable("INV_OPENING_LINE", (string)null);
+                });
+
+            modelBuilder.Entity("ThinkOnErp.Domain.Entities.Inventory.InvReservation", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("NUMBER(19)")
+                        .HasColumnName("ID");
+
+                    OraclePropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<DateTime>("CreationDate")
+                        .HasColumnType("TIMESTAMP(7)")
+                        .HasColumnName("CREATION_DATE");
+
+                    b.Property<string>("CreationUser")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("NVARCHAR2(100)")
+                        .HasColumnName("CREATION_USER");
+
+                    b.Property<DateTime?>("ExpiryDate")
+                        .HasColumnType("TIMESTAMP(7)")
+                        .HasColumnName("EXPIRY_DATE");
+
+                    b.Property<long>("ItemId")
+                        .HasColumnType("NUMBER(19)")
+                        .HasColumnName("ITEM_ID");
+
+                    b.Property<long?>("LotId")
+                        .HasColumnType("NUMBER(19)")
+                        .HasColumnName("LOT_ID");
+
+                    b.Property<decimal>("ReservedQty")
+                        .HasColumnType("NUMBER(14,4)")
+                        .HasColumnName("RESERVED_QTY");
+
+                    b.Property<long?>("SerialId")
+                        .HasColumnType("NUMBER(19)")
+                        .HasColumnName("SERIAL_ID");
+
+                    b.Property<string>("SourceDocId")
+                        .HasMaxLength(100)
+                        .HasColumnType("NVARCHAR2(100)")
+                        .HasColumnName("SOURCE_DOC_ID");
+
+                    b.Property<string>("SourceDocType")
+                        .HasMaxLength(100)
+                        .HasColumnType("NVARCHAR2(100)")
+                        .HasColumnName("SOURCE_DOC_TYPE");
+
+                    b.Property<string>("SourceLineId")
+                        .HasMaxLength(100)
+                        .HasColumnType("NVARCHAR2(100)")
+                        .HasColumnName("SOURCE_LINE_ID");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("NVARCHAR2(50)")
+                        .HasColumnName("STATUS");
+
+                    b.Property<DateTime?>("UpdateDate")
+                        .HasColumnType("TIMESTAMP(7)")
+                        .HasColumnName("UPDATE_DATE");
+
+                    b.Property<string>("UpdateUser")
+                        .HasMaxLength(100)
+                        .HasColumnType("NVARCHAR2(100)")
+                        .HasColumnName("UPDATE_USER");
+
+                    b.Property<long>("WarehouseId")
+                        .HasColumnType("NUMBER(19)")
+                        .HasColumnName("WAREHOUSE_ID");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ItemId");
+
+                    b.HasIndex("WarehouseId");
+
+                    b.ToTable("INV_RESERVATION", (string)null);
+                });
+
+            modelBuilder.Entity("ThinkOnErp.Domain.Entities.Inventory.InvSerialMaster", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("NUMBER(19)")
+                        .HasColumnName("ID");
+
+                    OraclePropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<long?>("CurrentBinId")
+                        .HasColumnType("NUMBER(19)")
+                        .HasColumnName("CURRENT_BIN_ID");
+
+                    b.Property<long?>("CurrentWarehouseId")
+                        .HasColumnType("NUMBER(19)")
+                        .HasColumnName("CURRENT_WAREHOUSE_ID");
+
+                    b.Property<long>("ItemId")
+                        .HasColumnType("NUMBER(19)")
+                        .HasColumnName("ITEM_ID");
+
+                    b.Property<long?>("LotId")
+                        .HasColumnType("NUMBER(19)")
+                        .HasColumnName("LOT_ID");
+
+                    b.Property<string>("SerialNumber")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("NVARCHAR2(100)")
+                        .HasColumnName("SERIAL_NUMBER");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("NVARCHAR2(50)")
+                        .HasColumnName("STATUS");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CurrentBinId");
+
+                    b.HasIndex("CurrentWarehouseId");
+
+                    b.HasIndex("ItemId");
+
+                    b.HasIndex("LotId");
+
+                    b.ToTable("INV_SERIAL_MASTER", (string)null);
+                });
+
+            modelBuilder.Entity("ThinkOnErp.Domain.Entities.Inventory.InvStockBalance", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("NUMBER(19)")
+                        .HasColumnName("ID");
+
+                    OraclePropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<decimal>("AvgCost")
+                        .HasColumnType("NUMBER(18,4)")
+                        .HasColumnName("AVG_COST");
+
+                    b.Property<long?>("BinId")
+                        .HasColumnType("NUMBER(19)")
+                        .HasColumnName("BIN_ID");
+
+                    b.Property<long>("ItemId")
+                        .HasColumnType("NUMBER(19)")
+                        .HasColumnName("ITEM_ID");
+
+                    b.Property<DateTime?>("LastIssueDate")
+                        .HasColumnType("TIMESTAMP(7)")
+                        .HasColumnName("LAST_ISSUE_DATE");
+
+                    b.Property<DateTime?>("LastReceiptDate")
+                        .HasColumnType("TIMESTAMP(7)")
+                        .HasColumnName("LAST_RECEIPT_DATE");
+
+                    b.Property<decimal>("OnHandQty")
+                        .HasColumnType("NUMBER(14,4)")
+                        .HasColumnName("ON_HAND_QTY");
+
+                    b.Property<decimal>("OnOrderQty")
+                        .HasColumnType("NUMBER(14,4)")
+                        .HasColumnName("ON_ORDER_QTY");
+
+                    b.Property<decimal>("ReservedQty")
+                        .HasColumnType("NUMBER(14,4)")
+                        .HasColumnName("RESERVED_QTY");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("TIMESTAMP(7)")
+                        .HasColumnName("UPDATED_AT");
+
+                    b.Property<long>("WarehouseId")
+                        .HasColumnType("NUMBER(19)")
+                        .HasColumnName("WAREHOUSE_ID");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ItemId");
+
+                    b.HasIndex("WarehouseId");
+
+                    b.ToTable("INV_STOCK_BALANCE", (string)null);
+                });
+
+            modelBuilder.Entity("ThinkOnErp.Domain.Entities.Inventory.InvStockLedgerEntry", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("NUMBER(19)")
+                        .HasColumnName("ID");
+
+                    OraclePropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<long?>("BinId")
+                        .HasColumnType("NUMBER(19)")
+                        .HasColumnName("BIN_ID");
+
+                    b.Property<long>("BranchId")
+                        .HasColumnType("NUMBER(19)")
+                        .HasColumnName("BRANCH_ID");
+
+                    b.Property<long?>("CostLayerId")
+                        .HasColumnType("NUMBER(19)")
+                        .HasColumnName("COST_LAYER_ID");
+
+                    b.Property<DateTime>("CreationDate")
+                        .HasColumnType("TIMESTAMP(7)")
+                        .HasColumnName("CREATION_DATE");
+
+                    b.Property<string>("CreationUser")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("NVARCHAR2(100)")
+                        .HasColumnName("CREATION_USER");
+
+                    b.Property<string>("Direction")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("NVARCHAR2(50)")
+                        .HasColumnName("DIRECTION");
+
+                    b.Property<long>("ItemId")
+                        .HasColumnType("NUMBER(19)")
+                        .HasColumnName("ITEM_ID");
+
+                    b.Property<long?>("JournalEntryId")
+                        .HasColumnType("NUMBER(19)")
+                        .HasColumnName("JOURNAL_ENTRY_ID");
+
+                    b.Property<long?>("LotId")
+                        .HasColumnType("NUMBER(19)")
+                        .HasColumnName("LOT_ID");
+
+                    b.Property<string>("LpnCode")
+                        .HasMaxLength(50)
+                        .HasColumnType("NVARCHAR2(50)")
+                        .HasColumnName("LPN_CODE");
+
+                    b.Property<string>("Notes")
+                        .HasMaxLength(2000)
+                        .HasColumnType("NVARCHAR2(2000)")
+                        .HasColumnName("NOTES");
+
+                    b.Property<string>("PostingRuleCode")
+                        .HasMaxLength(50)
+                        .HasColumnType("NVARCHAR2(50)")
+                        .HasColumnName("POSTING_RULE_CODE");
+
+                    b.Property<decimal>("Quantity")
+                        .HasColumnType("NUMBER(14,4)")
+                        .HasColumnName("QUANTITY");
+
+                    b.Property<decimal>("RunningBalanceQty")
+                        .HasColumnType("NUMBER(14,4)")
+                        .HasColumnName("RUNNING_BALANCE_QTY");
+
+                    b.Property<decimal>("RunningBalanceValue")
+                        .HasColumnType("NUMBER(18,4)")
+                        .HasColumnName("RUNNING_BALANCE_VALUE");
+
+                    b.Property<long?>("SerialId")
+                        .HasColumnType("NUMBER(19)")
+                        .HasColumnName("SERIAL_ID");
+
+                    b.Property<string>("SourceDocId")
+                        .HasMaxLength(100)
+                        .HasColumnType("NVARCHAR2(100)")
+                        .HasColumnName("SOURCE_DOC_ID");
+
+                    b.Property<string>("SourceDocType")
+                        .HasMaxLength(100)
+                        .HasColumnType("NVARCHAR2(100)")
+                        .HasColumnName("SOURCE_DOC_TYPE");
+
+                    b.Property<string>("SourceLineId")
+                        .HasMaxLength(100)
+                        .HasColumnType("NVARCHAR2(100)")
+                        .HasColumnName("SOURCE_LINE_ID");
+
+                    b.Property<string>("SourceModule")
+                        .HasMaxLength(100)
+                        .HasColumnType("NVARCHAR2(100)")
+                        .HasColumnName("SOURCE_MODULE");
+
+                    b.Property<DateTime>("TransactionDate")
+                        .HasColumnType("TIMESTAMP(7)")
+                        .HasColumnName("TRANSACTION_DATE");
+
+                    b.Property<string>("TransactionType")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("NVARCHAR2(50)")
+                        .HasColumnName("TRANSACTION_TYPE");
+
+                    b.Property<decimal>("UnitCost")
+                        .HasColumnType("NUMBER(18,4)")
+                        .HasColumnName("UNIT_COST");
+
+                    b.Property<string>("UomCode")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("NVARCHAR2(50)")
+                        .HasColumnName("UOM_CODE");
+
+                    b.Property<long>("WarehouseId")
+                        .HasColumnType("NUMBER(19)")
+                        .HasColumnName("WAREHOUSE_ID");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ItemId");
+
+                    b.HasIndex("WarehouseId");
+
+                    b.ToTable("INV_STOCK_LEDGER_ENTRY", (string)null);
+                });
+
+            modelBuilder.Entity("ThinkOnErp.Domain.Entities.Inventory.InvWarehouse", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("NUMBER(19)")
+                        .HasColumnName("ID");
+
+                    OraclePropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<string>("Address")
+                        .HasMaxLength(100)
+                        .HasColumnType("NVARCHAR2(100)")
+                        .HasColumnName("ADDRESS");
+
+                    b.Property<long>("BranchId")
+                        .HasColumnType("NUMBER(19)")
+                        .HasColumnName("BRANCH_ID");
+
+                    b.Property<DateTime>("CreationDate")
+                        .HasColumnType("TIMESTAMP(7)")
+                        .HasColumnName("CREATION_DATE");
+
+                    b.Property<string>("CreationUser")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("NVARCHAR2(100)")
+                        .HasColumnName("CREATION_USER");
+
+                    b.Property<bool>("EnableBinTracking")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("NUMBER(1)")
+                        .HasDefaultValue(false)
+                        .HasColumnName("ENABLE_BIN_TRACKING");
+
+                    b.Property<bool>("IsActive")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("NUMBER(1)")
+                        .HasDefaultValue(false)
+                        .HasColumnName("IS_ACTIVE");
+
+                    b.Property<DateTime?>("UpdateDate")
+                        .HasColumnType("TIMESTAMP(7)")
+                        .HasColumnName("UPDATE_DATE");
+
+                    b.Property<string>("UpdateUser")
+                        .HasMaxLength(100)
+                        .HasColumnType("NVARCHAR2(100)")
+                        .HasColumnName("UPDATE_USER");
+
+                    b.Property<string>("WarehouseCode")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("NVARCHAR2(50)")
+                        .HasColumnName("WAREHOUSE_CODE");
+
+                    b.Property<string>("WarehouseNameAr")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("NVARCHAR2(200)")
+                        .HasColumnName("WAREHOUSE_NAME_AR");
+
+                    b.Property<string>("WarehouseNameEn")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("NVARCHAR2(200)")
+                        .HasColumnName("WAREHOUSE_NAME_EN");
+
+                    b.Property<string>("WarehouseType")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("NVARCHAR2(50)")
+                        .HasColumnName("WAREHOUSE_TYPE");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("INV_WAREHOUSE", (string)null);
+                });
+
+            modelBuilder.Entity("ThinkOnErp.Domain.Entities.Inventory.InvZone", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("NUMBER(19)")
+                        .HasColumnName("ID");
+
+                    OraclePropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<long>("WarehouseId")
+                        .HasColumnType("NUMBER(19)")
+                        .HasColumnName("WAREHOUSE_ID");
+
+                    b.Property<string>("ZoneCode")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("NVARCHAR2(50)")
+                        .HasColumnName("ZONE_CODE");
+
+                    b.Property<string>("ZoneName")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("NVARCHAR2(200)")
+                        .HasColumnName("ZONE_NAME");
+
+                    b.Property<string>("ZoneType")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("NVARCHAR2(50)")
+                        .HasColumnName("ZONE_TYPE");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("WarehouseId");
+
+                    b.ToTable("INV_ZONE", (string)null);
+                });
+
+            modelBuilder.Entity("ThinkOnErp.Domain.Entities.Inventory.TrxDocType", b =>
+                {
+                    b.Property<int>("TypeCode")
+                        .HasColumnType("NUMBER(10)")
+                        .HasColumnName("TYPE_CODE");
+
+                    b.Property<DateTime>("CreationDate")
+                        .HasColumnType("TIMESTAMP")
+                        .HasColumnName("CREATION_DATE");
+
+                    b.Property<string>("CreationUser")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("NVARCHAR2(100)")
+                        .HasColumnName("CREATION_USER");
+
+                    b.Property<string>("DocPrefix")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("NVARCHAR2(10)")
+                        .HasColumnName("DOC_PREFIX");
+
+                    b.Property<bool>("IsActive")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("NUMBER(1)")
+                        .HasDefaultValue(true)
+                        .HasColumnName("IS_ACTIVE");
+
+                    b.Property<bool>("IsSystemReserved")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("NUMBER(1)")
+                        .HasDefaultValue(true)
+                        .HasColumnName("IS_SYSTEM_RESERVED");
+
+                    b.Property<string>("ModuleCode")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("NVARCHAR2(30)")
+                        .HasColumnName("MODULE_CODE");
+
+                    b.Property<string>("ResetPolicy")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(20)
+                        .HasColumnType("NVARCHAR2(20)")
+                        .HasDefaultValue("YEARLY")
+                        .HasColumnName("RESET_POLICY");
+
+                    b.Property<string>("TypeKey")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("NVARCHAR2(50)")
+                        .HasColumnName("TYPE_KEY");
+
+                    b.Property<string>("TypeNameAr")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("NVARCHAR2(100)")
+                        .HasColumnName("TYPE_NAME_AR");
+
+                    b.Property<string>("TypeNameEn")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("NVARCHAR2(100)")
+                        .HasColumnName("TYPE_NAME_EN");
+
+                    b.Property<DateTime?>("UpdateDate")
+                        .HasColumnType("TIMESTAMP")
+                        .HasColumnName("UPDATE_DATE");
+
+                    b.Property<string>("UpdateUser")
+                        .HasMaxLength(100)
+                        .HasColumnType("NVARCHAR2(100)")
+                        .HasColumnName("UPDATE_USER");
+
+                    b.HasKey("TypeCode");
+
+                    b.HasIndex("TypeKey")
+                        .IsUnique();
+
+                    b.ToTable("TRX_DOC_TYPE", (string)null);
+                });
+
+            modelBuilder.Entity("ThinkOnErp.Domain.Entities.Inventory.TrxDocumentHeader", b =>
+                {
+                    b.Property<long>("BranchId")
+                        .HasColumnType("NUMBER(19)")
+                        .HasColumnName("BRANCH_ID");
+
+                    b.Property<int>("DocYear")
+                        .HasColumnType("NUMBER(10)")
+                        .HasColumnName("DOC_YEAR");
+
+                    b.Property<int>("DocType")
+                        .HasColumnType("NUMBER(10)")
+                        .HasColumnName("DOC_TYPE");
+
+                    b.Property<long>("Id")
+                        .HasColumnType("NUMBER(19)")
+                        .HasColumnName("ID");
+
+                    b.Property<long?>("BaseBranchId")
+                        .HasColumnType("NUMBER(19)")
+                        .HasColumnName("BASE_BRANCH_ID");
+
+                    b.Property<long?>("BaseDocId")
+                        .HasColumnType("NUMBER(19)")
+                        .HasColumnName("BASE_DOC_ID");
+
+                    b.Property<int?>("BaseDocType")
+                        .HasColumnType("NUMBER(10)")
+                        .HasColumnName("BASE_DOC_TYPE");
+
+                    b.Property<int?>("BaseDocYear")
+                        .HasColumnType("NUMBER(10)")
+                        .HasColumnName("BASE_DOC_YEAR");
+
+                    b.Property<DateTime>("CreationDate")
+                        .HasColumnType("TIMESTAMP")
+                        .HasColumnName("CREATION_DATE");
+
+                    b.Property<string>("CreationUser")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("NVARCHAR2(100)")
+                        .HasColumnName("CREATION_USER");
+
+                    b.Property<string>("CurrencyCode")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(3)
+                        .HasColumnType("NVARCHAR2(3)")
+                        .HasDefaultValue("USD")
+                        .HasColumnName("CURRENCY_CODE");
+
+                    b.Property<decimal>("DiscountAmount")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("NUMBER(18,4)")
+                        .HasDefaultValue(0m)
+                        .HasColumnName("DISCOUNT_AMOUNT");
+
+                    b.Property<DateTime>("DocDate")
+                        .HasColumnType("TIMESTAMP")
+                        .HasColumnName("DOC_DATE");
+
+                    b.Property<string>("DocNo")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("NVARCHAR2(50)")
+                        .HasColumnName("DOC_NO");
+
+                    b.Property<int>("DocStatusCode")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("NUMBER(10)")
+                        .HasDefaultValue(1)
+                        .HasColumnName("DOC_STATUS_CODE");
+
+                    b.Property<DateTime?>("DueDate")
+                        .HasColumnType("TIMESTAMP(7)")
+                        .HasColumnName("DUE_DATE");
+
+                    b.Property<decimal>("ExchangeRate")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("NUMBER(14,6)")
+                        .HasDefaultValue(1m)
+                        .HasColumnName("EXCHANGE_RATE");
+
+                    b.Property<long?>("FromWarehouseId")
+                        .HasColumnType("NUMBER(19)")
+                        .HasColumnName("FROM_WAREHOUSE_ID");
+
+                    b.Property<bool>("IsPostedGl")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("NUMBER(1)")
+                        .HasDefaultValue(false)
+                        .HasColumnName("IS_POSTED_GL");
+
+                    b.Property<bool>("IsPostedStock")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("NUMBER(1)")
+                        .HasDefaultValue(false)
+                        .HasColumnName("IS_POSTED_STOCK");
+
+                    b.Property<long?>("JournalEntryId")
+                        .HasColumnType("NUMBER(19)")
+                        .HasColumnName("JOURNAL_ENTRY_ID");
+
+                    b.Property<string>("Notes")
+                        .HasMaxLength(1000)
+                        .HasColumnType("NVARCHAR2(1000)")
+                        .HasColumnName("NOTES");
+
+                    b.Property<decimal>("PaidAmount")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("NUMBER(18,4)")
+                        .HasDefaultValue(0m)
+                        .HasColumnName("PAID_AMOUNT");
+
+                    b.Property<long?>("PartyId")
+                        .HasColumnType("NUMBER(19)")
+                        .HasColumnName("PARTY_ID");
+
+                    b.Property<string>("PartyName")
+                        .HasMaxLength(200)
+                        .HasColumnType("NVARCHAR2(200)")
+                        .HasColumnName("PARTY_NAME");
+
+                    b.Property<int>("PartyTypeCode")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("NUMBER(10)")
+                        .HasDefaultValue(0)
+                        .HasColumnName("PARTY_TYPE_CODE");
+
+                    b.Property<int>("PaymentMethodCode")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("NUMBER(10)")
+                        .HasDefaultValue(1)
+                        .HasColumnName("PAYMENT_METHOD_CODE");
+
+                    b.Property<string>("PostedBy")
+                        .HasMaxLength(100)
+                        .HasColumnType("NVARCHAR2(100)")
+                        .HasColumnName("POSTED_BY");
+
+                    b.Property<DateTime?>("PostedDate")
+                        .HasColumnType("TIMESTAMP")
+                        .HasColumnName("POSTED_DATE");
+
+                    b.Property<decimal>("RemainingAmount")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("NUMBER(18,4)")
+                        .HasDefaultValue(0m)
+                        .HasColumnName("REMAINING_AMOUNT");
+
+                    b.Property<decimal>("TaxAmount")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("NUMBER(18,4)")
+                        .HasDefaultValue(0m)
+                        .HasColumnName("TAX_AMOUNT");
+
+                    b.Property<long?>("ToWarehouseId")
+                        .HasColumnType("NUMBER(19)")
+                        .HasColumnName("TO_WAREHOUSE_ID");
+
+                    b.Property<decimal>("TotalGross")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("NUMBER(18,4)")
+                        .HasDefaultValue(0m)
+                        .HasColumnName("TOTAL_GROSS");
+
+                    b.Property<decimal>("TotalNet")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("NUMBER(18,4)")
+                        .HasDefaultValue(0m)
+                        .HasColumnName("TOTAL_NET");
+
+                    b.Property<decimal>("TotalNetBeforeTax")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("NUMBER(18,4)")
+                        .HasDefaultValue(0m)
+                        .HasColumnName("TOTAL_NET_BEFORE_TAX");
+
+                    b.Property<int>("TrxType")
+                        .HasColumnType("NUMBER(10)")
+                        .HasColumnName("TRX_TYPE");
+
+                    b.Property<DateTime?>("UpdateDate")
+                        .HasColumnType("TIMESTAMP")
+                        .HasColumnName("UPDATE_DATE");
+
+                    b.Property<string>("UpdateUser")
+                        .HasMaxLength(100)
+                        .HasColumnType("NVARCHAR2(100)")
+                        .HasColumnName("UPDATE_USER");
+
+                    b.HasKey("BranchId", "DocYear", "DocType", "Id");
+
+                    b.HasIndex("DocType");
+
+                    b.HasIndex("FromWarehouseId");
+
+                    b.HasIndex("ToWarehouseId");
+
+                    b.HasIndex("TrxType");
+
+                    b.HasIndex("BranchId", "DocYear", "DocType", "DocNo")
+                        .IsUnique();
+
+                    b.ToTable("TRX_DOCUMENT_HEADER", (string)null);
+                });
+
+            modelBuilder.Entity("ThinkOnErp.Domain.Entities.Inventory.TrxDocumentLine", b =>
+                {
+                    b.Property<long>("BranchId")
+                        .HasColumnType("NUMBER(19)")
+                        .HasColumnName("BRANCH_ID");
+
+                    b.Property<int>("DocYear")
+                        .HasColumnType("NUMBER(10)")
+                        .HasColumnName("DOC_YEAR");
+
+                    b.Property<int>("DocType")
+                        .HasColumnType("NUMBER(10)")
+                        .HasColumnName("DOC_TYPE");
+
+                    b.Property<long>("DocId")
+                        .HasColumnType("NUMBER(19)")
+                        .HasColumnName("DOC_ID");
+
+                    b.Property<int>("LineNo")
+                        .HasColumnType("NUMBER(10)")
+                        .HasColumnName("LINE_NO");
+
+                    b.Property<int?>("BaseLineNo")
+                        .HasColumnType("NUMBER(10)")
+                        .HasColumnName("BASE_LINE_NO");
+
+                    b.Property<decimal>("BaseQuantityIn")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("NUMBER(14,4)")
+                        .HasDefaultValue(0m)
+                        .HasColumnName("BASE_QUANTITY_IN");
+
+                    b.Property<decimal>("BaseQuantityOut")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("NUMBER(14,4)")
+                        .HasDefaultValue(0m)
+                        .HasColumnName("BASE_QUANTITY_OUT");
+
+                    b.Property<decimal>("DiscountAmount")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("NUMBER(18,4)")
+                        .HasDefaultValue(0m)
+                        .HasColumnName("DISCOUNT_AMOUNT");
+
+                    b.Property<decimal>("DiscountPercent")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("NUMBER(7,4)")
+                        .HasDefaultValue(0m)
+                        .HasColumnName("DISCOUNT_PERCENT");
+
+                    b.Property<DateTime?>("ExpiryDate")
+                        .HasColumnType("TIMESTAMP(7)")
+                        .HasColumnName("EXPIRY_DATE");
+
+                    b.Property<long?>("FromBinId")
+                        .HasColumnType("NUMBER(19)")
+                        .HasColumnName("FROM_BIN_ID");
+
+                    b.Property<string>("GlAccountCode")
+                        .HasMaxLength(50)
+                        .HasColumnType("NVARCHAR2(50)")
+                        .HasColumnName("GL_ACCOUNT_CODE");
+
+                    b.Property<string>("ItemDescription")
+                        .HasMaxLength(500)
+                        .HasColumnType("NVARCHAR2(500)")
+                        .HasColumnName("ITEM_DESCRIPTION");
+
+                    b.Property<long>("ItemId")
+                        .HasColumnType("NUMBER(19)")
+                        .HasColumnName("ITEM_ID");
+
+                    b.Property<decimal>("LineTotal")
+                        .HasColumnType("NUMBER(18,4)")
+                        .HasColumnName("LINE_TOTAL");
+
+                    b.Property<string>("LotNumber")
+                        .HasMaxLength(50)
+                        .HasColumnType("NVARCHAR2(50)")
+                        .HasColumnName("LOT_NUMBER");
+
+                    b.Property<decimal>("QuantityIn")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("NUMBER(14,4)")
+                        .HasDefaultValue(0m)
+                        .HasColumnName("QUANTITY_IN");
+
+                    b.Property<decimal>("QuantityOut")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("NUMBER(14,4)")
+                        .HasDefaultValue(0m)
+                        .HasColumnName("QUANTITY_OUT");
+
+                    b.Property<string>("SerialNumber")
+                        .HasMaxLength(100)
+                        .HasColumnType("NVARCHAR2(100)")
+                        .HasColumnName("SERIAL_NUMBER");
+
+                    b.Property<decimal>("TaxAmount")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("NUMBER(18,4)")
+                        .HasDefaultValue(0m)
+                        .HasColumnName("TAX_AMOUNT");
+
+                    b.Property<decimal>("TaxRate")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("NUMBER(7,4)")
+                        .HasDefaultValue(0m)
+                        .HasColumnName("TAX_RATE");
+
+                    b.Property<long?>("ToBinId")
+                        .HasColumnType("NUMBER(19)")
+                        .HasColumnName("TO_BIN_ID");
+
+                    b.Property<int>("TrxType")
+                        .HasColumnType("NUMBER(10)")
+                        .HasColumnName("TRX_TYPE");
+
+                    b.Property<decimal>("UnitCost")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("NUMBER(18,4)")
+                        .HasDefaultValue(0m)
+                        .HasColumnName("UNIT_COST");
+
+                    b.Property<decimal>("UnitPrice")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("NUMBER(18,4)")
+                        .HasDefaultValue(0m)
+                        .HasColumnName("UNIT_PRICE");
+
+                    b.Property<string>("UomCode")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("NVARCHAR2(20)")
+                        .HasColumnName("UOM_CODE");
+
+                    b.Property<decimal>("UomFactor")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("NUMBER(18,6)")
+                        .HasDefaultValue(1m)
+                        .HasColumnName("UOM_FACTOR");
+
+                    b.HasKey("BranchId", "DocYear", "DocType", "DocId", "LineNo");
+
+                    b.HasIndex("ItemId");
+
+                    b.HasIndex("TrxType");
+
+                    b.ToTable("TRX_DOCUMENT_LINE", (string)null);
+                });
+
+            modelBuilder.Entity("ThinkOnErp.Domain.Entities.Inventory.TrxTransactionType", b =>
+                {
+                    b.Property<int>("TrxCode")
+                        .HasColumnType("NUMBER(10)")
+                        .HasColumnName("TRX_CODE");
+
+                    b.Property<bool>("AffectsGl")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("NUMBER(1)")
+                        .HasDefaultValue(true)
+                        .HasColumnName("AFFECTS_GL");
+
+                    b.Property<bool>("AffectsPartyBalance")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("NUMBER(1)")
+                        .HasDefaultValue(false)
+                        .HasColumnName("AFFECTS_PARTY_BALANCE");
+
+                    b.Property<bool>("AffectsStock")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("NUMBER(1)")
+                        .HasDefaultValue(true)
+                        .HasColumnName("AFFECTS_STOCK");
+
+                    b.Property<DateTime>("CreationDate")
+                        .HasColumnType("TIMESTAMP")
+                        .HasColumnName("CREATION_DATE");
+
+                    b.Property<string>("CreationUser")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("NVARCHAR2(100)")
+                        .HasColumnName("CREATION_USER");
+
+                    b.Property<int>("DocTypeCode")
+                        .HasColumnType("NUMBER(10)")
+                        .HasColumnName("DOC_TYPE_CODE");
+
+                    b.Property<bool>("IsActive")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("NUMBER(1)")
+                        .HasDefaultValue(true)
+                        .HasColumnName("IS_ACTIVE");
+
+                    b.Property<string>("PostingRuleCode")
+                        .HasMaxLength(50)
+                        .HasColumnType("NVARCHAR2(50)")
+                        .HasColumnName("POSTING_RULE_CODE");
+
+                    b.Property<bool>("RequiresCost")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("NUMBER(1)")
+                        .HasDefaultValue(true)
+                        .HasColumnName("REQUIRES_COST");
+
+                    b.Property<bool>("RequiresParty")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("NUMBER(1)")
+                        .HasDefaultValue(false)
+                        .HasColumnName("REQUIRES_PARTY");
+
+                    b.Property<bool>("RequiresPrice")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("NUMBER(1)")
+                        .HasDefaultValue(false)
+                        .HasColumnName("REQUIRES_PRICE");
+
+                    b.Property<bool>("RequiresWarehouse")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("NUMBER(1)")
+                        .HasDefaultValue(true)
+                        .HasColumnName("REQUIRES_WAREHOUSE");
+
+                    b.Property<byte>("StockDirection")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("NUMBER(2)")
+                        .HasDefaultValue((byte)0)
+                        .HasColumnName("STOCK_DIRECTION");
+
+                    b.Property<string>("TrxKey")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("NVARCHAR2(50)")
+                        .HasColumnName("TRX_KEY");
+
+                    b.Property<string>("TrxNameAr")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("NVARCHAR2(100)")
+                        .HasColumnName("TRX_NAME_AR");
+
+                    b.Property<string>("TrxNameEn")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("NVARCHAR2(100)")
+                        .HasColumnName("TRX_NAME_EN");
+
+                    b.Property<DateTime?>("UpdateDate")
+                        .HasColumnType("TIMESTAMP")
+                        .HasColumnName("UPDATE_DATE");
+
+                    b.Property<string>("UpdateUser")
+                        .HasMaxLength(100)
+                        .HasColumnType("NVARCHAR2(100)")
+                        .HasColumnName("UPDATE_USER");
+
+                    b.HasKey("TrxCode");
+
+                    b.HasIndex("DocTypeCode");
+
+                    b.HasIndex("TrxKey")
+                        .IsUnique();
+
+                    b.ToTable("TRX_TRANSACTION_TYPE", (string)null);
+                });
+
+            modelBuilder.Entity("ThinkOnErp.Domain.Entities.SysApiCategory", b =>
+                {
+                    b.Property<string>("CategoryCode")
+                        .HasMaxLength(50)
+                        .HasColumnType("NVARCHAR2(50)")
+                        .HasColumnName("CATEGORY_CODE");
+
+                    b.Property<string>("ControllerNames")
+                        .HasMaxLength(1000)
+                        .HasColumnType("NVARCHAR2(1000)")
+                        .HasColumnName("CONTROLLER_NAMES");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(500)
+                        .HasColumnType("NVARCHAR2(500)")
+                        .HasColumnName("DESCRIPTION");
+
+                    b.Property<int>("DisplayOrder")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("NUMBER(10)")
+                        .HasDefaultValue(0)
+                        .HasColumnName("DISPLAY_ORDER");
+
+                    b.Property<string>("DisplayTitle")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("NVARCHAR2(150)")
+                        .HasColumnName("DISPLAY_TITLE");
+
+                    b.Property<bool>("IsActive")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("NUMBER(1)")
+                        .HasDefaultValue(true)
+                        .HasColumnName("IS_ACTIVE");
+
+                    b.HasKey("CategoryCode");
+
+                    b.ToTable("SYS_API_CATEGORIES", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            CategoryCode = "superadmin",
+                            ControllerNames = "SuperAdminController,SuperAdminAuthController",
+                            Description = "Platform-wide management: super admin accounts, company/branch registry, schema provisioning & sync.",
+                            DisplayOrder = 1,
+                            DisplayTitle = "1. SuperAdmin API",
+                            IsActive = true
+                        },
+                        new
+                        {
+                            CategoryCode = "company",
+                            ControllerNames = "CompanyController,BranchController,BranchAccessController,CompanyPermissionsController",
+                            Description = "Tenant-specific company management: company registration, default branch configuration, branch access, company permissions, and DEV_TEMPLATE schema export.",
+                            DisplayOrder = 2,
+                            DisplayTitle = "2. Company & Tenant Management API",
+                            IsActive = true
+                        },
+                        new
+                        {
+                            CategoryCode = "accounting",
+                            ControllerNames = "GlAccountsController,AccountCategoriesController,CoaImportController,CurrencyController,FiscalYearController",
+                            Description = "Accounting operations: chart of accounts CRUD, level 1/2 categories, next child code generator, COA Excel validation/import, postable accounts, fiscal years, and currency reference data.",
+                            DisplayOrder = 3,
+                            DisplayTitle = "3. Accounting & COA API",
+                            IsActive = true
+                        },
+                        new
+                        {
+                            CategoryCode = "auth",
+                            ControllerNames = "AuthController,UsersController,RolesController,PermissionsController",
+                            Description = "Authentication and Authorization: login, JWT tokens, user management, roles, and fine-grained permissions.",
+                            DisplayOrder = 4,
+                            DisplayTitle = "4. Auth & Security API",
+                            IsActive = true
+                        },
+                        new
+                        {
+                            CategoryCode = "audit",
+                            ControllerNames = "AuditLogsController,AuditTrailController,AuditHealthController,AlertsController,MonitoringController,ComplianceController,KeyManagementController",
+                            Description = "Audit and monitoring: audit logs, entity audit trail, audit health, threat alerts, performance metrics, compliance reporting, and key management.",
+                            DisplayOrder = 5,
+                            DisplayTitle = "5. Audit & Security Monitoring API",
+                            IsActive = true
+                        },
+                        new
+                        {
+                            CategoryCode = "support",
+                            ControllerNames = "TicketsController,TicketTypesController",
+                            Description = "Customer support & ticket management: support tickets, ticket status, and ticket types.",
+                            DisplayOrder = 6,
+                            DisplayTitle = "6. Tickets & Support API",
+                            IsActive = true
+                        },
+                        new
+                        {
+                            CategoryCode = "system",
+                            ControllerNames = "SysCodesController,SysSettingsController,ModulesController,ScreensController,FeaturesController,HealthController,DocumentsController,ConfigurationController,SavedSearchesController",
+                            Description = "System configuration & metadata: system lookup codes, global settings, modules, screens, feature toggles, health checks, document uploads, and saved searches.",
+                            DisplayOrder = 7,
+                            DisplayTitle = "7. System Settings & Codes API",
+                            IsActive = true
+                        });
+                });
+
+            modelBuilder.Entity("ThinkOnErp.Domain.Entities.SysApiEndpoint", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("NUMBER(19)")
+                        .HasColumnName("ID");
+
+                    OraclePropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<string>("ActionName")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("NVARCHAR2(100)")
+                        .HasColumnName("ACTION_NAME");
+
+                    b.Property<string>("CategoryCode")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("NVARCHAR2(50)")
+                        .HasColumnName("CATEGORY_CODE");
+
+                    b.Property<string>("ControllerName")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("NVARCHAR2(100)")
+                        .HasColumnName("CONTROLLER_NAME");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(500)
+                        .HasColumnType("NVARCHAR2(500)")
+                        .HasColumnName("DESCRIPTION");
+
+                    b.Property<string>("DisplayName")
+                        .HasMaxLength(200)
+                        .HasColumnType("NVARCHAR2(200)")
+                        .HasColumnName("DISPLAY_NAME");
+
+                    b.Property<string>("HttpMethod")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("NVARCHAR2(10)")
+                        .HasColumnName("HTTP_METHOD");
+
+                    b.Property<bool>("IsActive")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("NUMBER(1)")
+                        .HasDefaultValue(true)
+                        .HasColumnName("IS_ACTIVE");
+
+                    b.Property<string>("RoutePath")
+                        .IsRequired()
+                        .HasMaxLength(300)
+                        .HasColumnType("NVARCHAR2(300)")
+                        .HasColumnName("ROUTE_PATH");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CategoryCode");
+
+                    b.HasIndex("HttpMethod", "RoutePath")
+                        .IsUnique()
+                        .HasDatabaseName("UX_SYS_API_ENDPOINTS_ROUTE");
+
+                    b.ToTable("SYS_API_ENDPOINTS", (string)null);
+                });
+
             modelBuilder.Entity("ThinkOnErp.Domain.Entities.SysAuditLog", b =>
                 {
                     b.Property<long>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("NUMBER(19)");
+                        .HasColumnType("NUMBER(19)")
+                        .HasColumnName("ID");
 
                     OraclePropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
 
@@ -308,16 +5168,15 @@ namespace ThinkOnErp.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("SystemId");
-
-                    b.ToTable("SYS_AUDIT_LOG", (string)null);
+                    b.ToTable("SYS_AUDIT_LOG", "THINKON_AUDIT");
                 });
 
             modelBuilder.Entity("ThinkOnErp.Domain.Entities.SysAuditLogArchive", b =>
                 {
                     b.Property<long>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("NUMBER(19)");
+                        .HasColumnType("NUMBER(19)")
+                        .HasColumnName("ID");
 
                     OraclePropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
 
@@ -465,7 +5324,7 @@ namespace ThinkOnErp.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("SYS_AUDIT_LOG_ARCHIVE", (string)null);
+                    b.ToTable("SYS_AUDIT_LOG_ARCHIVE", "THINKON_AUDIT");
                 });
 
             modelBuilder.Entity("ThinkOnErp.Domain.Entities.SysBranch", b =>
@@ -525,14 +5384,16 @@ namespace ThinkOnErp.Infrastructure.Migrations
                         .HasColumnType("NVARCHAR2(50)")
                         .HasColumnName("FAX");
 
-                    b.Property<bool>("IsActive")
+                    b.Property<string>("IsActive")
+                        .IsRequired()
                         .HasMaxLength(1)
-                        .HasColumnType("NUMBER(1)")
+                        .HasColumnType("NVARCHAR2(1)")
                         .HasColumnName("IS_ACTIVE");
 
-                    b.Property<bool>("IsHeadBranch")
+                    b.Property<string>("IsHeadBranch")
+                        .IsRequired()
                         .HasMaxLength(1)
-                        .HasColumnType("NUMBER(1)")
+                        .HasColumnType("NVARCHAR2(1)")
                         .HasColumnName("IS_HEAD_BRANCH");
 
                     b.Property<string>("Mobile")
@@ -817,10 +5678,10 @@ namespace ThinkOnErp.Infrastructure.Migrations
                         .HasColumnType("NVARCHAR2(100)")
                         .HasColumnName("CREATION_USER");
 
-                    b.Property<int>("IsActive")
+                    b.Property<byte>("IsActive")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("NUMBER(10)")
-                        .HasDefaultValue(1)
+                        .HasColumnType("NUMBER(3)")
+                        .HasDefaultValue((byte)1)
                         .HasColumnName("IS_ACTIVE");
 
                     b.Property<DateTime?>("UpdateDate")
@@ -898,9 +5759,10 @@ namespace ThinkOnErp.Infrastructure.Migrations
                         .HasColumnType("NUMBER(19)")
                         .HasColumnName("DEFAULT_BRANCH_ID");
 
-                    b.Property<bool>("IsActive")
+                    b.Property<string>("IsActive")
+                        .IsRequired()
                         .HasMaxLength(1)
-                        .HasColumnType("NUMBER(1)")
+                        .HasColumnType("NVARCHAR2(1)")
                         .HasColumnName("IS_ACTIVE");
 
                     b.Property<string>("LegalName")
@@ -1254,6 +6116,86 @@ namespace ThinkOnErp.Infrastructure.Migrations
                     b.ToTable("SYS_FEATURE", (string)null);
                 });
 
+            modelBuilder.Entity("ThinkOnErp.Domain.Entities.SysFieldValidationRule", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("NUMBER(19)")
+                        .HasColumnName("ID");
+
+                    OraclePropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<long?>("CompanyId")
+                        .HasColumnType("NUMBER(19)")
+                        .HasColumnName("COMPANY_ID");
+
+                    b.Property<string>("CountryCode")
+                        .HasMaxLength(10)
+                        .HasColumnType("NVARCHAR2(10)")
+                        .HasColumnName("COUNTRY_CODE");
+
+                    b.Property<DateTime?>("CreationDate")
+                        .HasColumnType("TIMESTAMP(7)")
+                        .HasColumnName("CREATION_DATE");
+
+                    b.Property<string>("CreationUser")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("NVARCHAR2(100)")
+                        .HasColumnName("CREATION_USER");
+
+                    b.Property<string>("EntityName")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("NVARCHAR2(100)")
+                        .HasColumnName("ENTITY_NAME");
+
+                    b.Property<string>("ErrorCode")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("NVARCHAR2(100)")
+                        .HasColumnName("ERROR_CODE");
+
+                    b.Property<string>("FieldName")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("NVARCHAR2(100)")
+                        .HasColumnName("FIELD_NAME");
+
+                    b.Property<int>("IsActive")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("NUMBER(10)")
+                        .HasDefaultValue(1)
+                        .HasColumnName("IS_ACTIVE");
+
+                    b.Property<string>("RuleType")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("NVARCHAR2(50)")
+                        .HasColumnName("RULE_TYPE");
+
+                    b.Property<string>("RuleValue")
+                        .HasMaxLength(500)
+                        .HasColumnType("NVARCHAR2(500)")
+                        .HasColumnName("RULE_VALUE");
+
+                    b.Property<DateTime?>("UpdateDate")
+                        .HasColumnType("TIMESTAMP(7)")
+                        .HasColumnName("UPDATE_DATE");
+
+                    b.Property<string>("UpdateUser")
+                        .HasMaxLength(100)
+                        .HasColumnType("NVARCHAR2(100)")
+                        .HasColumnName("UPDATE_USER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("EntityName", "CountryCode", "CompanyId", "IsActive")
+                        .HasDatabaseName("IX_VAL_RULE_LOOKUP");
+
+                    b.ToTable("SYS_FIELD_VALIDATION_RULE", (string)null);
+                });
+
             modelBuilder.Entity("ThinkOnErp.Domain.Entities.SysFiscalYear", b =>
                 {
                     b.Property<long>("Id")
@@ -1265,10 +6207,6 @@ namespace ThinkOnErp.Infrastructure.Migrations
                     b.Property<long>("BranchId")
                         .HasColumnType("NUMBER(19)")
                         .HasColumnName("BRANCH_ID");
-
-                    b.Property<long>("CompanyId")
-                        .HasColumnType("NUMBER(19)")
-                        .HasColumnName("COMPANY_ID");
 
                     b.Property<DateTime?>("CreationDate")
                         .HasColumnType("TIMESTAMP(7)")
@@ -1300,14 +6238,16 @@ namespace ThinkOnErp.Infrastructure.Migrations
                         .HasColumnType("NVARCHAR2(200)")
                         .HasColumnName("NAME_EN");
 
-                    b.Property<bool>("IsActive")
+                    b.Property<string>("IsActive")
+                        .IsRequired()
                         .HasMaxLength(1)
-                        .HasColumnType("NUMBER(1)")
+                        .HasColumnType("NVARCHAR2(1)")
                         .HasColumnName("IS_ACTIVE");
 
-                    b.Property<bool>("IsClosed")
+                    b.Property<string>("IsClosed")
+                        .IsRequired()
                         .HasMaxLength(1)
-                        .HasColumnType("NUMBER(1)")
+                        .HasColumnType("NVARCHAR2(1)")
                         .HasColumnName("IS_CLOSED");
 
                     b.Property<DateTime>("StartDate")
@@ -1326,8 +6266,6 @@ namespace ThinkOnErp.Infrastructure.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("BranchId");
-
-                    b.HasIndex("CompanyId");
 
                     b.ToTable("SYS_FISCAL_YEAR", null, t =>
                         {
@@ -1532,7 +6470,6 @@ namespace ThinkOnErp.Infrastructure.Migrations
                         .HasColumnName("EXPECTED_RESOLUTION_DATE");
 
                     b.Property<bool>("IsActive")
-                        .HasMaxLength(1)
                         .HasColumnType("NUMBER(1)")
                         .HasColumnName("IS_ACTIVE");
 
@@ -1595,17 +6532,15 @@ namespace ThinkOnErp.Infrastructure.Migrations
 
                     b.HasIndex("TicketTypeId");
 
-                    b.ToTable("SYS_REQUEST_TICKET", null, t =>
-                        {
-                            t.ExcludeFromMigrations();
-                        });
+                    b.ToTable("SYS_REQUEST_TICKET", "THINKON_SUPPORT");
                 });
 
             modelBuilder.Entity("ThinkOnErp.Domain.Entities.SysRetentionPolicy", b =>
                 {
                     b.Property<long>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("NUMBER(19)");
+                        .HasColumnType("NUMBER(19)")
+                        .HasColumnName("ID");
 
                     OraclePropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
 
@@ -1638,10 +6573,7 @@ namespace ThinkOnErp.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("SYS_RETENTION_POLICIES", null, t =>
-                        {
-                            t.ExcludeFromMigrations();
-                        });
+                    b.ToTable("SYS_RETENTION_POLICIES", "THINKON_AUDIT");
                 });
 
             modelBuilder.Entity("ThinkOnErp.Domain.Entities.SysRole", b =>
@@ -1662,9 +6594,10 @@ namespace ThinkOnErp.Infrastructure.Migrations
                         .HasColumnType("NVARCHAR2(100)")
                         .HasColumnName("CREATION_USER");
 
-                    b.Property<bool>("IsActive")
+                    b.Property<string>("IsActive")
+                        .IsRequired()
                         .HasMaxLength(1)
-                        .HasColumnType("NUMBER(1)")
+                        .HasColumnType("NVARCHAR2(1)")
                         .HasColumnName("IS_ACTIVE");
 
                     b.Property<string>("Note")
@@ -1785,17 +6718,14 @@ namespace ThinkOnErp.Infrastructure.Migrations
                         .HasColumnName("CREATION_USER");
 
                     b.Property<bool>("IsActive")
-                        .HasMaxLength(1)
                         .HasColumnType("NUMBER(1)")
                         .HasColumnName("IS_ACTIVE");
 
                     b.Property<bool>("IsDefault")
-                        .HasMaxLength(1)
                         .HasColumnType("NUMBER(1)")
                         .HasColumnName("IS_DEFAULT");
 
                     b.Property<bool>("IsPublic")
-                        .HasMaxLength(1)
                         .HasColumnType("NUMBER(1)")
                         .HasColumnName("IS_PUBLIC");
 
@@ -1883,9 +6813,10 @@ namespace ThinkOnErp.Infrastructure.Migrations
                         .HasColumnType("NVARCHAR2(100)")
                         .HasColumnName("ICON");
 
-                    b.Property<bool>("IsActive")
+                    b.Property<string>("IsActive")
+                        .IsRequired()
                         .HasMaxLength(1)
-                        .HasColumnType("NUMBER(1)")
+                        .HasColumnType("NVARCHAR2(1)")
                         .HasColumnName("IS_ACTIVE");
 
                     b.Property<long?>("ParentScreenId")
@@ -2181,9 +7112,10 @@ namespace ThinkOnErp.Infrastructure.Migrations
                         .HasColumnType("NVARCHAR2(200)")
                         .HasColumnName("EMAIL");
 
-                    b.Property<bool>("IsActive")
+                    b.Property<string>("IsActive")
+                        .IsRequired()
                         .HasMaxLength(1)
-                        .HasColumnType("NUMBER(1)")
+                        .HasColumnType("NVARCHAR2(1)")
                         .HasColumnName("IS_ACTIVE");
 
                     b.Property<DateTime?>("LastLoginDate")
@@ -2218,9 +7150,10 @@ namespace ThinkOnErp.Infrastructure.Migrations
                         .HasColumnType("NVARCHAR2(256)")
                         .HasColumnName("PIN_HASH");
 
-                    b.Property<bool>("TwoFaEnabled")
+                    b.Property<string>("TwoFaEnabled")
+                        .IsRequired()
                         .HasMaxLength(1)
-                        .HasColumnType("NUMBER(1)")
+                        .HasColumnType("NVARCHAR2(1)")
                         .HasColumnName("TWO_FA_ENABLED");
 
                     b.Property<string>("TwoFaSecret")
@@ -2292,9 +7225,10 @@ namespace ThinkOnErp.Infrastructure.Migrations
                         .HasColumnType("NVARCHAR2(100)")
                         .HasColumnName("ICON");
 
-                    b.Property<bool>("IsActive")
+                    b.Property<string>("IsActive")
+                        .IsRequired()
                         .HasMaxLength(1)
-                        .HasColumnType("NUMBER(1)")
+                        .HasColumnType("NVARCHAR2(1)")
                         .HasColumnName("IS_ACTIVE");
 
                     b.Property<string>("SystemCode")
@@ -2379,10 +7313,7 @@ namespace ThinkOnErp.Infrastructure.Migrations
 
                     b.HasIndex("TicketId");
 
-                    b.ToTable("SYS_TICKET_ATTACHMENT", null, t =>
-                        {
-                            t.ExcludeFromMigrations();
-                        });
+                    b.ToTable("SYS_TICKET_ATTACHMENT", "THINKON_SUPPORT");
                 });
 
             modelBuilder.Entity("ThinkOnErp.Domain.Entities.SysTicketCategory", b =>
@@ -2430,7 +7361,6 @@ namespace ThinkOnErp.Infrastructure.Migrations
                         .HasColumnName("DISPLAY_ORDER");
 
                     b.Property<bool>("IsActive")
-                        .HasMaxLength(1)
                         .HasColumnType("NUMBER(1)")
                         .HasColumnName("IS_ACTIVE");
 
@@ -2445,10 +7375,7 @@ namespace ThinkOnErp.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("SYS_TICKET_CATEGORY", null, t =>
-                        {
-                            t.ExcludeFromMigrations();
-                        });
+                    b.ToTable("SYS_TICKET_CATEGORY", "THINKON_SUPPORT");
                 });
 
             modelBuilder.Entity("ThinkOnErp.Domain.Entities.SysTicketComment", b =>
@@ -2476,7 +7403,6 @@ namespace ThinkOnErp.Infrastructure.Migrations
                         .HasColumnName("CREATION_USER");
 
                     b.Property<bool>("IsInternal")
-                        .HasMaxLength(1)
                         .HasColumnType("NUMBER(1)")
                         .HasColumnName("IS_INTERNAL");
 
@@ -2488,10 +7414,7 @@ namespace ThinkOnErp.Infrastructure.Migrations
 
                     b.HasIndex("TicketId");
 
-                    b.ToTable("SYS_TICKET_COMMENT", null, t =>
-                        {
-                            t.ExcludeFromMigrations();
-                        });
+                    b.ToTable("SYS_TICKET_COMMENT", "THINKON_SUPPORT");
                 });
 
             modelBuilder.Entity("ThinkOnErp.Domain.Entities.SysTicketConfig", b =>
@@ -2541,7 +7464,6 @@ namespace ThinkOnErp.Infrastructure.Migrations
                         .HasColumnName("DESCRIPTION_EN");
 
                     b.Property<bool>("IsActive")
-                        .HasMaxLength(1)
                         .HasColumnType("NUMBER(1)")
                         .HasColumnName("IS_ACTIVE");
 
@@ -2559,10 +7481,7 @@ namespace ThinkOnErp.Infrastructure.Migrations
                     b.HasIndex("ConfigKey")
                         .IsUnique();
 
-                    b.ToTable("SYS_TICKET_CONFIG", null, t =>
-                        {
-                            t.ExcludeFromMigrations();
-                        });
+                    b.ToTable("SYS_TICKET_CONFIG", "THINKON_SUPPORT");
                 });
 
             modelBuilder.Entity("ThinkOnErp.Domain.Entities.SysTicketPriority", b =>
@@ -2588,7 +7507,6 @@ namespace ThinkOnErp.Infrastructure.Migrations
                         .HasColumnName("ESCALATION_THRESHOLD_HOURS");
 
                     b.Property<bool>("IsActive")
-                        .HasMaxLength(1)
                         .HasColumnType("NUMBER(1)")
                         .HasColumnName("IS_ACTIVE");
 
@@ -2614,10 +7532,7 @@ namespace ThinkOnErp.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("SYS_TICKET_PRIORITY", null, t =>
-                        {
-                            t.ExcludeFromMigrations();
-                        });
+                    b.ToTable("SYS_TICKET_PRIORITY", "THINKON_SUPPORT");
                 });
 
             modelBuilder.Entity("ThinkOnErp.Domain.Entities.SysTicketStatus", b =>
@@ -2643,12 +7558,10 @@ namespace ThinkOnErp.Infrastructure.Migrations
                         .HasColumnName("DISPLAY_ORDER");
 
                     b.Property<bool>("IsActive")
-                        .HasMaxLength(1)
                         .HasColumnType("NUMBER(1)")
                         .HasColumnName("IS_ACTIVE");
 
                     b.Property<bool>("IsFinalStatus")
-                        .HasMaxLength(1)
                         .HasColumnType("NUMBER(1)")
                         .HasColumnName("IS_FINAL_STATUS");
 
@@ -2675,10 +7588,7 @@ namespace ThinkOnErp.Infrastructure.Migrations
                     b.HasIndex("StatusCode")
                         .IsUnique();
 
-                    b.ToTable("SYS_TICKET_STATUS", null, t =>
-                        {
-                            t.ExcludeFromMigrations();
-                        });
+                    b.ToTable("SYS_TICKET_STATUS", "THINKON_SUPPORT");
                 });
 
             modelBuilder.Entity("ThinkOnErp.Domain.Entities.SysTicketType", b =>
@@ -2714,7 +7624,6 @@ namespace ThinkOnErp.Infrastructure.Migrations
                         .HasColumnName("DESCRIPTION_EN");
 
                     b.Property<bool>("IsActive")
-                        .HasMaxLength(1)
                         .HasColumnType("NUMBER(1)")
                         .HasColumnName("IS_ACTIVE");
 
@@ -2747,10 +7656,7 @@ namespace ThinkOnErp.Infrastructure.Migrations
 
                     b.HasIndex("DefaultPriorityId");
 
-                    b.ToTable("SYS_TICKET_TYPE", null, t =>
-                        {
-                            t.ExcludeFromMigrations();
-                        });
+                    b.ToTable("SYS_TICKET_TYPE", "THINKON_SUPPORT");
                 });
 
             modelBuilder.Entity("ThinkOnErp.Domain.Entities.SysUser", b =>
@@ -2775,6 +7681,12 @@ namespace ThinkOnErp.Infrastructure.Migrations
                         .HasColumnType("NVARCHAR2(100)")
                         .HasColumnName("CREATION_USER");
 
+                    b.Property<byte>("DefaultLang")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("NUMBER(3)")
+                        .HasDefaultValue((byte)1)
+                        .HasColumnName("DEFAULT_LANG");
+
                     b.Property<string>("Email")
                         .HasMaxLength(200)
                         .HasColumnType("NVARCHAR2(200)")
@@ -2796,14 +7708,16 @@ namespace ThinkOnErp.Infrastructure.Migrations
                         .HasColumnType("NVARCHAR2(200)")
                         .HasColumnName("NAME_EN");
 
-                    b.Property<bool>("IsActive")
+                    b.Property<string>("IsActive")
+                        .IsRequired()
                         .HasMaxLength(1)
-                        .HasColumnType("NUMBER(1)")
+                        .HasColumnType("NVARCHAR2(1)")
                         .HasColumnName("IS_ACTIVE");
 
-                    b.Property<bool>("IsAdmin")
+                    b.Property<string>("IsAdmin")
+                        .IsRequired()
                         .HasMaxLength(1)
-                        .HasColumnType("NUMBER(1)")
+                        .HasColumnType("NVARCHAR2(1)")
                         .HasColumnName("IS_ADMIN");
 
                     b.Property<DateTime?>("LastLoginDate")
@@ -2888,7 +7802,6 @@ namespace ThinkOnErp.Infrastructure.Migrations
                         .HasColumnName("BRANCH_ID");
 
                     b.Property<bool>("IsPrimary")
-                        .HasMaxLength(1)
                         .HasColumnType("NUMBER(1)")
                         .HasColumnName("IS_PRIMARY");
 
@@ -3019,17 +7932,117 @@ namespace ThinkOnErp.Infrastructure.Migrations
                         });
                 });
 
-            modelBuilder.Entity("ThinkOnErp.Domain.Entities.Accounting.GlAccount", b =>
+            modelBuilder.Entity("ThinkOnErp.Domain.Entities.Accounting.ApCashApplication", b =>
                 {
-                    b.HasOne("ThinkOnErp.Domain.Entities.Accounting.GlAccount", "ParentAccount")
-                        .WithMany("ChildrenAccounts")
-                        .HasForeignKey("CompanyId", "ParentAccountCode")
-                        .OnDelete(DeleteBehavior.Restrict);
+                    b.HasOne("ThinkOnErp.Domain.Entities.Accounting.ApSubledgerTransaction", "InvoiceTransaction")
+                        .WithMany("InvoiceApplications")
+                        .HasForeignKey("InvoiceTransactionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
-                    b.Navigation("ParentAccount");
+                    b.HasOne("ThinkOnErp.Domain.Entities.Accounting.ApSubledgerTransaction", "PaymentTransaction")
+                        .WithMany("PaymentApplications")
+                        .HasForeignKey("PaymentTransactionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("InvoiceTransaction");
+
+                    b.Navigation("PaymentTransaction");
                 });
 
-            modelBuilder.Entity("ThinkOnErp.Domain.Entities.Accounting.GlAccountBranch", b =>
+            modelBuilder.Entity("ThinkOnErp.Domain.Entities.Accounting.ApSubledgerTransaction", b =>
+                {
+                    b.HasOne("ThinkOnErp.Domain.Entities.SysCurrency", "Currency")
+                        .WithMany()
+                        .HasForeignKey("CurrencyId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("ThinkOnErp.Domain.Entities.Accounting.GlVoucherDetail", "JournalLine")
+                        .WithMany()
+                        .HasForeignKey("JournalLineId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("ThinkOnErp.Domain.Entities.Accounting.Vendor", "Vendor")
+                        .WithMany()
+                        .HasForeignKey("VendorCode")
+                        .HasPrincipalKey("VendorCode")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("ThinkOnErp.Domain.Entities.Accounting.GlVoucherHeader", "Voucher")
+                        .WithMany()
+                        .HasForeignKey("VoucherId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Currency");
+
+                    b.Navigation("JournalLine");
+
+                    b.Navigation("Vendor");
+
+                    b.Navigation("Voucher");
+                });
+
+            modelBuilder.Entity("ThinkOnErp.Domain.Entities.Accounting.ArCashApplication", b =>
+                {
+                    b.HasOne("ThinkOnErp.Domain.Entities.Accounting.ArSubledgerTransaction", "InvoiceTransaction")
+                        .WithMany("InvoiceApplications")
+                        .HasForeignKey("InvoiceTransactionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("ThinkOnErp.Domain.Entities.Accounting.ArSubledgerTransaction", "PaymentTransaction")
+                        .WithMany("PaymentApplications")
+                        .HasForeignKey("PaymentTransactionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("InvoiceTransaction");
+
+                    b.Navigation("PaymentTransaction");
+                });
+
+            modelBuilder.Entity("ThinkOnErp.Domain.Entities.Accounting.ArSubledgerTransaction", b =>
+                {
+                    b.HasOne("ThinkOnErp.Domain.Entities.SysCurrency", "Currency")
+                        .WithMany()
+                        .HasForeignKey("CurrencyId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("ThinkOnErp.Domain.Entities.Accounting.Customer", "Customer")
+                        .WithMany()
+                        .HasForeignKey("CustomerCode")
+                        .HasPrincipalKey("CustomerCode")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("ThinkOnErp.Domain.Entities.Accounting.GlVoucherDetail", "JournalLine")
+                        .WithMany()
+                        .HasForeignKey("JournalLineId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("ThinkOnErp.Domain.Entities.Accounting.GlVoucherHeader", "Voucher")
+                        .WithMany()
+                        .HasForeignKey("VoucherId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Currency");
+
+                    b.Navigation("Customer");
+
+                    b.Navigation("JournalLine");
+
+                    b.Navigation("Voucher");
+                });
+
+            modelBuilder.Entity("ThinkOnErp.Domain.Entities.Accounting.BankAccount", b =>
                 {
                     b.HasOne("ThinkOnErp.Domain.Entities.SysBranch", "Branch")
                         .WithMany()
@@ -3037,9 +8050,186 @@ namespace ThinkOnErp.Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
+                    b.HasOne("ThinkOnErp.Domain.Entities.SysCurrency", "Currency")
+                        .WithMany()
+                        .HasForeignKey("CurrencyId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("ThinkOnErp.Domain.Entities.Accounting.GlAccount", "GlAccount")
+                        .WithMany()
+                        .HasForeignKey("GlAccountCode")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Branch");
+
+                    b.Navigation("Currency");
+
+                    b.Navigation("GlAccount");
+                });
+
+            modelBuilder.Entity("ThinkOnErp.Domain.Entities.Accounting.BankReconciliation", b =>
+                {
+                    b.HasOne("ThinkOnErp.Domain.Entities.Accounting.BankAccount", "BankAccount")
+                        .WithMany()
+                        .HasForeignKey("BankAccountId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("ThinkOnErp.Domain.Entities.Accounting.GlFiscalPeriod", "FiscalPeriod")
+                        .WithMany()
+                        .HasForeignKey("FiscalPeriodId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("ThinkOnErp.Domain.Entities.SysFiscalYear", "FiscalYear")
+                        .WithMany()
+                        .HasForeignKey("FiscalYearId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("BankAccount");
+
+                    b.Navigation("FiscalPeriod");
+
+                    b.Navigation("FiscalYear");
+                });
+
+            modelBuilder.Entity("ThinkOnErp.Domain.Entities.Accounting.BankStatementLine", b =>
+                {
+                    b.HasOne("ThinkOnErp.Domain.Entities.Accounting.GlVoucherDetail", "MatchedVoucherDetail")
+                        .WithMany()
+                        .HasForeignKey("MatchedVoucherDetailId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("ThinkOnErp.Domain.Entities.Accounting.BankReconciliation", "Reconciliation")
+                        .WithMany("StatementLines")
+                        .HasForeignKey("ReconciliationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("MatchedVoucherDetail");
+
+                    b.Navigation("Reconciliation");
+                });
+
+            modelBuilder.Entity("ThinkOnErp.Domain.Entities.Accounting.CashRegister", b =>
+                {
+                    b.HasOne("ThinkOnErp.Domain.Entities.SysBranch", "Branch")
+                        .WithMany()
+                        .HasForeignKey("BranchId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("ThinkOnErp.Domain.Entities.SysCurrency", "Currency")
+                        .WithMany()
+                        .HasForeignKey("CurrencyId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("ThinkOnErp.Domain.Entities.Accounting.GlAccount", "GlAccount")
+                        .WithMany()
+                        .HasForeignKey("GlAccountCode")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Branch");
+
+                    b.Navigation("Currency");
+
+                    b.Navigation("GlAccount");
+                });
+
+            modelBuilder.Entity("ThinkOnErp.Domain.Entities.Accounting.Customer", b =>
+                {
+                    b.HasOne("ThinkOnErp.Domain.Entities.Accounting.GlAccount", "ArControlAccount")
+                        .WithMany()
+                        .HasForeignKey("ArControlAccountCode")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("ThinkOnErp.Domain.Entities.SysBranch", "Branch")
+                        .WithMany()
+                        .HasForeignKey("BranchId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("ThinkOnErp.Domain.Entities.SysCurrency", "DefaultCurrency")
+                        .WithMany()
+                        .HasForeignKey("DefaultCurrencyId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("ArControlAccount");
+
+                    b.Navigation("Branch");
+
+                    b.Navigation("DefaultCurrency");
+                });
+
+            modelBuilder.Entity("ThinkOnErp.Domain.Entities.Accounting.GlAccount", b =>
+                {
+                    b.HasOne("ThinkOnErp.Domain.Entities.Accounting.GlAccount", "ParentAccount")
+                        .WithMany("ChildrenAccounts")
+                        .HasForeignKey("ParentAccountCode")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("ParentAccount");
+                });
+
+            modelBuilder.Entity("ThinkOnErp.Domain.Entities.Accounting.GlAccountBalance", b =>
+                {
+                    b.HasOne("ThinkOnErp.Domain.Entities.Accounting.GlAccount", "Account")
+                        .WithMany()
+                        .HasForeignKey("AccountCode")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("ThinkOnErp.Domain.Entities.SysBranch", "Branch")
+                        .WithMany()
+                        .HasForeignKey("BranchId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("ThinkOnErp.Domain.Entities.SysCurrency", "Currency")
+                        .WithMany()
+                        .HasForeignKey("CurrencyId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("ThinkOnErp.Domain.Entities.Accounting.GlFiscalPeriod", "FiscalPeriod")
+                        .WithMany()
+                        .HasForeignKey("FiscalPeriodId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("ThinkOnErp.Domain.Entities.SysFiscalYear", "FiscalYear")
+                        .WithMany()
+                        .HasForeignKey("FiscalYearId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Account");
+
+                    b.Navigation("Branch");
+
+                    b.Navigation("Currency");
+
+                    b.Navigation("FiscalPeriod");
+
+                    b.Navigation("FiscalYear");
+                });
+
+            modelBuilder.Entity("ThinkOnErp.Domain.Entities.Accounting.GlAccountBranch", b =>
+                {
                     b.HasOne("ThinkOnErp.Domain.Entities.Accounting.GlAccount", "GlAccount")
                         .WithMany("BranchLinks")
-                        .HasForeignKey("CompanyId", "AccountCode")
+                        .HasForeignKey("AccountCode")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("ThinkOnErp.Domain.Entities.SysBranch", "Branch")
+                        .WithMany()
+                        .HasForeignKey("BranchId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
@@ -3048,15 +8238,615 @@ namespace ThinkOnErp.Infrastructure.Migrations
                     b.Navigation("GlAccount");
                 });
 
-            modelBuilder.Entity("ThinkOnErp.Domain.Entities.SysAuditLog", b =>
+            modelBuilder.Entity("ThinkOnErp.Domain.Entities.Accounting.GlCostCenter", b =>
                 {
-                    b.HasOne("ThinkOnErp.Domain.Entities.SysSystem", "System")
-                        .WithMany()
-                        .HasForeignKey("SystemId")
-                        .OnDelete(DeleteBehavior.SetNull)
-                        .HasConstraintName("FK_SYS_AUDIT_LOG_SYSTEM");
+                    b.HasOne("ThinkOnErp.Domain.Entities.Accounting.GlCostCenter", "ParentCostCenter")
+                        .WithMany("InverseParentCostCenter")
+                        .HasForeignKey("ParentCostCenterCode")
+                        .OnDelete(DeleteBehavior.Restrict);
 
-                    b.Navigation("System");
+                    b.Navigation("ParentCostCenter");
+                });
+
+            modelBuilder.Entity("ThinkOnErp.Domain.Entities.Accounting.GlFiscalPeriod", b =>
+                {
+                    b.HasOne("ThinkOnErp.Domain.Entities.SysFiscalYear", "FiscalYear")
+                        .WithMany("Periods")
+                        .HasForeignKey("FiscalYearId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("FiscalYear");
+                });
+
+            modelBuilder.Entity("ThinkOnErp.Domain.Entities.Accounting.GlOpeningBalanceDetail", b =>
+                {
+                    b.HasOne("ThinkOnErp.Domain.Entities.Accounting.GlAccount", "Account")
+                        .WithMany()
+                        .HasForeignKey("AccountCode")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("ThinkOnErp.Domain.Entities.Accounting.GlOpeningBalanceHeader", "Header")
+                        .WithMany("Details")
+                        .HasForeignKey("HeaderId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Account");
+
+                    b.Navigation("Header");
+                });
+
+            modelBuilder.Entity("ThinkOnErp.Domain.Entities.Accounting.GlPdcRegister", b =>
+                {
+                    b.HasOne("ThinkOnErp.Domain.Entities.Accounting.GlVoucherHeader", "BounceVoucher")
+                        .WithMany()
+                        .HasForeignKey("BounceVoucherId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("ThinkOnErp.Domain.Entities.SysBranch", "Branch")
+                        .WithMany()
+                        .HasForeignKey("BranchId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("ThinkOnErp.Domain.Entities.Accounting.GlVoucherHeader", "ClearingVoucher")
+                        .WithMany()
+                        .HasForeignKey("ClearingVoucherId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("ThinkOnErp.Domain.Entities.SysCurrency", "Currency")
+                        .WithMany()
+                        .HasForeignKey("CurrencyId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("ThinkOnErp.Domain.Entities.SysFiscalYear", "FiscalYear")
+                        .WithMany()
+                        .HasForeignKey("FiscalYearId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("ThinkOnErp.Domain.Entities.Accounting.GlVoucherHeader", "OriginatingVoucher")
+                        .WithMany()
+                        .HasForeignKey("OriginatingVoucherId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("BounceVoucher");
+
+                    b.Navigation("Branch");
+
+                    b.Navigation("ClearingVoucher");
+
+                    b.Navigation("Currency");
+
+                    b.Navigation("FiscalYear");
+
+                    b.Navigation("OriginatingVoucher");
+                });
+
+            modelBuilder.Entity("ThinkOnErp.Domain.Entities.Accounting.GlPostingRule", b =>
+                {
+                    b.HasOne("ThinkOnErp.Domain.Entities.SysBranch", "Branch")
+                        .WithMany()
+                        .HasForeignKey("BranchId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("ThinkOnErp.Domain.Entities.Accounting.GlAccount", "CreditAccount")
+                        .WithMany()
+                        .HasForeignKey("CreditAccountCode")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("ThinkOnErp.Domain.Entities.Accounting.GlAccount", "DebitAccount")
+                        .WithMany()
+                        .HasForeignKey("DebitAccountCode")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("ThinkOnErp.Domain.Entities.Accounting.GlCostCenter", "DefaultCostCenter")
+                        .WithMany()
+                        .HasForeignKey("DefaultCostCenterCode")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("Branch");
+
+                    b.Navigation("CreditAccount");
+
+                    b.Navigation("DebitAccount");
+
+                    b.Navigation("DefaultCostCenter");
+                });
+
+            modelBuilder.Entity("ThinkOnErp.Domain.Entities.Accounting.GlVoucherDetail", b =>
+                {
+                    b.HasOne("ThinkOnErp.Domain.Entities.Accounting.GlAccount", "Account")
+                        .WithMany()
+                        .HasForeignKey("AccountCode")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("ThinkOnErp.Domain.Entities.SysBranch", "Branch")
+                        .WithMany()
+                        .HasForeignKey("BranchId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("ThinkOnErp.Domain.Entities.Accounting.GlCostCenter", "CostCenter")
+                        .WithMany()
+                        .HasForeignKey("CostCenterCode")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("ThinkOnErp.Domain.Entities.Accounting.GlVoucherHeader", "Header")
+                        .WithMany("Details")
+                        .HasForeignKey("VoucherId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Account");
+
+                    b.Navigation("Branch");
+
+                    b.Navigation("CostCenter");
+
+                    b.Navigation("Header");
+                });
+
+            modelBuilder.Entity("ThinkOnErp.Domain.Entities.Accounting.TaxGroupItem", b =>
+                {
+                    b.HasOne("ThinkOnErp.Domain.Entities.Accounting.TaxGroup", "Group")
+                        .WithMany("Items")
+                        .HasForeignKey("TaxGroupId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("ThinkOnErp.Domain.Entities.Accounting.TaxRate", "TaxRate")
+                        .WithMany()
+                        .HasForeignKey("TaxRateId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Group");
+
+                    b.Navigation("TaxRate");
+                });
+
+            modelBuilder.Entity("ThinkOnErp.Domain.Entities.Accounting.TaxRate", b =>
+                {
+                    b.HasOne("ThinkOnErp.Domain.Entities.Accounting.GlAccount", "PurchaseTaxGlAccount")
+                        .WithMany()
+                        .HasForeignKey("PurchaseTaxGlAccountCode")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("ThinkOnErp.Domain.Entities.Accounting.GlAccount", "SalesTaxGlAccount")
+                        .WithMany()
+                        .HasForeignKey("SalesTaxGlAccountCode")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("ThinkOnErp.Domain.Entities.Accounting.TaxCategory", "Category")
+                        .WithMany("TaxRates")
+                        .HasForeignKey("TaxCategoryId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Category");
+
+                    b.Navigation("PurchaseTaxGlAccount");
+
+                    b.Navigation("SalesTaxGlAccount");
+                });
+
+            modelBuilder.Entity("ThinkOnErp.Domain.Entities.Accounting.TaxTransaction", b =>
+                {
+                    b.HasOne("ThinkOnErp.Domain.Entities.Accounting.GlVoucherHeader", "GlVoucher")
+                        .WithMany()
+                        .HasForeignKey("GlVoucherId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("ThinkOnErp.Domain.Entities.Accounting.TaxRate", "TaxRate")
+                        .WithMany()
+                        .HasForeignKey("TaxRateId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("GlVoucher");
+
+                    b.Navigation("TaxRate");
+                });
+
+            modelBuilder.Entity("ThinkOnErp.Domain.Entities.Accounting.Vendor", b =>
+                {
+                    b.HasOne("ThinkOnErp.Domain.Entities.Accounting.GlAccount", "ApControlAccount")
+                        .WithMany()
+                        .HasForeignKey("ApControlAccountCode")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("ThinkOnErp.Domain.Entities.SysBranch", "Branch")
+                        .WithMany()
+                        .HasForeignKey("BranchId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("ThinkOnErp.Domain.Entities.SysCurrency", "DefaultCurrency")
+                        .WithMany()
+                        .HasForeignKey("DefaultCurrencyId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("ApControlAccount");
+
+                    b.Navigation("Branch");
+
+                    b.Navigation("DefaultCurrency");
+                });
+
+            modelBuilder.Entity("ThinkOnErp.Domain.Entities.Inventory.InvBin", b =>
+                {
+                    b.HasOne("ThinkOnErp.Domain.Entities.Inventory.InvZone", "Zone")
+                        .WithMany("Bins")
+                        .HasForeignKey("ZoneId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Zone");
+                });
+
+            modelBuilder.Entity("ThinkOnErp.Domain.Entities.Inventory.InvBomHeader", b =>
+                {
+                    b.HasOne("ThinkOnErp.Domain.Entities.Inventory.InvItem", "ParentItem")
+                        .WithMany("AssembledBoms")
+                        .HasForeignKey("ParentItemId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("ParentItem");
+                });
+
+            modelBuilder.Entity("ThinkOnErp.Domain.Entities.Inventory.InvBomLine", b =>
+                {
+                    b.HasOne("ThinkOnErp.Domain.Entities.Inventory.InvBomHeader", "BomHeader")
+                        .WithMany("Lines")
+                        .HasForeignKey("BomId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("ThinkOnErp.Domain.Entities.Inventory.InvItem", "ComponentItem")
+                        .WithMany()
+                        .HasForeignKey("ComponentItemId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("ThinkOnErp.Domain.Entities.Inventory.InvItem", "SubstituteItem")
+                        .WithMany()
+                        .HasForeignKey("SubstituteItemId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("BomHeader");
+
+                    b.Navigation("ComponentItem");
+
+                    b.Navigation("SubstituteItem");
+                });
+
+            modelBuilder.Entity("ThinkOnErp.Domain.Entities.Inventory.InvCostLayer", b =>
+                {
+                    b.HasOne("ThinkOnErp.Domain.Entities.Inventory.InvItem", "Item")
+                        .WithMany()
+                        .HasForeignKey("ItemId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("ThinkOnErp.Domain.Entities.Inventory.InvWarehouse", "Warehouse")
+                        .WithMany()
+                        .HasForeignKey("WarehouseId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Item");
+
+                    b.Navigation("Warehouse");
+                });
+
+            modelBuilder.Entity("ThinkOnErp.Domain.Entities.Inventory.InvCountLine", b =>
+                {
+                    b.HasOne("ThinkOnErp.Domain.Entities.Inventory.InvBin", "Bin")
+                        .WithMany()
+                        .HasForeignKey("BinId");
+
+                    b.HasOne("ThinkOnErp.Domain.Entities.Inventory.InvCountSession", "CountSession")
+                        .WithMany("Lines")
+                        .HasForeignKey("CountSessionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("ThinkOnErp.Domain.Entities.Inventory.InvItem", "Item")
+                        .WithMany()
+                        .HasForeignKey("ItemId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Bin");
+
+                    b.Navigation("CountSession");
+
+                    b.Navigation("Item");
+                });
+
+            modelBuilder.Entity("ThinkOnErp.Domain.Entities.Inventory.InvCountSession", b =>
+                {
+                    b.HasOne("ThinkOnErp.Domain.Entities.Inventory.InvWarehouse", "Warehouse")
+                        .WithMany()
+                        .HasForeignKey("WarehouseId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Warehouse");
+                });
+
+            modelBuilder.Entity("ThinkOnErp.Domain.Entities.Inventory.InvItem", b =>
+                {
+                    b.HasOne("ThinkOnErp.Domain.Entities.Inventory.InvItemGroup", "MainGroup")
+                        .WithMany("Items")
+                        .HasForeignKey("MainGroupId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("ThinkOnErp.Domain.Entities.Inventory.InvItemGroup", "SubGroup")
+                        .WithMany()
+                        .HasForeignKey("SubGroupId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("MainGroup");
+
+                    b.Navigation("SubGroup");
+                });
+
+            modelBuilder.Entity("ThinkOnErp.Domain.Entities.Inventory.InvItemBarcode", b =>
+                {
+                    b.HasOne("ThinkOnErp.Domain.Entities.Inventory.InvItem", "Item")
+                        .WithMany("Barcodes")
+                        .HasForeignKey("ItemId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Item");
+                });
+
+            modelBuilder.Entity("ThinkOnErp.Domain.Entities.Inventory.InvItemGroup", b =>
+                {
+                    b.HasOne("ThinkOnErp.Domain.Entities.Inventory.InvItemGroup", "ParentGroup")
+                        .WithMany("SubGroups")
+                        .HasForeignKey("ParentGroupId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("ParentGroup");
+                });
+
+            modelBuilder.Entity("ThinkOnErp.Domain.Entities.Inventory.InvItemUomConversion", b =>
+                {
+                    b.HasOne("ThinkOnErp.Domain.Entities.Inventory.InvItem", "Item")
+                        .WithMany("UomConversions")
+                        .HasForeignKey("ItemId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Item");
+                });
+
+            modelBuilder.Entity("ThinkOnErp.Domain.Entities.Inventory.InvLotMaster", b =>
+                {
+                    b.HasOne("ThinkOnErp.Domain.Entities.Inventory.InvItem", "Item")
+                        .WithMany("Lots")
+                        .HasForeignKey("ItemId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Item");
+                });
+
+            modelBuilder.Entity("ThinkOnErp.Domain.Entities.Inventory.InvOpeningLine", b =>
+                {
+                    b.HasOne("ThinkOnErp.Domain.Entities.Inventory.InvOpeningBatch", "Batch")
+                        .WithMany("Lines")
+                        .HasForeignKey("BatchId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("ThinkOnErp.Domain.Entities.Inventory.InvItem", "Item")
+                        .WithMany()
+                        .HasForeignKey("ItemId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("ThinkOnErp.Domain.Entities.Inventory.InvWarehouse", "Warehouse")
+                        .WithMany()
+                        .HasForeignKey("WarehouseId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Batch");
+
+                    b.Navigation("Item");
+
+                    b.Navigation("Warehouse");
+                });
+
+            modelBuilder.Entity("ThinkOnErp.Domain.Entities.Inventory.InvReservation", b =>
+                {
+                    b.HasOne("ThinkOnErp.Domain.Entities.Inventory.InvItem", "Item")
+                        .WithMany()
+                        .HasForeignKey("ItemId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("ThinkOnErp.Domain.Entities.Inventory.InvWarehouse", "Warehouse")
+                        .WithMany()
+                        .HasForeignKey("WarehouseId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Item");
+
+                    b.Navigation("Warehouse");
+                });
+
+            modelBuilder.Entity("ThinkOnErp.Domain.Entities.Inventory.InvSerialMaster", b =>
+                {
+                    b.HasOne("ThinkOnErp.Domain.Entities.Inventory.InvBin", "CurrentBin")
+                        .WithMany()
+                        .HasForeignKey("CurrentBinId");
+
+                    b.HasOne("ThinkOnErp.Domain.Entities.Inventory.InvWarehouse", "CurrentWarehouse")
+                        .WithMany()
+                        .HasForeignKey("CurrentWarehouseId");
+
+                    b.HasOne("ThinkOnErp.Domain.Entities.Inventory.InvItem", "Item")
+                        .WithMany("Serials")
+                        .HasForeignKey("ItemId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("ThinkOnErp.Domain.Entities.Inventory.InvLotMaster", "Lot")
+                        .WithMany()
+                        .HasForeignKey("LotId");
+
+                    b.Navigation("CurrentBin");
+
+                    b.Navigation("CurrentWarehouse");
+
+                    b.Navigation("Item");
+
+                    b.Navigation("Lot");
+                });
+
+            modelBuilder.Entity("ThinkOnErp.Domain.Entities.Inventory.InvStockBalance", b =>
+                {
+                    b.HasOne("ThinkOnErp.Domain.Entities.Inventory.InvItem", "Item")
+                        .WithMany("StockBalances")
+                        .HasForeignKey("ItemId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("ThinkOnErp.Domain.Entities.Inventory.InvWarehouse", "Warehouse")
+                        .WithMany()
+                        .HasForeignKey("WarehouseId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Item");
+
+                    b.Navigation("Warehouse");
+                });
+
+            modelBuilder.Entity("ThinkOnErp.Domain.Entities.Inventory.InvStockLedgerEntry", b =>
+                {
+                    b.HasOne("ThinkOnErp.Domain.Entities.Inventory.InvItem", "Item")
+                        .WithMany()
+                        .HasForeignKey("ItemId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("ThinkOnErp.Domain.Entities.Inventory.InvWarehouse", "Warehouse")
+                        .WithMany()
+                        .HasForeignKey("WarehouseId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Item");
+
+                    b.Navigation("Warehouse");
+                });
+
+            modelBuilder.Entity("ThinkOnErp.Domain.Entities.Inventory.InvZone", b =>
+                {
+                    b.HasOne("ThinkOnErp.Domain.Entities.Inventory.InvWarehouse", "Warehouse")
+                        .WithMany("Zones")
+                        .HasForeignKey("WarehouseId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Warehouse");
+                });
+
+            modelBuilder.Entity("ThinkOnErp.Domain.Entities.Inventory.TrxDocumentHeader", b =>
+                {
+                    b.HasOne("ThinkOnErp.Domain.Entities.Inventory.TrxDocType", "DocTypeConfig")
+                        .WithMany()
+                        .HasForeignKey("DocType")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("ThinkOnErp.Domain.Entities.Inventory.InvWarehouse", "FromWarehouse")
+                        .WithMany()
+                        .HasForeignKey("FromWarehouseId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("ThinkOnErp.Domain.Entities.Inventory.InvWarehouse", "ToWarehouse")
+                        .WithMany()
+                        .HasForeignKey("ToWarehouseId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("ThinkOnErp.Domain.Entities.Inventory.TrxTransactionType", "TrxTypeConfig")
+                        .WithMany()
+                        .HasForeignKey("TrxType")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("DocTypeConfig");
+
+                    b.Navigation("FromWarehouse");
+
+                    b.Navigation("ToWarehouse");
+
+                    b.Navigation("TrxTypeConfig");
+                });
+
+            modelBuilder.Entity("ThinkOnErp.Domain.Entities.Inventory.TrxDocumentLine", b =>
+                {
+                    b.HasOne("ThinkOnErp.Domain.Entities.Inventory.InvItem", "Item")
+                        .WithMany()
+                        .HasForeignKey("ItemId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("ThinkOnErp.Domain.Entities.Inventory.TrxTransactionType", "TrxTypeConfig")
+                        .WithMany()
+                        .HasForeignKey("TrxType")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("ThinkOnErp.Domain.Entities.Inventory.TrxDocumentHeader", "DocumentHeader")
+                        .WithMany("Lines")
+                        .HasForeignKey("BranchId", "DocYear", "DocType", "DocId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("DocumentHeader");
+
+                    b.Navigation("Item");
+
+                    b.Navigation("TrxTypeConfig");
+                });
+
+            modelBuilder.Entity("ThinkOnErp.Domain.Entities.Inventory.TrxTransactionType", b =>
+                {
+                    b.HasOne("ThinkOnErp.Domain.Entities.Inventory.TrxDocType", "DocType")
+                        .WithMany("TransactionTypes")
+                        .HasForeignKey("DocTypeCode")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("DocType");
+                });
+
+            modelBuilder.Entity("ThinkOnErp.Domain.Entities.SysApiEndpoint", b =>
+                {
+                    b.HasOne("ThinkOnErp.Domain.Entities.SysApiCategory", "Category")
+                        .WithMany()
+                        .HasForeignKey("CategoryCode")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Category");
                 });
 
             modelBuilder.Entity("ThinkOnErp.Domain.Entities.SysBranch", b =>
@@ -3194,15 +8984,7 @@ namespace ThinkOnErp.Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("ThinkOnErp.Domain.Entities.SysCompany", "Company")
-                        .WithMany()
-                        .HasForeignKey("CompanyId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
                     b.Navigation("Branch");
-
-                    b.Navigation("Company");
                 });
 
             modelBuilder.Entity("ThinkOnErp.Domain.Entities.SysRequestTicket", b =>
@@ -3482,11 +9264,112 @@ namespace ThinkOnErp.Infrastructure.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("ThinkOnErp.Domain.Entities.Accounting.ApSubledgerTransaction", b =>
+                {
+                    b.Navigation("InvoiceApplications");
+
+                    b.Navigation("PaymentApplications");
+                });
+
+            modelBuilder.Entity("ThinkOnErp.Domain.Entities.Accounting.ArSubledgerTransaction", b =>
+                {
+                    b.Navigation("InvoiceApplications");
+
+                    b.Navigation("PaymentApplications");
+                });
+
+            modelBuilder.Entity("ThinkOnErp.Domain.Entities.Accounting.BankReconciliation", b =>
+                {
+                    b.Navigation("StatementLines");
+                });
+
             modelBuilder.Entity("ThinkOnErp.Domain.Entities.Accounting.GlAccount", b =>
                 {
                     b.Navigation("BranchLinks");
 
                     b.Navigation("ChildrenAccounts");
+                });
+
+            modelBuilder.Entity("ThinkOnErp.Domain.Entities.Accounting.GlCostCenter", b =>
+                {
+                    b.Navigation("InverseParentCostCenter");
+                });
+
+            modelBuilder.Entity("ThinkOnErp.Domain.Entities.Accounting.GlOpeningBalanceHeader", b =>
+                {
+                    b.Navigation("Details");
+                });
+
+            modelBuilder.Entity("ThinkOnErp.Domain.Entities.Accounting.GlVoucherHeader", b =>
+                {
+                    b.Navigation("Details");
+                });
+
+            modelBuilder.Entity("ThinkOnErp.Domain.Entities.Accounting.TaxCategory", b =>
+                {
+                    b.Navigation("TaxRates");
+                });
+
+            modelBuilder.Entity("ThinkOnErp.Domain.Entities.Accounting.TaxGroup", b =>
+                {
+                    b.Navigation("Items");
+                });
+
+            modelBuilder.Entity("ThinkOnErp.Domain.Entities.Inventory.InvBomHeader", b =>
+                {
+                    b.Navigation("Lines");
+                });
+
+            modelBuilder.Entity("ThinkOnErp.Domain.Entities.Inventory.InvCountSession", b =>
+                {
+                    b.Navigation("Lines");
+                });
+
+            modelBuilder.Entity("ThinkOnErp.Domain.Entities.Inventory.InvItem", b =>
+                {
+                    b.Navigation("AssembledBoms");
+
+                    b.Navigation("Barcodes");
+
+                    b.Navigation("Lots");
+
+                    b.Navigation("Serials");
+
+                    b.Navigation("StockBalances");
+
+                    b.Navigation("UomConversions");
+                });
+
+            modelBuilder.Entity("ThinkOnErp.Domain.Entities.Inventory.InvItemGroup", b =>
+                {
+                    b.Navigation("Items");
+
+                    b.Navigation("SubGroups");
+                });
+
+            modelBuilder.Entity("ThinkOnErp.Domain.Entities.Inventory.InvOpeningBatch", b =>
+                {
+                    b.Navigation("Lines");
+                });
+
+            modelBuilder.Entity("ThinkOnErp.Domain.Entities.Inventory.InvWarehouse", b =>
+                {
+                    b.Navigation("Zones");
+                });
+
+            modelBuilder.Entity("ThinkOnErp.Domain.Entities.Inventory.InvZone", b =>
+                {
+                    b.Navigation("Bins");
+                });
+
+            modelBuilder.Entity("ThinkOnErp.Domain.Entities.Inventory.TrxDocType", b =>
+                {
+                    b.Navigation("TransactionTypes");
+                });
+
+            modelBuilder.Entity("ThinkOnErp.Domain.Entities.Inventory.TrxDocumentHeader", b =>
+                {
+                    b.Navigation("Lines");
                 });
 
             modelBuilder.Entity("ThinkOnErp.Domain.Entities.SysCompany", b =>
@@ -3497,6 +9380,11 @@ namespace ThinkOnErp.Infrastructure.Migrations
             modelBuilder.Entity("ThinkOnErp.Domain.Entities.SysFeature", b =>
                 {
                     b.Navigation("ScreenFeatures");
+                });
+
+            modelBuilder.Entity("ThinkOnErp.Domain.Entities.SysFiscalYear", b =>
+                {
+                    b.Navigation("Periods");
                 });
 
             modelBuilder.Entity("ThinkOnErp.Domain.Entities.SysRequestTicket", b =>

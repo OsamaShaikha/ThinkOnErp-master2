@@ -16,6 +16,7 @@ public class CreateUserCommand : IRequest<Int64>
     public long PrimaryBranchId { get; set; }
     public string? Email { get; set; }
     public bool IsAdmin { get; set; }
+    public int DefaultLang { get; set; } = 1;
     [JsonIgnore]
     public string CreationUser { get; set; } = string.Empty;
 }

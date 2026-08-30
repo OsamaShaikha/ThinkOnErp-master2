@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using ThinkOnErp.Domain.Entities;
 using ThinkOnErp.Domain.Entities.Accounting;
+using ThinkOnErp.Domain.Entities.Inventory;
 using ThinkOnErp.Infrastructure.Data.Configurations.Accounting;
 
 namespace ThinkOnErp.Infrastructure.Data;
@@ -15,102 +16,16 @@ public class OracleDbContext : DbContext
     {
     }
 
-    public async Task<IQueryable<SysAuditLog>> GetCombinedAuditLogsAsync()
+    public Task<IQueryable<SysAuditLog>> GetCombinedAuditLogsAsync()
     {
-        const string auditLogProjection = """
-            "Id",
-            CORRELATION_ID,
-            ACTOR_TYPE,
-            ACTOR_ID,
-            COMPANY_ID,
-            BRANCH_ID,
-            ACTION,
-            ENTITY_TYPE,
-            ENTITY_ID,
-            OLD_VALUE,
-            NEW_VALUE,
-            IP_ADDRESS,
-            USER_AGENT,
-            HTTP_METHOD,
-            ENDPOINT_PATH,
-            REQUEST_PAYLOAD,
-            RESPONSE_PAYLOAD,
-            EXECUTION_TIME_MS,
-            STATUS_CODE,
-            EXCEPTION_TYPE,
-            EXCEPTION_MESSAGE,
-            STACK_TRACE,
-            SEVERITY,
-            EVENT_CATEGORY,
-            METADATA,
-            STATUS,
-            CREATION_DATE,
-            BUSINESS_MODULE,
-            DEVICE_IDENTIFIER,
-            ERROR_CODE,
-            BUSINESS_DESCRIPTION
-            """;
+        // Audit logs are stored in the dedicated central schema "THINKON_AUDIT"."SYS_AUDIT_LOG"
+        return Task.FromResult(this.SysAuditLogs.AsQueryable());
+    }
 
-        var connection = this.Database.GetDbConnection();
-        var isMasterSchema = false;
-        try
-        {
-            var builder = new Oracle.ManagedDataAccess.Client.OracleConnectionStringBuilder(connection.ConnectionString);
-            isMasterSchema = builder.TryGetValue("User Id", out var userIdObj) && string.Equals(userIdObj?.ToString(), "THINKON_ERP", StringComparison.OrdinalIgnoreCase);
-        }
-        catch
-        {
-            isMasterSchema = await this.SysCompanies.CountAsync() > 1;
-        }
-
-        if (!isMasterSchema)
-        {
-            return this.SysAuditLogs.AsQueryable();
-        }
-
-        var ownersWithAuditLogs = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-        try
-        {
-            var wasOpen = connection.State == System.Data.ConnectionState.Open;
-            if (!wasOpen) await connection.OpenAsync();
-            
-            using (var checkCmd = connection.CreateCommand())
-            {
-                checkCmd.CommandText = "SELECT DISTINCT owner FROM all_tables WHERE table_name = 'SYS_AUDIT_LOG'";
-                using (var reader = await checkCmd.ExecuteReaderAsync())
-                {
-                    while (await reader.ReadAsync())
-                    {
-                        ownersWithAuditLogs.Add(reader.GetString(0));
-                    }
-                }
-            }
-        }
-        catch
-        {
-            // Fallback: return only master logs if table check fails
-            return this.SysAuditLogs.AsQueryable();
-        }
-
-        var sqlParts = new List<string>();
-        sqlParts.Add($"SELECT {auditLogProjection} FROM \"SYS_AUDIT_LOG\"");
-
-        var companySchemas = await this.SysCompanies
-            .Where(c => c.IsActive && c.CompanySchema != null && c.CompanySchema != "")
-            .Select(c => c.CompanySchema)
-            .Distinct()
-            .ToListAsync();
-
-        foreach (var sch in companySchemas)
-        {
-            if (sch != null && ownersWithAuditLogs.Contains(sch))
-            {
-                sqlParts.Add($"SELECT {auditLogProjection} FROM \"{sch}\".\"SYS_AUDIT_LOG\"");
-            }
-        }
-
-        var combinedSql = string.Join(" UNION ALL ", sqlParts);
-        return this.SysAuditLogs.FromSqlRaw(combinedSql).AsQueryable();
+    public Task<IQueryable<SysAuditLog>> GetAllAuditLogsAsync()
+    {
+        // Audit logs are stored in the dedicated central schema "THINKON_AUDIT"."SYS_AUDIT_LOG"
+        return Task.FromResult(this.SysAuditLogs.AsQueryable());
     }
 
     // Core entities
@@ -176,6 +91,7 @@ public class OracleDbContext : DbContext
     public DbSet<SysRetentionPolicy> SysRetentionPolicies => Set<SysRetentionPolicy>();
     public DbSet<SysCode> SysCodes => Set<SysCode>();
     public DbSet<SysSetting> SysSettings => Set<SysSetting>();
+    public DbSet<SysFieldValidationRule> SysFieldValidationRules => Set<SysFieldValidationRule>();
 
     // General ledger / chart of accounts & vouchers (tenant schemas)
     public DbSet<GlAccount> GlAccounts => Set<GlAccount>();
@@ -204,6 +120,38 @@ public class OracleDbContext : DbContext
     // Opening balance staging (dedicated OB table)
     public DbSet<GlOpeningBalanceHeader> GlOpeningBalanceHeaders => Set<GlOpeningBalanceHeader>();
     public DbSet<GlOpeningBalanceDetail> GlOpeningBalanceDetails => Set<GlOpeningBalanceDetail>();
+
+    // Tax Engine (Tax master data & audit transactions)
+    public DbSet<TaxCategory> TaxCategories => Set<TaxCategory>();
+    public DbSet<TaxRate> TaxRates => Set<TaxRate>();
+    public DbSet<TaxGroup> TaxGroups => Set<TaxGroup>();
+    public DbSet<TaxGroupItem> TaxGroupItems => Set<TaxGroupItem>();
+    public DbSet<TaxTransaction> TaxTransactions => Set<TaxTransaction>();
+
+    // Inventory & Unified Trade Documents Engine
+    public DbSet<TrxDocType> TrxDocTypes => Set<TrxDocType>();
+    public DbSet<TrxTransactionType> TrxTransactionTypes => Set<TrxTransactionType>();
+    public DbSet<InvItemGroup> InvItemGroups => Set<InvItemGroup>();
+    public DbSet<InvItem> InvItems => Set<InvItem>();
+    public DbSet<InvItemUomConversion> InvItemUomConversions => Set<InvItemUomConversion>();
+    public DbSet<InvItemBarcode> InvItemBarcodes => Set<InvItemBarcode>();
+    public DbSet<InvBomHeader> InvBomHeaders => Set<InvBomHeader>();
+    public DbSet<InvBomLine> InvBomLines => Set<InvBomLine>();
+    public DbSet<InvWarehouse> InvWarehouses => Set<InvWarehouse>();
+    public DbSet<InvZone> InvZones => Set<InvZone>();
+    public DbSet<InvBin> InvBins => Set<InvBin>();
+    public DbSet<InvStockLedgerEntry> InvStockLedgerEntries => Set<InvStockLedgerEntry>();
+    public DbSet<InvStockBalance> InvStockBalances => Set<InvStockBalance>();
+    public DbSet<InvCostLayer> InvCostLayers => Set<InvCostLayer>();
+    public DbSet<InvLotMaster> InvLotMasters => Set<InvLotMaster>();
+    public DbSet<InvSerialMaster> InvSerialMasters => Set<InvSerialMaster>();
+    public DbSet<InvReservation> InvReservations => Set<InvReservation>();
+    public DbSet<TrxDocumentHeader> TrxDocumentHeaders => Set<TrxDocumentHeader>();
+    public DbSet<TrxDocumentLine> TrxDocumentLines => Set<TrxDocumentLine>();
+    public DbSet<InvCountSession> InvCountSessions => Set<InvCountSession>();
+    public DbSet<InvCountLine> InvCountLines => Set<InvCountLine>();
+    public DbSet<InvOpeningBatch> InvOpeningBatches => Set<InvOpeningBatch>();
+    public DbSet<InvOpeningLine> InvOpeningLines => Set<InvOpeningLine>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

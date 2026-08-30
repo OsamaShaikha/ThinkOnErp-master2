@@ -1,9 +1,10 @@
-﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using ThinkOnErp.API.Authorization;
 using ThinkOnErp.Application.Common;
 using ThinkOnErp.Application.DTOs.Accounting.Banking;
 using ThinkOnErp.Application.Services.Accounting;
+using ThinkOnErp.Domain.Constants;
 
 namespace ThinkOnErp.API.Controllers;
 
@@ -32,7 +33,7 @@ public class BankReconciliationController : ControllerBase
         var list = await _bankingService.GetReconciliationsAsync(bankAccountId, fiscalYearId, cancellationToken);
         return Ok(ApiResponse<IReadOnlyList<BankReconciliationDto>>.CreateSuccess(
             list,
-            "تم استرجاع قائمة مذكرات التسوية البنكية بنجاح",
+            ResponseCodes.DataRetrieved,
             200));
     }
 
@@ -45,7 +46,7 @@ public class BankReconciliationController : ControllerBase
         var rec = await _bankingService.GetReconciliationByIdAsync(id, cancellationToken);
         return Ok(ApiResponse<BankReconciliationDto>.CreateSuccess(
             rec,
-            "تم استرجاع تفاصيل مذكرة التسوية البنكية بنجاح",
+            ResponseCodes.DataRetrieved,
             200));
     }
 
@@ -60,7 +61,7 @@ public class BankReconciliationController : ControllerBase
         var rec = await _bankingService.CreateReconciliationAsync(dto, username, cancellationToken);
         return StatusCode(StatusCodes.Status201Created, ApiResponse<BankReconciliationDto>.CreateSuccess(
             rec,
-            "تم إنشاء مذكرة التسوية البنكية واستيراد كشف الحساب بنجاح",
+            ResponseCodes.BankReconciliationCreated,
             201));
     }
 
@@ -75,7 +76,7 @@ public class BankReconciliationController : ControllerBase
         var result = await _bankingService.AutoReconcileAsync(id, username, cancellationToken);
         return Ok(ApiResponse<AutoReconcileResultDto>.CreateSuccess(
             result,
-            "تمت المطابقة البنكية الآلية بنجاح",
+            ResponseCodes.BankReconciliationAutoMatched,
             200));
     }
 
@@ -91,7 +92,7 @@ public class BankReconciliationController : ControllerBase
         var result = await _bankingService.ManualMatchAsync(id, matchDto, username, cancellationToken);
         return Ok(ApiResponse<BankReconciliationDto>.CreateSuccess(
             result,
-            "تمت المطابقة اليدوية لسطر كشف الحساب بنجاح",
+            ResponseCodes.OperationSuccessful,
             200));
     }
 
@@ -104,7 +105,7 @@ public class BankReconciliationController : ControllerBase
         var report = await _bankingService.GetReconciliationStatementReportAsync(id, cancellationToken);
         return Ok(ApiResponse<BankReconciliationStatementDto>.CreateSuccess(
             report,
-            "تم استخراج تقرير مذكرة تسوية البنك الرسمية بنجاح",
+            ResponseCodes.DataRetrieved,
             200));
     }
 }

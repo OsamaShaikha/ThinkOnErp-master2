@@ -8,9 +8,9 @@ public class SysAuditLogConfiguration : IEntityTypeConfiguration<SysAuditLog>
 {
     public void Configure(EntityTypeBuilder<SysAuditLog> builder)
     {
-        builder.ToTable("SYS_AUDIT_LOG");
+        builder.ToTable("SYS_AUDIT_LOG", "THINKON_AUDIT");
         builder.HasKey(e => e.Id);
-        builder.Property(e => e.Id).ValueGeneratedOnAdd();
+        builder.Property(e => e.Id).HasColumnName("ID").ValueGeneratedOnAdd();
         builder.Property(e => e.CorrelationId).HasColumnName("CORRELATION_ID").HasMaxLength(100);
         builder.Property(e => e.ActorType).HasColumnName("ACTOR_TYPE").HasMaxLength(50).IsRequired();
         builder.Property(e => e.ActorId).HasColumnName("ACTOR_ID").IsRequired();
@@ -42,10 +42,6 @@ public class SysAuditLogConfiguration : IEntityTypeConfiguration<SysAuditLog>
         builder.Property(e => e.ErrorCode).HasColumnName("ERROR_CODE").HasMaxLength(100);
         builder.Property(e => e.BusinessDescription).HasColumnName("BUSINESS_DESCRIPTION").HasMaxLength(500);
 
-        builder.HasOne(e => e.System)
-            .WithMany()
-            .HasForeignKey(e => e.SystemId)
-            .HasConstraintName("FK_SYS_AUDIT_LOG_SYSTEM")
-            .OnDelete(DeleteBehavior.SetNull);
+        builder.Ignore(e => e.System);
     }
 }

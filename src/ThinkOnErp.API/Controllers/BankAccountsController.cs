@@ -1,9 +1,10 @@
-﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using ThinkOnErp.API.Authorization;
 using ThinkOnErp.Application.Common;
 using ThinkOnErp.Application.DTOs.Accounting.Banking;
 using ThinkOnErp.Application.Services.Accounting;
+using ThinkOnErp.Domain.Constants;
 
 namespace ThinkOnErp.API.Controllers;
 
@@ -32,7 +33,7 @@ public class BankAccountsController : ControllerBase
         var list = await _bankingService.GetBankAccountsAsync(branchId, activeOnly, cancellationToken);
         return Ok(ApiResponse<IReadOnlyList<BankAccountDto>>.CreateSuccess(
             list,
-            "تم استرجاع قائمة الحسابات البنكية بنجاح",
+            ResponseCodes.BankAccountsRetrieved,
             200));
     }
 
@@ -45,7 +46,7 @@ public class BankAccountsController : ControllerBase
         var account = await _bankingService.GetBankAccountByIdAsync(id, cancellationToken);
         return Ok(ApiResponse<BankAccountDto>.CreateSuccess(
             account,
-            "تم استرجاع بيانات الحساب البنكي بنجاح",
+            ResponseCodes.DataRetrieved,
             200));
     }
 
@@ -60,7 +61,7 @@ public class BankAccountsController : ControllerBase
         var account = await _bankingService.CreateBankAccountAsync(dto, username, cancellationToken);
         return StatusCode(StatusCodes.Status201Created, ApiResponse<BankAccountDto>.CreateSuccess(
             account,
-            "تم إنشاء الحساب البنكي بنجاح",
+            ResponseCodes.BankAccountCreated,
             201));
     }
 
@@ -76,7 +77,7 @@ public class BankAccountsController : ControllerBase
         var account = await _bankingService.UpdateBankAccountAsync(id, dto, username, cancellationToken);
         return Ok(ApiResponse<BankAccountDto>.CreateSuccess(
             account,
-            "تم تحديث بيانات الحساب البنكي بنجاح",
+            ResponseCodes.BankAccountUpdated,
             200));
     }
 }

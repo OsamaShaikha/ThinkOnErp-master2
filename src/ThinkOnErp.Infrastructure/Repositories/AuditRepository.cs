@@ -15,13 +15,13 @@ namespace ThinkOnErp.Infrastructure.Repositories;
 /// </summary>
 public class AuditRepository : IAuditRepository
 {
-    private readonly OracleDbContext _dbContext;
+    private readonly AuditDbContext _dbContext;
     private readonly ILogger<AuditRepository> _logger;
     private readonly IServiceProvider _serviceProvider;
     private IAuditLogIntegrityService? _integrityService;
 
     public AuditRepository(
-        OracleDbContext dbContext, 
+        AuditDbContext dbContext, 
         ILogger<AuditRepository> logger,
         IServiceProvider serviceProvider)
     {

@@ -3,6 +3,7 @@ using Microsoft.Extensions.Logging;
 using System.Diagnostics;
 using System.Text.Json;
 using ThinkOnErp.Application.DTOs.Ticket;
+using ThinkOnErp.Application.Services.Localization;
 using ThinkOnErp.Domain.Entities;
 using ThinkOnErp.Domain.Interfaces;
 
@@ -18,15 +19,18 @@ public class GetTicketsQueryHandler : IRequestHandler<GetTicketsQuery, PagedResu
 {
     private readonly ITicketRepository _ticketRepository;
     private readonly ISearchAnalyticsRepository _searchAnalyticsRepository;
+    private readonly ILocalizationService _localizationService;
     private readonly ILogger<GetTicketsQueryHandler> _logger;
 
     public GetTicketsQueryHandler(
         ITicketRepository ticketRepository,
         ISearchAnalyticsRepository searchAnalyticsRepository,
+        ILocalizationService localizationService,
         ILogger<GetTicketsQueryHandler> logger)
     {
         _ticketRepository = ticketRepository;
         _searchAnalyticsRepository = searchAnalyticsRepository;
+        _localizationService = localizationService;
         _logger = logger;
     }
 
@@ -97,7 +101,9 @@ public class GetTicketsQueryHandler : IRequestHandler<GetTicketsQuery, PagedResu
 
             stopwatch.Stop();
 
-            // Map to DTOs
+            var isArabic = _localizationService.ResolveLanguageId(null) == 1;
+
+            // Map to DTOs with language-aware names and safe fallbacks
             var ticketDtos = tickets.Select(ticket => new TicketDto
             {
                 TicketId = ticket.Id,
@@ -105,21 +111,37 @@ public class GetTicketsQueryHandler : IRequestHandler<GetTicketsQuery, PagedResu
                 TitleEn = ticket.TitleEn,
                 Description = ticket.Description,
                 CompanyId = ticket.CompanyId,
-                CompanyName = ticket.Company?.CompanyNameEn,
+                CompanyName = isArabic 
+                    ? (!string.IsNullOrWhiteSpace(ticket.Company?.CompanyNameAr) ? ticket.Company.CompanyNameAr : ticket.Company?.CompanyNameEn)
+                    : (!string.IsNullOrWhiteSpace(ticket.Company?.CompanyNameEn) ? ticket.Company.CompanyNameEn : ticket.Company?.CompanyNameAr),
                 BranchId = ticket.BranchId,
-                BranchName = ticket.Branch?.BranchNameEn,
+                BranchName = isArabic 
+                    ? (!string.IsNullOrWhiteSpace(ticket.Branch?.BranchNameAr) ? ticket.Branch.BranchNameAr : ticket.Branch?.BranchNameEn)
+                    : (!string.IsNullOrWhiteSpace(ticket.Branch?.BranchNameEn) ? ticket.Branch.BranchNameEn : ticket.Branch?.BranchNameAr),
                 RequesterId = ticket.RequesterId,
-                RequesterName = ticket.Requester?.FullNameEn,
+                RequesterName = isArabic 
+                    ? (!string.IsNullOrWhiteSpace(ticket.Requester?.FullNameAr) ? ticket.Requester.FullNameAr : ticket.Requester?.FullNameEn ?? ticket.CreationUser)
+                    : (!string.IsNullOrWhiteSpace(ticket.Requester?.FullNameEn) ? ticket.Requester.FullNameEn : ticket.Requester?.FullNameAr ?? ticket.CreationUser),
                 AssigneeId = ticket.AssigneeId,
-                AssigneeName = ticket.Assignee?.FullNameEn,
+                AssigneeName = isArabic 
+                    ? (!string.IsNullOrWhiteSpace(ticket.Assignee?.FullNameAr) ? ticket.Assignee.FullNameAr : ticket.Assignee?.FullNameEn)
+                    : (!string.IsNullOrWhiteSpace(ticket.Assignee?.FullNameEn) ? ticket.Assignee.FullNameEn : ticket.Assignee?.FullNameAr),
                 TicketTypeId = ticket.TicketTypeId,
-                TicketTypeName = ticket.TicketType?.TypeNameEn,
+                TicketTypeName = isArabic 
+                    ? (!string.IsNullOrWhiteSpace(ticket.TicketType?.TypeNameAr) ? ticket.TicketType.TypeNameAr : ticket.TicketType?.TypeNameEn)
+                    : (!string.IsNullOrWhiteSpace(ticket.TicketType?.TypeNameEn) ? ticket.TicketType.TypeNameEn : ticket.TicketType?.TypeNameAr),
                 TicketStatusId = ticket.TicketStatusId,
-                TicketStatusName = ticket.TicketStatus?.StatusNameEn,
+                TicketStatusName = isArabic 
+                    ? (!string.IsNullOrWhiteSpace(ticket.TicketStatus?.StatusNameAr) ? ticket.TicketStatus.StatusNameAr : ticket.TicketStatus?.StatusNameEn)
+                    : (!string.IsNullOrWhiteSpace(ticket.TicketStatus?.StatusNameEn) ? ticket.TicketStatus.StatusNameEn : ticket.TicketStatus?.StatusNameAr),
                 TicketPriorityId = ticket.TicketPriorityId,
-                TicketPriorityName = ticket.TicketPriority?.PriorityNameEn,
+                TicketPriorityName = isArabic 
+                    ? (!string.IsNullOrWhiteSpace(ticket.TicketPriority?.PriorityNameAr) ? ticket.TicketPriority.PriorityNameAr : ticket.TicketPriority?.PriorityNameEn)
+                    : (!string.IsNullOrWhiteSpace(ticket.TicketPriority?.PriorityNameEn) ? ticket.TicketPriority.PriorityNameEn : ticket.TicketPriority?.PriorityNameAr),
                 TicketCategoryId = ticket.TicketCategoryId,
-                TicketCategoryName = ticket.TicketCategory?.CategoryNameEn,
+                TicketCategoryName = isArabic 
+                    ? (!string.IsNullOrWhiteSpace(ticket.TicketCategory?.CategoryNameAr) ? ticket.TicketCategory.CategoryNameAr : ticket.TicketCategory?.CategoryNameEn)
+                    : (!string.IsNullOrWhiteSpace(ticket.TicketCategory?.CategoryNameEn) ? ticket.TicketCategory.CategoryNameEn : ticket.TicketCategory?.CategoryNameAr),
                 ExpectedResolutionDate = ticket.ExpectedResolutionDate,
                 ActualResolutionDate = ticket.ActualResolutionDate,
                 IsActive = ticket.IsActive,

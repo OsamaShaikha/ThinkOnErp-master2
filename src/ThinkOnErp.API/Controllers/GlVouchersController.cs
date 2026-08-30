@@ -5,6 +5,7 @@ using ThinkOnErp.API.Authorization;
 using ThinkOnErp.Application.Common;
 using ThinkOnErp.Application.DTOs.Accounting.Vouchers;
 using ThinkOnErp.Application.Services.Accounting;
+using ThinkOnErp.Domain.Constants;
 
 namespace ThinkOnErp.API.Controllers;
 
@@ -39,7 +40,7 @@ public sealed class GlVouchersController : ControllerBase
         CancellationToken cancellationToken)
     {
         var result = await _service.GetPagedVouchersAsync(filter, cancellationToken);
-        return Ok(ApiResponse<PagedResultDto<GlVoucherHeaderDto>>.CreateSuccess(result, "Vouchers retrieved successfully"));
+        return Ok(ApiResponse<PagedResultDto<GlVoucherHeaderDto>>.CreateSuccess(result, ResponseCodes.VouchersRetrieved));
     }
 
     /// <summary>
@@ -55,10 +56,10 @@ public sealed class GlVouchersController : ControllerBase
         var voucher = await _service.GetByIdAsync(id, cancellationToken);
         if (voucher == null)
         {
-            return NotFound(ApiResponse<object>.CreateFailure($"Voucher with ID '{id}' was not found.", statusCode: 404));
+            return NotFound(ApiResponse<object>.CreateFailure(ErrorCodes.VoucherNotFound, statusCode: 404));
         }
 
-        return Ok(ApiResponse<GlVoucherHeaderDto>.CreateSuccess(voucher, "Voucher retrieved successfully"));
+        return Ok(ApiResponse<GlVoucherHeaderDto>.CreateSuccess(voucher, ResponseCodes.VoucherDetailsRetrieved));
     }
 
     /// <summary>
@@ -77,7 +78,7 @@ public sealed class GlVouchersController : ControllerBase
         return CreatedAtAction(
             nameof(GetVoucherById),
             new { id = voucher.Id },
-            ApiResponse<GlVoucherHeaderDto>.CreateSuccess(voucher, "Voucher created successfully", 201));
+            ApiResponse<GlVoucherHeaderDto>.CreateSuccess(voucher, ResponseCodes.VoucherCreated, 201));
     }
 
     /// <summary>
@@ -94,7 +95,7 @@ public sealed class GlVouchersController : ControllerBase
         var username = User.FindFirstValue(ClaimTypes.Name) ?? User.Identity?.Name ?? "API_USER";
         var voucher = await _service.ReviewVoucherAsync(id, username, cancellationToken);
 
-        return Ok(ApiResponse<GlVoucherHeaderDto>.CreateSuccess(voucher, "Voucher reviewed successfully"));
+        return Ok(ApiResponse<GlVoucherHeaderDto>.CreateSuccess(voucher, ResponseCodes.StatusUpdated));
     }
 
     /// <summary>
@@ -111,7 +112,7 @@ public sealed class GlVouchersController : ControllerBase
         var username = User.FindFirstValue(ClaimTypes.Name) ?? User.Identity?.Name ?? "API_USER";
         var voucher = await _service.PostVoucherAsync(id, username, cancellationToken);
 
-        return Ok(ApiResponse<GlVoucherHeaderDto>.CreateSuccess(voucher, "Voucher posted successfully"));
+        return Ok(ApiResponse<GlVoucherHeaderDto>.CreateSuccess(voucher, ResponseCodes.VoucherPosted));
     }
 
     /// <summary>
@@ -129,6 +130,6 @@ public sealed class GlVouchersController : ControllerBase
         var username = User.FindFirstValue(ClaimTypes.Name) ?? User.Identity?.Name ?? "API_USER";
         var reversalVoucher = await _service.ReverseVoucherAsync(id, username, reason, cancellationToken);
 
-        return Ok(ApiResponse<GlVoucherHeaderDto>.CreateSuccess(reversalVoucher, "Voucher reversed successfully"));
+        return Ok(ApiResponse<GlVoucherHeaderDto>.CreateSuccess(reversalVoucher, ResponseCodes.VoucherReversed));
     }
 }

@@ -44,6 +44,7 @@ public class GetAllUsersQueryHandler : IRequestHandler<GetAllUsersQuery, List<Us
                 LastLoginDate = u.LastLoginDate,
                 IsActive = u.IsActive,
                 IsAdmin = u.IsAdmin,
+                DefaultLang = u.DefaultLang,
                 CreationUser = u.CreationUser,
                 CreationDate = u.CreationDate,
                 UpdateUser = u.UpdateUser,

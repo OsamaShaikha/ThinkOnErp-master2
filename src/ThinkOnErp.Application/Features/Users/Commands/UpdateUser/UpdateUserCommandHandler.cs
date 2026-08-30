@@ -71,6 +71,7 @@ public class UpdateUserCommandHandler : IRequestHandler<UpdateUserCommand, Int64
             CompanyId = primaryBranch?.CompanyId,
             Email = request.Email,
             IsAdmin = request.IsAdmin,
+            DefaultLang = request.DefaultLang > 0 ? request.DefaultLang : 1,
             UpdateUser = request.UpdateUser,
             UpdateDate = DateTime.UtcNow
         };
