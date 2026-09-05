@@ -1,4 +1,4 @@
-﻿using System.Linq;
+using System.Linq;
 using ThinkOnErp.Application.DTOs.Inventory.Documents;
 using ThinkOnErp.Domain.Entities.Inventory;
 
@@ -40,6 +40,7 @@ public static class TrxDocumentMapper
         int lineNo = 1;
         decimal gross = 0;
         decimal totalTax = 0;
+        decimal totalCost = 0;
 
         foreach (var l in dto.Lines)
         {
@@ -51,8 +52,14 @@ public static class TrxDocumentMapper
             var taxAmt = lineNet * (l.TaxRate / 100m);
             var lineTotal = lineNet + taxAmt;
 
+            var activeCostQty = l.QuantityOut > 0 ? l.QuantityOut : (l.QuantityIn > 0 ? l.QuantityIn : 0);
+            var lineCost = activeCostQty * l.UnitCost;
+            var lineProfit = l.QuantityOut > 0 ? (lineNet - lineCost) : 0;
+            var marginPct = (l.QuantityOut > 0 && lineNet > 0) ? (lineProfit / lineNet) * 100m : 0;
+
             gross += lineGross;
             totalTax += taxAmt;
+            if (l.QuantityOut > 0) totalCost += lineCost;
 
             header.Lines.Add(new TrxDocumentLine
             {
@@ -72,6 +79,9 @@ public static class TrxDocumentMapper
                 BaseQuantityOut = baseQtyOut,
                 UnitPrice = l.UnitPrice,
                 UnitCost = l.UnitCost,
+                LineCost = lineCost,
+                LineProfit = lineProfit,
+                ProfitMarginPercent = Math.Round(marginPct, 4),
                 DiscountPercent = l.DiscountPercent,
                 DiscountAmount = l.DiscountAmount,
                 TaxRate = l.TaxRate,
@@ -91,6 +101,9 @@ public static class TrxDocumentMapper
         header.TotalNetBeforeTax = gross - dto.DiscountAmount;
         header.TaxAmount = totalTax;
         header.TotalNet = header.TotalNetBeforeTax + totalTax;
+        header.TotalCost = totalCost;
+        header.TotalProfit = header.TotalNetBeforeTax - totalCost;
+        header.ProfitMarginPercent = header.TotalNetBeforeTax > 0 ? Math.Round((header.TotalProfit / header.TotalNetBeforeTax) * 100m, 4) : 0;
         header.RemainingAmount = header.TotalNet - header.PaidAmount;
 
         return header;
@@ -125,6 +138,9 @@ public static class TrxDocumentMapper
             TotalNetBeforeTax = entity.TotalNetBeforeTax,
             TaxAmount = entity.TaxAmount,
             TotalNet = entity.TotalNet,
+            TotalCost = entity.TotalCost,
+            TotalProfit = entity.TotalProfit,
+            ProfitMarginPercent = entity.ProfitMarginPercent,
             PaidAmount = entity.PaidAmount,
             RemainingAmount = entity.RemainingAmount,
             BaseBranchId = entity.BaseBranchId,
@@ -156,6 +172,9 @@ public static class TrxDocumentMapper
                 BaseQuantityOut = l.BaseQuantityOut,
                 UnitPrice = l.UnitPrice,
                 UnitCost = l.UnitCost,
+                LineCost = l.LineCost,
+                LineProfit = l.LineProfit,
+                ProfitMarginPercent = l.ProfitMarginPercent,
                 DiscountPercent = l.DiscountPercent,
                 DiscountAmount = l.DiscountAmount,
                 TaxRate = l.TaxRate,

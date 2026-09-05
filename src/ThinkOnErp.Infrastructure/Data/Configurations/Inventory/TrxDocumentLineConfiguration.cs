@@ -32,6 +32,9 @@ public sealed class TrxDocumentLineConfiguration : IEntityTypeConfiguration<TrxD
 
         builder.Property(l => l.UnitPrice).HasColumnName("UNIT_PRICE").HasColumnType("NUMBER(18,4)").HasDefaultValue(0m);
         builder.Property(l => l.UnitCost).HasColumnName("UNIT_COST").HasColumnType("NUMBER(18,4)").HasDefaultValue(0m);
+        builder.Property(l => l.LineCost).HasColumnName("LINE_COST").HasColumnType("NUMBER(18,4)").HasDefaultValue(0m);
+        builder.Property(l => l.LineProfit).HasColumnName("LINE_PROFIT").HasColumnType("NUMBER(18,4)").HasDefaultValue(0m);
+        builder.Property(l => l.ProfitMarginPercent).HasColumnName("PROFIT_MARGIN_PERCENT").HasColumnType("NUMBER(9,4)").HasDefaultValue(0m);
         builder.Property(l => l.DiscountPercent).HasColumnName("DISCOUNT_PERCENT").HasColumnType("NUMBER(7,4)").HasDefaultValue(0m);
         builder.Property(l => l.DiscountAmount).HasColumnName("DISCOUNT_AMOUNT").HasColumnType("NUMBER(18,4)").HasDefaultValue(0m);
         builder.Property(l => l.TaxRate).HasColumnName("TAX_RATE").HasColumnType("NUMBER(7,4)").HasDefaultValue(0m);

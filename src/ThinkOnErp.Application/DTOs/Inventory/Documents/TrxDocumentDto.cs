@@ -30,6 +30,9 @@ public sealed class TrxDocumentDto
     public decimal TotalNetBeforeTax { get; set; }
     public decimal TaxAmount { get; set; }
     public decimal TotalNet { get; set; }
+    public decimal TotalCost { get; set; }
+    public decimal TotalProfit { get; set; }
+    public decimal ProfitMarginPercent { get; set; }
     public decimal PaidAmount { get; set; }
     public decimal RemainingAmount { get; set; }
     public long? BaseBranchId { get; set; }
@@ -65,6 +68,9 @@ public sealed class TrxDocumentLineDto
     public decimal BaseQuantityOut { get; set; }
     public decimal UnitPrice { get; set; }
     public decimal UnitCost { get; set; }
+    public decimal LineCost { get; set; }
+    public decimal LineProfit { get; set; }
+    public decimal ProfitMarginPercent { get; set; }
     public decimal DiscountPercent { get; set; }
     public decimal DiscountAmount { get; set; }
     public decimal TaxRate { get; set; }

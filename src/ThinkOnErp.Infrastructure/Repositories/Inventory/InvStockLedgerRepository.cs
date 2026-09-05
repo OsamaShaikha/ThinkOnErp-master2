@@ -96,6 +96,27 @@ public sealed class InvStockLedgerRepository : IInvStockLedgerRepository
         return (entries, totalCount);
     }
 
+    public async Task<IReadOnlyList<InvStockLedgerEntry>> GetChronologicalMovementsAsync(
+        long itemId,
+        long? warehouseId = null,
+        DateTime? fromDate = null,
+        CancellationToken cancellationToken = default)
+    {
+        var query = _context.InvStockLedgerEntries
+            .Where(e => e.ItemId == itemId);
+
+        if (warehouseId.HasValue)
+            query = query.Where(e => e.WarehouseId == warehouseId.Value);
+
+        if (fromDate.HasValue)
+            query = query.Where(e => e.TransactionDate >= fromDate.Value);
+
+        return await query
+            .OrderBy(e => e.TransactionDate)
+            .ThenBy(e => e.Id)
+            .ToListAsync(cancellationToken);
+    }
+
     public async Task SaveChangesAsync(CancellationToken cancellationToken = default)
     {
         await _context.SaveChangesAsync(cancellationToken);

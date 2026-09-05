@@ -102,6 +102,7 @@ public sealed class TrxDocumentService : ITrxDocumentService
             int lineNo = 1;
             decimal gross = 0;
             decimal totalTax = 0;
+            decimal totalCost = 0;
 
             foreach (var l in dto.Lines)
             {
@@ -113,8 +114,14 @@ public sealed class TrxDocumentService : ITrxDocumentService
                 var taxAmt = lineNet * (l.TaxRate / 100m);
                 var lineTotal = lineNet + taxAmt;
 
+                var activeCostQty = l.QuantityOut > 0 ? l.QuantityOut : (l.QuantityIn > 0 ? l.QuantityIn : 0);
+                var lineCost = activeCostQty * l.UnitCost;
+                var lineProfit = l.QuantityOut > 0 ? (lineNet - lineCost) : 0;
+                var marginPct = (l.QuantityOut > 0 && lineNet > 0) ? (lineProfit / lineNet) * 100m : 0;
+
                 gross += lineGross;
                 totalTax += taxAmt;
+                if (l.QuantityOut > 0) totalCost += lineCost;
 
                 doc.Lines.Add(new TrxDocumentLine
                 {
@@ -134,6 +141,9 @@ public sealed class TrxDocumentService : ITrxDocumentService
                     BaseQuantityOut = baseQtyOut,
                     UnitPrice = l.UnitPrice,
                     UnitCost = l.UnitCost,
+                    LineCost = lineCost,
+                    LineProfit = lineProfit,
+                    ProfitMarginPercent = Math.Round(marginPct, 4),
                     DiscountPercent = l.DiscountPercent,
                     DiscountAmount = l.DiscountAmount,
                     TaxRate = l.TaxRate,
@@ -153,6 +163,9 @@ public sealed class TrxDocumentService : ITrxDocumentService
             doc.TotalNetBeforeTax = gross - doc.DiscountAmount;
             doc.TaxAmount = totalTax;
             doc.TotalNet = doc.TotalNetBeforeTax + totalTax;
+            doc.TotalCost = totalCost;
+            doc.TotalProfit = doc.TotalNetBeforeTax - totalCost;
+            doc.ProfitMarginPercent = doc.TotalNetBeforeTax > 0 ? Math.Round((doc.TotalProfit / doc.TotalNetBeforeTax) * 100m, 4) : 0;
             doc.RemainingAmount = doc.TotalNet - doc.PaidAmount;
         }
 
@@ -186,6 +199,8 @@ public sealed class TrxDocumentService : ITrxDocumentService
             return ApiResponse<TrxDocumentDto>.CreateFailure("Only draft documents can be posted", null, 400);
 
         var trxType = await _typeRepository.GetTrxTypeAsync(doc.TrxType, ct);
+        decimal totalCost = 0;
+
         if (trxType != null && trxType.AffectsStock)
         {
             foreach (var line in doc.Lines)
@@ -208,8 +223,16 @@ public sealed class TrxDocumentService : ITrxDocumentService
                                 SourceDocId = doc.DocNo,
                                 Notes = $"Auto BOM explosion for {item.ItemCode}"
                             };
-                            await _stockLedgerService.PostMovementAsync(moveReq, ct);
+                            var moveResp = await _stockLedgerService.PostMovementAsync(moveReq, ct);
+                            if (moveResp.Success && moveResp.Data != null)
+                            {
+                                line.UnitCost += (moveResp.Data.UnitCost * comp.Quantity);
+                            }
                         }
+                        line.LineCost = line.QuantityOut * line.UnitCost;
+                        var lineNet = (line.QuantityOut * line.UnitPrice) - line.DiscountAmount;
+                        line.LineProfit = lineNet - line.LineCost;
+                        line.ProfitMarginPercent = lineNet > 0 ? Math.Round((line.LineProfit / lineNet) * 100m, 4) : 0;
                     }
                 }
                 else
@@ -227,10 +250,30 @@ public sealed class TrxDocumentService : ITrxDocumentService
                         SerialNumber = line.SerialNumber,
                         SourceDocId = doc.DocNo
                     };
-                    await _stockLedgerService.PostMovementAsync(moveReq, ct);
+                    var moveResp = await _stockLedgerService.PostMovementAsync(moveReq, ct);
+                    if (moveResp.Success && moveResp.Data != null && moveResp.Data.UnitCost > 0)
+                    {
+                        line.UnitCost = moveResp.Data.UnitCost;
+                        line.LineCost = (line.QuantityOut > 0 ? line.QuantityOut : line.QuantityIn) * line.UnitCost;
+                        if (line.QuantityOut > 0)
+                        {
+                            var lineNet = (line.QuantityOut * line.UnitPrice) - line.DiscountAmount;
+                            line.LineProfit = lineNet - line.LineCost;
+                            line.ProfitMarginPercent = lineNet > 0 ? Math.Round((line.LineProfit / lineNet) * 100m, 4) : 0;
+                        }
+                    }
                 }
+
+                if (line.QuantityOut > 0) totalCost += line.LineCost;
             }
             doc.IsPostedStock = true;
+        }
+
+        if (totalCost > 0 || doc.TotalCost == 0)
+        {
+            doc.TotalCost = totalCost > 0 ? totalCost : doc.Lines.Where(l => l.QuantityOut > 0).Sum(l => l.LineCost);
+            doc.TotalProfit = doc.TotalNetBeforeTax - doc.TotalCost;
+            doc.ProfitMarginPercent = doc.TotalNetBeforeTax > 0 ? Math.Round((doc.TotalProfit / doc.TotalNetBeforeTax) * 100m, 4) : 0;
         }
 
         doc.DocStatusCode = 3; // Posted

@@ -26,6 +26,9 @@ public sealed class TrxDocumentHeader
     public decimal TotalNetBeforeTax { get; set; }
     public decimal TaxAmount { get; set; }
     public decimal TotalNet { get; set; }
+    public decimal TotalCost { get; set; }
+    public decimal TotalProfit { get; set; }
+    public decimal ProfitMarginPercent { get; set; }
     public decimal PaidAmount { get; set; }
     public decimal RemainingAmount { get; set; }
     public long? BaseBranchId { get; set; }

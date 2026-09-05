@@ -21,5 +21,10 @@ public interface IInvStockLedgerRepository
         int pageIndex,
         int pageSize,
         CancellationToken cancellationToken = default);
+    Task<IReadOnlyList<InvStockLedgerEntry>> GetChronologicalMovementsAsync(
+        long itemId,
+        long? warehouseId = null,
+        DateTime? fromDate = null,
+        CancellationToken cancellationToken = default);
     Task SaveChangesAsync(CancellationToken cancellationToken = default);
 }

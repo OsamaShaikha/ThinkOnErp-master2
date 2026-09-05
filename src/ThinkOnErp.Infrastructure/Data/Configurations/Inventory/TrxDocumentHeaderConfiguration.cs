@@ -38,6 +38,9 @@ public sealed class TrxDocumentHeaderConfiguration : IEntityTypeConfiguration<Tr
         builder.Property(h => h.TotalNetBeforeTax).HasColumnName("TOTAL_NET_BEFORE_TAX").HasColumnType("NUMBER(18,4)").HasDefaultValue(0m);
         builder.Property(h => h.TaxAmount).HasColumnName("TAX_AMOUNT").HasColumnType("NUMBER(18,4)").HasDefaultValue(0m);
         builder.Property(h => h.TotalNet).HasColumnName("TOTAL_NET").HasColumnType("NUMBER(18,4)").HasDefaultValue(0m);
+        builder.Property(h => h.TotalCost).HasColumnName("TOTAL_COST").HasColumnType("NUMBER(18,4)").HasDefaultValue(0m);
+        builder.Property(h => h.TotalProfit).HasColumnName("TOTAL_PROFIT").HasColumnType("NUMBER(18,4)").HasDefaultValue(0m);
+        builder.Property(h => h.ProfitMarginPercent).HasColumnName("PROFIT_MARGIN_PERCENT").HasColumnType("NUMBER(9,4)").HasDefaultValue(0m);
         builder.Property(h => h.PaidAmount).HasColumnName("PAID_AMOUNT").HasColumnType("NUMBER(18,4)").HasDefaultValue(0m);
         builder.Property(h => h.RemainingAmount).HasColumnName("REMAINING_AMOUNT").HasColumnType("NUMBER(18,4)").HasDefaultValue(0m);
 

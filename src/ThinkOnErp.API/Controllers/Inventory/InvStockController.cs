@@ -30,17 +30,20 @@ public class InvStockController : ControllerBase
     private readonly IInvStockBalanceRepository _stockBalanceRepository;
     private readonly IInvAtpCalculator _atpCalculator;
     private readonly IInvReconciliationService _reconciliationService;
+    private readonly IInvCostingEngine _costingEngine;
 
     public InvStockController(
         IInvStockLedgerService stockLedgerService,
         IInvStockBalanceRepository stockBalanceRepository,
         IInvAtpCalculator atpCalculator,
-        IInvReconciliationService reconciliationService)
+        IInvReconciliationService reconciliationService,
+        IInvCostingEngine costingEngine)
     {
         _stockLedgerService = stockLedgerService;
         _stockBalanceRepository = stockBalanceRepository;
         _atpCalculator = atpCalculator;
         _reconciliationService = reconciliationService;
+        _costingEngine = costingEngine;
     }
 
     /// <summary>
@@ -181,6 +184,24 @@ public class InvStockController : ControllerBase
         var response = await _reconciliationService.RunReconciliationCheckAsync(cancellationToken);
         if (response.Success)
             response.Message = ResponseCodes.StockReconciliationCompleted;
+
+        return StatusCode(response.StatusCode, response);
+    }
+
+    /// <summary>
+    /// Replays chronological stock transactions to recalculate running average costs, rebuild ledger valuations, and correct historical invoice costs.
+    /// </summary>
+    /// <param name="request">Recalculation filter payload.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>Batch execution summary with affected items and movements.</returns>
+    [HttpPost("recalculate-cost")]
+    [ProducesResponseType(typeof(ApiResponse<RecalculateCostResultDto>), StatusCodes.Status200OK)]
+    public async Task<IActionResult> RecalculateCost([FromBody] RecalculateCostRequestDto request, CancellationToken cancellationToken)
+    {
+        var username = User.FindFirst(ClaimTypes.Name)?.Value ?? "SYSTEM";
+        var response = await _costingEngine.RecalculateCostBatchAsync(request, username, cancellationToken);
+        if (response.Success)
+            response.Message = ResponseCodes.OperationSuccessful;
 
         return StatusCode(response.StatusCode, response);
     }

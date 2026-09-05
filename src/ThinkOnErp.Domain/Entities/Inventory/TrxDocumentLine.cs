@@ -20,6 +20,9 @@ public sealed class TrxDocumentLine
     public decimal BaseQuantityOut { get; set; }
     public decimal UnitPrice { get; set; }
     public decimal UnitCost { get; set; }
+    public decimal LineCost { get; set; }
+    public decimal LineProfit { get; set; }
+    public decimal ProfitMarginPercent { get; set; }
     public decimal DiscountPercent { get; set; }
     public decimal DiscountAmount { get; set; }
     public decimal TaxRate { get; set; }
