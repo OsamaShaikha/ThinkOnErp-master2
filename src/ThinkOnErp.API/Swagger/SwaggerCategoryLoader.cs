@@ -105,6 +105,9 @@ public class SwaggerCategoryLoader
         if (string.Equals(documentName, ApiCategories.Company, StringComparison.OrdinalIgnoreCase) && relativePath?.StartsWith("api/companies", StringComparison.OrdinalIgnoreCase) == true)
             return true;
 
+        if (relativePath?.StartsWith("api/hr", StringComparison.OrdinalIgnoreCase) == true)
+            return string.Equals(documentName, ApiCategories.Hr, StringComparison.OrdinalIgnoreCase);
+
         return string.Equals(documentName, ApiCategories.System, StringComparison.OrdinalIgnoreCase);
     }
 
@@ -155,6 +158,7 @@ public class SwaggerCategoryLoader
                         else if (routePath.StartsWith("api/superadmin", StringComparison.OrdinalIgnoreCase)) category = ApiCategories.SuperAdmin;
                         else if (routePath.StartsWith("api/auth", StringComparison.OrdinalIgnoreCase)) category = ApiCategories.Auth;
                         else if (routePath.StartsWith("api/companies", StringComparison.OrdinalIgnoreCase)) category = ApiCategories.Company;
+                        else if (routePath.StartsWith("api/hr", StringComparison.OrdinalIgnoreCase)) category = ApiCategories.Hr;
                         else category = ApiCategories.System;
                     }
 
@@ -289,12 +293,12 @@ public class SwaggerCategoryLoader
         var defaults = new List<(string Code, string Title, string Desc, int Order, string Controllers)>
         {
             (ApiCategories.SuperAdmin, "1. SuperAdmin API", "Platform-wide management: super admin accounts, company/branch registry, schema provisioning & sync.", 1, "SuperAdminController,SuperAdminAuthController"),
-            (ApiCategories.Company, "2. Company & Tenant Management API", "Tenant-specific company management: company registration, default branch configuration, branch access, company permissions, and DEV_TEMPLATE schema export.", 2, "CompanyController,BranchController,BranchAccessController,CompanyPermissionsController"),
-            (ApiCategories.Accounting, "3. Accounting & COA API", "Accounting operations: chart of accounts CRUD, level 1/2 categories, next child code generator, COA Excel validation/import, postable accounts, fiscal years, and currency reference data.", 3, "GlAccountsController,AccountCategoriesController,CoaImportController,CurrencyController,FiscalYearController"),
+            (ApiCategories.Accounting, "3. Accounting & COA API", "Accounting operations: chart of accounts CRUD, level 1/2 categories, next child code generator, COA Excel validation/import, postable accounts, fiscal years, vouchers, receipts, payments, customers, vendors, PDC cheques, bank accounts, cash registers, bank reconciliations, fiscal closing, opening balances, account statements, and financial reports.", 3, "GlAccountsController,AccountCategoriesController,CoaImportController,CurrencyController,FiscalYearController,FiscalPeriodsController,CostCentersController,GlVouchersController,ReceiptsController,PaymentsController,CustomersController,VendorsController,PdcController,PdcRegisterController,BankAccountsController,CashRegistersController,BankReconciliationController,PostingRulesController,AccountBalancesController,FiscalClosingController,SubledgerController,GlReportsController,FinancialReportsController,GlAccountStructureController,VoucherTypesController,OpeningBalancesController,AccountStatementController"),
             (ApiCategories.Auth, "4. Auth & Security API", "Authentication and Authorization: login, JWT tokens, user management, roles, and fine-grained permissions.", 4, "AuthController,UsersController,RolesController,PermissionsController"),
             (ApiCategories.Audit, "5. Audit & Security Monitoring API", "Audit and monitoring: audit logs, entity audit trail, audit health, threat alerts, performance metrics, compliance reporting, and key management.", 5, "AuditLogsController,AuditTrailController,AuditHealthController,AlertsController,MonitoringController,ComplianceController,KeyManagementController"),
             (ApiCategories.Support, "6. Tickets & Support API", "Customer support & ticket management: support tickets, ticket status, and ticket types.", 6, "TicketsController,TicketTypesController"),
-            (ApiCategories.System, "7. System Settings & Codes API", "System configuration & metadata: system lookup codes, global settings, modules, screens, feature toggles, health checks, document uploads, and saved searches.", 7, "SysCodesController,SysSettingsController,ModulesController,ScreensController,FeaturesController,HealthController,DocumentsController,ConfigurationController,SavedSearchesController")
+            (ApiCategories.System, "7. System Settings & Codes API", "System configuration & metadata: system lookup codes, global settings, modules, screens, feature toggles, health checks, document uploads, and saved searches.", 7, "SysCodesController,SysSettingsController,ModulesController,ScreensController,FeaturesController,HealthController,DocumentsController,ConfigurationController,SavedSearchesController"),
+            (ApiCategories.Hr, "8. Human Resources & Payroll API", "Human resources, organizational structure, employee master, recruitment ATS, attendance, leave management, compensation, payroll engine, end-of-service gratuity, statutory reporting, expenses, assets, work calendars, overtime rules, proration policies, and self-service portals.", 8, "StatutoryRulesController,DepartmentsController,JobGradesController,PositionsController,EmployeesController,EmployeeDocumentsController,RecruitmentController,AttendanceController,LeaveController,CompensationController,PayrollController,EndOfServiceController,StatutoryReportingController,ExpenseClaimsController,AssetAssignmentsController,SelfServiceController,WorkCalendarsController,AttendanceCorrectionsController,PayrollPoliciesController,LoansController")
         };
 
         foreach (var d in defaults)

@@ -5,6 +5,7 @@ using System.Reflection;
 using ThinkOnErp.Application.Behaviors;
 using ThinkOnErp.Application.Services;
 using ThinkOnErp.Application.Services.Accounting;
+using ThinkOnErp.Application.Services.Hr;
 
 namespace ThinkOnErp.Application;
 
@@ -46,6 +47,36 @@ public static class DependencyInjection
         services.AddScoped<IOpeningBalanceService, OpeningBalanceService>();
         services.AddScoped<IAccountStatementService, AccountStatementService>();
 
+        // Register HR & Payroll services
+        services.AddScoped<IStatutoryRuleService, StatutoryRuleService>();
+        services.AddScoped<IDepartmentService, DepartmentService>();
+        services.AddScoped<IJobGradeService, JobGradeService>();
+        services.AddScoped<IPositionService, PositionService>();
+        services.AddScoped<IEmployeeService, EmployeeService>();
+        services.AddScoped<IEmployeeDocumentService, EmployeeDocumentService>();
+        services.AddScoped<IAttendanceService, AttendanceService>();
+        services.AddScoped<ILeaveService, LeaveService>();
+        services.AddScoped<ICompensationService, CompensationService>();
+        services.AddScoped<IWorkCalendarService, WorkCalendarService>();
+        services.AddScoped<IAttendanceCalculationEngine, AttendanceCalculationEngine>();
+        services.AddScoped<IAttendanceCorrectionService, AttendanceCorrectionService>();
+        services.AddScoped<IOvertimeCalculationService, OvertimeCalculationService>();
+        services.AddScoped<IPayrollProrationService, PayrollProrationService>();
+        services.AddScoped<ITaxCalculationEngine, TaxCalculationEngine>();
+        services.AddScoped<ISSCCalculationService, SSCCalculationService>();
+        services.AddScoped<ILoanDeductionService, LoanDeductionService>();
+        services.AddScoped<IPayrollValidationService, PayrollValidationService>();
+        services.AddScoped<IPayrollCalculationEngine, PayrollCalculationEngine>();
+        services.AddScoped<IPayrollExplanationService, PayrollExplanationService>();
+        services.AddScoped<IPayrollService, PayrollService>();
+        services.AddScoped<IEndOfServiceService, EndOfServiceService>();
+        services.AddScoped<IStatutoryReportingService, StatutoryReportingService>();
+        services.AddScoped<IRecruitmentService, RecruitmentService>();
+        services.AddScoped<IExpenseClaimService, ExpenseClaimService>();
+        services.AddScoped<IAssetAssignmentService, AssetAssignmentService>();
+        services.AddScoped<ISelfServiceService, SelfServiceService>();
+
         return services;
     }
 }
+

@@ -182,6 +182,29 @@ public static class DependencyInjection
         services.AddScoped<IPolicyRepository, PolicyRepository>();
         services.AddScoped<IPayrollPeriodRepository, PayrollPeriodRepository>();
 
+        // Register HR & Payroll repositories
+        services.AddScoped<IStatutoryRuleRepository, StatutoryRuleRepository>();
+        services.AddScoped<IDepartmentRepository, DepartmentRepository>();
+        services.AddScoped<IJobGradeRepository, JobGradeRepository>();
+        services.AddScoped<IPositionRepository, PositionRepository>();
+        services.AddScoped<IEmployeeRepository, EmployeeRepository>();
+        services.AddScoped<IEmployeeDependentRepository, EmployeeDependentRepository>();
+        services.AddScoped<IEmployeeDocumentRepository, EmployeeDocumentRepository>();
+        services.AddScoped<IEmploymentEventRepository, EmploymentEventRepository>();
+        services.AddScoped<IAttendanceRepository, AttendanceRepository>();
+        services.AddScoped<ILeaveRepository, LeaveRepository>();
+        services.AddScoped<ICompensationRepository, CompensationRepository>();
+        services.AddScoped<IPayrollRepository, PayrollRepository>();
+        services.AddScoped<IEndOfServiceRepository, EndOfServiceRepository>();
+        services.AddScoped<IRecruitmentRepository, RecruitmentRepository>();
+        services.AddScoped<IExpenseClaimRepository, ExpenseClaimRepository>();
+        services.AddScoped<IAssetAssignmentRepository, AssetAssignmentRepository>();
+        services.AddScoped<IWorkCalendarRepository, WorkCalendarRepository>();
+        services.AddScoped<IAttendanceCorrectionRepository, AttendanceCorrectionRepository>();
+        services.AddScoped<ILoanRepository, LoanRepository>();
+        services.AddScoped<IPolicyRepository, PolicyRepository>();
+        services.AddScoped<IPayrollPeriodRepository, PayrollPeriodRepository>();
+
         // Register audit logging services
         services.AddScoped<IAuditRepository, AuditRepository>();
         services.AddScoped<ISensitiveDataMasker, SensitiveDataMasker>();
