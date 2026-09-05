@@ -137,8 +137,7 @@ public sealed class EndOfServiceService : IEndOfServiceService
                 Debit = totalAccrued,
                 LocalDebit = totalAccrued,
                 BaseDebit = totalAccrued,
-                Description = $"End-of-Service Expense Accrual for {payPeriod}",
-                BranchId = 1
+                Description = $"End-of-Service Expense Accrual for {payPeriod}"
             });
 
             // Credit: 223101 End-of-Service Provision Liability
@@ -149,8 +148,7 @@ public sealed class EndOfServiceService : IEndOfServiceService
                 Credit = totalAccrued,
                 LocalCredit = totalAccrued,
                 BaseCredit = totalAccrued,
-                Description = $"End-of-Service Provision Accrual for {payPeriod}",
-                BranchId = 1
+                Description = $"End-of-Service Provision Accrual for {payPeriod}"
             });
 
             await _glVoucherRepository.AddVoucherAsync(voucher);
@@ -328,8 +326,7 @@ public sealed class EndOfServiceService : IEndOfServiceService
                 Debit = settlement.EndOfServiceGratuity,
                 LocalDebit = settlement.EndOfServiceGratuity,
                 BaseDebit = settlement.EndOfServiceGratuity,
-                Description = $"EOS Gratuity for {settlement.EmployeeCode}",
-                BranchId = 1
+                Description = $"EOS Gratuity for {settlement.EmployeeCode}"
             });
         }
 
@@ -344,8 +341,7 @@ public sealed class EndOfServiceService : IEndOfServiceService
                 Debit = otherEntitlements,
                 LocalDebit = otherEntitlements,
                 BaseDebit = otherEntitlements,
-                Description = $"Leave Encashment / Notice Pay for {settlement.EmployeeCode}",
-                BranchId = 1
+                Description = $"Leave Encashment / Notice Pay for {settlement.EmployeeCode}"
             });
         }
 
@@ -357,8 +353,7 @@ public sealed class EndOfServiceService : IEndOfServiceService
             Credit = settlement.NetSettlementAmount,
             LocalCredit = settlement.NetSettlementAmount,
             BaseCredit = settlement.NetSettlementAmount,
-            Description = $"Net Final Settlement Payable for {settlement.EmployeeCode}",
-            BranchId = 1
+            Description = $"Net Final Settlement Payable for {settlement.EmployeeCode}"
         });
 
         // Credit: 113101 Employee Advances / Loan Recovery
@@ -371,8 +366,7 @@ public sealed class EndOfServiceService : IEndOfServiceService
                 Credit = settlement.TotalDeductions,
                 LocalCredit = settlement.TotalDeductions,
                 BaseCredit = settlement.TotalDeductions,
-                Description = $"Loan & Deductions Recovery for {settlement.EmployeeCode}",
-                BranchId = 1
+                Description = $"Loan & Deductions Recovery for {settlement.EmployeeCode}"
             });
         }
 

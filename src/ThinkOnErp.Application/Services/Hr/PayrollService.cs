@@ -268,8 +268,7 @@ public sealed class PayrollService : IPayrollService
             Debit = run.TotalGrossSalary,
             LocalDebit = run.TotalGrossSalary,
             BaseDebit = run.TotalGrossSalary,
-            Description = $"Salaries & Wages for {run.PayPeriod}",
-            BranchId = branchId
+            Description = $"Salaries & Wages for {run.PayPeriod}"
         });
 
         // Debit: Employer Social Security Expense
@@ -280,8 +279,7 @@ public sealed class PayrollService : IPayrollService
             Debit = run.TotalEmployerSsc,
             LocalDebit = run.TotalEmployerSsc,
             BaseDebit = run.TotalEmployerSsc,
-            Description = $"Employer Social Security Contribution for {run.PayPeriod}",
-            BranchId = branchId
+            Description = $"Employer Social Security Contribution for {run.PayPeriod}"
         });
 
         // Credit: Salaries Payable (Net Pay)
@@ -292,8 +290,7 @@ public sealed class PayrollService : IPayrollService
             Credit = run.TotalNetSalary,
             LocalCredit = run.TotalNetSalary,
             BaseCredit = run.TotalNetSalary,
-            Description = $"Net Salaries Payable for {run.PayPeriod}",
-            BranchId = branchId
+            Description = $"Net Salaries Payable for {run.PayPeriod}"
         });
 
         // Credit: Social Security Payable (Employee + Employer)
@@ -305,8 +302,7 @@ public sealed class PayrollService : IPayrollService
             Credit = totalSsc,
             LocalCredit = totalSsc,
             BaseCredit = totalSsc,
-            Description = $"Social Security Withholdings & Contributions for {run.PayPeriod}",
-            BranchId = branchId
+            Description = $"Social Security Withholdings & Contributions for {run.PayPeriod}"
         });
 
         // Credit: Income Tax Payable (Income tax + National surcharge)
@@ -320,8 +316,7 @@ public sealed class PayrollService : IPayrollService
                 Credit = totalTax,
                 LocalCredit = totalTax,
                 BaseCredit = totalTax,
-                Description = $"Employee Income Tax Withheld for {run.PayPeriod}",
-                BranchId = branchId
+                Description = $"Employee Income Tax Withheld for {run.PayPeriod}"
             });
         }
 
@@ -335,8 +330,7 @@ public sealed class PayrollService : IPayrollService
                 Credit = run.TotalOtherDeductions,
                 LocalCredit = run.TotalOtherDeductions,
                 BaseCredit = run.TotalOtherDeductions,
-                Description = $"Other Deductions & Loans for {run.PayPeriod}",
-                BranchId = branchId
+                Description = $"Other Deductions & Loans for {run.PayPeriod}"
             });
         }
 
@@ -436,8 +430,7 @@ public sealed class PayrollService : IPayrollService
             Credit = run.TotalGrossSalary,
             LocalCredit = run.TotalGrossSalary,
             BaseCredit = run.TotalGrossSalary,
-            Description = $"Reversal: Salaries & Wages for {run.PayPeriod}",
-            BranchId = branchId
+            Description = $"Reversal: Salaries & Wages for {run.PayPeriod}"
         });
 
         revVoucher.Details.Add(new GlVoucherDetail
@@ -447,8 +440,7 @@ public sealed class PayrollService : IPayrollService
             Credit = run.TotalEmployerSsc,
             LocalCredit = run.TotalEmployerSsc,
             BaseCredit = run.TotalEmployerSsc,
-            Description = $"Reversal: Employer SSC for {run.PayPeriod}",
-            BranchId = branchId
+            Description = $"Reversal: Employer SSC for {run.PayPeriod}"
         });
 
         revVoucher.Details.Add(new GlVoucherDetail
@@ -458,8 +450,7 @@ public sealed class PayrollService : IPayrollService
             Debit = run.TotalNetSalary,
             LocalDebit = run.TotalNetSalary,
             BaseDebit = run.TotalNetSalary,
-            Description = $"Reversal: Net Salaries for {run.PayPeriod}",
-            BranchId = branchId
+            Description = $"Reversal: Net Salaries for {run.PayPeriod}"
         });
 
         var totalSsc = run.TotalEmployeeSsc + run.TotalEmployerSsc;
@@ -470,8 +461,7 @@ public sealed class PayrollService : IPayrollService
             Debit = totalSsc,
             LocalDebit = totalSsc,
             BaseDebit = totalSsc,
-            Description = $"Reversal: SSC Payable for {run.PayPeriod}",
-            BranchId = branchId
+            Description = $"Reversal: SSC Payable for {run.PayPeriod}"
         });
 
         var totalTax = run.TotalIncomeTax + run.TotalNationalContribution;
@@ -484,8 +474,7 @@ public sealed class PayrollService : IPayrollService
                 Debit = totalTax,
                 LocalDebit = totalTax,
                 BaseDebit = totalTax,
-                Description = $"Reversal: Tax Withheld for {run.PayPeriod}",
-                BranchId = branchId
+                Description = $"Reversal: Tax Withheld for {run.PayPeriod}"
             });
         }
 
@@ -498,8 +487,7 @@ public sealed class PayrollService : IPayrollService
                 Debit = run.TotalOtherDeductions,
                 LocalDebit = run.TotalOtherDeductions,
                 BaseDebit = run.TotalOtherDeductions,
-                Description = $"Reversal: Other Deductions for {run.PayPeriod}",
-                BranchId = branchId
+                Description = $"Reversal: Other Deductions for {run.PayPeriod}"
             });
         }
 
