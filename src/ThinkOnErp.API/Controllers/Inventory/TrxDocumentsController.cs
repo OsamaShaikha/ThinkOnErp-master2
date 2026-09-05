@@ -184,4 +184,23 @@ public sealed class TrxDocumentsController : ControllerBase
 
         return result.Success ? Ok(result) : BadRequest(result);
     }
+
+    /// <summary>
+    /// Generates high-performance sales invoice profitability analytics using database view VW_SALES_INVOICE_PROFITABILITY.
+    /// Returns invoice and line-item level revenues, costs, gross profit, and margin percentages.
+    /// </summary>
+    [HttpGet("profitability-report")]
+    [ProducesResponseType(typeof(ApiResponse<ProfitabilitySummaryReportDto>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<ApiResponse<ProfitabilitySummaryReportDto>>> GetProfitabilityReport(
+        [FromQuery] long? branchId,
+        [FromQuery] int? docYear,
+        [FromQuery] DateTime? fromDate,
+        [FromQuery] DateTime? toDate,
+        [FromQuery] string? customerCode,
+        [FromQuery] long? itemId,
+        CancellationToken ct)
+    {
+        var result = await _docService.GetProfitabilityReportAsync(branchId, docYear, fromDate, toDate, customerCode, itemId, ct);
+        return Ok(result);
+    }
 }

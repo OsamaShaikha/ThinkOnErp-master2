@@ -1,4 +1,4 @@
-﻿using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging;
 using ThinkOnErp.Application.DTOs.Accounting.Subledger;
 using ThinkOnErp.Domain.Entities.Accounting;
 using ThinkOnErp.Domain.Exceptions;
@@ -625,39 +625,34 @@ public sealed class SubledgerService : ISubledgerService
 
     public async Task<AgingReportDto> GetArAgingReportAsync(DateTime asOfDate, CancellationToken cancellationToken = default)
     {
-        var openTransactions = await _arRepository.GetTransactionsAsync(null, null, asOfDate, onlyOpen: true, cancellationToken);
-        var customers = await _customerRepository.GetAllAsync(cancellationToken: cancellationToken);
-        var custDict = customers.ToDictionary(c => c.CustomerCode);
+        var viewRows = await _arRepository.GetAgingAnalysisFromViewAsync(null, asOfDate, cancellationToken);
 
-        var grouped = openTransactions.Where(t => t.LocalOpenAmount > 0).GroupBy(t => t.CustomerCode);
-
-        var buckets = new List<AgingBucketDto>();
-
-        foreach (var g in grouped)
-        {
-            custDict.TryGetValue(g.Key, out var cust);
-            var b = new AgingBucketDto
+        var buckets = viewRows
+            .GroupBy(r => r.CustomerCode)
+            .Select(g =>
             {
-                PartyCode = g.Key,
-                PartyNameLocal = cust?.NameLocal ?? string.Empty,
-                PartyNameEn = cust?.NameEn ?? string.Empty
-            };
+                var first = g.First();
+                var current = g.Sum(x => x.Bucket0To30);
+                var d31 = g.Sum(x => x.Bucket31To60);
+                var d61 = g.Sum(x => x.Bucket61To90);
+                var d91 = g.Sum(x => x.Bucket91To120);
+                var over120 = g.Sum(x => x.BucketOver120);
+                var total = current + d31 + d61 + d91 + over120;
 
-            foreach (var t in g)
-            {
-                var dueDate = t.DueDate ?? t.TransactionDate;
-                var days = (asOfDate.Date - dueDate.Date).Days;
-
-                if (days <= 30) b.CurrentAmount += t.LocalOpenAmount;
-                else if (days <= 60) b.Days31To60 += t.LocalOpenAmount;
-                else if (days <= 90) b.Days61To90 += t.LocalOpenAmount;
-                else if (days <= 120) b.Days91To120 += t.LocalOpenAmount;
-                else b.Over120Days += t.LocalOpenAmount;
-            }
-
-            b.TotalOutstanding = b.CurrentAmount + b.Days31To60 + b.Days61To90 + b.Days91To120 + b.Over120Days;
-            buckets.Add(b);
-        }
+                return new AgingBucketDto
+                {
+                    PartyCode = g.Key,
+                    PartyNameLocal = first.CustomerNameLocal ?? string.Empty,
+                    PartyNameEn = first.CustomerNameEn ?? string.Empty,
+                    CurrentAmount = current,
+                    Days31To60 = d31,
+                    Days61To90 = d61,
+                    Days91To120 = d91,
+                    Over120Days = over120,
+                    TotalOutstanding = total
+                };
+            })
+            .ToList();
 
         return new AgingReportDto
         {
@@ -675,39 +670,34 @@ public sealed class SubledgerService : ISubledgerService
 
     public async Task<AgingReportDto> GetApAgingReportAsync(DateTime asOfDate, CancellationToken cancellationToken = default)
     {
-        var openTransactions = await _apRepository.GetTransactionsAsync(null, null, asOfDate, onlyOpen: true, cancellationToken);
-        var vendors = await _vendorRepository.GetAllAsync(cancellationToken: cancellationToken);
-        var vendDict = vendors.ToDictionary(v => v.VendorCode);
+        var viewRows = await _apRepository.GetAgingAnalysisFromViewAsync(null, asOfDate, cancellationToken);
 
-        var grouped = openTransactions.Where(t => t.LocalOpenAmount > 0).GroupBy(t => t.VendorCode);
-
-        var buckets = new List<AgingBucketDto>();
-
-        foreach (var g in grouped)
-        {
-            vendDict.TryGetValue(g.Key, out var vend);
-            var b = new AgingBucketDto
+        var buckets = viewRows
+            .GroupBy(r => r.VendorCode)
+            .Select(g =>
             {
-                PartyCode = g.Key,
-                PartyNameLocal = vend?.NameLocal ?? string.Empty,
-                PartyNameEn = vend?.NameEn ?? string.Empty
-            };
+                var first = g.First();
+                var current = g.Sum(x => x.Bucket0To30);
+                var d31 = g.Sum(x => x.Bucket31To60);
+                var d61 = g.Sum(x => x.Bucket61To90);
+                var d91 = g.Sum(x => x.Bucket91To120);
+                var over120 = g.Sum(x => x.BucketOver120);
+                var total = current + d31 + d61 + d91 + over120;
 
-            foreach (var t in g)
-            {
-                var dueDate = t.DueDate ?? t.TransactionDate;
-                var days = (asOfDate.Date - dueDate.Date).Days;
-
-                if (days <= 30) b.CurrentAmount += t.LocalOpenAmount;
-                else if (days <= 60) b.Days31To60 += t.LocalOpenAmount;
-                else if (days <= 90) b.Days61To90 += t.LocalOpenAmount;
-                else if (days <= 120) b.Days91To120 += t.LocalOpenAmount;
-                else b.Over120Days += t.LocalOpenAmount;
-            }
-
-            b.TotalOutstanding = b.CurrentAmount + b.Days31To60 + b.Days61To90 + b.Days91To120 + b.Over120Days;
-            buckets.Add(b);
-        }
+                return new AgingBucketDto
+                {
+                    PartyCode = g.Key,
+                    PartyNameLocal = first.VendorNameLocal ?? string.Empty,
+                    PartyNameEn = first.VendorNameEn ?? string.Empty,
+                    CurrentAmount = current,
+                    Days31To60 = d31,
+                    Days61To90 = d61,
+                    Days91To120 = d91,
+                    Over120Days = over120,
+                    TotalOutstanding = total
+                };
+            })
+            .ToList();
 
         return new AgingReportDto
         {

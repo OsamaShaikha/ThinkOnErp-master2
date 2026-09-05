@@ -128,27 +128,27 @@ public class InvStockController : ControllerBase
     }
 
     /// <summary>
-    /// Retrieves total inventory valuation summary report.
+    /// Retrieves total inventory valuation summary report from optimized database view VW_INVENTORY_VALUATION.
     /// </summary>
     [HttpGet("valuation")]
     [ProducesResponseType(typeof(ApiResponse<List<StockBalanceDto>>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetValuation([FromQuery] long? warehouseId, CancellationToken cancellationToken)
     {
-        var balances = warehouseId.HasValue 
-            ? await _stockBalanceRepository.GetByWarehouseAsync(warehouseId.Value, cancellationToken)
-            : await _stockBalanceRepository.GetAllAsync(cancellationToken);
+        var views = await _stockBalanceRepository.GetValuationSummaryFromViewAsync(null, warehouseId, cancellationToken);
             
-        var list = balances.Select(b => new StockBalanceDto
+        var list = views.Select(b => new StockBalanceDto
         {
             ItemId = b.ItemId,
+            ItemCode = b.ItemCode,
+            ItemName = b.ItemNameLocal,
             WarehouseId = b.WarehouseId,
-            BinId = b.BinId,
+            WarehouseCode = b.WarehouseCode,
             OnHandQty = b.OnHandQty,
             ReservedQty = b.ReservedQty,
-            AvailableQty = b.OnHandQty - b.ReservedQty,
+            AvailableQty = b.AvailableQty,
             OnOrderQty = b.OnOrderQty,
             AvgCost = b.AvgCost,
-            TotalValue = b.OnHandQty * b.AvgCost
+            TotalValue = b.TotalValuation
         }).ToList();
 
         return Ok(ApiResponse<List<StockBalanceDto>>.CreateSuccess(list, "Inventory valuation retrieved successfully"));

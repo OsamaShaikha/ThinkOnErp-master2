@@ -55,4 +55,14 @@ public interface IAccountStatementRepository
 
     Task<IReadOnlyList<GlCostCenter>> GetCostCentersAsync(
         CancellationToken cancellationToken = default);
+
+    Task<IReadOnlyList<ThinkOnErp.Domain.Entities.Views.GlAccountStatementView>> GetStatementFromViewAsync(
+        IReadOnlyList<string> accountCodes,
+        DateTime? fromDate,
+        DateTime? toDate,
+        long? branchId,
+        long? fiscalYearId,
+        string? costCenterCode,
+        bool includeUnposted,
+        CancellationToken cancellationToken = default);
 }

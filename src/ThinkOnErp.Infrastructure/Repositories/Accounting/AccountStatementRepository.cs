@@ -248,4 +248,49 @@ public sealed class AccountStatementRepository : IAccountStatementRepository
             .AsNoTracking()
             .ToListAsync(cancellationToken);
     }
+
+    public async Task<IReadOnlyList<ThinkOnErp.Domain.Entities.Views.GlAccountStatementView>> GetStatementFromViewAsync(
+        IReadOnlyList<string> accountCodes,
+        DateTime? fromDate,
+        DateTime? toDate,
+        long? branchId,
+        long? fiscalYearId,
+        string? costCenterCode,
+        bool includeUnposted,
+        CancellationToken cancellationToken = default)
+    {
+        var query = _context.GlAccountStatementViews
+            .AsNoTracking()
+            .Where(v => accountCodes.Contains(v.AccountCode));
+
+        if (!includeUnposted)
+        {
+            query = query.Where(v => v.VoucherStatus == 3);
+        }
+        else
+        {
+            query = query.Where(v => v.VoucherStatus != 4);
+        }
+
+        if (fromDate.HasValue)
+            query = query.Where(v => v.VoucherDate >= fromDate.Value);
+
+        if (toDate.HasValue)
+            query = query.Where(v => v.VoucherDate <= toDate.Value);
+
+        if (branchId.HasValue && branchId.Value > 0)
+            query = query.Where(v => v.BranchId == branchId.Value);
+
+        if (fiscalYearId.HasValue && fiscalYearId.Value > 0)
+            query = query.Where(v => v.FiscalYearId == fiscalYearId.Value);
+
+        if (!string.IsNullOrWhiteSpace(costCenterCode))
+            query = query.Where(v => v.CostCenterCode == costCenterCode);
+
+        return await query
+            .OrderBy(v => v.VoucherDate)
+            .ThenBy(v => v.VoucherNo)
+            .ThenBy(v => v.LineSer)
+            .ToListAsync(cancellationToken);
+    }
 }

@@ -92,4 +92,26 @@ public sealed class InvStockBalanceRepository : IInvStockBalanceRepository
     {
         await _context.SaveChangesAsync(cancellationToken);
     }
+
+    public async Task<IReadOnlyList<ThinkOnErp.Domain.Entities.Views.InventoryValuationView>> GetValuationSummaryFromViewAsync(long? branchId, long? warehouseId, CancellationToken cancellationToken = default)
+    {
+        var query = _context.InventoryValuationViews
+            .AsNoTracking()
+            .Where(v => v.OnHandQty > 0 || v.ReservedQty > 0 || v.OnOrderQty > 0);
+
+        if (branchId.HasValue && branchId.Value > 0)
+        {
+            query = query.Where(v => v.BranchId == branchId.Value);
+        }
+
+        if (warehouseId.HasValue && warehouseId.Value > 0)
+        {
+            query = query.Where(v => v.WarehouseId == warehouseId.Value);
+        }
+
+        return await query
+            .OrderBy(v => v.WarehouseCode)
+            .ThenBy(v => v.ItemCode)
+            .ToListAsync(cancellationToken);
+    }
 }

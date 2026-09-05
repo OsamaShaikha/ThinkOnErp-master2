@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using ThinkOnErp.Domain.Entities.Accounting;
 using ThinkOnErp.Domain.Interfaces.Accounting;
 using ThinkOnErp.Infrastructure.Data;
@@ -127,5 +127,22 @@ public sealed class ApSubledgerRepository : IApSubledgerRepository
     public async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
     {
         return await _context.SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task<IReadOnlyList<ThinkOnErp.Domain.Entities.Views.ApAgingAnalysisView>> GetAgingAnalysisFromViewAsync(long? branchId, DateTime asOfDate, CancellationToken cancellationToken = default)
+    {
+        var query = _context.ApAgingAnalysisViews
+            .AsNoTracking()
+            .Where(v => v.LocalOpenAmount > 0 && v.TransactionDate <= asOfDate);
+
+        if (branchId.HasValue && branchId.Value > 0)
+        {
+            query = query.Where(v => v.BranchId == branchId.Value);
+        }
+
+        return await query
+            .OrderBy(v => v.VendorCode)
+            .ThenBy(v => v.DueDate)
+            .ToListAsync(cancellationToken);
     }
 }

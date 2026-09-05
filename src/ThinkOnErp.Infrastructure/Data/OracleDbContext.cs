@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore;
 using ThinkOnErp.Domain.Entities;
 using ThinkOnErp.Domain.Entities.Accounting;
 using ThinkOnErp.Domain.Entities.Inventory;
+using ThinkOnErp.Domain.Entities.Views;
 using ThinkOnErp.Infrastructure.Data.Configurations.Accounting;
 
 namespace ThinkOnErp.Infrastructure.Data;
@@ -154,6 +155,13 @@ public class OracleDbContext : DbContext
 
     // Universal Dynamic Translation
     public DbSet<SysEntityTranslation> EntityTranslations => Set<SysEntityTranslation>();
+
+    // High-Performance Database Views
+    public DbSet<GlAccountStatementView> GlAccountStatementViews => Set<GlAccountStatementView>();
+    public DbSet<InventoryValuationView> InventoryValuationViews => Set<InventoryValuationView>();
+    public DbSet<ArAgingAnalysisView> ArAgingAnalysisViews => Set<ArAgingAnalysisView>();
+    public DbSet<ApAgingAnalysisView> ApAgingAnalysisViews => Set<ApAgingAnalysisView>();
+    public DbSet<SalesInvoiceProfitabilityView> SalesInvoiceProfitabilityViews => Set<SalesInvoiceProfitabilityView>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

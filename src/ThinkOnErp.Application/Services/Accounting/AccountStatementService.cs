@@ -1,4 +1,4 @@
-﻿using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging;
 using ThinkOnErp.Application.DTOs.Accounting.AccountStatement;
 using ThinkOnErp.Domain.Entities.Accounting;
 using ThinkOnErp.Domain.Exceptions;
@@ -71,8 +71,8 @@ public sealed class AccountStatementService : IAccountStatementService
             ? (openingDebit - openingCredit)
             : (openingCredit - openingDebit);
 
-        // 2. Fetch period transaction postings
-        var periodDetails = await _statementRepository.GetPeriodDetailsAsync(
+        // 2. Fetch period transaction postings from optimized database view
+        var periodDetails = await _statementRepository.GetStatementFromViewAsync(
             targetCodes,
             request.FromDate,
             request.ToDate,
@@ -82,11 +82,9 @@ public sealed class AccountStatementService : IAccountStatementService
             request.IncludeUnposted,
             cancellationToken);
 
-        // Fetch voucher types and cost centers metadata for fast lookup
+        // Fetch voucher types metadata for fast lookup
         var voucherTypes = (await _statementRepository.GetVoucherTypesAsync(cancellationToken))
             .ToDictionary(v => v.TypeCode);
-        var costCenters = (await _statementRepository.GetCostCentersAsync(cancellationToken))
-            .ToDictionary(c => c.CostCenterCode);
 
         // 3. Process items and calculate running balance line by line
         decimal currentRunningBalance = openingNetBalance;
@@ -106,36 +104,35 @@ public sealed class AccountStatementService : IAccountStatementService
 
             currentRunningBalance += lineMovement;
 
-            voucherTypes.TryGetValue(detail.Header.VoucherType, out var vType);
-            costCenters.TryGetValue(detail.CostCenterCode ?? string.Empty, out var cc);
+            voucherTypes.TryGetValue(detail.VoucherType, out var vType);
 
             var itemDto = new AccountStatementItemDto
             {
                 VoucherId = detail.VoucherId,
-                VoucherNo = detail.Header.VoucherNo,
-                VoucherDate = detail.Header.VoucherDate,
-                VoucherTypeCode = detail.Header.VoucherType,
+                VoucherNo = detail.VoucherNo,
+                VoucherDate = detail.VoucherDate,
+                VoucherTypeCode = detail.VoucherType,
                 VoucherTypeNameLocal = vType?.NameLocal ?? string.Empty,
                 VoucherTypeNameEn = vType?.NameEn ?? string.Empty,
                 VoucherPrefix = vType?.Prefix ?? string.Empty,
                 LineSer = detail.LineSer,
                 AccountCode = detail.AccountCode,
-                AccountNameLocal = detail.Account?.AccountNameLocal ?? account.AccountNameLocal,
-                AccountNameEn = detail.Account?.AccountNameEn ?? account.AccountNameEn,
+                AccountNameLocal = detail.AccountNameLocal ?? account.AccountNameLocal,
+                AccountNameEn = detail.AccountNameEn ?? account.AccountNameEn,
                 Debit = detail.Debit,
                 Credit = detail.Credit,
                 LocalDebit = detail.LocalDebit,
                 LocalCredit = detail.LocalCredit,
                 RunningBalance = currentRunningBalance,
-                CurrencyId = detail.CurrencyId,
+                CurrencyId = detail.CurrencyId ?? 0,
                 ExchangeRate = detail.ExchangeRate,
                 CostCenterCode = detail.CostCenterCode,
-                CostCenterNameLocal = cc?.NameLocal,
-                CostCenterNameEn = cc?.NameEn,
-                Description = string.IsNullOrWhiteSpace(detail.Description) ? detail.Header.Description : detail.Description,
-                SourceSystemCode = detail.Header.SourceSystemCode,
-                SourceRefId = detail.Header.SourceRefId,
-                VoucherStatus = detail.Header.Status
+                CostCenterNameLocal = detail.CostCenterNameLocal,
+                CostCenterNameEn = detail.CostCenterNameLocal,
+                Description = detail.Description,
+                SourceSystemCode = string.Empty,
+                SourceRefId = null,
+                VoucherStatus = detail.VoucherStatus
             };
 
             items.Add(itemDto);

@@ -17,4 +17,6 @@ public interface ITrxDocumentRepository
     Task<TrxDocumentHeader> CreateAsync(TrxDocumentHeader doc, CancellationToken ct = default);
     Task UpdateAsync(TrxDocumentHeader doc, CancellationToken ct = default);
     Task DeleteAsync(TrxDocumentHeader doc, CancellationToken ct = default);
+    Task<IReadOnlyList<ThinkOnErp.Domain.Entities.Views.SalesInvoiceProfitabilityView>> GetProfitabilityReportFromViewAsync(
+        long? branchId, int? docYear, DateTime? fromDate, DateTime? toDate, string? customerCode, long? itemId, CancellationToken ct = default);
 }

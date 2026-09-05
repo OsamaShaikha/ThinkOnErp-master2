@@ -1,4 +1,4 @@
-﻿using ThinkOnErp.Domain.Entities.Accounting;
+using ThinkOnErp.Domain.Entities.Accounting;
 
 namespace ThinkOnErp.Domain.Interfaces.Accounting;
 
@@ -15,4 +15,5 @@ public interface IApSubledgerRepository
     Task AddCashApplicationAsync(ApCashApplication application, CancellationToken cancellationToken = default);
     void RemoveCashApplication(ApCashApplication application);
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
+    Task<IReadOnlyList<ThinkOnErp.Domain.Entities.Views.ApAgingAnalysisView>> GetAgingAnalysisFromViewAsync(long? branchId, DateTime asOfDate, CancellationToken cancellationToken = default);
 }

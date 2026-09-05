@@ -127,4 +127,36 @@ public sealed class TrxDocumentRepository : ITrxDocumentRepository
         _context.TrxDocumentHeaders.Remove(doc);
         await _context.SaveChangesAsync(ct);
     }
+
+    public async Task<IReadOnlyList<ThinkOnErp.Domain.Entities.Views.SalesInvoiceProfitabilityView>> GetProfitabilityReportFromViewAsync(
+        long? branchId, int? docYear, DateTime? fromDate, DateTime? toDate, string? customerCode, long? itemId, CancellationToken ct = default)
+    {
+        var query = _context.SalesInvoiceProfitabilityViews
+            .AsNoTracking()
+            .AsQueryable();
+
+        if (branchId.HasValue && branchId.Value > 0)
+            query = query.Where(v => v.BranchId == branchId.Value);
+
+        if (docYear.HasValue)
+            query = query.Where(v => v.DocYear == docYear.Value);
+
+        if (fromDate.HasValue)
+            query = query.Where(v => v.DocDate >= fromDate.Value);
+
+        if (toDate.HasValue)
+            query = query.Where(v => v.DocDate <= toDate.Value);
+
+        if (!string.IsNullOrWhiteSpace(customerCode))
+            query = query.Where(v => v.CustomerCode == customerCode);
+
+        if (itemId.HasValue && itemId.Value > 0)
+            query = query.Where(v => v.ItemId == itemId.Value);
+
+        return await query
+            .OrderByDescending(v => v.DocDate)
+            .ThenBy(v => v.DocNo)
+            .ThenBy(v => v.LineNo)
+            .ToListAsync(ct);
+    }
 }

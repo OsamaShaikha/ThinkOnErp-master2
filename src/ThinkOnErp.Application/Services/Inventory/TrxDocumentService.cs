@@ -286,4 +286,64 @@ public sealed class TrxDocumentService : ITrxDocumentService
         await _docRepository.UpdateAsync(doc, ct);
         return ApiResponse<TrxDocumentDto>.CreateSuccess(TrxDocumentMapper.ToDto(doc), "Document posted successfully");
     }
+
+    public async Task<ApiResponse<ProfitabilitySummaryReportDto>> GetProfitabilityReportAsync(
+        long? branchId, int? docYear, DateTime? fromDate, DateTime? toDate, string? customerCode, long? itemId, CancellationToken ct = default)
+    {
+        var rows = await _docRepository.GetProfitabilityReportFromViewAsync(
+            branchId, docYear, fromDate, toDate, customerCode, itemId, ct);
+
+        var dtoList = rows.Select(r => new SalesInvoiceProfitabilityDto
+        {
+            BranchId = r.BranchId,
+            DocYear = r.DocYear,
+            DocType = r.DocType,
+            DocId = r.DocId,
+            DocNo = r.DocNo,
+            DocDate = r.DocDate,
+            DocStatusCode = r.DocStatusCode,
+            IsPostedGl = r.IsPostedGl,
+            IsPostedStock = r.IsPostedStock,
+            CustomerId = r.CustomerId,
+            CustomerCode = r.CustomerCode,
+            CustomerName = r.CustomerName,
+            FromWarehouseId = r.FromWarehouseId,
+            HeaderTotalGross = r.HeaderTotalGross,
+            HeaderTotalNet = r.HeaderTotalNet,
+            HeaderTotalCost = r.HeaderTotalCost,
+            HeaderTotalProfit = r.HeaderTotalProfit,
+            HeaderProfitMargin = r.HeaderProfitMargin,
+            LineNo = r.LineNo,
+            ItemId = r.ItemId,
+            ItemCode = r.ItemCode,
+            ItemName = r.ItemName,
+            Quantity = r.Quantity,
+            BaseQuantity = r.BaseQuantity,
+            UnitPrice = r.UnitPrice,
+            UnitCost = r.UnitCost,
+            LineTotal = r.LineTotal,
+            LineCost = r.LineCost,
+            LineProfit = r.LineProfit,
+            LineProfitMargin = r.LineProfitMargin
+        }).ToList();
+
+        var totalRev = dtoList.Sum(x => x.LineTotal);
+        var totalCost = dtoList.Sum(x => x.LineCost);
+        var totalProfit = totalRev - totalCost;
+        var marginPct = totalRev > 0 ? Math.Round((totalProfit / totalRev) * 100m, 4) : 0;
+        var distinctInvoices = dtoList.Select(x => x.DocId).Distinct().Count();
+
+        var summary = new ProfitabilitySummaryReportDto
+        {
+            TotalRevenue = totalRev,
+            TotalCost = totalCost,
+            TotalGrossProfit = totalProfit,
+            OverallProfitMarginPercent = marginPct,
+            TotalInvoicesCount = distinctInvoices,
+            TotalLinesCount = dtoList.Count,
+            Items = dtoList
+        };
+
+        return ApiResponse<ProfitabilitySummaryReportDto>.CreateSuccess(summary, "Profitability report generated successfully");
+    }
 }
