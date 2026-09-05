@@ -1,11 +1,11 @@
-using System.Text.Json.Serialization;
+﻿using System.Text.Json.Serialization;
 using MediatR;
 
 namespace ThinkOnErp.Application.Features.Users.Commands.CreateUser;
 
 public class CreateUserCommand : IRequest<Int64>
 {
-    public string NameAr { get; set; } = string.Empty;
+    public string NameLocal { get; set; } = string.Empty;
     public string NameEn { get; set; } = string.Empty;
     public string UserName { get; set; } = string.Empty;
     public string Password { get; set; } = string.Empty;

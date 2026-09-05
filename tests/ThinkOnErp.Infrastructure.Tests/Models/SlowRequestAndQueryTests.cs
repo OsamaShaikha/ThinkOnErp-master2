@@ -352,7 +352,7 @@ public class SlowQueryTests
             "SELECT * FROM SYS_USERS WHERE IS_ACTIVE = 1",
             "UPDATE SYS_USERS SET LAST_LOGIN_DATE = SYSDATE",
             "DELETE FROM SYS_AUDIT_LOG WHERE CREATION_DATE < :p0",
-            "INSERT INTO SYS_USERS (NAME_AR, EMAIL) VALUES (:p0, :p1)"
+            "INSERT INTO SYS_USERS (NAME_LOCAL, EMAIL) VALUES (:p0, :p1)"
         };
 
         foreach (var query in queries)
@@ -376,7 +376,7 @@ public class SlowQueryTests
         // Arrange & Act
         var slowQuery = new SlowQuery
         {
-            SqlStatement = @"SELECT u.*, c.NAME_AR, b.NAME_AR 
+            SqlStatement = @"SELECT u.*, c.NAME_LOCAL, b.NAME_LOCAL 
                             FROM SYS_USERS u 
                             JOIN SYS_COMPANY c ON u.COMPANY_ID = c.ROW_ID 
                             JOIN SYS_BRANCH b ON u.BRANCH_ID = b.ROW_ID 

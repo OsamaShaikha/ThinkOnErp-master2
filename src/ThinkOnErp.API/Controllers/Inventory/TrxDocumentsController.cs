@@ -18,7 +18,7 @@ namespace ThinkOnErp.API.Controllers.Inventory;
 /// Universal Trade and Movement Documents API: Manages all sales invoices, purchase bills, returns, goods receipts, goods issues, transfers, quotations, and purchase orders.
 /// </summary>
 [ApiController]
-[Route("api/documents")]
+[Route("api/inventory/documents")]
 [ApiExplorerSettings(GroupName = ApiCategories.Inventory)]
 [TenantScoped]
 [Authorize]
@@ -88,8 +88,8 @@ public sealed class TrxDocumentsController : ControllerBase
     /// <param name="ct">Cancellation token.</param>
     /// <returns>A paginated list of matching documents and total record count.</returns>
     [HttpGet]
-    [ProducesResponseType(typeof(ApiResponse<(List<TrxDocumentDto> Items, int TotalCount)>), StatusCodes.Status200OK)]
-    public async Task<ActionResult<ApiResponse<(List<TrxDocumentDto> Items, int TotalCount)>>> GetDocuments(
+    [ProducesResponseType(typeof(ApiResponse<PagedResultDto<TrxDocumentDto>>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<ApiResponse<PagedResultDto<TrxDocumentDto>>>> GetDocuments(
         [FromQuery] TrxDocumentFilterDto filter,
         CancellationToken ct)
     {

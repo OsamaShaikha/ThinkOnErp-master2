@@ -1,4 +1,4 @@
-namespace ThinkOnErp.Application.DTOs.Currency;
+﻿namespace ThinkOnErp.Application.DTOs.Currency;
 
 /// <summary>
 /// Data transfer object for currency information returned from API endpoints.
@@ -14,7 +14,7 @@ public class CurrencyDto
     /// <summary>
     /// Arabic description of the currency
     /// </summary>
-    public string CurrencyNameAr { get; set; } = string.Empty;
+    public string CurrencyNameLocal { get; set; } = string.Empty;
 
     /// <summary>
     /// English description of the currency
@@ -24,7 +24,7 @@ public class CurrencyDto
     /// <summary>
     /// Arabic short description
     /// </summary>
-    public string ShortNameAr { get; set; } = string.Empty;
+    public string ShortNameLocal { get; set; } = string.Empty;
 
     /// <summary>
     /// English short description
@@ -34,7 +34,7 @@ public class CurrencyDto
     /// <summary>
     /// Arabic singular form
     /// </summary>
-    public string SingularNameAr { get; set; } = string.Empty;
+    public string SingularNameLocal { get; set; } = string.Empty;
 
     /// <summary>
     /// English singular form
@@ -44,7 +44,7 @@ public class CurrencyDto
     /// <summary>
     /// Arabic dual form
     /// </summary>
-    public string DualNameAr { get; set; } = string.Empty;
+    public string DualNameLocal { get; set; } = string.Empty;
 
     /// <summary>
     /// English dual form
@@ -54,7 +54,7 @@ public class CurrencyDto
     /// <summary>
     /// Arabic sum form
     /// </summary>
-    public string CollectiveNameAr { get; set; } = string.Empty;
+    public string CollectiveNameLocal { get; set; } = string.Empty;
 
     /// <summary>
     /// English sum form
@@ -64,7 +64,7 @@ public class CurrencyDto
     /// <summary>
     /// Arabic fraction form
     /// </summary>
-    public string FractionNameAr { get; set; } = string.Empty;
+    public string FractionNameLocal { get; set; } = string.Empty;
 
     /// <summary>
     /// English fraction form

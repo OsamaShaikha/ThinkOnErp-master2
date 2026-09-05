@@ -1,4 +1,4 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using ThinkOnErp.Domain.Entities.Inventory;
 
@@ -14,12 +14,12 @@ public sealed class InvItemConfiguration : IEntityTypeConfiguration<InvItem>
         builder.Property(i => i.Id).HasColumnName("ID").ValueGeneratedOnAdd();
         builder.Property(i => i.BranchId).HasColumnName("BRANCH_ID").IsRequired();
         builder.Property(i => i.ItemCode).HasColumnName("ITEM_CODE").HasMaxLength(30).IsRequired();
-        builder.Property(i => i.ItemNameAr).HasColumnName("ITEM_NAME_AR").HasMaxLength(200).IsRequired();
+        builder.Property(i => i.ItemNameLocal).HasColumnName("ITEM_NAME_LOCAL").HasMaxLength(200).IsRequired();
         builder.Property(i => i.ItemNameEn).HasColumnName("ITEM_NAME_EN").HasMaxLength(200);
         builder.Property(i => i.MainGroupId).HasColumnName("MAIN_GROUP_ID").IsRequired();
         builder.Property(i => i.SubGroupId).HasColumnName("SUB_GROUP_ID");
         builder.Property(i => i.ItemType).HasColumnName("ITEM_TYPE").HasConversion<string>().HasMaxLength(20).IsRequired();
-        builder.Property(i => i.UomBase).HasColumnName("UOM_BASE").HasMaxLength(20).IsRequired();
+        builder.Property(i => i.UomBase).HasColumnName("UOM_BASE").HasColumnType("NUMBER(6)").IsRequired();
         builder.Property(i => i.CostingMethod).HasColumnName("COSTING_METHOD").HasConversion<string>().HasMaxLength(20).HasDefaultValue(Domain.Entities.Inventory.Enums.CostingMethod.WeightedAverage);
         builder.Property(i => i.StandardCost).HasColumnName("STANDARD_COST").HasColumnType("NUMBER(18,4)").HasDefaultValue(0m);
 
@@ -35,7 +35,7 @@ public sealed class InvItemConfiguration : IEntityTypeConfiguration<InvItem>
         builder.Property(i => i.LeadTimeDays).HasColumnName("LEAD_TIME_DAYS").HasDefaultValue(0);
 
         builder.Property(i => i.Weight).HasColumnName("WEIGHT").HasColumnType("NUMBER(14,4)").HasDefaultValue(0m);
-        builder.Property(i => i.WeightUnit).HasColumnName("WEIGHT_UNIT").HasMaxLength(10);
+        builder.Property(i => i.WeightUnit).HasColumnName("WEIGHT_UNIT").HasColumnType("NUMBER(6)");
 
         builder.Property(i => i.GlControlAccount).HasColumnName("GL_CONTROL_ACCOUNT").HasMaxLength(50);
         builder.Property(i => i.GlRevenueAccount).HasColumnName("GL_REVENUE_ACCOUNT").HasMaxLength(50);
@@ -44,6 +44,9 @@ public sealed class InvItemConfiguration : IEntityTypeConfiguration<InvItem>
         builder.Property(i => i.CountryOfOrigin).HasColumnName("COUNTRY_OF_ORIGIN").HasMaxLength(3);
         builder.Property(i => i.HsCode).HasColumnName("HS_CODE").HasMaxLength(20);
         builder.Property(i => i.Notes).HasColumnName("NOTES").HasMaxLength(2000);
+
+        builder.Property(i => i.ImageBase64).HasColumnName("IMAGE_BASE64").HasColumnType("CLOB");
+        builder.Property(i => i.ColorCode).HasColumnName("COLOR_CODE");
 
         builder.Property(i => i.IsActive).HasColumnName("IS_ACTIVE").HasColumnType("NUMBER(1)").HasDefaultValue(true);
         builder.Property(i => i.CreationUser).HasColumnName("CREATION_USER").HasMaxLength(100).IsRequired();

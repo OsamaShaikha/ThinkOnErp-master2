@@ -23,7 +23,7 @@ namespace ThinkOnErp.Infrastructure.Migrations
             migrationBuilder.Sql(@"
                 CREATE TABLE GL_ACCOUNT (
                     ACCOUNT_CODE NVARCHAR2(50) NOT NULL,
-                    ACCOUNT_NAME_AR NVARCHAR2(200) NOT NULL,
+                    ACCOUNT_NAME_LOCAL NVARCHAR2(200) NOT NULL,
                     ACCOUNT_NAME_EN NVARCHAR2(200) NOT NULL,
                     PARENT_ACCOUNT_CODE NVARCHAR2(50) NULL,
                     ACCOUNT_LEVEL NUMBER(2) NOT NULL,

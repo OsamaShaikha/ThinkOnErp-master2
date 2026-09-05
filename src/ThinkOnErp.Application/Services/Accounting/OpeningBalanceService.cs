@@ -1,4 +1,4 @@
-using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.Logging;
 using ThinkOnErp.Application.DTOs.Accounting.OpeningBalances;
 using ThinkOnErp.Domain.Entities.Accounting;
 using ThinkOnErp.Domain.Exceptions;
@@ -385,7 +385,7 @@ public sealed class OpeningBalanceService : IOpeningBalanceService
 
             if (!account.IsPostable)
                 throw new AccountingException(
-                    $"الحساب ({line.AccountCode} - {account.AccountNameAr}) ليس حساباً قابلاً للترحيل (Header account).",
+                    $"الحساب ({line.AccountCode} - {account.AccountNameLocal}) ليس حساباً قابلاً للترحيل (Header account).",
                     "OB_ACCOUNT_NOT_POSTABLE");
 
             header.Details.Add(new GlOpeningBalanceDetail
@@ -434,7 +434,7 @@ public sealed class OpeningBalanceService : IOpeningBalanceService
                 HeaderId = d.HeaderId,
                 LineSer = d.LineSer,
                 AccountCode = d.AccountCode,
-                AccountNameAr = d.Account?.AccountNameAr ?? string.Empty,
+                AccountNameLocal = d.Account?.AccountNameLocal ?? string.Empty,
                 AccountNameEn = d.Account?.AccountNameEn ?? string.Empty,
                 DebitAmount = d.DebitAmount,
                 CreditAmount = d.CreditAmount,

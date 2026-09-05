@@ -1,4 +1,4 @@
-namespace ThinkOnErp.Application.DTOs.Company;
+﻿namespace ThinkOnErp.Application.DTOs.Company;
 
 /// <summary>
 /// Data transfer object for company information returned from API endpoints.
@@ -14,7 +14,7 @@ public class CompanyDto
     /// <summary>
     /// Arabic description of the company
     /// </summary>
-    public string CompanyNameAr { get; set; } = string.Empty;
+    public string CompanyNameLocal { get; set; } = string.Empty;
 
     /// <summary>
     /// English description of the company
@@ -34,7 +34,7 @@ public class CompanyDto
     /// <summary>
     /// Legal name of the company in Arabic
     /// </summary>
-    public string? LegalNameAr { get; set; }
+    public string? LegalNameLocal { get; set; }
 
     /// <summary>
     /// Legal name of the company in English

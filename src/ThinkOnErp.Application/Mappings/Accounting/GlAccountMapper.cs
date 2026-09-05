@@ -1,4 +1,4 @@
-using ThinkOnErp.Application.DTOs.Accounting;
+﻿using ThinkOnErp.Application.DTOs.Accounting;
 using ThinkOnErp.Domain.Entities.Accounting;
 
 namespace ThinkOnErp.Application.Mappings.Accounting;
@@ -17,7 +17,7 @@ public static class GlAccountMapper
         {
             AccountCode = account.AccountCode,
             OldAccountCode = account.OldAccountCode,
-            AccountNameAr = account.AccountNameAr,
+            AccountNameLocal = account.AccountNameLocal,
             AccountNameEn = account.AccountNameEn,
             ParentAccountCode = account.ParentAccountCode,
             CategoryCode = categoryCode,
@@ -49,7 +49,7 @@ public static class GlAccountMapper
         {
             AccountCode = flat.AccountCode,
             OldAccountCode = flat.OldAccountCode,
-            AccountNameAr = flat.AccountNameAr,
+            AccountNameLocal = flat.AccountNameLocal,
             AccountNameEn = flat.AccountNameEn,
             ParentAccountCode = flat.ParentAccountCode,
             CategoryCode = flat.CategoryCode,

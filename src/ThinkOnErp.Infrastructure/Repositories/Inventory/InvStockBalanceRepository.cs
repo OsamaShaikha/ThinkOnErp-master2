@@ -27,6 +27,15 @@ public sealed class InvStockBalanceRepository : IInvStockBalanceRepository
             .FirstOrDefaultAsync(b => b.ItemId == itemId && b.WarehouseId == warehouseId && b.BinId == binId, cancellationToken);
     }
 
+    public async Task<IReadOnlyList<InvStockBalance>> GetAllAsync(CancellationToken cancellationToken = default)
+    {
+        return await _context.InvStockBalances
+            .AsNoTracking()
+            .Include(b => b.Item)
+            .Include(b => b.Warehouse)
+            .ToListAsync(cancellationToken);
+    }
+
     public async Task<IReadOnlyList<InvStockBalance>> GetByItemAsync(long itemId, CancellationToken cancellationToken = default)
     {
         return await _context.InvStockBalances
@@ -47,7 +56,11 @@ public sealed class InvStockBalanceRepository : IInvStockBalanceRepository
 
     public Task UpdateBalanceAsync(InvStockBalance balance, CancellationToken cancellationToken = default)
     {
-        _context.InvStockBalances.Update(balance);
+        var entry = _context.Entry(balance);
+        if (entry.State == EntityState.Detached)
+        {
+            _context.InvStockBalances.Update(balance);
+        }
         return Task.CompletedTask;
     }
 

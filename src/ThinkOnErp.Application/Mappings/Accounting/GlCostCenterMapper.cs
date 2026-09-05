@@ -1,4 +1,4 @@
-using ThinkOnErp.Application.DTOs.Accounting.CostCenters;
+﻿using ThinkOnErp.Application.DTOs.Accounting.CostCenters;
 using ThinkOnErp.Domain.Entities.Accounting;
 
 namespace ThinkOnErp.Application.Mappings.Accounting;
@@ -11,7 +11,7 @@ public static class GlCostCenterMapper
         {
             CostCenterCode = entity.CostCenterCode,
             ParentCostCenterCode = entity.ParentCostCenterCode,
-            NameAr = entity.NameAr,
+            NameLocal = entity.NameLocal,
             NameEn = entity.NameEn,
             CostCenterLevel = entity.CostCenterLevel,
             CostCenterType = entity.CostCenterType,
@@ -30,7 +30,7 @@ public static class GlCostCenterMapper
         {
             CostCenterCode = entity.CostCenterCode,
             ParentCostCenterCode = entity.ParentCostCenterCode,
-            NameAr = entity.NameAr,
+            NameLocal = entity.NameLocal,
             NameEn = entity.NameEn,
             CostCenterLevel = entity.CostCenterLevel,
             CostCenterType = entity.CostCenterType,

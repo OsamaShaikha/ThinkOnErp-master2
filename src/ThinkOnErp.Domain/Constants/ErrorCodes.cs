@@ -83,4 +83,20 @@ public static class ErrorCodes
     public const string CompanyContextRequired = "ERR_COMPANY_CONTEXT_REQUIRED";
     public const string CompanyNotFound = "ERR_COMPANY_NOT_FOUND";
     public const string BranchNotFound = "ERR_BRANCH_NOT_FOUND";
+
+    // Inventory & Trade Module Errors
+    public const string ItemNotFound = "ERR_ITEM_NOT_FOUND";
+    public const string WarehouseNotFound = "ERR_WAREHOUSE_NOT_FOUND";
+    public const string InsufficientStock = "ERR_INSUFFICIENT_STOCK";
+    public const string NegativeStockNotAllowed = "ERR_NEGATIVE_STOCK_NOT_ALLOWED";
+    public const string DuplicateItemCode = "ERR_DUPLICATE_ITEM_CODE";
+    public const string DuplicateBarcode = "ERR_DUPLICATE_BARCODE";
+    public const string DuplicateGroupCode = "ERR_DUPLICATE_GROUP_CODE";
+    public const string DuplicateWarehouseCode = "ERR_DUPLICATE_WAREHOUSE_CODE";
+    public const string LotNumberRequired = "ERR_LOT_NUMBER_REQUIRED";
+    public const string SerialNumberRequired = "ERR_SERIAL_NUMBER_REQUIRED";
+    public const string DocTypeRequired = "ERR_DOC_TYPE_REQUIRED";
+    public const string TrxTypeRequired = "ERR_TRX_TYPE_REQUIRED";
+    public const string InvalidUomFactor = "ERR_INVALID_UOM_FACTOR";
+    public const string OpeningBalancePosted = "ERR_OPENING_BALANCE_POSTED";
 }

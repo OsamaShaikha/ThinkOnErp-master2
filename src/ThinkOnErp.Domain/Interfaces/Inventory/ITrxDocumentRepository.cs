@@ -13,6 +13,7 @@ public interface ITrxDocumentRepository
         long branchId, int? docYear, int? docType, int? trxType, int? partyTypeCode, long? partyId, int? statusCode,
         int pageNumber, int pageSize, CancellationToken ct = default);
     Task<long> GetNextIdAsync(long branchId, int docYear, int docType, CancellationToken ct = default);
+    Task<long> GenerateNextSerialNoAsync(long branchId, int docYear, int docMonth, int docType, string resetPolicy, CancellationToken ct = default);
     Task<TrxDocumentHeader> CreateAsync(TrxDocumentHeader doc, CancellationToken ct = default);
     Task UpdateAsync(TrxDocumentHeader doc, CancellationToken ct = default);
     Task DeleteAsync(TrxDocumentHeader doc, CancellationToken ct = default);

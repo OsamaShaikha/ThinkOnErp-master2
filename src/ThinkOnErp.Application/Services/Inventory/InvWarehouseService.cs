@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -40,13 +40,14 @@ public sealed class InvWarehouseService : IInvWarehouseService
         var warehouse = new InvWarehouse
         {
             BranchId = request.BranchId,
-            WarehouseCode = request.WarehouseCode.Trim().ToUpper(),
-            WarehouseNameAr = request.WarehouseNameAr.Trim(),
+            WarehouseCode = request.WarehouseCode,
+            WarehouseNameLocal = request.WarehouseNameLocal.Trim(),
             WarehouseNameEn = request.WarehouseNameEn?.Trim() ?? string.Empty,
             WarehouseType = whType,
             Address = request.Address?.Trim(),
             EnableBinTracking = request.EnableBinTracking,
             IsActive = true,
+            CreationUser = "admin",
             CreationDate = DateTime.UtcNow
         };
 
@@ -60,12 +61,13 @@ public sealed class InvWarehouseService : IInvWarehouseService
         if (warehouse == null)
             return ApiResponse<InvWarehouseDto>.CreateFailure("Warehouse not found", null, 404);
 
-        if (!string.IsNullOrWhiteSpace(request.WarehouseNameAr)) warehouse.WarehouseNameAr = request.WarehouseNameAr.Trim();
-        if (request.WarehouseNameEn != null) warehouse.WarehouseNameEn = request.WarehouseNameEn.Trim();
-        if (!string.IsNullOrWhiteSpace(request.WarehouseType) && Enum.TryParse<WarehouseType>(request.WarehouseType, true, out var whType)) warehouse.WarehouseType = whType;
+        if (!string.IsNullOrWhiteSpace(request.WarehouseNameLocal)) warehouse.WarehouseNameLocal = request.WarehouseNameLocal.Trim();
+        if (!string.IsNullOrWhiteSpace(request.WarehouseNameEn)) warehouse.WarehouseNameEn = request.WarehouseNameEn.Trim();
+        if (!string.IsNullOrWhiteSpace(request.WarehouseType) && Enum.TryParse<WarehouseType>(request.WarehouseType, true, out var wt)) warehouse.WarehouseType = wt;
         if (request.Address != null) warehouse.Address = request.Address.Trim();
         if (request.EnableBinTracking.HasValue) warehouse.EnableBinTracking = request.EnableBinTracking.Value;
 
+        warehouse.UpdateUser = "admin";
         warehouse.UpdateDate = DateTime.UtcNow;
         await _warehouseRepository.UpdateAsync(warehouse, cancellationToken);
         return ApiResponse<InvWarehouseDto>.CreateSuccess(InvWarehouseMapper.ToDto(warehouse), "Warehouse updated successfully");
@@ -107,7 +109,7 @@ public sealed class InvWarehouseService : IInvWarehouseService
         var zone = new InvZone
         {
             WarehouseId = warehouseId,
-            ZoneCode = request.ZoneCode.Trim().ToUpper(),
+            ZoneCode = request.ZoneCode,
             ZoneName = request.ZoneName.Trim(),
             ZoneType = zoneType
         };
@@ -149,7 +151,7 @@ public sealed class InvWarehouseService : IInvWarehouseService
         var bin = new InvBin
         {
             ZoneId = zoneId,
-            BinCode = request.BinCode.Trim().ToUpper(),
+            BinCode = request.BinCode,
             MaxWeight = request.MaxWeight,
             MaxVolume = request.MaxVolume,
             IsActive = true
@@ -166,7 +168,7 @@ public sealed class InvWarehouseService : IInvWarehouseService
         if (bin == null)
             return ApiResponse<bool>.CreateFailure("Bin not found", null, 404);
 
-        if (!string.IsNullOrWhiteSpace(request.BinCode)) bin.BinCode = request.BinCode.Trim().ToUpper();
+        if (request.BinCode.HasValue) bin.BinCode = request.BinCode.Value;
         if (request.MaxWeight.HasValue) bin.MaxWeight = request.MaxWeight;
         if (request.MaxVolume.HasValue) bin.MaxVolume = request.MaxVolume;
         if (request.IsActive.HasValue) bin.IsActive = request.IsActive.Value;

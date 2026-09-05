@@ -1,9 +1,9 @@
-namespace ThinkOnErp.Domain.Entities;
+﻿namespace ThinkOnErp.Domain.Entities;
 
 public class SysUser
 {
     public Int64 Id { get; set; }
-    public string FullNameAr { get; set; } = string.Empty;
+    public string FullNameLocal { get; set; } = string.Empty;
     public string FullNameEn { get; set; } = string.Empty;
     public string UserName { get; set; } = string.Empty;
     public string Password { get; set; } = string.Empty;

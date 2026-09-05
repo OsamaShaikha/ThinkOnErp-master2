@@ -1,4 +1,4 @@
-using MediatR;
+﻿using MediatR;
 using ThinkOnErp.Application.DTOs.FiscalYear;
 using ThinkOnErp.Domain.Interfaces;
 
@@ -22,7 +22,7 @@ public class GetAllFiscalYearsQueryHandler : IRequestHandler<GetAllFiscalYearsQu
             FiscalYearId = fy.Id,
             BranchId = fy.BranchId,
             FiscalYearCode = fy.FiscalYearCode,
-            FiscalYearNameAr = fy.FiscalYearNameAr,
+            FiscalYearNameLocal = fy.FiscalYearNameLocal,
             FiscalYearNameEn = fy.FiscalYearNameEn,
             StartDate = fy.StartDate,
             EndDate = fy.EndDate,

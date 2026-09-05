@@ -1,4 +1,4 @@
-using MediatR;
+﻿using MediatR;
 using ThinkOnErp.Application.DTOs.Role;
 using ThinkOnErp.Domain.Interfaces;
 
@@ -27,7 +27,7 @@ public class GetRoleByIdQueryHandler : IRequestHandler<GetRoleByIdQuery, RoleDto
         return new RoleDto
         {
             RoleId = role.Id,
-            RoleNameAr = role.RoleNameAr,
+            RoleNameLocal = role.RoleNameLocal,
             RoleNameEn = role.RoleNameEn,
             Note = role.Note,
             IsActive = role.IsActive,

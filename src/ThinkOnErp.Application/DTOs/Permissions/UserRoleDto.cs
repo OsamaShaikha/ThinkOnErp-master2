@@ -1,4 +1,4 @@
-namespace ThinkOnErp.Application.DTOs.Permissions;
+﻿namespace ThinkOnErp.Application.DTOs.Permissions;
 
 /// <summary>
 /// Data transfer object for user role assignments.
@@ -18,7 +18,7 @@ public class UserRoleDto
     /// <summary>
     /// Arabic role name
     /// </summary>
-    public string RoleNameAr { get; set; } = string.Empty;
+    public string RoleNameLocal { get; set; } = string.Empty;
 
     /// <summary>
     /// English role name

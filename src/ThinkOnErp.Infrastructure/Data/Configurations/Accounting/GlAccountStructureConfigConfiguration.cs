@@ -1,4 +1,4 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using ThinkOnErp.Domain.Entities.Accounting;
 
@@ -20,8 +20,8 @@ public class GlAccountStructureConfigConfiguration : IEntityTypeConfiguration<Gl
             .HasColumnName("DIGIT_LENGTH")
             .IsRequired();
 
-        builder.Property(c => c.LevelNameAr)
-            .HasColumnName("LEVEL_NAME_AR")
+        builder.Property(c => c.LevelNameLocal)
+            .HasColumnName("LEVEL_NAME_LOCAL")
             .HasMaxLength(100)
             .IsRequired();
 
@@ -45,7 +45,7 @@ public class GlAccountStructureConfigConfiguration : IEntityTypeConfiguration<Gl
             {
                 LevelNumber = 1,
                 DigitLength = 1,
-                LevelNameAr = "المستوى الأول - الحسابات الرئيسية العالية",
+                LevelNameLocal = "المستوى الأول - الحسابات الرئيسية العالية",
                 LevelNameEn = "Level 1 - Main Primary Accounts",
                 Description = "خانة واحدة للحسابات الرئيسية (1: الأصول، 2: الخصوم، 3: حقوق الملكية...)",
                 IsActive = true
@@ -54,7 +54,7 @@ public class GlAccountStructureConfigConfiguration : IEntityTypeConfiguration<Gl
             {
                 LevelNumber = 2,
                 DigitLength = 1,
-                LevelNameAr = "المستوى الثاني - الفئات الرئيسية",
+                LevelNameLocal = "المستوى الثاني - الفئات الرئيسية",
                 LevelNameEn = "Level 2 - Main Categories",
                 Description = "خانة واحدة إضافية للفئات الرئيسية (11: الأصول المتداولة، 12: الأصول غير المتداولة...)",
                 IsActive = true
@@ -63,7 +63,7 @@ public class GlAccountStructureConfigConfiguration : IEntityTypeConfiguration<Gl
             {
                 LevelNumber = 3,
                 DigitLength = 1,
-                LevelNameAr = "المستوى الثالث - المجموعات الفرعية",
+                LevelNameLocal = "المستوى الثالث - المجموعات الفرعية",
                 LevelNameEn = "Level 3 - Sub Groups",
                 Description = "خانة واحدة إضافية للمجموعات الفرعية (111: النقدية وما في حكمها...)",
                 IsActive = true
@@ -72,7 +72,7 @@ public class GlAccountStructureConfigConfiguration : IEntityTypeConfiguration<Gl
             {
                 LevelNumber = 4,
                 DigitLength = 1,
-                LevelNameAr = "المستوى الرابع - الحسابات التجميعية",
+                LevelNameLocal = "المستوى الرابع - الحسابات التجميعية",
                 LevelNameEn = "Level 4 - Summary Accounts",
                 Description = "خانة واحدة إضافية للحسابات التجميعية (1111: البنوك...)",
                 IsActive = true
@@ -81,7 +81,7 @@ public class GlAccountStructureConfigConfiguration : IEntityTypeConfiguration<Gl
             {
                 LevelNumber = 5,
                 DigitLength = 2,
-                LevelNameAr = "المستوى الخامس - الحسابات الفرعية التفصيلية",
+                LevelNameLocal = "المستوى الخامس - الحسابات الفرعية التفصيلية",
                 LevelNameEn = "Level 5 - Detail Sub Accounts",
                 Description = "خانة أو خانتان تفصيلية للحسابات الفرعية للتسجيل والترحيل المباشر (111101: بنك الاتحاد - حساب جاري...)",
                 IsActive = true

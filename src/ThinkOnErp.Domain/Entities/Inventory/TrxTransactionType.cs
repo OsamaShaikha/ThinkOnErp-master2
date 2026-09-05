@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 
 namespace ThinkOnErp.Domain.Entities.Inventory;
 
@@ -7,7 +7,7 @@ public sealed class TrxTransactionType
     public int TrxCode { get; set; }
     public int DocTypeCode { get; set; }
     public string TrxKey { get; set; } = string.Empty;
-    public string TrxNameAr { get; set; } = string.Empty;
+    public string TrxNameLocal { get; set; } = string.Empty;
     public string TrxNameEn { get; set; } = string.Empty;
     public bool AffectsStock { get; set; } = true;
     public int StockDirection { get; set; } = 0;

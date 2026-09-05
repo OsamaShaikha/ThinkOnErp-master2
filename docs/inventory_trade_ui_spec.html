@@ -1,0 +1,892 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ThinkOn ERP — Inventory & Trade Documents UI Specification</title>
+  <!-- Tailwind CSS via allowlisted CDN -->
+  <script src="https://www.gstatic.com/antigravity/web/dev/tailwindcss.min.js"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap');
+    
+    * {
+      font-family: 'Cairo', system-ui, -apple-system, sans-serif;
+    }
+    
+    code, pre, .font-mono {
+      font-family: 'JetBrains Mono', monospace !important;
+      direction: ltr;
+      text-align: left;
+    }
+
+    /* Custom scrollbars */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: rgba(0, 0, 0, 0.05);
+    }
+    ::-webkit-scrollbar-thumb {
+      background: rgba(99, 102, 241, 0.4);
+      border-radius: 3px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: rgba(99, 102, 241, 0.7);
+    }
+
+    .glass-card {
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(226, 232, 240, 0.8);
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 0.15rem 0.6rem;
+      border-radius: 9999px;
+      font-size: 0.75rem;
+      font-weight: 700;
+    }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-800 antialiased min-h-screen flex flex-col">
+
+  <!-- TOP HEADER -->
+  <header class="bg-indigo-900 text-white shadow-lg sticky top-0 z-50 border-b border-indigo-700">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 flex flex-wrap items-center justify-between gap-4">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-400 to-indigo-600 flex items-center justify-center shadow-md font-black text-xl text-white">
+          T
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <h1 class="text-xl font-bold tracking-tight">ThinkOn ERP — Frontend UI Specification</h1>
+            <span class="bg-indigo-700 text-indigo-200 text-xs px-2 py-0.5 rounded-full font-mono">v2.4 Final</span>
+          </div>
+          <p class="text-xs text-indigo-300">الدليل الشامل لمطور الواجهات (Frontend UI & API Reference) للمخزون والتجارة والتجميع</p>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-3">
+        <span class="text-xs bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-2.5 py-1 rounded-lg flex items-center gap-1.5 font-medium">
+          <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+          Swagger Doc #8 Active
+        </span>
+        <button onclick="copyAllEndpoints()" class="bg-indigo-800 hover:bg-indigo-700 text-xs text-indigo-100 px-3 py-1.5 rounded-lg border border-indigo-600 transition flex items-center gap-1">
+          📋 نسخ كل الروابط
+        </button>
+      </div>
+    </div>
+
+    <!-- MAIN NAVIGATION TABS -->
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <nav class="flex space-x-1 space-x-reverse overflow-x-auto pb-1 text-sm font-medium border-t border-indigo-800/60 pt-1.5" id="navTabs">
+        <button onclick="switchTab('documents')" id="tab-documents" class="nav-btn px-4 py-2.5 rounded-t-lg transition flex items-center gap-2 border-b-2 border-amber-400 text-amber-300 bg-indigo-800/80 font-bold">
+          📄 <span>الفواتير والمستندات الموحدة</span>
+        </button>
+        <button onclick="switchTab('items')" id="tab-items" class="nav-btn px-4 py-2.5 rounded-t-lg transition flex items-center gap-2 border-b-2 border-transparent text-indigo-200 hover:text-white hover:bg-indigo-800/40">
+          📦 <span>الأصناف والمجموعات المزدوجة</span>
+        </button>
+        <button onclick="switchTab('bom')" id="tab-bom" class="nav-btn px-4 py-2.5 rounded-t-lg transition flex items-center gap-2 border-b-2 border-transparent text-indigo-200 hover:text-white hover:bg-indigo-800/40">
+          🧩 <span>الكرت التجميعي (BOM)</span>
+        </button>
+        <button onclick="switchTab('warehouses')" id="tab-warehouses" class="nav-btn px-4 py-2.5 rounded-t-lg transition flex items-center gap-2 border-b-2 border-transparent text-indigo-200 hover:text-white hover:bg-indigo-800/40">
+          🏬 <span>المستودعات والمناطق والرفوف</span>
+        </button>
+        <button onclick="switchTab('opening')" id="tab-opening" class="nav-btn px-4 py-2.5 rounded-t-lg transition flex items-center gap-2 border-b-2 border-transparent text-indigo-200 hover:text-white hover:bg-indigo-800/40">
+          ⚖️ <span>الأرصدة الافتتاحية</span>
+        </button>
+        <button onclick="switchTab('stock')" id="tab-stock" class="nav-btn px-4 py-2.5 rounded-t-lg transition flex items-center gap-2 border-b-2 border-transparent text-indigo-200 hover:text-white hover:bg-indigo-800/40">
+          📊 <span>حركات المخزون والمتاح (ATP)</span>
+        </button>
+        <button onclick="switchTab('api')" id="tab-api" class="nav-btn px-4 py-2.5 rounded-t-lg transition flex items-center gap-2 border-b-2 border-transparent text-indigo-200 hover:text-white hover:bg-indigo-800/40">
+          🔌 <span>دليل الـ API & Payloads</span>
+        </button>
+      </nav>
+    </div>
+  </header>
+
+  <!-- MAIN BODY CONTENT -->
+  <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+
+    <!-- ========================================================================= -->
+    <!-- TAB 1: UNIVERSAL TRADE & MOVEMENT DOCUMENTS -->
+    <!-- ========================================================================= -->
+    <div id="content-documents" class="tab-content space-y-6">
+      
+      <!-- Key Architecture Banner -->
+      <div class="bg-gradient-to-r from-amber-500/10 via-amber-500/5 to-transparent border-r-4 border-amber-500 p-4 rounded-xl flex items-start gap-3.5">
+        <div class="text-2xl mt-0.5">⚠️</div>
+        <div class="space-y-1">
+          <h3 class="font-bold text-amber-900 text-base">القواعد الجوهرية لشاشة الفواتير والمستندات (Critical Directives):</h3>
+          <ul class="text-xs text-amber-800 space-y-1 list-disc list-inside">
+            <li><strong>المفتاح الأساسي الرباعي (Composite PK):</strong> يعتمد على <code class="bg-amber-100 px-1 py-0.5 rounded text-amber-900 font-bold">BranchId</code> + <code class="bg-amber-100 px-1 py-0.5 rounded text-amber-900 font-bold">DocYear</code> + <code class="bg-amber-100 px-1 py-0.5 rounded text-amber-900 font-bold">DocType</code> + <code class="bg-amber-100 px-1 py-0.5 rounded text-amber-900 font-bold">Id</code>.</li>
+            <li><strong>الأرقام بدلاً من النصوص (sysCode Codes):</strong>
+              نوع الطرف: <span class="badge bg-slate-200 text-slate-800">0=NONE</span> <span class="badge bg-blue-100 text-blue-800">1=CUSTOMER</span> <span class="badge bg-purple-100 text-purple-800">2=VENDOR</span> <span class="badge bg-teal-100 text-teal-800">3=BRANCH</span> <span class="badge bg-orange-100 text-orange-800">4=DEPARTMENT</span> | 
+              طريقة الدفع: <span class="badge bg-green-100 text-green-800">1=CASH</span> <span class="badge bg-amber-100 text-amber-800">2=CREDIT</span> <span class="badge bg-indigo-100 text-indigo-800">3=BANK</span> <span class="badge bg-rose-100 text-rose-800">4=CHEQUE</span> <span class="badge bg-cyan-100 text-cyan-800">5=MULTI</span>
+            </li>
+            <li><strong>الترحيل المزدوج (Double-Posting):</strong> عند الضغط على <code class="bg-emerald-100 text-emerald-800 px-1 py-0.5 rounded font-bold">POST /post</code> يتم إنشاء سند القيد في الأستاذ العام وتوليد حركات المخزون مع انفجار الأصناف التجميعية تلقائياً.</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Live Mock Interactive Screen -->
+      <div class="glass-card rounded-2xl p-6 shadow-sm space-y-6">
+        <div class="flex flex-wrap items-center justify-between gap-4 border-b border-slate-200 pb-4">
+          <div class="flex items-center gap-3">
+            <span class="p-2 bg-indigo-100 text-indigo-700 rounded-xl font-bold text-lg">📄</span>
+            <div>
+              <h2 class="text-lg font-bold text-slate-900">نموذج شاشة الفاتورة / المستند التجاري (UI Mockup)</h2>
+              <p class="text-xs text-slate-500">تصميم الواجهة المطلوب بناؤها في Angular / React</p>
+            </div>
+          </div>
+          <div class="flex items-center gap-2">
+            <span class="badge bg-amber-100 text-amber-800">حالة المسودة (Draft = 1)</span>
+            <button class="bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs px-3 py-2 rounded-lg font-semibold transition">حفظ مسودة</button>
+            <button class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs px-4 py-2 rounded-lg font-bold shadow-sm transition flex items-center gap-1.5">
+              <span>⚡</span> ترحيل نهائي (Post)
+            </button>
+          </div>
+        </div>
+
+        <!-- Document Header Inputs Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 text-xs">
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">الفرع (BranchId) <span class="text-red-500">*</span></label>
+            <select class="w-full bg-white border border-slate-300 rounded-lg p-2 text-xs focus:ring-2 focus:ring-indigo-500">
+              <option value="1">1 - الفرع الرئيسي (Main Branch)</option>
+              <option value="2">2 - فرع إربد (Irbid Branch)</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">نوع المستند (DocType) <span class="text-red-500">*</span></label>
+            <select class="w-full bg-white border border-slate-300 rounded-lg p-2 text-xs focus:ring-2 focus:ring-indigo-500 font-semibold text-indigo-900">
+              <option value="100">100 - فاتورة مبيعات (Sales Invoice)</option>
+              <option value="150">150 - مردود مبيعات (Sales Return)</option>
+              <option value="200">200 - فاتورة مشتريات (Purchase Bill)</option>
+              <option value="250">250 - مردود مشتريات (Purchase Return)</option>
+              <option value="300">300 - سند مخزني إدخال/إخراج (Stock Voucher)</option>
+              <option value="350">350 - تحويل مخزني (Stock Transfer)</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">نوع الحركة (TrxType) <span class="text-red-500">*</span></label>
+            <select class="w-full bg-white border border-slate-300 rounded-lg p-2 text-xs focus:ring-2 focus:ring-indigo-500">
+              <option value="1001">1001 - مبيعات محلية نقدية (Local Cash)</option>
+              <option value="1002">1002 - مبيعات ذمم وآجل (Local Credit)</option>
+              <option value="1003">1003 - مبيعات تصدير خارجي (Export)</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">تاريخ المستند (DocDate)</label>
+            <input type="date" value="2026-08-31" class="w-full bg-white border border-slate-300 rounded-lg p-2 text-xs">
+          </div>
+
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">نوع الطرف (PartyTypeCode) <span class="text-red-500">*</span></label>
+            <select class="w-full bg-white border border-slate-300 rounded-lg p-2 text-xs focus:ring-2 focus:ring-indigo-500">
+              <option value="1">1 - عميل (Customer)</option>
+              <option value="2">2 - مورد (Vendor)</option>
+              <option value="3">3 - فرع (Branch)</option>
+              <option value="4">4 - قسم داخلي (Department)</option>
+              <option value="0">0 - بدون طرف (None)</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">الطرف / العميل (PartyId & Name)</label>
+            <input type="text" value="شركة الأفق للتقنية (CUST-0092)" class="w-full bg-white border border-slate-300 rounded-lg p-2 text-xs">
+          </div>
+
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">طريقة الدفع (PaymentMethodCode) <span class="text-red-500">*</span></label>
+            <select class="w-full bg-white border border-slate-300 rounded-lg p-2 text-xs focus:ring-2 focus:ring-indigo-500 font-semibold text-emerald-800">
+              <option value="1">1 - نقداً (Cash)</option>
+              <option value="2">2 - ذمم / آجل (Credit)</option>
+              <option value="3">3 - بنك / حوالة (Bank)</option>
+              <option value="4">4 - شيكات (Cheque)</option>
+              <option value="5">5 - متعدد (Multi)</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">من مستودع (FromWarehouseId)</label>
+            <select class="w-full bg-white border border-slate-300 rounded-lg p-2 text-xs focus:ring-2 focus:ring-indigo-500">
+              <option value="1">WH-01 - المستودع المركزي الرئيسي</option>
+              <option value="2">WH-02 - مستودع المواد الأولية</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Lines Table -->
+        <div class="space-y-2">
+          <div class="flex items-center justify-between">
+            <h4 class="text-xs font-bold text-slate-700 flex items-center gap-1.5">
+              <span>📋</span> بنود ومواد الفاتورة (Document Line Items):
+            </h4>
+            <button class="text-xs bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold px-2.5 py-1 rounded-lg border border-indigo-200 transition">
+              + إضافة بند جديد
+            </button>
+          </div>
+
+          <div class="overflow-x-auto border border-slate-200 rounded-xl">
+            <table class="w-full text-right text-xs">
+              <thead class="bg-slate-100 text-slate-700 font-bold border-b border-slate-200">
+                <tr>
+                  <th class="p-2.5 text-center">#</th>
+                  <th class="p-2.5">رمز الصنف / الوصف</th>
+                  <th class="p-2.5">الوحدة</th>
+                  <th class="p-2.5 text-center">الكمية</th>
+                  <th class="p-2.5 text-center">سعر الوحدة</th>
+                  <th class="p-2.5 text-center">الخصم</th>
+                  <th class="p-2.5 text-center">الضريبة %</th>
+                  <th class="p-2.5 text-center">الإجمالي</th>
+                  <th class="p-2.5">الرف / الخانة (Bin)</th>
+                  <th class="p-2.5">الدفعة (Lot)</th>
+                  <th class="p-2.5 text-center">إجراء</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-100">
+                <tr class="hover:bg-slate-50">
+                  <td class="p-2.5 text-center font-bold text-slate-400">1</td>
+                  <td class="p-2.5">
+                    <div class="font-bold text-slate-800">KIT-PC-GAMING</div>
+                    <div class="text-[10px] text-indigo-600 font-medium">✨ كرت تجميعي (Kit / Assembly) - ينفجر تلقائياً عند الترحيل</div>
+                  </td>
+                  <td class="p-2.5"><span class="badge bg-slate-100 text-slate-700 font-mono">SET</span></td>
+                  <td class="p-2.5 text-center font-bold text-indigo-700">2.00</td>
+                  <td class="p-2.5 text-center font-mono">750.00</td>
+                  <td class="p-2.5 text-center font-mono">0.00</td>
+                  <td class="p-2.5 text-center font-mono">16%</td>
+                  <td class="p-2.5 text-center font-bold text-slate-900 font-mono">1,740.00</td>
+                  <td class="p-2.5 text-slate-500 font-mono text-[11px]">BIN-A1-04</td>
+                  <td class="p-2.5 text-slate-400 font-mono text-[11px]">-</td>
+                  <td class="p-2.5 text-center text-red-500 hover:text-red-700 cursor-pointer">🗑️</td>
+                </tr>
+                <tr class="hover:bg-slate-50">
+                  <td class="p-2.5 text-center font-bold text-slate-400">2</td>
+                  <td class="p-2.5">
+                    <div class="font-bold text-slate-800">ITM-MOUSE-RGB</div>
+                    <div class="text-[10px] text-slate-500">ماوس لاسلكي احترافي RGB</div>
+                  </td>
+                  <td class="p-2.5"><span class="badge bg-slate-100 text-slate-700 font-mono">PCS</span></td>
+                  <td class="p-2.5 text-center font-bold text-indigo-700">5.00</td>
+                  <td class="p-2.5 text-center font-mono">25.00</td>
+                  <td class="p-2.5 text-center font-mono">5.00</td>
+                  <td class="p-2.5 text-center font-mono">16%</td>
+                  <td class="p-2.5 text-center font-bold text-slate-900 font-mono">139.20</td>
+                  <td class="p-2.5 text-slate-500 font-mono text-[11px]">BIN-B2-01</td>
+                  <td class="p-2.5 text-slate-700 font-mono text-[11px]">LOT-2026-08</td>
+                  <td class="p-2.5 text-center text-red-500 hover:text-red-700 cursor-pointer">🗑️</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Totals Summary & Calculations Footer -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 bg-slate-100/70 p-4 rounded-xl border border-slate-200">
+          <div>
+            <label class="block font-bold text-slate-700 text-xs mb-1">ملاحظات المستند (Notes):</label>
+            <textarea rows="2" class="w-full bg-white border border-slate-300 rounded-lg p-2 text-xs" placeholder="تسليم موقع العميل مع كفالة سنة..."></textarea>
+          </div>
+          <div class="space-y-1.5 text-xs text-slate-700">
+            <div class="flex justify-between">
+              <span>المجموع الإجمالي (Total Gross):</span>
+              <span class="font-bold font-mono">1,625.00 USD</span>
+            </div>
+            <div class="flex justify-between text-red-600">
+              <span>إجمالي الخصم (Discount Amount):</span>
+              <span class="font-bold font-mono">-5.00 USD</span>
+            </div>
+            <div class="flex justify-between">
+              <span>الصافي قبل الضريبة (Net Before Tax):</span>
+              <span class="font-bold font-mono">1,620.00 USD</span>
+            </div>
+            <div class="flex justify-between text-indigo-700">
+              <span>مبلغ الضريبة (VAT 16%):</span>
+              <span class="font-bold font-mono">+259.20 USD</span>
+            </div>
+            <div class="flex justify-between border-t border-slate-300 pt-1.5 text-sm font-black text-slate-900">
+              <span>الصافي النهائي المستحق (Total Net):</span>
+              <span class="font-mono text-emerald-700 text-base">1,879.20 USD</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+
+    <!-- ========================================================================= -->
+    <!-- TAB 2: ITEM MASTER & DUAL GROUPS -->
+    <!-- ========================================================================= -->
+    <div id="content-items" class="tab-content space-y-6 hidden">
+      <div class="glass-card rounded-2xl p-6 shadow-sm space-y-6">
+        <div class="flex items-center justify-between border-b border-slate-200 pb-4">
+          <div class="flex items-center gap-3">
+            <span class="p-2 bg-purple-100 text-purple-700 rounded-xl font-bold text-lg">📦</span>
+            <div>
+              <h2 class="text-lg font-bold text-slate-900">بطاقة الصنف والمجموعات المزدوجة (Item Master & Groups)</h2>
+              <p class="text-xs text-slate-500">إدارة الأصناف العادية والتجميعية، والمجموعة الرئيسية والمجموعة الفرعية</p>
+            </div>
+          </div>
+          <button class="bg-indigo-600 hover:bg-indigo-700 text-white text-xs px-4 py-2 rounded-lg font-bold shadow-sm transition">
+            + حفظ صنف جديد
+          </button>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">كود الصنف (ItemCode) <span class="text-red-500">*</span></label>
+            <input type="text" value="ITM-LAPTOP-PRO" class="w-full bg-white border border-slate-300 rounded-lg p-2 text-xs font-mono">
+          </div>
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">اسم الصنف بالعربي (ItemNameAr) <span class="text-red-500">*</span></label>
+            <input type="text" value="حاسوب محمول برو 16 بوصة" class="w-full bg-white border border-slate-300 rounded-lg p-2 text-xs">
+          </div>
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">اسم الصنف بالإنجليزي (ItemNameEn) <span class="text-red-500">*</span></label>
+            <input type="text" value="Pro Laptop 16-inch" class="w-full bg-white border border-slate-300 rounded-lg p-2 text-xs font-mono">
+          </div>
+
+          <!-- Dual Group Selectors -->
+          <div class="p-3 bg-indigo-50/70 border border-indigo-100 rounded-xl space-y-2">
+            <label class="block font-bold text-indigo-900 mb-1">1. المجموعة الرئيسية (Main Group) <span class="text-red-500">*</span></label>
+            <select class="w-full bg-white border border-indigo-200 rounded-lg p-2 text-xs font-semibold">
+              <option value="1">GRP-ELC - الأجهزة الإلكترونية (Electronics)</option>
+              <option value="2">GRP-RAW - المواد الخام والأولية (Raw Materials)</option>
+              <option value="3">GRP-ACC - الإكسسوارات والملحقات (Accessories)</option>
+            </select>
+          </div>
+
+          <div class="p-3 bg-indigo-50/70 border border-indigo-100 rounded-xl space-y-2">
+            <label class="block font-bold text-indigo-900 mb-1">2. المجموعة الفرعية (Sub Group)</label>
+            <select class="w-full bg-white border border-indigo-200 rounded-lg p-2 text-xs font-semibold">
+              <option value="11">SUB-COMP - أجهزة الكمبيوتر واللابتوب</option>
+              <option value="12">SUB-MOBI - الهواتف الذكية</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">نوع الصنف (ItemType) <span class="text-red-500">*</span></label>
+            <select class="w-full bg-white border border-slate-300 rounded-lg p-2 text-xs font-bold text-indigo-800">
+              <option value="Stock">Stock - صنف مخزني عادي</option>
+              <option value="Kit">Kit - طقم مبيعات تجميعي (Sales Kit)</option>
+              <option value="Assembly">Assembly - منتج تجميعي/تصنيعي (Assembly)</option>
+              <option value="Service">Service - صنف خدمي</option>
+              <option value="NonStock">NonStock - صنف استهلاكي غير مخزني</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">طريقة احتساب التكلفة (CostingMethod)</label>
+            <select class="w-full bg-white border border-slate-300 rounded-lg p-2 text-xs font-semibold">
+              <option value="WeightedAverage">WeightedAverage - المتوسط المرجح المتحرك</option>
+              <option value="Fifo">Fifo - الوارد أولاً صادر أولاً (FIFO Layers)</option>
+              <option value="SpecificId">SpecificId - التكلفة المحددة بالسيريال/الدفعة</option>
+              <option value="Standard">Standard - التكلفة المعيارية</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">وحدة القياس الأساسية (UomBase)</label>
+            <input type="text" value="PCS" class="w-full bg-white border border-slate-300 rounded-lg p-2 text-xs font-mono">
+          </div>
+
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">التكلفة المعيارية (StandardCost)</label>
+            <input type="number" value="650.00" class="w-full bg-white border border-slate-300 rounded-lg p-2 text-xs font-mono">
+          </div>
+        </div>
+
+        <!-- Tracking Checkboxes -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-3 bg-slate-50 p-4 rounded-xl border border-slate-200 text-xs">
+          <label class="flex items-center gap-2 cursor-pointer">
+            <input type="checkbox" checked class="rounded text-indigo-600 focus:ring-indigo-500">
+            <span class="font-bold text-slate-700">تتبع أرقام المسلسلات (Serial Tracking)</span>
+          </label>
+          <label class="flex items-center gap-2 cursor-pointer">
+            <input type="checkbox" checked class="rounded text-indigo-600 focus:ring-indigo-500">
+            <span class="font-bold text-slate-700">تتبع أرقام التشغيلات (Lot Tracking)</span>
+          </label>
+          <label class="flex items-center gap-2 cursor-pointer">
+            <input type="checkbox" checked class="rounded text-indigo-600 focus:ring-indigo-500">
+            <span class="font-bold text-slate-700">تتبع الصلاحية (Expiry FEFO)</span>
+          </label>
+          <label class="flex items-center gap-2 cursor-pointer">
+            <input type="checkbox" class="rounded text-indigo-600 focus:ring-indigo-500">
+            <span class="font-bold text-red-700">السماح بالسالب (Negative Stock)</span>
+          </label>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========================================================================= -->
+    <!-- TAB 3: BOM & COMPOSITE ASSEMBLIES -->
+    <!-- ========================================================================= -->
+    <div id="content-bom" class="tab-content space-y-6 hidden">
+      <div class="glass-card rounded-2xl p-6 shadow-sm space-y-6">
+        <div class="flex items-center justify-between border-b border-slate-200 pb-4">
+          <div class="flex items-center gap-3">
+            <span class="p-2 bg-emerald-100 text-emerald-700 rounded-xl font-bold text-lg">🧩</span>
+            <div>
+              <h2 class="text-lg font-bold text-slate-900">الكرت التجميعي ووصفة التركيب (Bill of Materials - BOM)</h2>
+              <p class="text-xs text-slate-500">تعريف مكونات الصنف التجميعي ونسب تكاليفها وتوليد شجرة المكونات تلقائياً</p>
+            </div>
+          </div>
+          <button class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs px-4 py-2 rounded-lg font-bold shadow-sm transition">
+            + حفظ كرت التجميع
+          </button>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 text-xs">
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">كود المعادلة (BomCode)</label>
+            <input type="text" value="BOM-PC-SET-01" class="w-full bg-white border border-slate-300 rounded-lg p-2 text-xs font-mono">
+          </div>
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">الصنف التجميعي الأب (Parent Item)</label>
+            <select class="w-full bg-white border border-slate-300 rounded-lg p-2 text-xs font-bold text-emerald-900">
+              <option value="10">KIT-PC-GAMING - كمبيوتر مكتبي تجميعي كامل</option>
+              <option value="11">KIT-SOLAR-SYS - نظام طاقة شمسية منزلي</option>
+            </select>
+          </div>
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">كمية الإنتاج/المخرجات (OutputQty)</label>
+            <input type="number" value="1.00" class="w-full bg-white border border-slate-300 rounded-lg p-2 text-xs font-mono">
+          </div>
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">نوع التجميع (BomType)</label>
+            <select class="w-full bg-white border border-slate-300 rounded-lg p-2 text-xs">
+              <option value="SalesKit">SalesKit - طقم مبيعات (ينفجر بالفاتورة)</option>
+              <option value="Manufacturing">Manufacturing - تجميع تصنيعي بأمر إنتاج</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- BOM Recipe Lines -->
+        <div class="space-y-2">
+          <h4 class="text-xs font-bold text-slate-700">شجرة المكونات الداخلة في التركيب (Component Lines):</h4>
+          <div class="border border-slate-200 rounded-xl overflow-x-auto">
+            <table class="w-full text-right text-xs">
+              <thead class="bg-slate-100 text-slate-700 font-bold border-b border-slate-200">
+                <tr>
+                  <th class="p-2.5 text-center">#</th>
+                  <th class="p-2.5">المادة المكونة (Component Item)</th>
+                  <th class="p-2.5">الوحدة</th>
+                  <th class="p-2.5 text-center">الكمية المطلوبة</th>
+                  <th class="p-2.5 text-center">نسبة الهالك %</th>
+                  <th class="p-2.5 text-center">حصة التكلفة %</th>
+                  <th class="p-2.5 text-center">السماح ببديل</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-100">
+                <tr>
+                  <td class="p-2.5 text-center font-mono">1</td>
+                  <td class="p-2.5 font-bold text-slate-800">CPU-INTEL-I7 (معالج إنتل كور i7)</td>
+                  <td class="p-2.5"><span class="badge bg-slate-100 font-mono">PCS</span></td>
+                  <td class="p-2.5 text-center font-bold text-emerald-700 font-mono">1.00</td>
+                  <td class="p-2.5 text-center font-mono">0.00%</td>
+                  <td class="p-2.5 text-center font-mono">40.00%</td>
+                  <td class="p-2.5 text-center text-emerald-600 font-bold">نعم</td>
+                </tr>
+                <tr>
+                  <td class="p-2.5 text-center font-mono">2</td>
+                  <td class="p-2.5 font-bold text-slate-800">RAM-16GB-DDR5 (ذاكرة عشوائية 16 جيجا)</td>
+                  <td class="p-2.5"><span class="badge bg-slate-100 font-mono">PCS</span></td>
+                  <td class="p-2.5 text-center font-bold text-emerald-700 font-mono">2.00</td>
+                  <td class="p-2.5 text-center font-mono">0.00%</td>
+                  <td class="p-2.5 text-center font-mono">20.00%</td>
+                  <td class="p-2.5 text-center text-slate-400">لا</td>
+                </tr>
+                <tr>
+                  <td class="p-2.5 text-center font-mono">3</td>
+                  <td class="p-2.5 font-bold text-slate-800">GPU-RTX-4070 (كرت شاشة RTX 4070)</td>
+                  <td class="p-2.5"><span class="badge bg-slate-100 font-mono">PCS</span></td>
+                  <td class="p-2.5 text-center font-bold text-emerald-700 font-mono">1.00</td>
+                  <td class="p-2.5 text-center font-mono">0.00%</td>
+                  <td class="p-2.5 text-center font-mono">40.00%</td>
+                  <td class="p-2.5 text-center text-emerald-600 font-bold">نعم</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========================================================================= -->
+    <!-- TAB 4: WAREHOUSES, ZONES & BINS -->
+    <!-- ========================================================================= -->
+    <div id="content-warehouses" class="tab-content space-y-6 hidden">
+      <div class="glass-card rounded-2xl p-6 shadow-sm space-y-6">
+        <div class="flex items-center justify-between border-b border-slate-200 pb-4">
+          <div class="flex items-center gap-3">
+            <span class="p-2 bg-blue-100 text-blue-700 rounded-xl font-bold text-lg">🏬</span>
+            <div>
+              <h2 class="text-lg font-bold text-slate-900">هيكلية المستودعات والمناطق والرفوف (Warehouses Hierarchy)</h2>
+              <p class="text-xs text-slate-500">إدارة مواقع التخزين ثلاثية المستويات: المستودع &gt; منطقة التخزين &gt; الرف والخانة</p>
+            </div>
+          </div>
+          <button class="bg-blue-600 hover:bg-blue-700 text-white text-xs px-4 py-2 rounded-lg font-bold shadow-sm transition">
+            + إضافة مستودع جديد
+          </button>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 text-xs">
+          <!-- Warehouse Card -->
+          <div class="border border-slate-200 rounded-xl p-4 bg-slate-50/50 space-y-3">
+            <div class="flex items-center justify-between">
+              <span class="badge bg-blue-100 text-blue-800">مستودع رئيسي (Main)</span>
+              <span class="font-mono text-slate-400">WH-01</span>
+            </div>
+            <h3 class="font-bold text-slate-900 text-sm">المستودع المركزي - عمان</h3>
+            <p class="text-[11px] text-slate-500">العنوان: المنطقة الصناعية - سحاب، شارع 4</p>
+            <div class="text-[11px] text-indigo-700 font-semibold">تتبع الخانات والرفوف: مفعل (Bin Tracking: ON)</div>
+          </div>
+
+          <!-- Zones Inside Warehouse -->
+          <div class="border border-slate-200 rounded-xl p-4 bg-slate-50/50 space-y-3">
+            <div class="flex items-center justify-between">
+              <span class="badge bg-purple-100 text-purple-800">منطقة تخزين (Storage Zone)</span>
+              <span class="font-mono text-slate-400">ZN-A1</span>
+            </div>
+            <h3 class="font-bold text-slate-900 text-sm">منطقة التخزين المكيفة (Zone A)</h3>
+            <p class="text-[11px] text-slate-500">النوع: Storage | مخصصة للأجهزة الحساسة</p>
+            <div class="text-[11px] text-purple-700 font-semibold">عدد الرفوف والخانات: 12 رف نشط</div>
+          </div>
+
+          <!-- Bins Inside Zone -->
+          <div class="border border-slate-200 rounded-xl p-4 bg-slate-50/50 space-y-3">
+            <div class="flex items-center justify-between">
+              <span class="badge bg-emerald-100 text-emerald-800">خانة / رف (Bin Location)</span>
+              <span class="font-mono text-slate-400">BIN-A1-04</span>
+            </div>
+            <h3 class="font-bold text-slate-900 text-sm">رف رقم 4 - قسم الأجهزة المحمولة</h3>
+            <p class="text-[11px] text-slate-500">أقصى وزن: 500 KG | أقصى حجم: 2.5 M³</p>
+            <div class="text-[11px] text-emerald-700 font-semibold">الحالة: متاح للتخزين</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========================================================================= -->
+    <!-- TAB 5: OPENING BALANCES -->
+    <!-- ========================================================================= -->
+    <div id="content-opening" class="tab-content space-y-6 hidden">
+      <div class="glass-card rounded-2xl p-6 shadow-sm space-y-6">
+        <div class="flex items-center justify-between border-b border-slate-200 pb-4">
+          <div class="flex items-center gap-3">
+            <span class="p-2 bg-teal-100 text-teal-700 rounded-xl font-bold text-lg">⚖️</span>
+            <div>
+              <h2 class="text-lg font-bold text-slate-900">الأرصدة الافتتاحية للمخزون (Opening Balances)</h2>
+              <p class="text-xs text-slate-500">تأسيس الأرصدة الأولية للمستودع والفرع والمادة وترحيلها محاسبياً</p>
+            </div>
+          </div>
+          <button class="bg-teal-600 hover:bg-teal-700 text-white text-xs px-4 py-2 rounded-lg font-bold shadow-sm transition">
+            + إنشاء دفعة رصيد افتتاحي
+          </button>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">رقم الدفعة (BatchNo)</label>
+            <input type="text" value="OPN-2026-001" class="w-full bg-white border border-slate-300 rounded-lg p-2 text-xs font-mono" readonly>
+          </div>
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">الفرع (BranchId)</label>
+            <select class="w-full bg-white border border-slate-300 rounded-lg p-2 text-xs">
+              <option value="1">1 - الفرع الرئيسي</option>
+            </select>
+          </div>
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">السنة المالية (FiscalYearId)</label>
+            <select class="w-full bg-white border border-slate-300 rounded-lg p-2 text-xs">
+              <option value="2026">2026 - السنة المالية الحالية</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="border border-slate-200 rounded-xl overflow-x-auto">
+          <table class="w-full text-right text-xs">
+            <thead class="bg-slate-100 text-slate-700 font-bold border-b border-slate-200">
+              <tr>
+                <th class="p-2.5">المستودع</th>
+                <th class="p-2.5">رمز الصنف</th>
+                <th class="p-2.5">الرف (Bin)</th>
+                <th class="p-2.5 text-center">الكمية الافتتاحية</th>
+                <th class="p-2.5 text-center">سعر التكلفة</th>
+                <th class="p-2.5 text-center">إجمالي القيمة</th>
+                <th class="p-2.5">رقم التشغيلة (Lot)</th>
+                <th class="p-2.5">تاريخ الانتهاء</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100">
+              <tr>
+                <td class="p-2.5 font-semibold">المستودع الرئيسي</td>
+                <td class="p-2.5 font-mono font-bold text-slate-800">ITM-LAPTOP-PRO</td>
+                <td class="p-2.5 font-mono text-[11px]">BIN-A1-04</td>
+                <td class="p-2.5 text-center font-bold text-teal-700 font-mono">50.00</td>
+                <td class="p-2.5 text-center font-mono">600.00</td>
+                <td class="p-2.5 text-center font-bold font-mono">30,000.00 USD</td>
+                <td class="p-2.5 font-mono text-[11px]">LOT-2026-OP</td>
+                <td class="p-2.5 font-mono text-[11px]">2028-12-31</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========================================================================= -->
+    <!-- TAB 6: STOCK LEDGER & ATP -->
+    <!-- ========================================================================= -->
+    <div id="content-stock" class="tab-content space-y-6 hidden">
+      <div class="glass-card rounded-2xl p-6 shadow-sm space-y-6">
+        <div class="flex items-center justify-between border-b border-slate-200 pb-4">
+          <div class="flex items-center gap-3">
+            <span class="p-2 bg-indigo-100 text-indigo-700 rounded-xl font-bold text-lg">📊</span>
+            <div>
+              <h2 class="text-lg font-bold text-slate-900">سجل حركات المخزون والمتاح للالتزام (Stock Ledger & ATP)</h2>
+              <p class="text-xs text-slate-500">حركات سجل المخزون غير القابل للتعديل (Append-Only) وحساب الكميات المتاحة لحظياً</p>
+            </div>
+          </div>
+          <button class="bg-indigo-600 hover:bg-indigo-700 text-white text-xs px-4 py-2 rounded-lg font-bold shadow-sm transition">
+            🔄 تحديث الأرصدة اللحظية
+          </button>
+        </div>
+
+        <!-- ATP Widget Demonstration -->
+        <div class="bg-gradient-to-br from-indigo-900 to-slate-900 text-white p-5 rounded-2xl shadow-md grid grid-cols-2 md:grid-cols-5 gap-4 text-center">
+          <div class="p-3 bg-white/10 rounded-xl border border-white/10">
+            <div class="text-[11px] text-indigo-200 font-medium">الرصيد الفعلي (On-Hand)</div>
+            <div class="text-xl font-black font-mono text-emerald-400 mt-1">120.00</div>
+          </div>
+          <div class="p-3 bg-white/10 rounded-xl border border-white/10">
+            <div class="text-[11px] text-indigo-200 font-medium">المحجوز لطلبيات (Reserved)</div>
+            <div class="text-xl font-black font-mono text-amber-400 mt-1">15.00</div>
+          </div>
+          <div class="p-3 bg-white/10 rounded-xl border border-white/10">
+            <div class="text-[11px] text-indigo-200 font-medium">تحت الشراء (On-Order)</div>
+            <div class="text-xl font-black font-mono text-cyan-400 mt-1">40.00</div>
+          </div>
+          <div class="p-3 bg-white/10 rounded-xl border border-white/10">
+            <div class="text-[11px] text-indigo-200 font-medium">حد الأمان (Safety Stock)</div>
+            <div class="text-xl font-black font-mono text-rose-400 mt-1">10.00</div>
+          </div>
+          <div class="p-3 bg-emerald-500/20 rounded-xl border border-emerald-400/30 col-span-2 md:col-span-1">
+            <div class="text-[11px] text-emerald-200 font-bold">المتاح للبيع (ATP)</div>
+            <div class="text-2xl font-black font-mono text-white mt-0.5">135.00</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========================================================================= -->
+    <!-- TAB 7: FULL API REFERENCE & JSON CONTRACTS -->
+    <!-- ========================================================================= -->
+    <div id="content-api" class="tab-content space-y-6 hidden">
+      <div class="glass-card rounded-2xl p-6 shadow-sm space-y-6">
+        <div class="flex items-center justify-between border-b border-slate-200 pb-4">
+          <div class="flex items-center gap-3">
+            <span class="p-2 bg-slate-900 text-white rounded-xl font-bold text-lg">🔌</span>
+            <div>
+              <h2 class="text-lg font-bold text-slate-900">دليل الـ REST Endpoints ونماذج الـ JSON</h2>
+              <p class="text-xs text-slate-500">جاهز للاستخدام المباشر في الـ Frontend Services (Axios / HttpClient)</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="space-y-4 text-xs">
+          <!-- Endpoint 1 -->
+          <div class="border border-slate-200 rounded-xl p-4 space-y-2 bg-slate-50/50">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-2">
+                <span class="badge bg-emerald-600 text-white font-mono">POST</span>
+                <span class="font-mono font-bold text-slate-800 text-sm">/api/documents</span>
+              </div>
+              <span class="text-slate-500">إنشاء فاتورة أو مستند تجاري جديد</span>
+            </div>
+            <pre class="bg-slate-900 text-emerald-400 p-3 rounded-lg overflow-x-auto text-[11px]">{
+  "branchId": 1,
+  "docYear": 2026,
+  "docType": 100,
+  "trxType": 1001,
+  "docDate": "2026-08-31T00:00:00Z",
+  "partyTypeCode": 1,
+  "partyId": 92,
+  "partyName": "شركة الأفق للتقنية",
+  "fromWarehouseId": 1,
+  "currencyCode": "USD",
+  "exchangeRate": 1.0,
+  "paymentMethodCode": 1,
+  "lines": [
+    {
+      "itemId": 10,
+      "uomCode": "SET",
+      "uomFactor": 1.0,
+      "quantityOut": 2.0,
+      "unitPrice": 750.0,
+      "discountPercent": 0.0,
+      "taxRate": 16.0,
+      "fromBinId": 4
+    }
+  ]
+}</pre>
+          </div>
+
+          <!-- Endpoint 2 -->
+          <div class="border border-slate-200 rounded-xl p-4 space-y-2 bg-slate-50/50">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-2">
+                <span class="badge bg-blue-600 text-white font-mono">POST</span>
+                <span class="font-mono font-bold text-slate-800 text-sm">/api/documents/{branchId}/{docYear}/{docType}/{id}/post</span>
+              </div>
+              <span class="text-slate-500">ترحيل المستند نهائياً للمخزون والقيود المحاسبية</span>
+            </div>
+            <pre class="bg-slate-900 text-cyan-400 p-3 rounded-lg overflow-x-auto text-[11px]">// Response Code: RES_DOCUMENT_POSTED
+{
+  "success": true,
+  "statusCode": 200,
+  "message": "RES_DOCUMENT_POSTED",
+  "data": {
+    "branchId": 1,
+    "docYear": 2026,
+    "docType": 100,
+    "id": 1,
+    "docNo": "SINV-2026-00001",
+    "docStatusCode": 2,
+    "isPostedGl": true,
+    "isPostedStock": true,
+    "journalEntryId": 1402
+  }
+}</pre>
+          </div>
+
+          <!-- Endpoint 3 -->
+          <div class="border border-slate-200 rounded-xl p-4 space-y-2 bg-slate-50/50">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-2">
+                <span class="badge bg-amber-600 text-white font-mono">POST</span>
+                <span class="font-mono font-bold text-slate-800 text-sm">/api/inventory/bom</span>
+              </div>
+              <span class="text-slate-500">إنشاء كرت تجميعي (BOM Recipe)</span>
+            </div>
+            <pre class="bg-slate-900 text-amber-300 p-3 rounded-lg overflow-x-auto text-[11px]">{
+  "branchId": 1,
+  "bomCode": "BOM-PC-SET-01",
+  "bomNameAr": "تجميع حاسوب مكتبي ألعاب",
+  "bomNameEn": "Gaming Desktop Assembly",
+  "parentItemId": 10,
+  "outputQty": 1.0,
+  "uomCode": "SET",
+  "bomType": "SalesKit",
+  "lines": [
+    { "componentItemId": 1, "quantity": 1.0, "uomCode": "PCS", "costSharePercent": 40.0 },
+    { "componentItemId": 2, "quantity": 2.0, "uomCode": "PCS", "costSharePercent": 20.0 },
+    { "componentItemId": 3, "quantity": 1.0, "uomCode": "PCS", "costSharePercent": 40.0 }
+  ]
+}</pre>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- FOOTER -->
+  <footer class="bg-white border-t border-slate-200 text-slate-500 text-xs py-4 text-center mt-auto">
+    <p>ThinkOn ERP — Enterprise Resource Planning Multi-Tenant System &copy; 2026. All rights reserved.</p>
+  </footer>
+
+  <!-- INTERACTIVE JS FOR TABS -->
+  <script>
+    function switchTab(tabId) {
+      // Hide all contents
+      document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+      
+      // Reset all tab buttons
+      document.querySelectorAll('.nav-btn').forEach(btn => {
+        btn.classList.remove('border-amber-400', 'text-amber-300', 'bg-indigo-800/80', 'font-bold');
+        btn.classList.add('border-transparent', 'text-indigo-200');
+      });
+
+      // Show selected content
+      const targetContent = document.getElementById('content-' + tabId);
+      if (targetContent) {
+        targetContent.classList.remove('hidden');
+      }
+
+      // Highlight selected tab
+      const targetTab = document.getElementById('tab-' + tabId);
+      if (targetTab) {
+        targetTab.classList.remove('border-transparent', 'text-indigo-200');
+        targetTab.classList.add('border-amber-400', 'text-amber-300', 'bg-indigo-800/80', 'font-bold');
+      }
+    }
+
+    function copyAllEndpoints() {
+      const endpoints = `
+1. Universal Trade Documents API:
+   - POST   /api/documents
+   - GET    /api/documents/{branchId}/{docYear}/{docType}/{id}
+   - GET    /api/documents (paged)
+   - PUT    /api/documents/{branchId}/{docYear}/{docType}/{id}
+   - DELETE /api/documents/{branchId}/{docYear}/{docType}/{id}
+   - POST   /api/documents/{branchId}/{docYear}/{docType}/{id}/post
+
+2. Item Master & Dual Groups API:
+   - POST   /api/inventory/items
+   - GET    /api/inventory/items (paged)
+   - GET    /api/inventory/items/{id}
+   - PUT    /api/inventory/items/{id}
+   - DELETE /api/inventory/items/{id}
+   - POST   /api/inventory/items/{id}/uom
+   - POST   /api/inventory/items/{id}/barcode
+   - POST   /api/inventory/groups
+   - GET    /api/inventory/groups/main
+   - GET    /api/inventory/groups/{mainGroupId}/sub
+
+3. Bill of Materials (BOM) API:
+   - POST   /api/inventory/bom
+   - GET    /api/inventory/bom (paged)
+   - GET    /api/inventory/bom/{id}
+   - GET    /api/inventory/bom/item/{parentItemId}/default
+   - PUT    /api/inventory/bom/{id}
+   - DELETE /api/inventory/bom/{id}
+
+4. Warehouses, Zones & Bins API:
+   - POST   /api/inventory/warehouses
+   - GET    /api/inventory/warehouses?branchId={branchId}
+   - PUT    /api/inventory/warehouses/{id}
+   - DELETE /api/inventory/warehouses/{id}
+   - POST   /api/inventory/warehouses/{id}/zones
+   - POST   /api/inventory/warehouses/zones/{zoneId}/bins
+   - GET    /api/inventory/warehouses/{id}/stock
+
+5. Opening Balances API:
+   - POST   /api/inventory/opening-balances
+   - GET    /api/inventory/opening-balances?branchId={branchId}
+   - PUT    /api/inventory/opening-balances/{id}
+   - DELETE /api/inventory/opening-balances/{id}
+   - POST   /api/inventory/opening-balances/{id}/post
+
+6. Stock Ledger, Balances & ATP API:
+   - POST   /api/inventory/stock/movements
+   - GET    /api/inventory/stock/movements/{itemId}
+   - GET    /api/inventory/stock/balances
+   - GET    /api/inventory/stock/atp/{itemId}
+   - GET    /api/inventory/stock/reconciliation
+      `;
+      navigator.clipboard.writeText(endpoints.trim());
+      alert('تم نسخ جميع روابط الـ Endpoints إلى الحافظة بنجاح!');
+    }
+  </script>
+</body>
+</html>

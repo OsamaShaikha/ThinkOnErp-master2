@@ -22,7 +22,7 @@ public class GetFiscalYearsByBranchQueryHandler : IRequestHandler<GetFiscalYears
             FiscalYearId = fy.Id,
             BranchId = fy.BranchId,
             FiscalYearCode = fy.FiscalYearCode,
-            FiscalYearNameAr = fy.FiscalYearNameAr,
+            FiscalYearNameLocal = fy.FiscalYearNameLocal,
             FiscalYearNameEn = fy.FiscalYearNameEn,
             StartDate = fy.StartDate,
             EndDate = fy.EndDate,

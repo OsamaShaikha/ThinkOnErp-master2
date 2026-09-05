@@ -23,6 +23,13 @@ public sealed class GlVoucherRepository : IGlVoucherRepository
             .ToListAsync(cancellationToken);
     }
 
+    public async Task<GlVoucherType?> GetVoucherTypeByIdAsync(long id, CancellationToken cancellationToken = default)
+    {
+        return await _context.GlVoucherTypes
+            .AsNoTracking()
+            .FirstOrDefaultAsync(t => t.Id == id, cancellationToken);
+    }
+
     public async Task<GlVoucherType?> GetVoucherTypeByCodeAsync(int typeCode, CancellationToken cancellationToken = default)
     {
         return await _context.GlVoucherTypes
@@ -35,6 +42,45 @@ public sealed class GlVoucherRepository : IGlVoucherRepository
         return await _context.GlVoucherTypes
             .AsNoTracking()
             .FirstOrDefaultAsync(t => t.TypeKey == typeKey.ToUpper(), cancellationToken);
+    }
+
+    public async Task<GlVoucherType> CreateVoucherTypeAsync(GlVoucherType voucherType, CancellationToken cancellationToken = default)
+    {
+        await _context.GlVoucherTypes.AddAsync(voucherType, cancellationToken);
+        await _context.SaveChangesAsync(cancellationToken);
+        return voucherType;
+    }
+
+    public async Task<GlVoucherType> UpdateVoucherTypeAsync(GlVoucherType voucherType, CancellationToken cancellationToken = default)
+    {
+        _context.GlVoucherTypes.Update(voucherType);
+        await _context.SaveChangesAsync(cancellationToken);
+        return voucherType;
+    }
+
+    public async Task DeleteVoucherTypeAsync(long id, CancellationToken cancellationToken = default)
+    {
+        var entity = await _context.GlVoucherTypes.FirstOrDefaultAsync(t => t.Id == id, cancellationToken);
+        if (entity != null)
+        {
+            _context.GlVoucherTypes.Remove(entity);
+            await _context.SaveChangesAsync(cancellationToken);
+        }
+    }
+
+    public async Task<bool> VoucherTypeExistsAsync(int typeCode, string typeKey, long? excludeId = null, CancellationToken cancellationToken = default)
+    {
+        var upperKey = typeKey.Trim().ToUpper();
+        return await _context.GlVoucherTypes
+            .AnyAsync(t => (excludeId == null || t.Id != excludeId.Value) &&
+                           (t.TypeCode == typeCode || t.TypeKey.ToUpper() == upperKey),
+                      cancellationToken);
+    }
+
+    public async Task<bool> HasAssociatedVouchersAsync(int typeCode, CancellationToken cancellationToken = default)
+    {
+        return await _context.GlVoucherHeaders
+            .AnyAsync(h => h.VoucherType == typeCode, cancellationToken);
     }
 
     public async Task<GlVoucherHeader?> GetByIdAsync(long id, CancellationToken cancellationToken = default)

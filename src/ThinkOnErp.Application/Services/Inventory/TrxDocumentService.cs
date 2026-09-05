@@ -47,10 +47,11 @@ public sealed class TrxDocumentService : ITrxDocumentService
         if (docType == null || trxType == null)
             return ApiResponse<TrxDocumentDto>.CreateFailure("Invalid document type or transaction type", null, 400);
 
-        var nextId = await _docRepository.GetNextIdAsync(dto.BranchId, dto.DocYear, dto.DocType, ct);
-        var docNo = $"{docType.DocPrefix}{dto.DocYear}-{nextId:D6}";
+        var docMonth = dto.DocDate.Month;
+        var nextSerial = await _docRepository.GenerateNextSerialNoAsync(dto.BranchId, dto.DocYear, docMonth, dto.DocType, docType.ResetPolicy, ct);
+        var docNo = $"{docType.DocPrefix}{dto.DocYear}-{nextSerial:D6}";
 
-        var entity = TrxDocumentMapper.ToEntity(dto, nextId, username);
+        var entity = TrxDocumentMapper.ToEntity(dto, nextSerial, username);
         entity.DocNo = docNo;
 
         var created = await _docRepository.CreateAsync(entity, ct);
@@ -66,14 +67,15 @@ public sealed class TrxDocumentService : ITrxDocumentService
         return ApiResponse<TrxDocumentDto>.CreateSuccess(TrxDocumentMapper.ToDto(doc));
     }
 
-    public async Task<ApiResponse<(List<TrxDocumentDto> Items, int TotalCount)>> GetDocumentsPagedAsync(TrxDocumentFilterDto filter, CancellationToken ct = default)
+    public async Task<ApiResponse<PagedResultDto<TrxDocumentDto>>> GetDocumentsPagedAsync(TrxDocumentFilterDto filter, CancellationToken ct = default)
     {
         var (items, total) = await _docRepository.GetPagedAsync(
             filter.BranchId, filter.DocYear, filter.DocType, filter.TrxType, filter.PartyTypeCode, filter.PartyId, filter.StatusCode,
             filter.PageNumber, filter.PageSize, ct);
 
         var dtos = items.Select(TrxDocumentMapper.ToDto).ToList();
-        return ApiResponse<(List<TrxDocumentDto> Items, int TotalCount)>.CreateSuccess((dtos, total));
+        var pagedResult = new PagedResultDto<TrxDocumentDto>(dtos, total, filter.PageNumber, filter.PageSize);
+        return ApiResponse<PagedResultDto<TrxDocumentDto>>.CreateSuccess(pagedResult);
     }
 
     public async Task<ApiResponse<TrxDocumentDto>> UpdateDocumentAsync(long branchId, int docYear, int docType, long id, UpdateTrxDocumentDto dto, string username, CancellationToken ct = default)

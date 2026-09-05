@@ -1,4 +1,4 @@
-namespace ThinkOnErp.Domain.Entities.Accounting;
+﻿namespace ThinkOnErp.Domain.Entities.Accounting;
 
 /// <summary>
 /// Defines the Chart of Accounts level digit structure configuration.
@@ -19,7 +19,7 @@ public class GlAccountStructureConfig
     /// <summary>
     /// Arabic name for the level (e.g., "المستوى الأول - الحساب الرئيسي").
     /// </summary>
-    public string LevelNameAr { get; set; } = string.Empty;
+    public string LevelNameLocal { get; set; } = string.Empty;
 
     /// <summary>
     /// English name for the level (e.g., "Level 1 - Main Account").

@@ -47,7 +47,7 @@ public class ValidationExceptionReturns400PropertyTests : IClassFixture<TestWebA
                 // Create a role with validation errors
                 var createDto = new CreateRoleDto
                 {
-                    RoleNameAr = "", // Invalid - empty
+                    RoleNameLocal = "", // Invalid - empty
                     RoleNameEn = "", // Invalid - empty
                     Note = "Test"
                 };

@@ -1,4 +1,4 @@
-using MediatR;
+﻿using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using ThinkOnErp.Application.Common;
@@ -148,7 +148,7 @@ public class SuperAdminController : ControllerBase
 
             var command = new CreateSuperAdminCommand
             {
-                NameAr = dto.NameAr,
+                NameLocal = dto.NameLocal,
                 NameEn = dto.NameEn,
                 UserName = dto.UserName,
                 Password = passwordHash, // Pass hashed password
@@ -211,7 +211,7 @@ public class SuperAdminController : ControllerBase
             var command = new UpdateSuperAdminCommand
             {
                 SuperAdminId = id,
-                NameAr = dto.NameAr,
+                NameLocal = dto.NameLocal,
                 NameEn = dto.NameEn,
                 Email = dto.Email,
                 Phone = dto.Phone,

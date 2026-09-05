@@ -1,4 +1,4 @@
-using FluentValidation;
+﻿using FluentValidation;
 
 namespace ThinkOnErp.Application.DTOs.SuperAdmin;
 
@@ -10,7 +10,7 @@ public class CreateSuperAdminDtoValidator : AbstractValidator<CreateSuperAdminDt
 {
     public CreateSuperAdminDtoValidator()
     {
-        RuleFor(x => x.NameAr)
+        RuleFor(x => x.NameLocal)
             .NotEmpty().WithMessage("Arabic name is required")
             .MaximumLength(200).WithMessage("Arabic name cannot exceed 200 characters");
 

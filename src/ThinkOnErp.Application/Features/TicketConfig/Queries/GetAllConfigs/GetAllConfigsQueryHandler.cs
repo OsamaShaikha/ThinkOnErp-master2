@@ -1,4 +1,4 @@
-using MediatR;
+﻿using MediatR;
 using ThinkOnErp.Application.DTOs.TicketConfig;
 using ThinkOnErp.Domain.Interfaces;
 
@@ -26,7 +26,7 @@ public class GetAllConfigsQueryHandler : IRequestHandler<GetAllConfigsQuery, Lis
             ConfigKey = c.ConfigKey,
             ConfigValue = c.ConfigValue,
             ConfigType = c.ConfigType,
-            DescriptionAr = c.DescriptionAr,
+            DescriptionLocal = c.DescriptionLocal,
             DescriptionEn = c.DescriptionEn,
             IsActive = c.IsActive,
             CreationUser = c.CreationUser,

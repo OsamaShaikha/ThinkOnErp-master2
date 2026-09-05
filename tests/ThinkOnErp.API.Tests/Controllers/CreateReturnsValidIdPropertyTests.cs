@@ -250,7 +250,7 @@ public class CreateReturnsValidIdPropertyTests
                    select new SysRole
                     {
                         Id = rowId,
-                        RoleNameAr = rowDesc,
+                        RoleNameLocal = rowDesc,
                         RoleNameEn = rowDescE,
                         Note = note,
                         IsActive = true,
@@ -279,7 +279,7 @@ public class CreateReturnsValidIdPropertyTests
                    select new SysCurrency
                     {
                         Id = rowId,
-                        CurrencyNameAr = rowDesc,
+                        CurrencyNameLocal = rowDesc,
                         CurrencyNameEn = rowDescE,
                         ShortNameAr = shortDesc,
                         ShortNameEn = shortDescE,
@@ -317,7 +317,7 @@ public class CreateReturnsValidIdPropertyTests
                    select new SysCompany
                     {
                         Id = rowId,
-                        CompanyNameAr = rowDesc,
+                        CompanyNameLocal = rowDesc,
                         CompanyNameEn = rowDescE,
                         CountryId = countryId,
                         CurrId = currId,
@@ -350,7 +350,7 @@ public class CreateReturnsValidIdPropertyTests
                     {
                         Id = rowId,
                         CompanyId = companyId,
-                        BranchNameAr = rowDesc,
+                        BranchNameLocal = rowDesc,
                         BranchNameEn = rowDescE,
                         Phone = phone,
                         Mobile = mobile,
@@ -387,7 +387,7 @@ public class CreateReturnsValidIdPropertyTests
                     {
                         Id = rowId,
                         UserName = userName,
-                        FullNameAr = rowDesc,
+                        FullNameLocal = rowDesc,
                         FullNameEn = rowDescE,
                         Password = password,
                         Phone = phone,

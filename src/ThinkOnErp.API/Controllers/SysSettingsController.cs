@@ -4,11 +4,13 @@ using ThinkOnErp.Application.Common;
 using ThinkOnErp.Application.DTOs.SysSetting;
 using ThinkOnErp.Domain.Interfaces;
 
+using ThinkOnErp.API.Swagger;
+
 namespace ThinkOnErp.API.Controllers;
 
 [ApiController]
 [Route("api/syssettings")]
-[Authorize(Policy = "SuperAdminOnly")]
+[ApiExplorerSettings(GroupName = ApiCategories.System)]
 public class SysSettingsController : ControllerBase
 {
     private readonly ISysSettingRepository _repo;
@@ -21,6 +23,7 @@ public class SysSettingsController : ControllerBase
     }
 
     [HttpGet]
+    [Authorize]
     [ProducesResponseType(typeof(ApiResponse<List<SysSettingDto>>), StatusCodes.Status200OK)]
     public async Task<ActionResult<ApiResponse<List<SysSettingDto>>>> GetAll()
     {
@@ -35,6 +38,7 @@ public class SysSettingsController : ControllerBase
     }
 
     [HttpGet("{settingCode}")]
+    [Authorize]
     [ProducesResponseType(typeof(ApiResponse<SysSettingDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<ApiResponse<SysSettingDto>>> GetByCode(int settingCode)
@@ -53,6 +57,7 @@ public class SysSettingsController : ControllerBase
     }
 
     [HttpPost]
+    [Authorize(Policy = "SuperAdminOnly")]
     [ProducesResponseType(typeof(ApiResponse<SysSettingDto>), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<ActionResult<ApiResponse<SysSettingDto>>> Create([FromBody] CreateSysSettingDto dto)
@@ -100,6 +105,7 @@ public class SysSettingsController : ControllerBase
     }
 
     [HttpPut("{settingCode}")]
+    [Authorize(Policy = "SuperAdminOnly")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<ApiResponse<object>>> Update(int settingCode, [FromBody] UpdateSysSettingDto dto)
@@ -116,6 +122,7 @@ public class SysSettingsController : ControllerBase
     }
 
     [HttpDelete("{settingCode}")]
+    [Authorize(Policy = "SuperAdminOnly")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<ApiResponse<object>>> Delete(int settingCode)

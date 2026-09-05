@@ -37,7 +37,7 @@ public class ValidationExecutesForAllRequestsPropertyTests : IClassFixture<TestW
                 // Test with CreateRoleCommand which has a validator
                 var createCommand = new CreateRoleCommand
                 {
-                    RoleNameAr = "", // Invalid - should trigger validation
+                    RoleNameLocal = "", // Invalid - should trigger validation
                     RoleNameEn = "Valid English",
                     Note = "Test"
                 };
@@ -62,7 +62,7 @@ public class ValidationExecutesForAllRequestsPropertyTests : IClassFixture<TestW
                 var updateCommand = new UpdateRoleCommand
                 {
                     RoleId = 1,
-                    RoleNameAr = "", // Invalid
+                    RoleNameLocal = "", // Invalid
                     RoleNameEn = "",  // Invalid
                     Note = "Test"
                 };

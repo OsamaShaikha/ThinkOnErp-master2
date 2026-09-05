@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
@@ -139,8 +139,8 @@ namespace ThinkOnErp.Infrastructure.Migrations
                     WHERE NOT EXISTS (SELECT 1 FROM ""SYS_FIELD_VALIDATION_RULE"" WHERE ""ENTITY_NAME""='Customer' AND ""FIELD_NAME""='CustomerCode' AND ""RULE_TYPE""='REQUIRED');
 
                     INSERT INTO ""SYS_FIELD_VALIDATION_RULE"" (""ENTITY_NAME"", ""FIELD_NAME"", ""RULE_TYPE"", ""RULE_VALUE"", ""ERROR_CODE"", ""COUNTRY_CODE"", ""COMPANY_ID"", ""IS_ACTIVE"", ""CREATION_USER"", ""CREATION_DATE"")
-                    SELECT 'Customer', 'NameAr', 'REQUIRED', NULL, 'ERR_FIELD_REQUIRED', NULL, NULL, 1, v_seed_user, v_now FROM DUAL
-                    WHERE NOT EXISTS (SELECT 1 FROM ""SYS_FIELD_VALIDATION_RULE"" WHERE ""ENTITY_NAME""='Customer' AND ""FIELD_NAME""='NameAr' AND ""RULE_TYPE""='REQUIRED');
+                    SELECT 'Customer', 'NameLocal', 'REQUIRED', NULL, 'ERR_FIELD_REQUIRED', NULL, NULL, 1, v_seed_user, v_now FROM DUAL
+                    WHERE NOT EXISTS (SELECT 1 FROM ""SYS_FIELD_VALIDATION_RULE"" WHERE ""ENTITY_NAME""='Customer' AND ""FIELD_NAME""='NameLocal' AND ""RULE_TYPE""='REQUIRED');
 
                     INSERT INTO ""SYS_FIELD_VALIDATION_RULE"" (""ENTITY_NAME"", ""FIELD_NAME"", ""RULE_TYPE"", ""RULE_VALUE"", ""ERROR_CODE"", ""COUNTRY_CODE"", ""COMPANY_ID"", ""IS_ACTIVE"", ""CREATION_USER"", ""CREATION_DATE"")
                     SELECT 'Customer', 'CreditLimit', 'RANGE', '0..999999999', 'ERR_OUT_OF_RANGE', NULL, NULL, 1, v_seed_user, v_now FROM DUAL
@@ -166,8 +166,8 @@ namespace ThinkOnErp.Infrastructure.Migrations
                     WHERE NOT EXISTS (SELECT 1 FROM ""SYS_FIELD_VALIDATION_RULE"" WHERE ""ENTITY_NAME""='GlAccount' AND ""FIELD_NAME""='AccountCode' AND ""RULE_TYPE""='REGEX');
 
                     INSERT INTO ""SYS_FIELD_VALIDATION_RULE"" (""ENTITY_NAME"", ""FIELD_NAME"", ""RULE_TYPE"", ""RULE_VALUE"", ""ERROR_CODE"", ""COUNTRY_CODE"", ""COMPANY_ID"", ""IS_ACTIVE"", ""CREATION_USER"", ""CREATION_DATE"")
-                    SELECT 'GlAccount', 'AccountNameAr', 'REQUIRED', NULL, 'ERR_FIELD_REQUIRED', NULL, NULL, 1, v_seed_user, v_now FROM DUAL
-                    WHERE NOT EXISTS (SELECT 1 FROM ""SYS_FIELD_VALIDATION_RULE"" WHERE ""ENTITY_NAME""='GlAccount' AND ""FIELD_NAME""='AccountNameAr' AND ""RULE_TYPE""='REQUIRED');
+                    SELECT 'GlAccount', 'AccountNameLocal', 'REQUIRED', NULL, 'ERR_FIELD_REQUIRED', NULL, NULL, 1, v_seed_user, v_now FROM DUAL
+                    WHERE NOT EXISTS (SELECT 1 FROM ""SYS_FIELD_VALIDATION_RULE"" WHERE ""ENTITY_NAME""='GlAccount' AND ""FIELD_NAME""='AccountNameLocal' AND ""RULE_TYPE""='REQUIRED');
 
                     INSERT INTO ""SYS_FIELD_VALIDATION_RULE"" (""ENTITY_NAME"", ""FIELD_NAME"", ""RULE_TYPE"", ""RULE_VALUE"", ""ERROR_CODE"", ""COUNTRY_CODE"", ""COMPANY_ID"", ""IS_ACTIVE"", ""CREATION_USER"", ""CREATION_DATE"")
                     SELECT 'GlAccount', 'NormalBalance', 'REGEX', '^[DCdc]$', 'ERR_ACCOUNT_BALANCE_TYPE_INVALID', NULL, NULL, 1, v_seed_user, v_now FROM DUAL

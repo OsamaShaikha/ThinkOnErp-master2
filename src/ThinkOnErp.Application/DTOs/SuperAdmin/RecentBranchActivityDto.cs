@@ -1,4 +1,4 @@
-namespace ThinkOnErp.Application.DTOs.SuperAdmin;
+﻿namespace ThinkOnErp.Application.DTOs.SuperAdmin;
 
 /// <summary>
 /// Data transfer object for recent branch activities
@@ -9,7 +9,7 @@ public class RecentBranchActivityDto
     /// <summary>
     /// Branch name in Arabic
     /// </summary>
-    public string BranchNameAr { get; set; }
+    public string BranchNameLocal { get; set; }
 
     /// <summary>
     /// Branch name in English
@@ -19,7 +19,7 @@ public class RecentBranchActivityDto
     /// <summary>
     /// Company name in Arabic
     /// </summary>
-    public string CompanyNameAr { get; set; }
+    public string CompanyNameLocal { get; set; }
 
     /// <summary>
     /// Company name in English

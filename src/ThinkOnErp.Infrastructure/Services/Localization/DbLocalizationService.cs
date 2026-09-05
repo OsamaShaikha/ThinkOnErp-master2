@@ -17,12 +17,33 @@ public class DbLocalizationService : ILocalizationService
 
     // Cache: (CodeValue, LangId) -> Localized Message
     private readonly ConcurrentDictionary<(string CodeValue, int LangId), string> _messageCache = new();
+    // Reverse cache: CodeDesc -> CodeValue for auto-resolving legacy string messages to machine codes
+    private readonly ConcurrentDictionary<string, string> _descToKeyCache = new(StringComparer.OrdinalIgnoreCase);
     private bool _isInitialized;
     private readonly object _initLock = new();
 
     // Default built-in fallback translations if DB row is not yet seeded
     private static readonly Dictionary<(string CodeValue, int LangId), string> Fallbacks = new()
     {
+        // Standard Responses
+        { (ResponseCodes.OperationSuccessful, 1), "تمت العملية بنجاح." },
+        { (ResponseCodes.OperationSuccessful, 2), "Operation completed successfully." },
+        { (ResponseCodes.LoginSuccessful, 1), "تم تسجيل الدخول بنجاح." },
+        { (ResponseCodes.LoginSuccessful, 2), "Login successful." },
+        { (ResponseCodes.DataRetrieved, 1), "تم استرجاع البيانات بنجاح." },
+        { (ResponseCodes.DataRetrieved, 2), "Data retrieved successfully." },
+        { (ResponseCodes.RecordCreated, 1), "تمت إضافة السجل بنجاح." },
+        { (ResponseCodes.RecordCreated, 2), "Record created successfully." },
+        { (ResponseCodes.RecordUpdated, 1), "تم تعديل السجل بنجاح." },
+        { (ResponseCodes.RecordUpdated, 2), "Record updated successfully." },
+        { (ResponseCodes.RecordDeleted, 1), "تم حذف السجل بنجاح." },
+        { (ResponseCodes.RecordDeleted, 2), "Record deleted successfully." },
+        { (ResponseCodes.StatusUpdated, 1), "تم تحديث الحالة بنجاح." },
+        { (ResponseCodes.StatusUpdated, 2), "Status updated successfully." },
+        { (ResponseCodes.TokenRefreshed, 1), "تم تجديد رمز الدخول بنجاح." },
+        { (ResponseCodes.TokenRefreshed, 2), "Token refreshed successfully." },
+
+        // Field Validation Errors
         { (ErrorCodes.FieldRequired, 1), "حقل {0} مطلوب ولا يمكن تركه فارغاً." },
         { (ErrorCodes.FieldRequired, 2), "The field {0} is required." },
         { (ErrorCodes.InvalidFormat, 1), "صيغة حقل {0} غير صالحة." },
@@ -72,7 +93,9 @@ public class DbLocalizationService : ILocalizationService
         { (ErrorCodes.CompanyNotFound, 1), "الشركة المحددة غير موجودة." },
         { (ErrorCodes.CompanyNotFound, 2), "The specified company was not found." },
         { (ErrorCodes.BranchNotFound, 1), "الفرع المحدد غير موجود." },
-        { (ErrorCodes.BranchNotFound, 2), "The specified branch was not found." }
+        { (ErrorCodes.BranchNotFound, 2), "The specified branch was not found." },
+        { (ErrorCodes.InvalidCredentials, 1), "بيانات الاعتماد غير صالحة. يرجى التحقق من اسم المستخدم وكلمة المرور." },
+        { (ErrorCodes.InvalidCredentials, 2), "Invalid credentials. Please verify your username and password." }
     };
 
     public DbLocalizationService(
@@ -88,19 +111,27 @@ public class DbLocalizationService : ILocalizationService
     public string GetMessage(string errorCode, string? languageCode = null)
     {
         EnsureInitialized();
-        var key = NormalizeKey(errorCode);
+        if (string.IsNullOrWhiteSpace(errorCode)) return errorCode;
+
+        var trimmed = errorCode.Trim();
+        var key = NormalizeKey(trimmed);
         var langId = ResolveLanguageId(languageCode);
 
+        // 1. Direct match by key and lang
         if (_messageCache.TryGetValue((key, langId), out var msg))
             return msg;
 
-        // Fallback to English if Arabic is missing or vice versa
+        // 2. Reverse match if the input was a description text (Arabic or English)
+        if (_descToKeyCache.TryGetValue(trimmed, out var mappedKey) && _messageCache.TryGetValue((mappedKey, langId), out var descMsg))
+            return descMsg;
+
+        // 3. Fallback to English if target is not English, or Arabic if target is not Arabic
         if (langId != 2 && _messageCache.TryGetValue((key, 2), out var enMsg))
             return enMsg;
         if (langId != 1 && _messageCache.TryGetValue((key, 1), out var arMsg))
             return arMsg;
 
-        // Fallback to built-in constants
+        // 4. Fallback to built-in constants
         if (Fallbacks.TryGetValue((key, langId), out var fallback))
             return fallback;
         if (Fallbacks.TryGetValue((key, 2), out var fallbackEn))
@@ -111,15 +142,7 @@ public class DbLocalizationService : ILocalizationService
 
     public string GetMessage(string errorCode, int languageId)
     {
-        EnsureInitialized();
-        var key = NormalizeKey(errorCode);
-        if (_messageCache.TryGetValue((key, languageId), out var msg))
-            return msg;
-
-        if (Fallbacks.TryGetValue((key, languageId), out var fallback))
-            return fallback;
-
-        return errorCode;
+        return GetMessage(errorCode, languageId.ToString());
     }
 
     private static string NormalizeKey(string rawCode)
@@ -135,6 +158,20 @@ public class DbLocalizationService : ILocalizationService
         }
 
         var lower = trimmed.ToLowerInvariant();
+
+        // Common Arabic Success Phrases
+        if (trimmed.Contains("تمت العملية بنجاح") || trimmed.Contains("تم التنفيذ بنجاح"))
+            return ResponseCodes.OperationSuccessful;
+        if (trimmed.Contains("تم تسجيل الدخول بنجاح"))
+            return ResponseCodes.LoginSuccessful;
+        if (trimmed.Contains("تم استرجاع") || trimmed.Contains("تم جلب"))
+            return ResponseCodes.DataRetrieved;
+        if (trimmed.Contains("تم إنشاء") || trimmed.Contains("تمت إضافة") || trimmed.Contains("تم الحفظ"))
+            return ResponseCodes.RecordCreated;
+        if (trimmed.Contains("تم تحديث") || trimmed.Contains("تم تعديل"))
+            return ResponseCodes.RecordUpdated;
+        if (trimmed.Contains("تم حذف"))
+            return ResponseCodes.RecordDeleted;
 
         // Common English Success Phrases
         if (lower.Contains("retrieved successfully") || lower.Contains("fetched successfully") || lower.Contains("loaded successfully"))
@@ -153,8 +190,22 @@ public class DbLocalizationService : ILocalizationService
             return ResponseCodes.StatusUpdated;
         if (lower.Contains("assigned successfully") || lower.Contains("re-allowed successfully") || lower.Contains("revoked successfully") || lower.Contains("provisioning state retrieved"))
             return ResponseCodes.DataRetrieved;
+        if (lower.Contains("login successful") || lower.Contains("authenticated successfully"))
+            return ResponseCodes.LoginSuccessful;
         if (lower.Contains("operation completed successfully") || lower.Contains("completed successfully") || lower.Contains("successful"))
             return ResponseCodes.OperationSuccessful;
+
+        // Common Arabic Error Phrases
+        if (trimmed.Contains("غير موجود") || trimmed.Contains("لم يتم العثور"))
+            return ErrorCodes.EntityNotFound;
+        if (trimmed.Contains("غير مصرح") || trimmed.Contains("لا تملك صلاحية"))
+            return ErrorCodes.UnauthorizedAction;
+        if (trimmed.Contains("بيانات الاعتماد غير صالحة") || trimmed.Contains("كلمة المرور غير صحيحة"))
+            return ErrorCodes.InvalidCredentials;
+        if (trimmed.Contains("مطلوب") || trimmed.Contains("إجباري"))
+            return ErrorCodes.ValidationError;
+        if (trimmed.Contains("فشلت العملية") || trimmed.Contains("حدث خطأ"))
+            return ErrorCodes.OperationFailed;
 
         // Common English Error Phrases
         if (lower.Contains("not found"))
@@ -194,20 +245,36 @@ public class DbLocalizationService : ILocalizationService
             if (code == "1" || code.StartsWith("ar")) return 1;
             if (code == "2" || code.StartsWith("en")) return 2;
             if (code == "3" || code.StartsWith("fr")) return 3;
-            if (code == "4" || code.StartsWith("tr")) return 4;
+            if (code == "4" || code.StartsWith("es")) return 4;
+            if (code == "5" || code.StartsWith("tr")) return 5;
+            if (code == "6" || code.StartsWith("de")) return 6;
         }
 
         var httpContext = _httpContextAccessor.HttpContext;
         if (httpContext != null)
         {
-            // 1. Explicit Custom Header (e.g. X-Language: en or X-Language: 2)
+            // 0. Explicit SessionLanguage in HttpContext.Items (e.g. from Login request)
+            if (httpContext.Items.TryGetValue("SessionLanguage", out var itemVal) && itemVal != null)
+            {
+                var s = itemVal.ToString()!.Trim().ToLowerInvariant();
+                if (s == "1" || s.StartsWith("ar")) return 1;
+                if (s == "2" || s.StartsWith("en")) return 2;
+                if (s == "3" || s.StartsWith("fr")) return 3;
+                if (s == "4" || s.StartsWith("es")) return 4;
+                if (s == "5" || s.StartsWith("tr")) return 5;
+                if (s == "6" || s.StartsWith("de")) return 6;
+            }
+
+            // 1. Explicit Custom Header (e.g. X-Language: 2 or X-Language: en)
             if (httpContext.Request.Headers.TryGetValue("X-Language", out var xLangValues))
             {
                 string xLang = xLangValues.ToString().Trim().ToLowerInvariant();
                 if (xLang == "1" || xLang.StartsWith("ar")) return 1;
                 if (xLang == "2" || xLang.StartsWith("en")) return 2;
                 if (xLang == "3" || xLang.StartsWith("fr")) return 3;
-                if (xLang == "4" || xLang.StartsWith("tr")) return 4;
+                if (xLang == "4" || xLang.StartsWith("es")) return 4;
+                if (xLang == "5" || xLang.StartsWith("tr")) return 5;
+                if (xLang == "6" || xLang.StartsWith("de")) return 6;
             }
 
             // 2. Check authenticated User Claims (User-Level Language Preference)
@@ -219,7 +286,9 @@ public class DbLocalizationService : ILocalizationService
                 if (lower == "1" || lower.StartsWith("ar")) return 1;
                 if (lower == "2" || lower.StartsWith("en")) return 2;
                 if (lower == "3" || lower.StartsWith("fr")) return 3;
-                if (lower == "4" || lower.StartsWith("tr")) return 4;
+                if (lower == "4" || lower.StartsWith("es")) return 4;
+                if (lower == "5" || lower.StartsWith("tr")) return 5;
+                if (lower == "6" || lower.StartsWith("de")) return 6;
             }
 
             // 3. Check HTTP Request Accept-Language header (Browser/Client default)
@@ -232,7 +301,9 @@ public class DbLocalizationService : ILocalizationService
                     if (lower.StartsWith("ar", StringComparison.Ordinal) || lower.Contains("ar-", StringComparison.Ordinal)) return 1;
                     if (lower.StartsWith("en", StringComparison.Ordinal) || lower.Contains("en-", StringComparison.Ordinal)) return 2;
                     if (lower.StartsWith("fr", StringComparison.Ordinal) || lower.Contains("fr-", StringComparison.Ordinal)) return 3;
-                    if (lower.StartsWith("tr", StringComparison.Ordinal) || lower.Contains("tr-", StringComparison.Ordinal)) return 4;
+                    if (lower.StartsWith("es", StringComparison.Ordinal) || lower.Contains("es-", StringComparison.Ordinal)) return 4;
+                    if (lower.StartsWith("tr", StringComparison.Ordinal) || lower.Contains("tr-", StringComparison.Ordinal)) return 5;
+                    if (lower.StartsWith("de", StringComparison.Ordinal) || lower.Contains("de-", StringComparison.Ordinal)) return 6;
                 }
             }
         }
@@ -245,6 +316,7 @@ public class DbLocalizationService : ILocalizationService
         lock (_initLock)
         {
             _messageCache.Clear();
+            _descToKeyCache.Clear();
             _isInitialized = false;
             EnsureInitialized();
         }
@@ -265,7 +337,7 @@ public class DbLocalizationService : ILocalizationService
                 if (db != null)
                 {
                     var codes = db.SysCodes
-                        .Where(c => (c.CodeMgr == ErrorCodes.CodeMgr || c.CodeMgr == ResponseCodes.CodeMgr) && c.IsActive == 1)
+                        .Where(c => (c.CodeMgr == ErrorCodes.CodeMgr || c.CodeMgr == ResponseCodes.CodeMgr || c.CodeMgr == 32) && c.IsActive == 1)
                         .Select(c => new { c.CodeValue, c.CodeLang, c.CodeDesc })
                         .ToList();
 
@@ -274,6 +346,7 @@ public class DbLocalizationService : ILocalizationService
                         if (!string.IsNullOrEmpty(c.CodeValue) && !string.IsNullOrEmpty(c.CodeDesc))
                         {
                             _messageCache[(c.CodeValue, c.CodeLang)] = c.CodeDesc;
+                            _descToKeyCache[c.CodeDesc.Trim()] = c.CodeValue;
                         }
                     }
 

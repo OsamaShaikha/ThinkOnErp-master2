@@ -1,4 +1,4 @@
-using System.Text.Json.Serialization;
+﻿using System.Text.Json.Serialization;
 
 namespace ThinkOnErp.Application.DTOs.Branch;
 
@@ -21,7 +21,7 @@ public class BranchDto
     /// <summary>
     /// Arabic description of the branch
     /// </summary>
-    public string BranchNameAr { get; set; } = string.Empty;
+    public string BranchNameLocal { get; set; } = string.Empty;
 
     /// <summary>
     /// English description of the branch

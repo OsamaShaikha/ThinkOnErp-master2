@@ -1,4 +1,4 @@
-using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.Logging;
 using ThinkOnErp.Application.DTOs.Accounting.AccountStatement;
 using ThinkOnErp.Domain.Entities.Accounting;
 using ThinkOnErp.Domain.Exceptions;
@@ -115,12 +115,12 @@ public sealed class AccountStatementService : IAccountStatementService
                 VoucherNo = detail.Header.VoucherNo,
                 VoucherDate = detail.Header.VoucherDate,
                 VoucherTypeCode = detail.Header.VoucherType,
-                VoucherTypeNameAr = vType?.NameAr ?? string.Empty,
+                VoucherTypeNameLocal = vType?.NameLocal ?? string.Empty,
                 VoucherTypeNameEn = vType?.NameEn ?? string.Empty,
                 VoucherPrefix = vType?.Prefix ?? string.Empty,
                 LineSer = detail.LineSer,
                 AccountCode = detail.AccountCode,
-                AccountNameAr = detail.Account?.AccountNameAr ?? account.AccountNameAr,
+                AccountNameLocal = detail.Account?.AccountNameLocal ?? account.AccountNameLocal,
                 AccountNameEn = detail.Account?.AccountNameEn ?? account.AccountNameEn,
                 Debit = detail.Debit,
                 Credit = detail.Credit,
@@ -130,7 +130,7 @@ public sealed class AccountStatementService : IAccountStatementService
                 CurrencyId = detail.CurrencyId,
                 ExchangeRate = detail.ExchangeRate,
                 CostCenterCode = detail.CostCenterCode,
-                CostCenterNameAr = cc?.NameAr,
+                CostCenterNameLocal = cc?.NameLocal,
                 CostCenterNameEn = cc?.NameEn,
                 Description = string.IsNullOrWhiteSpace(detail.Description) ? detail.Header.Description : detail.Description,
                 SourceSystemCode = detail.Header.SourceSystemCode,
@@ -153,7 +153,7 @@ public sealed class AccountStatementService : IAccountStatementService
         return new AccountStatementReportDto
         {
             AccountCode = account.AccountCode,
-            AccountNameAr = account.AccountNameAr,
+            AccountNameLocal = account.AccountNameLocal,
             AccountNameEn = account.AccountNameEn,
             AccountType = account.AccountType,
             NormalBalance = account.NormalBalance,
@@ -224,7 +224,7 @@ public sealed class AccountStatementService : IAccountStatementService
             result.Add(new AccountStatementSummaryDto
             {
                 AccountCode = acc.AccountCode,
-                AccountNameAr = acc.AccountNameAr,
+                AccountNameLocal = acc.AccountNameLocal,
                 AccountNameEn = acc.AccountNameEn,
                 AccountType = acc.AccountType,
                 NormalBalance = acc.NormalBalance,

@@ -159,7 +159,7 @@ public class OracleSchemaService : IOracleSchemaService
         try
         {
             var roleSql = $"INSERT INTO \"{schemaName}\".\"SYS_ROLE\" " +
-                $"(\"Id\", \"NAME_AR\", \"NAME_EN\", \"NOTE\", \"IS_ACTIVE\", \"CREATION_USER\", \"CREATION_DATE\") " +
+                $"(\"Id\", \"NAME_LOCAL\", \"NAME_EN\", \"NOTE\", \"IS_ACTIVE\", \"CREATION_USER\", \"CREATION_DATE\") " +
                 $"VALUES (:roleId, 'مدير النظام', 'Administrator', 'Default system administrator', 1, :creationUser, SYSDATE)";
             await using var roleCmd = tenantConn.CreateCommand();
             roleCmd.CommandText = roleSql;
@@ -176,7 +176,7 @@ public class OracleSchemaService : IOracleSchemaService
         try
         {
             var userSql = $"INSERT INTO \"{schemaName}\".\"SYS_USERS\" " +
-                $"(\"Id\", \"NAME_AR\", \"NAME_EN\", \"USER_NAME\", \"PASSWORD\", \"ROLE\", \"COMPANY_ID\", " +
+                $"(\"Id\", \"NAME_LOCAL\", \"NAME_EN\", \"USER_NAME\", \"PASSWORD\", \"ROLE\", \"COMPANY_ID\", " +
                 $"\"IS_ACTIVE\", \"IS_ADMIN\", \"CREATION_USER\", \"CREATION_DATE\") " +
                 $"VALUES (1, 'مدير النظام', 'Admin', 'admin', :password, :roleId, :companyId, 1, 1, :creationUser, SYSDATE)";
             await using var userCmd = tenantConn.CreateCommand();
@@ -319,7 +319,19 @@ public class OracleSchemaService : IOracleSchemaService
 
         await using var tenantConn = await OpenTenantConnectionAsync(schemaName, schemaPassword);
 
-        var sql = $"SELECT u.\"Id\", u.\"NAME_AR\", u.\"NAME_EN\", u.\"USER_NAME\", u.\"PASSWORD\", u.\"ROLE\", ub.\"BRANCH_ID\", u.\"COMPANY_ID\", " +
+        try
+        {
+            return await ExecuteGetUserAsync(tenantConn, schemaName, userName, "NAME_LOCAL");
+        }
+        catch (OracleException ex) when (ex.Number == 904)
+        {
+            return await ExecuteGetUserAsync(tenantConn, schemaName, userName, "NAME_AR");
+        }
+    }
+
+    private static async Task<SysUser?> ExecuteGetUserAsync(OracleConnection tenantConn, string schemaName, string userName, string nameColumn)
+    {
+        var sql = $"SELECT u.\"Id\", u.\"{nameColumn}\", u.\"NAME_EN\", u.\"USER_NAME\", u.\"PASSWORD\", u.\"ROLE\", ub.\"BRANCH_ID\", u.\"COMPANY_ID\", " +
                   $"u.\"IS_ACTIVE\", u.\"IS_ADMIN\", u.\"CREATION_USER\", u.\"CREATION_DATE\", u.\"UPDATE_USER\", u.\"UPDATE_DATE\", " +
                   $"u.\"REFRESH_TOKEN\", u.\"REFRESH_TOKEN_EXPIRY\", u.\"FORCE_LOGOUT_DATE\", u.\"PHONE\", u.\"PHONE2\", u.\"EMAIL\", u.\"LAST_LOGIN_DATE\", u.\"DEFAULT_LANG\" " +
                   $"FROM \"{schemaName}\".\"SYS_USERS\" u " +
@@ -336,7 +348,7 @@ public class OracleSchemaService : IOracleSchemaService
             return new SysUser
             {
                 Id = reader.GetInt64(0),
-                FullNameAr = reader.GetString(1),
+                FullNameLocal = reader.GetString(1),
                 FullNameEn = reader.GetString(2),
                 UserName = reader.GetString(3),
                 Password = reader.GetString(4),
@@ -616,7 +628,7 @@ public class OracleSchemaService : IOracleSchemaService
 
     private async Task SeedAccountCategoriesAsync(OracleConnection connection, string schemaName)
     {
-        var categories = new (long Id, int Code, string NameAr, string NameEn, string Balance, string Statement, int Order)[]
+        var categories = new (long Id, int Code, string NameLocal, string NameEn, string Balance, string Statement, int Order)[]
         {
             (1, 1, "الأصول", "Assets", "D", "BALANCE_SHEET", 1),
             (2, 2, "الالتزامات", "Liabilities", "C", "BALANCE_SHEET", 2),
@@ -634,7 +646,7 @@ public class OracleSchemaService : IOracleSchemaService
             (
                 SELECT :id AS "Id",
                        :categoryCode AS "CATEGORY_CODE",
-                       :nameAr AS "NAME_AR",
+                       :nameAr AS "NAME_LOCAL",
                        :nameEn AS "NAME_EN",
                        :normalBalance AS "NORMAL_BALANCE",
                        :financialStatement AS "FINANCIAL_STATEMENT",
@@ -644,19 +656,19 @@ public class OracleSchemaService : IOracleSchemaService
             ON (target."Id" = source."Id")
             WHEN MATCHED THEN UPDATE SET
                 target."CATEGORY_CODE" = source."CATEGORY_CODE",
-                target."NAME_AR" = source."NAME_AR",
+                target."NAME_LOCAL" = source."NAME_LOCAL",
                 target."NAME_EN" = source."NAME_EN",
                 target."NORMAL_BALANCE" = source."NORMAL_BALANCE",
                 target."FINANCIAL_STATEMENT" = source."FINANCIAL_STATEMENT",
                 target."DISPLAY_ORDER" = source."DISPLAY_ORDER"
             WHEN NOT MATCHED THEN INSERT
             (
-                "Id", "CATEGORY_CODE", "NAME_AR", "NAME_EN",
+                "Id", "CATEGORY_CODE", "NAME_LOCAL", "NAME_EN",
                 "NORMAL_BALANCE", "FINANCIAL_STATEMENT", "DISPLAY_ORDER"
             )
             VALUES
             (
-                source."Id", source."CATEGORY_CODE", source."NAME_AR", source."NAME_EN",
+                source."Id", source."CATEGORY_CODE", source."NAME_LOCAL", source."NAME_EN",
                 source."NORMAL_BALANCE", source."FINANCIAL_STATEMENT", source."DISPLAY_ORDER"
             )
             """;
@@ -672,7 +684,7 @@ public class OracleSchemaService : IOracleSchemaService
                 cmd.Transaction = transaction;
                 cmd.Parameters.Add(new OracleParameter("id", OracleDbType.Int64) { Value = category.Id });
                 cmd.Parameters.Add(new OracleParameter("categoryCode", OracleDbType.Int32) { Value = category.Code });
-                cmd.Parameters.Add(new OracleParameter("nameAr", OracleDbType.NVarchar2, 200) { Value = category.NameAr });
+                cmd.Parameters.Add(new OracleParameter("nameAr", OracleDbType.NVarchar2, 200) { Value = category.NameLocal });
                 cmd.Parameters.Add(new OracleParameter("nameEn", OracleDbType.NVarchar2, 200) { Value = category.NameEn });
                 cmd.Parameters.Add(new OracleParameter("normalBalance", OracleDbType.NVarchar2, 1) { Value = category.Balance });
                 cmd.Parameters.Add(new OracleParameter("financialStatement", OracleDbType.NVarchar2, 20) { Value = category.Statement });
@@ -699,7 +711,7 @@ public class OracleSchemaService : IOracleSchemaService
 
     private async Task SeedVoucherTypesAsync(OracleConnection connection, string schemaName)
     {
-        var voucherTypes = new (int Code, string Key, string NameAr, string NameEn, string Prefix, string Category, string Policy, int Review, int Manual, int System, int Order)[]
+        var voucherTypes = new (int Code, string Key, string NameLocal, string NameEn, string Prefix, string Category, string Policy, int Review, int Manual, int System, int Order)[]
         {
             (101, "JV", "قيد يومية عام", "General Journal Voucher", "JV", "JOURNAL", "MONTHLY", 1, 1, 1, 1),
             (102, "RV", "سند قبض", "Receipt Voucher", "RV", "RECEIPT", "MONTHLY", 1, 1, 1, 2),
@@ -716,7 +728,7 @@ public class OracleSchemaService : IOracleSchemaService
             (
                 SELECT :typeCode AS "TYPE_CODE",
                        :typeKey AS "TYPE_KEY",
-                       :nameAr AS "NAME_AR",
+                       :nameAr AS "NAME_LOCAL",
                        :nameEn AS "NAME_EN",
                        :prefix AS "PREFIX",
                        :category AS "CATEGORY",
@@ -730,7 +742,7 @@ public class OracleSchemaService : IOracleSchemaService
             ) source
             ON (target."TYPE_CODE" = source."TYPE_CODE")
             WHEN MATCHED THEN UPDATE SET
-                target."NAME_AR" = source."NAME_AR",
+                target."NAME_LOCAL" = source."NAME_LOCAL",
                 target."NAME_EN" = source."NAME_EN",
                 target."PREFIX" = source."PREFIX",
                 target."CATEGORY" = source."CATEGORY",
@@ -741,12 +753,12 @@ public class OracleSchemaService : IOracleSchemaService
                 target."DISPLAY_ORDER" = source."DISPLAY_ORDER"
             WHEN NOT MATCHED THEN INSERT
             (
-                "TYPE_CODE", "TYPE_KEY", "NAME_AR", "NAME_EN", "PREFIX", "CATEGORY",
+                "TYPE_CODE", "TYPE_KEY", "NAME_LOCAL", "NAME_EN", "PREFIX", "CATEGORY",
                 "SERIAL_RESET_POLICY", "REQUIRES_REVIEW", "ALLOW_MANUAL_ENTRY", "IS_SYSTEM", "DISPLAY_ORDER", "IS_ACTIVE", "CREATION_USER", "CREATION_DATE"
             )
             VALUES
             (
-                source."TYPE_CODE", source."TYPE_KEY", source."NAME_AR", source."NAME_EN", source."PREFIX", source."CATEGORY",
+                source."TYPE_CODE", source."TYPE_KEY", source."NAME_LOCAL", source."NAME_EN", source."PREFIX", source."CATEGORY",
                 source."SERIAL_RESET_POLICY", source."REQUIRES_REVIEW", source."ALLOW_MANUAL_ENTRY", source."IS_SYSTEM", source."DISPLAY_ORDER", 1, source."CREATION_USER", CURRENT_TIMESTAMP
             )
             """;
@@ -762,7 +774,7 @@ public class OracleSchemaService : IOracleSchemaService
                 cmd.Transaction = transaction;
                 cmd.Parameters.Add(new OracleParameter("typeCode", OracleDbType.Int32) { Value = vt.Code });
                 cmd.Parameters.Add(new OracleParameter("typeKey", OracleDbType.NVarchar2, 20) { Value = vt.Key });
-                cmd.Parameters.Add(new OracleParameter("nameAr", OracleDbType.NVarchar2, 200) { Value = vt.NameAr });
+                cmd.Parameters.Add(new OracleParameter("nameAr", OracleDbType.NVarchar2, 200) { Value = vt.NameLocal });
                 cmd.Parameters.Add(new OracleParameter("nameEn", OracleDbType.NVarchar2, 200) { Value = vt.NameEn });
                 cmd.Parameters.Add(new OracleParameter("prefix", OracleDbType.NVarchar2, 10) { Value = vt.Prefix });
                 cmd.Parameters.Add(new OracleParameter("category", OracleDbType.NVarchar2, 20) { Value = vt.Category });
@@ -793,7 +805,7 @@ public class OracleSchemaService : IOracleSchemaService
 
     private async Task SeedCostCentersAsync(OracleConnection connection, string schemaName)
     {
-        var costCenters = new (string Code, string? ParentCode, string NameAr, string NameEn, int Level, string Type, int IsPostable)[]
+        var costCenters = new (string Code, string? ParentCode, string NameLocal, string NameEn, int Level, string Type, int IsPostable)[]
         {
             ("100", null, "الإدارة العامة والخدمات المساندة", "General Administration & Support", 1, "HEADER", 0),
             ("101", "100", "قسم تقنية المعلومات", "Information Technology Dept", 2, "DETAIL", 1),
@@ -811,7 +823,7 @@ public class OracleSchemaService : IOracleSchemaService
             (
                 SELECT :costCenterCode AS "COST_CENTER_CODE",
                        :parentCode AS "PARENT_COST_CENTER_CODE",
-                       :nameAr AS "NAME_AR",
+                       :nameAr AS "NAME_LOCAL",
                        :nameEn AS "NAME_EN",
                        :ccLevel AS "COST_CENTER_LEVEL",
                        :ccType AS "COST_CENTER_TYPE",
@@ -821,19 +833,19 @@ public class OracleSchemaService : IOracleSchemaService
             ) source
             ON (target."COST_CENTER_CODE" = source."COST_CENTER_CODE")
             WHEN MATCHED THEN UPDATE SET
-                target."NAME_AR" = source."NAME_AR",
+                target."NAME_LOCAL" = source."NAME_LOCAL",
                 target."NAME_EN" = source."NAME_EN",
                 target."COST_CENTER_LEVEL" = source."COST_CENTER_LEVEL",
                 target."COST_CENTER_TYPE" = source."COST_CENTER_TYPE",
                 target."IS_POSTABLE" = source."IS_POSTABLE"
             WHEN NOT MATCHED THEN INSERT
             (
-                "COST_CENTER_CODE", "PARENT_COST_CENTER_CODE", "NAME_AR", "NAME_EN",
+                "COST_CENTER_CODE", "PARENT_COST_CENTER_CODE", "NAME_LOCAL", "NAME_EN",
                 "COST_CENTER_LEVEL", "COST_CENTER_TYPE", "IS_POSTABLE", "IS_ACTIVE", "CREATION_USER", "CREATION_DATE"
             )
             VALUES
             (
-                source."COST_CENTER_CODE", source."PARENT_COST_CENTER_CODE", source."NAME_AR", source."NAME_EN",
+                source."COST_CENTER_CODE", source."PARENT_COST_CENTER_CODE", source."NAME_LOCAL", source."NAME_EN",
                 source."COST_CENTER_LEVEL", source."COST_CENTER_TYPE", source."IS_POSTABLE", 1, source."CREATION_USER", CURRENT_TIMESTAMP
             )
             """;
@@ -849,7 +861,7 @@ public class OracleSchemaService : IOracleSchemaService
                 cmd.CommandText = mergeSql;
                 cmd.Parameters.Add(new OracleParameter("costCenterCode", OracleDbType.NVarchar2, 50) { Value = cc.Code });
                 cmd.Parameters.Add(new OracleParameter("parentCode", OracleDbType.NVarchar2, 50) { Value = (object?)cc.ParentCode ?? DBNull.Value });
-                cmd.Parameters.Add(new OracleParameter("nameAr", OracleDbType.NVarchar2, 200) { Value = cc.NameAr });
+                cmd.Parameters.Add(new OracleParameter("nameAr", OracleDbType.NVarchar2, 200) { Value = cc.NameLocal });
                 cmd.Parameters.Add(new OracleParameter("nameEn", OracleDbType.NVarchar2, 200) { Value = cc.NameEn });
                 cmd.Parameters.Add(new OracleParameter("ccLevel", OracleDbType.Int32) { Value = cc.Level });
                 cmd.Parameters.Add(new OracleParameter("ccType", OracleDbType.NVarchar2, 20) { Value = cc.Type });
@@ -877,7 +889,7 @@ public class OracleSchemaService : IOracleSchemaService
     private async Task SeedTaxDefaultsAsync(OracleConnection connection, string schemaName)
     {
         // 1. Categories
-        var categories = new (long Id, string Code, string NameAr, string NameEn, string Description, int Order)[]
+        var categories = new (long Id, string Code, string NameLocal, string NameEn, string Description, int Order)[]
         {
             (1, "VAT", "ضريبة القيمة المضافة", "Value Added Tax", "ضريبة القيمة المضافة القياسية والمخفضة والصفرية والمعفاة", 1),
             (2, "WHT", "ضريبة الاستقطاع", "Withholding Tax", "ضريبة الاستقطاع على الخدمات والمدفوعات لغير المقيمين", 2),
@@ -890,7 +902,7 @@ public class OracleSchemaService : IOracleSchemaService
             (
                 SELECT :id AS "ID",
                        :code AS "CATEGORY_CODE",
-                       :nameAr AS "NAME_AR",
+                       :nameAr AS "NAME_LOCAL",
                        :nameEn AS "NAME_EN",
                        :description AS "DESCRIPTION",
                        :displayOrder AS "DISPLAY_ORDER"
@@ -898,24 +910,24 @@ public class OracleSchemaService : IOracleSchemaService
             ) source
             ON (target."CATEGORY_CODE" = source."CATEGORY_CODE")
             WHEN MATCHED THEN UPDATE SET
-                target."NAME_AR" = source."NAME_AR",
+                target."NAME_LOCAL" = source."NAME_LOCAL",
                 target."NAME_EN" = source."NAME_EN",
                 target."DESCRIPTION" = source."DESCRIPTION",
                 target."DISPLAY_ORDER" = source."DISPLAY_ORDER"
             WHEN NOT MATCHED THEN INSERT
             (
-                "CATEGORY_CODE", "NAME_AR", "NAME_EN", "DESCRIPTION",
+                "CATEGORY_CODE", "NAME_LOCAL", "NAME_EN", "DESCRIPTION",
                 "DISPLAY_ORDER", "IS_ACTIVE", "CREATION_USER", "CREATION_DATE"
             )
             VALUES
             (
-                source."CATEGORY_CODE", source."NAME_AR", source."NAME_EN", source."DESCRIPTION",
+                source."CATEGORY_CODE", source."NAME_LOCAL", source."NAME_EN", source."DESCRIPTION",
                 source."DISPLAY_ORDER", 1, 'SYSTEM', CURRENT_TIMESTAMP
             )
             """;
 
         // 2. Tax Rates
-        var rates = new (string Code, string CatCode, string NameAr, string NameEn, decimal Percent, string? SalesAcc, string? PurchAcc, int IsExempt, int IsZero, string? ExCode, string? ExAr, string? ExEn, int Order)[]
+        var rates = new (string Code, string CatCode, string NameLocal, string NameEn, decimal Percent, string? SalesAcc, string? PurchAcc, int IsExempt, int IsZero, string? ExCode, string? ExAr, string? ExEn, int Order)[]
         {
             ("VAT_15", "VAT", "ضريبة القيمة المضافة القياسية (15%)", "Standard VAT (15%)", 15.0000m, "213101", "113101", 0, 0, null, null, null, 1),
             ("VAT_5", "VAT", "ضريبة القيمة المضافة المخفضة (5%)", "Reduced VAT (5%)", 5.0000m, "213101", "113101", 0, 0, null, null, null, 2),
@@ -930,7 +942,7 @@ public class OracleSchemaService : IOracleSchemaService
             (
                 SELECT :code AS "TAX_RATE_CODE",
                        (SELECT "ID" FROM "{schemaName}"."TAX_CATEGORY" WHERE "CATEGORY_CODE" = :catCode) AS "TAX_CATEGORY_ID",
-                       :nameAr AS "NAME_AR",
+                       :nameAr AS "NAME_LOCAL",
                        :nameEn AS "NAME_EN",
                        :percent AS "RATE_PERCENT",
                        'PERCENTAGE' AS "RATE_TYPE",
@@ -939,14 +951,14 @@ public class OracleSchemaService : IOracleSchemaService
                        :isExempt AS "IS_EXEMPT",
                        :isZero AS "IS_ZERO_RATED",
                        :exCode AS "EXEMPTION_REASON_CODE",
-                       :exAr AS "EXEMPTION_REASON_AR",
+                       :exAr AS "EXEMPTION_REASON_LOCAL",
                        :exEn AS "EXEMPTION_REASON_EN",
                        :displayOrder AS "DISPLAY_ORDER"
                 FROM DUAL
             ) source
             ON (target."TAX_RATE_CODE" = source."TAX_RATE_CODE")
             WHEN MATCHED THEN UPDATE SET
-                target."NAME_AR" = source."NAME_AR",
+                target."NAME_LOCAL" = source."NAME_LOCAL",
                 target."NAME_EN" = source."NAME_EN",
                 target."RATE_PERCENT" = source."RATE_PERCENT",
                 target."SALES_TAX_GL_ACCOUNT_CODE" = source."SALES_TAX_GL_ACCOUNT_CODE",
@@ -954,21 +966,21 @@ public class OracleSchemaService : IOracleSchemaService
                 target."IS_EXEMPT" = source."IS_EXEMPT",
                 target."IS_ZERO_RATED" = source."IS_ZERO_RATED",
                 target."EXEMPTION_REASON_CODE" = source."EXEMPTION_REASON_CODE",
-                target."EXEMPTION_REASON_AR" = source."EXEMPTION_REASON_AR",
+                target."EXEMPTION_REASON_LOCAL" = source."EXEMPTION_REASON_LOCAL",
                 target."EXEMPTION_REASON_EN" = source."EXEMPTION_REASON_EN",
                 target."DISPLAY_ORDER" = source."DISPLAY_ORDER"
             WHEN NOT MATCHED THEN INSERT
             (
-                "TAX_RATE_CODE", "TAX_CATEGORY_ID", "NAME_AR", "NAME_EN", "RATE_PERCENT", "RATE_TYPE",
+                "TAX_RATE_CODE", "TAX_CATEGORY_ID", "NAME_LOCAL", "NAME_EN", "RATE_PERCENT", "RATE_TYPE",
                 "SALES_TAX_GL_ACCOUNT_CODE", "PURCHASE_TAX_GL_ACCOUNT_CODE",
-                "IS_EXEMPT", "IS_ZERO_RATED", "EXEMPTION_REASON_CODE", "EXEMPTION_REASON_AR", "EXEMPTION_REASON_EN",
+                "IS_EXEMPT", "IS_ZERO_RATED", "EXEMPTION_REASON_CODE", "EXEMPTION_REASON_LOCAL", "EXEMPTION_REASON_EN",
                 "DISPLAY_ORDER", "IS_ACTIVE", "CREATION_USER", "CREATION_DATE"
             )
             VALUES
             (
-                source."TAX_RATE_CODE", source."TAX_CATEGORY_ID", source."NAME_AR", source."NAME_EN", source."RATE_PERCENT", source."RATE_TYPE",
+                source."TAX_RATE_CODE", source."TAX_CATEGORY_ID", source."NAME_LOCAL", source."NAME_EN", source."RATE_PERCENT", source."RATE_TYPE",
                 source."SALES_TAX_GL_ACCOUNT_CODE", source."PURCHASE_TAX_GL_ACCOUNT_CODE",
-                source."IS_EXEMPT", source."IS_ZERO_RATED", source."EXEMPTION_REASON_CODE", source."EXEMPTION_REASON_AR", source."EXEMPTION_REASON_EN",
+                source."IS_EXEMPT", source."IS_ZERO_RATED", source."EXEMPTION_REASON_CODE", source."EXEMPTION_REASON_LOCAL", source."EXEMPTION_REASON_EN",
                 source."DISPLAY_ORDER", 1, 'SYSTEM', CURRENT_TIMESTAMP
             )
             """;
@@ -984,7 +996,7 @@ public class OracleSchemaService : IOracleSchemaService
                 cmd.CommandText = mergeCategorySql;
                 cmd.Parameters.Add(new OracleParameter("id", OracleDbType.Int64) { Value = cat.Id });
                 cmd.Parameters.Add(new OracleParameter("code", OracleDbType.NVarchar2, 50) { Value = cat.Code });
-                cmd.Parameters.Add(new OracleParameter("nameAr", OracleDbType.NVarchar2, 150) { Value = cat.NameAr });
+                cmd.Parameters.Add(new OracleParameter("nameAr", OracleDbType.NVarchar2, 150) { Value = cat.NameLocal });
                 cmd.Parameters.Add(new OracleParameter("nameEn", OracleDbType.NVarchar2, 150) { Value = cat.NameEn });
                 cmd.Parameters.Add(new OracleParameter("description", OracleDbType.NVarchar2, 500) { Value = cat.Description });
                 cmd.Parameters.Add(new OracleParameter("displayOrder", OracleDbType.Int32) { Value = cat.Order });
@@ -999,7 +1011,7 @@ public class OracleSchemaService : IOracleSchemaService
                 cmd.CommandText = mergeRateSql;
                 cmd.Parameters.Add(new OracleParameter("code", OracleDbType.NVarchar2, 50) { Value = r.Code });
                 cmd.Parameters.Add(new OracleParameter("catCode", OracleDbType.NVarchar2, 50) { Value = r.CatCode });
-                cmd.Parameters.Add(new OracleParameter("nameAr", OracleDbType.NVarchar2, 150) { Value = r.NameAr });
+                cmd.Parameters.Add(new OracleParameter("nameAr", OracleDbType.NVarchar2, 150) { Value = r.NameLocal });
                 cmd.Parameters.Add(new OracleParameter("nameEn", OracleDbType.NVarchar2, 150) { Value = r.NameEn });
                 cmd.Parameters.Add(new OracleParameter("percent", OracleDbType.Decimal) { Value = r.Percent });
                 cmd.Parameters.Add(new OracleParameter("salesAcc", OracleDbType.NVarchar2, 50) { Value = (object?)r.SalesAcc ?? DBNull.Value });
@@ -1505,7 +1517,7 @@ public class OracleSchemaService : IOracleSchemaService
         string schemaName,
         string schemaPassword,
         long companyId,
-        string? branchNameAr, string? branchNameEn,
+        string? branchNameLocal, string? branchNameEn,
         string? branchPhone, string? branchMobile,
         string? branchFax, string? branchEmail,
         string? taxNumber, int defaultLang,
@@ -1520,14 +1532,14 @@ public class OracleSchemaService : IOracleSchemaService
         // 1. Insert Branch
         var branchSql = $@"
             INSERT INTO ""{schemaName}"".""SYS_BRANCH"" 
-            (""COMPANY_ID"", ""NAME_AR"", ""NAME_EN"", ""PHONE"", ""MOBILE"", ""FAX"", ""EMAIL"", ""IS_HEAD_BRANCH"", ""TAX_NUMBER"", ""DEFAULT_LANG"", ""BASE_CURRENCY_ID"", ""ROUNDING_RULES"", ""BRANCH_LOGO_PATH"", ""IS_ACTIVE"", ""CREATION_USER"", ""CREATION_DATE"")
+            (""COMPANY_ID"", ""NAME_LOCAL"", ""NAME_EN"", ""PHONE"", ""MOBILE"", ""FAX"", ""EMAIL"", ""IS_HEAD_BRANCH"", ""TAX_NUMBER"", ""DEFAULT_LANG"", ""BASE_CURRENCY_ID"", ""ROUNDING_RULES"", ""BRANCH_LOGO_PATH"", ""IS_ACTIVE"", ""CREATION_USER"", ""CREATION_DATE"")
             VALUES (:companyId, :nameAr, :nameEn, :phone, :mobile, :fax, :email, 1, :taxNumber, :defaultLang, :baseCurrencyId, :roundingRules, :logoPath, 1, :creationUser, SYSDATE)
             RETURNING ""Id"" INTO :branchId";
 
         await using var branchCmd = tenantConn.CreateCommand();
         branchCmd.CommandText = branchSql;
         branchCmd.Parameters.Add(new OracleParameter("companyId", companyId));
-        branchCmd.Parameters.Add(new OracleParameter("nameAr", branchNameAr ?? "Default Branch"));
+        branchCmd.Parameters.Add(new OracleParameter("nameAr", branchNameLocal ?? "Default Branch"));
         branchCmd.Parameters.Add(new OracleParameter("nameEn", branchNameEn ?? "Default Branch"));
         branchCmd.Parameters.Add(new OracleParameter("phone", (object?)branchPhone ?? DBNull.Value));
         branchCmd.Parameters.Add(new OracleParameter("mobile", (object?)branchMobile ?? DBNull.Value));
@@ -1552,14 +1564,14 @@ public class OracleSchemaService : IOracleSchemaService
 
         // 2. Insert Fiscal Year
         var fyCode = $"FY{DateTime.Now.Year}";
-        var fyNameAr = $"السنة المالية {DateTime.Now.Year}";
+        var fyNameLocal = $"السنة المالية {DateTime.Now.Year}";
         var fyNameEn = $"Fiscal Year {DateTime.Now.Year}";
         var startDate = new DateTime(DateTime.Now.Year, 1, 1);
         var endDate = new DateTime(DateTime.Now.Year, 12, 31);
 
         var fySql = $@"
             INSERT INTO ""{schemaName}"".""SYS_FISCAL_YEAR""
-            (""COMPANY_ID"", ""BRANCH_ID"", ""FISCAL_YEAR_CODE"", ""NAME_AR"", ""NAME_EN"", ""START_DATE"", ""END_DATE"", ""IS_CLOSED"", ""IS_ACTIVE"", ""CREATION_USER"", ""CREATION_DATE"")
+            (""COMPANY_ID"", ""BRANCH_ID"", ""FISCAL_YEAR_CODE"", ""NAME_LOCAL"", ""NAME_EN"", ""START_DATE"", ""END_DATE"", ""IS_CLOSED"", ""IS_ACTIVE"", ""CREATION_USER"", ""CREATION_DATE"")
             VALUES (:companyId, :branchId, :fyCode, :nameAr, :nameEn, :startDate, :endDate, 0, 1, :creationUser, SYSDATE)
             RETURNING ""Id"" INTO :fyId";
 
@@ -1568,7 +1580,7 @@ public class OracleSchemaService : IOracleSchemaService
         fyCmd.Parameters.Add(new OracleParameter("companyId", companyId));
         fyCmd.Parameters.Add(new OracleParameter("branchId", branchId));
         fyCmd.Parameters.Add(new OracleParameter("fyCode", fyCode));
-        fyCmd.Parameters.Add(new OracleParameter("nameAr", fyNameAr));
+        fyCmd.Parameters.Add(new OracleParameter("nameAr", fyNameLocal));
         fyCmd.Parameters.Add(new OracleParameter("nameEn", fyNameEn));
         fyCmd.Parameters.Add(new OracleParameter("startDate", startDate));
         fyCmd.Parameters.Add(new OracleParameter("endDate", endDate));
@@ -1603,7 +1615,7 @@ public class OracleSchemaService : IOracleSchemaService
         _logger.LogInformation("Updated branch logo path in tenant schema {SchemaName} for branch ID {BranchId}", schemaName, branchId);
     }
 
-    public async Task<(string? BranchNameEn, string? BranchNameAr, string? BranchLogoPath)> GetBranchDetailsAsync(string schemaName, long branchId)
+    public async Task<(string? BranchNameEn, string? BranchNameLocal, string? BranchLogoPath)> GetBranchDetailsAsync(string schemaName, long branchId)
     {
         if (string.IsNullOrEmpty(schemaName) || branchId <= 0) return (null, null, null);
         try
@@ -1611,7 +1623,7 @@ public class OracleSchemaService : IOracleSchemaService
             await using var conn = await OpenMasterConnectionAsync();
             await using var cmd = conn.CreateCommand();
             cmd.CommandText = $@"
-                SELECT NAME_EN, NAME_AR, BRANCH_LOGO_PATH
+                SELECT NAME_EN, NAME_LOCAL, BRANCH_LOGO_PATH
                 FROM ""{schemaName.ToUpperInvariant()}"".""SYS_BRANCH""
                 WHERE ""Id"" = :branchId";
             cmd.Parameters.Add(new OracleParameter("branchId", branchId));
@@ -1619,10 +1631,32 @@ public class OracleSchemaService : IOracleSchemaService
             if (await reader.ReadAsync())
             {
                 var nameEn = reader.IsDBNull(0) ? null : reader.GetString(0);
-                var nameAr = reader.IsDBNull(1) ? null : reader.GetString(1);
+                var nameLocal = reader.IsDBNull(1) ? null : reader.GetString(1);
                 var logoPath = reader.IsDBNull(2) ? null : reader.GetString(2);
-                return (nameEn, nameAr, logoPath);
+                return (nameEn, nameLocal, logoPath);
             }
+        }
+        catch (OracleException ex) when (ex.Number == 904)
+        {
+            try
+            {
+                await using var conn = await OpenMasterConnectionAsync();
+                await using var cmd = conn.CreateCommand();
+                cmd.CommandText = $@"
+                    SELECT NAME_EN, NAME_AR, BRANCH_LOGO_PATH
+                    FROM ""{schemaName.ToUpperInvariant()}"".""SYS_BRANCH""
+                    WHERE ""Id"" = :branchId";
+                cmd.Parameters.Add(new OracleParameter("branchId", branchId));
+                await using var reader = await cmd.ExecuteReaderAsync();
+                if (await reader.ReadAsync())
+                {
+                    var nameEn = reader.IsDBNull(0) ? null : reader.GetString(0);
+                    var nameLocal = reader.IsDBNull(1) ? null : reader.GetString(1);
+                    var logoPath = reader.IsDBNull(2) ? null : reader.GetString(2);
+                    return (nameEn, nameLocal, logoPath);
+                }
+            }
+            catch { }
         }
         catch (Exception ex)
         {

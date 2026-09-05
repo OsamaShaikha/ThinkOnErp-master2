@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -53,7 +53,7 @@ public sealed class InvItemRepository : IInvItemRepository
             var keyword = searchKeyword.Trim().ToLower();
             query = query.Where(i =>
                 i.ItemCode.ToLower().Contains(keyword) ||
-                i.ItemNameAr.ToLower().Contains(keyword) ||
+                i.ItemNameLocal.ToLower().Contains(keyword) ||
                 (i.ItemNameEn != null && i.ItemNameEn.ToLower().Contains(keyword)));
         }
 

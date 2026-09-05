@@ -1,4 +1,4 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using ThinkOnErp.Domain.Entities;
 
@@ -11,9 +11,9 @@ public class SysTicketTypeConfiguration : IEntityTypeConfiguration<SysTicketType
         builder.ToTable("SYS_TICKET_TYPE", "THINKON_SUPPORT");
         builder.HasKey(e => e.Id);
         builder.Property(e => e.Id).ValueGeneratedOnAdd();
-        builder.Property(e => e.TypeNameAr).HasColumnName("TYPE_NAME_AR").HasMaxLength(200).IsRequired();
+        builder.Property(e => e.TypeNameLocal).HasColumnName("TYPE_NAME_LOCAL").HasMaxLength(200).IsRequired();
         builder.Property(e => e.TypeNameEn).HasColumnName("TYPE_NAME_EN").HasMaxLength(200).IsRequired();
-        builder.Property(e => e.DescriptionAr).HasColumnName("DESCRIPTION_AR").HasMaxLength(500);
+        builder.Property(e => e.DescriptionLocal).HasColumnName("DESCRIPTION_LOCAL").HasMaxLength(500);
         builder.Property(e => e.DescriptionEn).HasColumnName("DESCRIPTION_EN").HasMaxLength(500);
         builder.Property(e => e.DefaultPriorityId).HasColumnName("DEFAULT_PRIORITY_ID").IsRequired();
         builder.Property(e => e.SlaTargetHours).HasColumnName("SLA_TARGET_HOURS").HasColumnType("NUMBER");
@@ -34,7 +34,7 @@ public class SysTicketPriorityConfiguration : IEntityTypeConfiguration<SysTicket
         builder.ToTable("SYS_TICKET_PRIORITY", "THINKON_SUPPORT");
         builder.HasKey(e => e.Id);
         builder.Property(e => e.Id).ValueGeneratedOnAdd();
-        builder.Property(e => e.PriorityNameAr).HasColumnName("PRIORITY_NAME_AR").HasMaxLength(200).IsRequired();
+        builder.Property(e => e.PriorityNameLocal).HasColumnName("PRIORITY_NAME_LOCAL").HasMaxLength(200).IsRequired();
         builder.Property(e => e.PriorityNameEn).HasColumnName("PRIORITY_NAME_EN").HasMaxLength(200).IsRequired();
         builder.Property(e => e.PriorityLevel).HasColumnName("PRIORITY_LEVEL").IsRequired();
         builder.Property(e => e.SlaTargetHours).HasColumnName("SLA_TARGET_HOURS").HasColumnType("NUMBER");
@@ -52,7 +52,7 @@ public class SysTicketStatusConfiguration : IEntityTypeConfiguration<SysTicketSt
         builder.ToTable("SYS_TICKET_STATUS", "THINKON_SUPPORT");
         builder.HasKey(e => e.Id);
         builder.Property(e => e.Id).ValueGeneratedOnAdd();
-        builder.Property(e => e.StatusNameAr).HasColumnName("STATUS_NAME_AR").HasMaxLength(200).IsRequired();
+        builder.Property(e => e.StatusNameLocal).HasColumnName("STATUS_NAME_LOCAL").HasMaxLength(200).IsRequired();
         builder.Property(e => e.StatusNameEn).HasColumnName("STATUS_NAME_EN").HasMaxLength(200).IsRequired();
         builder.Property(e => e.StatusCode).HasColumnName("STATUS_CODE").HasMaxLength(50).IsRequired();
         builder.HasIndex(e => e.StatusCode).IsUnique();
@@ -71,9 +71,9 @@ public class SysTicketCategoryConfiguration : IEntityTypeConfiguration<SysTicket
         builder.ToTable("SYS_TICKET_CATEGORY", "THINKON_SUPPORT");
         builder.HasKey(e => e.Id);
         builder.Property(e => e.Id).ValueGeneratedOnAdd();
-        builder.Property(e => e.CategoryNameAr).HasColumnName("CATEGORY_NAME_AR").HasMaxLength(200).IsRequired();
+        builder.Property(e => e.CategoryNameLocal).HasColumnName("CATEGORY_NAME_LOCAL").HasMaxLength(200).IsRequired();
         builder.Property(e => e.CategoryNameEn).HasColumnName("CATEGORY_NAME_EN").HasMaxLength(200).IsRequired();
-        builder.Property(e => e.DescriptionAr).HasColumnName("DESCRIPTION_AR").HasMaxLength(500);
+        builder.Property(e => e.DescriptionLocal).HasColumnName("DESCRIPTION_LOCAL").HasMaxLength(500);
         builder.Property(e => e.DescriptionEn).HasColumnName("DESCRIPTION_EN").HasMaxLength(500);
         builder.Property(e => e.DisplayOrder).HasColumnName("DISPLAY_ORDER");
         builder.Property(e => e.IsActive).HasColumnName("IS_ACTIVE").HasColumnType("NUMBER(1)").IsRequired();
@@ -174,7 +174,7 @@ public class SysTicketConfigConfiguration : IEntityTypeConfiguration<SysTicketCo
         builder.Property(e => e.ConfigKey).HasColumnName("CONFIG_KEY").HasMaxLength(100).IsRequired();
         builder.HasIndex(e => e.ConfigKey).IsUnique();
         builder.Property(e => e.ConfigValue).HasColumnName("CONFIG_VALUE").HasMaxLength(1000).IsRequired();
-        builder.Property(e => e.DescriptionAr).HasColumnName("DESCRIPTION_AR").HasMaxLength(500);
+        builder.Property(e => e.DescriptionLocal).HasColumnName("DESCRIPTION_LOCAL").HasMaxLength(500);
         builder.Property(e => e.DescriptionEn).HasColumnName("DESCRIPTION_EN").HasMaxLength(500);
         builder.Property(e => e.ConfigType).HasColumnName("CONFIG_TYPE").HasMaxLength(50).IsRequired();
         builder.Property(e => e.IsActive).HasColumnName("IS_ACTIVE").HasColumnType("NUMBER(1)").IsRequired();

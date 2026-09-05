@@ -4,21 +4,21 @@ public sealed class PostingRuleDto
 {
     public long Id { get; set; }
     public long? BranchId { get; set; }
-    public string? BranchNameAr { get; set; }
+    public string? BranchNameLocal { get; set; }
 
     public string Module { get; set; } = string.Empty;
     public string EventType { get; set; } = string.Empty;
-    public string EventNameAr { get; set; } = string.Empty;
+    public string EventNameLocal { get; set; } = string.Empty;
     public string EventNameEn { get; set; } = string.Empty;
 
     public string DebitAccountCode { get; set; } = string.Empty;
-    public string? DebitAccountNameAr { get; set; }
+    public string? DebitAccountNameLocal { get; set; }
 
     public string CreditAccountCode { get; set; } = string.Empty;
-    public string? CreditAccountNameAr { get; set; }
+    public string? CreditAccountNameLocal { get; set; }
 
     public string? DefaultCostCenterCode { get; set; }
-    public string? DefaultCostCenterNameAr { get; set; }
+    public string? DefaultCostCenterNameLocal { get; set; }
 
     public int DefaultVoucherType { get; set; }
     public string? DescriptionTemplate { get; set; }
@@ -30,7 +30,7 @@ public sealed class CreatePostingRuleDto
     public long? BranchId { get; set; }
     public string Module { get; set; } = string.Empty;
     public string EventType { get; set; } = string.Empty;
-    public string EventNameAr { get; set; } = string.Empty;
+    public string EventNameLocal { get; set; } = string.Empty;
     public string EventNameEn { get; set; } = string.Empty;
 
     public string DebitAccountCode { get; set; } = string.Empty;

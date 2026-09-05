@@ -1,4 +1,4 @@
-namespace ThinkOnErp.Domain.Entities;
+﻿namespace ThinkOnErp.Domain.Entities;
 
 /// <summary>
 /// Represents a ticket system configuration setting.
@@ -29,7 +29,7 @@ public class SysTicketConfig
     /// <summary>
     /// Arabic description of the configuration setting
     /// </summary>
-    public string? DescriptionAr { get; set; }
+    public string? DescriptionLocal { get; set; }
 
     /// <summary>
     /// English description of the configuration setting

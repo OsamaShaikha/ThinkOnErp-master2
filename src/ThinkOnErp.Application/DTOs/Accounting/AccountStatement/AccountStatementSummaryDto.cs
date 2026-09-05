@@ -1,4 +1,4 @@
-namespace ThinkOnErp.Application.DTOs.Accounting.AccountStatement;
+﻿namespace ThinkOnErp.Application.DTOs.Accounting.AccountStatement;
 
 /// <summary>
 /// Summary balance item for multi-account statement / trial-style summary.
@@ -6,7 +6,7 @@ namespace ThinkOnErp.Application.DTOs.Accounting.AccountStatement;
 public sealed class AccountStatementSummaryDto
 {
     public string AccountCode { get; set; } = string.Empty;
-    public string AccountNameAr { get; set; } = string.Empty;
+    public string AccountNameLocal { get; set; } = string.Empty;
     public string AccountNameEn { get; set; } = string.Empty;
     public string AccountType { get; set; } = "DETAIL";
     public string NormalBalance { get; set; } = "D";

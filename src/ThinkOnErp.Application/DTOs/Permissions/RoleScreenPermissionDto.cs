@@ -1,4 +1,4 @@
-namespace ThinkOnErp.Application.DTOs.Permissions;
+﻿namespace ThinkOnErp.Application.DTOs.Permissions;
 
 /// <summary>
 /// Data transfer object for role screen permissions.
@@ -23,7 +23,7 @@ public class RoleScreenPermissionDto
     /// <summary>
     /// Arabic screen name
     /// </summary>
-    public string ScreenNameAr { get; set; } = string.Empty;
+    public string ScreenNameLocal { get; set; } = string.Empty;
 
     /// <summary>
     /// English screen name

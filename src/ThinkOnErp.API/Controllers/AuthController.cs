@@ -4,6 +4,7 @@ using ThinkOnErp.Application.Common;
 using ThinkOnErp.Application.DTOs.Auth;
 using ThinkOnErp.Application.DTOs.User;
 using ThinkOnErp.Application.Features.Auth.Commands.Login;
+using ThinkOnErp.Domain.Constants;
 using ThinkOnErp.Domain.Entities;
 using ThinkOnErp.Domain.Interfaces;
 using ThinkOnErp.Infrastructure.Services;
@@ -154,8 +155,13 @@ public class AuthController : ControllerBase
                     statusCode: 401));
             }
 
-            // Generate JWT token with company schema context
-            var tokenDto = _jwtTokenService.GenerateToken(user, company.CompanyCode, company.CompanySchema);
+            if (command.Language.HasValue && command.Language.Value > 0)
+            {
+                HttpContext.Items["SessionLanguage"] = command.Language.Value;
+            }
+
+            // Generate JWT token with company schema context and requested language
+            var tokenDto = _jwtTokenService.GenerateToken(user, company.CompanyCode, company.CompanySchema, command.Language);
 
             // Retrieve assigned branches for user from tenant schema
             List<long> branchIds = new();
@@ -171,7 +177,7 @@ public class AuthController : ControllerBase
             tokenDto.User = new UserDto
             {
                 UserId = user.Id,
-                NameAr = user.FullNameAr,
+                NameLocal = user.FullNameLocal,
                 NameEn = user.FullNameEn,
                 UserName = user.UserName,
                 Phone = user.Phone,
@@ -185,6 +191,7 @@ public class AuthController : ControllerBase
                 IsActive = user.IsActive,
                 IsAdmin = user.IsAdmin,
                 DefaultLang = user.DefaultLang,
+                ActiveLanguage = tokenDto.Language,
                 CreationUser = user.CreationUser,
                 CreationDate = user.CreationDate,
                 UpdateUser = user.UpdateUser,
@@ -211,7 +218,7 @@ public class AuthController : ControllerBase
 
             return Ok(ApiResponse<TokenDto>.CreateSuccess(
                 tokenDto,
-                "Authentication successful",
+                ResponseCodes.OperationSuccessful,
                 200));
         }
         catch (Exception ex)

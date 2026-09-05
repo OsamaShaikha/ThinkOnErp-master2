@@ -1,4 +1,4 @@
-using MediatR;
+﻿using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using ThinkOnErp.API.Authorization;
@@ -103,7 +103,7 @@ public class CurrencyController : ControllerBase
         try
         {
             command.CreationUser = User.Identity?.Name ?? "system";
-            _logger.LogInformation("Creating new currency: {CurrencyDesc}", command.CurrencyNameAr);
+            _logger.LogInformation("Creating new currency: {CurrencyDesc}", command.CurrencyNameLocal);
 
             var currencyId = await _mediator.Send(command);
 
@@ -119,7 +119,7 @@ public class CurrencyController : ControllerBase
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error creating currency: {CurrencyDesc}", command.CurrencyNameAr);
+            _logger.LogError(ex, "Error creating currency: {CurrencyDesc}", command.CurrencyNameLocal);
             throw;
         }
     }

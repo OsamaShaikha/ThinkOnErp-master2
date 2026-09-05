@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ThinkOn ERP — التوثيق الشامل الكامل لنظام المخزون والمستندات والتجميع</title>
+  <!-- Tailwind CSS via allowlisted CDN -->
+  <script src="https://www.gstatic.com/antigravity/web/dev/tailwindcss.min.js"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap');
+    
+    * {
+      font-family: 'Cairo', system-ui, -apple-system, sans-serif;
+    }
+    
+    code, pre, .font-mono {
+      font-family: 'JetBrains Mono', monospace !important;
+      direction: ltr;
+      text-align: left;
+    }
+
+    /* Custom scrollbars */
+    ::-webkit-scrollbar {
+      width: 7px;
+      height: 7px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #f1f5f9;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #94a3b8;
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #64748b;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 0.15rem 0.6rem;
+      border-radius: 9999px;
+      font-size: 0.75rem;
+      font-weight: 700;
+    }
+
+    .doc-section {
+      scroll-margin-top: 5rem;
+    }
+
+    @media print {
+      aside { display: none; }
+      header { position: static; }
+      body { background: white; color: black; }
+    }
+  </style>
+</head>
+<body class="bg-slate-100 text-slate-800 antialiased min-h-screen flex flex-col">
+
+  <!-- TOP HEADER -->
+  <header class="bg-slate-900 text-white sticky top-0 z-50 border-b border-slate-800 shadow-md">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-indigo-700 flex items-center justify-center shadow-lg font-black text-xl text-white">
+          T
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <h1 class="text-lg font-bold">ThinkOn ERP — دليل التوثيق الشامل الكامل</h1>
+            <span class="bg-indigo-600/30 text-indigo-300 text-xs px-2.5 py-0.5 rounded-full border border-indigo-500/30 font-mono">v2.4 Final</span>
+          </div>
+          <p class="text-xs text-slate-400">المخزون، الفواتير الموحدة، الكرت التجميعي (BOM)، المستودعات، الأرصدة، التقييم، والتوجيه المحاسبي</p>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-2">
+        <button onclick="window.print()" class="bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs px-3 py-1.5 rounded-lg border border-slate-700 transition flex items-center gap-1">
+          🖨️ طباعة / PDF
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- MAIN WRAPPER WITH SIDEBAR -->
+  <div class="max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 flex-1 flex flex-col lg:flex-row gap-6">
+
+    <!-- SIDEBAR NAVIGATION -->
+    <aside class="lg:w-72 shrink-0">
+      <div class="sticky top-20 bg-white rounded-2xl p-4 border border-slate-200 shadow-sm space-y-3">
+        <h3 class="font-black text-xs text-slate-400 uppercase tracking-wider px-2">فهرس الأقسام الرئيسية</h3>
+        <nav class="space-y-1 text-xs font-semibold">
+          <a href="#sec-architecture" class="flex items-center gap-2 px-3 py-2 rounded-lg text-slate-700 hover:bg-indigo-50 hover:text-indigo-700 transition">
+            <span>🏛️</span> 1. المعمارية وعزل البيانات
+          </a>
+          <a href="#sec-items" class="flex items-center gap-2 px-3 py-2 rounded-lg text-slate-700 hover:bg-indigo-50 hover:text-indigo-700 transition">
+            <span>📦</span> 2. بطاقة الصنف والمجموعات
+          </a>
+          <a href="#sec-bom" class="flex items-center gap-2 px-3 py-2 rounded-lg text-slate-700 hover:bg-indigo-50 hover:text-indigo-700 transition">
+            <span>🧩</span> 3. الكرت التجميعي (BOM)
+          </a>
+          <a href="#sec-warehouses" class="flex items-center gap-2 px-3 py-2 rounded-lg text-slate-700 hover:bg-indigo-50 hover:text-indigo-700 transition">
+            <span>🏬</span> 4. المستودعات والمناطق والرفوف
+          </a>
+          <a href="#sec-documents" class="flex items-center gap-2 px-3 py-2 rounded-lg text-slate-700 hover:bg-indigo-50 hover:text-indigo-700 transition">
+            <span>📄</span> 5. المستندات والفواتير الموحدة
+          </a>
+          <a href="#sec-opening" class="flex items-center gap-2 px-3 py-2 rounded-lg text-slate-700 hover:bg-indigo-50 hover:text-indigo-700 transition">
+            <span>⚖️</span> 6. الأرصدة الافتتاحية
+          </a>
+          <a href="#sec-costing" class="flex items-center gap-2 px-3 py-2 rounded-lg text-slate-700 hover:bg-indigo-50 hover:text-indigo-700 transition">
+            <span>📊</span> 7. محرك التكاليف و ATP
+          </a>
+          <a href="#sec-api" class="flex items-center gap-2 px-3 py-2 rounded-lg text-slate-700 hover:bg-indigo-50 hover:text-indigo-700 transition">
+            <span>🔌</span> 8. جدول الـ REST Endpoints
+          </a>
+          <a href="#sec-validation" class="flex items-center gap-2 px-3 py-2 rounded-lg text-slate-700 hover:bg-indigo-50 hover:text-indigo-700 transition">
+            <span>🛡️</span> 9. التحقق والاستجابات
+          </a>
+        </nav>
+
+        <div class="border-t border-slate-100 pt-3 text-[11px] text-slate-500 space-y-1 px-2">
+          <div class="flex justify-between">
+            <span>حالة الـ DB:</span>
+            <span class="text-emerald-600 font-bold">50 سكيمة متزامنة</span>
+          </div>
+          <div class="flex justify-between">
+            <span>عدد الجداول:</span>
+            <span class="font-mono font-bold">23 جدولاً</span>
+          </div>
+          <div class="flex justify-between">
+            <span>عدد الـ Endpoints:</span>
+            <span class="font-mono font-bold">34 إندبوينت</span>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- MAIN CONTENT AREA -->
+    <main class="flex-1 space-y-8">
+
+      <!-- ========================================================================= -->
+      <!-- SECTION 1: ARCHITECTURE -->
+      <!-- ========================================================================= -->
+      <section id="sec-architecture" class="doc-section bg-white rounded-2xl p-6 border border-slate-200 shadow-sm space-y-4">
+        <div class="flex items-center gap-3 border-b border-slate-100 pb-3">
+          <span class="p-2.5 bg-indigo-100 text-indigo-700 rounded-xl text-xl">🏛️</span>
+          <div>
+            <h2 class="text-base font-bold text-slate-900">1. المعمارية وعزل البيانات (Multi-Tenant Architecture)</h2>
+            <p class="text-xs text-slate-500">هيكلية العزل التام للبيانات بين السكيمة الرئيسية وسكيمات الشركات وقالب الإنشاء</p>
+          </div>
+        </div>
+
+        <p class="text-xs text-slate-600 leading-relaxed">
+          يعتمد نظام <strong>ThinkOn ERP</strong> على نموذج <strong>Schema-per-Company</strong> في قاعدة بيانات <strong>Oracle Database</strong>، بحيث تخصص سكيمة مستقلة لكل شركة لضمان الأمان والعزل التام:
+        </p>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
+          <div class="p-4 rounded-xl border border-slate-200 bg-slate-50/70 space-y-2">
+            <div class="font-bold text-slate-900 flex items-center gap-1.5">
+              <span class="w-2.5 h-2.5 rounded-full bg-slate-700"></span>
+              السكيمة الرئيسية (THINKON_ERP)
+            </div>
+            <p class="text-[11px] text-slate-600">
+              مخصصة فقط للبيانات الإدارية العامة (الشركات، المستخدمين السوبر، العملات، قاموس الأكواد <code class="font-mono bg-slate-200 px-1 rounded">SYS_CODE</code>، وقواعد التحقق <code class="font-mono bg-slate-200 px-1 rounded">SYS_FIELD_VALIDATION_RULE</code>). خالية تماماً من جداول المخزون التشغيلية (0 جداول).
+            </p>
+          </div>
+
+          <div class="p-4 rounded-xl border border-indigo-200 bg-indigo-50/50 space-y-2">
+            <div class="font-bold text-indigo-900 flex items-center gap-1.5">
+              <span class="w-2.5 h-2.5 rounded-full bg-indigo-600"></span>
+              سكيمة القالب (DEV_TEMPLATE)
+            </div>
+            <p class="text-[11px] text-indigo-900">
+              القالب المرجعي الشامل (Blueprint)؛ يحتوي على كافة الجداول الـ 23 والـ Sequences وقواعد التوجيه المحاسبي وأنواع الفواتير، ويتم استنساخه تلقائياً عند إنشاء أي شركة جديدة.
+            </p>
+          </div>
+
+          <div class="p-4 rounded-xl border border-emerald-200 bg-emerald-50/50 space-y-2">
+            <div class="font-bold text-emerald-900 flex items-center gap-1.5">
+              <span class="w-2.5 h-2.5 rounded-full bg-emerald-600"></span>
+              سكيمات الشركات (THINKONERP_*)
+            </div>
+            <p class="text-[11px] text-emerald-900">
+              كل شركة تمتلك سكيمتها الخاصة (50 سكيمة متزامنة حالياً)، وتخزن فيها بيانات الأصناف، كروت التجميع، الفواتير، حركات المخزون، والقيود المحاسبية الخاصة بها فقط.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <!-- ========================================================================= -->
+      <!-- SECTION 2: ITEMS & GROUPS -->
+      <!-- ========================================================================= -->
+      <section id="sec-items" class="doc-section bg-white rounded-2xl p-6 border border-slate-200 shadow-sm space-y-4">
+        <div class="flex items-center gap-3 border-b border-slate-100 pb-3">
+          <span class="p-2.5 bg-purple-100 text-purple-700 rounded-xl text-xl">📦</span>
+          <div>
+            <h2 class="text-base font-bold text-slate-900">2. بطاقة الصنف والمجموعات المزدوجة (Item Master & Dual Groups)</h2>
+            <p class="text-xs text-slate-500">التصنيف الثنائي للأصناف وطرق احتساب التكلفة الأربعة وأنظمة التتبع</p>
+          </div>
+        </div>
+
+        <div class="space-y-3 text-xs">
+          <h3 class="font-bold text-slate-800">أ. التصنيف الثنائي لشجرة المجموعات (Dual Group Hierarchy):</h3>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="p-3 bg-purple-50 rounded-xl border border-purple-100">
+              <div class="font-bold text-purple-900">1. المجموعة الرئيسية (Main Group)</div>
+              <p class="text-[11px] text-purple-800 mt-1">تحدد التصنيف الاستراتيجي وتوجه حسابات الأستاذ العام الافتراضية للصنف (حساب المخزون <code class="font-mono">GL_CONTROL_ACCOUNT</code>، حساب تكلفة المبيعات <code class="font-mono">GL_COGS_ACCOUNT</code>، وحساب الإيراد <code class="font-mono">GL_REVENUE_ACCOUNT</code>).</p>
+            </div>
+            <div class="p-3 bg-purple-50 rounded-xl border border-purple-100">
+              <div class="font-bold text-purple-900">2. المجموعة الفرعية (Sub Group)</div>
+              <p class="text-[11px] text-purple-800 mt-1">تحدد التصنيف التفصيلي الداخلي للصنف لأغراض التقارير والفلترة الدقيقة.</p>
+            </div>
+          </div>
+
+          <h3 class="font-bold text-slate-800 pt-2">ب. أنواع الأصناف المدعومة (Item Types):</h3>
+          <div class="overflow-x-auto border border-slate-200 rounded-xl">
+            <table class="w-full text-right text-xs">
+              <thead class="bg-slate-50 font-bold border-b border-slate-200 text-slate-700">
+                <tr>
+                  <th class="p-2.5">نوع الصنف (ItemType)</th>
+                  <th class="p-2.5">المعنى التجاري</th>
+                  <th class="p-2.5">السلوك المخزني والمحاسبي</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-100">
+                <tr>
+                  <td class="p-2.5 font-bold font-mono text-indigo-700">Stock</td>
+                  <td class="p-2.5">صنف مخزني مادي عادي</td>
+                  <td class="p-2.5">يدخل في الجرد الفعلي، وله تكلفة وأرصدة في المستودعات والرفوف.</td>
+                </tr>
+                <tr>
+                  <td class="p-2.5 font-bold font-mono text-emerald-700">Kit</td>
+                  <td class="p-2.5">طقم مبيعات تجميعي (Sales Kit)</td>
+                  <td class="p-2.5">لا يُخزن ككتلة واحدة؛ بل ينفجر تلقائياً في فواتير المبيعات إلى مواده المكونة ويخصمها من المستودع.</td>
+                </tr>
+                <tr>
+                  <td class="p-2.5 font-bold font-mono text-blue-700">Assembly</td>
+                  <td class="p-2.5">منتج تجميعي تصنيعي (Assembly)</td>
+                  <td class="p-2.5">يتم تجميعه عبر أمر تشغيل مسبق وله كرت تجميع وتكلفة مستقلة.</td>
+                </tr>
+                <tr>
+                  <td class="p-2.5 font-bold font-mono text-amber-700">Service</td>
+                  <td class="p-2.5">صنف خدمي (نقل، صيانة، تركيب)</td>
+                  <td class="p-2.5">لا يؤثر على كميات المخزون، ويثبت إيراده أو تكلفته مباشرة.</td>
+                </tr>
+                <tr>
+                  <td class="p-2.5 font-bold font-mono text-rose-700">NonStock</td>
+                  <td class="p-2.5">صنف استهلاكي غير مخزني</td>
+                  <td class="p-2.5">مستلزمات مكتبية أو ضيافة؛ ترحل قيمتها فوراً كمصروف تشغيلي.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <h3 class="font-bold text-slate-800 pt-2">ج. طرق احتساب التكلفة الأربعة (Costing Methods):</h3>
+          <ul class="space-y-1.5 text-slate-700 list-disc list-inside text-xs">
+            <li><strong>المتوسط المرجح المتحرك (WeightedAverage):</strong> إعادة احتساب متوسط تكلفة الوحدة تلقائياً مع كل حركة واردة.</li>
+            <li><strong>الوارد أولاً صادر أولاً (Fifo):</strong> بناء طبقات تكلفة في جدول <code class="font-mono bg-slate-100 px-1 rounded">INV_COST_LAYER</code> وصرف الطبقات الأقدم زمنياً.</li>
+            <li><strong>التكلفة المحددة (SpecificId):</strong> احتساب التكلفة الحقيقية للقطعة المحددة برقم المسلسل أو الدفعة.</li>
+            <li><strong>التكلفة المعيارية (Standard):</strong> تقييم المخزون بسعر ثابت وترحيل الفروقات لحساب انحراف أسعار الشراء (<code class="font-mono">PPV - 532101</code>).</li>
+          </ul>
+        </div>
+      </section>
+
+      <!-- ========================================================================= -->
+      <!-- SECTION 3: BOM -->
+      <!-- ========================================================================= -->
+      <section id="sec-bom" class="doc-section bg-white rounded-2xl p-6 border border-slate-200 shadow-sm space-y-4">
+        <div class="flex items-center gap-3 border-b border-slate-100 pb-3">
+          <span class="p-2.5 bg-emerald-100 text-emerald-700 rounded-xl text-xl">🧩</span>
+          <div>
+            <h2 class="text-base font-bold text-slate-900">3. الكرت التجميعي ووصفات التركيب (Bill of Materials - BOM)</h2>
+            <p class="text-xs text-slate-500">إدارة بطاقات التجميع وآلية الانفجار التلقائي للأطقم المركبة</p>
+          </div>
+        </div>
+
+        <p class="text-xs text-slate-600 leading-relaxed">
+          يتيح نظام الـ BOM تكوين بطاقة تركيب تحتوي على الصنف الأب (<code class="font-mono">ParentItemId</code>) والمواد المكونة الداخلة في تركيبه مع نسب الهالك وحصص التكلفة:
+        </p>
+
+        <div class="bg-emerald-50/70 border border-emerald-200 p-4 rounded-xl space-y-2 text-xs">
+          <div class="font-bold text-emerald-900 flex items-center gap-2">
+            <span>⚡</span> آلية الانفجار التلقائي في الفواتير (Auto-Explosion Engine):
+          </div>
+          <ol class="list-decimal list-inside space-y-1 text-emerald-800 text-[11px]">
+            <li>عند إضافة صنف تجميعي من نوع <code class="font-mono font-bold">Kit</code> في فاتورة المبيعات، يقبل النظام الصنف كبند مبيعات موحد للعميل.</li>
+            <li>عند الترحيل النهائي (<code class="font-mono font-bold">POST /api/documents/.../post</code>)، يقرأ النظام كرت التجميع الافتراضي للصنف.</li>
+            <li>يتحقق النظام من كفاية الأرصدة اللحظية لكافة المواد المكونة في المستودع المختار.</li>
+            <li>يتم توليد حركات صرف مخزني لمكونات الطقم، وحساب تكلفة البضاعة المباعة (<code class="font-mono">COGS</code>) وترحيل القيد المحاسبي آلياً.</li>
+          </ol>
+        </div>
+      </section>
+
+      <!-- ========================================================================= -->
+      <!-- SECTION 4: WAREHOUSES -->
+      <!-- ========================================================================= -->
+      <section id="sec-warehouses" class="doc-section bg-white rounded-2xl p-6 border border-slate-200 shadow-sm space-y-4">
+        <div class="flex items-center gap-3 border-b border-slate-100 pb-3">
+          <span class="p-2.5 bg-blue-100 text-blue-700 rounded-xl text-xl">🏬</span>
+          <div>
+            <h2 class="text-base font-bold text-slate-900">4. المستودعات والمناطق والرفوف (Warehouses, Zones & Bins)</h2>
+            <p class="text-xs text-slate-500">الهيكلية المكانية ثلاثية المستويات لإدارة المستودعات</p>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
+          <div class="p-3.5 bg-slate-50 border border-slate-200 rounded-xl space-y-1.5">
+            <div class="font-bold text-blue-900">1. المستودع (INV_WAREHOUSE)</div>
+            <p class="text-[11px] text-slate-600">مقيد بالفرع (رئيسي، فرعي، ترانزيت، افتراضي)، ويحدد تفعيل تتبع الخانات والرفوف.</p>
+          </div>
+          <div class="p-3.5 bg-slate-50 border border-slate-200 rounded-xl space-y-1.5">
+            <div class="font-bold text-purple-900">2. منطقة التخزين (INV_ZONE)</div>
+            <p class="text-[11px] text-slate-600">مناطق وظيفية: تخزين عادي (Storage)، استلام (Receiving)، تحضير (Staging)، حجر (Quarantine)، تالف (Damaged)، مرتجعات (Returns).</p>
+          </div>
+          <div class="p-3.5 bg-slate-50 border border-slate-200 rounded-xl space-y-1.5">
+            <div class="font-bold text-emerald-900">3. الخانة والرف (INV_BIN)</div>
+            <p class="text-[11px] text-slate-600">الموقع الفيزيائي الدقيق داخل المنطقة، محدد بأقصى وزن مسموح بالكيلوغرام وأقصى حجم بالمتر المكعب.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- ========================================================================= -->
+      <!-- SECTION 5: TRADE DOCUMENTS -->
+      <!-- ========================================================================= -->
+      <section id="sec-documents" class="doc-section bg-white rounded-2xl p-6 border border-slate-200 shadow-sm space-y-4">
+        <div class="flex items-center gap-3 border-b border-slate-100 pb-3">
+          <span class="p-2.5 bg-amber-100 text-amber-700 rounded-xl text-xl">📄</span>
+          <div>
+            <h2 class="text-base font-bold text-slate-900">5. المستندات التجارية وحركات المخزون الموحدة (Universal Documents)</h2>
+            <p class="text-xs text-slate-500">محرك الفواتير والمستندات الشامل بالمفتاح الرباعي والأكواد الرقمية</p>
+          </div>
+        </div>
+
+        <div class="space-y-3 text-xs">
+          <div class="p-3 bg-amber-50 rounded-xl border border-amber-200">
+            <div class="font-bold text-amber-900 mb-1">المفتاح الأساسي الرباعي المركب (Composite Primary Key):</div>
+            <code class="font-mono text-amber-950 font-bold bg-amber-100/80 px-2 py-1 rounded block">
+              PRIMARY KEY (BRANCH_ID, DOC_YEAR, DOC_TYPE, ID)
+            </code>
+          </div>
+
+          <h3 class="font-bold text-slate-800 pt-2">جدول الأكواد الرقمية (sysCode Integer Mappings):</h3>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+            <div class="p-3 border border-slate-200 rounded-xl bg-slate-50/60 space-y-1.5">
+              <div class="font-bold text-slate-900">نوع الطرف (PartyTypeCode):</div>
+              <ul class="text-[11px] space-y-1 font-mono text-slate-700">
+                <li><span class="badge bg-slate-200">0</span> NONE (بدون طرف)</li>
+                <li><span class="badge bg-blue-100 text-blue-800">1</span> CUSTOMER (عميل)</li>
+                <li><span class="badge bg-purple-100 text-purple-800">2</span> VENDOR (مورد)</li>
+                <li><span class="badge bg-teal-100 text-teal-800">3</span> BRANCH (فرع)</li>
+                <li><span class="badge bg-orange-100 text-orange-800">4</span> DEPARTMENT (قسم)</li>
+              </ul>
+            </div>
+
+            <div class="p-3 border border-slate-200 rounded-xl bg-slate-50/60 space-y-1.5">
+              <div class="font-bold text-slate-900">طريقة الدفع (PaymentMethodCode):</div>
+              <ul class="text-[11px] space-y-1 font-mono text-slate-700">
+                <li><span class="badge bg-green-100 text-green-800">1</span> CASH (نقداً)</li>
+                <li><span class="badge bg-amber-100 text-amber-800">2</span> CREDIT (ذمم/آجل)</li>
+                <li><span class="badge bg-indigo-100 text-indigo-800">3</span> BANK (بنك/حوالة)</li>
+                <li><span class="badge bg-rose-100 text-rose-800">4</span> CHEQUE (شيكات)</li>
+                <li><span class="badge bg-cyan-100 text-cyan-800">5</span> MULTI (متعدد)</li>
+              </ul>
+            </div>
+
+            <div class="p-3 border border-slate-200 rounded-xl bg-slate-50/60 space-y-1.5">
+              <div class="font-bold text-slate-900">حالة المستند (DocStatusCode):</div>
+              <ul class="text-[11px] space-y-1 font-mono text-slate-700">
+                <li><span class="badge bg-amber-100 text-amber-800">1</span> DRAFT (مسودة)</li>
+                <li><span class="badge bg-emerald-100 text-emerald-800">2</span> POSTED (مرحل نهائي)</li>
+                <li><span class="badge bg-red-100 text-red-800">3</span> CANCELLED (ملغي)</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ========================================================================= -->
+      <!-- SECTION 6: OPENING BALANCES -->
+      <!-- ========================================================================= -->
+      <section id="sec-opening" class="doc-section bg-white rounded-2xl p-6 border border-slate-200 shadow-sm space-y-4">
+        <div class="flex items-center gap-3 border-b border-slate-100 pb-3">
+          <span class="p-2.5 bg-teal-100 text-teal-700 rounded-xl text-xl">⚖️</span>
+          <div>
+            <h2 class="text-base font-bold text-slate-900">6. الأرصدة الافتتاحية للمخزون (Opening Balances)</h2>
+            <p class="text-xs text-slate-500">تأسيس الأرصدة الأولية للمستودع والفرع والمادة والترحيل المالي</p>
+          </div>
+        </div>
+
+        <p class="text-xs text-slate-600 leading-relaxed">
+          يتم إدخال الأرصدة الافتتاحية كدفعات مقيدة بالفرع والسنة المالية (<code class="font-mono">INV_OPENING_BATCH</code>) مع تفاصيل المواد والمستودعات والرفوف والتشغيلات والتكاليف الأولية (<code class="font-mono">INV_OPENING_LINE</code>).
+        </p>
+
+        <div class="p-3.5 bg-teal-50 border border-teal-200 rounded-xl text-xs space-y-1 text-teal-950">
+          <div class="font-bold">القيد المحاسبي المولد عند ترحيل الرصيد الافتتاحي:</div>
+          <div class="font-mono text-[11px] bg-white p-2.5 rounded-lg border border-teal-200">
+            من حـ/ المخزون بضاعة تامة الصنع (114301) — [مدين]<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;إلى حـ/ الأرباح المدورة أو رأس المال (311101) — [دائن]
+          </div>
+        </div>
+      </section>
+
+      <!-- ========================================================================= -->
+      <!-- SECTION 7: COSTING & ATP -->
+      <!-- ========================================================================= -->
+      <section id="sec-costing" class="doc-section bg-white rounded-2xl p-6 border border-slate-200 shadow-sm space-y-4">
+        <div class="flex items-center gap-3 border-b border-slate-100 pb-3">
+          <span class="p-2.5 bg-indigo-100 text-indigo-700 rounded-xl text-xl">📊</span>
+          <div>
+            <h2 class="text-base font-bold text-slate-900">7. محرك التكاليف والمتاح للالتزام (Costing, ATP & GL Reconciliation)</h2>
+            <p class="text-xs text-slate-500">سجل المخزون غير القابل للتعديل، حاسبة الـ ATP، ومطابقة الأستاذ العام</p>
+          </div>
+        </div>
+
+        <div class="space-y-3 text-xs">
+          <div class="p-4 bg-slate-900 text-white rounded-xl space-y-2">
+            <div class="font-bold text-cyan-300">معادلة المتاح للالتزام الفوري للعملاء (Available-To-Promise Equation):</div>
+            <div class="font-mono text-sm text-emerald-400 bg-black/40 p-2.5 rounded-lg">
+              ATP = OnHand + OnOrder - Reserved - SafetyStock
+            </div>
+            <p class="text-[11px] text-slate-300">
+              تضمن هذه المعادلة عدم التعهد للعميل بكميات محجوزة لطلبيات أخرى أو تقع تحت حد الأمان الحرج.
+            </p>
+          </div>
+
+          <div class="p-3 bg-slate-50 border border-slate-200 rounded-xl space-y-1">
+            <div class="font-bold text-slate-900">محرك المطابقة والتسوية مع الأستاذ العام (GL Reconciliation):</div>
+            <p class="text-[11px] text-slate-600">
+              يقوم بمطابقة حاصل ضرب الكميات اللحظية في التكلفة لكل مادة في المستودعات مع إجمالي أرصدة حسابات مراقبة المخزون في شجرة الحسابات واستخراج فروقات الجرد دورياً.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <!-- ========================================================================= -->
+      <!-- SECTION 8: API MATRIX -->
+      <!-- ========================================================================= -->
+      <section id="sec-api" class="doc-section bg-white rounded-2xl p-6 border border-slate-200 shadow-sm space-y-4">
+        <div class="flex items-center gap-3 border-b border-slate-100 pb-3">
+          <span class="p-2.5 bg-slate-900 text-white rounded-xl text-xl">🔌</span>
+          <div>
+            <h2 class="text-base font-bold text-slate-900">8. جدول الـ RESTful API الكامل (7 Controllers Matrix)</h2>
+            <p class="text-xs text-slate-500">دليل الـ Endpoints الكامل لجميع وحدات المخزون والمستندات في Swagger</p>
+          </div>
+        </div>
+
+        <div class="overflow-x-auto border border-slate-200 rounded-xl">
+          <table class="w-full text-right text-xs">
+            <thead class="bg-slate-100 font-bold border-b border-slate-200 text-slate-700">
+              <tr>
+                <th class="p-2.5">الكنترولر (Controller)</th>
+                <th class="p-2.5">المسار (Route)</th>
+                <th class="p-2.5">العمليات المدعومة (HTTP Methods)</th>
+                <th class="p-2.5">الوصف البرمجي</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100 font-mono text-[11px]">
+              <tr>
+                <td class="p-2.5 font-bold text-slate-900">TrxDocumentsController</td>
+                <td class="p-2.5 text-indigo-700">/api/documents</td>
+                <td class="p-2.5">GET, POST, PUT, DELETE, POST /post</td>
+                <td class="p-2.5 text-slate-600 font-sans">إدارة الفواتير والمستندات بالمفتاح الرباعي والترحيل المالي</td>
+              </tr>
+              <tr>
+                <td class="p-2.5 font-bold text-slate-900">InvItemsController</td>
+                <td class="p-2.5 text-indigo-700">/api/inventory/items</td>
+                <td class="p-2.5">GET, POST, PUT, DELETE, POST/DEL /uom, POST/DEL /barcode</td>
+                <td class="p-2.5 text-slate-600 font-sans">بطاقة الأصناف، وحدات القياس، والباركودات الدولية</td>
+              </tr>
+              <tr>
+                <td class="p-2.5 font-bold text-slate-900">InvItemGroupsController</td>
+                <td class="p-2.5 text-indigo-700">/api/inventory/groups</td>
+                <td class="p-2.5">GET, POST, PUT, DELETE, GET /main, GET /{id}/sub</td>
+                <td class="p-2.5 text-slate-600 font-sans">شجرة المجموعات الرئيسية والمجموعات الفرعية والتوجيه المحاسبي</td>
+              </tr>
+              <tr>
+                <td class="p-2.5 font-bold text-slate-900">InvBomController</td>
+                <td class="p-2.5 text-indigo-700">/api/inventory/bom</td>
+                <td class="p-2.5">GET, POST, PUT, DELETE, GET /item/{id}/default</td>
+                <td class="p-2.5 text-slate-600 font-sans">كروت التجميع، نسب التكاليف، وشجرة المكونات</td>
+              </tr>
+              <tr>
+                <td class="p-2.5 font-bold text-slate-900">InvWarehousesController</td>
+                <td class="p-2.5 text-indigo-700">/api/inventory/warehouses</td>
+                <td class="p-2.5">GET, POST, PUT, DELETE, /zones, /bins, GET /stock</td>
+                <td class="p-2.5 text-slate-600 font-sans">المستودعات، مناطق التخزين، الرفوف، وملخص الأرصدة</td>
+              </tr>
+              <tr>
+                <td class="p-2.5 font-bold text-slate-900">InvOpeningBalancesController</td>
+                <td class="p-2.5 text-indigo-700">/api/inventory/opening-balances</td>
+                <td class="p-2.5">GET, POST, PUT, DELETE, POST /{id}/post</td>
+                <td class="p-2.5 text-slate-600 font-sans">دفعات الأرصدة الافتتاحية والترحيل للأستاذ العام</td>
+              </tr>
+              <tr>
+                <td class="p-2.5 font-bold text-slate-900">InvStockController</td>
+                <td class="p-2.5 text-indigo-700">/api/inventory/stock</td>
+                <td class="p-2.5">POST /movements, GET /balances, GET /atp, GET /reconciliation</td>
+                <td class="p-2.5 text-slate-600 font-sans">سجل الحركات اللحظي، حساب المتاح للبيع، ومطابقة الحسابات</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- ========================================================================= -->
+      <!-- SECTION 9: VALIDATION & RESPONSES -->
+      <!-- ========================================================================= -->
+      <section id="sec-validation" class="doc-section bg-white rounded-2xl p-6 border border-slate-200 shadow-sm space-y-4">
+        <div class="flex items-center gap-3 border-b border-slate-100 pb-3">
+          <span class="p-2.5 bg-rose-100 text-rose-700 rounded-xl text-xl">🛡️</span>
+          <div>
+            <h2 class="text-base font-bold text-slate-900">9. طبقة التحقق وقاموس الاستجابات (Validation & Responses)</h2>
+            <p class="text-xs text-slate-500">قواعد FluentValidation، جداول الـ Validation الديناميكية، وأكواد الاستجابة المعربة</p>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+          <div class="p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-2">
+            <div class="font-bold text-slate-900">قواعد التحقق (Validation Engine):</div>
+            <ul class="text-[11px] text-slate-600 space-y-1 list-disc list-inside">
+              <li><strong>برمجياً (C#):</strong> 7 فئات تحقق مستقلة بـ <code class="font-mono">FluentValidation</code> تفحص الحقول الموجبة وتوازن الفواتير.</li>
+              <li><strong>في قاعدة البيانات (Oracle):</strong> 36 قاعدة تحقق ديناميكية في جدول <code class="font-mono">SYS_FIELD_VALIDATION_RULE</code> قابلة للتخصيص بحسب الدولة أو الشركة.</li>
+            </ul>
+          </div>
+
+          <div class="p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-2">
+            <div class="font-bold text-slate-900">قاموس الاستجابات المعربة (SYS_CODE - 31):</div>
+            <ul class="text-[11px] text-slate-600 space-y-1 list-disc list-inside">
+              <li><strong>50 كود استجابة معرّب ومترجم بالإنجليزية:</strong> مسجلة في جدول <code class="font-mono">SYS_CODE</code> برقم تصنيف <code class="font-mono">CODE_MGR = 31</code>.</li>
+              <li>توحيد تام لرسائل النجاح والعمليات لكافة تطبيقات الويب والموبايل.</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- FOOTER -->
+  <footer class="bg-white border-t border-slate-200 text-slate-500 text-xs py-4 text-center mt-auto">
+    <p>ThinkOn ERP — Enterprise Resource Planning Multi-Tenant System &copy; 2026. All rights reserved.</p>
+  </footer>
+
+</body>
+</html>

@@ -4,7 +4,7 @@ public sealed class SubledgerTransactionDto
 {
     public long Id { get; set; }
     public string PartyCode { get; set; } = string.Empty;
-    public string PartyNameAr { get; set; } = string.Empty;
+    public string PartyNameLocal { get; set; } = string.Empty;
     public string PartyNameEn { get; set; } = string.Empty;
     public long JournalLineId { get; set; }
     public long VoucherId { get; set; }
@@ -103,7 +103,7 @@ public sealed class StatementRowDto
 public sealed class StatementOfAccountDto
 {
     public string PartyCode { get; set; } = string.Empty;
-    public string PartyNameAr { get; set; } = string.Empty;
+    public string PartyNameLocal { get; set; } = string.Empty;
     public string PartyNameEn { get; set; } = string.Empty;
     public string PartyType { get; set; } = string.Empty; // CUSTOMER or VENDOR
     public decimal OpeningBalance { get; set; }
@@ -116,7 +116,7 @@ public sealed class StatementOfAccountDto
 public sealed class AgingBucketDto
 {
     public string PartyCode { get; set; } = string.Empty;
-    public string PartyNameAr { get; set; } = string.Empty;
+    public string PartyNameLocal { get; set; } = string.Empty;
     public string PartyNameEn { get; set; } = string.Empty;
     public decimal CurrentAmount { get; set; }    // Not yet due or 0-30 days
     public decimal Days31To60 { get; set; }      // 31-60 days overdue

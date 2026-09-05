@@ -10,14 +10,17 @@ namespace ThinkOnErp.Application.Services.Accounting;
 public sealed class GlCostCenterService : IGlCostCenterService
 {
     private readonly IGlCostCenterRepository _repository;
+    private readonly ITranslationService? _translationService;
     private readonly ILogger<GlCostCenterService> _logger;
 
     public GlCostCenterService(
         IGlCostCenterRepository repository,
-        ILogger<GlCostCenterService> logger)
+        ILogger<GlCostCenterService> logger,
+        ITranslationService? translationService = null)
     {
         _repository = repository ?? throw new ArgumentNullException(nameof(repository));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        _translationService = translationService;
     }
 
     public async Task<IReadOnlyList<GlCostCenterDto>> GetAllAsync(CancellationToken cancellationToken = default)
@@ -62,7 +65,7 @@ public sealed class GlCostCenterService : IGlCostCenterService
 
         if (await _repository.CodeExistsAsync(dto.CostCenterCode, cancellationToken))
         {
-            throw new AccountingException($"مركز التكلفة برقم ({dto.CostCenterCode}) موجود مسبقاً.", "GL_COST_CENTER_DUPLICATE_CODE");
+            throw new AccountingException($"Cost center with code '{dto.CostCenterCode}' already exists.", "GL_COST_CENTER_DUPLICATE_CODE");
         }
 
         int level = 1;
@@ -71,7 +74,7 @@ public sealed class GlCostCenterService : IGlCostCenterService
             var parent = await _repository.GetByCodeAsync(dto.ParentCostCenterCode, cancellationToken);
             if (parent == null)
             {
-                throw new AccountingException($"مركز التكلفة الأب رقم ({dto.ParentCostCenterCode}) غير موجود.", "GL_COST_CENTER_PARENT_NOT_FOUND");
+                throw new AccountingException($"Parent cost center with code '{dto.ParentCostCenterCode}' was not found.", "GL_COST_CENTER_PARENT_NOT_FOUND");
             }
 
             level = parent.CostCenterLevel + 1;
@@ -82,7 +85,7 @@ public sealed class GlCostCenterService : IGlCostCenterService
         {
             CostCenterCode = dto.CostCenterCode.Trim(),
             ParentCostCenterCode = string.IsNullOrWhiteSpace(dto.ParentCostCenterCode) ? null : dto.ParentCostCenterCode.Trim(),
-            NameAr = dto.NameAr.Trim(),
+            NameLocal = dto.NameLocal.Trim(),
             NameEn = dto.NameEn.Trim(),
             CostCenterLevel = level,
             CostCenterType = dto.CostCenterType.ToUpperInvariant(),
@@ -94,6 +97,12 @@ public sealed class GlCostCenterService : IGlCostCenterService
 
         await _repository.AddAsync(entity, cancellationToken);
         await _repository.SaveChangesAsync(cancellationToken);
+
+        // Save translations if provided
+        if (_translationService != null && dto.Translations != null && dto.Translations.Any() && long.TryParse(entity.CostCenterCode, out var costCenterId))
+        {
+            await _translationService.SaveTranslationsAsync("GL_COST_CENTER", costCenterId, dto.Translations, currentUser, cancellationToken);
+        }
 
         _logger.LogInformation("Cost Center {Code} created by {User}", entity.CostCenterCode, currentUser);
         return GlCostCenterMapper.ToDto(entity);
@@ -107,11 +116,11 @@ public sealed class GlCostCenterService : IGlCostCenterService
         var entity = await _repository.GetByCodeAsync(costCenterCode, cancellationToken);
         if (entity == null)
         {
-            throw new AccountingNotFoundException($"مركز التكلفة برقم ({costCenterCode}) غير موجود.", "GL_COST_CENTER_NOT_FOUND");
+            throw new AccountingNotFoundException($"Cost center with code '{costCenterCode}' was not found.", "GL_COST_CENTER_NOT_FOUND");
         }
 
         var currentUser = string.IsNullOrWhiteSpace(username) ? "SYSTEM" : username;
-        entity.NameAr = dto.NameAr.Trim();
+        entity.NameLocal = dto.NameLocal.Trim();
         entity.NameEn = dto.NameEn.Trim();
         entity.CostCenterType = dto.CostCenterType.ToUpperInvariant();
         entity.IsPostable = dto.CostCenterType.Equals("DETAIL", StringComparison.OrdinalIgnoreCase) && dto.IsPostable;
@@ -120,6 +129,12 @@ public sealed class GlCostCenterService : IGlCostCenterService
         entity.UpdateDate = DateTime.UtcNow;
 
         await _repository.SaveChangesAsync(cancellationToken);
+
+        // Save translations if provided
+        if (_translationService != null && dto.Translations != null && dto.Translations.Any() && long.TryParse(entity.CostCenterCode, out var costCenterId))
+        {
+            await _translationService.SaveTranslationsAsync("GL_COST_CENTER", costCenterId, dto.Translations, currentUser, cancellationToken);
+        }
 
         _logger.LogInformation("Cost Center {Code} updated by {User}", entity.CostCenterCode, currentUser);
         return GlCostCenterMapper.ToDto(entity);
@@ -132,7 +147,7 @@ public sealed class GlCostCenterService : IGlCostCenterService
         var entity = await _repository.GetByCodeAsync(costCenterCode, cancellationToken);
         if (entity == null)
         {
-            throw new AccountingNotFoundException($"مركز التكلفة برقم ({costCenterCode}) غير موجود.", "GL_COST_CENTER_NOT_FOUND");
+            throw new AccountingNotFoundException($"Cost center with code '{costCenterCode}' was not found.", "GL_COST_CENTER_NOT_FOUND");
         }
 
         var currentUser = string.IsNullOrWhiteSpace(username) ? "SYSTEM" : username;

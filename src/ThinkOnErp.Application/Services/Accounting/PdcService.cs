@@ -94,23 +94,23 @@ public sealed class PdcService : IPdcService
             throw new AccountingNotFoundException($"الشيك رقم ({id}) غير موجود بالسجل.", "PDC_NOT_FOUND");
         }
 
-        string partyNameAr = string.Empty;
+        string partyNameLocal = string.Empty;
         string partyNameEn = string.Empty;
 
         if (pdc.PartyType == "CUSTOMER" && !string.IsNullOrWhiteSpace(pdc.PartyCode))
         {
             var cust = await _customerRepository.GetByCodeAsync(pdc.PartyCode, cancellationToken);
-            partyNameAr = cust?.NameAr ?? string.Empty;
+            partyNameLocal = cust?.NameLocal ?? string.Empty;
             partyNameEn = cust?.NameEn ?? string.Empty;
         }
         else if (pdc.PartyType == "VENDOR" && !string.IsNullOrWhiteSpace(pdc.PartyCode))
         {
             var vend = await _vendorRepository.GetByCodeAsync(pdc.PartyCode, cancellationToken);
-            partyNameAr = vend?.NameAr ?? string.Empty;
+            partyNameLocal = vend?.NameLocal ?? string.Empty;
             partyNameEn = vend?.NameEn ?? string.Empty;
         }
 
-        return MapToDto(pdc, partyNameAr, partyNameEn);
+        return MapToDto(pdc, partyNameLocal, partyNameEn);
     }
 
     public async Task<IReadOnlyList<PdcRegisterDto>> GetChequesAsync(PdcFilterDto filter, CancellationToken cancellationToken = default)
@@ -409,13 +409,13 @@ public sealed class PdcService : IPdcService
         };
     }
 
-    private static PdcRegisterDto MapToDto(GlPdcRegister pdc, string partyNameAr, string partyNameEn)
+    private static PdcRegisterDto MapToDto(GlPdcRegister pdc, string partyNameLocal, string partyNameEn)
     {
         return new PdcRegisterDto
         {
             Id = pdc.Id,
             BranchId = pdc.BranchId,
-            BranchNameAr = pdc.Branch?.BranchNameAr,
+            BranchNameLocal = pdc.Branch?.BranchNameLocal,
             BranchNameEn = pdc.Branch?.BranchNameEn,
             FiscalYearId = pdc.FiscalYearId,
             ChequeType = pdc.ChequeType,
@@ -432,10 +432,10 @@ public sealed class PdcService : IPdcService
             BeneficiaryName = pdc.BeneficiaryName,
             PartyType = pdc.PartyType,
             PartyCode = pdc.PartyCode,
-            PartyNameAr = partyNameAr,
+            PartyNameLocal = partyNameLocal,
             PartyNameEn = partyNameEn,
             Status = pdc.Status,
-            StatusNameAr = pdc.Status switch
+            StatusNameLocal = pdc.Status switch
             {
                 "RECEIVED" => "مستلم",
                 "DEPOSITED" => "مودع بالبنك",

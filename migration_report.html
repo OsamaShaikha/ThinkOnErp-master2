@@ -1,0 +1,766 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ThinkOn ERP — وثيقة التحول الدولي (NameAr ➔ NameLocal Migration Report)</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #2563eb;
+            --primary-dark: #1d4ed8;
+            --primary-light: #dbeafe;
+            --success: #10b981;
+            --success-light: #d1fae5;
+            --warning: #f59e0b;
+            --warning-light: #fef3c7;
+            --danger: #ef4444;
+            --danger-light: #fee2e2;
+            --bg: #f8fafc;
+            --card-bg: #ffffff;
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+            --border: #e2e8f0;
+            --radius: 12px;
+            --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.05), 0 2px 4px -2px rgb(0 0 0 / 0.05);
+            --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.08), 0 4px 6px -4px rgb(0 0 0 / 0.08);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Cairo', sans-serif;
+            background-color: var(--bg);
+            color: var(--text-main);
+            line-height: 1.6;
+            padding: 24px;
+        }
+
+        .container {
+            max-width: 1300px;
+            margin: 0 auto;
+        }
+
+        header {
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+            color: white;
+            padding: 36px 40px;
+            border-radius: var(--radius);
+            margin-bottom: 24px;
+            box-shadow: var(--shadow-lg);
+            position: relative;
+            overflow: hidden;
+        }
+
+        header::after {
+            content: "";
+            position: absolute;
+            top: -50%;
+            left: -20%;
+            width: 400px;
+            height: 400px;
+            background: radial-gradient(circle, rgba(37, 99, 235, 0.25) 0%, rgba(0,0,0,0) 70%);
+            border-radius: 50%;
+        }
+
+        .header-title {
+            font-size: 28px;
+            font-weight: 800;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .header-subtitle {
+            font-size: 15px;
+            color: #94a3b8;
+            max-width: 800px;
+        }
+
+        .badge-global {
+            background: var(--primary);
+            color: white;
+            font-size: 13px;
+            padding: 4px 12px;
+            border-radius: 999px;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .stat-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            padding: 20px 24px;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .stat-number {
+            font-size: 30px;
+            font-weight: 800;
+            color: var(--primary);
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .stat-label {
+            font-size: 14px;
+            color: var(--text-muted);
+            font-weight: 600;
+        }
+
+        /* Search & Filter Controls */
+        .controls {
+            background: var(--card-bg);
+            padding: 16px 20px;
+            border-radius: var(--radius);
+            border: 1px solid var(--border);
+            margin-bottom: 24px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 16px;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: var(--shadow);
+        }
+
+        .search-box {
+            flex: 1;
+            min-width: 280px;
+            position: relative;
+        }
+
+        .search-box input {
+            width: 100%;
+            padding: 10px 16px 10px 40px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-family: 'Cairo', sans-serif;
+            font-size: 14px;
+            outline: none;
+            transition: all 0.2s;
+        }
+
+        .search-box input:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+        }
+
+        .search-box span {
+            position: absolute;
+            left: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+        }
+
+        .tab-buttons {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .tab-btn {
+            background: #f1f5f9;
+            border: 1px solid transparent;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-family: 'Cairo', sans-serif;
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .tab-btn.active, .tab-btn:hover {
+            background: var(--primary);
+            color: white;
+        }
+
+        /* Content Sections */
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            margin-bottom: 24px;
+            overflow: hidden;
+        }
+
+        .card-header {
+            padding: 18px 24px;
+            border-bottom: 1px solid var(--border);
+            background: #fafafa;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .card-title {
+            font-size: 17px;
+            font-weight: 700;
+            color: var(--text-main);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .table-responsive {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: right;
+            font-size: 14px;
+        }
+
+        th {
+            background: #f8fafc;
+            padding: 12px 20px;
+            font-weight: 700;
+            color: var(--text-muted);
+            border-bottom: 1px solid var(--border);
+            white-space: nowrap;
+        }
+
+        td {
+            padding: 14px 20px;
+            border-bottom: 1px solid var(--border);
+            vertical-align: middle;
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        tr:hover td {
+            background: #f8fafc;
+        }
+
+        .code-old {
+            font-family: 'JetBrains Mono', monospace;
+            background: var(--danger-light);
+            color: #b91c1c;
+            padding: 3px 8px;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 600;
+            text-decoration: line-through;
+        }
+
+        .code-new {
+            font-family: 'JetBrains Mono', monospace;
+            background: var(--success-light);
+            color: #047857;
+            padding: 3px 8px;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 700;
+        }
+
+        .endpoint-badge {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            font-weight: 700;
+            padding: 4px 8px;
+            border-radius: 6px;
+            text-transform: uppercase;
+        }
+
+        .get { background: #dbeafe; color: #1d4ed8; }
+        .post { background: #d1fae5; color: #047857; }
+        .put { background: #fef3c7; color: #b45309; }
+        .delete { background: #fee2e2; color: #b91c1c; }
+
+        .endpoint-url {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 13px;
+            font-weight: 600;
+            direction: ltr;
+            text-align: left;
+            display: inline-block;
+        }
+
+        /* JSON Code Boxes */
+        .json-box {
+            background: #0f172a;
+            color: #f8fafc;
+            padding: 18px 20px;
+            border-radius: 8px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 13px;
+            direction: ltr;
+            text-align: left;
+            overflow-x: auto;
+            line-height: 1.5;
+            margin-top: 10px;
+        }
+
+        .json-key { color: #38bdf8; }
+        .json-string { color: #a7f3d0; }
+        .json-number { color: #fde047; }
+        .json-diff-old { background: rgba(239, 68, 68, 0.25); color: #fca5a5; }
+        .json-diff-new { background: rgba(16, 185, 129, 0.25); color: #86efac; font-weight: bold; }
+
+        .notice-box {
+            background: #eff6ff;
+            border-right: 4px solid var(--primary);
+            padding: 16px 20px;
+            border-radius: 0 var(--radius) var(--radius) 0;
+            margin-bottom: 24px;
+            font-size: 14px;
+            color: #1e3a8a;
+        }
+
+        .notice-box strong {
+            display: block;
+            margin-bottom: 4px;
+            font-size: 15px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+
+    <!-- Header -->
+    <header>
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 16px;">
+            <div>
+                <div class="header-title">
+                    🌐 وثيقة التحول الدولي (i18n Migration Report)
+                </div>
+                <div class="header-subtitle">
+                    دليل شامل لمهندسي الـ Frontend & UI لتوضيح كافة التعديلات في الحقول البرمجية (DTOs) وطلبات الـ API بعد اعتماد معيار <code>NameLocal</code> للغة المحلية للدولة بدلاً من <code>NameAr</code>.
+                </div>
+            </div>
+            <span class="badge-global">Enterprise Ready • ThinkOn ERP</span>
+        </div>
+    </header>
+
+    <!-- KPI Summary -->
+    <div class="stats-grid">
+        <div class="stat-card">
+            <span class="stat-number">38</span>
+            <span class="stat-label">عمود تم تعديله في قاعدة البيانات (DEV_TEMPLATE)</span>
+        </div>
+        <div class="stat-card">
+            <span class="stat-number">52+</span>
+            <span class="stat-label">كائن DTO تم تحديثه في الـ Application Layer</span>
+        </div>
+        <div class="stat-card">
+            <span class="stat-number">45</span>
+            <span class="stat-label">قاعدة تحقق ديناميكية (Validation Rules) تم تحديثها</span>
+        </div>
+        <div class="stat-card">
+            <span class="stat-number">100%</span>
+            <span class="stat-label">جاهزية التوسع العالمي لأي دولة (Multi-Country)</span>
+        </div>
+    </div>
+
+    <!-- Notice Box -->
+    <div class="notice-box">
+        <strong>📌 تنبيه هام لمهندسي الـ UI والواجهات:</strong>
+        تم توحيد معيار تسمية الحقول الثنائية للغات عبر النظام بالكامل:
+        <br/>• <strong><code>NameEn</code></strong> / <strong><code>DescriptionEn</code></strong>: اللغة العالمية الموحدة (Global Lingua Franca - الإنجليزية).
+        <br/>• <strong><code>NameLocal</code></strong> / <strong><code>DescriptionLocal</code></strong>: اللغة المحلية للدولة التي يعمل بها المستأجر (عربي، تركي، فرنسي، إلخ).
+    </div>
+
+    <!-- Controls / Filters -->
+    <div class="controls">
+        <div class="search-box">
+            <input type="text" id="searchInput" placeholder="ابحث عن اسم حقل، كود DTO، أو مسار Endpoint..." onkeyup="filterTables()">
+            <span>🔍</span>
+        </div>
+        <div class="tab-buttons">
+            <button class="tab-btn active" onclick="showTab('tab-inventory')">📦 إدارة المخزون (Inventory)</button>
+            <button class="tab-btn" onclick="showTab('tab-accounting')">💰 المحاسبة (Accounting & GL)</button>
+            <button class="tab-btn" onclick="showTab('tab-core')">🏢 الشركة والفروع والمستخدمين</button>
+            <button class="tab-btn" onclick="showTab('tab-db')">🗄️ جداول قاعدة البيانات</button>
+            <button class="tab-btn" onclick="showTab('tab-json')">📑 نماذج JSON قبل / بعد</button>
+        </div>
+    </div>
+
+    <!-- TAB 1: INVENTORY -->
+    <div id="tab-inventory" class="tab-content active">
+        <div class="card">
+            <div class="card-header">
+                <div class="card-title">📦 حقول DTOs ونقاط الـ API في وحدة المخزون (Inventory)</div>
+            </div>
+            <div class="table-responsive">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>الشاشة / الكيان</th>
+                            <th>الـ Endpoint</th>
+                            <th>الحقل القديم (Old)</th>
+                            <th>الحقل الجديد (New)</th>
+                            <th>الوصف</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>بطاقة الصنف (Item Master)</strong></td>
+                            <td><span class="endpoint-badge post">POST</span> <span class="endpoint-url">/api/inventory/items</span><br/><span class="endpoint-badge put">PUT</span> <span class="endpoint-url">/api/inventory/items/{id}</span></td>
+                            <td><span class="code-old">itemNameAr</span></td>
+                            <td><span class="code-new">itemNameLocal</span></td>
+                            <td>اسم الصنف باللغة المحلية</td>
+                        </tr>
+                        <tr>
+                            <td><strong>المجموعات الرئيسية (Main Groups)</strong></td>
+                            <td><span class="endpoint-badge post">POST</span> <span class="endpoint-url">/api/inventory/groups/main</span><br/><span class="endpoint-badge put">PUT</span> <span class="endpoint-url">/api/inventory/groups/main/{id}</span></td>
+                            <td><span class="code-old">groupNameAr</span></td>
+                            <td><span class="code-new">groupNameLocal</span></td>
+                            <td>اسم المجموعة الرئيسية باللغة المحلية</td>
+                        </tr>
+                        <tr>
+                            <td><strong>المجموعات الفرعية (Sub Groups)</strong></td>
+                            <td><span class="endpoint-badge post">POST</span> <span class="endpoint-url">/api/inventory/groups/sub</span><br/><span class="endpoint-badge put">PUT</span> <span class="endpoint-url">/api/inventory/groups/sub/{id}</span></td>
+                            <td><span class="code-old">groupNameAr</span></td>
+                            <td><span class="code-new">groupNameLocal</span></td>
+                            <td>اسم المجموعة الفرعية باللغة المحلية</td>
+                        </tr>
+                        <tr>
+                            <td><strong>المستودعات (Warehouses)</strong></td>
+                            <td><span class="endpoint-badge post">POST</span> <span class="endpoint-url">/api/inventory/warehouses</span><br/><span class="endpoint-badge put">PUT</span> <span class="endpoint-url">/api/inventory/warehouses/{id}</span></td>
+                            <td><span class="code-old">warehouseNameAr</span></td>
+                            <td><span class="code-new">warehouseNameLocal</span></td>
+                            <td>اسم المستودع باللغة المحلية</td>
+                        </tr>
+                        <tr>
+                            <td><strong>المناطق المستودعية (Zones)</strong></td>
+                            <td><span class="endpoint-badge post">POST</span> <span class="endpoint-url">/api/inventory/warehouses/{id}/zones</span></td>
+                            <td><span class="code-old">zoneNameAr</span></td>
+                            <td><span class="code-new">zoneNameLocal</span></td>
+                            <td>اسم المنطقة بالمستودع باللغة المحلية</td>
+                        </tr>
+                        <tr>
+                            <td><strong>قوائم المواد (BOM Recipes)</strong></td>
+                            <td><span class="endpoint-badge post">POST</span> <span class="endpoint-url">/api/inventory/bom</span><br/><span class="endpoint-badge put">PUT</span> <span class="endpoint-url">/api/inventory/bom/{id}</span></td>
+                            <td><span class="code-old">bomNameAr</span></td>
+                            <td><span class="code-new">bomNameLocal</span></td>
+                            <td>اسم وصفة التجميع والتصنيع باللغة المحلية</td>
+                        </tr>
+                        <tr>
+                            <td><strong>أنواع المستندات (Doc Types)</strong></td>
+                            <td><span class="endpoint-badge get">GET</span> <span class="endpoint-url">/api/inventory/types/doc-types</span></td>
+                            <td><span class="code-old">typeNameAr</span></td>
+                            <td><span class="code-new">typeNameLocal</span></td>
+                            <td>اسم نوع المستند باللغة المحلية</td>
+                        </tr>
+                        <tr>
+                            <td><strong>أنواع الحركات (Trx Types)</strong></td>
+                            <td><span class="endpoint-badge get">GET</span> <span class="endpoint-url">/api/inventory/types/trx-types</span></td>
+                            <td><span class="code-old">trxNameAr</span></td>
+                            <td><span class="code-new">trxNameLocal</span></td>
+                            <td>اسم نوع الحركة المخزنية باللغة المحلية</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- TAB 2: ACCOUNTING -->
+    <div id="tab-accounting" class="tab-content">
+        <div class="card">
+            <div class="card-header">
+                <div class="card-title">💰 حقول DTOs ونقاط الـ API في وحدة المحاسبة (Accounting & GL)</div>
+            </div>
+            <div class="table-responsive">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>الشاشة / الكيان</th>
+                            <th>الـ Endpoint</th>
+                            <th>الحقل القديم (Old)</th>
+                            <th>الحقل الجديد (New)</th>
+                            <th>الوصف</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>دليل الحسابات (COA Accounts)</strong></td>
+                            <td><span class="endpoint-badge post">POST</span> <span class="endpoint-url">/api/accounting/accounts</span><br/><span class="endpoint-badge put">PUT</span> <span class="endpoint-url">/api/accounting/accounts/{code}</span></td>
+                            <td><span class="code-old">accountNameAr</span></td>
+                            <td><span class="code-new">accountNameLocal</span></td>
+                            <td>اسم الحساب المالي باللغة المحلية</td>
+                        </tr>
+                        <tr>
+                            <td><strong>مراكز التكلفة (Cost Centers)</strong></td>
+                            <td><span class="endpoint-badge post">POST</span> <span class="endpoint-url">/api/accounting/cost-centers</span><br/><span class="endpoint-badge put">PUT</span> <span class="endpoint-url">/api/accounting/cost-centers/{id}</span></td>
+                            <td><span class="code-old">nameAr</span></td>
+                            <td><span class="code-new">nameLocal</span></td>
+                            <td>اسم مركز التكلفة باللغة المحلية</td>
+                        </tr>
+                        <tr>
+                            <td><strong>أنواع السندات والقيود (Voucher Types)</strong></td>
+                            <td><span class="endpoint-badge post">POST</span> <span class="endpoint-url">/api/accounting/voucher-types</span><br/><span class="endpoint-badge put">PUT</span> <span class="endpoint-url">/api/accounting/voucher-types/{id}</span></td>
+                            <td><span class="code-old">nameAr</span></td>
+                            <td><span class="code-new">nameLocal</span></td>
+                            <td>اسم نوع القيد باللغة المحلية</td>
+                        </tr>
+                        <tr>
+                            <td><strong>قواعد الترحيل الآلي (Posting Rules)</strong></td>
+                            <td><span class="endpoint-badge post">POST</span> <span class="endpoint-url">/api/accounting/posting-rules</span></td>
+                            <td><span class="code-old">eventNameAr</span></td>
+                            <td><span class="code-new">eventNameLocal</span></td>
+                            <td>اسم الحركة/الحدث المحاسبي باللغة المحلية</td>
+                        </tr>
+                        <tr>
+                            <td><strong>الفترات المالية (Fiscal Periods)</strong></td>
+                            <td><span class="endpoint-badge post">POST</span> <span class="endpoint-url">/api/accounting/fiscal-periods</span></td>
+                            <td><span class="code-old">periodNameAr</span></td>
+                            <td><span class="code-new">periodNameLocal</span></td>
+                            <td>اسم الشهر أو الفترة المالية باللغة المحلية</td>
+                        </tr>
+                        <tr>
+                            <td><strong>العملاء (Customers)</strong></td>
+                            <td><span class="endpoint-badge get">GET</span> <span class="endpoint-url">/api/accounting/customers</span></td>
+                            <td><span class="code-old">nameAr</span></td>
+                            <td><span class="code-new">nameLocal</span></td>
+                            <td>اسم العميل باللغة المحلية</td>
+                        </tr>
+                        <tr>
+                            <td><strong>الموردين (Vendors)</strong></td>
+                            <td><span class="endpoint-badge get">GET</span> <span class="endpoint-url">/api/accounting/vendors</span></td>
+                            <td><span class="code-old">nameAr</span></td>
+                            <td><span class="code-new">nameLocal</span></td>
+                            <td>اسم المورد باللغة المحلية</td>
+                        </tr>
+                        <tr>
+                            <td><strong>الحسابات البنكية والخزائن (Bank/Cash)</strong></td>
+                            <td><span class="endpoint-badge get">GET</span> <span class="endpoint-url">/api/accounting/banking/accounts</span></td>
+                            <td><span class="code-old">accountNameAr</span> / <span class="code-old">nameAr</span></td>
+                            <td><span class="code-new">accountNameLocal</span> / <span class="code-new">nameLocal</span></td>
+                            <td>اسم البنك أو الخزينة باللغة المحلية</td>
+                        </tr>
+                        <tr>
+                            <td><strong>محرك الضرائب (Tax Rates/Categories)</strong></td>
+                            <td><span class="endpoint-badge get">GET</span> <span class="endpoint-url">/api/accounting/tax/rates</span></td>
+                            <td><span class="code-old">nameAr</span>, <span class="code-old">exemptionReasonAr</span></td>
+                            <td><span class="code-new">nameLocal</span>, <span class="code-new">exemptionReasonLocal</span></td>
+                            <td>اسم الضريبة وسبب الإعفاء الضريبي</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- TAB 3: CORE & ADMIN -->
+    <div id="tab-core" class="tab-content">
+        <div class="card">
+            <div class="card-header">
+                <div class="card-title">🏢 حقول DTOs في إعدادات الشركة، الفروع، المستخدمين والتذاكر</div>
+            </div>
+            <div class="table-responsive">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>الشاشة / الكيان</th>
+                            <th>الـ Endpoint</th>
+                            <th>الحقل القديم (Old)</th>
+                            <th>الحقل الجديد (New)</th>
+                            <th>الوصف</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>بيانات الشركة (Company)</strong></td>
+                            <td><span class="endpoint-badge post">POST</span> <span class="endpoint-url">/api/company</span><br/><span class="endpoint-badge put">PUT</span> <span class="endpoint-url">/api/company/{id}</span></td>
+                            <td><span class="code-old">companyNameAr</span><br/><span class="code-old">legalNameAr</span></td>
+                            <td><span class="code-new">companyNameLocal</span><br/><span class="code-new">legalNameLocal</span></td>
+                            <td>اسم الشركة والاسم القانوني باللغة المحلية</td>
+                        </tr>
+                        <tr>
+                            <td><strong>الفروع (Branches)</strong></td>
+                            <td><span class="endpoint-badge post">POST</span> <span class="endpoint-url">/api/branch</span><br/><span class="endpoint-badge put">PUT</span> <span class="endpoint-url">/api/branch/{id}</span></td>
+                            <td><span class="code-old">branchNameAr</span></td>
+                            <td><span class="code-new">branchNameLocal</span></td>
+                            <td>اسم الفرع باللغة المحلية</td>
+                        </tr>
+                        <tr>
+                            <td><strong>العملات (Currencies)</strong></td>
+                            <td><span class="endpoint-badge post">POST</span> <span class="endpoint-url">/api/currency</span></td>
+                            <td><span class="code-old">currencyNameAr</span></td>
+                            <td><span class="code-new">currencyNameLocal</span></td>
+                            <td>اسم العملة باللغة المحلية</td>
+                        </tr>
+                        <tr>
+                            <td><strong>السنوات المالية (Fiscal Years)</strong></td>
+                            <td><span class="endpoint-badge post">POST</span> <span class="endpoint-url">/api/fiscalyear</span></td>
+                            <td><span class="code-old">fiscalYearNameAr</span></td>
+                            <td><span class="code-new">fiscalYearNameLocal</span></td>
+                            <td>مسمى السنة المالية باللغة المحلية</td>
+                        </tr>
+                        <tr>
+                            <td><strong>المستخدمين والأدوار (Users & Roles)</strong></td>
+                            <td><span class="endpoint-badge post">POST</span> <span class="endpoint-url">/api/users</span><br/><span class="endpoint-badge post">POST</span> <span class="endpoint-url">/api/roles</span></td>
+                            <td><span class="code-old">fullNameAr</span><br/><span class="code-old">roleNameAr</span></td>
+                            <td><span class="code-new">fullNameLocal</span><br/><span class="code-new">roleNameLocal</span></td>
+                            <td>اسم المستخدم الكامل والمسمى الوظيفي للدور</td>
+                        </tr>
+                        <tr>
+                            <td><strong>أنظمة التذاكر (Tickets)</strong></td>
+                            <td><span class="endpoint-badge get">GET</span> <span class="endpoint-url">/api/tickets/types</span></td>
+                            <td><span class="code-old">typeNameAr</span>, <span class="code-old">descriptionAr</span></td>
+                            <td><span class="code-new">typeNameLocal</span>, <span class="code-new">descriptionLocal</span></td>
+                            <td>نوع التذكرة ووصف التصنيف باللغة المحلية</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- TAB 4: DATABASE -->
+    <div id="tab-db" class="tab-content">
+        <div class="card">
+            <div class="card-header">
+                <div class="card-title">🗄️ الأعمدة المعدلة في قاعدة بيانات أوراكل (DEV_TEMPLATE & THINKON_ERP)</div>
+            </div>
+            <div class="table-responsive">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>اسم الجدول (Oracle Table)</th>
+                            <th>العمود القديم (Old Column)</th>
+                            <th>العمود الجديد (New Column)</th>
+                            <th>النوع في الداتابيس</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr><td><code>INV_ITEM</code></td><td><span class="code-old">ITEM_NAME_AR</span></td><td><span class="code-new">ITEM_NAME_LOCAL</span></td><td>NVARCHAR2(200)</td></tr>
+                        <tr><td><code>INV_ITEM_GROUP</code></td><td><span class="code-old">GROUP_NAME_AR</span></td><td><span class="code-new">GROUP_NAME_LOCAL</span></td><td>NVARCHAR2(150)</td></tr>
+                        <tr><td><code>INV_WAREHOUSE</code></td><td><span class="code-old">WAREHOUSE_NAME_AR</span></td><td><span class="code-new">WAREHOUSE_NAME_LOCAL</span></td><td>NVARCHAR2(150)</td></tr>
+                        <tr><td><code>INV_BOM_HEADER</code></td><td><span class="code-old">BOM_NAME_AR</span></td><td><span class="code-new">BOM_NAME_LOCAL</span></td><td>NVARCHAR2(150)</td></tr>
+                        <tr><td><code>TRX_DOC_TYPE</code></td><td><span class="code-old">TYPE_NAME_AR</span></td><td><span class="code-new">TYPE_NAME_LOCAL</span></td><td>NVARCHAR2(150)</td></tr>
+                        <tr><td><code>TRX_TRANSACTION_TYPE</code></td><td><span class="code-old">TRX_NAME_AR</span></td><td><span class="code-new">TRX_NAME_LOCAL</span></td><td>NVARCHAR2(150)</td></tr>
+                        <tr><td><code>GL_ACCOUNT</code></td><td><span class="code-old">ACCOUNT_NAME_AR</span></td><td><span class="code-new">ACCOUNT_NAME_LOCAL</span></td><td>NVARCHAR2(150)</td></tr>
+                        <tr><td><code>GL_COST_CENTER</code></td><td><span class="code-old">NAME_AR</span></td><td><span class="code-new">NAME_LOCAL</span></td><td>NVARCHAR2(150)</td></tr>
+                        <tr><td><code>GL_VOUCHER_TYPE</code></td><td><span class="code-old">NAME_AR</span></td><td><span class="code-new">NAME_LOCAL</span></td><td>NVARCHAR2(100)</td></tr>
+                        <tr><td><code>GL_POSTING_RULE</code></td><td><span class="code-old">EVENT_NAME_AR</span></td><td><span class="code-new">EVENT_NAME_LOCAL</span></td><td>NVARCHAR2(150)</td></tr>
+                        <tr><td><code>GL_FISCAL_PERIOD</code></td><td><span class="code-old">PERIOD_NAME_AR</span></td><td><span class="code-new">PERIOD_NAME_LOCAL</span></td><td>NVARCHAR2(50)</td></tr>
+                        <tr><td><code>CUSTOMER</code></td><td><span class="code-old">NAME_AR</span></td><td><span class="code-new">NAME_LOCAL</span></td><td>NVARCHAR2(150)</td></tr>
+                        <tr><td><code>VENDOR</code></td><td><span class="code-old">NAME_AR</span></td><td><span class="code-new">NAME_LOCAL</span></td><td>NVARCHAR2(150)</td></tr>
+                        <tr><td><code>BANK_ACCOUNT</code></td><td><span class="code-old">ACCOUNT_NAME_AR</span></td><td><span class="code-new">ACCOUNT_NAME_LOCAL</span></td><td>NVARCHAR2(150)</td></tr>
+                        <tr><td><code>CASH_REGISTER</code></td><td><span class="code-old">NAME_AR</span></td><td><span class="code-new">NAME_LOCAL</span></td><td>NVARCHAR2(150)</td></tr>
+                        <tr><td><code>TAX_CATEGORY</code></td><td><span class="code-old">NAME_AR</span></td><td><span class="code-new">NAME_LOCAL</span></td><td>NVARCHAR2(100)</td></tr>
+                        <tr><td><code>TAX_GROUP</code></td><td><span class="code-old">NAME_AR</span></td><td><span class="code-new">NAME_LOCAL</span></td><td>NVARCHAR2(100)</td></tr>
+                        <tr><td><code>TAX_RATE</code></td><td><span class="code-old">NAME_AR</span> / <span class="code-old">EXEMPTION_REASON_AR</span></td><td><span class="code-new">NAME_LOCAL</span> / <span class="code-new">EXEMPTION_REASON_LOCAL</span></td><td>NVARCHAR2(100)</td></tr>
+                        <tr><td><code>SYS_COMPANY</code></td><td><span class="code-old">NAME_AR</span></td><td><span class="code-new">NAME_LOCAL</span></td><td>NVARCHAR2(200)</td></tr>
+                        <tr><td><code>SYS_BRANCH</code></td><td><span class="code-old">NAME_AR</span></td><td><span class="code-new">NAME_LOCAL</span></td><td>NVARCHAR2(200)</td></tr>
+                        <tr><td><code>SYS_CURRENCY</code></td><td><span class="code-old">NAME_AR</span></td><td><span class="code-new">NAME_LOCAL</span></td><td>NVARCHAR2(100)</td></tr>
+                        <tr><td><code>SYS_ROLE</code></td><td><span class="code-old">NAME_AR</span></td><td><span class="code-new">NAME_LOCAL</span></td><td>NVARCHAR2(100)</td></tr>
+                        <tr><td><code>SYS_USERS</code></td><td><span class="code-old">NAME_AR</span></td><td><span class="code-new">NAME_LOCAL</span></td><td>NVARCHAR2(100)</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- TAB 5: JSON EXAMPLES -->
+    <div id="tab-json" class="tab-content">
+        <div class="card">
+            <div class="card-header">
+                <div class="card-title">📑 مقارنة نماذج الـ JSON Payload (Request / Response)</div>
+            </div>
+            <div style="padding: 24px;">
+                <h4 style="margin-bottom: 8px;">1. بطاقة صنف جديد (Create Item Request Payload):</h4>
+                <div class="json-box">
+<span class="json-diff-old">// ❌ القديم (Old Payload):</span>
+{
+  <span class="json-key">"itemCode"</span>: <span class="json-string">"1001"</span>,
+  <span class="json-diff-old"><span class="json-key">"itemNameAr"</span>: <span class="json-string">"جهاز حاسوب محمول"</span>,</span>
+  <span class="json-key">"itemNameEn"</span>: <span class="json-string">"Laptop Computer"</span>,
+  <span class="json-key">"uomBase"</span>: <span class="json-number">1</span>
+}
+
+<span class="json-diff-new">// ✅ الجديد المعتمد (New Standard Payload):</span>
+{
+  <span class="json-key">"itemCode"</span>: <span class="json-string">"1001"</span>,
+  <span class="json-diff-new"><span class="json-key">"itemNameLocal"</span>: <span class="json-string">"جهاز حاسوب محمول"</span>,</span>
+  <span class="json-key">"itemNameEn"</span>: <span class="json-string">"Laptop Computer"</span>,
+  <span class="json-key">"uomBase"</span>: <span class="json-number">1</span>
+}</div>
+
+                <h4 style="margin-top: 24px; margin-bottom: 8px;">2. إنشاء مجموعة أصناف (Create Item Group Payload):</h4>
+                <div class="json-box">
+<span class="json-diff-new">// ✅ الجديد المعتمد:</span>
+{
+  <span class="json-key">"groupCode"</span>: <span class="json-number">501</span>,
+  <span class="json-diff-new"><span class="json-key">"groupNameLocal"</span>: <span class="json-string">"الإلكترونيات والملحقات"</span>,</span>
+  <span class="json-key">"groupNameEn"</span>: <span class="json-string">"Electronics & Accessories"</span>,
+  <span class="json-key">"groupLevel"</span>: <span class="json-number">1</span>
+}</div>
+
+                <h4 style="margin-top: 24px; margin-bottom: 8px;">3. إنشاء حساب مالي (Create GL Account Payload):</h4>
+                <div class="json-box">
+<span class="json-diff-new">// ✅ الجديد المعتمد:</span>
+{
+  <span class="json-key">"accountCode"</span>: <span class="json-string">"114301"</span>,
+  <span class="json-diff-new"><span class="json-key">"accountNameLocal"</span>: <span class="json-string">"مخزون بضاعة تامة الصنع"</span>,</span>
+  <span class="json-key">"accountNameEn"</span>: <span class="json-string">"Finished Goods Inventory"</span>,
+  <span class="json-key">"accountType"</span>: <span class="json-string">"ASSET"</span>
+}</div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<script>
+    function showTab(tabId) {
+        document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+        document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+        
+        document.getElementById(tabId).classList.add('active');
+        event.target.classList.add('active');
+    }
+
+    function filterTables() {
+        const query = document.getElementById('searchInput').value.toLowerCase();
+        const rows = document.querySelectorAll('.data-table tbody tr');
+
+        rows.forEach(row => {
+            const text = row.innerText.toLowerCase();
+            if (text.includes(query)) {
+                row.style.display = '';
+            } else {
+                row.style.display = 'none';
+            }
+        });
+    }
+</script>
+
+</body>
+</html>

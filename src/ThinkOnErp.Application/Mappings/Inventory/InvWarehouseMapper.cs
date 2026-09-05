@@ -1,4 +1,4 @@
-using System.Linq;
+﻿using System.Linq;
 using ThinkOnErp.Application.DTOs.Inventory.Warehouses;
 using ThinkOnErp.Domain.Entities.Inventory;
 
@@ -14,7 +14,7 @@ public static class InvWarehouseMapper
         {
             Id = entity.Id,
             WarehouseCode = entity.WarehouseCode,
-            WarehouseNameAr = entity.WarehouseNameAr,
+            WarehouseNameLocal = entity.WarehouseNameLocal,
             WarehouseNameEn = entity.WarehouseNameEn,
             WarehouseType = entity.WarehouseType.ToString(),
             Address = entity.Address,

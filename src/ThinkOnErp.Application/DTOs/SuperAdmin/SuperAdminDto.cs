@@ -1,4 +1,4 @@
-namespace ThinkOnErp.Application.DTOs.SuperAdmin;
+﻿namespace ThinkOnErp.Application.DTOs.SuperAdmin;
 
 /// <summary>
 /// Data transfer object for super admin information returned from API endpoints
@@ -6,7 +6,7 @@ namespace ThinkOnErp.Application.DTOs.SuperAdmin;
 public class SuperAdminDto
 {
     public Int64 SuperAdminId { get; set; }
-    public string NameAr { get; set; } = string.Empty;
+    public string NameLocal { get; set; } = string.Empty;
     public string NameEn { get; set; } = string.Empty;
     public string UserName { get; set; } = string.Empty;
     public string? Email { get; set; }

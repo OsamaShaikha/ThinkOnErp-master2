@@ -1,4 +1,4 @@
-using FluentValidation;
+﻿using FluentValidation;
 
 namespace ThinkOnErp.Application.Features.SuperAdmins.Commands.UpdateSuperAdmin;
 
@@ -10,7 +10,7 @@ public class UpdateSuperAdminCommandValidator : AbstractValidator<UpdateSuperAdm
             .GreaterThan(0)
             .WithMessage("Super admin ID must be greater than 0");
 
-        RuleFor(x => x.NameAr)
+        RuleFor(x => x.NameLocal)
             .NotEmpty()
             .WithMessage("Arabic name is required")
             .MaximumLength(200)

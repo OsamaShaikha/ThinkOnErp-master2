@@ -1,4 +1,4 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using ThinkOnErp.Domain.Entities.Accounting;
 
@@ -44,8 +44,8 @@ public class GlAccountConfiguration : IEntityTypeConfiguration<GlAccount>
             .HasColumnName("OLD_ACCOUNT_CODE")
             .HasColumnType("NVARCHAR2(50)")
             .HasMaxLength(50);
-        builder.Property(account => account.AccountNameAr)
-            .HasColumnName("ACCOUNT_NAME_AR")
+        builder.Property(account => account.AccountNameLocal)
+            .HasColumnName("ACCOUNT_NAME_LOCAL")
             .HasColumnType("NVARCHAR2(200)")
             .HasMaxLength(200)
             .IsRequired();

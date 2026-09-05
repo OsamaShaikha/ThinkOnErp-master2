@@ -8,7 +8,7 @@ namespace ThinkOnErp.Domain.Interfaces.Inventory;
 public interface IInvWarehouseRepository
 {
     Task<InvWarehouse?> GetByIdAsync(long id, CancellationToken cancellationToken = default);
-    Task<InvWarehouse?> GetByCodeAsync(string warehouseCode, CancellationToken cancellationToken = default);
+    Task<InvWarehouse?> GetByCodeAsync(long warehouseCode, CancellationToken cancellationToken = default);
     Task<IReadOnlyList<InvWarehouse>> GetAllByBranchAsync(long branchId, CancellationToken cancellationToken = default);
     Task AddAsync(InvWarehouse warehouse, CancellationToken cancellationToken = default);
     Task UpdateAsync(InvWarehouse warehouse, CancellationToken cancellationToken = default);

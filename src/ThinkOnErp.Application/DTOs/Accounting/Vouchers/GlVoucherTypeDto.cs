@@ -1,11 +1,11 @@
-namespace ThinkOnErp.Application.DTOs.Accounting.Vouchers;
+﻿namespace ThinkOnErp.Application.DTOs.Accounting.Vouchers;
 
 public sealed class GlVoucherTypeDto
 {
     public long Id { get; set; }
     public int TypeCode { get; set; }
     public string TypeKey { get; set; } = string.Empty;
-    public string NameAr { get; set; } = string.Empty;
+    public string NameLocal { get; set; } = string.Empty;
     public string NameEn { get; set; } = string.Empty;
     public string Prefix { get; set; } = string.Empty;
     public string Category { get; set; } = string.Empty;

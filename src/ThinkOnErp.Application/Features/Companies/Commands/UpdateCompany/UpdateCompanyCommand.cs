@@ -1,13 +1,13 @@
-using MediatR;
+﻿using MediatR;
 
 namespace ThinkOnErp.Application.Features.Companies.Commands.UpdateCompany;
 
 public class UpdateCompanyCommand : IRequest<Int64>
 {
     public Int64 CompanyId { get; set; }
-    public string CompanyNameAr { get; set; } = string.Empty;
+    public string CompanyNameLocal { get; set; } = string.Empty;
     public string CompanyNameEn { get; set; } = string.Empty;
-    public string? LegalNameAr { get; set; }
+    public string? LegalNameLocal { get; set; }
     public string? LegalNameEn { get; set; }
     public string? CompanyCode { get; set; }
     public Int64? CountryId { get; set; }

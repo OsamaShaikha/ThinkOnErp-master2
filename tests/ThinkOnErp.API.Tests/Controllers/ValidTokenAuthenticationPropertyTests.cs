@@ -176,7 +176,7 @@ public class ValidTokenAuthenticationPropertyTests
                                 {
                                     Id = rowId,
                                     UserName = userName,
-                                    FullNameAr = rowDesc,
+                                    FullNameLocal = rowDesc,
                                     FullNameEn = rowDescE,
                                    Password = password,
                                     RoleId = role,

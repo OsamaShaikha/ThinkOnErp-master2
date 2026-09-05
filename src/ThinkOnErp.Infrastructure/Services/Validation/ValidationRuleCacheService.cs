@@ -1,4 +1,4 @@
-using System.Collections.Concurrent;
+﻿using System.Collections.Concurrent;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -25,8 +25,8 @@ public class ValidationRuleCacheService : IValidationRuleCacheService
         // GlAccount Validation Rules
         new() { EntityName = "GlAccount", FieldName = "AccountCode", RuleType = "REQUIRED", ErrorCode = ErrorCodes.FieldRequired },
         new() { EntityName = "GlAccount", FieldName = "AccountCode", RuleType = "REGEX", RuleValue = @"^[0-9]+(\.[0-9]+)*$", ErrorCode = ErrorCodes.InvalidAccountCode },
-        new() { EntityName = "GlAccount", FieldName = "AccountNameAr", RuleType = "REQUIRED", ErrorCode = ErrorCodes.FieldRequired },
-        new() { EntityName = "GlAccount", FieldName = "AccountNameAr", RuleType = "MAX_LENGTH", RuleValue = "200", ErrorCode = ErrorCodes.MaxLength },
+        new() { EntityName = "GlAccount", FieldName = "AccountNameLocal", RuleType = "REQUIRED", ErrorCode = ErrorCodes.FieldRequired },
+        new() { EntityName = "GlAccount", FieldName = "AccountNameLocal", RuleType = "MAX_LENGTH", RuleValue = "200", ErrorCode = ErrorCodes.MaxLength },
         new() { EntityName = "GlAccount", FieldName = "NormalBalance", RuleType = "REQUIRED", ErrorCode = ErrorCodes.FieldRequired },
         new() { EntityName = "GlAccount", FieldName = "NormalBalance", RuleType = "REGEX", RuleValue = "^[DCdc]$", ErrorCode = ErrorCodes.AccountBalanceTypeInvalid },
         new() { EntityName = "GlAccount", FieldName = "AccountType", RuleType = "REQUIRED", ErrorCode = ErrorCodes.FieldRequired },
@@ -35,7 +35,7 @@ public class ValidationRuleCacheService : IValidationRuleCacheService
         // Customer Validation Rules
         new() { EntityName = "Customer", FieldName = "CustomerCode", RuleType = "REQUIRED", ErrorCode = ErrorCodes.FieldRequired },
         new() { EntityName = "Customer", FieldName = "CustomerCode", RuleType = "MAX_LENGTH", RuleValue = "50", ErrorCode = ErrorCodes.MaxLength },
-        new() { EntityName = "Customer", FieldName = "NameAr", RuleType = "REQUIRED", ErrorCode = ErrorCodes.FieldRequired },
+        new() { EntityName = "Customer", FieldName = "NameLocal", RuleType = "REQUIRED", ErrorCode = ErrorCodes.FieldRequired },
         new() { EntityName = "Customer", FieldName = "CreditLimit", RuleType = "RANGE", RuleValue = "0..999999999", ErrorCode = ErrorCodes.OutOfRange },
         // Saudi Tax Number: 15 digits starting and ending with 3
         new() { EntityName = "Customer", FieldName = "TaxNumber", RuleType = "REGEX", RuleValue = @"^3\d{13}3$", ErrorCode = ErrorCodes.InvalidTaxNumber, CountryCode = "SA" },
@@ -46,7 +46,7 @@ public class ValidationRuleCacheService : IValidationRuleCacheService
 
         // Vendor Validation Rules
         new() { EntityName = "Vendor", FieldName = "VendorCode", RuleType = "REQUIRED", ErrorCode = ErrorCodes.FieldRequired },
-        new() { EntityName = "Vendor", FieldName = "NameAr", RuleType = "REQUIRED", ErrorCode = ErrorCodes.FieldRequired },
+        new() { EntityName = "Vendor", FieldName = "NameLocal", RuleType = "REQUIRED", ErrorCode = ErrorCodes.FieldRequired },
         new() { EntityName = "Vendor", FieldName = "TaxNumber", RuleType = "REGEX", RuleValue = @"^3\d{13}3$", ErrorCode = ErrorCodes.InvalidTaxNumber, CountryCode = "SA" },
         new() { EntityName = "Vendor", FieldName = "TaxNumber", RuleType = "REGEX", RuleValue = @"^\d{8}$", ErrorCode = ErrorCodes.InvalidTaxNumber, CountryCode = "JO" },
 
@@ -61,7 +61,59 @@ public class ValidationRuleCacheService : IValidationRuleCacheService
 
         // PDC Cheque Validation Rules
         new() { EntityName = "GlPdcRegister", FieldName = "ChequeNumber", RuleType = "REQUIRED", ErrorCode = ErrorCodes.ChequeNumberRequired },
-        new() { EntityName = "GlPdcRegister", FieldName = "Amount", RuleType = "RANGE", RuleValue = "0.001..999999999999", ErrorCode = ErrorCodes.InvalidChequeAmount }
+        new() { EntityName = "GlPdcRegister", FieldName = "Amount", RuleType = "RANGE", RuleValue = "0.001..999999999999", ErrorCode = ErrorCodes.InvalidChequeAmount },
+
+        // Inventory Main Group
+        new() { EntityName = "InvMainGroup", FieldName = "GroupCode", RuleType = "REQUIRED", ErrorCode = ErrorCodes.FieldRequired },
+        new() { EntityName = "InvMainGroup", FieldName = "GroupCode", RuleType = "RANGE", RuleValue = "1..999999", ErrorCode = ErrorCodes.OutOfRange },
+        new() { EntityName = "InvMainGroup", FieldName = "GroupNameLocal", RuleType = "REQUIRED", ErrorCode = ErrorCodes.FieldRequired },
+        new() { EntityName = "InvMainGroup", FieldName = "GroupNameLocal", RuleType = "MAX_LENGTH", RuleValue = "100", ErrorCode = ErrorCodes.MaxLength },
+
+        // Inventory Sub Group
+        new() { EntityName = "InvSubGroup", FieldName = "MainGroupId", RuleType = "REQUIRED", ErrorCode = ErrorCodes.FieldRequired },
+        new() { EntityName = "InvSubGroup", FieldName = "GroupCode", RuleType = "REQUIRED", ErrorCode = ErrorCodes.FieldRequired },
+        new() { EntityName = "InvSubGroup", FieldName = "GroupCode", RuleType = "RANGE", RuleValue = "1..999999", ErrorCode = ErrorCodes.OutOfRange },
+        new() { EntityName = "InvSubGroup", FieldName = "GroupNameLocal", RuleType = "REQUIRED", ErrorCode = ErrorCodes.FieldRequired },
+
+        // Inventory Warehouse
+        new() { EntityName = "InvWarehouse", FieldName = "BranchId", RuleType = "REQUIRED", ErrorCode = ErrorCodes.FieldRequired },
+        new() { EntityName = "InvWarehouse", FieldName = "WarehouseCode", RuleType = "REQUIRED", ErrorCode = ErrorCodes.FieldRequired },
+        new() { EntityName = "InvWarehouse", FieldName = "WarehouseCode", RuleType = "RANGE", RuleValue = "1..999999", ErrorCode = ErrorCodes.OutOfRange },
+        new() { EntityName = "InvWarehouse", FieldName = "WarehouseNameLocal", RuleType = "REQUIRED", ErrorCode = ErrorCodes.FieldRequired },
+
+        // Inventory Item Master
+        new() { EntityName = "InvItem", FieldName = "ItemCode", RuleType = "REQUIRED", ErrorCode = ErrorCodes.FieldRequired },
+        new() { EntityName = "InvItem", FieldName = "ItemCode", RuleType = "MAX_LENGTH", RuleValue = "60", ErrorCode = ErrorCodes.MaxLength },
+        new() { EntityName = "InvItem", FieldName = "ItemNameLocal", RuleType = "REQUIRED", ErrorCode = ErrorCodes.FieldRequired },
+        new() { EntityName = "InvItem", FieldName = "ItemNameLocal", RuleType = "MAX_LENGTH", RuleValue = "200", ErrorCode = ErrorCodes.MaxLength },
+        new() { EntityName = "InvItem", FieldName = "MainGroupId", RuleType = "REQUIRED", ErrorCode = ErrorCodes.FieldRequired },
+        new() { EntityName = "InvItem", FieldName = "UomBase", RuleType = "REQUIRED", ErrorCode = ErrorCodes.FieldRequired },
+
+        // Inventory Movements
+        new() { EntityName = "StockMovement", FieldName = "ItemId", RuleType = "REQUIRED", ErrorCode = ErrorCodes.FieldRequired },
+        new() { EntityName = "StockMovement", FieldName = "WarehouseId", RuleType = "REQUIRED", ErrorCode = ErrorCodes.FieldRequired },
+        new() { EntityName = "StockMovement", FieldName = "TransactionType", RuleType = "REQUIRED", ErrorCode = ErrorCodes.TrxTypeRequired },
+        new() { EntityName = "StockMovement", FieldName = "Quantity", RuleType = "REQUIRED", ErrorCode = ErrorCodes.FieldRequired },
+        new() { EntityName = "StockMovement", FieldName = "Quantity", RuleType = "RANGE", RuleValue = "0.0001..999999999", ErrorCode = ErrorCodes.PositiveNumberRequired },
+        new() { EntityName = "StockMovement", FieldName = "UomCode", RuleType = "REQUIRED", ErrorCode = ErrorCodes.FieldRequired },
+
+        // Trade Documents
+        new() { EntityName = "TrxDocument", FieldName = "BranchId", RuleType = "REQUIRED", ErrorCode = ErrorCodes.FieldRequired },
+        new() { EntityName = "TrxDocument", FieldName = "DocYear", RuleType = "RANGE", RuleValue = "2000..2099", ErrorCode = ErrorCodes.OutOfRange },
+        new() { EntityName = "TrxDocument", FieldName = "DocType", RuleType = "REQUIRED", ErrorCode = ErrorCodes.DocTypeRequired },
+        new() { EntityName = "TrxDocument", FieldName = "TrxType", RuleType = "REQUIRED", ErrorCode = ErrorCodes.TrxTypeRequired },
+        new() { EntityName = "TrxDocumentLine", FieldName = "ItemId", RuleType = "REQUIRED", ErrorCode = ErrorCodes.FieldRequired },
+        new() { EntityName = "TrxDocumentLine", FieldName = "UomCode", RuleType = "REQUIRED", ErrorCode = ErrorCodes.FieldRequired },
+
+        // GL Voucher Type
+        new() { EntityName = "GlVoucherType", FieldName = "TypeCode", RuleType = "REQUIRED", ErrorCode = ErrorCodes.FieldRequired },
+        new() { EntityName = "GlVoucherType", FieldName = "TypeCode", RuleType = "RANGE", RuleValue = "1..999999", ErrorCode = ErrorCodes.OutOfRange },
+        new() { EntityName = "GlVoucherType", FieldName = "TypeKey", RuleType = "REQUIRED", ErrorCode = ErrorCodes.FieldRequired },
+        new() { EntityName = "GlVoucherType", FieldName = "TypeKey", RuleType = "MAX_LENGTH", RuleValue = "20", ErrorCode = ErrorCodes.MaxLength },
+        new() { EntityName = "GlVoucherType", FieldName = "NameLocal", RuleType = "REQUIRED", ErrorCode = ErrorCodes.FieldRequired },
+        new() { EntityName = "GlVoucherType", FieldName = "NameLocal", RuleType = "MAX_LENGTH", RuleValue = "200", ErrorCode = ErrorCodes.MaxLength },
+        new() { EntityName = "GlVoucherType", FieldName = "Prefix", RuleType = "REQUIRED", ErrorCode = ErrorCodes.FieldRequired },
+        new() { EntityName = "GlVoucherType", FieldName = "Prefix", RuleType = "MAX_LENGTH", RuleValue = "10", ErrorCode = ErrorCodes.MaxLength }
     };
 
     public ValidationRuleCacheService(
@@ -84,6 +136,9 @@ public class ValidationRuleCacheService : IValidationRuleCacheService
             else if (cleanName.Equals("GlPdcRegister", StringComparison.OrdinalIgnoreCase) && _rulesByEntity.TryGetValue("Pdc", out allRulesForEntity)) { }
             else if (!cleanName.StartsWith("Gl", StringComparison.OrdinalIgnoreCase) && _rulesByEntity.TryGetValue("Gl" + cleanName, out allRulesForEntity)) { }
             else if (cleanName.StartsWith("Gl", StringComparison.OrdinalIgnoreCase) && _rulesByEntity.TryGetValue(cleanName[2..], out allRulesForEntity)) { }
+            else if (!cleanName.StartsWith("Inv", StringComparison.OrdinalIgnoreCase) && _rulesByEntity.TryGetValue("Inv" + cleanName, out allRulesForEntity)) { }
+            else if (cleanName.StartsWith("Inv", StringComparison.OrdinalIgnoreCase) && _rulesByEntity.TryGetValue(cleanName[3..], out allRulesForEntity)) { }
+            else if (cleanName.EndsWith("Request", StringComparison.OrdinalIgnoreCase) && _rulesByEntity.TryGetValue(cleanName[..^7], out allRulesForEntity)) { }
             else
             {
                 return Array.Empty<SysFieldValidationRule>();

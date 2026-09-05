@@ -1,4 +1,4 @@
-using ThinkOnErp.Domain.Entities;
+﻿using ThinkOnErp.Domain.Entities;
 
 namespace ThinkOnErp.Domain.Interfaces;
 
@@ -69,16 +69,16 @@ public interface ICompanyRepository
     /// Creates a new company with an automatic default branch in a single transaction.
     /// Calls SP_SYS_COMPANY_INSERT_WITH_BRANCH stored procedure.
     /// </summary>
-    /// <param name="companyNameAr">Arabic name of the company</param>
+    /// <param name="companyNameLocal">Arabic name of the company</param>
     /// <param name="companyNameEn">English name of the company (required)</param>
-    /// <param name="legalNameAr">Legal name in Arabic</param>
+    /// <param name="legalNameLocal">Legal name in Arabic</param>
     /// <param name="legalNameEn">Legal name in English (required)</param>
     /// <param name="companyCode">Unique company code (required)</param>
     /// <param name="taxNumber">Tax registration number (applied to default branch)</param>
     /// <param name="countryId">Country ID</param>
     /// <param name="currId">Currency ID (legacy)</param>
     /// <param name="companyLogoPath">Company logo file path</param>
-    /// <param name="branchNameAr">Arabic name for the default branch</param>
+    /// <param name="branchNameLocal">Arabic name for the default branch</param>
     /// <param name="branchNameEn">English name for the default branch</param>
     /// <param name="branchPhone">Branch phone number</param>
     /// <param name="branchMobile">Branch mobile number</param>
@@ -93,16 +93,16 @@ public interface ICompanyRepository
     /// <param name="creationUser">Username of the user creating the records</param>
     /// <returns>A tuple containing the new company ID, branch ID, and fiscal year ID</returns>
     Task<(Int64 CompanyId, Int64 BranchId, Int64 FiscalYearId)> CreateWithBranchAsync(
-        string? companyNameAr,
+        string? companyNameLocal,
         string companyNameEn,
-        string? legalNameAr,
+        string? legalNameLocal,
         string legalNameEn,
         string companyCode,
         string? taxNumber,
         Int64? countryId,
         Int64? currId,
         string? companyLogoPath,
-        string? branchNameAr,
+        string? branchNameLocal,
         string? branchNameEn,
         string? branchPhone,
         string? branchMobile,

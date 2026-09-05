@@ -1,11 +1,11 @@
-namespace ThinkOnErp.Domain.Entities;
+﻿namespace ThinkOnErp.Domain.Entities;
 
 public class SysFiscalYear
 {
     public Int64 Id { get; set; }
     public Int64 BranchId { get; set; }
     public string FiscalYearCode { get; set; } = string.Empty;
-    public string? FiscalYearNameAr { get; set; }
+    public string? FiscalYearNameLocal { get; set; }
     public string? FiscalYearNameEn { get; set; }
     public DateTime StartDate { get; set; }
     public DateTime EndDate { get; set; }

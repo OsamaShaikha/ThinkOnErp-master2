@@ -1,4 +1,4 @@
-using ThinkOnErp.Application.DTOs.Accounting.Vouchers;
+﻿using ThinkOnErp.Application.DTOs.Accounting.Vouchers;
 using ThinkOnErp.Domain.Entities.Accounting;
 
 namespace ThinkOnErp.Application.Mappings.Accounting;
@@ -12,7 +12,7 @@ public static class GlVoucherMapper
             Id = entity.Id,
             TypeCode = entity.TypeCode,
             TypeKey = entity.TypeKey,
-            NameAr = entity.NameAr,
+            NameLocal = entity.NameLocal,
             NameEn = entity.NameEn,
             Prefix = entity.Prefix,
             Category = entity.Category,
@@ -46,7 +46,7 @@ public static class GlVoucherMapper
             VoucherYear = entity.VoucherYear,
             VoucherMonth = entity.VoucherMonth,
             VoucherType = entity.VoucherType,
-            VoucherTypeNameAr = voucherType?.NameAr,
+            VoucherTypeNameLocal = voucherType?.NameLocal,
             VoucherTypeNameEn = voucherType?.NameEn,
             VoucherNo = entity.VoucherNo,
             FullVoucherNumber = $"{prefix}-{entity.VoucherYear}-{entity.VoucherMonth:D2}-{entity.VoucherNo:D5}",
@@ -85,7 +85,7 @@ public static class GlVoucherMapper
             VoucherId = entity.VoucherId,
             LineSer = entity.LineSer,
             AccountCode = entity.AccountCode,
-            AccountNameAr = entity.Account?.AccountNameAr,
+            AccountNameLocal = entity.Account?.AccountNameLocal,
             AccountNameEn = entity.Account?.AccountNameEn,
             Debit = entity.Debit,
             Credit = entity.Credit,
@@ -99,13 +99,13 @@ public static class GlVoucherMapper
             CostCenterCode = entity.CostCenterCode,
             CostCenterMgrCode = entity.CostCenterMgrCode,
             CostCenterMnrCode = entity.CostCenterMnrCode,
-            CostCenterNameAr = entity.CostCenter?.NameAr,
+            CostCenterNameLocal = entity.CostCenter?.NameLocal,
             CostCenterNameEn = entity.CostCenter?.NameEn,
             IsSettlement = entity.IsSettlement,
             PartyType = entity.PartyType,
             PartyCode = entity.PartyCode,
             BranchId = entity.BranchId,
-            BranchNameAr = entity.Branch?.BranchNameAr,
+            BranchNameLocal = entity.Branch?.BranchNameLocal,
             BranchNameEn = entity.Branch?.BranchNameEn
         };
     }

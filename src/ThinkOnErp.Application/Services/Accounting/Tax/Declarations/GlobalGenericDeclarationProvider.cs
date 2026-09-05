@@ -1,4 +1,4 @@
-using ThinkOnErp.Application.DTOs.Accounting.Tax;
+﻿using ThinkOnErp.Application.DTOs.Accounting.Tax;
 using ThinkOnErp.Domain.Entities.Accounting;
 
 namespace ThinkOnErp.Application.Services.Accounting.Tax.Declarations;
@@ -17,12 +17,12 @@ public sealed class GlobalGenericDeclarationProvider : ITaxDeclarationProvider
         {
             TemplateCode = TemplateCode,
             CountryCode = CountryCode,
-            CountryNameAr = "النموذج الضريبي العالمي الموحد",
+            CountryNameLocal = "النموذج الضريبي العالمي الموحد",
             CountryNameEn = "Universal Global Tax Return",
             FlagEmoji = "🌐",
             TitleAr = "الإقرار الضريبي العالمي الموحد (مبيعات، مشتريات، صافي الضريبة)",
             TitleEn = "Universal Tax Return Summary (Output Tax, Input Tax, Net Due)",
-            TaxAuthorityNameAr = "الهيئة الضريبية المختصة",
+            TaxAuthorityNameLocal = "الهيئة الضريبية المختصة",
             TaxAuthorityNameEn = "General Tax Authority",
             DefaultCurrencyCode = "USD",
             FilingFrequency = "CUSTOM",
@@ -70,7 +70,7 @@ public sealed class GlobalGenericDeclarationProvider : ITaxDeclarationProvider
         VatDeclarationFilterDto filter,
         IReadOnlyList<TaxTransaction> transactions,
         IReadOnlyList<TaxRate> availableRates,
-        string branchNameAr,
+        string branchNameLocal,
         string branchNameEn)
     {
         var rateMap = availableRates.ToDictionary(r => r.Id);
@@ -141,11 +141,11 @@ public sealed class GlobalGenericDeclarationProvider : ITaxDeclarationProvider
             CountryCode = CountryCode,
             TemplateTitleAr = "الإقرار الضريبي العالمي الموحد",
             TemplateTitleEn = "Universal Global Tax Return",
-            TaxAuthorityNameAr = "الهيئة الضريبية العامة",
+            TaxAuthorityNameLocal = "الهيئة الضريبية العامة",
             TaxAuthorityNameEn = "Tax Authority",
             CurrencyCode = "USD",
             BranchId = filter.BranchId,
-            BranchNameAr = branchNameAr,
+            BranchNameLocal = branchNameLocal,
             BranchNameEn = branchNameEn,
             FromDate = filter.FromDate,
             ToDate = filter.ToDate,

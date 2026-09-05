@@ -8,7 +8,7 @@ public sealed class InvStockLedgerEntryConfiguration : IEntityTypeConfiguration<
 {
     public void Configure(EntityTypeBuilder<InvStockLedgerEntry> builder)
     {
-        builder.ToTable("INV_STOCK_LEDGER_ENTRY");
+        builder.ToTable("INV_STOCK_LEDGER");
 
         builder.HasKey(e => e.Id);
         builder.Property(e => e.Id)
@@ -36,14 +36,13 @@ public sealed class InvStockLedgerEntryConfiguration : IEntityTypeConfiguration<
 
         builder.Property(e => e.TransactionType)
             .HasColumnName("TRANSACTION_TYPE")
-            .HasConversion<string>()
-            .HasMaxLength(50)
+            .HasColumnType("NUMBER(6)")
             .IsRequired();
 
         builder.Property(e => e.Direction)
             .HasColumnName("DIRECTION")
             .HasConversion<string>()
-            .HasMaxLength(50)
+            .HasMaxLength(10)
             .IsRequired();
 
         builder.Property(e => e.Quantity)
@@ -53,7 +52,7 @@ public sealed class InvStockLedgerEntryConfiguration : IEntityTypeConfiguration<
 
         builder.Property(e => e.UomCode)
             .HasColumnName("UOM_CODE")
-            .HasMaxLength(50)
+            .HasColumnType("NUMBER(6)")
             .IsRequired();
 
         builder.Property(e => e.UnitCost)

@@ -1,4 +1,4 @@
-using MediatR;
+﻿using MediatR;
 using ThinkOnErp.Domain.Entities;
 using ThinkOnErp.Domain.Interfaces;
 
@@ -21,7 +21,7 @@ public class UpdateBranchCommandHandler : IRequestHandler<UpdateBranchCommand, I
         if (existing == null) return 0;
 
         existing.CompanyId = request.CompanyId;
-        existing.BranchNameAr = request.BranchNameAr;
+        existing.BranchNameLocal = request.BranchNameLocal;
         existing.BranchNameEn = request.BranchNameEn;
         existing.Phone = request.Phone;
         existing.Mobile = request.Mobile;

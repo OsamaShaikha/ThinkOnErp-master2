@@ -1,4 +1,4 @@
-using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.Logging;
 using ThinkOnErp.Application.DTOs.Accounting.Subledger;
 using ThinkOnErp.Domain.Entities.Accounting;
 using ThinkOnErp.Domain.Exceptions;
@@ -47,7 +47,7 @@ public sealed class SubledgerService : ISubledgerService
         {
             Id = t.Id,
             PartyCode = t.CustomerCode,
-            PartyNameAr = t.Customer?.NameAr ?? string.Empty,
+            PartyNameLocal = t.Customer?.NameLocal ?? string.Empty,
             PartyNameEn = t.Customer?.NameEn ?? string.Empty,
             JournalLineId = t.JournalLineId,
             VoucherId = t.VoucherId,
@@ -79,7 +79,7 @@ public sealed class SubledgerService : ISubledgerService
         {
             Id = t.Id,
             PartyCode = t.VendorCode,
-            PartyNameAr = t.Vendor?.NameAr ?? string.Empty,
+            PartyNameLocal = t.Vendor?.NameLocal ?? string.Empty,
             PartyNameEn = t.Vendor?.NameEn ?? string.Empty,
             JournalLineId = t.JournalLineId,
             VoucherId = t.VoucherId,
@@ -562,7 +562,7 @@ public sealed class SubledgerService : ISubledgerService
         return new StatementOfAccountDto
         {
             PartyCode = customer.CustomerCode,
-            PartyNameAr = customer.NameAr,
+            PartyNameLocal = customer.NameLocal,
             PartyNameEn = customer.NameEn,
             PartyType = "CUSTOMER",
             OpeningBalance = openingBalance,
@@ -612,7 +612,7 @@ public sealed class SubledgerService : ISubledgerService
         return new StatementOfAccountDto
         {
             PartyCode = vendor.VendorCode,
-            PartyNameAr = vendor.NameAr,
+            PartyNameLocal = vendor.NameLocal,
             PartyNameEn = vendor.NameEn,
             PartyType = "VENDOR",
             OpeningBalance = openingBalance,
@@ -639,7 +639,7 @@ public sealed class SubledgerService : ISubledgerService
             var b = new AgingBucketDto
             {
                 PartyCode = g.Key,
-                PartyNameAr = cust?.NameAr ?? string.Empty,
+                PartyNameLocal = cust?.NameLocal ?? string.Empty,
                 PartyNameEn = cust?.NameEn ?? string.Empty
             };
 
@@ -689,7 +689,7 @@ public sealed class SubledgerService : ISubledgerService
             var b = new AgingBucketDto
             {
                 PartyCode = g.Key,
-                PartyNameAr = vend?.NameAr ?? string.Empty,
+                PartyNameLocal = vend?.NameLocal ?? string.Empty,
                 PartyNameEn = vend?.NameEn ?? string.Empty
             };
 

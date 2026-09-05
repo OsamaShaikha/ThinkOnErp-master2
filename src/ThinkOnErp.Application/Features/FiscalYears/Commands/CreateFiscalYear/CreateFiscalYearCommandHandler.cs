@@ -1,4 +1,4 @@
-using MediatR;
+﻿using MediatR;
 using ThinkOnErp.Domain.Entities;
 using ThinkOnErp.Domain.Interfaces;
 
@@ -19,7 +19,7 @@ public class CreateFiscalYearCommandHandler : IRequestHandler<CreateFiscalYearCo
         {
             BranchId = request.BranchId,
             FiscalYearCode = request.FiscalYearCode,
-            FiscalYearNameAr = request.FiscalYearNameAr,
+            FiscalYearNameLocal = request.FiscalYearNameLocal,
             FiscalYearNameEn = request.FiscalYearNameEn,
             StartDate = request.StartDate,
             EndDate = request.EndDate,

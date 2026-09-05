@@ -41,7 +41,7 @@ public class ChangePasswordUpdatesHashPropertyTests : IClassFixture<TestWebAppli
                 // Create a user first
                 var createCommand = new CreateUserCommand
                 {
-                    NameAr = $"User {userName}",
+                    NameLocal = $"User {userName}",
                     NameEn = $"User {userName} E",
                     UserName = userName,
                     Password = oldPassword,

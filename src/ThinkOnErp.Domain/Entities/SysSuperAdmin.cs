@@ -1,4 +1,4 @@
-namespace ThinkOnErp.Domain.Entities;
+﻿namespace ThinkOnErp.Domain.Entities;
 
 /// <summary>
 /// Represents a Super Admin account with full platform access
@@ -6,7 +6,7 @@ namespace ThinkOnErp.Domain.Entities;
 public class SysSuperAdmin
 {
     public long Id { get; set; }
-    public string NameAr { get; set; } = string.Empty;
+    public string NameLocal { get; set; } = string.Empty;
     public string NameEn { get; set; } = string.Empty;
     public string UserName { get; set; } = string.Empty;
     public string Password { get; set; } = string.Empty;

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 
 namespace ThinkOnErp.Domain.Entities.Inventory;
@@ -7,7 +7,7 @@ public sealed class TrxDocType
 {
     public int TypeCode { get; set; }
     public string TypeKey { get; set; } = string.Empty;
-    public string TypeNameAr { get; set; } = string.Empty;
+    public string TypeNameLocal { get; set; } = string.Empty;
     public string TypeNameEn { get; set; } = string.Empty;
     public string ModuleCode { get; set; } = string.Empty;
     public string DocPrefix { get; set; } = string.Empty;

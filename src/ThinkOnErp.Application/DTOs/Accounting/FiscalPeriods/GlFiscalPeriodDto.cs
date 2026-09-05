@@ -5,7 +5,7 @@ public sealed class GlFiscalPeriodDto
     public long Id { get; set; }
     public long FiscalYearId { get; set; }
     public int PeriodNumber { get; set; }
-    public string PeriodNameAr { get; set; } = string.Empty;
+    public string PeriodNameLocal { get; set; } = string.Empty;
     public string PeriodNameEn { get; set; } = string.Empty;
     public DateTime StartDate { get; set; }
     public DateTime EndDate { get; set; }

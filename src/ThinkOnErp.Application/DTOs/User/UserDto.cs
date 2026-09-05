@@ -15,7 +15,7 @@ public class UserDto
     /// <summary>
     /// Arabic description of the user
     /// </summary>
-    public string NameAr { get; set; } = string.Empty;
+    public string NameLocal { get; set; } = string.Empty;
 
     /// <summary>
     /// English description of the user
@@ -81,6 +81,11 @@ public class UserDto
     /// User preferred default language (1 = Arabic, 2 = English)
     /// </summary>
     public int DefaultLang { get; set; } = 1;
+
+    /// <summary>
+    /// Active session language ID (1 = Arabic, 2 = English, 3 = French, 4 = Spanish, 5 = Turkish, 6 = German)
+    /// </summary>
+    public int ActiveLanguage { get; set; } = 1;
 
     /// <summary>
     /// Username of the user who created this record

@@ -1,4 +1,4 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using ThinkOnErp.Domain.Entities;
 using ThinkOnErp.Infrastructure.Services;
 
@@ -17,17 +17,17 @@ public static class SeedData
             .FirstOrDefaultAsync(c => c.CurrencyNameEn == "Saudi Riyal")
             ?? new SysCurrency
             {
-                CurrencyNameAr = "ريال سعودي",
+                CurrencyNameLocal = "ريال سعودي",
                 CurrencyNameEn = "Saudi Riyal",
-                ShortNameAr = "ر.س",
+                ShortNameLocal = "ر.س",
                 ShortNameEn = "SAR",
-                SingularNameAr = "ريال",
+                SingularNameLocal = "ريال",
                 SingularNameEn = "Riyal",
-                DualNameAr = "ريالان",
+                DualNameLocal = "ريالان",
                 DualNameEn = "Two Riyals",
-                CollectiveNameAr = "ريالات",
+                CollectiveNameLocal = "ريالات",
                 CollectiveNameEn = "Riyals",
-                FractionNameAr = "هللة",
+                FractionNameLocal = "هللة",
                 FractionNameEn = "Halala",
                 CurrRate = 1.0m,
                 CurrRateDate = now,
@@ -39,17 +39,17 @@ public static class SeedData
             .FirstOrDefaultAsync(c => c.CurrencyNameEn == "US Dollar")
             ?? new SysCurrency
             {
-                CurrencyNameAr = "دولار أمريكي",
+                CurrencyNameLocal = "دولار أمريكي",
                 CurrencyNameEn = "US Dollar",
-                ShortNameAr = "دولار",
+                ShortNameLocal = "دولار",
                 ShortNameEn = "USD",
-                SingularNameAr = "دولار",
+                SingularNameLocal = "دولار",
                 SingularNameEn = "Dollar",
-                DualNameAr = "دولاران",
+                DualNameLocal = "دولاران",
                 DualNameEn = "Two Dollars",
-                CollectiveNameAr = "دولارات",
+                CollectiveNameLocal = "دولارات",
                 CollectiveNameEn = "Dollars",
-                FractionNameAr = "سنت",
+                FractionNameLocal = "سنت",
                 FractionNameEn = "Cent",
                 CurrRate = 3.75m,
                 CurrRateDate = now,
@@ -66,7 +66,7 @@ public static class SeedData
         {
             var company = new SysCompany
             {
-                CompanyNameAr = "شركة تقنية",
+                CompanyNameLocal = "شركة تقنية",
                 CompanyNameEn = "Tech Company",
                 CurrId = sar.Id,
                 LegalName = "Tech Company For Information Technology",
@@ -84,7 +84,7 @@ public static class SeedData
             var hqBranch = new SysBranch
             {
                 CompanyId = company.Id,
-                BranchNameAr = "المركز الرئيسي",
+                BranchNameLocal = "المركز الرئيسي",
                 BranchNameEn = "Headquarters",
                 Phone = "+966112345678",
                 Mobile = "+966501234567",
@@ -102,7 +102,7 @@ public static class SeedData
             var branch2 = new SysBranch
             {
                 CompanyId = company.Id,
-                BranchNameAr = "فرع الرياض",
+                BranchNameLocal = "فرع الرياض",
                 BranchNameEn = "Riyadh Branch",
                 Phone = "+966112345679",
                 Mobile = "+966501234568",
@@ -123,7 +123,7 @@ public static class SeedData
         {
             var devCompany = new SysCompany
             {
-                CompanyNameAr = "شركة المطورين",
+                CompanyNameLocal = "شركة المطورين",
                 CompanyNameEn = "Developer Company",
                 CurrId = sar.Id,
                 LegalName = "Developer Company For Testing",
@@ -140,7 +140,7 @@ public static class SeedData
             var devHqBranch = new SysBranch
             {
                 CompanyId = devCompany.Id,
-                BranchNameAr = "المركز الرئيسي",
+                BranchNameLocal = "المركز الرئيسي",
                 BranchNameEn = "Headquarters",
                 Phone = "+966112345678",
                 Mobile = "+966501234567",
@@ -161,7 +161,7 @@ public static class SeedData
         {
             var admin = new SysSuperAdmin
             {
-                NameAr = "مدير النظام",
+                NameLocal = "مدير النظام",
                 NameEn = "System Administrator",
                 UserName = "admin",
                 Password = passwordHasher.HashPassword("Admin@123"),

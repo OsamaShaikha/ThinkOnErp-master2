@@ -12,7 +12,7 @@ public static class GlFiscalPeriodMapper
             Id = entity.Id,
             FiscalYearId = entity.FiscalYearId,
             PeriodNumber = entity.PeriodNumber,
-            PeriodNameAr = entity.PeriodNameAr,
+            PeriodNameLocal = entity.PeriodNameLocal,
             PeriodNameEn = entity.PeriodNameEn,
             StartDate = entity.StartDate,
             EndDate = entity.EndDate,

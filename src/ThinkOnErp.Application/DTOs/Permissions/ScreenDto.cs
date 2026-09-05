@@ -1,4 +1,4 @@
-namespace ThinkOnErp.Application.DTOs.Permissions;
+﻿namespace ThinkOnErp.Application.DTOs.Permissions;
 
 /// <summary>
 /// Data transfer object for screen/page information.
@@ -28,7 +28,7 @@ public class ScreenDto
     /// <summary>
     /// Arabic name of the screen
     /// </summary>
-    public string ScreenNameAr { get; set; } = string.Empty;
+    public string ScreenNameLocal { get; set; } = string.Empty;
 
     /// <summary>
     /// English name of the screen
@@ -43,7 +43,7 @@ public class ScreenDto
     /// <summary>
     /// Arabic description
     /// </summary>
-    public string? DescriptionAr { get; set; }
+    public string? DescriptionLocal { get; set; }
 
     /// <summary>
     /// English description

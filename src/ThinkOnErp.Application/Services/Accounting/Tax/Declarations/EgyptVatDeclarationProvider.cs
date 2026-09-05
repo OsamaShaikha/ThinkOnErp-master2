@@ -1,4 +1,4 @@
-using ThinkOnErp.Application.DTOs.Accounting.Tax;
+﻿using ThinkOnErp.Application.DTOs.Accounting.Tax;
 using ThinkOnErp.Domain.Entities.Accounting;
 
 namespace ThinkOnErp.Application.Services.Accounting.Tax.Declarations;
@@ -17,12 +17,12 @@ public sealed class EgyptVatDeclarationProvider : ITaxDeclarationProvider
         {
             TemplateCode = TemplateCode,
             CountryCode = CountryCode,
-            CountryNameAr = "جمهورية مصر العربية",
+            CountryNameLocal = "جمهورية مصر العربية",
             CountryNameEn = "Arab Republic of Egypt",
             FlagEmoji = "🇪🇬",
             TitleAr = "إقرار ضريبة القيمة المضافة وضريبة الجدول (نموذج 10) - مصلحة الضرائب المصرية",
             TitleEn = "VAT & Schedule Tax Return (Form 10) - Egyptian Tax Authority (ETA)",
-            TaxAuthorityNameAr = "مصلحة الضرائب المصرية (ETA)",
+            TaxAuthorityNameLocal = "مصلحة الضرائب المصرية (ETA)",
             TaxAuthorityNameEn = "Egyptian Tax Authority (ETA)",
             DefaultCurrencyCode = "EGP",
             FilingFrequency = "MONTHLY",
@@ -76,7 +76,7 @@ public sealed class EgyptVatDeclarationProvider : ITaxDeclarationProvider
         VatDeclarationFilterDto filter,
         IReadOnlyList<TaxTransaction> transactions,
         IReadOnlyList<TaxRate> availableRates,
-        string branchNameAr,
+        string branchNameLocal,
         string branchNameEn)
     {
         var rateMap = availableRates.ToDictionary(r => r.Id);
@@ -171,11 +171,11 @@ public sealed class EgyptVatDeclarationProvider : ITaxDeclarationProvider
             CountryCode = CountryCode,
             TemplateTitleAr = "إقرار ضريبة القيمة المضافة (مصر - نموذج 10)",
             TemplateTitleEn = "Egypt VAT Return (Form 10 - ETA)",
-            TaxAuthorityNameAr = "مصلحة الضرائب المصرية (ETA)",
+            TaxAuthorityNameLocal = "مصلحة الضرائب المصرية (ETA)",
             TaxAuthorityNameEn = "Egyptian Tax Authority (ETA)",
             CurrencyCode = "EGP",
             BranchId = filter.BranchId,
-            BranchNameAr = branchNameAr,
+            BranchNameLocal = branchNameLocal,
             BranchNameEn = branchNameEn,
             FromDate = filter.FromDate,
             ToDate = filter.ToDate,

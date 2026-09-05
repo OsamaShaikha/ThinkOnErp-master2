@@ -9,7 +9,7 @@ public sealed class Vendor
 {
     public long Id { get; set; }
     public string VendorCode { get; set; } = string.Empty;
-    public string NameAr { get; set; } = string.Empty;
+    public string NameLocal { get; set; } = string.Empty;
     public string NameEn { get; set; } = string.Empty;
     public string ApControlAccountCode { get; set; } = "211101"; // Default to AP Control
     public long? DefaultCurrencyId { get; set; }

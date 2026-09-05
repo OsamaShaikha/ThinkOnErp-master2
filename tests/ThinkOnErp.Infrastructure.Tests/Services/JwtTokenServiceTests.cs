@@ -231,7 +231,7 @@ public class JwtTokenServiceTests
         {
             Id = 123,
             UserName = "testuser",
-            FullNameAr = "Test User Arabic",
+            FullNameLocal = "Test User Arabic",
             FullNameEn = "Test User English",
             Password = "hashedpassword",
             RoleId = 5,

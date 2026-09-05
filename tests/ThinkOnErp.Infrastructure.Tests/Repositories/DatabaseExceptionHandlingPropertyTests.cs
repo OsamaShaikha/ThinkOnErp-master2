@@ -50,7 +50,7 @@ public class DatabaseExceptionHandlingPropertyTests
                 // Create a role with this ID
                 var role = new SysRole
                 {
-                    RoleNameAr = $"Test Role {validId}",
+                    RoleNameLocal = $"Test Role {validId}",
                     RoleNameEn = $"Test Role {validId}",
                     IsActive = true,
                     CreationUser = "test",
@@ -79,7 +79,7 @@ public class DatabaseExceptionHandlingPropertyTests
 
                 var role = new SysRole
                 {
-                    RoleNameAr = $"Role {id}",
+                    RoleNameLocal = $"Role {id}",
                     RoleNameEn = $"Role {id}",
                     IsActive = true,
                     CreationUser = "test",
@@ -113,7 +113,7 @@ public class DatabaseExceptionHandlingPropertyTests
                 {
                     var role = new SysRole
                     {
-                        RoleNameAr = $"Active Role {i}",
+                        RoleNameLocal = $"Active Role {i}",
                         RoleNameEn = $"Active Role {i}",
                         IsActive = i % 2 == 0, // Half active
                         CreationUser = "test",

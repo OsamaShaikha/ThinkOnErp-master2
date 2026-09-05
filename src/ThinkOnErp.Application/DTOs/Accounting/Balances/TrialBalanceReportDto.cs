@@ -3,7 +3,7 @@
 public sealed class TrialBalanceRowDto
 {
     public string AccountCode { get; set; } = string.Empty;
-    public string AccountNameAr { get; set; } = string.Empty;
+    public string AccountNameLocal { get; set; } = string.Empty;
     public string AccountNameEn { get; set; } = string.Empty;
     public int AccountLevel { get; set; }
     public string AccountType { get; set; } = string.Empty;

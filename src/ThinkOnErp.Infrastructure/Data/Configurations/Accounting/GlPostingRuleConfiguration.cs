@@ -16,7 +16,7 @@ public sealed class GlPostingRuleConfiguration : IEntityTypeConfiguration<GlPost
         builder.Property(e => e.BranchId).HasColumnName("BRANCH_ID");
         builder.Property(e => e.Module).HasColumnName("MODULE").HasMaxLength(50).IsRequired();
         builder.Property(e => e.EventType).HasColumnName("EVENT_TYPE").HasMaxLength(50).IsRequired();
-        builder.Property(e => e.EventNameAr).HasColumnName("EVENT_NAME_AR").HasMaxLength(200).IsRequired();
+        builder.Property(e => e.EventNameLocal).HasColumnName("EVENT_NAME_LOCAL").HasMaxLength(200).IsRequired();
         builder.Property(e => e.EventNameEn).HasColumnName("EVENT_NAME_EN").HasMaxLength(200).IsRequired();
 
         builder.Property(e => e.DebitAccountCode).HasColumnName("DEBIT_ACCOUNT_CODE").HasMaxLength(50).IsRequired();

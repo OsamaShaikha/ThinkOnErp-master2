@@ -47,7 +47,7 @@ public class ErrorResponseStructurePropertyTests : IClassFixture<TestWebApplicat
                 // Create a role with invalid data (empty RowDesc should fail validation)
                 var createDto = new CreateRoleDto
                 {
-                    RoleNameAr = "", // Invalid - empty
+                    RoleNameLocal = "", // Invalid - empty
                     RoleNameEn = "Valid English",
                     Note = "Test note"
                 };

@@ -1,4 +1,4 @@
-namespace ThinkOnErp.Application.DTOs.Accounting.Vouchers;
+﻿namespace ThinkOnErp.Application.DTOs.Accounting.Vouchers;
 
 public sealed class GlVoucherDetailDto
 {
@@ -6,7 +6,7 @@ public sealed class GlVoucherDetailDto
     public long VoucherId { get; set; }
     public int LineSer { get; set; }
     public string AccountCode { get; set; } = string.Empty;
-    public string? AccountNameAr { get; set; }
+    public string? AccountNameLocal { get; set; }
     public string? AccountNameEn { get; set; }
 
     public decimal Debit { get; set; }
@@ -23,7 +23,7 @@ public sealed class GlVoucherDetailDto
     public string? CostCenterCode { get; set; }
     public string? CostCenterMgrCode { get; set; }
     public string? CostCenterMnrCode { get; set; }
-    public string? CostCenterNameAr { get; set; }
+    public string? CostCenterNameLocal { get; set; }
     public string? CostCenterNameEn { get; set; }
     public bool IsSettlement { get; set; }
 
@@ -31,6 +31,6 @@ public sealed class GlVoucherDetailDto
     public string? PartyCode { get; set; }
 
     public long? BranchId { get; set; }
-    public string? BranchNameAr { get; set; }
+    public string? BranchNameLocal { get; set; }
     public string? BranchNameEn { get; set; }
 }

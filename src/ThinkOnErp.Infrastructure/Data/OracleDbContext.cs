@@ -72,7 +72,7 @@ public class OracleDbContext : DbContext
     // Document management
     public DbSet<SysDocument> SysDocuments => Set<SysDocument>();
 
-    // Audit log
+    // Audit log (mapped to THINKON_AUDIT.SYS_AUDIT_LOG)
     public DbSet<SysAuditLog> SysAuditLogs => Set<SysAuditLog>();
 
     // Security monitoring
@@ -86,9 +86,7 @@ public class OracleDbContext : DbContext
     // Scheduled reporting
     public DbSet<SysReportSchedule> SysReportSchedules => Set<SysReportSchedule>();
 
-    // Archival
-    public DbSet<SysAuditLogArchive> SysAuditLogArchives => Set<SysAuditLogArchive>();
-    public DbSet<SysRetentionPolicy> SysRetentionPolicies => Set<SysRetentionPolicy>();
+    // System Settings & Validation
     public DbSet<SysCode> SysCodes => Set<SysCode>();
     public DbSet<SysSetting> SysSettings => Set<SysSetting>();
     public DbSet<SysFieldValidationRule> SysFieldValidationRules => Set<SysFieldValidationRule>();
@@ -148,10 +146,14 @@ public class OracleDbContext : DbContext
     public DbSet<InvReservation> InvReservations => Set<InvReservation>();
     public DbSet<TrxDocumentHeader> TrxDocumentHeaders => Set<TrxDocumentHeader>();
     public DbSet<TrxDocumentLine> TrxDocumentLines => Set<TrxDocumentLine>();
+    public DbSet<TrxDocumentSerial> TrxDocumentSerials => Set<TrxDocumentSerial>();
     public DbSet<InvCountSession> InvCountSessions => Set<InvCountSession>();
     public DbSet<InvCountLine> InvCountLines => Set<InvCountLine>();
     public DbSet<InvOpeningBatch> InvOpeningBatches => Set<InvOpeningBatch>();
     public DbSet<InvOpeningLine> InvOpeningLines => Set<InvOpeningLine>();
+
+    // Universal Dynamic Translation
+    public DbSet<SysEntityTranslation> EntityTranslations => Set<SysEntityTranslation>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

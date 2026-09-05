@@ -1,4 +1,4 @@
-using MediatR;
+﻿using MediatR;
 using ThinkOnErp.Application.DTOs.Branch;
 using ThinkOnErp.Domain.Interfaces;
 
@@ -33,7 +33,7 @@ public class GetBranchesByCompanyIdQueryHandler : IRequestHandler<GetBranchesByC
             {
                 BranchId = b.Id,
                 CompanyId = b.CompanyId,
-                BranchNameAr = b.BranchNameAr,
+                BranchNameLocal = b.BranchNameLocal,
                 BranchNameEn = b.BranchNameEn,
                 Phone = b.Phone,
                 Mobile = b.Mobile,

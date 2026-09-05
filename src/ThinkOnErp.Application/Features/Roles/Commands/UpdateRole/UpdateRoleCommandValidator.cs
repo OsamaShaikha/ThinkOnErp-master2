@@ -1,4 +1,4 @@
-using FluentValidation;
+﻿using FluentValidation;
 
 namespace ThinkOnErp.Application.Features.Roles.Commands.UpdateRole;
 
@@ -13,7 +13,7 @@ public class UpdateRoleCommandValidator : AbstractValidator<UpdateRoleCommand>
         RuleFor(x => x.RoleId)
             .GreaterThan(0).WithMessage("Role ID must be greater than 0.");
 
-        RuleFor(x => x.RoleNameAr)
+        RuleFor(x => x.RoleNameLocal)
             .NotEmpty().WithMessage("Arabic description is required.")
             .MaximumLength(100).WithMessage("Arabic description must not exceed 100 characters.");
 

@@ -15,7 +15,7 @@ public sealed class CreateInvItemDto
 
     [Required]
     [MaxLength(200)]
-    public string ItemNameAr { get; set; } = string.Empty;
+    public string ItemNameLocal { get; set; } = string.Empty;
 
     [MaxLength(200)]
     public string? ItemNameEn { get; set; }
@@ -28,8 +28,7 @@ public sealed class CreateInvItemDto
     public ItemType ItemType { get; set; } = ItemType.Stock;
 
     [Required]
-    [MaxLength(20)]
-    public string UomBase { get; set; } = string.Empty;
+    public int UomBase { get; set; }
 
     public CostingMethod CostingMethod { get; set; } = CostingMethod.WeightedAverage;
     public decimal StandardCost { get; set; }
@@ -46,7 +45,7 @@ public sealed class CreateInvItemDto
     public int LeadTimeDays { get; set; }
 
     public decimal Weight { get; set; }
-    public string? WeightUnit { get; set; }
+    public int? WeightUnit { get; set; }
 
     public string? GlControlAccount { get; set; }
     public string? GlRevenueAccount { get; set; }
@@ -56,6 +55,10 @@ public sealed class CreateInvItemDto
     public string? HsCode { get; set; }
     public string? Notes { get; set; }
 
+    public string? ImageBase64 { get; set; }
+    public int? ColorCode { get; set; }
+
     public List<CreateInvItemUomDto> UomConversions { get; set; } = new();
     public List<CreateInvItemBarcodeDto> Barcodes { get; set; } = new();
+    public List<ThinkOnErp.Application.DTOs.Translations.EntityTranslationDto>? Translations { get; set; }
 }

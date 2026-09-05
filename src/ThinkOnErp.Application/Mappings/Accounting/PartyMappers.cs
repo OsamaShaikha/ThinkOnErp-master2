@@ -1,4 +1,4 @@
-using ThinkOnErp.Application.DTOs.Accounting.Parties;
+﻿using ThinkOnErp.Application.DTOs.Accounting.Parties;
 using ThinkOnErp.Domain.Entities.Accounting;
 
 namespace ThinkOnErp.Application.Mappings.Accounting;
@@ -11,18 +11,18 @@ public static class CustomerMapper
         {
             Id = customer.Id,
             CustomerCode = customer.CustomerCode,
-            NameAr = customer.NameAr,
+            NameLocal = customer.NameLocal,
             NameEn = customer.NameEn,
             ArControlAccountCode = customer.ArControlAccountCode,
-            ArControlAccountNameAr = customer.ArControlAccount?.AccountNameAr,
+            ArControlAccountNameLocal = customer.ArControlAccount?.AccountNameLocal,
             ArControlAccountNameEn = customer.ArControlAccount?.AccountNameEn,
             DefaultCurrencyId = customer.DefaultCurrencyId,
-            DefaultCurrencyNameAr = customer.DefaultCurrency?.CurrencyNameAr,
+            DefaultCurrencyNameLocal = customer.DefaultCurrency?.CurrencyNameLocal,
             DefaultCurrencyNameEn = customer.DefaultCurrency?.CurrencyNameEn,
             CreditLimit = customer.CreditLimit,
             PaymentTermsDays = customer.PaymentTermsDays,
             BranchId = customer.BranchId,
-            BranchNameAr = customer.Branch?.BranchNameAr,
+            BranchNameLocal = customer.Branch?.BranchNameLocal,
             BranchNameEn = customer.Branch?.BranchNameEn,
             TaxNumber = customer.TaxNumber,
             Phone = customer.Phone,
@@ -43,17 +43,17 @@ public static class VendorMapper
         {
             Id = vendor.Id,
             VendorCode = vendor.VendorCode,
-            NameAr = vendor.NameAr,
+            NameLocal = vendor.NameLocal,
             NameEn = vendor.NameEn,
             ApControlAccountCode = vendor.ApControlAccountCode,
-            ApControlAccountNameAr = vendor.ApControlAccount?.AccountNameAr,
+            ApControlAccountNameLocal = vendor.ApControlAccount?.AccountNameLocal,
             ApControlAccountNameEn = vendor.ApControlAccount?.AccountNameEn,
             DefaultCurrencyId = vendor.DefaultCurrencyId,
-            DefaultCurrencyNameAr = vendor.DefaultCurrency?.CurrencyNameAr,
+            DefaultCurrencyNameLocal = vendor.DefaultCurrency?.CurrencyNameLocal,
             DefaultCurrencyNameEn = vendor.DefaultCurrency?.CurrencyNameEn,
             PaymentTermsDays = vendor.PaymentTermsDays,
             BranchId = vendor.BranchId,
-            BranchNameAr = vendor.Branch?.BranchNameAr,
+            BranchNameLocal = vendor.Branch?.BranchNameLocal,
             BranchNameEn = vendor.Branch?.BranchNameEn,
             TaxNumber = vendor.TaxNumber,
             Phone = vendor.Phone,

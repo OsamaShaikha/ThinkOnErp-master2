@@ -1,4 +1,4 @@
-using MediatR;
+﻿using MediatR;
 using ThinkOnErp.Domain.Entities;
 using ThinkOnErp.Domain.Interfaces;
 
@@ -62,7 +62,7 @@ public class UpdateUserCommandHandler : IRequestHandler<UpdateUserCommand, Int64
         var user = new SysUser
         {
             Id = request.UserId,
-            FullNameAr = request.NameAr,
+            FullNameLocal = request.NameLocal,
             FullNameEn = request.NameEn,
             UserName = request.UserName,
             Phone = request.Phone,

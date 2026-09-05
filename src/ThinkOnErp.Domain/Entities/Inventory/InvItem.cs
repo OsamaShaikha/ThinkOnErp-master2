@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using ThinkOnErp.Domain.Entities.Inventory.Enums;
 
@@ -9,12 +9,12 @@ public sealed class InvItem
     public long Id { get; set; }
     public long BranchId { get; set; }
     public string ItemCode { get; set; } = string.Empty;
-    public string ItemNameAr { get; set; } = string.Empty;
+    public string ItemNameLocal { get; set; } = string.Empty;
     public string? ItemNameEn { get; set; }
     public long MainGroupId { get; set; }
     public long? SubGroupId { get; set; }
     public ItemType ItemType { get; set; }
-    public string UomBase { get; set; } = string.Empty;
+    public int UomBase { get; set; }
     public CostingMethod CostingMethod { get; set; }
     public decimal StandardCost { get; set; }
     
@@ -30,7 +30,7 @@ public sealed class InvItem
     public int LeadTimeDays { get; set; }
     
     public decimal Weight { get; set; }
-    public string? WeightUnit { get; set; }
+    public int? WeightUnit { get; set; }
     
     public string? GlControlAccount { get; set; }
     public string? GlRevenueAccount { get; set; }
@@ -39,6 +39,9 @@ public sealed class InvItem
     public string? CountryOfOrigin { get; set; }
     public string? HsCode { get; set; }
     public string? Notes { get; set; }
+
+    public string? ImageBase64 { get; set; }
+    public int? ColorCode { get; set; }
     
     public bool IsActive { get; set; } = true;
     public string CreationUser { get; set; } = string.Empty;

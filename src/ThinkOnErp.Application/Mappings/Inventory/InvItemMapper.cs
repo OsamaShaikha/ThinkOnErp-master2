@@ -1,4 +1,4 @@
-using System.Linq;
+﻿using System.Linq;
 using ThinkOnErp.Application.DTOs.Inventory.Items;
 using ThinkOnErp.Domain.Entities.Inventory;
 
@@ -14,13 +14,13 @@ public static class InvItemMapper
         {
             Id = entity.Id,
             ItemCode = entity.ItemCode,
-            ItemNameAr = entity.ItemNameAr,
+            ItemNameLocal = entity.ItemNameLocal,
             ItemNameEn = entity.ItemNameEn,
             ItemType = entity.ItemType.ToString(),
             MainGroupId = entity.MainGroupId,
-            MainGroupName = entity.MainGroup?.GroupNameAr,
+            MainGroupName = entity.MainGroup?.GroupNameLocal,
             SubGroupId = entity.SubGroupId,
-            SubGroupName = entity.SubGroup?.GroupNameAr,
+            SubGroupName = entity.SubGroup?.GroupNameLocal,
             UomBase = entity.UomBase,
             CostingMethod = entity.CostingMethod.ToString(),
             StandardCost = entity.StandardCost,
@@ -41,6 +41,8 @@ public static class InvItemMapper
             CountryOfOrigin = entity.CountryOfOrigin,
             HsCode = entity.HsCode,
             Notes = entity.Notes,
+            ImageBase64 = entity.ImageBase64,
+            ColorCode = entity.ColorCode,
             IsActive = entity.IsActive,
             UomConversions = entity.UomConversions?.Select(u => new InvItemUomDto
             {

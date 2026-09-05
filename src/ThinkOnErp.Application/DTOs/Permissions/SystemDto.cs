@@ -1,4 +1,4 @@
-namespace ThinkOnErp.Application.DTOs.Permissions;
+﻿namespace ThinkOnErp.Application.DTOs.Permissions;
 
 /// <summary>
 /// Data transfer object for system/module information.
@@ -18,7 +18,7 @@ public class SystemDto
     /// <summary>
     /// Arabic name of the system
     /// </summary>
-    public string SystemNameAr { get; set; } = string.Empty;
+    public string SystemNameLocal { get; set; } = string.Empty;
 
     /// <summary>
     /// English name of the system
@@ -28,7 +28,7 @@ public class SystemDto
     /// <summary>
     /// Arabic description
     /// </summary>
-    public string? DescriptionAr { get; set; }
+    public string? DescriptionLocal { get; set; }
 
     /// <summary>
     /// English description

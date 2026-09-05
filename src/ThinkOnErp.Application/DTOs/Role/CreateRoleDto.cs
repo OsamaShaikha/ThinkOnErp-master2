@@ -1,4 +1,4 @@
-namespace ThinkOnErp.Application.DTOs.Role;
+﻿namespace ThinkOnErp.Application.DTOs.Role;
 
 /// <summary>
 /// Data transfer object for creating a new role.
@@ -9,7 +9,7 @@ public class CreateRoleDto
     /// <summary>
     /// Arabic description of the role (required)
     /// </summary>
-    public string RoleNameAr { get; set; } = string.Empty;
+    public string RoleNameLocal { get; set; } = string.Empty;
 
     /// <summary>
     /// English description of the role (required)

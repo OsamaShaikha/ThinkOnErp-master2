@@ -1,4 +1,4 @@
-using MediatR;
+﻿using MediatR;
 using ThinkOnErp.Application.DTOs.User;
 using ThinkOnErp.Domain.Interfaces;
 
@@ -26,7 +26,7 @@ public class GetUserByIdQueryHandler : IRequestHandler<GetUserByIdQuery, UserDto
         return new UserDto
         {
             UserId = user.Id,
-            NameAr = user.FullNameAr,
+            NameLocal = user.FullNameLocal,
             NameEn = user.FullNameEn,
             UserName = user.UserName,
             Phone = user.Phone,

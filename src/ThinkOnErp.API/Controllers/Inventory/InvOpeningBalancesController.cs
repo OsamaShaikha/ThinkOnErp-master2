@@ -64,8 +64,8 @@ public sealed class InvOpeningBalancesController : ControllerBase
     /// <param name="ct">Cancellation token.</param>
     /// <returns>Paginated opening balance batches.</returns>
     [HttpGet]
-    [ProducesResponseType(typeof(ApiResponse<(List<OpeningBatchDto> Batches, int TotalCount)>), StatusCodes.Status200OK)]
-    public async Task<ActionResult<ApiResponse<(List<OpeningBatchDto> Batches, int TotalCount)>>> GetBatches(
+    [ProducesResponseType(typeof(ApiResponse<PagedResultDto<OpeningBatchDto>>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<ApiResponse<PagedResultDto<OpeningBatchDto>>>> GetBatches(
         [FromQuery] long branchId,
         [FromQuery] int pageIndex = 1,
         [FromQuery] int pageSize = 20,

@@ -352,11 +352,11 @@ namespace ThinkOnErp.Infrastructure.Migrations
                         .HasColumnType("CLOB")
                         .HasColumnName("BRANCH_LOGO");
 
-                    b.Property<string>("BranchNameAr")
+                    b.Property<string>("BranchNameLocal")
                         .IsRequired()
                         .HasMaxLength(200)
                         .HasColumnType("NVARCHAR2(200)")
-                        .HasColumnName("NAME_AR");
+                        .HasColumnName("NAME_LOCAL");
 
                     b.Property<string>("BranchNameEn")
                         .IsRequired()
@@ -665,11 +665,11 @@ namespace ThinkOnErp.Infrastructure.Migrations
                         .HasColumnType("CLOB")
                         .HasColumnName("COMPANY_LOGO");
 
-                    b.Property<string>("CompanyNameAr")
+                    b.Property<string>("CompanyNameLocal")
                         .IsRequired()
                         .HasMaxLength(200)
                         .HasColumnType("NVARCHAR2(200)")
-                        .HasColumnName("NAME_AR");
+                        .HasColumnName("NAME_LOCAL");
 
                     b.Property<string>("CompanyNameEn")
                         .IsRequired()
@@ -881,7 +881,7 @@ namespace ThinkOnErp.Infrastructure.Migrations
 
                     OraclePropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
 
-                    b.Property<string>("CollectiveNameAr")
+                    b.Property<string>("CollectiveNameLocal")
                         .IsRequired()
                         .HasMaxLength(50)
                         .HasColumnType("NVARCHAR2(50)")
@@ -911,11 +911,11 @@ namespace ThinkOnErp.Infrastructure.Migrations
                         .HasColumnType("TIMESTAMP(7)")
                         .HasColumnName("CURR_RATE_DATE");
 
-                    b.Property<string>("CurrencyNameAr")
+                    b.Property<string>("CurrencyNameLocal")
                         .IsRequired()
                         .HasMaxLength(200)
                         .HasColumnType("NVARCHAR2(200)")
-                        .HasColumnName("NAME_AR");
+                        .HasColumnName("NAME_LOCAL");
 
                     b.Property<string>("CurrencyNameEn")
                         .IsRequired()
@@ -923,7 +923,7 @@ namespace ThinkOnErp.Infrastructure.Migrations
                         .HasColumnType("NVARCHAR2(200)")
                         .HasColumnName("NAME_EN");
 
-                    b.Property<string>("DualNameAr")
+                    b.Property<string>("DualNameLocal")
                         .IsRequired()
                         .HasMaxLength(50)
                         .HasColumnType("NVARCHAR2(50)")
@@ -935,7 +935,7 @@ namespace ThinkOnErp.Infrastructure.Migrations
                         .HasColumnType("NVARCHAR2(50)")
                         .HasColumnName("DUAL_DESC_E");
 
-                    b.Property<string>("FractionNameAr")
+                    b.Property<string>("FractionNameLocal")
                         .IsRequired()
                         .HasMaxLength(50)
                         .HasColumnType("NVARCHAR2(50)")
@@ -947,7 +947,7 @@ namespace ThinkOnErp.Infrastructure.Migrations
                         .HasColumnType("NVARCHAR2(50)")
                         .HasColumnName("FRAC_DESC_E");
 
-                    b.Property<string>("ShortNameAr")
+                    b.Property<string>("ShortNameLocal")
                         .IsRequired()
                         .HasMaxLength(50)
                         .HasColumnType("NVARCHAR2(50)")
@@ -959,7 +959,7 @@ namespace ThinkOnErp.Infrastructure.Migrations
                         .HasColumnType("NVARCHAR2(50)")
                         .HasColumnName("SHORT_DESC_E");
 
-                    b.Property<string>("SingularNameAr")
+                    b.Property<string>("SingularNameLocal")
                         .IsRequired()
                         .HasMaxLength(50)
                         .HasColumnType("NVARCHAR2(50)")
@@ -1151,10 +1151,10 @@ namespace ThinkOnErp.Infrastructure.Migrations
                         .HasColumnType("NVARCHAR2(20)")
                         .HasColumnName("FISCAL_YEAR_CODE");
 
-                    b.Property<string>("FiscalYearNameAr")
+                    b.Property<string>("FiscalYearNameLocal")
                         .HasMaxLength(200)
                         .HasColumnType("NVARCHAR2(200)")
-                        .HasColumnName("NAME_AR");
+                        .HasColumnName("NAME_LOCAL");
 
                     b.Property<string>("FiscalYearNameEn")
                         .HasMaxLength(200)
@@ -1521,11 +1521,11 @@ namespace ThinkOnErp.Infrastructure.Migrations
                         .HasColumnType("NVARCHAR2(500)")
                         .HasColumnName("NOTE");
 
-                    b.Property<string>("RoleNameAr")
+                    b.Property<string>("RoleNameLocal")
                         .IsRequired()
                         .HasMaxLength(200)
                         .HasColumnType("NVARCHAR2(200)")
-                        .HasColumnName("NAME_AR");
+                        .HasColumnName("NAME_LOCAL");
 
                     b.Property<string>("RoleNameEn")
                         .IsRequired()
@@ -2012,11 +2012,11 @@ namespace ThinkOnErp.Infrastructure.Migrations
                         .HasColumnType("TIMESTAMP(7)")
                         .HasColumnName("LAST_LOGIN_DATE");
 
-                    b.Property<string>("NameAr")
+                    b.Property<string>("NameLocal")
                         .IsRequired()
                         .HasMaxLength(200)
                         .HasColumnType("NVARCHAR2(200)")
-                        .HasColumnName("NAME_AR");
+                        .HasColumnName("NAME_LOCAL");
 
                     b.Property<string>("NameEn")
                         .IsRequired()
@@ -2207,11 +2207,11 @@ namespace ThinkOnErp.Infrastructure.Migrations
 
                     OraclePropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
 
-                    b.Property<string>("CategoryNameAr")
+                    b.Property<string>("CategoryNameLocal")
                         .IsRequired()
                         .HasMaxLength(200)
                         .HasColumnType("NVARCHAR2(200)")
-                        .HasColumnName("CATEGORY_NAME_AR");
+                        .HasColumnName("CATEGORY_NAME_LOCAL");
 
                     b.Property<string>("CategoryNameEn")
                         .IsRequired()
@@ -2229,10 +2229,10 @@ namespace ThinkOnErp.Infrastructure.Migrations
                         .HasColumnType("NVARCHAR2(100)")
                         .HasColumnName("CREATION_USER");
 
-                    b.Property<string>("DescriptionAr")
+                    b.Property<string>("DescriptionLocal")
                         .HasMaxLength(500)
                         .HasColumnType("NVARCHAR2(500)")
-                        .HasColumnName("DESCRIPTION_AR");
+                        .HasColumnName("DESCRIPTION_LOCAL");
 
                     b.Property<string>("DescriptionEn")
                         .HasMaxLength(500)
@@ -2338,10 +2338,10 @@ namespace ThinkOnErp.Infrastructure.Migrations
                         .HasColumnType("NVARCHAR2(100)")
                         .HasColumnName("CREATION_USER");
 
-                    b.Property<string>("DescriptionAr")
+                    b.Property<string>("DescriptionLocal")
                         .HasMaxLength(500)
                         .HasColumnType("NVARCHAR2(500)")
-                        .HasColumnName("DESCRIPTION_AR");
+                        .HasColumnName("DESCRIPTION_LOCAL");
 
                     b.Property<string>("DescriptionEn")
                         .HasMaxLength(500)
@@ -2401,11 +2401,11 @@ namespace ThinkOnErp.Infrastructure.Migrations
                         .HasColumnType("NUMBER(10)")
                         .HasColumnName("PRIORITY_LEVEL");
 
-                    b.Property<string>("PriorityNameAr")
+                    b.Property<string>("PriorityNameLocal")
                         .IsRequired()
                         .HasMaxLength(200)
                         .HasColumnType("NVARCHAR2(200)")
-                        .HasColumnName("PRIORITY_NAME_AR");
+                        .HasColumnName("PRIORITY_NAME_LOCAL");
 
                     b.Property<string>("PriorityNameEn")
                         .IsRequired()
@@ -2460,11 +2460,11 @@ namespace ThinkOnErp.Infrastructure.Migrations
                         .HasColumnType("NVARCHAR2(50)")
                         .HasColumnName("STATUS_CODE");
 
-                    b.Property<string>("StatusNameAr")
+                    b.Property<string>("StatusNameLocal")
                         .IsRequired()
                         .HasMaxLength(200)
                         .HasColumnType("NVARCHAR2(200)")
-                        .HasColumnName("STATUS_NAME_AR");
+                        .HasColumnName("STATUS_NAME_LOCAL");
 
                     b.Property<string>("StatusNameEn")
                         .IsRequired()
@@ -2502,10 +2502,10 @@ namespace ThinkOnErp.Infrastructure.Migrations
                         .HasColumnType("NUMBER(19)")
                         .HasColumnName("DEFAULT_PRIORITY_ID");
 
-                    b.Property<string>("DescriptionAr")
+                    b.Property<string>("DescriptionLocal")
                         .HasMaxLength(500)
                         .HasColumnType("NVARCHAR2(500)")
-                        .HasColumnName("DESCRIPTION_AR");
+                        .HasColumnName("DESCRIPTION_LOCAL");
 
                     b.Property<string>("DescriptionEn")
                         .HasMaxLength(500)
@@ -2521,11 +2521,11 @@ namespace ThinkOnErp.Infrastructure.Migrations
                         .HasColumnType("NUMBER")
                         .HasColumnName("SLA_TARGET_HOURS");
 
-                    b.Property<string>("TypeNameAr")
+                    b.Property<string>("TypeNameLocal")
                         .IsRequired()
                         .HasMaxLength(200)
                         .HasColumnType("NVARCHAR2(200)")
-                        .HasColumnName("TYPE_NAME_AR");
+                        .HasColumnName("TYPE_NAME_LOCAL");
 
                     b.Property<string>("TypeNameEn")
                         .IsRequired()
@@ -2584,11 +2584,11 @@ namespace ThinkOnErp.Infrastructure.Migrations
                         .HasColumnType("TIMESTAMP(7)")
                         .HasColumnName("FORCE_LOGOUT_DATE");
 
-                    b.Property<string>("FullNameAr")
+                    b.Property<string>("FullNameLocal")
                         .IsRequired()
                         .HasMaxLength(200)
                         .HasColumnType("NVARCHAR2(200)")
-                        .HasColumnName("NAME_AR");
+                        .HasColumnName("NAME_LOCAL");
 
                     b.Property<string>("FullNameEn")
                         .IsRequired()

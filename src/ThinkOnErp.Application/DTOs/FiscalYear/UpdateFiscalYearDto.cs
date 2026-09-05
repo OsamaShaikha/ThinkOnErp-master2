@@ -1,4 +1,4 @@
-namespace ThinkOnErp.Application.DTOs.FiscalYear;
+﻿namespace ThinkOnErp.Application.DTOs.FiscalYear;
 
 /// <summary>
 /// Data transfer object for updating an existing fiscal year.
@@ -20,7 +20,7 @@ public class UpdateFiscalYearDto
     /// <summary>
     /// Arabic description of the fiscal year (optional)
     /// </summary>
-    public string? FiscalYearNameAr { get; set; }
+    public string? FiscalYearNameLocal { get; set; }
 
     /// <summary>
     /// English description of the fiscal year (optional)

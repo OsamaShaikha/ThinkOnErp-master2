@@ -10,7 +10,7 @@ public sealed class InvOpeningLine
     public long WarehouseId { get; set; }
     public long ItemId { get; set; }
     public long? BinId { get; set; }
-    public string UomCode { get; set; } = string.Empty;
+    public int UomCode { get; set; }
     public decimal UomFactor { get; set; } = 1;
     public decimal Quantity { get; set; }
     public decimal BaseQuantity { get; set; }

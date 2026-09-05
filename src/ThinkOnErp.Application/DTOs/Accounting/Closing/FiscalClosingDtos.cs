@@ -4,7 +4,7 @@ public sealed class PreClosingPeriodValidationDto
 {
     public long FiscalPeriodId { get; set; }
     public int PeriodNumber { get; set; }
-    public string PeriodNameAr { get; set; } = string.Empty;
+    public string PeriodNameLocal { get; set; } = string.Empty;
     public bool IsReadyToClose { get; set; }
     public int UnpostedDraftVouchersCount { get; set; }
     public int UnderReviewVouchersCount { get; set; }

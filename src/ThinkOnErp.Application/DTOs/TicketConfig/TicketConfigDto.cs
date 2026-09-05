@@ -1,4 +1,4 @@
-namespace ThinkOnErp.Application.DTOs.TicketConfig;
+﻿namespace ThinkOnErp.Application.DTOs.TicketConfig;
 
 /// <summary>
 /// DTO for ticket configuration settings
@@ -9,7 +9,7 @@ public class TicketConfigDto
     public string ConfigKey { get; set; } = string.Empty;
     public string ConfigValue { get; set; } = string.Empty;
     public string ConfigType { get; set; } = string.Empty;
-    public string? DescriptionAr { get; set; }
+    public string? DescriptionLocal { get; set; }
     public string? DescriptionEn { get; set; }
     public bool IsActive { get; set; }
     public string CreationUser { get; set; } = string.Empty;
@@ -26,7 +26,7 @@ public class CreateTicketConfigDto
     public string ConfigKey { get; set; } = string.Empty;
     public string ConfigValue { get; set; } = string.Empty;
     public string ConfigType { get; set; } = string.Empty;
-    public string? DescriptionAr { get; set; }
+    public string? DescriptionLocal { get; set; }
     public string? DescriptionEn { get; set; }
 }
 
@@ -36,7 +36,7 @@ public class CreateTicketConfigDto
 public class UpdateTicketConfigDto
 {
     public string ConfigValue { get; set; } = string.Empty;
-    public string? DescriptionAr { get; set; }
+    public string? DescriptionLocal { get; set; }
     public string? DescriptionEn { get; set; }
 }
 

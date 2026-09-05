@@ -7,7 +7,7 @@ public sealed class GlFiscalPeriod
     public long Id { get; set; }
     public long FiscalYearId { get; set; }
     public int PeriodNumber { get; set; } // 1..12, 13 (Year-end adjustments)
-    public string PeriodNameAr { get; set; } = string.Empty;
+    public string PeriodNameLocal { get; set; } = string.Empty;
     public string PeriodNameEn { get; set; } = string.Empty;
     public DateTime StartDate { get; set; }
     public DateTime EndDate { get; set; }

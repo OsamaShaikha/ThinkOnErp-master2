@@ -15,7 +15,7 @@ public sealed class InvBomLineConfiguration : IEntityTypeConfiguration<InvBomLin
         builder.Property(l => l.BomId).HasColumnName("BOM_ID").IsRequired();
         builder.Property(l => l.LineNo).HasColumnName("LINE_NO").IsRequired();
         builder.Property(l => l.ComponentItemId).HasColumnName("COMPONENT_ITEM_ID").IsRequired();
-        builder.Property(l => l.UomCode).HasColumnName("UOM_CODE").HasMaxLength(20).IsRequired();
+        builder.Property(l => l.UomCode).HasColumnName("UOM_CODE").HasColumnType("NUMBER(6)").IsRequired();
         builder.Property(l => l.UomFactor).HasColumnName("UOM_FACTOR").HasColumnType("NUMBER(18,6)").HasDefaultValue(1m);
         builder.Property(l => l.Quantity).HasColumnName("QUANTITY").HasColumnType("NUMBER(14,4)").IsRequired();
         builder.Property(l => l.ScrapPercent).HasColumnName("SCRAP_PERCENT").HasColumnType("NUMBER(7,4)").HasDefaultValue(0m);

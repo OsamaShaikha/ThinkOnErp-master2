@@ -1,3 +1,4 @@
+using ThinkOnErp.Application.Common;
 using ThinkOnErp.Application.DTOs.Accounting.Vouchers;
 
 namespace ThinkOnErp.Application.Services.Accounting;
@@ -5,7 +6,11 @@ namespace ThinkOnErp.Application.Services.Accounting;
 public interface IGlVoucherService
 {
     Task<IReadOnlyList<GlVoucherTypeDto>> GetVoucherTypesAsync(CancellationToken cancellationToken = default);
+    Task<GlVoucherTypeDto?> GetVoucherTypeByIdAsync(long id, CancellationToken cancellationToken = default);
     Task<GlVoucherTypeDto?> GetVoucherTypeByCodeAsync(int typeCode, CancellationToken cancellationToken = default);
+    Task<GlVoucherTypeDto> CreateVoucherTypeAsync(CreateGlVoucherTypeDto dto, string username, CancellationToken cancellationToken = default);
+    Task<GlVoucherTypeDto> UpdateVoucherTypeAsync(long id, UpdateGlVoucherTypeDto dto, string username, CancellationToken cancellationToken = default);
+    Task DeleteVoucherTypeAsync(long id, CancellationToken cancellationToken = default);
 
     Task<PagedResultDto<GlVoucherHeaderDto>> GetPagedVouchersAsync(
         GlVoucherFilterDto filter,

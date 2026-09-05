@@ -1,10 +1,10 @@
-namespace ThinkOnErp.Domain.Entities.Accounting;
+﻿namespace ThinkOnErp.Domain.Entities.Accounting;
 
 public sealed class TaxGroup
 {
     public long Id { get; set; }
     public string GroupCode { get; set; } = string.Empty; // STD_VAT_15, ZERO_VAT, EXEMPT_VAT
-    public string NameAr { get; set; } = string.Empty;
+    public string NameLocal { get; set; } = string.Empty;
     public string NameEn { get; set; } = string.Empty;
     public string? Description { get; set; }
     public bool IsActive { get; set; } = true;

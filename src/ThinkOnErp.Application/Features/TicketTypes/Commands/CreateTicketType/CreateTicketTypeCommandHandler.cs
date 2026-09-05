@@ -1,4 +1,4 @@
-using MediatR;
+﻿using MediatR;
 using Microsoft.Extensions.Logging;
 using ThinkOnErp.Domain.Entities;
 using ThinkOnErp.Domain.Interfaces;
@@ -29,7 +29,7 @@ public class CreateTicketTypeCommandHandler : IRequestHandler<CreateTicketTypeCo
             _logger.LogInformation("Creating new ticket type: {TypeNameEn}", request.TypeNameEn);
 
             // Validate required fields
-            if (string.IsNullOrWhiteSpace(request.TypeNameAr))
+            if (string.IsNullOrWhiteSpace(request.TypeNameLocal))
                 throw new ArgumentException("Arabic type name is required");
 
             if (string.IsNullOrWhiteSpace(request.TypeNameEn))
@@ -44,9 +44,9 @@ public class CreateTicketTypeCommandHandler : IRequestHandler<CreateTicketTypeCo
             // Create entity
             var ticketType = new SysTicketType
             {
-                TypeNameAr = request.TypeNameAr,
+                TypeNameLocal = request.TypeNameLocal,
                 TypeNameEn = request.TypeNameEn,
-                DescriptionAr = request.DescriptionAr,
+                DescriptionLocal = request.DescriptionLocal,
                 DescriptionEn = request.DescriptionEn,
                 DefaultPriorityId = request.DefaultPriorityId,
                 SlaTargetHours = request.SlaTargetHours,

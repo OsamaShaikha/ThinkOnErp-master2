@@ -15,7 +15,7 @@ public sealed class InvStockLedgerEntry
     public TransactionDirection Direction { get; set; }
     
     public decimal Quantity { get; set; }
-    public string UomCode { get; set; } = string.Empty;
+    public int UomCode { get; set; }
     public decimal UnitCost { get; set; }
     
     public decimal RunningBalanceQty { get; set; }

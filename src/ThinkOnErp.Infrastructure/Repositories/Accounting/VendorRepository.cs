@@ -49,7 +49,7 @@ public sealed class VendorRepository : IVendorRepository
             var term = searchTerm.Trim().ToUpper();
             query = query.Where(v =>
                 v.VendorCode.ToUpper().Contains(term) ||
-                v.NameAr.ToUpper().Contains(term) ||
+                v.NameLocal.ToUpper().Contains(term) ||
                 v.NameEn.ToUpper().Contains(term) ||
                 (v.Phone != null && v.Phone.Contains(term)) ||
                 (v.TaxNumber != null && v.TaxNumber.Contains(term)));

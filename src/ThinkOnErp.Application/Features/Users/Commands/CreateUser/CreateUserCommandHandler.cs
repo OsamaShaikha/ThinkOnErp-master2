@@ -1,4 +1,4 @@
-using MediatR;
+﻿using MediatR;
 using ThinkOnErp.Domain.Entities;
 using ThinkOnErp.Domain.Interfaces;
 
@@ -50,7 +50,7 @@ public class CreateUserCommandHandler : IRequestHandler<CreateUserCommand, Int64
 
         var user = new SysUser
         {
-            FullNameAr = request.NameAr,
+            FullNameLocal = request.NameLocal,
             FullNameEn = request.NameEn,
             UserName = request.UserName,
             Password = request.Password, // Will be hashed in Infrastructure layer

@@ -4,9 +4,9 @@ public sealed class BankAccountDto
 {
     public long Id { get; set; }
     public long BranchId { get; set; }
-    public string? BranchNameAr { get; set; }
+    public string? BranchNameLocal { get; set; }
     public string AccountNumber { get; set; } = string.Empty;
-    public string AccountNameAr { get; set; } = string.Empty;
+    public string AccountNameLocal { get; set; } = string.Empty;
     public string AccountNameEn { get; set; } = string.Empty;
     public string BankName { get; set; } = string.Empty;
     public string? BankBranchName { get; set; }
@@ -16,7 +16,7 @@ public sealed class BankAccountDto
     public long CurrencyId { get; set; }
     public string? CurrencyName { get; set; }
     public string GlAccountCode { get; set; } = string.Empty;
-    public string? GlAccountNameAr { get; set; }
+    public string? GlAccountNameLocal { get; set; }
 
     public decimal OverdraftLimit { get; set; }
     public decimal OpeningBalance { get; set; }
@@ -28,7 +28,7 @@ public sealed class CreateBankAccountDto
 {
     public long BranchId { get; set; }
     public string AccountNumber { get; set; } = string.Empty;
-    public string AccountNameAr { get; set; } = string.Empty;
+    public string AccountNameLocal { get; set; } = string.Empty;
     public string AccountNameEn { get; set; } = string.Empty;
     public string BankName { get; set; } = string.Empty;
     public string? BankBranchName { get; set; }
@@ -44,7 +44,7 @@ public sealed class CreateBankAccountDto
 
 public sealed class UpdateBankAccountDto
 {
-    public string AccountNameAr { get; set; } = string.Empty;
+    public string AccountNameLocal { get; set; } = string.Empty;
     public string AccountNameEn { get; set; } = string.Empty;
     public string BankName { get; set; } = string.Empty;
     public string? BankBranchName { get; set; }
@@ -59,15 +59,15 @@ public sealed class CashRegisterDto
 {
     public long Id { get; set; }
     public long BranchId { get; set; }
-    public string? BranchNameAr { get; set; }
+    public string? BranchNameLocal { get; set; }
     public string Code { get; set; } = string.Empty;
-    public string NameAr { get; set; } = string.Empty;
+    public string NameLocal { get; set; } = string.Empty;
     public string NameEn { get; set; } = string.Empty;
 
     public string RegisterType { get; set; } = string.Empty;
     public string? CustodianName { get; set; }
     public string GlAccountCode { get; set; } = string.Empty;
-    public string? GlAccountNameAr { get; set; }
+    public string? GlAccountNameLocal { get; set; }
     public long CurrencyId { get; set; }
     public string? CurrencyName { get; set; }
 
@@ -82,7 +82,7 @@ public sealed class CreateCashRegisterDto
 {
     public long BranchId { get; set; }
     public string Code { get; set; } = string.Empty;
-    public string NameAr { get; set; } = string.Empty;
+    public string NameLocal { get; set; } = string.Empty;
     public string NameEn { get; set; } = string.Empty;
 
     public string RegisterType { get; set; } = "MAIN"; // MAIN, BRANCH, CASHIER, PETTY_CASH
@@ -98,7 +98,7 @@ public sealed class CreateCashRegisterDto
 
 public sealed class UpdateCashRegisterDto
 {
-    public string NameAr { get; set; } = string.Empty;
+    public string NameLocal { get; set; } = string.Empty;
     public string NameEn { get; set; } = string.Empty;
     public string RegisterType { get; set; } = "MAIN";
     public string? CustodianName { get; set; }
@@ -152,7 +152,7 @@ public sealed class BankReconciliationDto
 {
     public long Id { get; set; }
     public long BankAccountId { get; set; }
-    public string? BankAccountNameAr { get; set; }
+    public string? BankAccountNameLocal { get; set; }
     public string? BankName { get; set; }
     public long FiscalYearId { get; set; }
     public long FiscalPeriodId { get; set; }
@@ -186,7 +186,7 @@ public sealed class ManualMatchLineDto
 
 public sealed class BankReconciliationStatementDto
 {
-    public string BankAccountNameAr { get; set; } = string.Empty;
+    public string BankAccountNameLocal { get; set; } = string.Empty;
     public string BankAccountNumber { get; set; } = string.Empty;
     public DateTime AsOfDate { get; set; }
 

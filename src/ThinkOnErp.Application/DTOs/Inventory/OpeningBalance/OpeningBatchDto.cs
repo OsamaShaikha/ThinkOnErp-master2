@@ -30,7 +30,7 @@ public sealed class OpeningLineDto
     public string? ItemCode { get; set; }
     public string? ItemName { get; set; }
     public long? BinId { get; set; }
-    public string UomCode { get; set; } = string.Empty;
+    public int UomCode { get; set; }
     public decimal UomFactor { get; set; } = 1;
     public decimal Quantity { get; set; }
     public decimal BaseQuantity { get; set; }

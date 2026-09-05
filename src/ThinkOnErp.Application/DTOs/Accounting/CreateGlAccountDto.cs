@@ -1,10 +1,10 @@
-namespace ThinkOnErp.Application.DTOs.Accounting;
+﻿namespace ThinkOnErp.Application.DTOs.Accounting;
 
 public sealed class CreateGlAccountDto
 {
     public string? AccountCode { get; set; }
     public string? OldAccountCode { get; set; }
-    public string AccountNameAr { get; set; } = string.Empty;
+    public string AccountNameLocal { get; set; } = string.Empty;
     public string AccountNameEn { get; set; } = string.Empty;
     public string? ParentAccountCode { get; set; }
     public string AccountType { get; set; } = "DETAIL";

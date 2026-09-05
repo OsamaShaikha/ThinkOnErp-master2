@@ -17,7 +17,7 @@ public sealed class GlPostingRule
     /// </summary>
     public string EventType { get; set; } = string.Empty;
 
-    public string EventNameAr { get; set; } = string.Empty;
+    public string EventNameLocal { get; set; } = string.Empty;
     public string EventNameEn { get; set; } = string.Empty;
 
     public string DebitAccountCode { get; set; } = string.Empty;

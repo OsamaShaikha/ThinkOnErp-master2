@@ -1,4 +1,4 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using ThinkOnErp.Domain.Entities;
 using ThinkOnErp.Domain.Interfaces;
 using ThinkOnErp.Infrastructure.Data;
@@ -85,11 +85,11 @@ public class CompanyRepository : ICompanyRepository
     }
 
     public async Task<(long CompanyId, long BranchId, long FiscalYearId)> CreateWithBranchAsync(
-        string? companyNameAr, string companyNameEn,
-        string? legalNameAr, string legalNameEn,
+        string? companyNameLocal, string companyNameEn,
+        string? legalNameLocal, string legalNameEn,
         string companyCode, string? taxNumber,
         long? countryId, long? currId,
-        string? companyLogoPath, string? branchNameAr, string? branchNameEn,
+        string? companyLogoPath, string? branchNameLocal, string? branchNameEn,
         string? branchPhone, string? branchMobile,
         string? branchFax, string? branchEmail,
         string? branchLogoPath, int? defaultLang,
@@ -112,9 +112,9 @@ public class CompanyRepository : ICompanyRepository
         // 1. Create the company in the master schema
         var company = new SysCompany
         {
-            CompanyNameAr = companyNameAr ?? string.Empty,
+            CompanyNameLocal = companyNameLocal ?? string.Empty,
             CompanyNameEn = companyNameEn,
-            LegalName = legalNameAr,
+            LegalName = legalNameLocal,
             LegalNameE = legalNameEn,
             CompanyCode = companyCode,
             CompanySchema = companySchema,
@@ -137,7 +137,7 @@ public class CompanyRepository : ICompanyRepository
             schemaName: companySchema,
             schemaPassword: companySchema,
             companyId: company.Id,
-            branchNameAr: branchNameAr,
+            branchNameLocal: branchNameLocal,
             branchNameEn: branchNameEn,
             branchPhone: branchPhone,
             branchMobile: branchMobile,

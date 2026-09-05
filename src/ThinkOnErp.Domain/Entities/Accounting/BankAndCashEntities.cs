@@ -5,7 +5,7 @@ public sealed class BankAccount
     public long Id { get; set; }
     public long BranchId { get; set; }
     public string AccountNumber { get; set; } = string.Empty;
-    public string AccountNameAr { get; set; } = string.Empty;
+    public string AccountNameLocal { get; set; } = string.Empty;
     public string AccountNameEn { get; set; } = string.Empty;
     public string BankName { get; set; } = string.Empty;
     public string? BankBranchName { get; set; }
@@ -35,7 +35,7 @@ public sealed class CashRegister
     public long Id { get; set; }
     public long BranchId { get; set; }
     public string Code { get; set; } = string.Empty;
-    public string NameAr { get; set; } = string.Empty;
+    public string NameLocal { get; set; } = string.Empty;
     public string NameEn { get; set; } = string.Empty;
 
     public string RegisterType { get; set; } = "MAIN"; // MAIN, BRANCH, CASHIER, PETTY_CASH

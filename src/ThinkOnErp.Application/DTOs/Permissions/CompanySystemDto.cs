@@ -1,4 +1,4 @@
-namespace ThinkOnErp.Application.DTOs.Permissions;
+﻿namespace ThinkOnErp.Application.DTOs.Permissions;
 
 /// <summary>
 /// Data transfer object for company system assignments.
@@ -23,7 +23,7 @@ public class CompanySystemDto
     /// <summary>
     /// Arabic system name
     /// </summary>
-    public string SystemNameAr { get; set; } = string.Empty;
+    public string SystemNameLocal { get; set; } = string.Empty;
 
     /// <summary>
     /// English system name

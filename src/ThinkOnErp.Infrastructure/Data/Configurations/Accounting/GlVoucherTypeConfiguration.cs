@@ -1,4 +1,4 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using ThinkOnErp.Domain.Entities.Accounting;
 
@@ -25,8 +25,8 @@ public sealed class GlVoucherTypeConfiguration : IEntityTypeConfiguration<GlVouc
             .HasMaxLength(20)
             .IsRequired();
 
-        builder.Property(t => t.NameAr)
-            .HasColumnName("NAME_AR")
+        builder.Property(t => t.NameLocal)
+            .HasColumnName("NAME_LOCAL")
             .HasMaxLength(200)
             .IsRequired();
 

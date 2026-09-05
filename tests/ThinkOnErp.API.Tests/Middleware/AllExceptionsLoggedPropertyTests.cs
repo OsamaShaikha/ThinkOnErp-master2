@@ -49,7 +49,7 @@ public class AllExceptionsLoggedPropertyTests : IClassFixture<TestWebApplication
                 // Trigger a validation exception
                 var createDto = new CreateRoleDto
                 {
-                    RoleNameAr = "", // Invalid - triggers ValidationException
+                    RoleNameLocal = "", // Invalid - triggers ValidationException
                     RoleNameEn = "",
                     Note = "Test"
                 };

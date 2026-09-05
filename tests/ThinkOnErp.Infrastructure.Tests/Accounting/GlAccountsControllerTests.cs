@@ -24,7 +24,7 @@ public sealed class GlAccountsControllerTests
             new GlAccountTreeDto
             {
                 AccountCode = "1",
-                AccountNameAr = "الأصول",
+                AccountNameLocal = "الأصول",
                 AccountNameEn = "Assets",
                 AccountType = "HEADER",
                 IsActive = true
@@ -49,7 +49,7 @@ public sealed class GlAccountsControllerTests
         var request = new CreateGlAccountDto
         {
             AccountCode = "111101",
-            AccountNameAr = "الصندوق الرئيسي",
+            AccountNameLocal = "الصندوق الرئيسي",
             AccountNameEn = "Main cash",
             ParentAccountCode = "1111",
             AccountType = "DETAIL",
@@ -58,7 +58,7 @@ public sealed class GlAccountsControllerTests
         var created = new GlAccountDto
         {
             AccountCode = request.AccountCode,
-            AccountNameAr = request.AccountNameAr,
+            AccountNameLocal = request.AccountNameLocal,
             AccountNameEn = request.AccountNameEn,
             AccountType = request.AccountType,
             NormalBalance = request.NormalBalance,
@@ -85,7 +85,7 @@ public sealed class GlAccountsControllerTests
         var account = new GlAccountDto
         {
             AccountCode = "111101",
-            AccountNameAr = "الصندوق الرئيسي",
+            AccountNameLocal = "الصندوق الرئيسي",
             AccountNameEn = "Main cash"
         };
         _service
@@ -105,13 +105,13 @@ public sealed class GlAccountsControllerTests
     {
         var request = new UpdateGlAccountDto
         {
-            AccountNameAr = "الصندوق - عمان",
+            AccountNameLocal = "الصندوق - عمان",
             AccountNameEn = "Cash - Amman"
         };
         var updated = new GlAccountDto
         {
             AccountCode = "111101",
-            AccountNameAr = request.AccountNameAr,
+            AccountNameLocal = request.AccountNameLocal,
             AccountNameEn = request.AccountNameEn
         };
         _service
@@ -128,7 +128,7 @@ public sealed class GlAccountsControllerTests
 
         var ok = Assert.IsType<OkObjectResult>(action.Result);
         var response = Assert.IsType<ApiResponse<GlAccountDto>>(ok.Value);
-        Assert.Equal("الصندوق - عمان", response.Data!.AccountNameAr);
+        Assert.Equal("الصندوق - عمان", response.Data!.AccountNameLocal);
         _service.VerifyAll();
     }
 
@@ -152,7 +152,7 @@ public sealed class GlAccountsControllerTests
         var deleted = new GlAccountDto
         {
             AccountCode = "111101",
-            AccountNameAr = "الصندوق الرئيسي",
+            AccountNameLocal = "الصندوق الرئيسي",
             AccountNameEn = "Main cash"
         };
         _service

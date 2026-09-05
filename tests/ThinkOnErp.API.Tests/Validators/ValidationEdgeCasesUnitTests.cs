@@ -40,7 +40,7 @@ public class ValidationEdgeCasesUnitTests : IClassFixture<TestWebApplicationFact
         // Arrange
         var createDto = new CreateRoleDto
         {
-            RoleNameAr = "", // Invalid - empty
+            RoleNameLocal = "", // Invalid - empty
             RoleNameEn = "Valid English",
             Note = "Test"
         };
@@ -65,7 +65,7 @@ public class ValidationEdgeCasesUnitTests : IClassFixture<TestWebApplicationFact
         var longString = new string('A', 101); // 101 characters
         var createDto = new CreateRoleDto
         {
-            RoleNameAr = longString,
+            RoleNameLocal = longString,
             RoleNameEn = "Valid English",
             Note = "Test"
         };
@@ -87,7 +87,7 @@ public class ValidationEdgeCasesUnitTests : IClassFixture<TestWebApplicationFact
         // Arrange
         var createDto = new CreateRoleDto
         {
-            RoleNameAr = "Valid Role",
+            RoleNameLocal = "Valid Role",
             RoleNameEn = "Valid Role E",
             Note = null // Null note should be allowed
         };
@@ -109,7 +109,7 @@ public class ValidationEdgeCasesUnitTests : IClassFixture<TestWebApplicationFact
         // Arrange
         var createDto = new CreateCurrencyDto
         {
-            CurrencyNameAr = "Test Currency",
+            CurrencyNameLocal = "Test Currency",
             CurrencyNameEn = "Test Currency E",
             ShortNameAr = "TC",
             ShortNameEn = "TC",
@@ -142,7 +142,7 @@ public class ValidationEdgeCasesUnitTests : IClassFixture<TestWebApplicationFact
         // Arrange
         var createDto1 = new CreateUserDto
         {
-            NameAr = "User 1",
+            NameLocal = "User 1",
             NameEn = "User 1 E",
             UserName = $"uniqueuser{Guid.NewGuid()}",
             Password = "Password123!",
@@ -156,7 +156,7 @@ public class ValidationEdgeCasesUnitTests : IClassFixture<TestWebApplicationFact
         // Try to create second user with same username
         var createDto2 = new CreateUserDto
         {
-            NameAr = "User 2",
+            NameLocal = "User 2",
             NameEn = "User 2 E",
             UserName = createDto1.UserName, // Duplicate username
             Password = "Password456!",

@@ -42,7 +42,7 @@ public class EndToEndFlowsIntegrationTests : IClassFixture<TestWebApplicationFac
         // Create
         var createDto = new CreateRoleDto
         {
-            RoleNameAr = "Integration Test Role",
+            RoleNameLocal = "Integration Test Role",
             RoleNameEn = "Integration Test Role E",
             Note = "Created for integration test"
         };
@@ -71,7 +71,7 @@ public class EndToEndFlowsIntegrationTests : IClassFixture<TestWebApplicationFac
         // Update
         var updateDto = new UpdateRoleDto
         {
-            RoleNameAr = "Updated Role",
+            RoleNameLocal = "Updated Role",
             RoleNameEn = "Updated Role E",
             Note = "Updated note"
         };
@@ -100,7 +100,7 @@ public class EndToEndFlowsIntegrationTests : IClassFixture<TestWebApplicationFac
         // Create
         var createDto = new CreateCurrencyDto
         {
-            CurrencyNameAr = "Test Currency",
+            CurrencyNameLocal = "Test Currency",
             CurrencyNameEn = "Test Currency E",
             ShortNameAr = "TC",
             ShortNameEn = "TC",
@@ -128,7 +128,7 @@ public class EndToEndFlowsIntegrationTests : IClassFixture<TestWebApplicationFac
         // Update
         var updateDto = new UpdateCurrencyDto
         {
-            CurrencyNameAr = "Updated Currency",
+            CurrencyNameLocal = "Updated Currency",
             CurrencyNameEn = "Updated Currency E",
             ShortNameAr = "UC",
             ShortNameEn = "UC",
@@ -158,7 +158,7 @@ public class EndToEndFlowsIntegrationTests : IClassFixture<TestWebApplicationFac
         // Create
         var createDto = new CreateCompanyDto
         {
-            CompanyNameAr = "Test Company",
+            CompanyNameLocal = "Test Company",
             CompanyNameEn = "Test Company E",
             CountryId = 1,
             CurrId = 1
@@ -176,7 +176,7 @@ public class EndToEndFlowsIntegrationTests : IClassFixture<TestWebApplicationFac
         // Update
         var updateDto = new UpdateCompanyDto
         {
-            CompanyNameAr = "Updated Company",
+            CompanyNameLocal = "Updated Company",
             CompanyNameEn = "Updated Company E",
             CountryId = 1,
             CurrId = 1
@@ -197,7 +197,7 @@ public class EndToEndFlowsIntegrationTests : IClassFixture<TestWebApplicationFac
         var createDto = new CreateBranchDto
         {
             CompanyId = 1,
-            BranchNameAr = "Test Branch",
+            BranchNameLocal = "Test Branch",
             BranchNameEn = "Test Branch E",
             Phone = "123456789",
             Mobile = "987654321",
@@ -218,7 +218,7 @@ public class EndToEndFlowsIntegrationTests : IClassFixture<TestWebApplicationFac
         var updateDto = new UpdateBranchDto
         {
             CompanyId = 1,
-            BranchNameAr = "Updated Branch",
+            BranchNameLocal = "Updated Branch",
             BranchNameEn = "Updated Branch E",
             Phone = "111111111",
             Mobile = "222222222",
@@ -240,7 +240,7 @@ public class EndToEndFlowsIntegrationTests : IClassFixture<TestWebApplicationFac
         // Create
         var createDto = new CreateUserDto
         {
-            NameAr = "Test User",
+            NameLocal = "Test User",
             NameEn = "Test User E",
             UserName = $"testuser{Guid.NewGuid()}",
             Password = "TestPassword123!",
@@ -259,7 +259,7 @@ public class EndToEndFlowsIntegrationTests : IClassFixture<TestWebApplicationFac
         // Update
         var updateDto = new UpdateUserDto
         {
-            NameAr = "Updated User",
+            NameLocal = "Updated User",
             NameEn = "Updated User E",
             UserName = createDto.UserName,
             IsAdmin = false
@@ -290,7 +290,7 @@ public class EndToEndFlowsIntegrationTests : IClassFixture<TestWebApplicationFac
         // Create role
         var createDto = new CreateRoleDto
         {
-            RoleNameAr = "Flow Test Role",
+            RoleNameLocal = "Flow Test Role",
             RoleNameEn = "Flow Test Role E",
             Note = "Test"
         };
@@ -303,7 +303,7 @@ public class EndToEndFlowsIntegrationTests : IClassFixture<TestWebApplicationFac
         // Update role
         var updateDto = new UpdateRoleDto
         {
-            RoleNameAr = "Updated Flow Role",
+            RoleNameLocal = "Updated Flow Role",
             RoleNameEn = "Updated Flow Role E",
             Note = "Updated"
         };
@@ -351,7 +351,7 @@ public class EndToEndFlowsIntegrationTests : IClassFixture<TestWebApplicationFac
         // Try to create a role (admin-only endpoint)
         var createDto = new CreateRoleDto
         {
-            RoleNameAr = "Test",
+            RoleNameLocal = "Test",
             RoleNameEn = "Test E",
             Note = "Test"
         };

@@ -1,4 +1,4 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using ThinkOnErp.Domain.Entities;
 using ThinkOnErp.Domain.Interfaces;
 using ThinkOnErp.Infrastructure.Data;
@@ -33,7 +33,7 @@ public class FiscalYearRepository : IFiscalYearRepository
 
         existing.BranchId = fiscalYear.BranchId;
         existing.FiscalYearCode = fiscalYear.FiscalYearCode;
-        existing.FiscalYearNameAr = fiscalYear.FiscalYearNameAr;
+        existing.FiscalYearNameLocal = fiscalYear.FiscalYearNameLocal;
         existing.FiscalYearNameEn = fiscalYear.FiscalYearNameEn;
         existing.StartDate = fiscalYear.StartDate;
         existing.EndDate = fiscalYear.EndDate;

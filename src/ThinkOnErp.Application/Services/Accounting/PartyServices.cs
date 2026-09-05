@@ -67,7 +67,7 @@ public sealed class CustomerService : ICustomerService
         var customer = new Customer
         {
             CustomerCode = dto.CustomerCode.Trim().ToUpper(),
-            NameAr = dto.NameAr.Trim(),
+            NameLocal = dto.NameLocal.Trim(),
             NameEn = dto.NameEn.Trim(),
             ArControlAccountCode = arAccountCode,
             DefaultCurrencyId = dto.DefaultCurrencyId,
@@ -110,7 +110,7 @@ public sealed class CustomerService : ICustomerService
             customer.ArControlAccountCode = dto.ArControlAccountCode;
         }
 
-        customer.NameAr = dto.NameAr.Trim();
+        customer.NameLocal = dto.NameLocal.Trim();
         customer.NameEn = dto.NameEn.Trim();
         customer.DefaultCurrencyId = dto.DefaultCurrencyId;
         customer.CreditLimit = dto.CreditLimit;
@@ -211,7 +211,7 @@ public sealed class VendorService : IVendorService
         var vendor = new Vendor
         {
             VendorCode = dto.VendorCode.Trim().ToUpper(),
-            NameAr = dto.NameAr.Trim(),
+            NameLocal = dto.NameLocal.Trim(),
             NameEn = dto.NameEn.Trim(),
             ApControlAccountCode = apAccountCode,
             DefaultCurrencyId = dto.DefaultCurrencyId,
@@ -253,7 +253,7 @@ public sealed class VendorService : IVendorService
             vendor.ApControlAccountCode = dto.ApControlAccountCode;
         }
 
-        vendor.NameAr = dto.NameAr.Trim();
+        vendor.NameLocal = dto.NameLocal.Trim();
         vendor.NameEn = dto.NameEn.Trim();
         vendor.DefaultCurrencyId = dto.DefaultCurrencyId;
         vendor.PaymentTermsDays = dto.PaymentTermsDays > 0 ? dto.PaymentTermsDays : 30;

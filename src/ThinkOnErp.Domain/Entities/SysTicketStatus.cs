@@ -1,4 +1,4 @@
-namespace ThinkOnErp.Domain.Entities;
+﻿namespace ThinkOnErp.Domain.Entities;
 
 /// <summary>
 /// Represents a ticket status entity for managing ticket workflow states.
@@ -15,7 +15,7 @@ public class SysTicketStatus
     /// <summary>
     /// Status name in Arabic
     /// </summary>
-    public string StatusNameAr { get; set; } = string.Empty;
+    public string StatusNameLocal { get; set; } = string.Empty;
 
     /// <summary>
     /// Status name in English

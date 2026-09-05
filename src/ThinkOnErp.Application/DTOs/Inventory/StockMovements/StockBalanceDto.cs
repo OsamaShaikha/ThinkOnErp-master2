@@ -6,7 +6,7 @@ public class StockBalanceDto
     public string ItemCode { get; set; } = string.Empty;
     public string ItemName { get; set; } = string.Empty;
     public long WarehouseId { get; set; }
-    public string WarehouseCode { get; set; } = string.Empty;
+    public long WarehouseCode { get; set; }
     public long? BinId { get; set; }
     public decimal OnHandQty { get; set; }
     public decimal ReservedQty { get; set; }

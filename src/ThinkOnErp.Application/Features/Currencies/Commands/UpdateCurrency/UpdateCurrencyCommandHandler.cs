@@ -1,4 +1,4 @@
-using MediatR;
+﻿using MediatR;
 using ThinkOnErp.Domain.Entities;
 using ThinkOnErp.Domain.Interfaces;
 
@@ -18,17 +18,17 @@ public class UpdateCurrencyCommandHandler : IRequestHandler<UpdateCurrencyComman
         var currency = new SysCurrency
         {
             Id = request.CurrencyId,
-            CurrencyNameAr = request.CurrencyNameAr,
+            CurrencyNameLocal = request.CurrencyNameLocal,
             CurrencyNameEn = request.CurrencyNameEn,
-            ShortNameAr = request.ShortNameAr,
+            ShortNameLocal = request.ShortNameLocal,
             ShortNameEn = request.ShortNameEn,
-            SingularNameAr = request.SingularNameAr,
+            SingularNameLocal = request.SingularNameLocal,
             SingularNameEn = request.SingularNameEn,
-            DualNameAr = request.DualNameAr,
+            DualNameLocal = request.DualNameLocal,
             DualNameEn = request.DualNameEn,
-            CollectiveNameAr = request.CollectiveNameAr,
+            CollectiveNameLocal = request.CollectiveNameLocal,
             CollectiveNameEn = request.CollectiveNameEn,
-            FractionNameAr = request.FractionNameAr,
+            FractionNameLocal = request.FractionNameLocal,
             FractionNameEn = request.FractionNameEn,
             CurrRate = request.CurrRate,
             CurrRateDate = request.CurrRateDate,

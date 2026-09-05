@@ -64,8 +64,8 @@ public sealed class InvBomController : ControllerBase
     /// <param name="ct">Cancellation token.</param>
     /// <returns>Paginated list of BOM recipes.</returns>
     [HttpGet]
-    [ProducesResponseType(typeof(ApiResponse<(List<InvBomDto> Items, int TotalCount)>), StatusCodes.Status200OK)]
-    public async Task<ActionResult<ApiResponse<(List<InvBomDto> Items, int TotalCount)>>> GetPaged(
+    [ProducesResponseType(typeof(ApiResponse<PagedResultDto<InvBomDto>>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<ApiResponse<PagedResultDto<InvBomDto>>>> GetPaged(
         [FromQuery] long? branchId,
         [FromQuery] int pageIndex = 1,
         [FromQuery] int pageSize = 20,

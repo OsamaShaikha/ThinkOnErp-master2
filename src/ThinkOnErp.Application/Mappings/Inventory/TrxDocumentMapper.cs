@@ -1,4 +1,4 @@
-using System.Linq;
+﻿using System.Linq;
 using ThinkOnErp.Application.DTOs.Inventory.Documents;
 using ThinkOnErp.Domain.Entities.Inventory;
 
@@ -105,8 +105,8 @@ public static class TrxDocumentMapper
             DocType = entity.DocType,
             Id = entity.Id,
             TrxType = entity.TrxType,
-            DocTypeName = entity.DocTypeConfig?.TypeNameAr ?? entity.DocType.ToString(),
-            TrxTypeName = entity.TrxTypeConfig?.TrxNameAr ?? entity.TrxType.ToString(),
+            DocTypeName = entity.DocTypeConfig?.TypeNameLocal ?? entity.DocType.ToString(),
+            TrxTypeName = entity.TrxTypeConfig?.TrxNameLocal ?? entity.TrxType.ToString(),
             DocNo = entity.DocNo,
             DocDate = entity.DocDate,
             DueDate = entity.DueDate,
@@ -114,9 +114,9 @@ public static class TrxDocumentMapper
             PartyId = entity.PartyId,
             PartyName = entity.PartyName,
             FromWarehouseId = entity.FromWarehouseId,
-            FromWarehouseName = entity.FromWarehouse?.WarehouseNameAr,
+            FromWarehouseName = entity.FromWarehouse?.WarehouseNameLocal,
             ToWarehouseId = entity.ToWarehouseId,
-            ToWarehouseName = entity.ToWarehouse?.WarehouseNameAr,
+            ToWarehouseName = entity.ToWarehouse?.WarehouseNameLocal,
             CurrencyCode = entity.CurrencyCode,
             ExchangeRate = entity.ExchangeRate,
             PaymentMethodCode = entity.PaymentMethodCode,
@@ -146,7 +146,7 @@ public static class TrxDocumentMapper
                 TrxType = l.TrxType,
                 ItemId = l.ItemId,
                 ItemCode = l.Item?.ItemCode ?? string.Empty,
-                ItemName = l.Item?.ItemNameAr ?? string.Empty,
+                ItemName = l.Item?.ItemNameLocal ?? string.Empty,
                 ItemDescription = l.ItemDescription,
                 UomCode = l.UomCode,
                 UomFactor = l.UomFactor,

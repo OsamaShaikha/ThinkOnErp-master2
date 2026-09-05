@@ -1,4 +1,4 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using ThinkOnErp.Domain.Entities.Inventory;
 
@@ -13,12 +13,12 @@ public sealed class InvBomHeaderConfiguration : IEntityTypeConfiguration<InvBomH
 
         builder.Property(b => b.Id).HasColumnName("ID").ValueGeneratedOnAdd();
         builder.Property(b => b.BranchId).HasColumnName("BRANCH_ID").IsRequired();
-        builder.Property(b => b.BomCode).HasColumnName("BOM_CODE").HasMaxLength(30).IsRequired();
-        builder.Property(b => b.BomNameAr).HasColumnName("BOM_NAME_AR").HasMaxLength(200).IsRequired();
+        builder.Property(b => b.BomCode).HasColumnName("BOM_CODE").HasColumnType("NUMBER(10)").IsRequired();
+        builder.Property(b => b.BomNameLocal).HasColumnName("BOM_NAME_LOCAL").HasMaxLength(200).IsRequired();
         builder.Property(b => b.BomNameEn).HasColumnName("BOM_NAME_EN").HasMaxLength(200);
         builder.Property(b => b.ParentItemId).HasColumnName("PARENT_ITEM_ID").IsRequired();
         builder.Property(b => b.OutputQty).HasColumnName("OUTPUT_QTY").HasColumnType("NUMBER(14,4)").HasDefaultValue(1m);
-        builder.Property(b => b.UomCode).HasColumnName("UOM_CODE").HasMaxLength(20).IsRequired();
+        builder.Property(b => b.UomCode).HasColumnName("UOM_CODE").HasColumnType("NUMBER(6)").IsRequired();
         builder.Property(b => b.BomType).HasColumnName("BOM_TYPE_CODE").HasConversion<int>().HasDefaultValue(Domain.Entities.Inventory.Enums.BomType.SalesKit);
         builder.Property(b => b.LaborCost).HasColumnName("LABOR_COST").HasColumnType("NUMBER(18,4)").HasDefaultValue(0m);
         builder.Property(b => b.OverheadCost).HasColumnName("OVERHEAD_COST").HasColumnType("NUMBER(18,4)").HasDefaultValue(0m);

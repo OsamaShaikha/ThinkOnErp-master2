@@ -49,7 +49,7 @@ public class NoDomainEntitiesInResponsesPropertyTests : IClassFixture<TestWebApp
                 // Create a role
                 var createDto = new CreateRoleDto
                 {
-                    RoleNameAr = roleDesc,
+                    RoleNameLocal = roleDesc,
                     RoleNameEn = roleDescE,
                     Note = "Test DTO"
                 };

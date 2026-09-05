@@ -1,4 +1,4 @@
-using MediatR;
+﻿using MediatR;
 using ThinkOnErp.Domain.Entities;
 using ThinkOnErp.Domain.Interfaces;
 
@@ -20,9 +20,9 @@ public class UpdateCompanyCommandHandler : IRequestHandler<UpdateCompanyCommand,
         var existing = await _companyRepository.GetByIdAsync(request.CompanyId);
         if (existing == null) return 0;
 
-        existing.CompanyNameAr = request.CompanyNameAr;
+        existing.CompanyNameLocal = request.CompanyNameLocal;
         existing.CompanyNameEn = request.CompanyNameEn;
-        existing.LegalName = request.LegalNameAr;
+        existing.LegalName = request.LegalNameLocal;
         existing.LegalNameE = request.LegalNameEn;
         existing.CompanyCode = request.CompanyCode;
         existing.CountryId = request.CountryId;

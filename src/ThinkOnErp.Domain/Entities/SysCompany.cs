@@ -1,9 +1,9 @@
-namespace ThinkOnErp.Domain.Entities;
+﻿namespace ThinkOnErp.Domain.Entities;
 
 public class SysCompany
 {
     public Int64 Id { get; set; }
-    public string CompanyNameAr { get; set; } = string.Empty;
+    public string CompanyNameLocal { get; set; } = string.Empty;
     public string CompanyNameEn { get; set; } = string.Empty;
     public Int64? CountryId { get; set; }
     public Int64? CurrId { get; set; }

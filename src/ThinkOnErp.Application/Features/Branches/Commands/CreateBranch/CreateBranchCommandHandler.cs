@@ -1,4 +1,4 @@
-using MediatR;
+﻿using MediatR;
 using ThinkOnErp.Domain.Entities;
 using ThinkOnErp.Domain.Interfaces;
 
@@ -21,7 +21,7 @@ public class CreateBranchCommandHandler : IRequestHandler<CreateBranchCommand, I
         var branch = new SysBranch
         {
             CompanyId = request.CompanyId,
-            BranchNameAr = request.BranchNameAr,
+            BranchNameLocal = request.BranchNameLocal,
             BranchNameEn = request.BranchNameEn,
             Phone = request.Phone,
             Mobile = request.Mobile,

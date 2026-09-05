@@ -21,7 +21,7 @@ public sealed class InvZoneConfiguration : IEntityTypeConfiguration<InvZone>
 
         builder.Property(e => e.ZoneCode)
             .HasColumnName("ZONE_CODE")
-            .HasMaxLength(50)
+            .HasColumnType("NUMBER(6)")
             .IsRequired();
 
         builder.Property(e => e.ZoneName)

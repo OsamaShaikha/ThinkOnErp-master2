@@ -8,7 +8,7 @@ public sealed class InvItemBarcode
     public long ItemId { get; set; }
     public string Barcode { get; set; } = string.Empty;
     public BarcodeType BarcodeType { get; set; }
-    public string UomCode { get; set; } = string.Empty;
+    public int UomCode { get; set; }
 
     public InvItem? Item { get; set; }
 }

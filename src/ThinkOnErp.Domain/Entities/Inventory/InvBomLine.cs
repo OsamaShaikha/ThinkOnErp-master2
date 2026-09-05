@@ -8,7 +8,7 @@ public sealed class InvBomLine
     public long BomId { get; set; }
     public int LineNo { get; set; }
     public long ComponentItemId { get; set; }
-    public string UomCode { get; set; } = string.Empty;
+    public int UomCode { get; set; }
     public decimal UomFactor { get; set; } = 1;
     public decimal Quantity { get; set; }
     public decimal ScrapPercent { get; set; }

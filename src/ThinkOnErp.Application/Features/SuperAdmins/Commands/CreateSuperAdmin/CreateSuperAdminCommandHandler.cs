@@ -1,4 +1,4 @@
-using MediatR;
+﻿using MediatR;
 using ThinkOnErp.Domain.Entities;
 using ThinkOnErp.Domain.Interfaces;
 
@@ -34,7 +34,7 @@ public class CreateSuperAdminCommandHandler : IRequestHandler<CreateSuperAdminCo
 
         var superAdmin = new SysSuperAdmin
         {
-            NameAr = request.NameAr,
+            NameLocal = request.NameLocal,
             NameEn = request.NameEn,
             UserName = request.UserName,
             Password = request.Password, // Will be hashed in API layer before reaching here

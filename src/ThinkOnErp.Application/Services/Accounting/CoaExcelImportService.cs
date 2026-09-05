@@ -1,4 +1,4 @@
-using ThinkOnErp.Application.DTOs.Accounting;
+﻿using ThinkOnErp.Application.DTOs.Accounting;
 using ThinkOnErp.Domain.Entities.Accounting;
 using ThinkOnErp.Domain.Interfaces.Accounting;
 
@@ -96,7 +96,7 @@ public sealed class CoaExcelImportService : ICoaExcelImportService
             {
                 AccountCode = accountCode,
                 OldAccountCode = NullIfWhiteSpace(row.OldAccountCode),
-                AccountNameAr = row.AccountNameAr.Trim(),
+                AccountNameLocal = row.AccountNameLocal.Trim(),
                 AccountNameEn = row.AccountNameEn.Trim(),
                 ParentAccountCode = NullIfWhiteSpace(row.ParentCode),
                 AccountLevel = row.AccountLevel,
@@ -212,7 +212,7 @@ public sealed class CoaExcelImportService : ICoaExcelImportService
         var financialStatement = Normalize(row.FinancialStatement);
         var controlType = NullIfWhiteSpace(row.ControlAccountType)?.ToUpperInvariant();
 
-        ValidateRequiredText(row.AccountNameAr, 200, row.RowNumber, "account_name_ar", errors);
+        ValidateRequiredText(row.AccountNameLocal, 200, row.RowNumber, "account_name_ar", errors);
         ValidateRequiredText(row.AccountNameEn, 200, row.RowNumber, "account_name_en", errors);
         ValidateOptionalText(row.Notes, 2000, row.RowNumber, "notes", errors);
 

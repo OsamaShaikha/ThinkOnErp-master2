@@ -1,4 +1,4 @@
-using MediatR;
+﻿using MediatR;
 using ThinkOnErp.Domain.Entities;
 using ThinkOnErp.Domain.Interfaces;
 
@@ -22,7 +22,7 @@ public class UpdateRoleCommandHandler : IRequestHandler<UpdateRoleCommand, Int64
         var role = new SysRole
         {
             Id = request.RoleId,
-            RoleNameAr = request.RoleNameAr,
+            RoleNameLocal = request.RoleNameLocal,
             RoleNameEn = request.RoleNameEn,
             Note = request.Note,
             UpdateUser = request.UpdateUser,

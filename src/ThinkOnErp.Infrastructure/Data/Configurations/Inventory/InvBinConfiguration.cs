@@ -21,7 +21,7 @@ public sealed class InvBinConfiguration : IEntityTypeConfiguration<InvBin>
 
         builder.Property(e => e.BinCode)
             .HasColumnName("BIN_CODE")
-            .HasMaxLength(50)
+            .HasColumnType("NUMBER(6)")
             .IsRequired();
 
         builder.Property(e => e.MaxWeight)

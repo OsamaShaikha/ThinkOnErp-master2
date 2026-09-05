@@ -73,7 +73,10 @@ public sealed class InvStockLedgerService : IInvStockLedgerService
             return ApiResponse<StockMovementDto>.CreateFailure("Serial number is required for this item", null, 400);
         }
 
-        var isOut = request.TransactionType < 0;
+        var isOut = request.TransactionType < 0
+            || (request.TransactionType >= 1000 && request.TransactionType < 1500)
+            || (request.TransactionType >= 2500 && request.TransactionType < 3000)
+            || (request.TransactionType >= 3010 && request.TransactionType < 3020);
         var balance = await _stockBalanceRepository.GetOrCreateAsync(request.ItemId, request.WarehouseId, request.BinId, cancellationToken);
 
         decimal unitCost = request.UnitCost;
@@ -131,7 +134,7 @@ public sealed class InvStockLedgerService : IInvStockLedgerService
             TransactionType = (TransactionType)Math.Abs(request.TransactionType),
             Direction = isOut ? TransactionDirection.Out : TransactionDirection.In,
             Quantity = request.Quantity,
-            UomCode = string.IsNullOrWhiteSpace(request.UomCode) ? item.UomBase : request.UomCode,
+            UomCode = request.UomCode > 0 ? request.UomCode : item.UomBase,
             UnitCost = unitCost,
             RunningBalanceQty = balance.OnHandQty,
             RunningBalanceValue = balance.OnHandQty * balance.AvgCost,
@@ -140,6 +143,7 @@ public sealed class InvStockLedgerService : IInvStockLedgerService
             SourceDocType = request.SourceDocType,
             SourceDocId = request.SourceDocId,
             Notes = request.Notes,
+            CreationUser = "admin",
             CreationDate = DateTime.UtcNow
         };
 

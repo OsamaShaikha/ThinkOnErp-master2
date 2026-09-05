@@ -187,7 +187,7 @@ public class MiddlewareRequestFlowIntegrationTests : IClassFixture<TestWebApplic
         // Create an invalid role (missing required fields)
         var invalidRole = new CreateRoleDto
         {
-            RoleNameAr = "", // Empty - should fail validation
+            RoleNameLocal = "", // Empty - should fail validation
             RoleNameEn = "",
             Note = null
         };
@@ -269,7 +269,7 @@ public class MiddlewareRequestFlowIntegrationTests : IClassFixture<TestWebApplic
 
         var createDto = new CreateRoleDto
         {
-            RoleNameAr = "Integration Test Role",
+            RoleNameLocal = "Integration Test Role",
             RoleNameEn = "Integration Test Role E",
             Note = "Test payload capture"
         };
@@ -324,7 +324,7 @@ public class MiddlewareRequestFlowIntegrationTests : IClassFixture<TestWebApplic
         // Act - perform a complete CRUD operation
         var createDto = new CreateRoleDto
         {
-            RoleNameAr = "Pipeline Test Role",
+            RoleNameLocal = "Pipeline Test Role",
             RoleNameEn = "Pipeline Test Role E",
             Note = "Testing middleware pipeline"
         };
@@ -350,7 +350,7 @@ public class MiddlewareRequestFlowIntegrationTests : IClassFixture<TestWebApplic
         // Update
         var updateDto = new UpdateRoleDto
         {
-            RoleNameAr = "Updated Pipeline Role",
+            RoleNameLocal = "Updated Pipeline Role",
             RoleNameEn = "Updated Pipeline Role E",
             Note = "Updated"
         };

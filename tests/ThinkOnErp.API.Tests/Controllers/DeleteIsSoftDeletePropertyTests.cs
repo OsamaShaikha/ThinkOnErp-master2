@@ -38,7 +38,7 @@ public class DeleteIsSoftDeletePropertyTests : IClassFixture<TestWebApplicationF
                 // Create a role first
                 var createCommand = new CreateRoleCommand
                 {
-                    RoleNameAr = roleDesc,
+                    RoleNameLocal = roleDesc,
                     RoleNameEn = roleDescE,
                     Note = "To be deleted"
                 };

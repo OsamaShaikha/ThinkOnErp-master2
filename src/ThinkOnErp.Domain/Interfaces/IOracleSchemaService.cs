@@ -1,4 +1,4 @@
-using ThinkOnErp.Domain.Entities;
+﻿using ThinkOnErp.Domain.Entities;
 
 namespace ThinkOnErp.Domain.Interfaces;
 
@@ -25,7 +25,7 @@ public interface IOracleSchemaService
         string schemaName,
         string schemaPassword,
         long companyId,
-        string? branchNameAr, string? branchNameEn,
+        string? branchNameLocal, string? branchNameEn,
         string? branchPhone, string? branchMobile,
         string? branchFax, string? branchEmail,
         string? taxNumber, int defaultLang,
@@ -33,6 +33,6 @@ public interface IOracleSchemaService
         string? branchLogoPath, string creationUser);
 
     Task UpdateTenantBranchLogoPathAsync(string schemaName, string schemaPassword, long branchId, string? logoPath, string updateUser);
-    Task<(string? BranchNameEn, string? BranchNameAr, string? BranchLogoPath)> GetBranchDetailsAsync(string schemaName, long branchId);
+    Task<(string? BranchNameEn, string? BranchNameLocal, string? BranchLogoPath)> GetBranchDetailsAsync(string schemaName, long branchId);
     Task SeedDeveloperTemplateAsync();
 }

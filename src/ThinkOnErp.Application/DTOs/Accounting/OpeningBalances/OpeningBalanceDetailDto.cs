@@ -1,4 +1,4 @@
-namespace ThinkOnErp.Application.DTOs.Accounting.OpeningBalances;
+﻿namespace ThinkOnErp.Application.DTOs.Accounting.OpeningBalances;
 
 /// <summary>Response DTO for an Opening Balance detail line.</summary>
 public sealed class OpeningBalanceDetailDto
@@ -8,7 +8,7 @@ public sealed class OpeningBalanceDetailDto
     public int LineSer { get; set; }
 
     public string AccountCode { get; set; } = string.Empty;
-    public string AccountNameAr { get; set; } = string.Empty;
+    public string AccountNameLocal { get; set; } = string.Empty;
     public string AccountNameEn { get; set; } = string.Empty;
 
     public decimal DebitAmount { get; set; }

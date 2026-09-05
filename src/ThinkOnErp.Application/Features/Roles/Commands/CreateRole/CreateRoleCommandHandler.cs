@@ -1,4 +1,4 @@
-using MediatR;
+﻿using MediatR;
 using ThinkOnErp.Domain.Entities;
 using ThinkOnErp.Domain.Interfaces;
 
@@ -21,7 +21,7 @@ public class CreateRoleCommandHandler : IRequestHandler<CreateRoleCommand, Int64
     {
         var role = new SysRole
         {
-            RoleNameAr = request.RoleNameAr,
+            RoleNameLocal = request.RoleNameLocal,
             RoleNameEn = request.RoleNameEn,
             Note = request.Note,
             IsActive = true,

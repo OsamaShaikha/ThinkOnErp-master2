@@ -1,11 +1,11 @@
-namespace ThinkOnErp.Domain.Entities.Accounting;
+﻿namespace ThinkOnErp.Domain.Entities.Accounting;
 
 public sealed class GlCostCenter
 {
     public string CostCenterCode { get; set; } = string.Empty;
     public string? ParentCostCenterCode { get; set; }
 
-    public string NameAr { get; set; } = string.Empty;
+    public string NameLocal { get; set; } = string.Empty;
     public string NameEn { get; set; } = string.Empty;
 
     public int CostCenterLevel { get; set; } = 1;

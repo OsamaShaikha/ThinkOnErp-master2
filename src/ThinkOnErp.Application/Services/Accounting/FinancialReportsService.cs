@@ -129,7 +129,7 @@ public sealed class FinancialReportsService : IFinancialReportsService
         return new GlStatementDto
         {
             AccountCode = account.AccountCode,
-            AccountNameAr = account.AccountNameAr,
+            AccountNameLocal = account.AccountNameLocal,
             AccountNameEn = account.AccountNameEn,
             AccountCategory = category,
             Nature = account.NormalBalance ?? "DEBIT",
@@ -179,7 +179,7 @@ public sealed class FinancialReportsService : IFinancialReportsService
                 return new ReportAccountLineDto
                 {
                     AccountCode = g.Key,
-                    AccountNameAr = acc?.AccountNameAr ?? g.Key,
+                    AccountNameLocal = acc?.AccountNameLocal ?? g.Key,
                     AccountNameEn = acc?.AccountNameEn ?? g.Key,
                     Amount = amount
                 };
@@ -197,7 +197,7 @@ public sealed class FinancialReportsService : IFinancialReportsService
                 return new ReportAccountLineDto
                 {
                     AccountCode = g.Key,
-                    AccountNameAr = acc?.AccountNameAr ?? g.Key,
+                    AccountNameLocal = acc?.AccountNameLocal ?? g.Key,
                     AccountNameEn = acc?.AccountNameEn ?? g.Key,
                     Amount = amount
                 };
@@ -215,7 +215,7 @@ public sealed class FinancialReportsService : IFinancialReportsService
                 return new ReportAccountLineDto
                 {
                     AccountCode = g.Key,
-                    AccountNameAr = acc?.AccountNameAr ?? g.Key,
+                    AccountNameLocal = acc?.AccountNameLocal ?? g.Key,
                     AccountNameEn = acc?.AccountNameEn ?? g.Key,
                     Amount = amount
                 };
@@ -233,7 +233,7 @@ public sealed class FinancialReportsService : IFinancialReportsService
                 return new ReportAccountLineDto
                 {
                     AccountCode = g.Key,
-                    AccountNameAr = acc?.AccountNameAr ?? g.Key,
+                    AccountNameLocal = acc?.AccountNameLocal ?? g.Key,
                     AccountNameEn = acc?.AccountNameEn ?? g.Key,
                     Amount = amount
                 };
@@ -251,7 +251,7 @@ public sealed class FinancialReportsService : IFinancialReportsService
                 return new ReportAccountLineDto
                 {
                     AccountCode = g.Key,
-                    AccountNameAr = acc?.AccountNameAr ?? g.Key,
+                    AccountNameLocal = acc?.AccountNameLocal ?? g.Key,
                     AccountNameEn = acc?.AccountNameEn ?? g.Key,
                     Amount = amount
                 };
@@ -326,7 +326,7 @@ public sealed class FinancialReportsService : IFinancialReportsService
                 return new ReportAccountLineDto
                 {
                     AccountCode = g.Key,
-                    AccountNameAr = acc?.AccountNameAr ?? g.Key,
+                    AccountNameLocal = acc?.AccountNameLocal ?? g.Key,
                     AccountNameEn = acc?.AccountNameEn ?? g.Key,
                     Amount = amount
                 };
@@ -344,7 +344,7 @@ public sealed class FinancialReportsService : IFinancialReportsService
                 return new ReportAccountLineDto
                 {
                     AccountCode = g.Key,
-                    AccountNameAr = acc?.AccountNameAr ?? g.Key,
+                    AccountNameLocal = acc?.AccountNameLocal ?? g.Key,
                     AccountNameEn = acc?.AccountNameEn ?? g.Key,
                     Amount = amount
                 };
@@ -362,7 +362,7 @@ public sealed class FinancialReportsService : IFinancialReportsService
                 return new ReportAccountLineDto
                 {
                     AccountCode = g.Key,
-                    AccountNameAr = acc?.AccountNameAr ?? g.Key,
+                    AccountNameLocal = acc?.AccountNameLocal ?? g.Key,
                     AccountNameEn = acc?.AccountNameEn ?? g.Key,
                     Amount = amount
                 };
@@ -380,7 +380,7 @@ public sealed class FinancialReportsService : IFinancialReportsService
                 return new ReportAccountLineDto
                 {
                     AccountCode = g.Key,
-                    AccountNameAr = acc?.AccountNameAr ?? g.Key,
+                    AccountNameLocal = acc?.AccountNameLocal ?? g.Key,
                     AccountNameEn = acc?.AccountNameEn ?? g.Key,
                     Amount = amount
                 };
@@ -398,7 +398,7 @@ public sealed class FinancialReportsService : IFinancialReportsService
                 return new ReportAccountLineDto
                 {
                     AccountCode = g.Key,
-                    AccountNameAr = acc?.AccountNameAr ?? g.Key,
+                    AccountNameLocal = acc?.AccountNameLocal ?? g.Key,
                     AccountNameEn = acc?.AccountNameEn ?? g.Key,
                     Amount = amount
                 };

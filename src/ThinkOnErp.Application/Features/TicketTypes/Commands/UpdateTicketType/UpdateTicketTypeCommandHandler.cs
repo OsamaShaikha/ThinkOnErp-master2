@@ -1,4 +1,4 @@
-using MediatR;
+﻿using MediatR;
 using Microsoft.Extensions.Logging;
 using ThinkOnErp.Domain.Entities;
 using ThinkOnErp.Domain.Interfaces;
@@ -32,7 +32,7 @@ public class UpdateTicketTypeCommandHandler : IRequestHandler<UpdateTicketTypeCo
             if (request.TicketTypeId <= 0)
                 throw new ArgumentException("Ticket type ID must be greater than zero");
 
-            if (string.IsNullOrWhiteSpace(request.TypeNameAr))
+            if (string.IsNullOrWhiteSpace(request.TypeNameLocal))
                 throw new ArgumentException("Arabic type name is required");
 
             if (string.IsNullOrWhiteSpace(request.TypeNameEn))
@@ -48,9 +48,9 @@ public class UpdateTicketTypeCommandHandler : IRequestHandler<UpdateTicketTypeCo
             var ticketType = new SysTicketType
             {
                 Id = request.TicketTypeId,
-                TypeNameAr = request.TypeNameAr,
+                TypeNameLocal = request.TypeNameLocal,
                 TypeNameEn = request.TypeNameEn,
-                DescriptionAr = request.DescriptionAr,
+                DescriptionLocal = request.DescriptionLocal,
                 DescriptionEn = request.DescriptionEn,
                 DefaultPriorityId = request.DefaultPriorityId,
                 SlaTargetHours = request.SlaTargetHours,

@@ -1,4 +1,4 @@
-namespace ThinkOnErp.Domain.Entities;
+﻿namespace ThinkOnErp.Domain.Entities;
 
 /// <summary>
 /// Represents a ticket category entity for additional classification of tickets.
@@ -15,7 +15,7 @@ public class SysTicketCategory
     /// <summary>
     /// Category name in Arabic
     /// </summary>
-    public string CategoryNameAr { get; set; } = string.Empty;
+    public string CategoryNameLocal { get; set; } = string.Empty;
 
     /// <summary>
     /// Category name in English
@@ -25,7 +25,7 @@ public class SysTicketCategory
     /// <summary>
     /// Category description in Arabic (optional)
     /// </summary>
-    public string? DescriptionAr { get; set; }
+    public string? DescriptionLocal { get; set; }
 
     /// <summary>
     /// Category description in English (optional)

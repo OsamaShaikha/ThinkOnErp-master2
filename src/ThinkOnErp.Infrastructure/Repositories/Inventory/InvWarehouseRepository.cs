@@ -26,7 +26,7 @@ public sealed class InvWarehouseRepository : IInvWarehouseRepository
             .FirstOrDefaultAsync(w => w.Id == id, cancellationToken);
     }
 
-    public async Task<InvWarehouse?> GetByCodeAsync(string warehouseCode, CancellationToken cancellationToken = default)
+    public async Task<InvWarehouse?> GetByCodeAsync(long warehouseCode, CancellationToken cancellationToken = default)
     {
         return await _context.InvWarehouses
             .FirstOrDefaultAsync(w => w.WarehouseCode == warehouseCode, cancellationToken);

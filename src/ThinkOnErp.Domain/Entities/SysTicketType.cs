@@ -1,4 +1,4 @@
-namespace ThinkOnErp.Domain.Entities;
+﻿namespace ThinkOnErp.Domain.Entities;
 
 /// <summary>
 /// Represents a ticket type entity for categorizing different types of requests.
@@ -15,7 +15,7 @@ public class SysTicketType
     /// <summary>
     /// Type name in Arabic
     /// </summary>
-    public string TypeNameAr { get; set; } = string.Empty;
+    public string TypeNameLocal { get; set; } = string.Empty;
 
     /// <summary>
     /// Type name in English
@@ -25,7 +25,7 @@ public class SysTicketType
     /// <summary>
     /// Description in Arabic (optional)
     /// </summary>
-    public string? DescriptionAr { get; set; }
+    public string? DescriptionLocal { get; set; }
 
     /// <summary>
     /// Description in English (optional)

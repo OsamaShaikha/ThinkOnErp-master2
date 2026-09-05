@@ -1,4 +1,4 @@
-using MediatR;
+﻿using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using ThinkOnErp.Domain.Constants;
@@ -122,11 +122,11 @@ public class CompanyController : ControllerBase
 
             var command = new CreateCompanyWithBranchCommand
             {
-                CompanyNameAr = dto.CompanyNameAr,
+                CompanyNameLocal = dto.CompanyNameLocal,
                 CompanyNameEn = dto.CompanyNameEn,
                 CountryId = dto.CountryId,
                 CurrId = dto.CurrId,
-                LegalNameAr = dto.LegalNameAr,
+                LegalNameLocal = dto.LegalNameLocal,
                 LegalNameEn = dto.LegalNameEn,
                 CompanyCode = dto.CompanyCode,
                 CompanyLogo = companyLogo != null ? await ReadFileBytesAsync(companyLogo) : null,
@@ -137,7 +137,7 @@ public class CompanyController : ControllerBase
                 BranchRoundingRules = dto.BranchRoundingRules,
                 Systems = dto.Systems,
                 
-                BranchNameAr = dto.BranchNameAr ?? dto.CompanyNameAr ?? "Default Branch",
+                BranchNameLocal = dto.BranchNameLocal ?? dto.CompanyNameLocal ?? "Default Branch",
                 BranchNameEn = dto.BranchNameEn ?? dto.CompanyNameEn ?? "Default Branch",
                 BranchPhone = dto.BranchPhone,
                 BranchMobile = dto.BranchMobile,
@@ -211,11 +211,11 @@ public class CompanyController : ControllerBase
             var command = new UpdateCompanyCommand
             {
                 CompanyId = id,
-                CompanyNameAr = dto.CompanyNameAr,
+                CompanyNameLocal = dto.CompanyNameLocal,
                 CompanyNameEn = dto.CompanyNameEn,
                 CountryId = dto.CountryId,
                 CurrId = dto.CurrId,
-                LegalNameAr = dto.LegalNameAr,
+                LegalNameLocal = dto.LegalNameLocal,
                 LegalNameEn = dto.LegalNameEn,
                 CompanyCode = dto.CompanyCode,
                 DefaultBranchId = dto.DefaultBranchId,

@@ -1,4 +1,4 @@
-using ThinkOnErp.Domain.Entities.Inventory.Enums;
+﻿using ThinkOnErp.Domain.Entities.Inventory.Enums;
 
 namespace ThinkOnErp.Domain.Entities.Inventory;
 
@@ -6,8 +6,8 @@ public sealed class InvWarehouse
 {
     public long Id { get; set; }
     public long BranchId { get; set; }
-    public string WarehouseCode { get; set; } = string.Empty;
-    public string WarehouseNameAr { get; set; } = string.Empty;
+    public long WarehouseCode { get; set; }
+    public string WarehouseNameLocal { get; set; } = string.Empty;
     public string WarehouseNameEn { get; set; } = string.Empty;
     public WarehouseType WarehouseType { get; set; }
     public string? Address { get; set; }

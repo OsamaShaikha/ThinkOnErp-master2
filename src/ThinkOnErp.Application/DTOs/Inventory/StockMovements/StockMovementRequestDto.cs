@@ -7,7 +7,7 @@ public class StockMovementRequestDto
     public long? BinId { get; set; }
     public int TransactionType { get; set; } // 1: In, -1: Out
     public decimal Quantity { get; set; }
-    public string UomCode { get; set; } = string.Empty;
+    public int UomCode { get; set; }
     public decimal UnitCost { get; set; }
     public string? LotNumber { get; set; }
     public string? SerialNumber { get; set; }

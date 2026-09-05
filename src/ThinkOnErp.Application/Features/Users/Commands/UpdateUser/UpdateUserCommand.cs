@@ -1,4 +1,4 @@
-using System.Text.Json.Serialization;
+﻿using System.Text.Json.Serialization;
 using MediatR;
 
 namespace ThinkOnErp.Application.Features.Users.Commands.UpdateUser;
@@ -7,7 +7,7 @@ public class UpdateUserCommand : IRequest<Int64>
 {
     [JsonIgnore]
     public Int64 UserId { get; set; }
-    public string NameAr { get; set; } = string.Empty;
+    public string NameLocal { get; set; } = string.Empty;
     public string NameEn { get; set; } = string.Empty;
     public string UserName { get; set; } = string.Empty;
     public string? Phone { get; set; }

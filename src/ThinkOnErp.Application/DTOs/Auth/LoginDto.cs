@@ -15,4 +15,9 @@ public class LoginDto
     /// Password for authentication (required)
     /// </summary>
     public string Password { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Optional session language ID (1 = Arabic, 2 = English, 3 = French, 4 = Spanish, 5 = Turkish, 6 = German).
+    /// </summary>
+    public int? Language { get; set; }
 }

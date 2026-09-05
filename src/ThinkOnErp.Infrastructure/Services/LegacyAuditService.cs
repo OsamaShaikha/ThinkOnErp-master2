@@ -1,4 +1,4 @@
-using System.Text;
+﻿using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using Microsoft.EntityFrameworkCore;
@@ -288,7 +288,7 @@ public class LegacyAuditService : ILegacyAuditService
             {
                 var company = _dbContext.SysCompanies
                     .Where(c => c.Id == log.CompanyId.Value)
-                    .Select(c => c.CompanyNameEn ?? c.CompanyNameAr)
+                    .Select(c => c.CompanyNameEn ?? c.CompanyNameLocal)
                     .FirstOrDefault();
                 entry.CompanyName = company;
             }
@@ -297,7 +297,7 @@ public class LegacyAuditService : ILegacyAuditService
             {
                 var branch = _dbContext.SysBranches
                     .Where(b => b.Id == log.BranchId.Value)
-                    .Select(b => b.BranchNameEn ?? b.BranchNameAr)
+                    .Select(b => b.BranchNameEn ?? b.BranchNameLocal)
                     .FirstOrDefault();
                 entry.BranchName = branch;
             }
@@ -308,14 +308,14 @@ public class LegacyAuditService : ILegacyAuditService
                 {
                     entry.ActorName = _dbContext.SysSuperAdmins
                         .Where(u => u.Id == log.ActorId)
-                        .Select(u => u.NameEn ?? u.NameAr ?? u.UserName)
+                        .Select(u => u.NameEn ?? u.NameLocal ?? u.UserName)
                         .FirstOrDefault();
                 }
                 else
                 {
                     entry.ActorName = _dbContext.SysUsers
                         .Where(u => u.Id == log.ActorId)
-                        .Select(u => u.FullNameEn ?? u.FullNameAr ?? u.UserName)
+                        .Select(u => u.FullNameEn ?? u.FullNameLocal ?? u.UserName)
                         .FirstOrDefault();
                 }
             }

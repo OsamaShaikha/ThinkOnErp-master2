@@ -32,7 +32,7 @@ public sealed class InvItemBarcodeConfiguration : IEntityTypeConfiguration<InvIt
 
         builder.Property(e => e.UomCode)
             .HasColumnName("UOM_CODE")
-            .HasMaxLength(50)
+            .HasColumnType("NUMBER(6)")
             .IsRequired();
 
     }

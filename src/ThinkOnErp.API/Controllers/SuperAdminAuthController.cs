@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using ThinkOnErp.Application.Common;
 using ThinkOnErp.Application.DTOs.Auth;
 using ThinkOnErp.Application.Features.Auth.Commands.Login;
+using ThinkOnErp.Domain.Constants;
 using ThinkOnErp.Domain.Interfaces;
 using ThinkOnErp.Infrastructure.Services;
 
@@ -48,7 +49,12 @@ public class SuperAdminAuthController : ControllerBase
                     statusCode: 401));
             }
 
-            var tokenDto = _jwtTokenService.GenerateToken(superAdmin);
+            if (command.Language.HasValue && command.Language.Value > 0)
+            {
+                HttpContext.Items["SessionLanguage"] = command.Language.Value;
+            }
+
+            var tokenDto = _jwtTokenService.GenerateToken(superAdmin, command.Language);
 
             await _superAdminRepository.SaveRefreshTokenAsync(
                 superAdmin.Id,
@@ -59,7 +65,7 @@ public class SuperAdminAuthController : ControllerBase
 
             return Ok(ApiResponse<TokenDto>.CreateSuccess(
                 tokenDto,
-                "Super admin authentication successful",
+                ResponseCodes.OperationSuccessful,
                 200));
         }
         catch (Exception ex)

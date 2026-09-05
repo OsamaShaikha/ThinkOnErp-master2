@@ -1,4 +1,4 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using ThinkOnErp.Domain.Entities;
 using ThinkOnErp.Domain.Interfaces;
 using ThinkOnErp.Infrastructure.Data;
@@ -28,17 +28,17 @@ public class CurrencyRepository : ICurrencyRepository
         var existing = await _context.SysCurrencies.FindAsync(currency.Id);
         if (existing == null) return 0;
 
-        existing.CurrencyNameAr = currency.CurrencyNameAr;
+        existing.CurrencyNameLocal = currency.CurrencyNameLocal;
         existing.CurrencyNameEn = currency.CurrencyNameEn;
-        existing.ShortNameAr = currency.ShortNameAr;
+        existing.ShortNameLocal = currency.ShortNameLocal;
         existing.ShortNameEn = currency.ShortNameEn;
-        existing.SingularNameAr = currency.SingularNameAr;
+        existing.SingularNameLocal = currency.SingularNameLocal;
         existing.SingularNameEn = currency.SingularNameEn;
-        existing.DualNameAr = currency.DualNameAr;
+        existing.DualNameLocal = currency.DualNameLocal;
         existing.DualNameEn = currency.DualNameEn;
-        existing.CollectiveNameAr = currency.CollectiveNameAr;
+        existing.CollectiveNameLocal = currency.CollectiveNameLocal;
         existing.CollectiveNameEn = currency.CollectiveNameEn;
-        existing.FractionNameAr = currency.FractionNameAr;
+        existing.FractionNameLocal = currency.FractionNameLocal;
         existing.FractionNameEn = currency.FractionNameEn;
         existing.CurrRate = currency.CurrRate;
         existing.CurrRateDate = currency.CurrRateDate;

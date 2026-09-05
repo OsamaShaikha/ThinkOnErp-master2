@@ -67,7 +67,7 @@ public class AdminOnlyEndpointAuthorizationPropertyTests : IClassFixture<WebAppl
         {
             Id = request.UserId,
             UserName = request.UserName,
-            FullNameAr = "Non-Admin User",
+            FullNameLocal = "Non-Admin User",
             FullNameEn = "Non-Admin User",
             Password = "hash",
             RoleId = request.RoleId,

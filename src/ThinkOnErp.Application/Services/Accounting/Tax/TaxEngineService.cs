@@ -1,4 +1,4 @@
-using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.Logging;
 using System.Text;
 using ThinkOnErp.Application.DTOs.Accounting.Tax;
 using ThinkOnErp.Application.Services.Accounting.Tax.Declarations;
@@ -130,7 +130,7 @@ public sealed class TaxEngineService : ITaxEngineService
                 LocalLineTotalAmount = Math.Round(lineTotal * exchangeRate, 3, MidpointRounding.AwayFromZero),
 
                 TaxRateCode = rate?.TaxRateCode ?? "VAT_15",
-                TaxRateNameAr = rate?.NameAr ?? "ضريبة القيمة المضافة 15%",
+                TaxRateNameLocal = rate?.NameLocal ?? "ضريبة القيمة المضافة 15%",
                 GlAccountCode = request.IsSales ? rate?.SalesTaxGlAccountCode : rate?.PurchaseTaxGlAccountCode
             };
 
@@ -153,7 +153,7 @@ public sealed class TaxEngineService : ITaxEngineService
                 summaryItem = new TaxSummaryItemDto
                 {
                     TaxRateCode = lineResult.TaxRateCode,
-                    TaxRateNameAr = lineResult.TaxRateNameAr,
+                    TaxRateNameLocal = lineResult.TaxRateNameLocal,
                     RatePercent = ratePercent,
                     GlAccountCode = lineResult.GlAccountCode
                 };
@@ -176,7 +176,7 @@ public sealed class TaxEngineService : ITaxEngineService
             result.SuggestedGlLines.Add(new SuggestedGlJournalLineDto
             {
                 AccountCode = "410101",
-                AccountNameAr = "إيرادات المبيعات العامة",
+                AccountNameLocal = "إيرادات المبيعات العامة",
                 Debit = 0,
                 Credit = result.SubtotalAmount,
                 LocalDebit = 0,
@@ -190,7 +190,7 @@ public sealed class TaxEngineService : ITaxEngineService
                 result.SuggestedGlLines.Add(new SuggestedGlJournalLineDto
                 {
                     AccountCode = "213101",
-                    AccountNameAr = "حساب ضريبة القيمة المضافة المستحقة (المخرجات)",
+                    AccountNameLocal = "حساب ضريبة القيمة المضافة المستحقة (المخرجات)",
                     Debit = 0,
                     Credit = result.TotalTaxAmount,
                     LocalDebit = 0,
@@ -203,7 +203,7 @@ public sealed class TaxEngineService : ITaxEngineService
             result.SuggestedGlLines.Add(new SuggestedGlJournalLineDto
             {
                 AccountCode = "112101",
-                AccountNameAr = "حساب العملاء / المدينون التجاريون",
+                AccountNameLocal = "حساب العملاء / المدينون التجاريون",
                 Debit = result.GrandTotalAmount,
                 Credit = 0,
                 LocalDebit = result.LocalGrandTotalAmount,
@@ -218,7 +218,7 @@ public sealed class TaxEngineService : ITaxEngineService
             result.SuggestedGlLines.Add(new SuggestedGlJournalLineDto
             {
                 AccountCode = "510101",
-                AccountNameAr = "تكلفة المشتريات / البضاعة",
+                AccountNameLocal = "تكلفة المشتريات / البضاعة",
                 Debit = result.SubtotalAmount,
                 Credit = 0,
                 LocalDebit = result.LocalSubtotalAmount,
@@ -232,7 +232,7 @@ public sealed class TaxEngineService : ITaxEngineService
                 result.SuggestedGlLines.Add(new SuggestedGlJournalLineDto
                 {
                     AccountCode = "113101",
-                    AccountNameAr = "حساب ضريبة القيمة المضافة المدخلات (المستردة)",
+                    AccountNameLocal = "حساب ضريبة القيمة المضافة المدخلات (المستردة)",
                     Debit = result.TotalTaxAmount,
                     Credit = 0,
                     LocalDebit = result.LocalTotalTaxAmount,
@@ -245,7 +245,7 @@ public sealed class TaxEngineService : ITaxEngineService
             result.SuggestedGlLines.Add(new SuggestedGlJournalLineDto
             {
                 AccountCode = "211101",
-                AccountNameAr = "حساب الموردين / الدائنون التجاريون",
+                AccountNameLocal = "حساب الموردين / الدائنون التجاريون",
                 Debit = 0,
                 Credit = result.GrandTotalAmount,
                 LocalDebit = 0,
@@ -268,7 +268,7 @@ public sealed class TaxEngineService : ITaxEngineService
         {
             Id = c.Id,
             CategoryCode = c.CategoryCode,
-            NameAr = c.NameAr,
+            NameLocal = c.NameLocal,
             NameEn = c.NameEn,
             Description = c.Description,
             DisplayOrder = c.DisplayOrder,
@@ -286,7 +286,7 @@ public sealed class TaxEngineService : ITaxEngineService
         {
             Id = c.Id,
             CategoryCode = c.CategoryCode,
-            NameAr = c.NameAr,
+            NameLocal = c.NameLocal,
             NameEn = c.NameEn,
             Description = c.Description,
             DisplayOrder = c.DisplayOrder,
@@ -307,7 +307,7 @@ public sealed class TaxEngineService : ITaxEngineService
         var entity = new TaxCategory
         {
             CategoryCode = dto.CategoryCode.Trim().ToUpper(),
-            NameAr = dto.NameAr.Trim(),
+            NameLocal = dto.NameLocal.Trim(),
             NameEn = dto.NameEn.Trim(),
             Description = dto.Description?.Trim(),
             DisplayOrder = dto.DisplayOrder,
@@ -327,7 +327,7 @@ public sealed class TaxEngineService : ITaxEngineService
         var entity = await _taxRepository.GetTaxCategoryByIdAsync(id, cancellationToken)
             ?? throw new AccountingNotFoundException($"فئة الضريبة ({id}) غير موجودة.", "TAX_CAT_NOT_FOUND");
 
-        entity.NameAr = dto.NameAr.Trim();
+        entity.NameLocal = dto.NameLocal.Trim();
         entity.NameEn = dto.NameEn.Trim();
         entity.Description = dto.Description?.Trim();
         entity.DisplayOrder = dto.DisplayOrder;
@@ -389,7 +389,7 @@ public sealed class TaxEngineService : ITaxEngineService
         {
             TaxRateCode = dto.TaxRateCode.Trim().ToUpper(),
             TaxCategoryId = dto.TaxCategoryId,
-            NameAr = dto.NameAr.Trim(),
+            NameLocal = dto.NameLocal.Trim(),
             NameEn = dto.NameEn.Trim(),
             RatePercent = dto.RatePercent,
             RateType = dto.RateType,
@@ -398,7 +398,7 @@ public sealed class TaxEngineService : ITaxEngineService
             IsExempt = dto.IsExempt,
             IsZeroRated = dto.IsZeroRated,
             ExemptionReasonCode = dto.ExemptionReasonCode?.Trim(),
-            ExemptionReasonAr = dto.ExemptionReasonAr?.Trim(),
+            ExemptionReasonLocal = dto.ExemptionReasonLocal?.Trim(),
             ExemptionReasonEn = dto.ExemptionReasonEn?.Trim(),
             DisplayOrder = dto.DisplayOrder,
             IsActive = true,
@@ -418,7 +418,7 @@ public sealed class TaxEngineService : ITaxEngineService
         var entity = await _taxRepository.GetTaxRateByIdAsync(id, cancellationToken)
             ?? throw new AccountingNotFoundException($"النسبة الضريبية ({id}) غير موجودة.", "TAX_RATE_NOT_FOUND");
 
-        entity.NameAr = dto.NameAr.Trim();
+        entity.NameLocal = dto.NameLocal.Trim();
         entity.NameEn = dto.NameEn.Trim();
         entity.RatePercent = dto.RatePercent;
         entity.RateType = dto.RateType;
@@ -427,7 +427,7 @@ public sealed class TaxEngineService : ITaxEngineService
         entity.IsExempt = dto.IsExempt;
         entity.IsZeroRated = dto.IsZeroRated;
         entity.ExemptionReasonCode = dto.ExemptionReasonCode?.Trim();
-        entity.ExemptionReasonAr = dto.ExemptionReasonAr?.Trim();
+        entity.ExemptionReasonLocal = dto.ExemptionReasonLocal?.Trim();
         entity.ExemptionReasonEn = dto.ExemptionReasonEn?.Trim();
         entity.DisplayOrder = dto.DisplayOrder;
         entity.IsActive = dto.IsActive;
@@ -476,7 +476,7 @@ public sealed class TaxEngineService : ITaxEngineService
         var entity = new TaxGroup
         {
             GroupCode = dto.GroupCode.Trim().ToUpper(),
-            NameAr = dto.NameAr.Trim(),
+            NameLocal = dto.NameLocal.Trim(),
             NameEn = dto.NameEn.Trim(),
             Description = dto.Description?.Trim(),
             IsActive = true,
@@ -560,10 +560,10 @@ public sealed class TaxEngineService : ITaxEngineService
             provider = _declarationProviders["GCC_ZATCA_16"];
         }
 
-        string branchNameAr = "كافة الفروع";
+        string branchNameLocal = "كافة الفروع";
         string branchNameEn = "All Branches";
 
-        return provider.BuildDeclaration(filter, transactions, rates, branchNameAr, branchNameEn);
+        return provider.BuildDeclaration(filter, transactions, rates, branchNameLocal, branchNameEn);
     }
 
     // ─────────────────────────────────────────────────────────────────────────
@@ -626,19 +626,19 @@ public sealed class TaxEngineService : ITaxEngineService
         TaxRateCode = r.TaxRateCode,
         TaxCategoryId = r.TaxCategoryId,
         CategoryCode = r.Category?.CategoryCode ?? string.Empty,
-        CategoryNameAr = r.Category?.NameAr ?? string.Empty,
-        NameAr = r.NameAr,
+        CategoryNameLocal = r.Category?.NameLocal ?? string.Empty,
+        NameLocal = r.NameLocal,
         NameEn = r.NameEn,
         RatePercent = r.RatePercent,
         RateType = r.RateType,
         SalesTaxGlAccountCode = r.SalesTaxGlAccountCode,
-        SalesTaxGlAccountNameAr = r.SalesTaxGlAccount?.AccountNameAr,
+        SalesTaxGlAccountNameLocal = r.SalesTaxGlAccount?.AccountNameLocal,
         PurchaseTaxGlAccountCode = r.PurchaseTaxGlAccountCode,
-        PurchaseTaxGlAccountNameAr = r.PurchaseTaxGlAccount?.AccountNameAr,
+        PurchaseTaxGlAccountNameLocal = r.PurchaseTaxGlAccount?.AccountNameLocal,
         IsExempt = r.IsExempt,
         IsZeroRated = r.IsZeroRated,
         ExemptionReasonCode = r.ExemptionReasonCode,
-        ExemptionReasonAr = r.ExemptionReasonAr,
+        ExemptionReasonLocal = r.ExemptionReasonLocal,
         ExemptionReasonEn = r.ExemptionReasonEn,
         DisplayOrder = r.DisplayOrder,
         IsActive = r.IsActive,
@@ -649,7 +649,7 @@ public sealed class TaxEngineService : ITaxEngineService
     {
         Id = g.Id,
         GroupCode = g.GroupCode,
-        NameAr = g.NameAr,
+        NameLocal = g.NameLocal,
         NameEn = g.NameEn,
         Description = g.Description,
         IsActive = g.IsActive,
@@ -658,7 +658,7 @@ public sealed class TaxEngineService : ITaxEngineService
             Id = i.Id,
             TaxRateId = i.TaxRateId,
             TaxRateCode = i.TaxRate?.TaxRateCode ?? string.Empty,
-            NameAr = i.TaxRate?.NameAr ?? string.Empty,
+            NameLocal = i.TaxRate?.NameLocal ?? string.Empty,
             RatePercent = i.TaxRate?.RatePercent ?? 0m,
             ApplicationOrder = i.ApplicationOrder,
             IsCompound = i.IsCompound

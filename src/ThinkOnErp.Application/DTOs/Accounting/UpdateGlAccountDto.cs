@@ -1,4 +1,4 @@
-namespace ThinkOnErp.Application.DTOs.Accounting;
+﻿namespace ThinkOnErp.Application.DTOs.Accounting;
 
 /// <summary>
 /// Updates the editable attributes of an existing GL account.
@@ -8,7 +8,7 @@ namespace ThinkOnErp.Application.DTOs.Accounting;
 public sealed class UpdateGlAccountDto
 {
     public string? OldAccountCode { get; set; }
-    public string AccountNameAr { get; set; } = string.Empty;
+    public string AccountNameLocal { get; set; } = string.Empty;
     public string AccountNameEn { get; set; } = string.Empty;
     public bool IsContra { get; set; }
     public bool IsControlAccount { get; set; }

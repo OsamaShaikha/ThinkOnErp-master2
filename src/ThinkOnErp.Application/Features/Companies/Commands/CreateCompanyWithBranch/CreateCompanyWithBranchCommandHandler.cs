@@ -1,4 +1,4 @@
-using MediatR;
+﻿using MediatR;
 using Microsoft.Extensions.Logging;
 using ThinkOnErp.Domain.Interfaces;
 
@@ -57,16 +57,16 @@ public class CreateCompanyWithBranchCommandHandler : IRequestHandler<CreateCompa
 
             // Use the repository method to create company with branch and fiscal year
             var result = await _companyRepository.CreateWithBranchAsync(
-                companyNameAr: request.CompanyNameAr,
+                companyNameLocal: request.CompanyNameLocal,
                 companyNameEn: request.CompanyNameEn,
-                legalNameAr: request.LegalNameAr,
+                legalNameLocal: request.LegalNameLocal,
                 legalNameEn: request.LegalNameEn,
                 companyCode: request.CompanyCode,
                 taxNumber: request.TaxNumber,
                 countryId: request.CountryId,
                 currId: request.CurrId,
                 companyLogoPath: companyLogoPath,
-                branchNameAr: request.BranchNameAr,
+                branchNameLocal: request.BranchNameLocal,
                 branchNameEn: request.BranchNameEn,
                 branchPhone: request.BranchPhone,
                 branchMobile: request.BranchMobile,

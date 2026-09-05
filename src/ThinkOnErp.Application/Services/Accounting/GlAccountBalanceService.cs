@@ -1,4 +1,4 @@
-using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.Logging;
 using ThinkOnErp.Application.DTOs.Accounting.Balances;
 using ThinkOnErp.Domain.Entities.Accounting;
 using ThinkOnErp.Domain.Exceptions;
@@ -44,12 +44,12 @@ public sealed class GlAccountBalanceService : IGlAccountBalanceService
         {
             Id = b.Id,
             AccountCode = b.AccountCode,
-            AccountNameAr = b.Account?.AccountNameAr ?? string.Empty,
+            AccountNameLocal = b.Account?.AccountNameLocal ?? string.Empty,
             AccountNameEn = b.Account?.AccountNameEn ?? string.Empty,
             BranchId = b.BranchId,
             FiscalYearId = b.FiscalYearId,
             FiscalPeriodId = b.FiscalPeriodId,
-            PeriodNameAr = b.FiscalPeriod?.PeriodNameAr,
+            PeriodNameLocal = b.FiscalPeriod?.PeriodNameLocal,
             PeriodNameEn = b.FiscalPeriod?.PeriodNameEn,
             CurrencyId = b.CurrencyId,
             CurrencyCode = b.Currency?.ShortNameEn,
@@ -107,7 +107,7 @@ public sealed class GlAccountBalanceService : IGlAccountBalanceService
             rows.Add(new TrialBalanceRowDto
             {
                 AccountCode = acc.AccountCode,
-                AccountNameAr = acc.AccountNameAr,
+                AccountNameLocal = acc.AccountNameLocal,
                 AccountNameEn = acc.AccountNameEn,
                 AccountLevel = acc.AccountLevel,
                 AccountType = acc.AccountType,

@@ -1,4 +1,4 @@
-namespace ThinkOnErp.Application.DTOs.Accounting.AccountStatement;
+﻿namespace ThinkOnErp.Application.DTOs.Accounting.AccountStatement;
 
 /// <summary>
 /// Detailed Account Statement report response containing header summary,
@@ -8,7 +8,7 @@ public sealed class AccountStatementReportDto
 {
     // Account details
     public string AccountCode { get; set; } = string.Empty;
-    public string AccountNameAr { get; set; } = string.Empty;
+    public string AccountNameLocal { get; set; } = string.Empty;
     public string AccountNameEn { get; set; } = string.Empty;
     public string AccountType { get; set; } = "DETAIL";
     public string NormalBalance { get; set; } = "D"; // 'D' (Debit) or 'C' (Credit)

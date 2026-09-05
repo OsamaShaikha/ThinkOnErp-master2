@@ -1,4 +1,4 @@
-using ThinkOnErp.Application.DTOs.Accounting.Tax;
+﻿using ThinkOnErp.Application.DTOs.Accounting.Tax;
 using ThinkOnErp.Domain.Entities.Accounting;
 
 namespace ThinkOnErp.Application.Services.Accounting.Tax.Declarations;
@@ -17,12 +17,12 @@ public sealed class ZatcaGccDeclarationProvider : ITaxDeclarationProvider
         {
             TemplateCode = TemplateCode,
             CountryCode = CountryCode,
-            CountryNameAr = "المملكة العربية السعودية ودول الخليج",
+            CountryNameLocal = "المملكة العربية السعودية ودول الخليج",
             CountryNameEn = "Saudi Arabia & GCC Countries",
             FlagEmoji = "🇸🇦",
             TitleAr = "إقرار ضريبة القيمة المضافة (16 مربعاً) - هيئة الزكاة والضريبة والجمارك",
             TitleEn = "Official 16-Box VAT Declaration - ZATCA & GCC",
-            TaxAuthorityNameAr = "هيئة الزكاة والضريبة والجمارك (ZATCA)",
+            TaxAuthorityNameLocal = "هيئة الزكاة والضريبة والجمارك (ZATCA)",
             TaxAuthorityNameEn = "Zakat, Tax and Customs Authority (ZATCA)",
             DefaultCurrencyCode = "SAR",
             FilingFrequency = "MONTHLY_OR_QUARTERLY",
@@ -79,7 +79,7 @@ public sealed class ZatcaGccDeclarationProvider : ITaxDeclarationProvider
         VatDeclarationFilterDto filter,
         IReadOnlyList<TaxTransaction> transactions,
         IReadOnlyList<TaxRate> availableRates,
-        string branchNameAr,
+        string branchNameLocal,
         string branchNameEn)
     {
         var rateMap = availableRates.ToDictionary(r => r.Id);
@@ -174,11 +174,11 @@ public sealed class ZatcaGccDeclarationProvider : ITaxDeclarationProvider
             CountryCode = CountryCode,
             TemplateTitleAr = "إقرار ضريبة القيمة المضافة (ZATCA 16 Boxes)",
             TemplateTitleEn = "VAT Declaration Return (ZATCA 16 Boxes)",
-            TaxAuthorityNameAr = "هيئة الزكاة والضريبة والجمارك (ZATCA)",
+            TaxAuthorityNameLocal = "هيئة الزكاة والضريبة والجمارك (ZATCA)",
             TaxAuthorityNameEn = "Zakat, Tax and Customs Authority (ZATCA)",
             CurrencyCode = "SAR",
             BranchId = filter.BranchId,
-            BranchNameAr = branchNameAr,
+            BranchNameLocal = branchNameLocal,
             BranchNameEn = branchNameEn,
             FromDate = filter.FromDate,
             ToDate = filter.ToDate,

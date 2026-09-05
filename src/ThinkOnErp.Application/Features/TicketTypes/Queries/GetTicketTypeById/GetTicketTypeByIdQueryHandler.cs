@@ -1,4 +1,4 @@
-using MediatR;
+﻿using MediatR;
 using Microsoft.Extensions.Logging;
 using ThinkOnErp.Application.DTOs.Ticket;
 using ThinkOnErp.Domain.Interfaces;
@@ -39,9 +39,9 @@ public class GetTicketTypeByIdQueryHandler : IRequestHandler<GetTicketTypeByIdQu
             var dto = new TicketTypeDto
             {
                 TicketTypeId = ticketType.Id,
-                TypeNameAr = ticketType.TypeNameAr,
+                TypeNameLocal = ticketType.TypeNameLocal,
                 TypeNameEn = ticketType.TypeNameEn,
-                DescriptionAr = ticketType.DescriptionAr,
+                DescriptionLocal = ticketType.DescriptionLocal,
                 DescriptionEn = ticketType.DescriptionEn,
                 DefaultPriorityId = ticketType.DefaultPriorityId,
                 DefaultPriorityName = ticketType.DefaultPriority?.PriorityNameEn,

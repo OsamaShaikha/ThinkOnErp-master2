@@ -1,4 +1,4 @@
-namespace ThinkOnErp.Application.DTOs.Ticket;
+﻿namespace ThinkOnErp.Application.DTOs.Ticket;
 
 /// <summary>
 /// Data transfer object for ticket type information returned from API endpoints.
@@ -14,7 +14,7 @@ public class TicketTypeDto
     /// <summary>
     /// Arabic name of the ticket type
     /// </summary>
-    public string TypeNameAr { get; set; } = string.Empty;
+    public string TypeNameLocal { get; set; } = string.Empty;
 
     /// <summary>
     /// English name of the ticket type
@@ -24,7 +24,7 @@ public class TicketTypeDto
     /// <summary>
     /// Arabic description of the ticket type
     /// </summary>
-    public string? DescriptionAr { get; set; }
+    public string? DescriptionLocal { get; set; }
 
     /// <summary>
     /// English description of the ticket type

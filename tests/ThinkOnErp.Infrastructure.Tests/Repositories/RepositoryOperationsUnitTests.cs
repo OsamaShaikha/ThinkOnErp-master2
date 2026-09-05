@@ -33,7 +33,7 @@ public class RepositoryOperationsUnitTests : IClassFixture<TestWebApplicationFac
         // Create a role first
         var createCommand = new CreateRoleCommand
         {
-            RoleNameAr = "Test Role",
+            RoleNameLocal = "Test Role",
             RoleNameEn = "Test Role E",
             Note = "Test Note"
         };
@@ -45,7 +45,7 @@ public class RepositoryOperationsUnitTests : IClassFixture<TestWebApplicationFac
         // Assert
         Assert.NotNull(role);
         Assert.Equal(roleId, role.Id);
-        Assert.Equal("Test Role", role.RoleNameAr);
+        Assert.Equal("Test Role", role.RoleNameLocal);
         Assert.Equal("Test Role E", role.RoleNameEn);
     }
 
@@ -89,7 +89,7 @@ public class RepositoryOperationsUnitTests : IClassFixture<TestWebApplicationFac
 
         var createCommand = new CreateRoleCommand
         {
-            RoleNameAr = "New Role",
+            RoleNameLocal = "New Role",
             RoleNameEn = "New Role E",
             Note = "New Note"
         };
@@ -111,7 +111,7 @@ public class RepositoryOperationsUnitTests : IClassFixture<TestWebApplicationFac
         // Create a role
         var createCommand = new CreateRoleCommand
         {
-            RoleNameAr = "Original Role",
+            RoleNameLocal = "Original Role",
             RoleNameEn = "Original Role E",
             Note = "Original Note"
         };
@@ -121,7 +121,7 @@ public class RepositoryOperationsUnitTests : IClassFixture<TestWebApplicationFac
         var updateCommand = new UpdateRoleCommand
         {
             RoleId = roleId,
-            RoleNameAr = "Updated Role",
+            RoleNameLocal = "Updated Role",
             RoleNameEn = "Updated Role E",
             Note = "Updated Note"
         };
@@ -136,7 +136,7 @@ public class RepositoryOperationsUnitTests : IClassFixture<TestWebApplicationFac
         // Assert
         Assert.True(updateResult > 0);
         Assert.NotNull(updatedRole);
-        Assert.Equal("Updated Role", updatedRole.RoleNameAr);
+        Assert.Equal("Updated Role", updatedRole.RoleNameLocal);
         Assert.Equal("Updated Role E", updatedRole.RoleNameEn);
         Assert.Equal("Updated Note", updatedRole.Note);
     }
@@ -151,7 +151,7 @@ public class RepositoryOperationsUnitTests : IClassFixture<TestWebApplicationFac
         // Create a role
         var createCommand = new CreateRoleCommand
         {
-            RoleNameAr = "Role To Delete",
+            RoleNameLocal = "Role To Delete",
             RoleNameEn = "Role To Delete E",
             Note = "Will be deleted"
         };
@@ -175,7 +175,7 @@ public class RepositoryOperationsUnitTests : IClassFixture<TestWebApplicationFac
         // Create a role
         var createCommand = new CreateRoleCommand
         {
-            RoleNameAr = "Role To Delete",
+            RoleNameLocal = "Role To Delete",
             RoleNameEn = "Role To Delete E",
             Note = "Will be deleted"
         };

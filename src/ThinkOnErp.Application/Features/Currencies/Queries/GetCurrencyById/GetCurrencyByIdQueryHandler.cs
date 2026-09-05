@@ -1,4 +1,4 @@
-using MediatR;
+﻿using MediatR;
 using ThinkOnErp.Application.DTOs.Currency;
 using ThinkOnErp.Domain.Interfaces;
 
@@ -23,17 +23,17 @@ public class GetCurrencyByIdQueryHandler : IRequestHandler<GetCurrencyByIdQuery,
         return new CurrencyDto
         {
             CurrencyId = currency.Id,
-            CurrencyNameAr = currency.CurrencyNameAr,
+            CurrencyNameLocal = currency.CurrencyNameLocal,
             CurrencyNameEn = currency.CurrencyNameEn,
-            ShortNameAr = currency.ShortNameAr,
+            ShortNameLocal = currency.ShortNameLocal,
             ShortNameEn = currency.ShortNameEn,
-            SingularNameAr = currency.SingularNameAr,
+            SingularNameLocal = currency.SingularNameLocal,
             SingularNameEn = currency.SingularNameEn,
-            DualNameAr = currency.DualNameAr,
+            DualNameLocal = currency.DualNameLocal,
             DualNameEn = currency.DualNameEn,
-            CollectiveNameAr = currency.CollectiveNameAr,
+            CollectiveNameLocal = currency.CollectiveNameLocal,
             CollectiveNameEn = currency.CollectiveNameEn,
-            FractionNameAr = currency.FractionNameAr,
+            FractionNameLocal = currency.FractionNameLocal,
             FractionNameEn = currency.FractionNameEn,
             CurrRate = currency.CurrRate,
             CurrRateDate = currency.CurrRateDate,

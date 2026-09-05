@@ -90,7 +90,7 @@ public class QueryMetricsTests
         // Arrange & Act
         var metrics = new QueryMetrics
         {
-            SqlStatement = "INSERT INTO SYS_USERS (NAME_AR, NAME_EN, EMAIL) VALUES (:p0, :p1, :p2)",
+            SqlStatement = "INSERT INTO SYS_USERS (NAME_LOCAL, NAME_EN, EMAIL) VALUES (:p0, :p1, :p2)",
             ExecutionTimeMs = 15,
             RowsAffected = 1
         };
@@ -238,7 +238,7 @@ public class QueryMetricsTests
         // Arrange & Act
         var metrics = new QueryMetrics
         {
-            SqlStatement = @"SELECT u.*, c.NAME_AR AS COMPANY_NAME, b.NAME_AR AS BRANCH_NAME 
+            SqlStatement = @"SELECT u.*, c.NAME_LOCAL AS COMPANY_NAME, b.NAME_LOCAL AS BRANCH_NAME 
                             FROM SYS_USERS u 
                             JOIN SYS_COMPANY c ON u.COMPANY_ID = c.ROW_ID 
                             JOIN SYS_BRANCH b ON u.BRANCH_ID = b.ROW_ID 

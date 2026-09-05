@@ -9,7 +9,7 @@ public sealed class Customer
 {
     public long Id { get; set; }
     public string CustomerCode { get; set; } = string.Empty;
-    public string NameAr { get; set; } = string.Empty;
+    public string NameLocal { get; set; } = string.Empty;
     public string NameEn { get; set; } = string.Empty;
     public string ArControlAccountCode { get; set; } = "112101"; // Default to AR Control
     public long? DefaultCurrencyId { get; set; }

@@ -1,4 +1,4 @@
-using System.Text;
+﻿using System.Text;
 using System.Text.Json;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Http;
@@ -1052,7 +1052,7 @@ public class AuditQueryService : IAuditQueryService
             {
                 entry.CompanyName = _oracleDbContext.SysCompanies
                     .Where(c => c.Id == entry.CompanyId.Value)
-                    .Select(c => c.CompanyNameEn ?? c.CompanyNameAr)
+                    .Select(c => c.CompanyNameEn ?? c.CompanyNameLocal)
                     .FirstOrDefault();
             }
 
@@ -1060,7 +1060,7 @@ public class AuditQueryService : IAuditQueryService
             {
                 entry.BranchName = _oracleDbContext.SysBranches
                     .Where(b => b.Id == entry.BranchId.Value)
-                    .Select(b => b.BranchNameEn ?? b.BranchNameAr)
+                    .Select(b => b.BranchNameEn ?? b.BranchNameLocal)
                     .FirstOrDefault();
             }
 
@@ -1069,11 +1069,11 @@ public class AuditQueryService : IAuditQueryService
                 entry.ActorName = string.Equals(entry.ActorType, "SUPER_ADMIN", StringComparison.OrdinalIgnoreCase)
                     ? _oracleDbContext.SysSuperAdmins
                         .Where(u => u.Id == entry.ActorId)
-                        .Select(u => u.NameEn ?? u.NameAr ?? u.UserName)
+                        .Select(u => u.NameEn ?? u.NameLocal ?? u.UserName)
                         .FirstOrDefault()
                     : _oracleDbContext.SysUsers
                         .Where(u => u.Id == entry.ActorId)
-                        .Select(u => u.FullNameEn ?? u.FullNameAr ?? u.UserName)
+                        .Select(u => u.FullNameEn ?? u.FullNameLocal ?? u.UserName)
                         .FirstOrDefault();
             }
         }

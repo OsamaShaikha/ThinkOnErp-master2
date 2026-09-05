@@ -1,4 +1,4 @@
-namespace ThinkOnErp.Application.DTOs.User;
+﻿namespace ThinkOnErp.Application.DTOs.User;
 
 /// <summary>
 /// Data transfer object for creating a new user.
@@ -9,7 +9,7 @@ public class CreateUserDto
     /// <summary>
     /// Arabic description of the user (required)
     /// </summary>
-    public string NameAr { get; set; } = string.Empty;
+    public string NameLocal { get; set; } = string.Empty;
 
     /// <summary>
     /// English description of the user (required)

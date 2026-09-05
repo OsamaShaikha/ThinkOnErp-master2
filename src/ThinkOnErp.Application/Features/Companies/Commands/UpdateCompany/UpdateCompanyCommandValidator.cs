@@ -1,4 +1,4 @@
-using FluentValidation;
+﻿using FluentValidation;
 
 namespace ThinkOnErp.Application.Features.Companies.Commands.UpdateCompany;
 
@@ -7,11 +7,11 @@ public class UpdateCompanyCommandValidator : AbstractValidator<UpdateCompanyComm
     public UpdateCompanyCommandValidator()
     {
         RuleFor(x => x.CompanyId).GreaterThan(0);
-        RuleFor(x => x.CompanyNameAr).NotEmpty().MaximumLength(100);
+        RuleFor(x => x.CompanyNameLocal).NotEmpty().MaximumLength(100);
         RuleFor(x => x.CompanyNameEn).NotEmpty().MaximumLength(100);
         RuleFor(x => x.UpdateUser).NotEmpty();
 
-        RuleFor(x => x.LegalNameAr).MaximumLength(300).When(x => !string.IsNullOrEmpty(x.LegalNameAr));
+        RuleFor(x => x.LegalNameLocal).MaximumLength(300).When(x => !string.IsNullOrEmpty(x.LegalNameLocal));
         RuleFor(x => x.LegalNameEn).MaximumLength(300).When(x => !string.IsNullOrEmpty(x.LegalNameEn));
         
         RuleFor(x => x.CompanyCode)

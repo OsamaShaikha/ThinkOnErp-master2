@@ -6,7 +6,7 @@ public sealed class InvZone
 {
     public long Id { get; set; }
     public long WarehouseId { get; set; }
-    public string ZoneCode { get; set; } = string.Empty;
+    public int ZoneCode { get; set; }
     public string ZoneName { get; set; } = string.Empty;
     public ZoneType ZoneType { get; set; }
 

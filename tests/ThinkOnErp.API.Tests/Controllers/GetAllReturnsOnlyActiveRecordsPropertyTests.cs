@@ -263,7 +263,7 @@ public class GetAllReturnsOnlyActiveRecordsPropertyTests
                    select new SysRole
                     {
                         Id = rowId,
-                        RoleNameAr = rowDesc,
+                        RoleNameLocal = rowDesc,
                         RoleNameEn = rowDescE,
                         Note = note,
                         IsActive = isActive,
@@ -296,7 +296,7 @@ public class GetAllReturnsOnlyActiveRecordsPropertyTests
                    select new SysCurrency
                     {
                         Id = rowId,
-                        CurrencyNameAr = rowDesc,
+                        CurrencyNameLocal = rowDesc,
                         CurrencyNameEn = rowDescE,
                         ShortNameAr = shortDesc,
                         ShortNameEn = shortDescE,
@@ -336,7 +336,7 @@ public class GetAllReturnsOnlyActiveRecordsPropertyTests
                    select new SysCompany
                     {
                         Id = rowId,
-                        CompanyNameAr = rowDesc,
+                        CompanyNameLocal = rowDesc,
                         CompanyNameEn = rowDescE,
                         IsActive = isActive,
                         CreationUser = creationUser,
@@ -367,7 +367,7 @@ public class GetAllReturnsOnlyActiveRecordsPropertyTests
                    select new SysBranch
                     {
                         Id = rowId,
-                        BranchNameAr = rowDesc,
+                        BranchNameLocal = rowDesc,
                         BranchNameEn = rowDescE,
                         IsActive = isActive,
                         IsHeadBranch = isHeadBranch,
@@ -402,7 +402,7 @@ public class GetAllReturnsOnlyActiveRecordsPropertyTests
                     {
                         Id = rowId,
                         UserName = userName,
-                        FullNameAr = rowDesc,
+                        FullNameLocal = rowDesc,
                         FullNameEn = rowDescE,
                         Password = password,
                         IsActive = isActive,

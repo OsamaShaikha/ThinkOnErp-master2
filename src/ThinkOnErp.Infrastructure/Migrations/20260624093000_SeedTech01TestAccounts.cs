@@ -58,7 +58,7 @@ public sealed class SeedTech01TestAccounts : Migration
                 target."UPDATE_USER" = N'{{SeedUser}}',
                 target."UPDATE_DATE" = SYSTIMESTAMP
             WHEN NOT MATCHED THEN INSERT (
-                "Id", "NAME_AR", "NAME_EN", "USER_NAME", "PASSWORD", "EMAIL", "PHONE",
+                "Id", "NAME_LOCAL", "NAME_EN", "USER_NAME", "PASSWORD", "EMAIL", "PHONE",
                 "TWO_FA_ENABLED", "IS_ACTIVE", "CREATION_USER", "CREATION_DATE"
             ) VALUES (
                 source."Id", N'TECH01 Test SuperAdmin', 'TECH01 Test SuperAdmin',
@@ -93,11 +93,11 @@ public sealed class SeedTech01TestAccounts : Migration
                             USING (
                                 SELECT
                                     base."MAX_ID" + ROW_NUMBER() OVER (ORDER BY role_rows."NAME_EN") AS "Id",
-                                    role_rows."NAME_AR",
+                                    role_rows."NAME_LOCAL",
                                     role_rows."NAME_EN",
                                     role_rows."NOTE"
                                 FROM (
-                                    SELECT 'Administrator' AS "NAME_AR", 'Administrator' AS "NAME_EN", 'Full TECH01 company administration test role' AS "NOTE" FROM DUAL
+                                    SELECT 'Administrator' AS "NAME_LOCAL", 'Administrator' AS "NAME_EN", 'Full TECH01 company administration test role' AS "NOTE" FROM DUAL
                                     UNION ALL SELECT 'Branch Manager', 'Branch Manager', 'Branch-level administration test role' FROM DUAL
                                     UNION ALL SELECT 'Viewer', 'Viewer', 'Read-only business user test role' FROM DUAL
                                 ) role_rows
@@ -112,9 +112,9 @@ public sealed class SeedTech01TestAccounts : Migration
                                 target."UPDATE_USER" = N'{{SeedUser}}',
                                 target."UPDATE_DATE" = SYSTIMESTAMP
                             WHEN NOT MATCHED THEN INSERT (
-                                "Id", "NAME_AR", "NAME_EN", "NOTE", "IS_ACTIVE", "CREATION_USER", "CREATION_DATE"
+                                "Id", "NAME_LOCAL", "NAME_EN", "NOTE", "IS_ACTIVE", "CREATION_USER", "CREATION_DATE"
                             ) VALUES (
-                                source."Id", source."NAME_AR", source."NAME_EN", source."NOTE",
+                                source."Id", source."NAME_LOCAL", source."NAME_EN", source."NOTE",
                                 1, N'{{SeedUser}}', SYSTIMESTAMP
                             )
                         ~';
@@ -124,7 +124,7 @@ public sealed class SeedTech01TestAccounts : Migration
                             USING (
                                 SELECT
                                     base."MAX_ID" + ROW_NUMBER() OVER (ORDER BY desired."USER_NAME") AS "Id",
-                                    desired."NAME_AR",
+                                    desired."NAME_LOCAL",
                                     desired."NAME_EN",
                                     desired."USER_NAME",
                                     desired."PASSWORD",
@@ -134,7 +134,7 @@ public sealed class SeedTech01TestAccounts : Migration
                                     desired."EMAIL",
                                     desired."IS_ADMIN"
                                 FROM (
-                                    SELECT 'TECH01 Admin' AS "NAME_AR", 'TECH01 Company Admin' AS "NAME_EN", 'tech_admin' AS "USER_NAME", '{{TechAdminHash}}' AS "PASSWORD", 'Administrator' AS "ROLE_NAME", 'Headquarters' AS "BRANCH_NAME", 'tech.admin@tech01.local' AS "EMAIL", 1 AS "IS_ADMIN" FROM DUAL
+                                    SELECT 'TECH01 Admin' AS "NAME_LOCAL", 'TECH01 Company Admin' AS "NAME_EN", 'tech_admin' AS "USER_NAME", '{{TechAdminHash}}' AS "PASSWORD", 'Administrator' AS "ROLE_NAME", 'Headquarters' AS "BRANCH_NAME", 'tech.admin@tech01.local' AS "EMAIL", 1 AS "IS_ADMIN" FROM DUAL
                                     UNION ALL SELECT 'Amman Admin', 'Amman Branch Admin', 'amman_admin', '{{AmmanAdminHash}}', 'Branch Manager', 'Amman Branch', 'amman.admin@tech01.local', 1 FROM DUAL
                                     UNION ALL SELECT 'Aqaba User', 'Aqaba Normal User', 'aqaba_user', '{{AqabaUserHash}}', 'Viewer', 'Aqaba Branch', 'aqaba.user@tech01.local', 0 FROM DUAL
                                 ) desired
@@ -164,10 +164,10 @@ public sealed class SeedTech01TestAccounts : Migration
                                 target."UPDATE_DATE" = SYSTIMESTAMP,
                                 target."FORCE_LOGOUT_DATE" = NULL
                             WHEN NOT MATCHED THEN INSERT (
-                                "Id", "NAME_AR", "NAME_EN", "USER_NAME", "PASSWORD", "ROLE", "BRANCH_ID",
+                                "Id", "NAME_LOCAL", "NAME_EN", "USER_NAME", "PASSWORD", "ROLE", "BRANCH_ID",
                                 "COMPANY_ID", "EMAIL", "IS_ACTIVE", "IS_ADMIN", "CREATION_USER", "CREATION_DATE"
                             ) VALUES (
-                                source."Id", source."NAME_AR", source."NAME_EN", source."USER_NAME",
+                                source."Id", source."NAME_LOCAL", source."NAME_EN", source."USER_NAME",
                                 source."PASSWORD", source."ROLE_ID", source."BRANCH_ID", source."COMPANY_ID",
                                 source."EMAIL", 1, source."IS_ADMIN", N'{{SeedUser}}', SYSTIMESTAMP
                             )

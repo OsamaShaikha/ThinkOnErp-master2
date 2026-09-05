@@ -1,4 +1,4 @@
-using System.Globalization;
+﻿using System.Globalization;
 using System.IO.Compression;
 using System.Xml;
 using System.Xml.Linq;
@@ -258,7 +258,7 @@ public sealed class XlsxCoaWorkbookReader : ICoaWorkbookReader
                             ? ReadOptionalText(cells, headerMap, "رقم_الحساب_القديم")
                             : null,
                 ParentCode = ReadOptionalText(cells, headerMap, "parent_code"),
-                AccountNameAr = ReadRequiredText(
+                AccountNameLocal = ReadRequiredText(
                     cells,
                     headerMap,
                     "account_name_ar",

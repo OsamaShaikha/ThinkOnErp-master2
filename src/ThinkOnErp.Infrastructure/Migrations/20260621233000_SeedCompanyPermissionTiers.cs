@@ -71,7 +71,7 @@ public sealed class SeedCompanyPermissionTiers : Migration
             MERGE INTO "SYS_COMPANY" target
             USING (
                 SELECT
-                    N'شركة التقنية' AS "NAME_AR",
+                    N'شركة التقنية' AS "NAME_LOCAL",
                     N'ThinkOnERP Technology Company' AS "NAME_EN",
                     N'شركة التقنية لأنظمة تخطيط الموارد' AS "LEGAL_NAME",
                     N'ThinkOnERP Technology Company LLC' AS "LEGAL_NAME_E",
@@ -87,12 +87,12 @@ public sealed class SeedCompanyPermissionTiers : Migration
                 target."UPDATE_USER" = N'{{SeedUser}}',
                 target."UPDATE_DATE" = SYSTIMESTAMP
             WHEN NOT MATCHED THEN INSERT (
-                "NAME_AR", "NAME_EN", "LEGAL_NAME", "LEGAL_NAME_E",
+                "NAME_LOCAL", "NAME_EN", "LEGAL_NAME", "LEGAL_NAME_E",
                 "COMPANY_CODE", "COMPANY_SCHEMA", "CURR_ID",
                 "CREATED_BY_SUPER_ADMIN_ID", "IS_ACTIVE",
                 "CREATION_USER", "CREATION_DATE"
             ) VALUES (
-                source."NAME_AR", source."NAME_EN", source."LEGAL_NAME", source."LEGAL_NAME_E",
+                source."NAME_LOCAL", source."NAME_EN", source."LEGAL_NAME", source."LEGAL_NAME_E",
                 source."COMPANY_CODE", source."COMPANY_SCHEMA", source."CURR_ID",
                 source."SUPER_ADMIN_ID", 1,
                 N'{{SeedUser}}', SYSTIMESTAMP
@@ -161,7 +161,7 @@ public sealed class SeedCompanyPermissionTiers : Migration
             USING (
                 SELECT
                     c."Id" AS "COMPANY_ID",
-                    N'{{nameAr}}' AS "NAME_AR",
+                    N'{{nameAr}}' AS "NAME_LOCAL",
                     N'{{nameEn}}' AS "NAME_EN",
                     N'{{email}}' AS "EMAIL",
                     N'{{phone}}' AS "PHONE",
@@ -181,12 +181,12 @@ public sealed class SeedCompanyPermissionTiers : Migration
                 target."UPDATE_USER" = N'{{SeedUser}}',
                 target."UPDATE_DATE" = SYSTIMESTAMP
             WHEN NOT MATCHED THEN INSERT (
-                "COMPANY_ID", "NAME_AR", "NAME_EN", "EMAIL", "PHONE", "MOBILE",
+                "COMPANY_ID", "NAME_LOCAL", "NAME_EN", "EMAIL", "PHONE", "MOBILE",
                 "TAX_NUMBER", "IS_HEAD_BRANCH", "BASE_CURRENCY_ID",
                 "DEFAULT_LANG", "ROUNDING_RULES", "IS_ACTIVE",
                 "CREATION_USER", "CREATION_DATE"
             ) VALUES (
-                source."COMPANY_ID", source."NAME_AR", source."NAME_EN",
+                source."COMPANY_ID", source."NAME_LOCAL", source."NAME_EN",
                 source."EMAIL", source."PHONE", source."MOBILE",
                 source."TAX_NUMBER", source."IS_HEAD_BRANCH", source."BASE_CURRENCY_ID",
                 2, 1, 1,
@@ -294,7 +294,7 @@ public sealed class SeedCompanyPermissionTiers : Migration
 
                             EXECUTE IMMEDIATE
                                 'INSERT INTO "{{CompanySchema}}"."SYS_ROLE" ' ||
-                                '("Id", "NAME_AR", "NAME_EN", "NOTE", "IS_ACTIVE", "CREATION_USER", "CREATION_DATE") ' ||
+                                '("Id", "NAME_LOCAL", "NAME_EN", "NOTE", "IS_ACTIVE", "CREATION_USER", "CREATION_DATE") ' ||
                                 'VALUES (:1, N''مدير النظام'', ''Administrator'', ' ||
                                 'N''Company administrator permission tier'', 1, N''{{SeedUser}}'', SYSTIMESTAMP)'
                             USING v_role_id;

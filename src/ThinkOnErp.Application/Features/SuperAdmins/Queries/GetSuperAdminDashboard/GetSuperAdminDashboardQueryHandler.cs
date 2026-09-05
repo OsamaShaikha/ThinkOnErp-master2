@@ -1,4 +1,4 @@
-using MediatR;
+﻿using MediatR;
 using Microsoft.Extensions.Logging;
 using ThinkOnErp.Application.DTOs.SuperAdmin;
 using ThinkOnErp.Domain.Interfaces;
@@ -118,7 +118,7 @@ public class GetSuperAdminDashboardQueryHandler : IRequestHandler<GetSuperAdminD
                 .Take(4)
                 .Select(c => new RecentCompanyDto
                 {
-                    NameAr = c.CompanyNameAr,
+                    NameLocal = c.CompanyNameLocal,
                     NameEn = c.CompanyNameEn,
                     Country = null, // Country name not available in entity, only CountryId
                     BranchCount = branches.Count(b => b.CompanyId == c.Id),
@@ -137,9 +137,9 @@ public class GetSuperAdminDashboardQueryHandler : IRequestHandler<GetSuperAdminD
                     var company = companies.FirstOrDefault(c => c.Id == b.CompanyId);
                     return new RecentBranchActivityDto
                     {
-                        BranchNameAr = b.BranchNameAr,
+                        BranchNameLocal = b.BranchNameLocal,
                         BranchNameEn = b.BranchNameEn,
-                        CompanyNameAr = company?.CompanyNameAr ?? "",
+                        CompanyNameLocal = company?.CompanyNameLocal ?? "",
                         CompanyNameEn = company?.CompanyNameEn ?? "",
                         ActivityType = b.CreationDate == b.UpdateDate ? "New" : "Update",
                         ActivityDate = b.UpdateDate ?? DateTime.MinValue
@@ -153,17 +153,17 @@ public class GetSuperAdminDashboardQueryHandler : IRequestHandler<GetSuperAdminD
                 .Select(t => new PendingRequestDto
                 {
                     TicketId = t.Id,
-                    CompanyNameAr = t.Company?.CompanyNameAr ?? "",
+                    CompanyNameLocal = t.Company?.CompanyNameLocal ?? "",
                     CompanyNameEn = t.Company?.CompanyNameEn ?? "",
                     RequestTypeAr = t.TitleAr,
                     RequestTypeEn = t.TitleEn,
                     Description = t.Description,
-                    Priority = t.TicketPriority?.PriorityNameAr ?? "متوسط",
+                    Priority = t.TicketPriority?.PriorityNameLocal ?? "متوسط",
                     PriorityCode = GetPriorityCode(t.TicketPriority?.PriorityNameEn ?? "Medium"),
                     RequestDate = t.CreationDate ?? DateTime.MinValue,
-                    BranchNameAr = t.Branch?.BranchNameAr ?? "",
+                    BranchNameLocal = t.Branch?.BranchNameLocal ?? "",
                     BranchNameEn = t.Branch?.BranchNameEn ?? "",
-                    Status = t.TicketStatus?.StatusNameAr ?? "قيد الانتظار"
+                    Status = t.TicketStatus?.StatusNameLocal ?? "قيد الانتظار"
                 })
                 .ToList();
 

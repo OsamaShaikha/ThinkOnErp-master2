@@ -1,4 +1,4 @@
-using MediatR;
+﻿using MediatR;
 using Microsoft.Extensions.Logging;
 using System.Diagnostics;
 using System.Text.Json;
@@ -112,36 +112,36 @@ public class GetTicketsQueryHandler : IRequestHandler<GetTicketsQuery, PagedResu
                 Description = ticket.Description,
                 CompanyId = ticket.CompanyId,
                 CompanyName = isArabic 
-                    ? (!string.IsNullOrWhiteSpace(ticket.Company?.CompanyNameAr) ? ticket.Company.CompanyNameAr : ticket.Company?.CompanyNameEn)
-                    : (!string.IsNullOrWhiteSpace(ticket.Company?.CompanyNameEn) ? ticket.Company.CompanyNameEn : ticket.Company?.CompanyNameAr),
+                    ? (!string.IsNullOrWhiteSpace(ticket.Company?.CompanyNameLocal) ? ticket.Company.CompanyNameLocal : ticket.Company?.CompanyNameEn)
+                    : (!string.IsNullOrWhiteSpace(ticket.Company?.CompanyNameEn) ? ticket.Company.CompanyNameEn : ticket.Company?.CompanyNameLocal),
                 BranchId = ticket.BranchId,
                 BranchName = isArabic 
-                    ? (!string.IsNullOrWhiteSpace(ticket.Branch?.BranchNameAr) ? ticket.Branch.BranchNameAr : ticket.Branch?.BranchNameEn)
-                    : (!string.IsNullOrWhiteSpace(ticket.Branch?.BranchNameEn) ? ticket.Branch.BranchNameEn : ticket.Branch?.BranchNameAr),
+                    ? (!string.IsNullOrWhiteSpace(ticket.Branch?.BranchNameLocal) ? ticket.Branch.BranchNameLocal : ticket.Branch?.BranchNameEn)
+                    : (!string.IsNullOrWhiteSpace(ticket.Branch?.BranchNameEn) ? ticket.Branch.BranchNameEn : ticket.Branch?.BranchNameLocal),
                 RequesterId = ticket.RequesterId,
                 RequesterName = isArabic 
-                    ? (!string.IsNullOrWhiteSpace(ticket.Requester?.FullNameAr) ? ticket.Requester.FullNameAr : ticket.Requester?.FullNameEn ?? ticket.CreationUser)
-                    : (!string.IsNullOrWhiteSpace(ticket.Requester?.FullNameEn) ? ticket.Requester.FullNameEn : ticket.Requester?.FullNameAr ?? ticket.CreationUser),
+                    ? (!string.IsNullOrWhiteSpace(ticket.Requester?.FullNameLocal) ? ticket.Requester.FullNameLocal : ticket.Requester?.FullNameEn ?? ticket.CreationUser)
+                    : (!string.IsNullOrWhiteSpace(ticket.Requester?.FullNameEn) ? ticket.Requester.FullNameEn : ticket.Requester?.FullNameLocal ?? ticket.CreationUser),
                 AssigneeId = ticket.AssigneeId,
                 AssigneeName = isArabic 
-                    ? (!string.IsNullOrWhiteSpace(ticket.Assignee?.FullNameAr) ? ticket.Assignee.FullNameAr : ticket.Assignee?.FullNameEn)
-                    : (!string.IsNullOrWhiteSpace(ticket.Assignee?.FullNameEn) ? ticket.Assignee.FullNameEn : ticket.Assignee?.FullNameAr),
+                    ? (!string.IsNullOrWhiteSpace(ticket.Assignee?.FullNameLocal) ? ticket.Assignee.FullNameLocal : ticket.Assignee?.FullNameEn)
+                    : (!string.IsNullOrWhiteSpace(ticket.Assignee?.FullNameEn) ? ticket.Assignee.FullNameEn : ticket.Assignee?.FullNameLocal),
                 TicketTypeId = ticket.TicketTypeId,
                 TicketTypeName = isArabic 
-                    ? (!string.IsNullOrWhiteSpace(ticket.TicketType?.TypeNameAr) ? ticket.TicketType.TypeNameAr : ticket.TicketType?.TypeNameEn)
-                    : (!string.IsNullOrWhiteSpace(ticket.TicketType?.TypeNameEn) ? ticket.TicketType.TypeNameEn : ticket.TicketType?.TypeNameAr),
+                    ? (!string.IsNullOrWhiteSpace(ticket.TicketType?.TypeNameLocal) ? ticket.TicketType.TypeNameLocal : ticket.TicketType?.TypeNameEn)
+                    : (!string.IsNullOrWhiteSpace(ticket.TicketType?.TypeNameEn) ? ticket.TicketType.TypeNameEn : ticket.TicketType?.TypeNameLocal),
                 TicketStatusId = ticket.TicketStatusId,
                 TicketStatusName = isArabic 
-                    ? (!string.IsNullOrWhiteSpace(ticket.TicketStatus?.StatusNameAr) ? ticket.TicketStatus.StatusNameAr : ticket.TicketStatus?.StatusNameEn)
-                    : (!string.IsNullOrWhiteSpace(ticket.TicketStatus?.StatusNameEn) ? ticket.TicketStatus.StatusNameEn : ticket.TicketStatus?.StatusNameAr),
+                    ? (!string.IsNullOrWhiteSpace(ticket.TicketStatus?.StatusNameLocal) ? ticket.TicketStatus.StatusNameLocal : ticket.TicketStatus?.StatusNameEn)
+                    : (!string.IsNullOrWhiteSpace(ticket.TicketStatus?.StatusNameEn) ? ticket.TicketStatus.StatusNameEn : ticket.TicketStatus?.StatusNameLocal),
                 TicketPriorityId = ticket.TicketPriorityId,
                 TicketPriorityName = isArabic 
-                    ? (!string.IsNullOrWhiteSpace(ticket.TicketPriority?.PriorityNameAr) ? ticket.TicketPriority.PriorityNameAr : ticket.TicketPriority?.PriorityNameEn)
-                    : (!string.IsNullOrWhiteSpace(ticket.TicketPriority?.PriorityNameEn) ? ticket.TicketPriority.PriorityNameEn : ticket.TicketPriority?.PriorityNameAr),
+                    ? (!string.IsNullOrWhiteSpace(ticket.TicketPriority?.PriorityNameLocal) ? ticket.TicketPriority.PriorityNameLocal : ticket.TicketPriority?.PriorityNameEn)
+                    : (!string.IsNullOrWhiteSpace(ticket.TicketPriority?.PriorityNameEn) ? ticket.TicketPriority.PriorityNameEn : ticket.TicketPriority?.PriorityNameLocal),
                 TicketCategoryId = ticket.TicketCategoryId,
                 TicketCategoryName = isArabic 
-                    ? (!string.IsNullOrWhiteSpace(ticket.TicketCategory?.CategoryNameAr) ? ticket.TicketCategory.CategoryNameAr : ticket.TicketCategory?.CategoryNameEn)
-                    : (!string.IsNullOrWhiteSpace(ticket.TicketCategory?.CategoryNameEn) ? ticket.TicketCategory.CategoryNameEn : ticket.TicketCategory?.CategoryNameAr),
+                    ? (!string.IsNullOrWhiteSpace(ticket.TicketCategory?.CategoryNameLocal) ? ticket.TicketCategory.CategoryNameLocal : ticket.TicketCategory?.CategoryNameEn)
+                    : (!string.IsNullOrWhiteSpace(ticket.TicketCategory?.CategoryNameEn) ? ticket.TicketCategory.CategoryNameEn : ticket.TicketCategory?.CategoryNameLocal),
                 ExpectedResolutionDate = ticket.ExpectedResolutionDate,
                 ActualResolutionDate = ticket.ActualResolutionDate,
                 IsActive = ticket.IsActive,

@@ -1,4 +1,4 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using ThinkOnErp.Domain.Entities;
 using ThinkOnErp.Domain.Interfaces;
 using ThinkOnErp.Infrastructure.Data;
@@ -37,7 +37,7 @@ public class RoleRepository : IRoleRepository
         var existingRole = await _context.SysRoles.FindAsync(role.Id);
         if (existingRole == null) return 0;
 
-        existingRole.RoleNameAr = role.RoleNameAr;
+        existingRole.RoleNameLocal = role.RoleNameLocal;
         existingRole.RoleNameEn = role.RoleNameEn;
         existingRole.Note = role.Note;
         existingRole.UpdateUser = role.UpdateUser;

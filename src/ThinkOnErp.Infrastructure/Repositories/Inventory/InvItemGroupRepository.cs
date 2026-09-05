@@ -25,7 +25,7 @@ public sealed class InvItemGroupRepository : IInvItemGroupRepository
             .FirstOrDefaultAsync(g => g.Id == id, ct);
     }
 
-    public async Task<InvItemGroup?> GetByCodeAsync(string code, CancellationToken ct = default)
+    public async Task<InvItemGroup?> GetByCodeAsync(long code, CancellationToken ct = default)
     {
         return await _context.InvItemGroups
             .FirstOrDefaultAsync(g => g.GroupCode == code, ct);
@@ -33,25 +33,42 @@ public sealed class InvItemGroupRepository : IInvItemGroupRepository
 
     public async Task<List<InvItemGroup>> GetMainGroupsAsync(long? branchId = null, CancellationToken ct = default)
     {
-        var query = _context.InvItemGroups.AsNoTracking().Where(g => g.GroupLevel == 1 && g.IsActive);
+        IQueryable<InvItemGroup> query = _context.InvItemGroups
+            .AsNoTracking()
+            .Include(g => g.SubGroups)
+            .Where(g => g.GroupLevel == 1 && g.IsActive);
+
         if (branchId.HasValue) query = query.Where(g => g.BranchId == branchId.Value || g.BranchId == null);
         return await query.OrderBy(g => g.GroupCode).ToListAsync(ct);
     }
 
     public async Task<List<InvItemGroup>> GetSubGroupsAsync(long mainGroupId, CancellationToken ct = default)
     {
-        return await _context.InvItemGroups.AsNoTracking()
-            .Where(g => g.ParentGroupId == mainGroupId && g.IsActive)
-            .OrderBy(g => g.GroupCode)
-            .ToListAsync(ct);
+        IQueryable<InvItemGroup> query = _context.InvItemGroups
+            .AsNoTracking()
+            .Include(g => g.ParentGroup)
+            .Where(g => g.ParentGroupId == mainGroupId && g.IsActive);
+
+        return await query.OrderBy(g => g.GroupCode).ToListAsync(ct);
+    }
+
+    public async Task<List<InvItemGroup>> GetAllSubGroupsAsync(long? branchId = null, CancellationToken ct = default)
+    {
+        IQueryable<InvItemGroup> query = _context.InvItemGroups
+            .AsNoTracking()
+            .Include(g => g.ParentGroup)
+            .Where(g => g.GroupLevel == 2 && g.IsActive);
+
+        if (branchId.HasValue) query = query.Where(g => g.BranchId == branchId.Value || g.BranchId == null);
+        return await query.OrderBy(g => g.ParentGroupId).ThenBy(g => g.GroupCode).ToListAsync(ct);
     }
 
     public async Task<(List<InvItemGroup> Items, int TotalCount)> GetAllPagedAsync(long? branchId, int pageIndex, int pageSize, CancellationToken ct = default)
     {
-        var query = _context.InvItemGroups.AsNoTracking();
+        IQueryable<InvItemGroup> query = _context.InvItemGroups.AsNoTracking().Include(g => g.ParentGroup);
         if (branchId.HasValue) query = query.Where(g => g.BranchId == branchId.Value || g.BranchId == null);
         var total = await query.CountAsync(ct);
-        var items = await query.OrderBy(g => g.GroupCode).Skip((pageIndex - 1) * pageSize).Take(pageSize).ToListAsync(ct);
+        var items = await query.OrderBy(g => g.GroupLevel).ThenBy(g => g.GroupCode).Skip((pageIndex - 1) * pageSize).Take(pageSize).ToListAsync(ct);
         return (items, total);
     }
 
@@ -78,10 +95,41 @@ public sealed class InvItemGroupRepository : IInvItemGroupRepository
         }
     }
 
-    public async Task<bool> ExistsAsync(string code, long? excludeId = null, CancellationToken ct = default)
+    public async Task HardDeleteAsync(long id, CancellationToken ct = default)
+    {
+        var group = await _context.InvItemGroups.FindAsync(new object[] { id }, ct);
+        if (group != null)
+        {
+            _context.InvItemGroups.Remove(group);
+            await _context.SaveChangesAsync(ct);
+        }
+    }
+
+    public async Task<bool> ExistsAsync(long code, long? excludeId = null, CancellationToken ct = default)
     {
         var query = _context.InvItemGroups.Where(g => g.GroupCode == code);
         if (excludeId.HasValue) query = query.Where(g => g.Id != excludeId.Value);
         return await query.AnyAsync(ct);
+    }
+
+    public async Task<bool> HasSubGroupsAsync(long mainGroupId, CancellationToken ct = default)
+    {
+        return await _context.InvItemGroups.AnyAsync(g => g.ParentGroupId == mainGroupId && g.IsActive, ct);
+    }
+
+    public async Task<bool> HasItemsAsync(long groupId, bool isMainGroup, CancellationToken ct = default)
+    {
+        if (isMainGroup)
+            return await _context.InvItems.AnyAsync(i => i.MainGroupId == groupId && i.IsActive, ct);
+        else
+            return await _context.InvItems.AnyAsync(i => i.SubGroupId == groupId && i.IsActive, ct);
+    }
+
+    public async Task<int> GetItemsCountAsync(long groupId, bool isMainGroup, CancellationToken ct = default)
+    {
+        if (isMainGroup)
+            return await _context.InvItems.CountAsync(i => i.MainGroupId == groupId && i.IsActive, ct);
+        else
+            return await _context.InvItems.CountAsync(i => i.SubGroupId == groupId && i.IsActive, ct);
     }
 }

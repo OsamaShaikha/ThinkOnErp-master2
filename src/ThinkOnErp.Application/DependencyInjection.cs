@@ -71,15 +71,8 @@ public static class DependencyInjection
         services.AddScoped<ThinkOnErp.Application.Services.Inventory.IInvItemGroupService, ThinkOnErp.Application.Services.Inventory.InvItemGroupService>();
         services.AddScoped<ThinkOnErp.Application.Services.Inventory.IInvBomService, ThinkOnErp.Application.Services.Inventory.InvBomService>();
         services.AddScoped<ThinkOnErp.Application.Services.Inventory.IInvOpeningBalanceService, ThinkOnErp.Application.Services.Inventory.InvOpeningBalanceService>();
-
-        // Inventory Validators
-        services.AddScoped<FluentValidation.IValidator<ThinkOnErp.Application.DTOs.Inventory.Documents.CreateTrxDocumentDto>, ThinkOnErp.Application.Validators.Inventory.CreateTrxDocumentDtoValidator>();
-        services.AddScoped<FluentValidation.IValidator<ThinkOnErp.Application.DTOs.Inventory.Items.CreateInvItemDto>, ThinkOnErp.Application.Validators.Inventory.CreateInvItemDtoValidator>();
-        services.AddScoped<FluentValidation.IValidator<ThinkOnErp.Application.DTOs.Inventory.ItemGroups.CreateInvItemGroupDto>, ThinkOnErp.Application.Validators.Inventory.CreateInvItemGroupDtoValidator>();
-        services.AddScoped<FluentValidation.IValidator<ThinkOnErp.Application.DTOs.Inventory.Bom.CreateInvBomDto>, ThinkOnErp.Application.Validators.Inventory.CreateInvBomDtoValidator>();
-        services.AddScoped<FluentValidation.IValidator<ThinkOnErp.Application.DTOs.Inventory.Warehouses.CreateInvWarehouseDto>, ThinkOnErp.Application.Validators.Inventory.CreateInvWarehouseDtoValidator>();
-        services.AddScoped<FluentValidation.IValidator<ThinkOnErp.Application.DTOs.Inventory.OpeningBalance.CreateOpeningBatchDto>, ThinkOnErp.Application.Validators.Inventory.CreateOpeningBatchDtoValidator>();
-        services.AddScoped<FluentValidation.IValidator<ThinkOnErp.Application.DTOs.Inventory.StockMovements.StockMovementRequestDto>, ThinkOnErp.Application.Validators.Inventory.StockMovementRequestDtoValidator>();
+        services.AddScoped<ThinkOnErp.Application.Services.Inventory.ITrxTypeService, ThinkOnErp.Application.Services.Inventory.TrxTypeService>();
+        services.AddScoped<ITranslationService, TranslationService>();
 
         return services;
     }

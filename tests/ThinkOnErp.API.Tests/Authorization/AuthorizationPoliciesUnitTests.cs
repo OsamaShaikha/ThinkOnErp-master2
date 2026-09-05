@@ -38,7 +38,7 @@ public class AuthorizationPoliciesUnitTests : IClassFixture<TestWebApplicationFa
         // Act - Try to create a role (admin-only endpoint)
         var createDto = new CreateRoleDto
         {
-            RoleNameAr = "Test Role",
+            RoleNameLocal = "Test Role",
             RoleNameEn = "Test Role E",
             Note = "Test"
         };
@@ -71,7 +71,7 @@ public class AuthorizationPoliciesUnitTests : IClassFixture<TestWebApplicationFa
         // Act - Try to create a role (admin-only endpoint)
         var createDto = new CreateRoleDto
         {
-            RoleNameAr = "Test Role",
+            RoleNameLocal = "Test Role",
             RoleNameEn = "Test Role E",
             Note = "Test"
         };

@@ -1,10 +1,10 @@
-namespace ThinkOnErp.Domain.Entities.Accounting;
+﻿namespace ThinkOnErp.Domain.Entities.Accounting;
 
 public sealed class TaxCategory
 {
     public long Id { get; set; }
     public string CategoryCode { get; set; } = string.Empty; // VAT, WHT, EXCISE, CUSTOMS
-    public string NameAr { get; set; } = string.Empty;
+    public string NameLocal { get; set; } = string.Empty;
     public string NameEn { get; set; } = string.Empty;
     public string? Description { get; set; }
     public int DisplayOrder { get; set; } = 1;

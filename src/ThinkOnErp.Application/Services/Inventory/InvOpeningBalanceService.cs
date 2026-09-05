@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -88,10 +88,12 @@ public sealed class InvOpeningBalanceService : IInvOpeningBalanceService
         return ApiResponse<OpeningBatchDto>.CreateSuccess(MapToDto(batch));
     }
 
-    public async Task<ApiResponse<(List<OpeningBatchDto> Batches, int TotalCount)>> GetBatchesPagedAsync(long branchId, int pageIndex, int pageSize, CancellationToken ct = default)
+    public async Task<ApiResponse<PagedResultDto<OpeningBatchDto>>> GetBatchesPagedAsync(long branchId, int pageIndex, int pageSize, CancellationToken ct = default)
     {
         var (batches, total) = await _repo.GetAllAsync(branchId, pageIndex, pageSize, ct);
-        return ApiResponse<(List<OpeningBatchDto> Batches, int TotalCount)>.CreateSuccess((batches.Select(MapToDto).ToList(), total));
+        var dtos = batches.Select(MapToDto).ToList();
+        var pagedResult = new PagedResultDto<OpeningBatchDto>(dtos, total, pageIndex, pageSize);
+        return ApiResponse<PagedResultDto<OpeningBatchDto>>.CreateSuccess(pagedResult);
     }
 
     public async Task<ApiResponse<OpeningBatchDto>> UpdateBatchAsync(long id, UpdateOpeningBatchDto dto, string username, CancellationToken ct = default)
@@ -221,10 +223,10 @@ public sealed class InvOpeningBalanceService : IInvOpeningBalanceService
             {
                 Id = l.Id,
                 WarehouseId = l.WarehouseId,
-                WarehouseName = l.Warehouse?.WarehouseNameAr,
+                WarehouseName = l.Warehouse?.WarehouseNameLocal,
                 ItemId = l.ItemId,
                 ItemCode = l.Item?.ItemCode,
-                ItemName = l.Item?.ItemNameAr,
+                ItemName = l.Item?.ItemNameLocal,
                 BinId = l.BinId,
                 UomCode = l.UomCode,
                 UomFactor = l.UomFactor,

@@ -1,4 +1,4 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using ThinkOnErp.Domain.Entities;
 
@@ -11,7 +11,7 @@ public class SysRoleConfiguration : IEntityTypeConfiguration<SysRole>
         builder.ToTable("SYS_ROLE", t => t.ExcludeFromMigrations());
         builder.HasKey(e => e.Id);
         builder.Property(e => e.Id).ValueGeneratedOnAdd();
-builder.Property(e => e.RoleNameAr).HasColumnName("NAME_AR").HasMaxLength(200).IsRequired();
+builder.Property(e => e.RoleNameLocal).HasColumnName("NAME_LOCAL").HasMaxLength(200).IsRequired();
 builder.Property(e => e.RoleNameEn).HasColumnName("NAME_EN").HasMaxLength(200).IsRequired();
         builder.Property(e => e.Note).HasColumnName("NOTE").HasMaxLength(500);
         builder.Property(e => e.IsActive).HasColumnName("IS_ACTIVE").HasConversion<string>(v => v ? "1" : "0", v => v == "1" || v == "Y" || v == "true").HasMaxLength(1);
@@ -29,17 +29,17 @@ public class SysCurrencyConfiguration : IEntityTypeConfiguration<SysCurrency>
         builder.ToTable("SYS_CURRENCY");
         builder.HasKey(e => e.Id);
         builder.Property(e => e.Id).ValueGeneratedOnAdd();
-builder.Property(e => e.CurrencyNameAr).HasColumnName("NAME_AR").HasMaxLength(200).IsRequired();
+builder.Property(e => e.CurrencyNameLocal).HasColumnName("NAME_LOCAL").HasMaxLength(200).IsRequired();
 builder.Property(e => e.CurrencyNameEn).HasColumnName("NAME_EN").HasMaxLength(200).IsRequired();
-        builder.Property(e => e.ShortNameAr).HasColumnName("SHORT_DESC").HasMaxLength(50).IsRequired();
+        builder.Property(e => e.ShortNameLocal).HasColumnName("SHORT_DESC").HasMaxLength(50).IsRequired();
         builder.Property(e => e.ShortNameEn).HasColumnName("SHORT_DESC_E").HasMaxLength(50).IsRequired();
-        builder.Property(e => e.SingularNameAr).HasColumnName("SINGULER_DESC").HasMaxLength(50).IsRequired();
+        builder.Property(e => e.SingularNameLocal).HasColumnName("SINGULER_DESC").HasMaxLength(50).IsRequired();
         builder.Property(e => e.SingularNameEn).HasColumnName("SINGULER_DESC_E").HasMaxLength(50).IsRequired();
-        builder.Property(e => e.DualNameAr).HasColumnName("DUAL_DESC").HasMaxLength(50).IsRequired();
+        builder.Property(e => e.DualNameLocal).HasColumnName("DUAL_DESC").HasMaxLength(50).IsRequired();
         builder.Property(e => e.DualNameEn).HasColumnName("DUAL_DESC_E").HasMaxLength(50).IsRequired();
-        builder.Property(e => e.CollectiveNameAr).HasColumnName("SUM_DESC").HasMaxLength(50).IsRequired();
+        builder.Property(e => e.CollectiveNameLocal).HasColumnName("SUM_DESC").HasMaxLength(50).IsRequired();
         builder.Property(e => e.CollectiveNameEn).HasColumnName("SUM_DESC_E").HasMaxLength(50).IsRequired();
-        builder.Property(e => e.FractionNameAr).HasColumnName("FRAC_DESC").HasMaxLength(50).IsRequired();
+        builder.Property(e => e.FractionNameLocal).HasColumnName("FRAC_DESC").HasMaxLength(50).IsRequired();
         builder.Property(e => e.FractionNameEn).HasColumnName("FRAC_DESC_E").HasMaxLength(50).IsRequired();
         builder.Property(e => e.CurrRate).HasColumnName("CURR_RATE").HasColumnType("DECIMAL(18,6)");
         builder.Property(e => e.CurrRateDate).HasColumnName("CURR_RATE_DATE");
@@ -57,7 +57,7 @@ public class SysCompanyConfiguration : IEntityTypeConfiguration<SysCompany>
         builder.ToTable("SYS_COMPANY");
         builder.HasKey(e => e.Id);
         builder.Property(e => e.Id).ValueGeneratedOnAdd();
-builder.Property(e => e.CompanyNameAr).HasColumnName("NAME_AR").HasMaxLength(200).IsRequired();
+builder.Property(e => e.CompanyNameLocal).HasColumnName("NAME_LOCAL").HasMaxLength(200).IsRequired();
 builder.Property(e => e.CompanyNameEn).HasColumnName("NAME_EN").HasMaxLength(200).IsRequired();
         builder.Property(e => e.CountryId).HasColumnName("COUNTRY_ID");
         builder.Property(e => e.CurrId).HasColumnName("CURR_ID");
@@ -90,7 +90,7 @@ public class SysBranchConfiguration : IEntityTypeConfiguration<SysBranch>
         builder.HasKey(e => e.Id);
         builder.Property(e => e.Id).ValueGeneratedOnAdd();
         builder.Property(e => e.CompanyId).HasColumnName("COMPANY_ID");
-builder.Property(e => e.BranchNameAr).HasColumnName("NAME_AR").HasMaxLength(200).IsRequired();
+builder.Property(e => e.BranchNameLocal).HasColumnName("NAME_LOCAL").HasMaxLength(200).IsRequired();
 builder.Property(e => e.BranchNameEn).HasColumnName("NAME_EN").HasMaxLength(200).IsRequired();
         builder.Property(e => e.Phone).HasColumnName("PHONE").HasMaxLength(50);
         builder.Property(e => e.Mobile).HasColumnName("MOBILE").HasMaxLength(50);
@@ -122,7 +122,7 @@ public class SysUserConfiguration : IEntityTypeConfiguration<SysUser>
         builder.ToTable("SYS_USERS", t => t.ExcludeFromMigrations());
         builder.HasKey(e => e.Id);
         builder.Property(e => e.Id).ValueGeneratedOnAdd();
-builder.Property(e => e.FullNameAr).HasColumnName("NAME_AR").HasMaxLength(200).IsRequired();
+builder.Property(e => e.FullNameLocal).HasColumnName("NAME_LOCAL").HasMaxLength(200).IsRequired();
 builder.Property(e => e.FullNameEn).HasColumnName("NAME_EN").HasMaxLength(200).IsRequired();
         builder.Property(e => e.UserName).HasColumnName("USER_NAME").HasMaxLength(100).IsRequired();
         builder.HasIndex(e => e.UserName).IsUnique();
@@ -156,7 +156,7 @@ public class SysFiscalYearConfiguration : IEntityTypeConfiguration<SysFiscalYear
         builder.Property(e => e.Id).ValueGeneratedOnAdd();
         builder.Property(e => e.BranchId).HasColumnName("BRANCH_ID").IsRequired();
         builder.Property(e => e.FiscalYearCode).HasColumnName("FISCAL_YEAR_CODE").HasMaxLength(20).IsRequired();
-builder.Property(e => e.FiscalYearNameAr).HasColumnName("NAME_AR").HasMaxLength(200);
+builder.Property(e => e.FiscalYearNameLocal).HasColumnName("NAME_LOCAL").HasMaxLength(200);
 builder.Property(e => e.FiscalYearNameEn).HasColumnName("NAME_EN").HasMaxLength(200);
         builder.Property(e => e.StartDate).HasColumnName("START_DATE").IsRequired();
         builder.Property(e => e.EndDate).HasColumnName("END_DATE").IsRequired();
@@ -179,7 +179,7 @@ public class SysSuperAdminConfiguration : IEntityTypeConfiguration<SysSuperAdmin
         builder.ToTable("SYS_SUPER_ADMIN");
         builder.HasKey(e => e.Id);
         builder.Property(e => e.Id).ValueGeneratedOnAdd();
-builder.Property(e => e.NameAr).HasColumnName("NAME_AR").HasMaxLength(200).IsRequired();
+builder.Property(e => e.NameLocal).HasColumnName("NAME_LOCAL").HasMaxLength(200).IsRequired();
 builder.Property(e => e.NameEn).HasColumnName("NAME_EN").HasMaxLength(200).IsRequired();
         builder.Property(e => e.UserName).HasColumnName("USER_NAME").HasMaxLength(100).IsRequired();
         builder.HasIndex(e => e.UserName).IsUnique();

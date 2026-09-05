@@ -57,7 +57,7 @@ public sealed class XlsxCoaWorkbookReaderTests
         Assert.Equal(2, row.RowNumber);
         Assert.Equal("111101", row.AccountCode);
         Assert.Equal("1111", row.ParentCode);
-        Assert.Equal("الصندوق الرئيسي", row.AccountNameAr);
+        Assert.Equal("الصندوق الرئيسي", row.AccountNameLocal);
         Assert.Equal("Main cash", row.AccountNameEn);
         Assert.Equal(5, row.AccountLevel);
         Assert.Equal("DETAIL", row.AccountType);

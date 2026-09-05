@@ -197,6 +197,7 @@ public static class DependencyInjection
         services.AddScoped<ITrxTypeRepository, TrxTypeRepository>();
         services.AddScoped<IInvItemGroupRepository, InvItemGroupRepository>();
         services.AddScoped<IInvBomRepository, InvBomRepository>();
+        services.AddScoped<ITranslationRepository, TranslationRepository>();
 
         // Register audit logging services
         services.AddScoped<IAuditRepository, AuditRepository>();

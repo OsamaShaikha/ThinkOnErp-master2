@@ -1,4 +1,4 @@
-namespace ThinkOnErp.Application.DTOs.Currency;
+﻿namespace ThinkOnErp.Application.DTOs.Currency;
 
 /// <summary>
 /// Data transfer object for creating a new currency.
@@ -9,7 +9,7 @@ public class CreateCurrencyDto
     /// <summary>
     /// Arabic description of the currency (required)
     /// </summary>
-    public string CurrencyNameAr { get; set; } = string.Empty;
+    public string CurrencyNameLocal { get; set; } = string.Empty;
 
     /// <summary>
     /// English description of the currency (required)
@@ -19,7 +19,7 @@ public class CreateCurrencyDto
     /// <summary>
     /// Arabic short description (required)
     /// </summary>
-    public string ShortNameAr { get; set; } = string.Empty;
+    public string ShortNameLocal { get; set; } = string.Empty;
 
     /// <summary>
     /// English short description (required)
@@ -29,7 +29,7 @@ public class CreateCurrencyDto
     /// <summary>
     /// Arabic singular form (required)
     /// </summary>
-    public string SingularNameAr { get; set; } = string.Empty;
+    public string SingularNameLocal { get; set; } = string.Empty;
 
     /// <summary>
     /// English singular form (required)
@@ -39,7 +39,7 @@ public class CreateCurrencyDto
     /// <summary>
     /// Arabic dual form (required)
     /// </summary>
-    public string DualNameAr { get; set; } = string.Empty;
+    public string DualNameLocal { get; set; } = string.Empty;
 
     /// <summary>
     /// English dual form (required)
@@ -49,7 +49,7 @@ public class CreateCurrencyDto
     /// <summary>
     /// Arabic sum form (required)
     /// </summary>
-    public string CollectiveNameAr { get; set; } = string.Empty;
+    public string CollectiveNameLocal { get; set; } = string.Empty;
 
     /// <summary>
     /// English sum form (required)
@@ -59,7 +59,7 @@ public class CreateCurrencyDto
     /// <summary>
     /// Arabic fraction form (required)
     /// </summary>
-    public string FractionNameAr { get; set; } = string.Empty;
+    public string FractionNameLocal { get; set; } = string.Empty;
 
     /// <summary>
     /// English fraction form (required)

@@ -18,7 +18,7 @@ public sealed class InvOpeningLineConfiguration : IEntityTypeConfiguration<InvOp
         builder.Property(l => l.ItemId).HasColumnName("ITEM_ID").IsRequired();
         builder.Property(l => l.BinId).HasColumnName("BIN_ID");
 
-        builder.Property(l => l.UomCode).HasColumnName("UOM_CODE").HasMaxLength(20).IsRequired();
+        builder.Property(l => l.UomCode).HasColumnName("UOM_CODE").HasColumnType("NUMBER(6)").IsRequired();
         builder.Property(l => l.UomFactor).HasColumnName("UOM_FACTOR").HasColumnType("NUMBER(18,6)").HasDefaultValue(1m);
         builder.Property(l => l.Quantity).HasColumnName("QUANTITY").HasColumnType("NUMBER(14,4)").IsRequired();
         builder.Property(l => l.BaseQuantity).HasColumnName("BASE_QUANTITY").HasColumnType("NUMBER(14,4)").IsRequired();

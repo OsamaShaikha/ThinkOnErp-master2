@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -25,7 +25,7 @@ public sealed class InvBomService : IInvBomService
 
     public async Task<ApiResponse<InvBomDto>> CreateBomAsync(CreateInvBomDto dto, string username, CancellationToken ct = default)
     {
-        if (await _bomRepository.ExistsAsync(dto.BomCode.Trim(), null, ct))
+        if (await _bomRepository.ExistsAsync(dto.BomCode, null, ct))
             return ApiResponse<InvBomDto>.CreateFailure($"BOM code '{dto.BomCode}' already exists", null, 400);
 
         var bom = InvBomMapper.ToEntity(dto, username);
@@ -57,11 +57,12 @@ public sealed class InvBomService : IInvBomService
         return ApiResponse<List<InvBomDto>>.CreateSuccess(list.Select(InvBomMapper.ToDto).ToList());
     }
 
-    public async Task<ApiResponse<(List<InvBomDto> Items, int TotalCount)>> GetPagedAsync(long? branchId, int pageIndex, int pageSize, CancellationToken ct = default)
+    public async Task<ApiResponse<PagedResultDto<InvBomDto>>> GetPagedAsync(long? branchId, int pageIndex, int pageSize, CancellationToken ct = default)
     {
         var (items, total) = await _bomRepository.GetPagedAsync(branchId, pageIndex, pageSize, ct);
         var dtos = items.Select(InvBomMapper.ToDto).ToList();
-        return ApiResponse<(List<InvBomDto> Items, int TotalCount)>.CreateSuccess((dtos, total));
+        var pagedResult = new PagedResultDto<InvBomDto>(dtos, total, pageIndex, pageSize);
+        return ApiResponse<PagedResultDto<InvBomDto>>.CreateSuccess(pagedResult);
     }
 
     public async Task<ApiResponse<InvBomDto>> UpdateBomAsync(long id, UpdateInvBomDto dto, string username, CancellationToken ct = default)
@@ -70,10 +71,10 @@ public sealed class InvBomService : IInvBomService
         if (bom == null)
             return ApiResponse<InvBomDto>.CreateFailure("BOM recipe not found", null, 404);
 
-        if (!string.IsNullOrWhiteSpace(dto.BomNameAr)) bom.BomNameAr = dto.BomNameAr.Trim();
+        if (!string.IsNullOrWhiteSpace(dto.BomNameLocal)) bom.BomNameLocal = dto.BomNameLocal.Trim();
         if (dto.BomNameEn != null) bom.BomNameEn = dto.BomNameEn.Trim();
         if (dto.OutputQty.HasValue) bom.OutputQty = dto.OutputQty.Value;
-        if (!string.IsNullOrWhiteSpace(dto.UomCode)) bom.UomCode = dto.UomCode.Trim();
+        if (dto.UomCode.HasValue) bom.UomCode = dto.UomCode.Value;
         if (dto.BomType.HasValue) bom.BomType = dto.BomType.Value;
         if (dto.LaborCost.HasValue) bom.LaborCost = dto.LaborCost.Value;
         if (dto.OverheadCost.HasValue) bom.OverheadCost = dto.OverheadCost.Value;

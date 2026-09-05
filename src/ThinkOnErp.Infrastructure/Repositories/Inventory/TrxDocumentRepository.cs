@@ -67,6 +67,48 @@ public sealed class TrxDocumentRepository : ITrxDocumentRepository
         return (maxId ?? 0) + 1;
     }
 
+    public async Task<long> GenerateNextSerialNoAsync(
+        long branchId,
+        int docYear,
+        int docMonth,
+        int docType,
+        string resetPolicy,
+        CancellationToken ct = default)
+    {
+        var targetMonth = resetPolicy.Equals("YEARLY", System.StringComparison.OrdinalIgnoreCase) ? 0 : docMonth;
+
+        var serialRecord = await _context.TrxDocumentSerials
+            .FirstOrDefaultAsync(
+                s => s.BranchId == branchId &&
+                     s.DocYear == docYear &&
+                     s.DocMonth == targetMonth &&
+                     s.DocType == docType,
+                ct);
+
+        if (serialRecord == null)
+        {
+            serialRecord = new TrxDocumentSerial
+            {
+                BranchId = branchId,
+                DocYear = docYear,
+                DocMonth = targetMonth,
+                DocType = docType,
+                LastSerialNo = 1,
+                UpdateDate = System.DateTime.UtcNow
+            };
+            await _context.TrxDocumentSerials.AddAsync(serialRecord, ct);
+        }
+        else
+        {
+            serialRecord.LastSerialNo += 1;
+            serialRecord.UpdateDate = System.DateTime.UtcNow;
+            _context.TrxDocumentSerials.Update(serialRecord);
+        }
+
+        await _context.SaveChangesAsync(ct);
+        return serialRecord.LastSerialNo;
+    }
+
     public async Task<TrxDocumentHeader> CreateAsync(TrxDocumentHeader doc, CancellationToken ct = default)
     {
         await _context.TrxDocumentHeaders.AddAsync(doc, ct);

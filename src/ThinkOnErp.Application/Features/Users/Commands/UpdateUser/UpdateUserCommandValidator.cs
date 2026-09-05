@@ -1,4 +1,4 @@
-using FluentValidation;
+﻿using FluentValidation;
 using ThinkOnErp.Domain.Interfaces;
 
 namespace ThinkOnErp.Application.Features.Users.Commands.UpdateUser;
@@ -10,7 +10,7 @@ public class UpdateUserCommandValidator : AbstractValidator<UpdateUserCommand>
         IRoleRepository roleRepository)
     {
         RuleFor(x => x.UserId).GreaterThan(0);
-        RuleFor(x => x.NameAr).NotEmpty().MaximumLength(100);
+        RuleFor(x => x.NameLocal).NotEmpty().MaximumLength(100);
         RuleFor(x => x.NameEn).NotEmpty().MaximumLength(100);
         RuleFor(x => x.UserName).NotEmpty().MaximumLength(50);
         RuleFor(x => x.Email).EmailAddress().When(x => !string.IsNullOrEmpty(x.Email));

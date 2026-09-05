@@ -15,7 +15,7 @@ public sealed class BankAccountConfiguration : IEntityTypeConfiguration<BankAcco
 
         builder.Property(e => e.BranchId).HasColumnName("BRANCH_ID").IsRequired();
         builder.Property(e => e.AccountNumber).HasColumnName("ACCOUNT_NUMBER").HasMaxLength(50).IsRequired();
-        builder.Property(e => e.AccountNameAr).HasColumnName("ACCOUNT_NAME_AR").HasMaxLength(200).IsRequired();
+        builder.Property(e => e.AccountNameLocal).HasColumnName("ACCOUNT_NAME_LOCAL").HasMaxLength(200).IsRequired();
         builder.Property(e => e.AccountNameEn).HasColumnName("ACCOUNT_NAME_EN").HasMaxLength(200).IsRequired();
         builder.Property(e => e.BankName).HasColumnName("BANK_NAME").HasMaxLength(150).IsRequired();
         builder.Property(e => e.BankBranchName).HasColumnName("BANK_BRANCH_NAME").HasMaxLength(150);
@@ -53,7 +53,7 @@ public sealed class CashRegisterConfiguration : IEntityTypeConfiguration<CashReg
 
         builder.Property(e => e.BranchId).HasColumnName("BRANCH_ID").IsRequired();
         builder.Property(e => e.Code).HasColumnName("CODE").HasMaxLength(50).IsRequired();
-        builder.Property(e => e.NameAr).HasColumnName("NAME_AR").HasMaxLength(200).IsRequired();
+        builder.Property(e => e.NameLocal).HasColumnName("NAME_LOCAL").HasMaxLength(200).IsRequired();
         builder.Property(e => e.NameEn).HasColumnName("NAME_EN").HasMaxLength(200).IsRequired();
 
         builder.Property(e => e.RegisterType).HasColumnName("REGISTER_TYPE").HasMaxLength(30).IsRequired();

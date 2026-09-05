@@ -1,4 +1,4 @@
-using FluentValidation;
+﻿using FluentValidation;
 
 namespace ThinkOnErp.Application.Features.Companies.Commands.CreateCompanyWithBranch;
 
@@ -17,10 +17,10 @@ public class CreateCompanyWithBranchCommandValidator : AbstractValidator<CreateC
             .MaximumLength(200)
             .WithMessage("Company English name cannot exceed 200 characters");
 
-        RuleFor(x => x.CompanyNameAr)
+        RuleFor(x => x.CompanyNameLocal)
             .MaximumLength(200)
             .WithMessage("Company Arabic name cannot exceed 200 characters")
-            .When(x => !string.IsNullOrEmpty(x.CompanyNameAr));
+            .When(x => !string.IsNullOrEmpty(x.CompanyNameLocal));
 
         // Legal Name Validation
         RuleFor(x => x.LegalNameEn)
@@ -29,10 +29,10 @@ public class CreateCompanyWithBranchCommandValidator : AbstractValidator<CreateC
             .MaximumLength(200)
             .WithMessage("Legal English name cannot exceed 200 characters");
 
-        RuleFor(x => x.LegalNameAr)
+        RuleFor(x => x.LegalNameLocal)
             .MaximumLength(200)
             .WithMessage("Legal Arabic name cannot exceed 200 characters")
-            .When(x => !string.IsNullOrEmpty(x.LegalNameAr));
+            .When(x => !string.IsNullOrEmpty(x.LegalNameLocal));
 
         // Company Code Validation
         RuleFor(x => x.CompanyCode)
@@ -58,10 +58,10 @@ public class CreateCompanyWithBranchCommandValidator : AbstractValidator<CreateC
             .WithMessage("Branch English name cannot exceed 200 characters")
             .When(x => !string.IsNullOrEmpty(x.BranchNameEn));
 
-        RuleFor(x => x.BranchNameAr)
+        RuleFor(x => x.BranchNameLocal)
             .MaximumLength(200)
             .WithMessage("Branch Arabic name cannot exceed 200 characters")
-            .When(x => !string.IsNullOrEmpty(x.BranchNameAr));
+            .When(x => !string.IsNullOrEmpty(x.BranchNameLocal));
 
         // Contact Information Validation (Optional)
         RuleFor(x => x.BranchPhone)

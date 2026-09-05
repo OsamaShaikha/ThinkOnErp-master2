@@ -1,4 +1,4 @@
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 
 namespace ThinkOnErp.Application.DTOs.Inventory.ItemGroups;
 
@@ -8,12 +8,11 @@ public sealed class CreateInvItemGroupDto
     public long? ParentGroupId { get; set; }
 
     [Required]
-    [MaxLength(30)]
-    public string GroupCode { get; set; } = string.Empty;
+    public long GroupCode { get; set; }
 
     [Required]
     [MaxLength(150)]
-    public string GroupNameAr { get; set; } = string.Empty;
+    public string GroupNameLocal { get; set; } = string.Empty;
 
     [MaxLength(150)]
     public string? GroupNameEn { get; set; }

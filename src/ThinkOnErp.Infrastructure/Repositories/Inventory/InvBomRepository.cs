@@ -27,7 +27,7 @@ public sealed class InvBomRepository : IInvBomRepository
             .FirstOrDefaultAsync(b => b.Id == id, ct);
     }
 
-    public async Task<InvBomHeader?> GetByCodeAsync(string code, CancellationToken ct = default)
+    public async Task<InvBomHeader?> GetByCodeAsync(long code, CancellationToken ct = default)
     {
         return await _context.InvBomHeaders
             .Include(b => b.Lines)
@@ -87,7 +87,7 @@ public sealed class InvBomRepository : IInvBomRepository
         }
     }
 
-    public async Task<bool> ExistsAsync(string code, long? excludeId = null, CancellationToken ct = default)
+    public async Task<bool> ExistsAsync(long code, long? excludeId = null, CancellationToken ct = default)
     {
         var query = _context.InvBomHeaders.Where(b => b.BomCode == code);
         if (excludeId.HasValue) query = query.Where(b => b.Id != excludeId.Value);

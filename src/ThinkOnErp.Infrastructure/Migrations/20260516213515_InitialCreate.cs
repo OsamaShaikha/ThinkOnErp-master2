@@ -125,7 +125,7 @@ namespace ThinkOnErp.Infrastructure.Migrations
                 {
                     Id = table.Column<long>(type: "NUMBER(19)", nullable: false)
                         .Annotation("Oracle:Identity", "START WITH 1 INCREMENT BY 1"),
-                    NAME_AR = table.Column<string>(type: "NVARCHAR2(200)", maxLength: 200, nullable: false),
+                    NAME_LOCAL = table.Column<string>(type: "NVARCHAR2(200)", maxLength: 200, nullable: false),
                     NAME_EN = table.Column<string>(type: "NVARCHAR2(200)", maxLength: 200, nullable: false),
                     SHORT_DESC = table.Column<string>(type: "NVARCHAR2(50)", maxLength: 50, nullable: false),
                     SHORT_DESC_E = table.Column<string>(type: "NVARCHAR2(50)", maxLength: 50, nullable: false),
@@ -240,7 +240,7 @@ namespace ThinkOnErp.Infrastructure.Migrations
                 {
                     Id = table.Column<long>(type: "NUMBER(19)", nullable: false)
                         .Annotation("Oracle:Identity", "START WITH 1 INCREMENT BY 1"),
-                    NAME_AR = table.Column<string>(type: "NVARCHAR2(200)", maxLength: 200, nullable: false),
+                    NAME_LOCAL = table.Column<string>(type: "NVARCHAR2(200)", maxLength: 200, nullable: false),
                     NAME_EN = table.Column<string>(type: "NVARCHAR2(200)", maxLength: 200, nullable: false),
                     NOTE = table.Column<string>(type: "NVARCHAR2(500)", maxLength: 500, nullable: true),
                     IS_ACTIVE = table.Column<string>(type: "NUMBER(1)", maxLength: 1, nullable: false),
@@ -304,7 +304,7 @@ namespace ThinkOnErp.Infrastructure.Migrations
                 {
                     Id = table.Column<long>(type: "NUMBER(19)", nullable: false)
                         .Annotation("Oracle:Identity", "START WITH 1 INCREMENT BY 1"),
-                    NAME_AR = table.Column<string>(type: "NVARCHAR2(200)", maxLength: 200, nullable: false),
+                    NAME_LOCAL = table.Column<string>(type: "NVARCHAR2(200)", maxLength: 200, nullable: false),
                     NAME_EN = table.Column<string>(type: "NVARCHAR2(200)", maxLength: 200, nullable: false),
                     USER_NAME = table.Column<string>(type: "NVARCHAR2(100)", maxLength: 100, nullable: false),
                     PASSWORD = table.Column<string>(type: "NVARCHAR2(500)", maxLength: 500, nullable: false),
@@ -354,9 +354,9 @@ namespace ThinkOnErp.Infrastructure.Migrations
                 {
                     Id = table.Column<long>(type: "NUMBER(19)", nullable: false)
                         .Annotation("Oracle:Identity", "START WITH 1 INCREMENT BY 1"),
-                    CATEGORY_NAME_AR = table.Column<string>(type: "NVARCHAR2(200)", maxLength: 200, nullable: false),
+                    CATEGORY_NAME_LOCAL = table.Column<string>(type: "NVARCHAR2(200)", maxLength: 200, nullable: false),
                     CATEGORY_NAME_EN = table.Column<string>(type: "NVARCHAR2(200)", maxLength: 200, nullable: false),
-                    DESCRIPTION_AR = table.Column<string>(type: "NVARCHAR2(500)", maxLength: 500, nullable: true),
+                    DESCRIPTION_LOCAL = table.Column<string>(type: "NVARCHAR2(500)", maxLength: 500, nullable: true),
                     DESCRIPTION_EN = table.Column<string>(type: "NVARCHAR2(500)", maxLength: 500, nullable: true),
                     DISPLAY_ORDER = table.Column<int>(type: "NUMBER(10)", nullable: false),
                     IS_ACTIVE = table.Column<string>(type: "NUMBER(1)", maxLength: 1, nullable: false),
@@ -379,7 +379,7 @@ namespace ThinkOnErp.Infrastructure.Migrations
                     CONFIG_KEY = table.Column<string>(type: "NVARCHAR2(100)", maxLength: 100, nullable: false),
                     CONFIG_VALUE = table.Column<string>(type: "NVARCHAR2(1000)", maxLength: 1000, nullable: false),
                     CONFIG_TYPE = table.Column<string>(type: "NVARCHAR2(50)", maxLength: 50, nullable: false),
-                    DESCRIPTION_AR = table.Column<string>(type: "NVARCHAR2(500)", maxLength: 500, nullable: true),
+                    DESCRIPTION_LOCAL = table.Column<string>(type: "NVARCHAR2(500)", maxLength: 500, nullable: true),
                     DESCRIPTION_EN = table.Column<string>(type: "NVARCHAR2(500)", maxLength: 500, nullable: true),
                     IS_ACTIVE = table.Column<string>(type: "NUMBER(1)", maxLength: 1, nullable: false),
                     CREATION_USER = table.Column<string>(type: "NVARCHAR2(100)", maxLength: 100, nullable: false),
@@ -398,7 +398,7 @@ namespace ThinkOnErp.Infrastructure.Migrations
                 {
                     Id = table.Column<long>(type: "NUMBER(19)", nullable: false)
                         .Annotation("Oracle:Identity", "START WITH 1 INCREMENT BY 1"),
-                    PRIORITY_NAME_AR = table.Column<string>(type: "NVARCHAR2(200)", maxLength: 200, nullable: false),
+                    PRIORITY_NAME_LOCAL = table.Column<string>(type: "NVARCHAR2(200)", maxLength: 200, nullable: false),
                     PRIORITY_NAME_EN = table.Column<string>(type: "NVARCHAR2(200)", maxLength: 200, nullable: false),
                     PRIORITY_LEVEL = table.Column<int>(type: "NUMBER(10)", nullable: false),
                     SLA_TARGET_HOURS = table.Column<decimal>(type: "NUMBER", nullable: false),
@@ -418,7 +418,7 @@ namespace ThinkOnErp.Infrastructure.Migrations
                 {
                     Id = table.Column<long>(type: "NUMBER(19)", nullable: false)
                         .Annotation("Oracle:Identity", "START WITH 1 INCREMENT BY 1"),
-                    STATUS_NAME_AR = table.Column<string>(type: "NVARCHAR2(200)", maxLength: 200, nullable: false),
+                    STATUS_NAME_LOCAL = table.Column<string>(type: "NVARCHAR2(200)", maxLength: 200, nullable: false),
                     STATUS_NAME_EN = table.Column<string>(type: "NVARCHAR2(200)", maxLength: 200, nullable: false),
                     STATUS_CODE = table.Column<string>(type: "NVARCHAR2(50)", maxLength: 50, nullable: false),
                     DISPLAY_ORDER = table.Column<int>(type: "NUMBER(10)", nullable: false),
@@ -438,7 +438,7 @@ namespace ThinkOnErp.Infrastructure.Migrations
                 {
                     Id = table.Column<long>(type: "NUMBER(19)", nullable: false)
                         .Annotation("Oracle:Identity", "START WITH 1 INCREMENT BY 1"),
-                    NAME_AR = table.Column<string>(type: "NVARCHAR2(200)", maxLength: 200, nullable: false),
+                    NAME_LOCAL = table.Column<string>(type: "NVARCHAR2(200)", maxLength: 200, nullable: false),
                     NAME_EN = table.Column<string>(type: "NVARCHAR2(200)", maxLength: 200, nullable: false),
                     USER_NAME = table.Column<string>(type: "NVARCHAR2(100)", maxLength: 100, nullable: false),
                     PASSWORD = table.Column<string>(type: "NVARCHAR2(500)", maxLength: 500, nullable: false),
@@ -509,9 +509,9 @@ namespace ThinkOnErp.Infrastructure.Migrations
                 {
                     Id = table.Column<long>(type: "NUMBER(19)", nullable: false)
                         .Annotation("Oracle:Identity", "START WITH 1 INCREMENT BY 1"),
-                    TYPE_NAME_AR = table.Column<string>(type: "NVARCHAR2(200)", maxLength: 200, nullable: false),
+                    TYPE_NAME_LOCAL = table.Column<string>(type: "NVARCHAR2(200)", maxLength: 200, nullable: false),
                     TYPE_NAME_EN = table.Column<string>(type: "NVARCHAR2(200)", maxLength: 200, nullable: false),
-                    DESCRIPTION_AR = table.Column<string>(type: "NVARCHAR2(500)", maxLength: 500, nullable: true),
+                    DESCRIPTION_LOCAL = table.Column<string>(type: "NVARCHAR2(500)", maxLength: 500, nullable: true),
                     DESCRIPTION_EN = table.Column<string>(type: "NVARCHAR2(500)", maxLength: 500, nullable: true),
                     DEFAULT_PRIORITY_ID = table.Column<long>(type: "NUMBER(19)", nullable: false),
                     SLA_TARGET_HOURS = table.Column<decimal>(type: "NUMBER", nullable: false),
@@ -671,7 +671,7 @@ namespace ThinkOnErp.Infrastructure.Migrations
                     Id = table.Column<long>(type: "NUMBER(19)", nullable: false)
                         .Annotation("Oracle:Identity", "START WITH 1 INCREMENT BY 1"),
                     COMPANY_ID = table.Column<long>(type: "NUMBER(19)", nullable: true),
-                    NAME_AR = table.Column<string>(type: "NVARCHAR2(200)", maxLength: 200, nullable: false),
+                    NAME_LOCAL = table.Column<string>(type: "NVARCHAR2(200)", maxLength: 200, nullable: false),
                     NAME_EN = table.Column<string>(type: "NVARCHAR2(200)", maxLength: 200, nullable: false),
                     PHONE = table.Column<string>(type: "NVARCHAR2(50)", maxLength: 50, nullable: true),
                     MOBILE = table.Column<string>(type: "NVARCHAR2(50)", maxLength: 50, nullable: true),
@@ -789,7 +789,7 @@ namespace ThinkOnErp.Infrastructure.Migrations
                 {
                     Id = table.Column<long>(type: "NUMBER(19)", nullable: false)
                         .Annotation("Oracle:Identity", "START WITH 1 INCREMENT BY 1"),
-                    NAME_AR = table.Column<string>(type: "NVARCHAR2(200)", maxLength: 200, nullable: false),
+                    NAME_LOCAL = table.Column<string>(type: "NVARCHAR2(200)", maxLength: 200, nullable: false),
                     NAME_EN = table.Column<string>(type: "NVARCHAR2(200)", maxLength: 200, nullable: false),
                     COUNTRY_ID = table.Column<long>(type: "NUMBER(19)", nullable: true),
                     CURR_ID = table.Column<long>(type: "NUMBER(19)", nullable: true),
@@ -874,7 +874,7 @@ namespace ThinkOnErp.Infrastructure.Migrations
                     COMPANY_ID = table.Column<long>(type: "NUMBER(19)", nullable: false),
                     BRANCH_ID = table.Column<long>(type: "NUMBER(19)", nullable: false),
                     FISCAL_YEAR_CODE = table.Column<string>(type: "NVARCHAR2(20)", maxLength: 20, nullable: false),
-                    NAME_AR = table.Column<string>(type: "NVARCHAR2(200)", maxLength: 200, nullable: true),
+                    NAME_LOCAL = table.Column<string>(type: "NVARCHAR2(200)", maxLength: 200, nullable: true),
                     NAME_EN = table.Column<string>(type: "NVARCHAR2(200)", maxLength: 200, nullable: true),
                     START_DATE = table.Column<DateTime>(type: "TIMESTAMP(7)", nullable: false),
                     END_DATE = table.Column<DateTime>(type: "TIMESTAMP(7)", nullable: false),

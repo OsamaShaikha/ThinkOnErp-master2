@@ -26,8 +26,11 @@ public class JwtTokenService
     /// Generates a JWT token for an authenticated user with all required claims.
     /// </summary>
     /// <param name="user">The authenticated user</param>
+    /// <param name="companyCode">Optional company code</param>
+    /// <param name="companySchema">Optional company schema</param>
+    /// <param name="requestedLanguage">Optional requested session language ID (1 = Arabic, 2 = English, 3 = French, 4 = Spanish, 5 = Turkish, 6 = German)</param>
     /// <returns>TokenDto containing the JWT token and expiration time</returns>
-    public virtual TokenDto GenerateToken(SysUser user, string? companyCode = null, string? companySchema = null)
+    public virtual TokenDto GenerateToken(SysUser user, string? companyCode = null, string? companySchema = null, int? requestedLanguage = null)
     {
         if (user == null)
         {
@@ -53,6 +56,11 @@ public class JwtTokenService
         var issuedAt = DateTime.UtcNow;
         var expiresAt = issuedAt.AddMinutes(expiryInMinutes);
 
+        // Resolve active session language ID (1 = Arabic, 2 = English, etc.)
+        int sessionLang = (requestedLanguage.HasValue && requestedLanguage.Value > 0)
+            ? requestedLanguage.Value
+            : (user.DefaultLang > 0 ? user.DefaultLang : 1);
+
         // Create claims with user information
         var claims = new List<Claim>
         {
@@ -65,7 +73,7 @@ public class JwtTokenService
             new("companyId", user.CompanyId?.ToString() ?? "0"),
             new("branchId", user.BranchId?.ToString() ?? "0"),
             new("isAdmin", user.IsAdmin.ToString().ToLower()),
-            new("lang", (user.DefaultLang > 0 ? user.DefaultLang : 1).ToString()),
+            new("lang", sessionLang.ToString()),
             new("defaultLang", (user.DefaultLang > 0 ? user.DefaultLang : 1).ToString()),
             new(
                 JwtRegisteredClaimNames.Iat,
@@ -101,7 +109,8 @@ public class JwtTokenService
             RefreshTokenExpiresAt = DateTime.UtcNow.AddDays(
                 int.Parse(_configuration["JwtSettings:RefreshTokenExpiryInDays"] ?? "7")),
             CompanyCode = companyCode,
-            CompanySchema = companySchema
+            CompanySchema = companySchema,
+            Language = sessionLang
         };
     }
 
@@ -109,8 +118,9 @@ public class JwtTokenService
     /// Generates a JWT token for an authenticated super admin with all required claims.
     /// </summary>
     /// <param name="superAdmin">The authenticated super admin</param>
+    /// <param name="requestedLanguage">Optional requested session language ID (1 = Arabic, 2 = English, 3 = French, 4 = Spanish, 5 = Turkish, 6 = German)</param>
     /// <returns>TokenDto containing the JWT token and expiration time</returns>
-    public virtual TokenDto GenerateToken(SysSuperAdmin superAdmin)
+    public virtual TokenDto GenerateToken(SysSuperAdmin superAdmin, int? requestedLanguage = null)
     {
         if (superAdmin == null)
         {
@@ -134,6 +144,11 @@ public class JwtTokenService
         var issuedAt = DateTime.UtcNow;
         var expiresAt = issuedAt.AddMinutes(expiryInMinutes);
 
+        // Resolve active session language ID (1 = Arabic, 2 = English, etc.)
+        int sessionLang = (requestedLanguage.HasValue && requestedLanguage.Value > 0)
+            ? requestedLanguage.Value
+            : 1;
+
         // Create claims with super admin information
         var claims = new[]
         {
@@ -146,6 +161,8 @@ public class JwtTokenService
             new Claim(ClaimTypes.Role, "SuperAdmin"),
             new Claim("isAdmin", "true"), // Super admins are always admins
             new Claim("isSuperAdmin", "true"), // Special claim for super admin
+            new Claim("lang", sessionLang.ToString()),
+            new Claim("defaultLang", "1"),
             new Claim(
                 JwtRegisteredClaimNames.Iat,
                 new DateTimeOffset(issuedAt).ToUnixTimeSeconds().ToString(),
@@ -173,7 +190,8 @@ public class JwtTokenService
             TokenType = "Bearer",
             RefreshToken = GenerateRefreshToken(),
             RefreshTokenExpiresAt = DateTime.UtcNow.AddDays(
-                int.Parse(_configuration["JwtSettings:RefreshTokenExpiryInDays"] ?? "7"))
+                int.Parse(_configuration["JwtSettings:RefreshTokenExpiryInDays"] ?? "7")),
+            Language = sessionLang
         };
     }
 

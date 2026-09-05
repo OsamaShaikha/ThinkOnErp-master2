@@ -1,4 +1,4 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Oracle.ManagedDataAccess.Client;
 using ThinkOnErp.Domain.Entities.Accounting;
 using ThinkOnErp.Domain.Exceptions;
@@ -105,7 +105,7 @@ public sealed class GlAccountRepository : IGlAccountRepository
             if (existing != null)
             {
                 existing.DigitLength = config.DigitLength;
-                if (!string.IsNullOrWhiteSpace(config.LevelNameAr)) existing.LevelNameAr = config.LevelNameAr;
+                if (!string.IsNullOrWhiteSpace(config.LevelNameLocal)) existing.LevelNameLocal = config.LevelNameLocal;
                 if (!string.IsNullOrWhiteSpace(config.LevelNameEn)) existing.LevelNameEn = config.LevelNameEn;
                 if (config.Description != null) existing.Description = config.Description;
                 existing.IsActive = config.IsActive;

@@ -1,4 +1,4 @@
-using MediatR;
+﻿using MediatR;
 using ThinkOnErp.Application.DTOs.SuperAdmin;
 using ThinkOnErp.Domain.Interfaces;
 
@@ -23,7 +23,7 @@ public class GetSuperAdminByIdQueryHandler : IRequestHandler<GetSuperAdminByIdQu
         return new SuperAdminDto
         {
             SuperAdminId = superAdmin.Id,
-            NameAr = superAdmin.NameAr,
+            NameLocal = superAdmin.NameLocal,
             NameEn = superAdmin.NameEn,
             UserName = superAdmin.UserName,
             Email = superAdmin.Email,

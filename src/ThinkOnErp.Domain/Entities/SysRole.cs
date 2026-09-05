@@ -1,9 +1,9 @@
-namespace ThinkOnErp.Domain.Entities;
+﻿namespace ThinkOnErp.Domain.Entities;
 
 public class SysRole
 {
     public Int64 Id { get; set; }
-    public string RoleNameAr { get; set; } = string.Empty;
+    public string RoleNameLocal { get; set; } = string.Empty;
     public string RoleNameEn { get; set; } = string.Empty;
     public string? Note { get; set; }
     public bool IsActive { get; set; }

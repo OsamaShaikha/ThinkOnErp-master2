@@ -26,7 +26,7 @@ public sealed class InvReconciliationService : IInvReconciliationService
         _logger.LogInformation("Running inventory GL reconciliation check");
 
         // Sum of all stock balances * avg cost
-        var balances = await _stockBalanceRepository.GetByWarehouseAsync(1, cancellationToken);
+        var balances = await _stockBalanceRepository.GetAllAsync(cancellationToken);
         var subledgerTotal = balances.Sum(b => b.OnHandQty * b.AvgCost);
 
         _logger.LogInformation("Inventory subledger valuation sum: {Total}", subledgerTotal);

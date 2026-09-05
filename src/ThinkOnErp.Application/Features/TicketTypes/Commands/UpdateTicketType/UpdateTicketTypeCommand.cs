@@ -1,4 +1,4 @@
-using System.Text.Json.Serialization;
+﻿using System.Text.Json.Serialization;
 using MediatR;
 
 namespace ThinkOnErp.Application.Features.TicketTypes.Commands.UpdateTicketType;
@@ -17,7 +17,7 @@ public class UpdateTicketTypeCommand : IRequest<Int64>
     /// <summary>
     /// Arabic name of the ticket type
     /// </summary>
-    public string TypeNameAr { get; set; } = string.Empty;
+    public string TypeNameLocal { get; set; } = string.Empty;
 
     /// <summary>
     /// English name of the ticket type
@@ -27,7 +27,7 @@ public class UpdateTicketTypeCommand : IRequest<Int64>
     /// <summary>
     /// Arabic description of the ticket type
     /// </summary>
-    public string? DescriptionAr { get; set; }
+    public string? DescriptionLocal { get; set; }
 
     /// <summary>
     /// English description of the ticket type

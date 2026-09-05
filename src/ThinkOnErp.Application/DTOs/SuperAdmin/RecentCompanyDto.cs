@@ -1,4 +1,4 @@
-namespace ThinkOnErp.Application.DTOs.SuperAdmin;
+﻿namespace ThinkOnErp.Application.DTOs.SuperAdmin;
 
 /// <summary>
 /// Data transfer object for recently created companies
@@ -9,7 +9,7 @@ public class RecentCompanyDto
     /// <summary>
     /// Company name in Arabic
     /// </summary>
-    public string NameAr { get; set; }
+    public string NameLocal { get; set; }
 
     /// <summary>
     /// Company name in English

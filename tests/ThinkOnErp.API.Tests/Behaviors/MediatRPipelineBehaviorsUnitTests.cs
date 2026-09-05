@@ -46,7 +46,7 @@ public class MediatRPipelineBehaviorsUnitTests : IClassFixture<TestWebApplicatio
         // Create command with invalid data
         var command = new CreateRoleCommand
         {
-            RoleNameAr = "", // Invalid - empty
+            RoleNameLocal = "", // Invalid - empty
             RoleNameEn = "Valid",
             Note = "Test"
         };
@@ -69,7 +69,7 @@ public class MediatRPipelineBehaviorsUnitTests : IClassFixture<TestWebApplicatio
         // Create command with multiple validation errors
         var command = new CreateRoleCommand
         {
-            RoleNameAr = "", // Invalid - empty
+            RoleNameLocal = "", // Invalid - empty
             RoleNameEn = "", // Invalid - empty
             Note = "Test"
         };
@@ -101,7 +101,7 @@ public class MediatRPipelineBehaviorsUnitTests : IClassFixture<TestWebApplicatio
         // Create valid command
         var command = new CreateRoleCommand
         {
-            RoleNameAr = "Test Role",
+            RoleNameLocal = "Test Role",
             RoleNameEn = "Test Role E",
             Note = "Test"
         };
@@ -127,7 +127,7 @@ public class MediatRPipelineBehaviorsUnitTests : IClassFixture<TestWebApplicatio
         // Create valid command
         var command = new CreateRoleCommand
         {
-            RoleNameAr = "Valid Role",
+            RoleNameLocal = "Valid Role",
             RoleNameEn = "Valid Role E",
             Note = "Valid Note"
         };
@@ -166,14 +166,14 @@ public class MediatRPipelineBehaviorsUnitTests : IClassFixture<TestWebApplicatio
 
         var command1 = new CreateRoleCommand
         {
-            RoleNameAr = "Role 1",
+            RoleNameLocal = "Role 1",
             RoleNameEn = "Role 1 E",
             Note = "Test 1"
         };
 
         var command2 = new CreateRoleCommand
         {
-            RoleNameAr = "Role 2",
+            RoleNameLocal = "Role 2",
             RoleNameEn = "Role 2 E",
             Note = "Test 2"
         };

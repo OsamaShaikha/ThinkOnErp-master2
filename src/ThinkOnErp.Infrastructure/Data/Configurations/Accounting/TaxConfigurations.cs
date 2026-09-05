@@ -1,4 +1,4 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using ThinkOnErp.Domain.Entities.Accounting;
 
@@ -13,7 +13,7 @@ public sealed class TaxCategoryConfiguration : IEntityTypeConfiguration<TaxCateg
         builder.Property(c => c.Id).HasColumnName("ID").ValueGeneratedOnAdd();
 
         builder.Property(c => c.CategoryCode).HasColumnName("CATEGORY_CODE").HasMaxLength(50).IsRequired();
-        builder.Property(c => c.NameAr).HasColumnName("NAME_AR").HasMaxLength(150).IsRequired();
+        builder.Property(c => c.NameLocal).HasColumnName("NAME_LOCAL").HasMaxLength(150).IsRequired();
         builder.Property(c => c.NameEn).HasColumnName("NAME_EN").HasMaxLength(150).IsRequired();
         builder.Property(c => c.Description).HasColumnName("DESCRIPTION").HasMaxLength(500);
         builder.Property(c => c.DisplayOrder).HasColumnName("DISPLAY_ORDER").HasDefaultValue(1);
@@ -38,7 +38,7 @@ public sealed class TaxRateConfiguration : IEntityTypeConfiguration<TaxRate>
 
         builder.Property(r => r.TaxRateCode).HasColumnName("TAX_RATE_CODE").HasMaxLength(50).IsRequired();
         builder.Property(r => r.TaxCategoryId).HasColumnName("TAX_CATEGORY_ID").IsRequired();
-        builder.Property(r => r.NameAr).HasColumnName("NAME_AR").HasMaxLength(150).IsRequired();
+        builder.Property(r => r.NameLocal).HasColumnName("NAME_LOCAL").HasMaxLength(150).IsRequired();
         builder.Property(r => r.NameEn).HasColumnName("NAME_EN").HasMaxLength(150).IsRequired();
 
         builder.Property(r => r.RatePercent).HasColumnName("RATE_PERCENT").HasPrecision(8, 4).IsRequired();
@@ -51,7 +51,7 @@ public sealed class TaxRateConfiguration : IEntityTypeConfiguration<TaxRate>
         builder.Property(r => r.IsZeroRated).HasColumnName("IS_ZERO_RATED").HasDefaultValue(false);
 
         builder.Property(r => r.ExemptionReasonCode).HasColumnName("EXEMPTION_REASON_CODE").HasMaxLength(50);
-        builder.Property(r => r.ExemptionReasonAr).HasColumnName("EXEMPTION_REASON_AR").HasMaxLength(300);
+        builder.Property(r => r.ExemptionReasonLocal).HasColumnName("EXEMPTION_REASON_LOCAL").HasMaxLength(300);
         builder.Property(r => r.ExemptionReasonEn).HasColumnName("EXEMPTION_REASON_EN").HasMaxLength(300);
 
         builder.Property(r => r.DisplayOrder).HasColumnName("DISPLAY_ORDER").HasDefaultValue(1);
@@ -91,7 +91,7 @@ public sealed class TaxGroupConfiguration : IEntityTypeConfiguration<TaxGroup>
         builder.Property(g => g.Id).HasColumnName("ID").ValueGeneratedOnAdd();
 
         builder.Property(g => g.GroupCode).HasColumnName("GROUP_CODE").HasMaxLength(50).IsRequired();
-        builder.Property(g => g.NameAr).HasColumnName("NAME_AR").HasMaxLength(150).IsRequired();
+        builder.Property(g => g.NameLocal).HasColumnName("NAME_LOCAL").HasMaxLength(150).IsRequired();
         builder.Property(g => g.NameEn).HasColumnName("NAME_EN").HasMaxLength(150).IsRequired();
         builder.Property(g => g.Description).HasColumnName("DESCRIPTION").HasMaxLength(500);
         builder.Property(g => g.IsActive).HasColumnName("IS_ACTIVE").HasDefaultValue(true);

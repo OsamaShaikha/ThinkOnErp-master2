@@ -1,4 +1,4 @@
-using System.Text.Json.Serialization;
+﻿using System.Text.Json.Serialization;
 
 namespace ThinkOnErp.Application.DTOs.Accounting.Vouchers;
 
@@ -10,7 +10,7 @@ public sealed class GlVoucherHeaderDto
     public int VoucherYear { get; set; }
     public int VoucherMonth { get; set; }
     public int VoucherType { get; set; }
-    public string? VoucherTypeNameAr { get; set; }
+    public string? VoucherTypeNameLocal { get; set; }
     public string? VoucherTypeNameEn { get; set; }
     public long VoucherNo { get; set; }
     public string FullVoucherNumber { get; set; } = string.Empty;

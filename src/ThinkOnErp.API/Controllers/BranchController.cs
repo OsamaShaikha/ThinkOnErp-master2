@@ -1,4 +1,4 @@
-using MediatR;
+﻿using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using ThinkOnErp.API.Authorization;
@@ -171,7 +171,7 @@ public class BranchController : ControllerBase
             var command = new CreateBranchCommand
             {
                 CompanyId = dto.CompanyId,
-                BranchNameAr = dto.BranchNameAr,
+                BranchNameLocal = dto.BranchNameLocal,
                 BranchNameEn = dto.BranchNameEn,
                 Phone = dto.Phone,
                 Mobile = dto.Mobile,
@@ -263,7 +263,7 @@ public class BranchController : ControllerBase
             {
                 BranchId = id,
                 CompanyId = dto.CompanyId,
-                BranchNameAr = dto.BranchNameAr,
+                BranchNameLocal = dto.BranchNameLocal,
                 BranchNameEn = dto.BranchNameEn,
                 Phone = dto.Phone,
                 Mobile = dto.Mobile,

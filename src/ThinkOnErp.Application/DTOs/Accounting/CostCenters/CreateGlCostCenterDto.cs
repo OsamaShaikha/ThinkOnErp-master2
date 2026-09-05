@@ -1,27 +1,30 @@
 using System.ComponentModel.DataAnnotations;
+using ThinkOnErp.Application.DTOs.Translations;
 
 namespace ThinkOnErp.Application.DTOs.Accounting.CostCenters;
 
 public sealed class CreateGlCostCenterDto
 {
-    [Required(ErrorMessage = "رمز مركز التكلفة مطلوب")]
+    [Required]
     [MaxLength(50)]
     public string CostCenterCode { get; set; } = string.Empty;
 
     [MaxLength(50)]
     public string? ParentCostCenterCode { get; set; }
 
-    [Required(ErrorMessage = "اسم مركز التكلفة بالعربي مطلوب")]
+    [Required]
     [MaxLength(200)]
-    public string NameAr { get; set; } = string.Empty;
+    public string NameLocal { get; set; } = string.Empty;
 
-    [Required(ErrorMessage = "اسم مركز التكلفة بالإنجليزي مطلوب")]
+    [Required]
     [MaxLength(200)]
     public string NameEn { get; set; } = string.Empty;
 
-    [Required(ErrorMessage = "نوع مركز التكلفة مطلوب (HEADER / DETAIL)")]
+    [Required]
     public string CostCenterType { get; set; } = "DETAIL"; // HEADER, DETAIL
 
     public bool IsPostable { get; set; } = true;
     public bool IsActive { get; set; } = true;
+
+    public List<EntityTranslationDto>? Translations { get; set; }
 }

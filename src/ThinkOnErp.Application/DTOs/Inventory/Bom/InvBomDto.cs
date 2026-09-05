@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using ThinkOnErp.Domain.Entities.Inventory.Enums;
 
 namespace ThinkOnErp.Application.DTOs.Inventory.Bom;
@@ -7,14 +7,14 @@ public sealed class InvBomDto
 {
     public long Id { get; set; }
     public long BranchId { get; set; }
-    public string BomCode { get; set; } = string.Empty;
-    public string BomNameAr { get; set; } = string.Empty;
+    public long BomCode { get; set; }
+    public string BomNameLocal { get; set; } = string.Empty;
     public string? BomNameEn { get; set; }
     public long ParentItemId { get; set; }
     public string ParentItemCode { get; set; } = string.Empty;
     public string ParentItemName { get; set; } = string.Empty;
     public decimal OutputQty { get; set; }
-    public string UomCode { get; set; } = string.Empty;
+    public int UomCode { get; set; }
     public BomType BomType { get; set; }
     public decimal LaborCost { get; set; }
     public decimal OverheadCost { get; set; }
@@ -32,7 +32,7 @@ public sealed class InvBomLineDto
     public long ComponentItemId { get; set; }
     public string ComponentItemCode { get; set; } = string.Empty;
     public string ComponentItemName { get; set; } = string.Empty;
-    public string UomCode { get; set; } = string.Empty;
+    public int UomCode { get; set; }
     public decimal UomFactor { get; set; }
     public decimal Quantity { get; set; }
     public decimal UnitCost { get; set; }

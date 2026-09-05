@@ -24,8 +24,8 @@ public sealed class GlFiscalPeriodConfiguration : IEntityTypeConfiguration<GlFis
             .HasColumnName("PERIOD_NUMBER")
             .IsRequired();
 
-        builder.Property(e => e.PeriodNameAr)
-            .HasColumnName("PERIOD_NAME_AR")
+        builder.Property(e => e.PeriodNameLocal)
+            .HasColumnName("PERIOD_NAME_LOCAL")
             .HasMaxLength(200)
             .IsRequired();
 

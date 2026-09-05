@@ -8,7 +8,7 @@ public sealed class InvItemUomConversionConfiguration : IEntityTypeConfiguration
 {
     public void Configure(EntityTypeBuilder<InvItemUomConversion> builder)
     {
-        builder.ToTable("INV_ITEM_UOM_CONVERSION");
+        builder.ToTable("INV_ITEM_UOM");
 
         builder.HasKey(e => e.Id);
         builder.Property(e => e.Id)
@@ -21,7 +21,7 @@ public sealed class InvItemUomConversionConfiguration : IEntityTypeConfiguration
 
         builder.Property(e => e.UomCode)
             .HasColumnName("UOM_CODE")
-            .HasMaxLength(50)
+            .HasColumnType("NUMBER(6)")
             .IsRequired();
 
         builder.Property(e => e.ConversionFactor)

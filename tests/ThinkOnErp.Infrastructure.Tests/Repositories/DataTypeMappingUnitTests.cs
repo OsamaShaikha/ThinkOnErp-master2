@@ -30,7 +30,7 @@ public class DataTypeMappingUnitTests : IClassFixture<TestWebApplicationFactory>
         // Create a role
         var command = new CreateRoleCommand
         {
-            RoleNameAr = "Test Role",
+            RoleNameLocal = "Test Role",
             RoleNameEn = "Test Role E",
             Note = "Test"
         };
@@ -56,7 +56,7 @@ public class DataTypeMappingUnitTests : IClassFixture<TestWebApplicationFactory>
         // Create a role with string values
         var command = new CreateRoleCommand
         {
-            RoleNameAr = "Arabic Description",
+            RoleNameLocal = "Arabic Description",
             RoleNameEn = "English Description",
             Note = "Test Note"
         };
@@ -67,9 +67,9 @@ public class DataTypeMappingUnitTests : IClassFixture<TestWebApplicationFactory>
 
         // Assert
         Assert.NotNull(role);
-        Assert.IsType<string>(role.RoleNameAr);
+        Assert.IsType<string>(role.RoleNameLocal);
         Assert.IsType<string>(role.RoleNameEn);
-        Assert.Equal("Arabic Description", role.RoleNameAr);
+        Assert.Equal("Arabic Description", role.RoleNameLocal);
         Assert.Equal("English Description", role.RoleNameEn);
     }
 
@@ -84,7 +84,7 @@ public class DataTypeMappingUnitTests : IClassFixture<TestWebApplicationFactory>
         // Create a role
         var command = new CreateRoleCommand
         {
-            RoleNameAr = "Test Role",
+            RoleNameLocal = "Test Role",
             RoleNameEn = "Test Role E",
             Note = "Test"
         };
@@ -112,7 +112,7 @@ public class DataTypeMappingUnitTests : IClassFixture<TestWebApplicationFactory>
         // Create a role (should be active by default)
         var command = new CreateRoleCommand
         {
-            RoleNameAr = "Active Role",
+            RoleNameLocal = "Active Role",
             RoleNameEn = "Active Role E",
             Note = "Test"
         };
@@ -138,7 +138,7 @@ public class DataTypeMappingUnitTests : IClassFixture<TestWebApplicationFactory>
         // Create a role
         var command = new CreateRoleCommand
         {
-            RoleNameAr = "Role To Deactivate",
+            RoleNameLocal = "Role To Deactivate",
             RoleNameEn = "Role To Deactivate E",
             Note = "Test"
         };
@@ -173,7 +173,7 @@ public class DataTypeMappingUnitTests : IClassFixture<TestWebApplicationFactory>
         // Create a role (IS_ACTIVE should be '1' or 'Y')
         var command = new CreateRoleCommand
         {
-            RoleNameAr = "Active Role",
+            RoleNameLocal = "Active Role",
             RoleNameEn = "Active Role E",
             Note = "Test"
         };
@@ -198,7 +198,7 @@ public class DataTypeMappingUnitTests : IClassFixture<TestWebApplicationFactory>
         // Create and delete a role
         var command = new CreateRoleCommand
         {
-            RoleNameAr = "Role To Deactivate",
+            RoleNameLocal = "Role To Deactivate",
             RoleNameEn = "Role To Deactivate E",
             Note = "Test"
         };
@@ -229,7 +229,7 @@ public class DataTypeMappingUnitTests : IClassFixture<TestWebApplicationFactory>
         // Create a role with null note
         var command = new CreateRoleCommand
         {
-            RoleNameAr = "Test Role",
+            RoleNameLocal = "Test Role",
             RoleNameEn = "Test Role E",
             Note = null // Nullable field
         };

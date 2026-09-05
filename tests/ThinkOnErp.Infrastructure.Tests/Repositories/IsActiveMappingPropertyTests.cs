@@ -39,7 +39,7 @@ public class IsActiveMappingPropertyTests : IClassFixture<TestWebApplicationFact
                 // Create a role (should be active by default)
                 var createCommand = new CreateRoleCommand
                 {
-                    RoleNameAr = roleDesc,
+                    RoleNameLocal = roleDesc,
                     RoleNameEn = roleDescE,
                     Note = "Test active mapping"
                 };
@@ -75,7 +75,7 @@ public class IsActiveMappingPropertyTests : IClassFixture<TestWebApplicationFact
                 // Create a role
                 var createCommand = new CreateRoleCommand
                 {
-                    RoleNameAr = roleDesc,
+                    RoleNameLocal = roleDesc,
                     RoleNameEn = roleDescE,
                     Note = "Test inactive mapping"
                 };

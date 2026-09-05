@@ -56,7 +56,7 @@ public class GetByIdReturnsMatchOrNullPropertyTests
             
             // Property 3: Returned record matches the expected record
             var matchesExpected = result?.Id == expectedRole.Id &&
-                                 result?.RoleNameAr == expectedRole.RoleNameAr &&
+                                 result?.RoleNameLocal == expectedRole.RoleNameLocal &&
                                  result?.RoleNameEn == expectedRole.RoleNameEn;
             
             propertyHolds = resultIsNotNull && correctId && matchesExpected;
@@ -110,7 +110,7 @@ public class GetByIdReturnsMatchOrNullPropertyTests
             
             // Property 3: Returned record matches the expected record
             var matchesExpected = result?.Id == expectedCurrency.Id &&
-                                 result?.CurrencyNameAr == expectedCurrency.CurrencyNameAr &&
+                                 result?.CurrencyNameLocal == expectedCurrency.CurrencyNameLocal &&
                                  result?.CurrencyNameEn == expectedCurrency.CurrencyNameEn;
             
             propertyHolds = resultIsNotNull && correctId && matchesExpected;
@@ -164,7 +164,7 @@ public class GetByIdReturnsMatchOrNullPropertyTests
             
             // Property 3: Returned record matches the expected record
             var matchesExpected = result?.Id == expectedCompany.Id &&
-                                 result?.CompanyNameAr == expectedCompany.CompanyNameAr &&
+                                 result?.CompanyNameLocal == expectedCompany.CompanyNameLocal &&
                                  result?.CompanyNameEn == expectedCompany.CompanyNameEn;
             
             propertyHolds = resultIsNotNull && correctId && matchesExpected;
@@ -218,7 +218,7 @@ public class GetByIdReturnsMatchOrNullPropertyTests
             
             // Property 3: Returned record matches the expected record
             var matchesExpected = result?.Id == expectedBranch.Id &&
-                                 result?.BranchNameAr == expectedBranch.BranchNameAr &&
+                                 result?.BranchNameLocal == expectedBranch.BranchNameLocal &&
                                  result?.BranchNameEn == expectedBranch.BranchNameEn;
             
             propertyHolds = resultIsNotNull && correctId && matchesExpected;
@@ -325,7 +325,7 @@ public class GetByIdReturnsMatchOrNullPropertyTests
                    select new SysRole
                     {
                         Id = rowId,
-                        RoleNameAr = rowDesc,
+                        RoleNameLocal = rowDesc,
                         RoleNameEn = rowDescE,
                         Note = note,
                         IsActive = isActive,
@@ -357,7 +357,7 @@ public class GetByIdReturnsMatchOrNullPropertyTests
                    select new SysCurrency
                     {
                         Id = rowId,
-                        CurrencyNameAr = rowDesc,
+                        CurrencyNameLocal = rowDesc,
                         CurrencyNameEn = rowDescE,
                         ShortNameAr = shortDesc,
                         ShortNameEn = shortDescE,
@@ -397,7 +397,7 @@ public class GetByIdReturnsMatchOrNullPropertyTests
                    select new SysCompany
                     {
                         Id = rowId,
-                        CompanyNameAr = rowDesc,
+                        CompanyNameLocal = rowDesc,
                         CompanyNameEn = rowDescE,
                         IsActive = isActive,
                         CreationUser = creationUser,
@@ -428,7 +428,7 @@ public class GetByIdReturnsMatchOrNullPropertyTests
                    select new SysBranch
                     {
                         Id = rowId,
-                        BranchNameAr = rowDesc,
+                        BranchNameLocal = rowDesc,
                         BranchNameEn = rowDescE,
                         IsActive = isActive,
                         IsHeadBranch = isHeadBranch,
@@ -463,7 +463,7 @@ public class GetByIdReturnsMatchOrNullPropertyTests
                     {
                         Id = rowId,
                         UserName = userName,
-                        FullNameAr = rowDesc,
+                        FullNameLocal = rowDesc,
                         FullNameEn = rowDescE,
                         Password = password,
                         IsActive = isActive,

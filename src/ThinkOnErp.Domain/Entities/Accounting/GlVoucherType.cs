@@ -1,4 +1,4 @@
-namespace ThinkOnErp.Domain.Entities.Accounting;
+﻿namespace ThinkOnErp.Domain.Entities.Accounting;
 
 public sealed class GlVoucherType
 {
@@ -6,7 +6,7 @@ public sealed class GlVoucherType
     public int TypeCode { get; set; }
     public string TypeKey { get; set; } = string.Empty; // JV, RV, PV, SALES, etc.
 
-    public string NameAr { get; set; } = string.Empty;
+    public string NameLocal { get; set; } = string.Empty;
     public string NameEn { get; set; } = string.Empty;
     public string Prefix { get; set; } = string.Empty; // JV, RV, PV, INV...
 

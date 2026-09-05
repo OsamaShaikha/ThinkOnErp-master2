@@ -1,4 +1,4 @@
-using System.Linq;
+﻿using System.Linq;
 using ThinkOnErp.Application.DTOs.Inventory.Bom;
 using ThinkOnErp.Domain.Entities.Inventory;
 
@@ -12,7 +12,7 @@ public static class InvBomMapper
         {
             BranchId = dto.BranchId,
             BomCode = dto.BomCode,
-            BomNameAr = dto.BomNameAr,
+            BomNameLocal = dto.BomNameLocal,
             BomNameEn = dto.BomNameEn,
             ParentItemId = dto.ParentItemId,
             OutputQty = dto.OutputQty,
@@ -55,11 +55,11 @@ public static class InvBomMapper
             Id = entity.Id,
             BranchId = entity.BranchId,
             BomCode = entity.BomCode,
-            BomNameAr = entity.BomNameAr,
+            BomNameLocal = entity.BomNameLocal,
             BomNameEn = entity.BomNameEn,
             ParentItemId = entity.ParentItemId,
             ParentItemCode = entity.ParentItem?.ItemCode ?? string.Empty,
-            ParentItemName = entity.ParentItem?.ItemNameAr ?? string.Empty,
+            ParentItemName = entity.ParentItem?.ItemNameLocal ?? string.Empty,
             OutputQty = entity.OutputQty,
             UomCode = entity.UomCode,
             BomType = entity.BomType,
@@ -73,7 +73,7 @@ public static class InvBomMapper
                 LineNo = l.LineNo,
                 ComponentItemId = l.ComponentItemId,
                 ComponentItemCode = l.ComponentItem?.ItemCode ?? string.Empty,
-                ComponentItemName = l.ComponentItem?.ItemNameAr ?? string.Empty,
+                ComponentItemName = l.ComponentItem?.ItemNameLocal ?? string.Empty,
                 UomCode = l.UomCode,
                 UomFactor = l.UomFactor,
                 Quantity = l.Quantity,
@@ -81,7 +81,7 @@ public static class InvBomMapper
                 CostSharePercent = l.CostSharePercent,
                 AllowSubstitute = l.AllowSubstitute,
                 SubstituteItemId = l.SubstituteItemId,
-                SubstituteItemName = l.SubstituteItem?.ItemNameAr,
+                SubstituteItemName = l.SubstituteItem?.ItemNameLocal,
                 Notes = l.Notes
             }).ToList()
         };

@@ -1,4 +1,4 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using ThinkOnErp.Domain.Entities.Inventory;
 
@@ -14,8 +14,8 @@ public sealed class InvItemGroupConfiguration : IEntityTypeConfiguration<InvItem
         builder.Property(g => g.Id).HasColumnName("ID").ValueGeneratedOnAdd();
         builder.Property(g => g.BranchId).HasColumnName("BRANCH_ID");
         builder.Property(g => g.ParentGroupId).HasColumnName("PARENT_GROUP_ID");
-        builder.Property(g => g.GroupCode).HasColumnName("GROUP_CODE").HasMaxLength(30).IsRequired();
-        builder.Property(g => g.GroupNameAr).HasColumnName("GROUP_NAME_AR").HasMaxLength(150).IsRequired();
+        builder.Property(g => g.GroupCode).HasColumnName("GROUP_CODE").HasColumnType("NUMBER(10)").IsRequired();
+        builder.Property(g => g.GroupNameLocal).HasColumnName("GROUP_NAME_LOCAL").HasMaxLength(150).IsRequired();
         builder.Property(g => g.GroupNameEn).HasColumnName("GROUP_NAME_EN").HasMaxLength(150);
         builder.Property(g => g.GroupLevel).HasColumnName("GROUP_LEVEL").HasDefaultValue(1);
         builder.Property(g => g.GlControlAccount).HasColumnName("GL_CONTROL_ACCOUNT").HasMaxLength(50);

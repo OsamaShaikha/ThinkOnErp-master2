@@ -1,4 +1,4 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using ThinkOnErp.Domain.Entities;
 using ThinkOnErp.Domain.Interfaces;
 using ThinkOnErp.Infrastructure.Data;
@@ -35,9 +35,9 @@ public class TicketTypeRepository : ITicketTypeRepository
         var existing = await _context.SysTicketTypes.FindAsync(ticketType.Id);
         if (existing == null) return 0;
 
-        existing.TypeNameAr = ticketType.TypeNameAr;
+        existing.TypeNameLocal = ticketType.TypeNameLocal;
         existing.TypeNameEn = ticketType.TypeNameEn;
-        existing.DescriptionAr = ticketType.DescriptionAr;
+        existing.DescriptionLocal = ticketType.DescriptionLocal;
         existing.DescriptionEn = ticketType.DescriptionEn;
         existing.DefaultPriorityId = ticketType.DefaultPriorityId;
         existing.SlaTargetHours = ticketType.SlaTargetHours;

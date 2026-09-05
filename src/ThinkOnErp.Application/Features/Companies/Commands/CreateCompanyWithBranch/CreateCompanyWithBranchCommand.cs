@@ -1,4 +1,4 @@
-using MediatR;
+﻿using MediatR;
 
 namespace ThinkOnErp.Application.Features.Companies.Commands.CreateCompanyWithBranch;
 
@@ -12,7 +12,7 @@ public class CreateCompanyWithBranchCommand : IRequest<CreateCompanyWithBranchRe
     /// <summary>
     /// Arabic name/description of the company
     /// </summary>
-    public string CompanyNameAr { get; set; } = string.Empty;
+    public string CompanyNameLocal { get; set; } = string.Empty;
 
     /// <summary>
     /// English name/description of the company (required)
@@ -22,7 +22,7 @@ public class CreateCompanyWithBranchCommand : IRequest<CreateCompanyWithBranchRe
     /// <summary>
     /// Legal name of the company in Arabic
     /// </summary>
-    public string? LegalNameAr { get; set; }
+    public string? LegalNameLocal { get; set; }
 
     /// <summary>
     /// Legal name of the company in English (required)
@@ -58,7 +58,7 @@ public class CreateCompanyWithBranchCommand : IRequest<CreateCompanyWithBranchRe
     /// <summary>
     /// Arabic name for the default branch (optional - will be auto-generated if not provided)
     /// </summary>
-    public string? BranchNameAr { get; set; }
+    public string? BranchNameLocal { get; set; }
 
     /// <summary>
     /// English name for the default branch (optional - will be auto-generated if not provided)

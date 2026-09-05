@@ -5,8 +5,14 @@ namespace ThinkOnErp.Domain.Interfaces.Accounting;
 public interface IGlVoucherRepository
 {
     Task<IReadOnlyList<GlVoucherType>> GetVoucherTypesAsync(CancellationToken cancellationToken = default);
+    Task<GlVoucherType?> GetVoucherTypeByIdAsync(long id, CancellationToken cancellationToken = default);
     Task<GlVoucherType?> GetVoucherTypeByCodeAsync(int typeCode, CancellationToken cancellationToken = default);
     Task<GlVoucherType?> GetVoucherTypeByKeyAsync(string typeKey, CancellationToken cancellationToken = default);
+    Task<GlVoucherType> CreateVoucherTypeAsync(GlVoucherType voucherType, CancellationToken cancellationToken = default);
+    Task<GlVoucherType> UpdateVoucherTypeAsync(GlVoucherType voucherType, CancellationToken cancellationToken = default);
+    Task DeleteVoucherTypeAsync(long id, CancellationToken cancellationToken = default);
+    Task<bool> VoucherTypeExistsAsync(int typeCode, string typeKey, long? excludeId = null, CancellationToken cancellationToken = default);
+    Task<bool> HasAssociatedVouchersAsync(int typeCode, CancellationToken cancellationToken = default);
 
     Task<GlVoucherHeader?> GetByIdAsync(long id, CancellationToken cancellationToken = default);
     Task<GlVoucherHeader?> GetByNumberAsync(

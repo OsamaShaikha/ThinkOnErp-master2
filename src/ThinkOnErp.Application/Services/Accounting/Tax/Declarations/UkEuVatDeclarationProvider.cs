@@ -1,4 +1,4 @@
-using ThinkOnErp.Application.DTOs.Accounting.Tax;
+﻿using ThinkOnErp.Application.DTOs.Accounting.Tax;
 using ThinkOnErp.Domain.Entities.Accounting;
 
 namespace ThinkOnErp.Application.Services.Accounting.Tax.Declarations;
@@ -17,12 +17,12 @@ public sealed class UkEuVatDeclarationProvider : ITaxDeclarationProvider
         {
             TemplateCode = TemplateCode,
             CountryCode = CountryCode,
-            CountryNameAr = "المملكة المتحدة والاتحاد الأوروبي",
+            CountryNameLocal = "المملكة المتحدة والاتحاد الأوروبي",
             CountryNameEn = "United Kingdom & European Union",
             FlagEmoji = "🇬🇧",
             TitleAr = "إقرار ضريبة القيمة المضافة القياسي (9 مربعات) - HMRC / EU Standard",
             TitleEn = "Standard 9-Box VAT Return - HMRC & European Standard",
-            TaxAuthorityNameAr = "هيئة الإيرادات والجمارك البريطانية (HMRC)",
+            TaxAuthorityNameLocal = "هيئة الإيرادات والجمارك البريطانية (HMRC)",
             TaxAuthorityNameEn = "HM Revenue & Customs (HMRC)",
             DefaultCurrencyCode = "GBP",
             FilingFrequency = "QUARTERLY_OR_MONTHLY",
@@ -63,7 +63,7 @@ public sealed class UkEuVatDeclarationProvider : ITaxDeclarationProvider
         VatDeclarationFilterDto filter,
         IReadOnlyList<TaxTransaction> transactions,
         IReadOnlyList<TaxRate> availableRates,
-        string branchNameAr,
+        string branchNameLocal,
         string branchNameEn)
     {
         decimal totalSalesBase = 0, totalSalesVat = 0;
@@ -108,11 +108,11 @@ public sealed class UkEuVatDeclarationProvider : ITaxDeclarationProvider
             CountryCode = CountryCode,
             TemplateTitleAr = "إقرار ضريبة القيمة المضافة (المملكة المتحدة وأوروبا - 9 مربعات)",
             TemplateTitleEn = "UK / EU Standard 9-Box VAT Return (HMRC)",
-            TaxAuthorityNameAr = "هيئة الإيرادات والجمارك البريطانية (HMRC)",
+            TaxAuthorityNameLocal = "هيئة الإيرادات والجمارك البريطانية (HMRC)",
             TaxAuthorityNameEn = "HM Revenue & Customs (HMRC)",
             CurrencyCode = "GBP",
             BranchId = filter.BranchId,
-            BranchNameAr = branchNameAr,
+            BranchNameLocal = branchNameLocal,
             BranchNameEn = branchNameEn,
             FromDate = filter.FromDate,
             ToDate = filter.ToDate,

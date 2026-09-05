@@ -1,4 +1,4 @@
-using Microsoft.Extensions.Configuration;
+﻿using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using ThinkOnErp.Domain.Entities;
 using ThinkOnErp.Domain.Interfaces;
@@ -58,11 +58,11 @@ public class TicketNotificationService : ITicketNotificationService
             {
                 var emailContent = await RenderTemplateAsync(template, new
                 {
-                    RecipientName = recipient.FullNameEn ?? recipient.FullNameAr,
+                    RecipientName = recipient.FullNameEn ?? recipient.FullNameLocal,
                     TicketId = ticket.Id,
                     TicketTitle = ticket.TitleEn ?? ticket.TitleAr,
                     Priority = ticket.TicketPriority?.PriorityNameEn ?? "Unknown",
-                    CreatedBy = ticket.Requester?.FullNameEn ?? ticket.Requester?.FullNameAr ?? "Unknown",
+                    CreatedBy = ticket.Requester?.FullNameEn ?? ticket.Requester?.FullNameLocal ?? "Unknown",
                     CreatedDate = ticket.CreationDate?.ToString("yyyy-MM-dd HH:mm"),
                     TicketUrl = GenerateTicketUrl(ticket.Id),
                     Description = TruncateText(ticket.Description, 200)
@@ -109,7 +109,7 @@ public class TicketNotificationService : ITicketNotificationService
             var template = GetTicketAssignedTemplate();
             var emailContent = await RenderTemplateAsync(template, new
             {
-                AssigneeName = assignee.FullNameEn ?? assignee.FullNameAr,
+                AssigneeName = assignee.FullNameEn ?? assignee.FullNameLocal,
                 TicketId = ticket.Id,
                 TicketTitle = ticket.TitleEn ?? ticket.TitleAr,
                 Priority = ticket.TicketPriority?.PriorityNameEn ?? "Unknown",
@@ -149,7 +149,7 @@ public class TicketNotificationService : ITicketNotificationService
             {
                 var emailContent = await RenderTemplateAsync(template, new
                 {
-                    RecipientName = recipient.FullNameEn ?? recipient.FullNameAr,
+                    RecipientName = recipient.FullNameEn ?? recipient.FullNameLocal,
                     TicketId = ticket.Id,
                     TicketTitle = ticket.TitleEn ?? ticket.TitleAr,
                     NewStatus = ticket.TicketStatus?.StatusNameEn ?? "Unknown",
@@ -192,7 +192,7 @@ public class TicketNotificationService : ITicketNotificationService
 
                 var emailContent = await RenderTemplateAsync(template, new
                 {
-                    RecipientName = recipient.FullNameEn ?? recipient.FullNameAr,
+                    RecipientName = recipient.FullNameEn ?? recipient.FullNameLocal,
                     TicketId = ticket.Id,
                     TicketTitle = ticket.TitleEn ?? ticket.TitleAr,
                     CommentBy = comment.CreationUser,
@@ -235,13 +235,13 @@ public class TicketNotificationService : ITicketNotificationService
 
                 var emailContent = await RenderTemplateAsync(template, new
                 {
-                    AdminName = admin.FullNameEn ?? admin.FullNameAr,
+                    AdminName = admin.FullNameEn ?? admin.FullNameLocal,
                     TicketId = ticket.Id,
                     TicketTitle = ticket.TitleEn ?? ticket.TitleAr,
                     Priority = ticket.TicketPriority?.PriorityNameEn ?? "Unknown",
                     ExpectedResolution = ticket.ExpectedResolutionDate?.ToString("yyyy-MM-dd HH:mm"),
                     CreatedDate = ticket.CreationDate?.ToString("yyyy-MM-dd HH:mm"),
-                    AssigneeName = ticket.Assignee?.FullNameEn ?? ticket.Assignee?.FullNameAr ?? "Unassigned",
+                    AssigneeName = ticket.Assignee?.FullNameEn ?? ticket.Assignee?.FullNameLocal ?? "Unassigned",
                     TicketUrl = GenerateTicketUrl(ticket.Id)
                 });
 
@@ -279,7 +279,7 @@ public class TicketNotificationService : ITicketNotificationService
 
                 var emailContent = await RenderTemplateAsync(template, new
                 {
-                    RecipientName = recipient.FullNameEn ?? recipient.FullNameAr,
+                    RecipientName = recipient.FullNameEn ?? recipient.FullNameLocal,
                     TicketId = ticket.Id,
                     TicketTitle = ticket.TitleEn ?? ticket.TitleAr,
                     FileName = attachment.FileName,

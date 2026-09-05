@@ -1,4 +1,4 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using ThinkOnErp.Domain.Entities.Accounting;
 
@@ -21,8 +21,8 @@ public sealed class GlCostCenterConfiguration : IEntityTypeConfiguration<GlCostC
             .HasColumnName("PARENT_COST_CENTER_CODE")
             .HasMaxLength(50);
 
-        builder.Property(c => c.NameAr)
-            .HasColumnName("NAME_AR")
+        builder.Property(c => c.NameLocal)
+            .HasColumnName("NAME_LOCAL")
             .HasMaxLength(200)
             .IsRequired();
 

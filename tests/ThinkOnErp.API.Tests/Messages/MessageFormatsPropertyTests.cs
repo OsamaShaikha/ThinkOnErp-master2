@@ -51,7 +51,7 @@ public class MessageFormatsPropertyTests : IClassFixture<TestWebApplicationFacto
                 // Create a role
                 var createDto = new CreateRoleDto
                 {
-                    RoleNameAr = roleDesc,
+                    RoleNameLocal = roleDesc,
                     RoleNameEn = roleDescE,
                     Note = "Test"
                 };
@@ -113,7 +113,7 @@ public class MessageFormatsPropertyTests : IClassFixture<TestWebApplicationFacto
                 // For this test, we'll try to access admin endpoint without proper token
                 var response = _client.PostAsJsonAsync("/api/roles", new CreateRoleDto
                 {
-                    RoleNameAr = "Test",
+                    RoleNameLocal = "Test",
                     RoleNameEn = "Test E",
                     Note = "Test"
                 }).GetAwaiter().GetResult();
@@ -177,7 +177,7 @@ public class MessageFormatsPropertyTests : IClassFixture<TestWebApplicationFacto
                 // Create role with validation errors
                 var createDto = new CreateRoleDto
                 {
-                    RoleNameAr = "", // Invalid
+                    RoleNameLocal = "", // Invalid
                     RoleNameEn = "",
                     Note = "Test"
                 };

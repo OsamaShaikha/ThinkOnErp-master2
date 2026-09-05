@@ -217,4 +217,16 @@ public static class ResponseCodes
     public const string StockValuationGenerated = "RES_STOCK_VALUATION_GENERATED";
     public const string AtpCalculated = "RES_ATP_CALCULATED";
     public const string StockReconciliationCompleted = "RES_STOCK_RECONCILIATION_COMPLETED";
+
+    public const string DocTypeCreated = "RES_DOC_TYPE_CREATED";
+    public const string DocTypeUpdated = "RES_DOC_TYPE_UPDATED";
+    public const string DocTypeDeleted = "RES_DOC_TYPE_DELETED";
+    public const string DocTypesRetrieved = "RES_DOC_TYPES_RETRIEVED";
+    public const string DocTypeDetailsRetrieved = "RES_DOC_TYPE_DETAILS_RETRIEVED";
+
+    public const string TrxTypeCreated = "RES_TRX_TYPE_CREATED";
+    public const string TrxTypeUpdated = "RES_TRX_TYPE_UPDATED";
+    public const string TrxTypeDeleted = "RES_TRX_TYPE_DELETED";
+    public const string TrxTypesRetrieved = "RES_TRX_TYPES_RETRIEVED";
+    public const string TrxTypeDetailsRetrieved = "RES_TRX_TYPE_DETAILS_RETRIEVED";
 }

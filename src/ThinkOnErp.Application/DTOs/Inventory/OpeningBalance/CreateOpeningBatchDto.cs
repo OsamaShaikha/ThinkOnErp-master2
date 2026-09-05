@@ -36,7 +36,7 @@ public sealed class CreateOpeningLineDto
     public long? BinId { get; set; }
 
     [Required]
-    public string UomCode { get; set; } = string.Empty;
+    public int UomCode { get; set; }
 
     public decimal UomFactor { get; set; } = 1;
 

@@ -155,7 +155,7 @@ public sealed class GlAccountServiceTests
         var result = await CreateService().CreateAccountAsync(new CreateGlAccountDto
         {
             AccountCode = "111101",
-            AccountNameAr = "الصندوق الرئيسي",
+            AccountNameLocal = "الصندوق الرئيسي",
             AccountNameEn = "Main cash",
             ParentAccountCode = parent.AccountCode,
             AccountType = "detail",
@@ -211,7 +211,7 @@ public sealed class GlAccountServiceTests
             account.AccountCode,
             new UpdateGlAccountDto
             {
-                AccountNameAr = "  حساب محدث  ",
+                AccountNameLocal = "  حساب محدث  ",
                 AccountNameEn = "  Updated account  ",
                 IsContra = true,
                 IsBranchSpecific = true,
@@ -222,7 +222,7 @@ public sealed class GlAccountServiceTests
         Assert.Equal("111101", result.AccountCode);
         Assert.Equal("1111", result.ParentAccountCode);
         Assert.Equal("DETAIL", result.AccountType);
-        Assert.Equal("حساب محدث", result.AccountNameAr);
+        Assert.Equal("حساب محدث", result.AccountNameLocal);
         Assert.Equal("Updated account", result.AccountNameEn);
         Assert.True(result.IsContra);
         Assert.Equal(new long[] { 10, 11 }, result.BranchIds);
@@ -314,7 +314,7 @@ public sealed class GlAccountServiceTests
         {
             CompanyId = TenantCompanyId,
             AccountCode = code,
-            AccountNameAr = $"حساب {code}",
+            AccountNameLocal = $"حساب {code}",
             AccountNameEn = $"Account {code}",
             ParentAccountCode = parentCode,
             AccountLevel = level,

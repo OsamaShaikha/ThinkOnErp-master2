@@ -1,6 +1,8 @@
-using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.Logging;
+using ThinkOnErp.Application.Common;
 using ThinkOnErp.Application.DTOs.Accounting.Vouchers;
 using ThinkOnErp.Application.Mappings.Accounting;
+using ThinkOnErp.Domain.Constants;
 using ThinkOnErp.Domain.Entities.Accounting;
 using ThinkOnErp.Domain.Exceptions;
 using ThinkOnErp.Domain.Interfaces.Accounting;
@@ -47,10 +49,106 @@ public sealed class GlVoucherService : IGlVoucherService
         return types.Select(GlVoucherMapper.ToDto).ToList();
     }
 
+    public async Task<GlVoucherTypeDto?> GetVoucherTypeByIdAsync(long id, CancellationToken cancellationToken = default)
+    {
+        var type = await _voucherRepository.GetVoucherTypeByIdAsync(id, cancellationToken);
+        return type == null ? null : GlVoucherMapper.ToDto(type);
+    }
+
     public async Task<GlVoucherTypeDto?> GetVoucherTypeByCodeAsync(int typeCode, CancellationToken cancellationToken = default)
     {
         var type = await _voucherRepository.GetVoucherTypeByCodeAsync(typeCode, cancellationToken);
         return type == null ? null : GlVoucherMapper.ToDto(type);
+    }
+
+    public async Task<GlVoucherTypeDto> CreateVoucherTypeAsync(
+        CreateGlVoucherTypeDto dto,
+        string username,
+        CancellationToken cancellationToken = default)
+    {
+        if (dto.TypeCode <= 0)
+            throw new AccountingException("Voucher TypeCode must be a positive integer.", ErrorCodes.OutOfRange);
+
+        if (string.IsNullOrWhiteSpace(dto.TypeKey))
+            throw new AccountingException("Voucher TypeKey is required.", ErrorCodes.FieldRequired);
+
+        if (string.IsNullOrWhiteSpace(dto.NameLocal))
+            throw new AccountingException("Voucher NameLocal is required.", ErrorCodes.FieldRequired);
+
+        var exists = await _voucherRepository.VoucherTypeExistsAsync(dto.TypeCode, dto.TypeKey, null, cancellationToken);
+        if (exists)
+            throw new AccountingException($"A voucher type with code '{dto.TypeCode}' or key '{dto.TypeKey}' already exists.", ErrorCodes.DuplicateValue);
+
+        var entity = new GlVoucherType
+        {
+            TypeCode = dto.TypeCode,
+            TypeKey = dto.TypeKey.Trim().ToUpper(),
+            NameLocal = dto.NameLocal.Trim(),
+            NameEn = string.IsNullOrWhiteSpace(dto.NameEn) ? dto.NameLocal.Trim() : dto.NameEn.Trim(),
+            Prefix = string.IsNullOrWhiteSpace(dto.Prefix) ? dto.TypeKey.Trim().ToUpper() : dto.Prefix.Trim().ToUpper(),
+            Category = string.IsNullOrWhiteSpace(dto.Category) ? "JOURNAL" : dto.Category.Trim().ToUpper(),
+            SerialResetPolicy = string.IsNullOrWhiteSpace(dto.SerialResetPolicy) ? "MONTHLY" : dto.SerialResetPolicy.Trim().ToUpper(),
+            RequiresReview = dto.RequiresReview,
+            AllowManualEntry = dto.AllowManualEntry,
+            IsSystem = false,
+            DisplayOrder = dto.DisplayOrder,
+            IsActive = dto.IsActive,
+            Description = dto.Description,
+            CreationUser = username,
+            CreationDate = DateTime.UtcNow
+        };
+
+        var created = await _voucherRepository.CreateVoucherTypeAsync(entity, cancellationToken);
+        _logger.LogInformation("Voucher type {TypeCode} ({TypeKey}) created successfully by {User}", created.TypeCode, created.TypeKey, username);
+        return GlVoucherMapper.ToDto(created);
+    }
+
+    public async Task<GlVoucherTypeDto> UpdateVoucherTypeAsync(
+        long id,
+        UpdateGlVoucherTypeDto dto,
+        string username,
+        CancellationToken cancellationToken = default)
+    {
+        var existing = await _voucherRepository.GetVoucherTypeByIdAsync(id, cancellationToken);
+        if (existing == null)
+            throw new AccountingException($"Voucher type with ID '{id}' was not found.", ErrorCodes.VoucherNotFound);
+
+        if (string.IsNullOrWhiteSpace(dto.NameLocal))
+            throw new AccountingException("Voucher NameLocal is required.", ErrorCodes.FieldRequired);
+
+        existing.NameLocal = dto.NameLocal.Trim();
+        existing.NameEn = string.IsNullOrWhiteSpace(dto.NameEn) ? dto.NameLocal.Trim() : dto.NameEn.Trim();
+        existing.Prefix = string.IsNullOrWhiteSpace(dto.Prefix) ? existing.Prefix : dto.Prefix.Trim().ToUpper();
+        existing.Category = string.IsNullOrWhiteSpace(dto.Category) ? existing.Category : dto.Category.Trim().ToUpper();
+        existing.SerialResetPolicy = string.IsNullOrWhiteSpace(dto.SerialResetPolicy) ? existing.SerialResetPolicy : dto.SerialResetPolicy.Trim().ToUpper();
+        existing.RequiresReview = dto.RequiresReview;
+        existing.AllowManualEntry = dto.AllowManualEntry;
+        existing.DisplayOrder = dto.DisplayOrder;
+        existing.IsActive = dto.IsActive;
+        existing.Description = dto.Description;
+        existing.UpdateUser = username;
+        existing.UpdateDate = DateTime.UtcNow;
+
+        var updated = await _voucherRepository.UpdateVoucherTypeAsync(existing, cancellationToken);
+        _logger.LogInformation("Voucher type {Id} updated successfully by {User}", id, username);
+        return GlVoucherMapper.ToDto(updated);
+    }
+
+    public async Task DeleteVoucherTypeAsync(long id, CancellationToken cancellationToken = default)
+    {
+        var existing = await _voucherRepository.GetVoucherTypeByIdAsync(id, cancellationToken);
+        if (existing == null)
+            throw new AccountingException($"Voucher type with ID '{id}' was not found.", ErrorCodes.VoucherNotFound);
+
+        if (existing.IsSystem)
+            throw new AccountingException("System voucher types cannot be deleted.", ErrorCodes.InvalidFormat);
+
+        var hasVouchers = await _voucherRepository.HasAssociatedVouchersAsync(existing.TypeCode, cancellationToken);
+        if (hasVouchers)
+            throw new AccountingException($"Cannot delete voucher type '{existing.TypeCode}' because vouchers are already recorded under it.", ErrorCodes.DuplicateValue);
+
+        await _voucherRepository.DeleteVoucherTypeAsync(id, cancellationToken);
+        _logger.LogInformation("Voucher type {Id} deleted successfully", id);
     }
 
     public async Task<PagedResultDto<GlVoucherHeaderDto>> GetPagedVouchersAsync(
@@ -117,7 +215,7 @@ public sealed class GlVoucherService : IGlVoucherService
 
         if (!voucherType.AllowManualEntry)
         {
-            throw new AccountingException($"نوع القيد ({voucherType.NameAr}) آلي ومخصص لعمليات النظام فقط.", "GL_VOUCHER_MANUAL_DISALLOWED");
+            throw new AccountingException($"نوع القيد ({voucherType.NameLocal}) آلي ومخصص لعمليات النظام فقط.", "GL_VOUCHER_MANUAL_DISALLOWED");
         }
 
         decimal totalDebit = 0;
@@ -138,7 +236,7 @@ public sealed class GlVoucherService : IGlVoucherService
 
             if (!account.IsPostable || account.AccountType == "HEADER")
             {
-                throw new AccountingException($"لا يمكن الترحيل على الحساب الرئيسي ({detail.AccountCode} - {account.AccountNameAr}). يجب الترحيل على حساب فرعي قابل للترحيل.", "GL_VOUCHER_ACCOUNT_HEADER_NOT_POSTABLE");
+                throw new AccountingException($"لا يمكن الترحيل على الحساب الرئيسي ({detail.AccountCode} - {account.AccountNameLocal}). يجب الترحيل على حساب فرعي قابل للترحيل.", "GL_VOUCHER_ACCOUNT_HEADER_NOT_POSTABLE");
             }
 
             if (!string.IsNullOrWhiteSpace(detail.CostCenterCode))
@@ -151,7 +249,7 @@ public sealed class GlVoucherService : IGlVoucherService
 
                 if (!costCenter.IsPostable || costCenter.CostCenterType == "HEADER")
                 {
-                    throw new AccountingException($"لا يمكن الترحيل على مركز التكلفة الرئيسي ({detail.CostCenterCode} - {costCenter.NameAr}). يجب الترحيل على مركز تكلفة فرعي قابل للترحيل.", "GL_VOUCHER_COST_CENTER_NOT_POSTABLE");
+                    throw new AccountingException($"لا يمكن الترحيل على مركز التكلفة الرئيسي ({detail.CostCenterCode} - {costCenter.NameLocal}). يجب الترحيل على مركز تكلفة فرعي قابل للترحيل.", "GL_VOUCHER_COST_CENTER_NOT_POSTABLE");
                 }
             }
 
@@ -167,7 +265,7 @@ public sealed class GlVoucherService : IGlVoucherService
                         _ => "الطرف المعني"
                     };
                     throw new AccountingException(
-                        $"الحساب ({detail.AccountCode} - {account.AccountNameAr}) هو حساب ضابط ({account.ControlAccountType}). يجب تحديد نوع الطرف (partyType) وكود الطرف (partyCode) — مثلاً partyType='{expectedParty}'.",
+                        $"الحساب ({detail.AccountCode} - {account.AccountNameLocal}) هو حساب ضابط ({account.ControlAccountType}). يجب تحديد نوع الطرف (partyType) وكود الطرف (partyCode) — مثلاً partyType='{expectedParty}'.",
                         "GL_VOUCHER_CONTROL_ACCOUNT_PARTY_REQUIRED");
                 }
 
@@ -206,11 +304,11 @@ public sealed class GlVoucherService : IGlVoucherService
         {
             if (period.Status == "HARD_CLOSE")
             {
-                throw new AccountingException($"لا يمكن إنشاء السند بتاريخ ({voucherDate:yyyy-MM-dd}) لأن الفترة المالية ({period.PeriodNameAr}) مقفلة نهائياً (HARD_CLOSE).", "GL_FISCAL_PERIOD_HARD_CLOSED");
+                throw new AccountingException($"لا يمكن إنشاء السند بتاريخ ({voucherDate:yyyy-MM-dd}) لأن الفترة المالية ({period.PeriodNameLocal}) مقفلة نهائياً (HARD_CLOSE).", "GL_FISCAL_PERIOD_HARD_CLOSED");
             }
             if (period.Status == "SOFT_CLOSE")
             {
-                throw new AccountingException($"الفترة المالية ({period.PeriodNameAr}) مقفلة جزئياً (SOFT_CLOSE). يتطلب الترحيل فيها صلاحيات مشرف وتبرير معتمد.", "GL_FISCAL_PERIOD_SOFT_CLOSED");
+                throw new AccountingException($"الفترة المالية ({period.PeriodNameLocal}) مقفلة جزئياً (SOFT_CLOSE). يتطلب الترحيل فيها صلاحيات مشرف وتبرير معتمد.", "GL_FISCAL_PERIOD_SOFT_CLOSED");
             }
         }
 
@@ -333,11 +431,11 @@ public sealed class GlVoucherService : IGlVoucherService
         {
             if (postPeriod.Status == "HARD_CLOSE")
             {
-                throw new AccountingException($"لا يمكن ترحيل السند رقم ({voucher.VoucherNo}) لأن الفترة المالية ({postPeriod.PeriodNameAr}) مقفلة نهائياً (HARD_CLOSE).", "GL_FISCAL_PERIOD_HARD_CLOSED");
+                throw new AccountingException($"لا يمكن ترحيل السند رقم ({voucher.VoucherNo}) لأن الفترة المالية ({postPeriod.PeriodNameLocal}) مقفلة نهائياً (HARD_CLOSE).", "GL_FISCAL_PERIOD_HARD_CLOSED");
             }
             if (postPeriod.Status == "SOFT_CLOSE")
             {
-                throw new AccountingException($"الفترة المالية ({postPeriod.PeriodNameAr}) مقفلة جزئياً (SOFT_CLOSE). يتطلب الترحيل فيها صلاحيات مشرف وتبرير معتمد.", "GL_FISCAL_PERIOD_SOFT_CLOSED");
+                throw new AccountingException($"الفترة المالية ({postPeriod.PeriodNameLocal}) مقفلة جزئياً (SOFT_CLOSE). يتطلب الترحيل فيها صلاحيات مشرف وتبرير معتمد.", "GL_FISCAL_PERIOD_SOFT_CLOSED");
             }
         }
 

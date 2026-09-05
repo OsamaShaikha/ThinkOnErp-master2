@@ -4,14 +4,14 @@ public sealed class GlAccountBalanceDto
 {
     public long Id { get; set; }
     public string AccountCode { get; set; } = string.Empty;
-    public string AccountNameAr { get; set; } = string.Empty;
+    public string AccountNameLocal { get; set; } = string.Empty;
     public string AccountNameEn { get; set; } = string.Empty;
     public long BranchId { get; set; }
-    public string? BranchNameAr { get; set; }
+    public string? BranchNameLocal { get; set; }
     public string? BranchNameEn { get; set; }
     public long FiscalYearId { get; set; }
     public long FiscalPeriodId { get; set; }
-    public string? PeriodNameAr { get; set; }
+    public string? PeriodNameLocal { get; set; }
     public string? PeriodNameEn { get; set; }
     public long CurrencyId { get; set; }
     public string? CurrencyCode { get; set; }

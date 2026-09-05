@@ -44,6 +44,11 @@ public class TokenDto
     public string? CompanySchema { get; set; }
 
     /// <summary>
+    /// Active session language ID (1 = Arabic, 2 = English, 3 = French, 4 = Spanish, 5 = Turkish, 6 = German)
+    /// </summary>
+    public int Language { get; set; } = 1;
+
+    /// <summary>
     /// Authenticated user information
     /// </summary>
     public UserDto? User { get; set; }

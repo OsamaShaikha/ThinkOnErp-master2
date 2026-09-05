@@ -1,4 +1,4 @@
-namespace ThinkOnErp.Application.DTOs.Accounting.AccountStatement;
+﻿namespace ThinkOnErp.Application.DTOs.Accounting.AccountStatement;
 
 /// <summary>
 /// Represents a single transaction movement row in an Account Statement.
@@ -10,13 +10,13 @@ public sealed class AccountStatementItemDto
     public DateTime VoucherDate { get; set; }
 
     public int VoucherTypeCode { get; set; }
-    public string VoucherTypeNameAr { get; set; } = string.Empty;
+    public string VoucherTypeNameLocal { get; set; } = string.Empty;
     public string VoucherTypeNameEn { get; set; } = string.Empty;
     public string VoucherPrefix { get; set; } = string.Empty;
 
     public int LineSer { get; set; }
     public string AccountCode { get; set; } = string.Empty;
-    public string AccountNameAr { get; set; } = string.Empty;
+    public string AccountNameLocal { get; set; } = string.Empty;
     public string AccountNameEn { get; set; } = string.Empty;
 
     public decimal Debit { get; set; }
@@ -33,7 +33,7 @@ public sealed class AccountStatementItemDto
     public decimal ExchangeRate { get; set; } = 1.0m;
 
     public string? CostCenterCode { get; set; }
-    public string? CostCenterNameAr { get; set; }
+    public string? CostCenterNameLocal { get; set; }
     public string? CostCenterNameEn { get; set; }
 
     public string? Description { get; set; }

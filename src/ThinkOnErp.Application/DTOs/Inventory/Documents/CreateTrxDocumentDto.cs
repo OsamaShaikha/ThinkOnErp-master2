@@ -62,7 +62,7 @@ public sealed class CreateTrxDocumentLineDto
     public string? ItemDescription { get; set; }
 
     [Required]
-    public string UomCode { get; set; } = string.Empty;
+    public int UomCode { get; set; }
 
     public decimal UomFactor { get; set; } = 1;
 

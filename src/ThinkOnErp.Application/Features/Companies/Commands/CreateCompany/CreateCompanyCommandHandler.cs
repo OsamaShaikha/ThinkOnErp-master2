@@ -1,4 +1,4 @@
-using MediatR;
+﻿using MediatR;
 using ThinkOnErp.Domain.Entities;
 using ThinkOnErp.Domain.Interfaces;
 
@@ -17,9 +17,9 @@ public class CreateCompanyCommandHandler : IRequestHandler<CreateCompanyCommand,
     {
         var company = new SysCompany
         {
-            CompanyNameAr = request.CompanyNameAr,
+            CompanyNameLocal = request.CompanyNameLocal,
             CompanyNameEn = request.CompanyNameEn,
-            LegalName = request.LegalNameAr,
+            LegalName = request.LegalNameLocal,
             LegalNameE = request.LegalNameEn,
             CompanyCode = request.CompanyCode,
             CountryId = request.CountryId,

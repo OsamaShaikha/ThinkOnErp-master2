@@ -4,7 +4,7 @@ public sealed class InvBin
 {
     public long Id { get; set; }
     public long ZoneId { get; set; }
-    public string BinCode { get; set; } = string.Empty;
+    public int BinCode { get; set; }
     public decimal? MaxWeight { get; set; }
     public decimal? MaxVolume { get; set; }
     public bool IsActive { get; set; } = true;

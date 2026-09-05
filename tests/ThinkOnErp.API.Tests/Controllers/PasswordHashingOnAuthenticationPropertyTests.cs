@@ -159,7 +159,7 @@ public class PasswordHashingOnAuthenticationPropertyTests
                     {
                         Id = userId,
                         UserName = userName,
-                        FullNameAr = $"User {userName}",
+                        FullNameLocal = $"User {userName}",
                         FullNameEn = $"User {userName}",
                         Password = ComputeSHA256Hash(password), // Stored hash
                         RoleId = roleId,

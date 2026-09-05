@@ -42,7 +42,7 @@ public class MediatRPipelineAuditIntegrationTests : IClassFixture<TestWebApplica
 
         var command = new CreateRoleCommand
         {
-            RoleNameAr = "Test Role",
+            RoleNameLocal = "Test Role",
             RoleNameEn = "Test Role EN",
             Note = "Integration test role"
         };
@@ -76,7 +76,7 @@ public class MediatRPipelineAuditIntegrationTests : IClassFixture<TestWebApplica
         // First create a role
         var createCommand = new CreateRoleCommand
         {
-            RoleNameAr = "Role to Update",
+            RoleNameLocal = "Role to Update",
             RoleNameEn = "Role to Update EN",
             Note = "Will be updated"
         };
@@ -87,7 +87,7 @@ public class MediatRPipelineAuditIntegrationTests : IClassFixture<TestWebApplica
         var updateCommand = new UpdateRoleCommand
         {
             RoleId = roleId,
-            RoleNameAr = "Updated Role",
+            RoleNameLocal = "Updated Role",
             RoleNameEn = "Updated Role EN",
             Note = "Updated note"
         };
@@ -111,7 +111,7 @@ public class MediatRPipelineAuditIntegrationTests : IClassFixture<TestWebApplica
         // First create a role
         var createCommand = new CreateRoleCommand
         {
-            RoleNameAr = "Role to Delete",
+            RoleNameLocal = "Role to Delete",
             RoleNameEn = "Role to Delete EN",
             Note = "Will be deleted"
         };
@@ -142,7 +142,7 @@ public class MediatRPipelineAuditIntegrationTests : IClassFixture<TestWebApplica
 
         var command = new CreateUserCommand
         {
-            NameAr = "Test User",
+            NameLocal = "Test User",
             NameEn = "Test User EN",
             UserName = $"testuser_{Guid.NewGuid():N}",
             Password = "TestPass123!",
@@ -175,7 +175,7 @@ public class MediatRPipelineAuditIntegrationTests : IClassFixture<TestWebApplica
         // First create a user
         var createCommand = new CreateUserCommand
         {
-            NameAr = "User for Password Change",
+            NameLocal = "User for Password Change",
             NameEn = "User for Password Change EN",
             UserName = $"pwduser_{Guid.NewGuid():N}",
             Password = "InitialPass123!",
@@ -218,7 +218,7 @@ public class MediatRPipelineAuditIntegrationTests : IClassFixture<TestWebApplica
         // First create a user
         var createCommand = new CreateUserCommand
         {
-            NameAr = "User for Password Reset",
+            NameLocal = "User for Password Reset",
             NameEn = "User for Password Reset EN",
             UserName = $"resetuser_{Guid.NewGuid():N}",
             Password = "InitialPass123!",
@@ -257,21 +257,21 @@ public class MediatRPipelineAuditIntegrationTests : IClassFixture<TestWebApplica
 
         var command1 = new CreateRoleCommand
         {
-            RoleNameAr = "Role 1",
+            RoleNameLocal = "Role 1",
             RoleNameEn = "Role 1 EN",
             Note = "First role"
         };
 
         var command2 = new CreateRoleCommand
         {
-            RoleNameAr = "Role 2",
+            RoleNameLocal = "Role 2",
             RoleNameEn = "Role 2 EN",
             Note = "Second role"
         };
 
         var command3 = new CreateRoleCommand
         {
-            RoleNameAr = "Role 3",
+            RoleNameLocal = "Role 3",
             RoleNameEn = "Role 3 EN",
             Note = "Third role"
         };
@@ -306,7 +306,7 @@ public class MediatRPipelineAuditIntegrationTests : IClassFixture<TestWebApplica
         // Create a command that will fail validation
         var invalidCommand = new CreateRoleCommand
         {
-            RoleNameAr = "", // Invalid - empty
+            RoleNameLocal = "", // Invalid - empty
             RoleNameEn = "", // Invalid - empty
             Note = "This will fail"
         };
@@ -332,7 +332,7 @@ public class MediatRPipelineAuditIntegrationTests : IClassFixture<TestWebApplica
 
         var command = new CreateRoleCommand
         {
-            RoleNameAr = "Performance Test Role",
+            RoleNameLocal = "Performance Test Role",
             RoleNameEn = "Performance Test Role EN",
             Note = "Testing async audit logging"
         };
@@ -364,7 +364,7 @@ public class MediatRPipelineAuditIntegrationTests : IClassFixture<TestWebApplica
 
         var command = new CreateRoleCommand
         {
-            RoleNameAr = "Health Check Role",
+            RoleNameLocal = "Health Check Role",
             RoleNameEn = "Health Check Role EN",
             Note = "Testing audit logger health"
         };
@@ -387,7 +387,7 @@ public class MediatRPipelineAuditIntegrationTests : IClassFixture<TestWebApplica
         // Create initial role
         var createCommand = new CreateRoleCommand
         {
-            RoleNameAr = "Original Name",
+            RoleNameLocal = "Original Name",
             RoleNameEn = "Original Name EN",
             Note = "Original note"
         };
@@ -398,7 +398,7 @@ public class MediatRPipelineAuditIntegrationTests : IClassFixture<TestWebApplica
         var updateCommand = new UpdateRoleCommand
         {
             RoleId = roleId,
-            RoleNameAr = "Modified Name",
+            RoleNameLocal = "Modified Name",
             RoleNameEn = "Modified Name EN",
             Note = "Modified note"
         };
@@ -423,7 +423,7 @@ public class MediatRPipelineAuditIntegrationTests : IClassFixture<TestWebApplica
 
         var command = new CreateRoleCommand
         {
-            RoleNameAr = "Pipeline Test Role",
+            RoleNameLocal = "Pipeline Test Role",
             RoleNameEn = "Pipeline Test Role EN",
             Note = "Testing pipeline order"
         };
@@ -453,7 +453,7 @@ public class MediatRPipelineAuditIntegrationTests : IClassFixture<TestWebApplica
 
         var command = new CreateRoleCommand
         {
-            RoleNameAr = "Entity ID Test",
+            RoleNameLocal = "Entity ID Test",
             RoleNameEn = "Entity ID Test EN",
             Note = "Testing entity ID extraction"
         };
@@ -478,7 +478,7 @@ public class MediatRPipelineAuditIntegrationTests : IClassFixture<TestWebApplica
 
         var command = new CreateRoleCommand
         {
-            RoleNameAr = "Action Test Create",
+            RoleNameLocal = "Action Test Create",
             RoleNameEn = "Action Test Create EN",
             Note = "Testing action determination"
         };
@@ -504,7 +504,7 @@ public class MediatRPipelineAuditIntegrationTests : IClassFixture<TestWebApplica
         // Create a role first
         var createCommand = new CreateRoleCommand
         {
-            RoleNameAr = "Action Test Update",
+            RoleNameLocal = "Action Test Update",
             RoleNameEn = "Action Test Update EN",
             Note = "For update test"
         };
@@ -515,7 +515,7 @@ public class MediatRPipelineAuditIntegrationTests : IClassFixture<TestWebApplica
         var updateCommand = new UpdateRoleCommand
         {
             RoleId = roleId,
-            RoleNameAr = "Updated",
+            RoleNameLocal = "Updated",
             RoleNameEn = "Updated EN",
             Note = "Updated"
         };
@@ -539,7 +539,7 @@ public class MediatRPipelineAuditIntegrationTests : IClassFixture<TestWebApplica
         // Create a role first
         var createCommand = new CreateRoleCommand
         {
-            RoleNameAr = "Action Test Delete",
+            RoleNameLocal = "Action Test Delete",
             RoleNameEn = "Action Test Delete EN",
             Note = "For delete test"
         };
@@ -570,7 +570,7 @@ public class MediatRPipelineAuditIntegrationTests : IClassFixture<TestWebApplica
 
         var commands = Enumerable.Range(1, 10).Select(i => new CreateRoleCommand
         {
-            RoleNameAr = $"Concurrent Role {i}",
+            RoleNameLocal = $"Concurrent Role {i}",
             RoleNameEn = $"Concurrent Role {i} EN",
             Note = $"Concurrent test {i}"
         }).ToList();

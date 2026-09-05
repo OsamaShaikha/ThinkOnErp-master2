@@ -1,4 +1,4 @@
-using System.Text.Json.Serialization;
+﻿using System.Text.Json.Serialization;
 using MediatR;
 
 namespace ThinkOnErp.Application.Features.Roles.Commands.CreateRole;
@@ -12,7 +12,7 @@ public class CreateRoleCommand : IRequest<Int64>
     /// <summary>
     /// Arabic description of the role (required)
     /// </summary>
-    public string RoleNameAr { get; set; } = string.Empty;
+    public string RoleNameLocal { get; set; } = string.Empty;
 
     /// <summary>
     /// English description of the role (required)

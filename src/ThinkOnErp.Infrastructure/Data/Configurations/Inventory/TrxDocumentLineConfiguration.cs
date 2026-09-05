@@ -22,7 +22,7 @@ public sealed class TrxDocumentLineConfiguration : IEntityTypeConfiguration<TrxD
         builder.Property(l => l.ItemId).HasColumnName("ITEM_ID").IsRequired();
         builder.Property(l => l.ItemDescription).HasColumnName("ITEM_DESCRIPTION").HasMaxLength(500);
 
-        builder.Property(l => l.UomCode).HasColumnName("UOM_CODE").HasMaxLength(20).IsRequired();
+        builder.Property(l => l.UomCode).HasColumnName("UOM_CODE").HasColumnType("NUMBER(6)").IsRequired();
         builder.Property(l => l.UomFactor).HasColumnName("UOM_FACTOR").HasColumnType("NUMBER(18,6)").HasDefaultValue(1m);
 
         builder.Property(l => l.QuantityIn).HasColumnName("QUANTITY_IN").HasColumnType("NUMBER(14,4)").HasDefaultValue(0m);

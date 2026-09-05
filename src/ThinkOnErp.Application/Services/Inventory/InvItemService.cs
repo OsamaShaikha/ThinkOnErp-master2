@@ -16,11 +16,16 @@ namespace ThinkOnErp.Application.Services.Inventory;
 public sealed class InvItemService : IInvItemService
 {
     private readonly IInvItemRepository _itemRepository;
+    private readonly ITranslationService _translationService;
     private readonly ILogger<InvItemService> _logger;
 
-    public InvItemService(IInvItemRepository itemRepository, ILogger<InvItemService> logger)
+    public InvItemService(
+        IInvItemRepository itemRepository, 
+        ITranslationService translationService,
+        ILogger<InvItemService> logger)
     {
         _itemRepository = itemRepository;
+        _translationService = translationService;
         _logger = logger;
     }
 
@@ -42,12 +47,12 @@ public sealed class InvItemService : IInvItemService
         {
             BranchId = request.BranchId,
             ItemCode = request.ItemCode.Trim().ToUpper(),
-            ItemNameAr = request.ItemNameAr.Trim(),
+            ItemNameLocal = request.ItemNameLocal.Trim(),
             ItemNameEn = request.ItemNameEn?.Trim() ?? string.Empty,
             MainGroupId = request.MainGroupId,
             SubGroupId = request.SubGroupId,
             ItemType = request.ItemType,
-            UomBase = request.UomBase?.Trim() ?? "PCS",
+            UomBase = request.UomBase,
             CostingMethod = request.CostingMethod,
             StandardCost = request.StandardCost,
             SerialTracking = request.SerialTracking,
@@ -67,7 +72,10 @@ public sealed class InvItemService : IInvItemService
             CountryOfOrigin = request.CountryOfOrigin?.Trim(),
             HsCode = request.HsCode?.Trim(),
             Notes = request.Notes?.Trim(),
+            ImageBase64 = request.ImageBase64?.Trim(),
+            ColorCode = request.ColorCode,
             IsActive = true,
+            CreationUser = "admin",
             CreationDate = DateTime.UtcNow
         };
 
@@ -77,7 +85,7 @@ public sealed class InvItemService : IInvItemService
             {
                 item.UomConversions.Add(new InvItemUomConversion
                 {
-                    UomCode = uom.UomCode.Trim().ToUpper(),
+                    UomCode = uom.UomCode,
                     ConversionFactor = uom.ConversionFactor,
                     IsDefaultPurchase = uom.IsDefaultPurchase,
                     IsDefaultSales = uom.IsDefaultSales
@@ -94,7 +102,7 @@ public sealed class InvItemService : IInvItemService
                 {
                     Barcode = b.Barcode.Trim(),
                     BarcodeType = bType,
-                    UomCode = b.UomCode?.Trim().ToUpper() ?? item.UomBase
+                    UomCode = b.UomCode > 0 ? b.UomCode : item.UomBase
                 });
             }
         }
@@ -102,7 +110,15 @@ public sealed class InvItemService : IInvItemService
         await _itemRepository.AddAsync(item, cancellationToken);
         await _itemRepository.SaveChangesAsync(cancellationToken);
 
-        return ApiResponse<InvItemDto>.CreateSuccess(InvItemMapper.ToDto(item), "Item created successfully", 201);
+        if (request.Translations != null && request.Translations.Count > 0)
+        {
+            await _translationService.SaveTranslationsAsync("ITEM", item.Id, request.Translations, "admin", cancellationToken);
+        }
+
+        var dto = InvItemMapper.ToDto(item);
+        dto.DisplayName = await _translationService.ResolveDisplayNameAsync("ITEM", item.Id, "Name", !string.IsNullOrWhiteSpace(item.ItemNameEn) ? item.ItemNameEn : item.ItemNameLocal, null, cancellationToken);
+
+        return ApiResponse<InvItemDto>.CreateSuccess(dto, "Item created successfully", 201);
     }
 
     public async Task<ApiResponse<InvItemDto>> UpdateAsync(long id, UpdateInvItemDto request, CancellationToken cancellationToken = default)
@@ -113,11 +129,11 @@ public sealed class InvItemService : IInvItemService
             return ApiResponse<InvItemDto>.CreateFailure("Item not found", null, 404);
         }
 
-        if (!string.IsNullOrWhiteSpace(request.ItemNameAr)) item.ItemNameAr = request.ItemNameAr.Trim();
+        if (!string.IsNullOrWhiteSpace(request.ItemNameLocal)) item.ItemNameLocal = request.ItemNameLocal.Trim();
         if (!string.IsNullOrWhiteSpace(request.ItemType) && Enum.TryParse<ItemType>(request.ItemType, true, out var itemType)) item.ItemType = itemType;
         if (request.MainGroupId.HasValue) item.MainGroupId = request.MainGroupId.Value;
         if (request.SubGroupId.HasValue) item.SubGroupId = request.SubGroupId.Value;
-        if (!string.IsNullOrWhiteSpace(request.UomBase)) item.UomBase = request.UomBase.Trim();
+        if (request.UomBase.HasValue) item.UomBase = request.UomBase.Value;
         if (!string.IsNullOrWhiteSpace(request.CostingMethod) && Enum.TryParse<CostingMethod>(request.CostingMethod, true, out var cm)) item.CostingMethod = cm;
         if (request.StandardCost.HasValue) item.StandardCost = request.StandardCost.Value;
         if (request.SerialTracking.HasValue) item.SerialTracking = request.SerialTracking.Value;
@@ -130,20 +146,31 @@ public sealed class InvItemService : IInvItemService
         if (request.MinOrderQty.HasValue) item.MinOrderQty = request.MinOrderQty.Value;
         if (request.LeadTimeDays.HasValue) item.LeadTimeDays = request.LeadTimeDays.Value;
         if (request.Weight.HasValue) item.Weight = request.Weight.Value;
-        if (request.WeightUnit != null) item.WeightUnit = request.WeightUnit.Trim();
+        if (request.WeightUnit.HasValue) item.WeightUnit = request.WeightUnit.Value;
         if (request.GlControlAccount != null) item.GlControlAccount = request.GlControlAccount.Trim();
         if (request.GlRevenueAccount != null) item.GlRevenueAccount = request.GlRevenueAccount.Trim();
         if (request.GlCogsAccount != null) item.GlCogsAccount = request.GlCogsAccount.Trim();
         if (request.CountryOfOrigin != null) item.CountryOfOrigin = request.CountryOfOrigin.Trim();
         if (request.HsCode != null) item.HsCode = request.HsCode.Trim();
         if (request.Notes != null) item.Notes = request.Notes.Trim();
+        if (request.ImageBase64 != null) item.ImageBase64 = request.ImageBase64.Trim();
+        if (request.ColorCode.HasValue) item.ColorCode = request.ColorCode.Value;
 
+        item.UpdateUser = "admin";
         item.UpdateDate = DateTime.UtcNow;
 
         await _itemRepository.UpdateAsync(item, cancellationToken);
         await _itemRepository.SaveChangesAsync(cancellationToken);
 
-        return ApiResponse<InvItemDto>.CreateSuccess(InvItemMapper.ToDto(item), "Item updated successfully");
+        if (request.Translations != null && request.Translations.Count > 0)
+        {
+            await _translationService.SaveTranslationsAsync("ITEM", item.Id, request.Translations, "admin", cancellationToken);
+        }
+
+        var updatedDto = InvItemMapper.ToDto(item);
+        updatedDto.DisplayName = await _translationService.ResolveDisplayNameAsync("ITEM", item.Id, "Name", !string.IsNullOrWhiteSpace(item.ItemNameEn) ? item.ItemNameEn : item.ItemNameLocal, null, cancellationToken);
+
+        return ApiResponse<InvItemDto>.CreateSuccess(updatedDto, "Item updated successfully");
     }
 
     public async Task<ApiResponse<InvItemDto>> GetByIdAsync(long id, CancellationToken cancellationToken = default)
@@ -154,7 +181,10 @@ public sealed class InvItemService : IInvItemService
             return ApiResponse<InvItemDto>.CreateFailure("Item not found", null, 404);
         }
 
-        return ApiResponse<InvItemDto>.CreateSuccess(InvItemMapper.ToDto(item));
+        var dto = InvItemMapper.ToDto(item);
+        dto.DisplayName = await _translationService.ResolveDisplayNameAsync("ITEM", item.Id, "Name", !string.IsNullOrWhiteSpace(item.ItemNameEn) ? item.ItemNameEn : item.ItemNameLocal, null, cancellationToken);
+
+        return ApiResponse<InvItemDto>.CreateSuccess(dto);
     }
 
     public async Task<ApiResponse<List<InvItemListDto>>> GetAllAsync(int pageNumber, int pageSize, CancellationToken cancellationToken = default)
@@ -165,12 +195,15 @@ public sealed class InvItemService : IInvItemService
         {
             Id = i.Id,
             ItemCode = i.ItemCode,
-            ItemNameAr = i.ItemNameAr,
+            ItemNameLocal = i.ItemNameLocal,
+            DisplayName = i.ItemNameLocal,
             ItemType = i.ItemType.ToString(),
             UomBase = i.UomBase,
             OnHandTotal = i.StockBalances?.Sum(b => b.OnHandQty) ?? 0,
             IsActive = i.IsActive
         }).ToList();
+
+        await _translationService.PopulateDisplayNamesAsync("ITEM", dtoList, i => i.Id, i => i.ItemNameLocal, (dto, name) => dto.DisplayName = name, "Name", null, cancellationToken);
 
         return ApiResponse<List<InvItemListDto>>.CreateSuccess(dtoList);
     }
@@ -208,7 +241,7 @@ public sealed class InvItemService : IInvItemService
         item.UomConversions.Add(new InvItemUomConversion
         {
             ItemId = itemId,
-            UomCode = request.UomCode.Trim().ToUpper(),
+            UomCode = request.UomCode,
             ConversionFactor = request.ConversionFactor,
             IsDefaultPurchase = request.IsDefaultPurchase,
             IsDefaultSales = request.IsDefaultSales
@@ -235,7 +268,7 @@ public sealed class InvItemService : IInvItemService
             ItemId = itemId,
             Barcode = request.Barcode.Trim(),
             BarcodeType = bType,
-            UomCode = request.UomCode?.Trim().ToUpper() ?? item.UomBase
+            UomCode = request.UomCode > 0 ? request.UomCode : item.UomBase
         });
 
         await _itemRepository.UpdateAsync(item, cancellationToken);

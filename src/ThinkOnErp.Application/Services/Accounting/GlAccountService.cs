@@ -1,4 +1,4 @@
-using System.Globalization;
+﻿using System.Globalization;
 using ThinkOnErp.Application.DTOs.Accounting;
 using ThinkOnErp.Application.Mappings.Accounting;
 using ThinkOnErp.Domain.Entities.Accounting;
@@ -82,7 +82,7 @@ public sealed class GlAccountService : IGlAccountService
             var categoryDto = new GlAccountCategoryDto
             {
                 AccountCode = l1.AccountCode,
-                AccountNameAr = l1.AccountNameAr,
+                AccountNameLocal = l1.AccountNameLocal,
                 AccountNameEn = l1.AccountNameEn,
                 AccountLevel = l1.AccountLevel,
                 AccountType = l1.AccountType,
@@ -94,7 +94,7 @@ public sealed class GlAccountService : IGlAccountService
                     .Select(l2 => new GlAccountCategoryDto
                     {
                         AccountCode = l2.AccountCode,
-                        AccountNameAr = l2.AccountNameAr,
+                        AccountNameLocal = l2.AccountNameLocal,
                         AccountNameEn = l2.AccountNameEn,
                         AccountLevel = l2.AccountLevel,
                         AccountType = l2.AccountType,
@@ -175,7 +175,7 @@ public sealed class GlAccountService : IGlAccountService
 
         var companyId = _tenantContext.GetRequiredCompanyId();
         var parentCode = NullIfWhiteSpace(request.ParentAccountCode);
-        var accountNameAr = RequiredText(request.AccountNameAr, nameof(request.AccountNameAr), 200);
+        var accountNameLocal = RequiredText(request.AccountNameLocal, nameof(request.AccountNameLocal), 200);
         var accountNameEn = RequiredText(request.AccountNameEn, nameof(request.AccountNameEn), 200);
         var accountType = RequiredText(request.AccountType, nameof(request.AccountType), 10).ToUpperInvariant();
         var controlType = NullIfWhiteSpace(request.ControlAccountType)?.ToUpperInvariant();
@@ -274,7 +274,7 @@ public sealed class GlAccountService : IGlAccountService
         {
             AccountCode = accountCode,
             OldAccountCode = OptionalText(request.OldAccountCode, nameof(request.OldAccountCode), 50),
-            AccountNameAr = accountNameAr,
+            AccountNameLocal = accountNameLocal,
             AccountNameEn = accountNameEn,
             ParentAccountCode = parent?.AccountCode,
             ParentAccount = parent,
@@ -320,7 +320,7 @@ public sealed class GlAccountService : IGlAccountService
                 "The account does not exist.",
                 "GL_ACCOUNT_NOT_FOUND");
 
-        var accountNameAr = RequiredText(request.AccountNameAr, nameof(request.AccountNameAr), 200);
+        var accountNameLocal = RequiredText(request.AccountNameLocal, nameof(request.AccountNameLocal), 200);
         var accountNameEn = RequiredText(request.AccountNameEn, nameof(request.AccountNameEn), 200);
         var controlType = NullIfWhiteSpace(request.ControlAccountType)?.ToUpperInvariant();
 
@@ -334,7 +334,7 @@ public sealed class GlAccountService : IGlAccountService
             cancellationToken);
 
         account.OldAccountCode = OptionalText(request.OldAccountCode, nameof(request.OldAccountCode), 50);
-        account.AccountNameAr = accountNameAr;
+        account.AccountNameLocal = accountNameLocal;
         account.AccountNameEn = accountNameEn;
         account.IsContra = request.IsContra;
         account.IsControlAccount = request.IsControlAccount;
@@ -563,7 +563,7 @@ public sealed class GlAccountService : IGlAccountService
                 LevelNumber = e.LevelNumber,
                 DigitLength = e.DigitLength,
                 TotalCumulativeLength = cumulative,
-                LevelNameAr = e.LevelNameAr,
+                LevelNameLocal = e.LevelNameLocal,
                 LevelNameEn = e.LevelNameEn,
                 Description = e.Description,
                 IsActive = e.IsActive
@@ -581,7 +581,7 @@ public sealed class GlAccountService : IGlAccountService
         {
             LevelNumber = r.LevelNumber,
             DigitLength = r.DigitLength > 0 ? r.DigitLength : 1,
-            LevelNameAr = r.LevelNameAr ?? $"المستوى {r.LevelNumber}",
+            LevelNameLocal = r.LevelNameLocal ?? $"المستوى {r.LevelNumber}",
             LevelNameEn = r.LevelNameEn ?? $"Level {r.LevelNumber}",
             Description = r.Description,
             IsActive = r.IsActive
@@ -670,7 +670,7 @@ public sealed class GlAccountService : IGlAccountService
             var account = new GlAccount
             {
                 AccountCode = currentCode,
-                AccountNameAr = node.NameAr,
+                AccountNameLocal = node.NameLocal,
                 AccountNameEn = node.NameEn,
                 ParentAccountCode = string.IsNullOrEmpty(parentCode) ? null : parentCode,
                 AccountLevel = node.Level,
@@ -707,7 +707,7 @@ public sealed class GlAccountService : IGlAccountService
     private sealed record DefaultTemplateAccount(
         int Level,
         int SeqIndex,
-        string NameAr,
+        string NameLocal,
         string NameEn,
         string AccountType,
         string NormalBalance,

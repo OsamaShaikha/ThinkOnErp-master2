@@ -1,4 +1,4 @@
-using ThinkOnErp.Application.DTOs.Accounting.Tax;
+﻿using ThinkOnErp.Application.DTOs.Accounting.Tax;
 using ThinkOnErp.Domain.Entities.Accounting;
 
 namespace ThinkOnErp.Application.Services.Accounting.Tax.Declarations;
@@ -30,6 +30,6 @@ public interface ITaxDeclarationProvider
         VatDeclarationFilterDto filter,
         IReadOnlyList<TaxTransaction> transactions,
         IReadOnlyList<TaxRate> availableRates,
-        string branchNameAr,
+        string branchNameLocal,
         string branchNameEn);
 }

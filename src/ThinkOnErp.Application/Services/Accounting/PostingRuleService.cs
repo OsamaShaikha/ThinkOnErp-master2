@@ -1,4 +1,4 @@
-using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.Logging;
 using ThinkOnErp.Application.DTOs.Accounting.PostingRules;
 using ThinkOnErp.Application.DTOs.Accounting.Vouchers;
 using ThinkOnErp.Domain.Entities.Accounting;
@@ -76,7 +76,7 @@ public sealed class PostingRuleService : IPostingRuleService
             BranchId = dto.BranchId,
             Module = dto.Module.ToUpper(),
             EventType = dto.EventType.ToUpper(),
-            EventNameAr = dto.EventNameAr,
+            EventNameLocal = dto.EventNameLocal,
             EventNameEn = dto.EventNameEn,
             DebitAccountCode = dto.DebitAccountCode,
             CreditAccountCode = dto.CreditAccountCode,
@@ -155,7 +155,7 @@ public sealed class PostingRuleService : IPostingRuleService
             throw new AccountingException($"لا توجد قاعدة ترحيل معرفة للحركة ({request.Module} - {request.EventType}). يرجى ضبط قواعد الترحيل أولاً.", "POSTING_RULE_NOT_CONFIGURED");
         }
 
-        string desc = request.CustomDescription ?? rule.DescriptionTemplate ?? $"{rule.EventNameAr} - مرجع: {request.ReferenceNo}";
+        string desc = request.CustomDescription ?? rule.DescriptionTemplate ?? $"{rule.EventNameLocal} - مرجع: {request.ReferenceNo}";
         string? cc = request.CostCenterCode ?? rule.DefaultCostCenterCode;
 
         var voucherDto = new CreateGlVoucherDto
@@ -212,36 +212,36 @@ public sealed class PostingRuleService : IPostingRuleService
         var defaultRules = new List<CreatePostingRuleDto>
         {
             // Sales
-            new() { BranchId = branchId, Module = "SALES", EventType = "SALES_INVOICE", EventNameAr = "فاتورة مبيعات آجل", EventNameEn = "Credit Sales Invoice", DebitAccountCode = "112101", CreditAccountCode = "410101", DefaultVoucherType = 101, DescriptionTemplate = "إيراد فاتورة مبيعات رقم {InvoiceNo}" },
-            new() { BranchId = branchId, Module = "SALES", EventType = "CASH_SALES", EventNameAr = "فاتورة مبيعات نقدي", EventNameEn = "Cash Sales Invoice", DebitAccountCode = "111101", CreditAccountCode = "410101", DefaultVoucherType = 102, DescriptionTemplate = "مبيعات نقدية فاتورة رقم {InvoiceNo}" },
-            new() { BranchId = branchId, Module = "SALES", EventType = "SALES_DISCOUNT", EventNameAr = "خصم مسموح به (مبيعات)", EventNameEn = "Sales Discount Allowed", DebitAccountCode = "410201", CreditAccountCode = "112101", DefaultVoucherType = 101, DescriptionTemplate = "خصم مسموح به للعميل {PartyCode}" },
+            new() { BranchId = branchId, Module = "SALES", EventType = "SALES_INVOICE", EventNameLocal = "فاتورة مبيعات آجل", EventNameEn = "Credit Sales Invoice", DebitAccountCode = "112101", CreditAccountCode = "410101", DefaultVoucherType = 101, DescriptionTemplate = "إيراد فاتورة مبيعات رقم {InvoiceNo}" },
+            new() { BranchId = branchId, Module = "SALES", EventType = "CASH_SALES", EventNameLocal = "فاتورة مبيعات نقدي", EventNameEn = "Cash Sales Invoice", DebitAccountCode = "111101", CreditAccountCode = "410101", DefaultVoucherType = 102, DescriptionTemplate = "مبيعات نقدية فاتورة رقم {InvoiceNo}" },
+            new() { BranchId = branchId, Module = "SALES", EventType = "SALES_DISCOUNT", EventNameLocal = "خصم مسموح به (مبيعات)", EventNameEn = "Sales Discount Allowed", DebitAccountCode = "410201", CreditAccountCode = "112101", DefaultVoucherType = 101, DescriptionTemplate = "خصم مسموح به للعميل {PartyCode}" },
             
             // Purchases
-            new() { BranchId = branchId, Module = "PURCHASES", EventType = "PURCHASE_BILL", EventNameAr = "فاتورة مشتريات آجل", EventNameEn = "Credit Purchase Bill", DebitAccountCode = "113101", CreditAccountCode = "211101", DefaultVoucherType = 101, DescriptionTemplate = "فاتورة شراء بضاعة من المورد {PartyCode}" },
-            new() { BranchId = branchId, Module = "PURCHASES", EventType = "PURCHASE_DISCOUNT", EventNameAr = "خصم مكتسب (مشتريات)", EventNameEn = "Purchase Discount Received", DebitAccountCode = "211101", CreditAccountCode = "420101", DefaultVoucherType = 101, DescriptionTemplate = "خصم مكتسب من المورد {PartyCode}" },
+            new() { BranchId = branchId, Module = "PURCHASES", EventType = "PURCHASE_BILL", EventNameLocal = "فاتورة مشتريات آجل", EventNameEn = "Credit Purchase Bill", DebitAccountCode = "113101", CreditAccountCode = "211101", DefaultVoucherType = 101, DescriptionTemplate = "فاتورة شراء بضاعة من المورد {PartyCode}" },
+            new() { BranchId = branchId, Module = "PURCHASES", EventType = "PURCHASE_DISCOUNT", EventNameLocal = "خصم مكتسب (مشتريات)", EventNameEn = "Purchase Discount Received", DebitAccountCode = "211101", CreditAccountCode = "420101", DefaultVoucherType = 101, DescriptionTemplate = "خصم مكتسب من المورد {PartyCode}" },
             
             // Receipts & Payments
-            new() { BranchId = branchId, Module = "CASH_BANK", EventType = "CUSTOMER_RECEIPT_CASH", EventNameAr = "سند قبض نقدي من عميل", EventNameEn = "Customer Cash Receipt", DebitAccountCode = "111101", CreditAccountCode = "112101", DefaultVoucherType = 102, DescriptionTemplate = "قبض نقدي من العميل {PartyCode}" },
-            new() { BranchId = branchId, Module = "CASH_BANK", EventType = "CUSTOMER_RECEIPT_BANK", EventNameAr = "سند قبض حوالة بنكية", EventNameEn = "Customer Bank Receipt", DebitAccountCode = "111201", CreditAccountCode = "112101", DefaultVoucherType = 102, DescriptionTemplate = "حوالة بنكية من العميل {PartyCode}" },
-            new() { BranchId = branchId, Module = "CASH_BANK", EventType = "VENDOR_PAYMENT_CASH", EventNameAr = "سند صرف نقدي لمورد", EventNameEn = "Vendor Cash Payment", DebitAccountCode = "211101", CreditAccountCode = "111101", DefaultVoucherType = 103, DescriptionTemplate = "دفعة نقدية للمورد {PartyCode}" },
-            new() { BranchId = branchId, Module = "CASH_BANK", EventType = "VENDOR_PAYMENT_BANK", EventNameAr = "سند صرف تحويل بنكي لمورد", EventNameEn = "Vendor Bank Payment", DebitAccountCode = "211101", CreditAccountCode = "111201", DefaultVoucherType = 103, DescriptionTemplate = "تحويل بنكي للمورد {PartyCode}" },
+            new() { BranchId = branchId, Module = "CASH_BANK", EventType = "CUSTOMER_RECEIPT_CASH", EventNameLocal = "سند قبض نقدي من عميل", EventNameEn = "Customer Cash Receipt", DebitAccountCode = "111101", CreditAccountCode = "112101", DefaultVoucherType = 102, DescriptionTemplate = "قبض نقدي من العميل {PartyCode}" },
+            new() { BranchId = branchId, Module = "CASH_BANK", EventType = "CUSTOMER_RECEIPT_BANK", EventNameLocal = "سند قبض حوالة بنكية", EventNameEn = "Customer Bank Receipt", DebitAccountCode = "111201", CreditAccountCode = "112101", DefaultVoucherType = 102, DescriptionTemplate = "حوالة بنكية من العميل {PartyCode}" },
+            new() { BranchId = branchId, Module = "CASH_BANK", EventType = "VENDOR_PAYMENT_CASH", EventNameLocal = "سند صرف نقدي لمورد", EventNameEn = "Vendor Cash Payment", DebitAccountCode = "211101", CreditAccountCode = "111101", DefaultVoucherType = 103, DescriptionTemplate = "دفعة نقدية للمورد {PartyCode}" },
+            new() { BranchId = branchId, Module = "CASH_BANK", EventType = "VENDOR_PAYMENT_BANK", EventNameLocal = "سند صرف تحويل بنكي لمورد", EventNameEn = "Vendor Bank Payment", DebitAccountCode = "211101", CreditAccountCode = "111201", DefaultVoucherType = 103, DescriptionTemplate = "تحويل بنكي للمورد {PartyCode}" },
 
             // PDC
-            new() { BranchId = branchId, Module = "PDC", EventType = "PDC_INWARD_RECEIPT", EventNameAr = "استلام شيك آجل من عميل", EventNameEn = "PDC Inward Receipt", DebitAccountCode = "111301", CreditAccountCode = "112101", DefaultVoucherType = 102, DescriptionTemplate = "شيك آجل برسم التحصيل رقم {ChequeNo}" },
-            new() { BranchId = branchId, Module = "PDC", EventType = "PDC_INWARD_CLEAR", EventNameAr = "تحصيل شيك مقبوض بالبنك", EventNameEn = "PDC Inward Clearing", DebitAccountCode = "111201", CreditAccountCode = "111301", DefaultVoucherType = 101, DescriptionTemplate = "تحصيل شيك رقم {ChequeNo} وإيداعه بالبنك" },
-            new() { BranchId = branchId, Module = "PDC", EventType = "PDC_INWARD_BOUNCE", EventNameAr = "ارتداد شيك مقبوض", EventNameEn = "PDC Inward Bounce", DebitAccountCode = "112101", CreditAccountCode = "111301", DefaultVoucherType = 101, DescriptionTemplate = "إلغاء وإعادة فتح مديونية لارتداد الشيك رقم {ChequeNo}" },
-            new() { BranchId = branchId, Module = "PDC", EventType = "PDC_OUTWARD_ISSUE", EventNameAr = "إصدار شيك آجل لمورد", EventNameEn = "PDC Outward Issuance", DebitAccountCode = "211101", CreditAccountCode = "211201", DefaultVoucherType = 103, DescriptionTemplate = "شيك صادر للمورد {PartyCode} رقم {ChequeNo}" },
-            new() { BranchId = branchId, Module = "PDC", EventType = "PDC_OUTWARD_CLEAR", EventNameAr = "صرف شيك صادر من البنك", EventNameEn = "PDC Outward Clearing", DebitAccountCode = "211201", CreditAccountCode = "111201", DefaultVoucherType = 101, DescriptionTemplate = "خصم من البنك لصرف الشيك الصادر رقم {ChequeNo}" },
+            new() { BranchId = branchId, Module = "PDC", EventType = "PDC_INWARD_RECEIPT", EventNameLocal = "استلام شيك آجل من عميل", EventNameEn = "PDC Inward Receipt", DebitAccountCode = "111301", CreditAccountCode = "112101", DefaultVoucherType = 102, DescriptionTemplate = "شيك آجل برسم التحصيل رقم {ChequeNo}" },
+            new() { BranchId = branchId, Module = "PDC", EventType = "PDC_INWARD_CLEAR", EventNameLocal = "تحصيل شيك مقبوض بالبنك", EventNameEn = "PDC Inward Clearing", DebitAccountCode = "111201", CreditAccountCode = "111301", DefaultVoucherType = 101, DescriptionTemplate = "تحصيل شيك رقم {ChequeNo} وإيداعه بالبنك" },
+            new() { BranchId = branchId, Module = "PDC", EventType = "PDC_INWARD_BOUNCE", EventNameLocal = "ارتداد شيك مقبوض", EventNameEn = "PDC Inward Bounce", DebitAccountCode = "112101", CreditAccountCode = "111301", DefaultVoucherType = 101, DescriptionTemplate = "إلغاء وإعادة فتح مديونية لارتداد الشيك رقم {ChequeNo}" },
+            new() { BranchId = branchId, Module = "PDC", EventType = "PDC_OUTWARD_ISSUE", EventNameLocal = "إصدار شيك آجل لمورد", EventNameEn = "PDC Outward Issuance", DebitAccountCode = "211101", CreditAccountCode = "211201", DefaultVoucherType = 103, DescriptionTemplate = "شيك صادر للمورد {PartyCode} رقم {ChequeNo}" },
+            new() { BranchId = branchId, Module = "PDC", EventType = "PDC_OUTWARD_CLEAR", EventNameLocal = "صرف شيك صادر من البنك", EventNameEn = "PDC Outward Clearing", DebitAccountCode = "211201", CreditAccountCode = "111201", DefaultVoucherType = 101, DescriptionTemplate = "خصم من البنك لصرف الشيك الصادر رقم {ChequeNo}" },
 
             // Inventory & COGS
-            new() { BranchId = branchId, Module = "INVENTORY", EventType = "COGS_POSTING", EventNameAr = "إثبات تكلفة البضاعة المباعة", EventNameEn = "Cost of Goods Sold Posting", DebitAccountCode = "510101", CreditAccountCode = "113101", DefaultVoucherType = 101, DescriptionTemplate = "تكلفة مبيعات البضاعة المباعة" },
-            new() { BranchId = branchId, Module = "INVENTORY", EventType = "INVENTORY_DAMAGE", EventNameAr = "إثبات تالف وهالك المخزون", EventNameEn = "Inventory Damage Write-off", DebitAccountCode = "520901", CreditAccountCode = "113101", DefaultVoucherType = 101, DescriptionTemplate = "تسوية هالك مخزون" },
+            new() { BranchId = branchId, Module = "INVENTORY", EventType = "COGS_POSTING", EventNameLocal = "إثبات تكلفة البضاعة المباعة", EventNameEn = "Cost of Goods Sold Posting", DebitAccountCode = "510101", CreditAccountCode = "113101", DefaultVoucherType = 101, DescriptionTemplate = "تكلفة مبيعات البضاعة المباعة" },
+            new() { BranchId = branchId, Module = "INVENTORY", EventType = "INVENTORY_DAMAGE", EventNameLocal = "إثبات تالف وهالك المخزون", EventNameEn = "Inventory Damage Write-off", DebitAccountCode = "520901", CreditAccountCode = "113101", DefaultVoucherType = 101, DescriptionTemplate = "تسوية هالك مخزون" },
 
             // Fixed Assets & FX
-            new() { BranchId = branchId, Module = "FIXED_ASSETS", EventType = "MONTHLY_DEPRECIATION", EventNameAr = "قيد الإهلاك الشهري للأصول", EventNameEn = "Monthly Asset Depreciation", DebitAccountCode = "520801", CreditAccountCode = "120901", DefaultVoucherType = 101, DescriptionTemplate = "إهلاك الأصول الثابتة للفترة" },
-            new() { BranchId = branchId, Module = "FX", EventType = "FX_UNREALIZED_GAIN", EventNameAr = "أرباح تقييم فروق العملة", EventNameEn = "Unrealized FX Gain", DebitAccountCode = "111201", CreditAccountCode = "420201", DefaultVoucherType = 101, DescriptionTemplate = "أرباح فروق تقييم أسعار العملات الأجنبية" },
-            new() { BranchId = branchId, Module = "FX", EventType = "FX_UNREALIZED_LOSS", EventNameAr = "خسائر تقييم فروق العملة", EventNameEn = "Unrealized FX Loss", DebitAccountCode = "580101", CreditAccountCode = "111201", DefaultVoucherType = 101, DescriptionTemplate = "خسائر فروق تقييم أسعار العملات الأجنبية" },
-            new() { BranchId = branchId, Module = "CASH_BANK", EventType = "BANK_CHARGES", EventNameAr = "المصاريف والعمولات البنكية", EventNameEn = "Bank Fees & Charges", DebitAccountCode = "510901", CreditAccountCode = "111201", DefaultVoucherType = 101, DescriptionTemplate = "عمولات ومصاريف بنكية" }
+            new() { BranchId = branchId, Module = "FIXED_ASSETS", EventType = "MONTHLY_DEPRECIATION", EventNameLocal = "قيد الإهلاك الشهري للأصول", EventNameEn = "Monthly Asset Depreciation", DebitAccountCode = "520801", CreditAccountCode = "120901", DefaultVoucherType = 101, DescriptionTemplate = "إهلاك الأصول الثابتة للفترة" },
+            new() { BranchId = branchId, Module = "FX", EventType = "FX_UNREALIZED_GAIN", EventNameLocal = "أرباح تقييم فروق العملة", EventNameEn = "Unrealized FX Gain", DebitAccountCode = "111201", CreditAccountCode = "420201", DefaultVoucherType = 101, DescriptionTemplate = "أرباح فروق تقييم أسعار العملات الأجنبية" },
+            new() { BranchId = branchId, Module = "FX", EventType = "FX_UNREALIZED_LOSS", EventNameLocal = "خسائر تقييم فروق العملة", EventNameEn = "Unrealized FX Loss", DebitAccountCode = "580101", CreditAccountCode = "111201", DefaultVoucherType = 101, DescriptionTemplate = "خسائر فروق تقييم أسعار العملات الأجنبية" },
+            new() { BranchId = branchId, Module = "CASH_BANK", EventType = "BANK_CHARGES", EventNameLocal = "المصاريف والعمولات البنكية", EventNameEn = "Bank Fees & Charges", DebitAccountCode = "510901", CreditAccountCode = "111201", DefaultVoucherType = 101, DescriptionTemplate = "عمولات ومصاريف بنكية" }
         };
 
         foreach (var r in defaultRules)
@@ -254,7 +254,7 @@ public sealed class PostingRuleService : IPostingRuleService
                     BranchId = branchId,
                     Module = r.Module,
                     EventType = r.EventType,
-                    EventNameAr = r.EventNameAr,
+                    EventNameLocal = r.EventNameLocal,
                     EventNameEn = r.EventNameEn,
                     DebitAccountCode = r.DebitAccountCode,
                     CreditAccountCode = r.CreditAccountCode,
@@ -279,17 +279,17 @@ public sealed class PostingRuleService : IPostingRuleService
         {
             Id = r.Id,
             BranchId = r.BranchId,
-            BranchNameAr = r.Branch?.BranchNameAr,
+            BranchNameLocal = r.Branch?.BranchNameLocal,
             Module = r.Module,
             EventType = r.EventType,
-            EventNameAr = r.EventNameAr,
+            EventNameLocal = r.EventNameLocal,
             EventNameEn = r.EventNameEn,
             DebitAccountCode = r.DebitAccountCode,
-            DebitAccountNameAr = r.DebitAccount?.AccountNameAr,
+            DebitAccountNameLocal = r.DebitAccount?.AccountNameLocal,
             CreditAccountCode = r.CreditAccountCode,
-            CreditAccountNameAr = r.CreditAccount?.AccountNameAr,
+            CreditAccountNameLocal = r.CreditAccount?.AccountNameLocal,
             DefaultCostCenterCode = r.DefaultCostCenterCode,
-            DefaultCostCenterNameAr = r.DefaultCostCenter?.NameAr,
+            DefaultCostCenterNameLocal = r.DefaultCostCenter?.NameLocal,
             DefaultVoucherType = r.DefaultVoucherType,
             DescriptionTemplate = r.DescriptionTemplate,
             IsActive = r.IsActive

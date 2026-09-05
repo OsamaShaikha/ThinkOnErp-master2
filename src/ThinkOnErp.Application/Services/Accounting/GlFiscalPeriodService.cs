@@ -96,7 +96,7 @@ public sealed class GlFiscalPeriodService : IGlFiscalPeriodService
             {
                 FiscalYearId = fiscalYearId,
                 PeriodNumber = periodNumber++,
-                PeriodNameAr = arName,
+                PeriodNameLocal = arName,
                 PeriodNameEn = enName,
                 StartDate = currentStart,
                 EndDate = currentEnd,
@@ -116,7 +116,7 @@ public sealed class GlFiscalPeriodService : IGlFiscalPeriodService
             {
                 FiscalYearId = fiscalYearId,
                 PeriodNumber = 13,
-                PeriodNameAr = $"تسويات نهاية السنة {fiscalYear.EndDate.Year}",
+                PeriodNameLocal = $"تسويات نهاية السنة {fiscalYear.EndDate.Year}",
                 PeriodNameEn = $"Year-End Adjustments {fiscalYear.EndDate.Year}",
                 StartDate = fiscalYear.EndDate.Date,
                 EndDate = fiscalYear.EndDate.Date,
@@ -156,7 +156,7 @@ public sealed class GlFiscalPeriodService : IGlFiscalPeriodService
         period.UpdateDate = DateTime.UtcNow;
 
         await _periodRepository.SaveChangesAsync(cancellationToken);
-        _logger.LogInformation("Fiscal period {PeriodId} ({Name}) soft-closed by {User}", id, period.PeriodNameAr, username);
+        _logger.LogInformation("Fiscal period {PeriodId} ({Name}) soft-closed by {User}", id, period.PeriodNameLocal, username);
 
         return GlFiscalPeriodMapper.ToDto(period);
     }
@@ -177,7 +177,7 @@ public sealed class GlFiscalPeriodService : IGlFiscalPeriodService
         period.UpdateDate = DateTime.UtcNow;
 
         await _periodRepository.SaveChangesAsync(cancellationToken);
-        _logger.LogInformation("Fiscal period {PeriodId} ({Name}) hard-closed by {User}", id, period.PeriodNameAr, username);
+        _logger.LogInformation("Fiscal period {PeriodId} ({Name}) hard-closed by {User}", id, period.PeriodNameLocal, username);
 
         return GlFiscalPeriodMapper.ToDto(period);
     }
@@ -203,7 +203,7 @@ public sealed class GlFiscalPeriodService : IGlFiscalPeriodService
         period.UpdateDate = DateTime.UtcNow;
 
         await _periodRepository.SaveChangesAsync(cancellationToken);
-        _logger.LogInformation("Fiscal period {PeriodId} ({Name}) reopened by {User}. Reason: {Reason}", id, period.PeriodNameAr, username, reason);
+        _logger.LogInformation("Fiscal period {PeriodId} ({Name}) reopened by {User}. Reason: {Reason}", id, period.PeriodNameLocal, username, reason);
 
         return GlFiscalPeriodMapper.ToDto(period);
     }
@@ -218,7 +218,7 @@ public sealed class GlFiscalPeriodService : IGlFiscalPeriodService
 
         if (fiscalYear.IsClosed)
         {
-            throw new AccountingException($"لا يمكن الترحيل في سنة مالية مقفلة ({fiscalYear.FiscalYearNameAr ?? fiscalYear.FiscalYearCode}).", "GL_FISCAL_YEAR_CLOSED");
+            throw new AccountingException($"لا يمكن الترحيل في سنة مالية مقفلة ({fiscalYear.FiscalYearNameLocal ?? fiscalYear.FiscalYearCode}).", "GL_FISCAL_YEAR_CLOSED");
         }
 
         var period = await _periodRepository.GetPeriodByDateAsync(fiscalYearId, entryDate, cancellationToken);
@@ -227,13 +227,13 @@ public sealed class GlFiscalPeriodService : IGlFiscalPeriodService
             if (period.Status == "HARD_CLOSE")
             {
                 throw new AccountingException(
-                    $"لا يمكن الترحيل بتاريخ ({entryDate:yyyy-MM-dd}) لأن الفترة المالية ({period.PeriodNameAr}) مقفلة نهائياً (HARD_CLOSE).",
+                    $"لا يمكن الترحيل بتاريخ ({entryDate:yyyy-MM-dd}) لأن الفترة المالية ({period.PeriodNameLocal}) مقفلة نهائياً (HARD_CLOSE).",
                     "GL_FISCAL_PERIOD_HARD_CLOSED");
             }
             if (period.Status == "SOFT_CLOSE")
             {
                 throw new AccountingException(
-                    $"الفترة المالية ({period.PeriodNameAr}) مقفلة جزئياً (SOFT_CLOSE). يتطلب الترحيل فيها صلاحيات مشرف مالي وتبرير محاسبي.",
+                    $"الفترة المالية ({period.PeriodNameLocal}) مقفلة جزئياً (SOFT_CLOSE). يتطلب الترحيل فيها صلاحيات مشرف مالي وتبرير محاسبي.",
                     "GL_FISCAL_PERIOD_SOFT_CLOSED");
             }
         }

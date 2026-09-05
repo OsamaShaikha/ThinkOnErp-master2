@@ -21,8 +21,8 @@ public sealed class CustomerConfiguration : IEntityTypeConfiguration<Customer>
             .HasMaxLength(50)
             .IsRequired();
 
-        builder.Property(e => e.NameAr)
-            .HasColumnName("NAME_AR")
+        builder.Property(e => e.NameLocal)
+            .HasColumnName("NAME_LOCAL")
             .HasMaxLength(200)
             .IsRequired();
 

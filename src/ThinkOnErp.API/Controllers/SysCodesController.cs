@@ -1,14 +1,25 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
+using ThinkOnErp.API.Swagger;
 using ThinkOnErp.Application.Common;
 using ThinkOnErp.Application.DTOs.SysCode;
 using ThinkOnErp.Domain.Interfaces;
 
 namespace ThinkOnErp.API.Controllers;
 
+/// <summary>
+/// إدارة أكواد النظام والقوائم المنسدلة العامة (System Codes and Lookup Tables API)
+/// </summary>
 [ApiController]
 [Route("api/syscodes")]
-[Authorize(Policy = "SuperAdminOnly")]
+[ApiExplorerSettings(GroupName = ApiCategories.System)]
+[Authorize]
 public class SysCodesController : ControllerBase
 {
     private readonly ISysCodeRepository _repo;
@@ -20,6 +31,9 @@ public class SysCodesController : ControllerBase
         _logger = logger;
     }
 
+    /// <summary>
+    /// استرجاع كافة أكواد النظام في جدول SYS_CODE
+    /// </summary>
     [HttpGet]
     [ProducesResponseType(typeof(ApiResponse<List<SysCodeDto>>), StatusCodes.Status200OK)]
     public async Task<ActionResult<ApiResponse<List<SysCodeDto>>>> GetAll()
@@ -41,6 +55,9 @@ public class SysCodesController : ControllerBase
         return Ok(ApiResponse<List<SysCodeDto>>.CreateSuccess(dtos, "Codes retrieved successfully", 200));
     }
 
+    /// <summary>
+    /// استرجاع أرقام فئات الأكواد المتوفرة (Distinct CODE_MGR)
+    /// </summary>
     [HttpGet("groups")]
     [ProducesResponseType(typeof(ApiResponse<List<int>>), StatusCodes.Status200OK)]
     public async Task<ActionResult<ApiResponse<List<int>>>> GetGroups()
@@ -49,6 +66,9 @@ public class SysCodesController : ControllerBase
         return Ok(ApiResponse<List<int>>.CreateSuccess(groups, "Code groups retrieved successfully", 200));
     }
 
+    /// <summary>
+    /// استرجاع وفلترة تعريفات الأكواد (حسب اللغة، الفئة، الكود، أو الوصف)
+    /// </summary>
     [HttpGet("definitions")]
     [ProducesResponseType(typeof(ApiResponse<List<SysCodeDto>>), StatusCodes.Status200OK)]
     public async Task<ActionResult<ApiResponse<List<SysCodeDto>>>> GetDefinitions(
@@ -74,11 +94,25 @@ public class SysCodesController : ControllerBase
         return Ok(ApiResponse<List<SysCodeDto>>.CreateSuccess(dtos, "Code definitions retrieved successfully", 200));
     }
 
-    [HttpGet("groups/{codeMgr}")]
+    /// <summary>
+    /// استرجاع كافة عناصر فئة معينة لتغذية القوائم المنسدلة في الواجهات (مثل: 32 للألوان، 14 للغات، 16 للأطراف)
+    /// </summary>
+    [HttpGet("groups/{codeMgr:int}")]
     [ProducesResponseType(typeof(ApiResponse<List<SysCodeDto>>), StatusCodes.Status200OK)]
-    public async Task<ActionResult<ApiResponse<List<SysCodeDto>>>> GetByGroup(int codeMgr)
+    public async Task<ActionResult<ApiResponse<List<SysCodeDto>>>> GetByGroup(
+        [FromRoute] int codeMgr,
+        [FromQuery] int? codeLang = null,
+        [FromQuery] bool activeOnly = true)
     {
-        var codes = await _repo.GetByCodeMgrAsync(codeMgr);
+        var codes = activeOnly 
+            ? await _repo.GetActiveByCodeMgrAsync(codeMgr) 
+            : await _repo.GetByCodeMgrAsync(codeMgr);
+
+        if (codeLang.HasValue)
+        {
+            codes = codes.Where(c => c.CodeLang == codeLang.Value).ToList();
+        }
+
         var dtos = codes.Select(c => new SysCodeDto
         {
             CodeMgr = c.CodeMgr,
@@ -92,10 +126,14 @@ public class SysCodesController : ControllerBase
             UpdateUser = c.UpdateUser,
             UpdateDate = c.UpdateDate
         }).ToList();
+
         return Ok(ApiResponse<List<SysCodeDto>>.CreateSuccess(dtos, "Codes retrieved successfully", 200));
     }
 
-    [HttpGet("groups/{codeMgr}/items/{codeMnr}/langs/{codeLang}")]
+    /// <summary>
+    /// استرجاع كود محدد بواسطة المفتاح المركب (CODE_MGR, CODE_MNR, CODE_LANG)
+    /// </summary>
+    [HttpGet("groups/{codeMgr:int}/items/{codeMnr:int}/langs/{codeLang:int}")]
     [ProducesResponseType(typeof(ApiResponse<SysCodeDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<ApiResponse<SysCodeDto>>> GetById(int codeMgr, int codeMnr, int codeLang)
@@ -120,7 +158,11 @@ public class SysCodesController : ControllerBase
         return Ok(ApiResponse<SysCodeDto>.CreateSuccess(dto, "Code retrieved successfully", 200));
     }
 
+    /// <summary>
+    /// إضافة كود جديد إلى جدول SYS_CODE (خاص بمدير النظام SuperAdmin)
+    /// </summary>
     [HttpPost]
+    [Authorize(Policy = "SuperAdminOnly")]
     [ProducesResponseType(typeof(ApiResponse<SysCodeDto>), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<ActionResult<ApiResponse<SysCodeDto>>> Create([FromBody] CreateSysCodeDto dto)
@@ -180,7 +222,11 @@ public class SysCodesController : ControllerBase
             ApiResponse<SysCodeDto>.CreateSuccess(result, "Code created successfully", 201));
     }
 
-    [HttpPut("groups/{codeMgr}/items/{codeMnr}/langs/{codeLang}")]
+    /// <summary>
+    /// تعديل بيانات كود محدد في جدول SYS_CODE (خاص بمدير النظام SuperAdmin)
+    /// </summary>
+    [HttpPut("groups/{codeMgr:int}/items/{codeMnr:int}/langs/{codeLang:int}")]
+    [Authorize(Policy = "SuperAdminOnly")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<ApiResponse<object>>> Update(int codeMgr, int codeMnr, int codeLang, [FromBody] UpdateSysCodeDto dto)
@@ -199,7 +245,11 @@ public class SysCodesController : ControllerBase
         return Ok(ApiResponse<object>.CreateSuccess(new { }, "Code updated successfully", 200));
     }
 
-    [HttpDelete("groups/{codeMgr}/items/{codeMnr}/langs/{codeLang}")]
+    /// <summary>
+    /// حذف كود من جدول SYS_CODE (خاص بمدير النظام SuperAdmin)
+    /// </summary>
+    [HttpDelete("groups/{codeMgr:int}/items/{codeMnr:int}/langs/{codeLang:int}")]
+    [Authorize(Policy = "SuperAdminOnly")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<ApiResponse<object>>> Delete(int codeMgr, int codeMnr, int codeLang)

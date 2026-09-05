@@ -28,12 +28,12 @@ public sealed class GlStatementRowDto
 public sealed class GlStatementDto
 {
     public string AccountCode { get; set; } = string.Empty;
-    public string AccountNameAr { get; set; } = string.Empty;
+    public string AccountNameLocal { get; set; } = string.Empty;
     public string AccountNameEn { get; set; } = string.Empty;
     public string AccountCategory { get; set; } = string.Empty;
     public string Nature { get; set; } = "DEBIT"; // DEBIT or CREDIT
     public long? BranchId { get; set; }
-    public string? BranchNameAr { get; set; }
+    public string? BranchNameLocal { get; set; }
     public DateTime FromDate { get; set; }
     public DateTime ToDate { get; set; }
 
@@ -58,7 +58,7 @@ public sealed class FinancialStatementFilterDto
 public sealed class ReportAccountLineDto
 {
     public string AccountCode { get; set; } = string.Empty;
-    public string AccountNameAr { get; set; } = string.Empty;
+    public string AccountNameLocal { get; set; } = string.Empty;
     public string AccountNameEn { get; set; } = string.Empty;
     public decimal Amount { get; set; }
 }
@@ -67,7 +67,7 @@ public sealed class IncomeStatementDto
 {
     public string Title { get; set; } = "قائمة الدخل (الأرباح والخسائر)";
     public long? BranchId { get; set; }
-    public string? BranchNameAr { get; set; }
+    public string? BranchNameLocal { get; set; }
     public DateTime FromDate { get; set; }
     public DateTime ToDate { get; set; }
 
@@ -105,7 +105,7 @@ public sealed class BalanceSheetDto
 {
     public string Title { get; set; } = "الميزانية العمومية (قائمة المركز المالي)";
     public long? BranchId { get; set; }
-    public string? BranchNameAr { get; set; }
+    public string? BranchNameLocal { get; set; }
     public DateTime AsOfDate { get; set; }
 
     // Assets

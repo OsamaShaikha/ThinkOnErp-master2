@@ -1,11 +1,11 @@
-namespace ThinkOnErp.Application.DTOs.Accounting.CostCenters;
+﻿namespace ThinkOnErp.Application.DTOs.Accounting.CostCenters;
 
 public sealed class GlCostCenterDto
 {
     public string CostCenterCode { get; set; } = string.Empty;
     public string? ParentCostCenterCode { get; set; }
 
-    public string NameAr { get; set; } = string.Empty;
+    public string NameLocal { get; set; } = string.Empty;
     public string NameEn { get; set; } = string.Empty;
 
     public int CostCenterLevel { get; set; }

@@ -1,4 +1,4 @@
-namespace ThinkOnErp.Domain.Entities;
+﻿namespace ThinkOnErp.Domain.Entities;
 
 /// <summary>
 /// Represents a ticket priority entity for managing urgency levels and SLA targets.
@@ -15,7 +15,7 @@ public class SysTicketPriority
     /// <summary>
     /// Priority name in Arabic
     /// </summary>
-    public string PriorityNameAr { get; set; } = string.Empty;
+    public string PriorityNameLocal { get; set; } = string.Empty;
 
     /// <summary>
     /// Priority name in English

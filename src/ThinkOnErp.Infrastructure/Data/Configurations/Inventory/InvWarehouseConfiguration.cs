@@ -1,4 +1,4 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using ThinkOnErp.Domain.Entities.Inventory;
 
@@ -21,11 +21,11 @@ public sealed class InvWarehouseConfiguration : IEntityTypeConfiguration<InvWare
 
         builder.Property(e => e.WarehouseCode)
             .HasColumnName("WAREHOUSE_CODE")
-            .HasMaxLength(50)
+            .HasColumnType("NUMBER(6)")
             .IsRequired();
 
-        builder.Property(e => e.WarehouseNameAr)
-            .HasColumnName("WAREHOUSE_NAME_AR")
+        builder.Property(e => e.WarehouseNameLocal)
+            .HasColumnName("WAREHOUSE_NAME_LOCAL")
             .HasMaxLength(200)
             .IsRequired();
 

@@ -1,4 +1,4 @@
-using MediatR;
+﻿using MediatR;
 using ThinkOnErp.Application.DTOs.Company;
 using ThinkOnErp.Domain.Interfaces;
 
@@ -33,11 +33,11 @@ public class GetCompanyByIdQueryHandler : IRequestHandler<GetCompanyByIdQuery, C
         var dto = new CompanyDto
         {
             CompanyId = company.Id,
-            CompanyNameAr = company.CompanyNameAr,
+            CompanyNameLocal = company.CompanyNameLocal,
             CompanyNameEn = company.CompanyNameEn,
             CountryId = company.CountryId,
             CurrId = company.CurrId,
-            LegalNameAr = company.LegalName,
+            LegalNameLocal = company.LegalName,
             LegalNameEn = company.LegalNameE,
             CompanyCode = company.CompanyCode,
             HasLogo = company.CompanyLogoPath != null,

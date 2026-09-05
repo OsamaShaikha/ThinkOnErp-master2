@@ -1,4 +1,4 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using ThinkOnErp.Domain.Entities.Inventory;
 
@@ -11,9 +11,9 @@ public sealed class TrxDocTypeConfiguration : IEntityTypeConfiguration<TrxDocTyp
         builder.ToTable("TRX_DOC_TYPE");
         builder.HasKey(t => t.TypeCode);
 
-        builder.Property(t => t.TypeCode).HasColumnName("TYPE_CODE").ValueGeneratedNever();
+        builder.Property(t => t.TypeCode).HasColumnName("TYPE_CODE").HasColumnType("NUMBER(10)").ValueGeneratedNever();
         builder.Property(t => t.TypeKey).HasColumnName("TYPE_KEY").HasMaxLength(50).IsRequired();
-        builder.Property(t => t.TypeNameAr).HasColumnName("TYPE_NAME_AR").HasMaxLength(100).IsRequired();
+        builder.Property(t => t.TypeNameLocal).HasColumnName("TYPE_NAME_LOCAL").HasMaxLength(100).IsRequired();
         builder.Property(t => t.TypeNameEn).HasColumnName("TYPE_NAME_EN").HasMaxLength(100).IsRequired();
         builder.Property(t => t.ModuleCode).HasColumnName("MODULE_CODE").HasMaxLength(30).IsRequired();
         builder.Property(t => t.DocPrefix).HasColumnName("DOC_PREFIX").HasMaxLength(10).IsRequired();

@@ -1,4 +1,4 @@
-using System.Text.Json.Serialization;
+﻿using System.Text.Json.Serialization;
 using MediatR;
 
 namespace ThinkOnErp.Application.Features.Currencies.Commands.CreateCurrency;
@@ -9,17 +9,17 @@ namespace ThinkOnErp.Application.Features.Currencies.Commands.CreateCurrency;
 /// </summary>
 public class CreateCurrencyCommand : IRequest<Int64>
 {
-    public string CurrencyNameAr { get; set; } = string.Empty;
+    public string CurrencyNameLocal { get; set; } = string.Empty;
     public string CurrencyNameEn { get; set; } = string.Empty;
-    public string ShortNameAr { get; set; } = string.Empty;
+    public string ShortNameLocal { get; set; } = string.Empty;
     public string ShortNameEn { get; set; } = string.Empty;
-    public string SingularNameAr { get; set; } = string.Empty;
+    public string SingularNameLocal { get; set; } = string.Empty;
     public string SingularNameEn { get; set; } = string.Empty;
-    public string DualNameAr { get; set; } = string.Empty;
+    public string DualNameLocal { get; set; } = string.Empty;
     public string DualNameEn { get; set; } = string.Empty;
-    public string CollectiveNameAr { get; set; } = string.Empty;
+    public string CollectiveNameLocal { get; set; } = string.Empty;
     public string CollectiveNameEn { get; set; } = string.Empty;
-    public string FractionNameAr { get; set; } = string.Empty;
+    public string FractionNameLocal { get; set; } = string.Empty;
     public string FractionNameEn { get; set; } = string.Empty;
     public decimal? CurrRate { get; set; }
     public DateTime? CurrRateDate { get; set; }

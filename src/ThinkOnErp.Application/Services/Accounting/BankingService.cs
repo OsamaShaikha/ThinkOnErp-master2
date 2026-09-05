@@ -1,4 +1,4 @@
-using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.Logging;
 using ThinkOnErp.Application.DTOs.Accounting.Banking;
 using ThinkOnErp.Domain.Entities.Accounting;
 using ThinkOnErp.Domain.Exceptions;
@@ -64,7 +64,7 @@ public sealed class BankingService : IBankingService
         {
             BranchId = dto.BranchId,
             AccountNumber = dto.AccountNumber,
-            AccountNameAr = dto.AccountNameAr,
+            AccountNameLocal = dto.AccountNameLocal,
             AccountNameEn = dto.AccountNameEn,
             BankName = dto.BankName,
             BankBranchName = dto.BankBranchName,
@@ -101,7 +101,7 @@ public sealed class BankingService : IBankingService
             throw new AccountingNotFoundException($"حساب الأستاذ العام ({dto.GlAccountCode}) غير موجود في الدليل.", "GL_ACCOUNT_NOT_FOUND");
         }
 
-        account.AccountNameAr = dto.AccountNameAr;
+        account.AccountNameLocal = dto.AccountNameLocal;
         account.AccountNameEn = dto.AccountNameEn;
         account.BankName = dto.BankName;
         account.BankBranchName = dto.BankBranchName;
@@ -152,7 +152,7 @@ public sealed class BankingService : IBankingService
         {
             BranchId = dto.BranchId,
             Code = dto.Code,
-            NameAr = dto.NameAr,
+            NameLocal = dto.NameLocal,
             NameEn = dto.NameEn,
             RegisterType = dto.RegisterType,
             CustodianName = dto.CustodianName,
@@ -188,7 +188,7 @@ public sealed class BankingService : IBankingService
             throw new AccountingNotFoundException($"حساب الأستاذ العام ({dto.GlAccountCode}) غير موجود في الدليل.", "GL_ACCOUNT_NOT_FOUND");
         }
 
-        reg.NameAr = dto.NameAr;
+        reg.NameLocal = dto.NameLocal;
         reg.NameEn = dto.NameEn;
         reg.RegisterType = dto.RegisterType;
         reg.CustodianName = dto.CustodianName;
@@ -282,7 +282,7 @@ public sealed class BankingService : IBankingService
         {
             Id = rec.Id,
             BankAccountId = rec.BankAccountId,
-            BankAccountNameAr = rec.BankAccount?.AccountNameAr,
+            BankAccountNameLocal = rec.BankAccount?.AccountNameLocal,
             BankName = rec.BankAccount?.BankName,
             FiscalYearId = rec.FiscalYearId,
             FiscalPeriodId = rec.FiscalPeriodId,
@@ -319,7 +319,7 @@ public sealed class BankingService : IBankingService
         {
             Id = rec.Id,
             BankAccountId = rec.BankAccountId,
-            BankAccountNameAr = rec.BankAccount?.AccountNameAr,
+            BankAccountNameLocal = rec.BankAccount?.AccountNameLocal,
             BankName = rec.BankAccount?.BankName,
             FiscalYearId = rec.FiscalYearId,
             FiscalPeriodId = rec.FiscalPeriodId,
@@ -443,7 +443,7 @@ public sealed class BankingService : IBankingService
 
         return new BankReconciliationStatementDto
         {
-            BankAccountNameAr = rec.BankAccount?.AccountNameAr ?? string.Empty,
+            BankAccountNameLocal = rec.BankAccount?.AccountNameLocal ?? string.Empty,
             BankAccountNumber = rec.BankAccount?.AccountNumber ?? string.Empty,
             AsOfDate = rec.StatementDate,
             BookBalance = rec.BookEndingBalance,
@@ -462,9 +462,9 @@ public sealed class BankingService : IBankingService
         {
             Id = b.Id,
             BranchId = b.BranchId,
-            BranchNameAr = b.Branch?.BranchNameAr,
+            BranchNameLocal = b.Branch?.BranchNameLocal,
             AccountNumber = b.AccountNumber,
-            AccountNameAr = b.AccountNameAr,
+            AccountNameLocal = b.AccountNameLocal,
             AccountNameEn = b.AccountNameEn,
             BankName = b.BankName,
             BankBranchName = b.BankBranchName,
@@ -473,7 +473,7 @@ public sealed class BankingService : IBankingService
             CurrencyId = b.CurrencyId,
             CurrencyName = b.Currency?.ShortNameEn,
             GlAccountCode = b.GlAccountCode,
-            GlAccountNameAr = b.GlAccount?.AccountNameAr,
+            GlAccountNameLocal = b.GlAccount?.AccountNameLocal,
             OverdraftLimit = b.OverdraftLimit,
             OpeningBalance = b.OpeningBalance,
             CurrentBalance = b.CurrentBalance,
@@ -487,14 +487,14 @@ public sealed class BankingService : IBankingService
         {
             Id = c.Id,
             BranchId = c.BranchId,
-            BranchNameAr = c.Branch?.BranchNameAr,
+            BranchNameLocal = c.Branch?.BranchNameLocal,
             Code = c.Code,
-            NameAr = c.NameAr,
+            NameLocal = c.NameLocal,
             NameEn = c.NameEn,
             RegisterType = c.RegisterType,
             CustodianName = c.CustodianName,
             GlAccountCode = c.GlAccountCode,
-            GlAccountNameAr = c.GlAccount?.AccountNameAr,
+            GlAccountNameLocal = c.GlAccount?.AccountNameLocal,
             CurrencyId = c.CurrencyId,
             CurrencyName = c.Currency?.ShortNameEn,
             MinLimit = c.MinLimit,

@@ -4,7 +4,7 @@ public sealed class PdcRegisterDto
 {
     public long Id { get; set; }
     public long BranchId { get; set; }
-    public string? BranchNameAr { get; set; }
+    public string? BranchNameLocal { get; set; }
     public string? BranchNameEn { get; set; }
     public long FiscalYearId { get; set; }
 
@@ -25,11 +25,11 @@ public sealed class PdcRegisterDto
 
     public string? PartyType { get; set; }
     public string? PartyCode { get; set; }
-    public string? PartyNameAr { get; set; }
+    public string? PartyNameLocal { get; set; }
     public string? PartyNameEn { get; set; }
 
     public string Status { get; set; } = string.Empty; // RECEIVED, DEPOSITED, CLEARED, BOUNCED, CANCELLED
-    public string StatusNameAr { get; set; } = string.Empty;
+    public string StatusNameLocal { get; set; } = string.Empty;
 
     public string? IntermediateAccountCode { get; set; }
     public string? DepositBankAccountCode { get; set; }

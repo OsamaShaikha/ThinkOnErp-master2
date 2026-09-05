@@ -1,4 +1,4 @@
-using MediatR;
+﻿using MediatR;
 using ThinkOnErp.Application.DTOs.Currency;
 using ThinkOnErp.Domain.Interfaces;
 
@@ -20,17 +20,17 @@ public class GetAllCurrenciesQueryHandler : IRequestHandler<GetAllCurrenciesQuer
         return currencies.Select(c => new CurrencyDto
         {
             CurrencyId = c.Id,
-            CurrencyNameAr = c.CurrencyNameAr,
+            CurrencyNameLocal = c.CurrencyNameLocal,
             CurrencyNameEn = c.CurrencyNameEn,
-            ShortNameAr = c.ShortNameAr,
+            ShortNameLocal = c.ShortNameLocal,
             ShortNameEn = c.ShortNameEn,
-            SingularNameAr = c.SingularNameAr,
+            SingularNameLocal = c.SingularNameLocal,
             SingularNameEn = c.SingularNameEn,
-            DualNameAr = c.DualNameAr,
+            DualNameLocal = c.DualNameLocal,
             DualNameEn = c.DualNameEn,
-            CollectiveNameAr = c.CollectiveNameAr,
+            CollectiveNameLocal = c.CollectiveNameLocal,
             CollectiveNameEn = c.CollectiveNameEn,
-            FractionNameAr = c.FractionNameAr,
+            FractionNameLocal = c.FractionNameLocal,
             FractionNameEn = c.FractionNameEn,
             CurrRate = c.CurrRate,
             CurrRateDate = c.CurrRateDate,

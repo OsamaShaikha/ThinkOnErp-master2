@@ -57,7 +57,7 @@ public sealed class TrxDocumentLineDto
     public string ItemCode { get; set; } = string.Empty;
     public string ItemName { get; set; } = string.Empty;
     public string? ItemDescription { get; set; }
-    public string UomCode { get; set; } = string.Empty;
+    public int UomCode { get; set; }
     public decimal UomFactor { get; set; }
     public decimal QuantityIn { get; set; }
     public decimal QuantityOut { get; set; }

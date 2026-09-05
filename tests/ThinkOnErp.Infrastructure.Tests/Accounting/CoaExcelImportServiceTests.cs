@@ -116,7 +116,7 @@ public sealed class CoaExcelImportServiceTests
             RowNumber = 2,
             AccountCode = code,
             ParentCode = parentCode,
-            AccountNameAr = $"حساب {code}",
+            AccountNameLocal = $"حساب {code}",
             AccountNameEn = $"Account {code}",
             AccountLevel = level,
             AccountType = accountType,

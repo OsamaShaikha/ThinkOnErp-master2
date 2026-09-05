@@ -12,7 +12,7 @@ public sealed class TrxDocumentLine
     public int TrxType { get; set; }
     public long ItemId { get; set; }
     public string? ItemDescription { get; set; }
-    public string UomCode { get; set; } = string.Empty;
+    public int UomCode { get; set; }
     public decimal UomFactor { get; set; } = 1;
     public decimal QuantityIn { get; set; }
     public decimal QuantityOut { get; set; }

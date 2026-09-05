@@ -1,11 +1,11 @@
-namespace ThinkOnErp.Domain.Entities.Accounting;
+﻿namespace ThinkOnErp.Domain.Entities.Accounting;
 
 public sealed class TaxRate
 {
     public long Id { get; set; }
     public string TaxRateCode { get; set; } = string.Empty; // VAT_15, VAT_5, VAT_0, VAT_EXEMPT, VAT_OUT_OF_SCOPE, WHT_5
     public long TaxCategoryId { get; set; }
-    public string NameAr { get; set; } = string.Empty;
+    public string NameLocal { get; set; } = string.Empty;
     public string NameEn { get; set; } = string.Empty;
 
     /// <summary>Rate percentage, e.g. 15.00, 5.00, 0.00</summary>
@@ -25,7 +25,7 @@ public sealed class TaxRate
 
     /// <summary>ZATCA or legal exemption reason code, e.g. VATEX-SA-32, VATEX-SA-29-7</summary>
     public string? ExemptionReasonCode { get; set; }
-    public string? ExemptionReasonAr { get; set; }
+    public string? ExemptionReasonLocal { get; set; }
     public string? ExemptionReasonEn { get; set; }
 
     public int DisplayOrder { get; set; } = 1;

@@ -1,4 +1,4 @@
-using MediatR;
+﻿using MediatR;
 using ThinkOnErp.Domain.Interfaces;
 
 namespace ThinkOnErp.Application.Features.SuperAdmins.Commands.UpdateSuperAdmin;
@@ -20,7 +20,7 @@ public class UpdateSuperAdminCommandHandler : IRequestHandler<UpdateSuperAdminCo
             throw new InvalidOperationException($"Super admin with ID {request.SuperAdminId} not found");
         }
 
-        superAdmin.NameAr = request.NameAr;
+        superAdmin.NameLocal = request.NameLocal;
         superAdmin.NameEn = request.NameEn;
         superAdmin.Email = request.Email;
         superAdmin.Phone = request.Phone;

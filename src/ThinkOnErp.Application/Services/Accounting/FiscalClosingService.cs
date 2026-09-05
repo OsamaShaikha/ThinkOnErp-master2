@@ -1,4 +1,4 @@
-using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.Logging;
 using ThinkOnErp.Application.DTOs.Accounting.Closing;
 using ThinkOnErp.Application.DTOs.Accounting.Vouchers;
 using ThinkOnErp.Application.Services.Accounting;
@@ -81,7 +81,7 @@ public sealed class FiscalClosingService : IFiscalClosingService
         {
             FiscalPeriodId = period.Id,
             PeriodNumber = period.PeriodNumber,
-            PeriodNameAr = period.PeriodNameAr,
+            PeriodNameLocal = period.PeriodNameLocal,
             UnpostedDraftVouchersCount = drafts,
             UnderReviewVouchersCount = underReview,
             IsReadyToClose = drafts == 0 && underReview == 0,
@@ -265,7 +265,7 @@ public sealed class FiscalClosingService : IFiscalClosingService
                             AccountCode = acc.AccountCode,
                             Debit = crAmount,
                             Credit = 0,
-                            Description = $"إقفال سنوي لحساب الإيرادات {acc.AccountNameAr}"
+                            Description = $"إقفال سنوي لحساب الإيرادات {acc.AccountNameLocal}"
                         });
                         totalRevenues += crAmount;
                     }
@@ -280,7 +280,7 @@ public sealed class FiscalClosingService : IFiscalClosingService
                             AccountCode = acc.AccountCode,
                             Debit = 0,
                             Credit = drAmount,
-                            Description = $"إقفال سنوي لحساب المصروفات {acc.AccountNameAr}"
+                            Description = $"إقفال سنوي لحساب المصروفات {acc.AccountNameLocal}"
                         });
                         totalExpenses += drAmount;
                     }

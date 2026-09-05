@@ -1,4 +1,4 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using ThinkOnErp.Domain.Entities;
 using ThinkOnErp.Domain.Interfaces;
 using ThinkOnErp.Infrastructure.Data;
@@ -38,7 +38,7 @@ public class UserRepository : IUserRepository
         var existing = await _context.SysUsers.FindAsync(user.Id);
         if (existing == null) return 0;
 
-        existing.FullNameAr = user.FullNameAr;
+        existing.FullNameLocal = user.FullNameLocal;
         existing.FullNameEn = user.FullNameEn;
         existing.UserName = user.UserName;
         if (!string.IsNullOrEmpty(user.Password))

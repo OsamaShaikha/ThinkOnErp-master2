@@ -49,7 +49,7 @@ public sealed class CustomerRepository : ICustomerRepository
             var term = searchTerm.Trim().ToUpper();
             query = query.Where(c =>
                 c.CustomerCode.ToUpper().Contains(term) ||
-                c.NameAr.ToUpper().Contains(term) ||
+                c.NameLocal.ToUpper().Contains(term) ||
                 c.NameEn.ToUpper().Contains(term) ||
                 (c.Phone != null && c.Phone.Contains(term)) ||
                 (c.TaxNumber != null && c.TaxNumber.Contains(term)));

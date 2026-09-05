@@ -1,4 +1,4 @@
-namespace ThinkOnErp.Application.DTOs.Role;
+﻿namespace ThinkOnErp.Application.DTOs.Role;
 
 /// <summary>
 /// Data transfer object for role information returned from API endpoints.
@@ -14,7 +14,7 @@ public class RoleDto
     /// <summary>
     /// Arabic description of the role
     /// </summary>
-    public string RoleNameAr { get; set; } = string.Empty;
+    public string RoleNameLocal { get; set; } = string.Empty;
 
     /// <summary>
     /// English description of the role

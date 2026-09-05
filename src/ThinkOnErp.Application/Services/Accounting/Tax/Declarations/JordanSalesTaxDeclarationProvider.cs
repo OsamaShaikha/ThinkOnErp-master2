@@ -1,4 +1,4 @@
-using ThinkOnErp.Application.DTOs.Accounting.Tax;
+﻿using ThinkOnErp.Application.DTOs.Accounting.Tax;
 using ThinkOnErp.Domain.Entities.Accounting;
 
 namespace ThinkOnErp.Application.Services.Accounting.Tax.Declarations;
@@ -17,12 +17,12 @@ public sealed class JordanSalesTaxDeclarationProvider : ITaxDeclarationProvider
         {
             TemplateCode = TemplateCode,
             CountryCode = CountryCode,
-            CountryNameAr = "المملكة الأردنية الهاشمية",
+            CountryNameLocal = "المملكة الأردنية الهاشمية",
             CountryNameEn = "Hashemite Kingdom of Jordan",
             FlagEmoji = "🇯🇴",
             TitleAr = "إقرار الضريبة العامة على المبيعات - دائرة ضريبة الدخل والمبيعات",
             TitleEn = "General Sales Tax Return - Income and Sales Tax Department (ISTD)",
-            TaxAuthorityNameAr = "دائرة ضريبة الدخل والمبيعات (ISTD)",
+            TaxAuthorityNameLocal = "دائرة ضريبة الدخل والمبيعات (ISTD)",
             TaxAuthorityNameEn = "Income & Sales Tax Department (ISTD)",
             DefaultCurrencyCode = "JOD",
             FilingFrequency = "BI_MONTHLY_OR_MONTHLY",
@@ -77,7 +77,7 @@ public sealed class JordanSalesTaxDeclarationProvider : ITaxDeclarationProvider
         VatDeclarationFilterDto filter,
         IReadOnlyList<TaxTransaction> transactions,
         IReadOnlyList<TaxRate> availableRates,
-        string branchNameAr,
+        string branchNameLocal,
         string branchNameEn)
     {
         var rateMap = availableRates.ToDictionary(r => r.Id);
@@ -179,11 +179,11 @@ public sealed class JordanSalesTaxDeclarationProvider : ITaxDeclarationProvider
             CountryCode = CountryCode,
             TemplateTitleAr = "إقرار الضريبة العامة على المبيعات (الأردن - ISTD)",
             TemplateTitleEn = "Jordan General Sales Tax Return (ISTD)",
-            TaxAuthorityNameAr = "دائرة ضريبة الدخل والمبيعات الأردنية (ISTD)",
+            TaxAuthorityNameLocal = "دائرة ضريبة الدخل والمبيعات الأردنية (ISTD)",
             TaxAuthorityNameEn = "Income & Sales Tax Department (ISTD)",
             CurrencyCode = "JOD",
             BranchId = filter.BranchId,
-            BranchNameAr = branchNameAr,
+            BranchNameLocal = branchNameLocal,
             BranchNameEn = branchNameEn,
             FromDate = filter.FromDate,
             ToDate = filter.ToDate,
