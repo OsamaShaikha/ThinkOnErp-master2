@@ -230,6 +230,12 @@ public static class SeedData
             context.SysFeatures.AddRange(features);
             await context.SaveChangesAsync();
         }
+
+        // 7. HR & Payroll (Statutory Rules, Organization, Employees, Compensation, Attendance, Leaves, ATS, Payroll, EOS, Expenses, Assets)
+        await HrSeedData.SeedStatutoryRulesAsync(context);
+        await HrSeedData.SeedLeaveTypesAndPoliciesAsync(context);
+        await HrSeedData.SeedSalaryComponentsAndShiftsAsync(context);
+        await HrSeedData.SeedComprehensiveEmployeesAndPayrollDataAsync(context);
     }
 }
 

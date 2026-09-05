@@ -346,16 +346,11 @@ Example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...'
             options.IncludeXmlComments(domainXmlPath);
         }
 
-        // Group endpoints by tags for better organization
+        // Group endpoints by tags (controller name) for clean separation inside each Swagger document definition
         options.TagActionsBy(api =>
         {
-            if (api.GroupName != null)
-            {
-                return new[] { api.GroupName };
-            }
-
-            var controllerName = api.ActionDescriptor.RouteValues["controller"];
-            return new[] { controllerName ?? "Default" };
+            var controllerName = api.ActionDescriptor.RouteValues.TryGetValue("controller", out var ctrl) ? ctrl : null;
+            return new[] { controllerName ?? api.GroupName ?? "Default" };
         });
 
         // Add custom operation filters for enhanced documentation
@@ -363,10 +358,13 @@ Example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...'
         
         // Order actions by HTTP method and then by path
         options.OrderActionsBy(apiDesc => 
-            $"{apiDesc.ActionDescriptor.RouteValues["controller"]}_{apiDesc.HttpMethod}_{apiDesc.RelativePath}");
+        {
+            var ctrl = apiDesc.ActionDescriptor.RouteValues.TryGetValue("controller", out var c) ? c : "Default";
+            return $"{ctrl}_{apiDesc.HttpMethod}_{apiDesc.RelativePath}";
+        });
 
         // Use full schema names to avoid conflicts
-        options.CustomSchemaIds(type => type.FullName?.Replace("+", "."));
+        options.CustomSchemaIds(type => type.FullName?.Replace("+", ".") ?? type.Name);
 
         // Add example values for common types
         options.MapType<DateTime>(() => new Microsoft.OpenApi.Models.OpenApiSchema

@@ -424,8 +424,8 @@ public class RedisCacheConfigurationIntegrationTests : IDisposable
         
         // Create mock repository
         var mockAuditRepository = new Mock<IAuditRepository>();
-        mockAuditRepository.Setup(r => r.QueryAsync(It.IsAny<AuditQueryFilter>(), It.IsAny<PaginationOptions>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new PagedResult<SysAuditLog> { Items = new List<SysAuditLog>(), TotalCount = 0, PageNumber = 1, PageSize = 10 });
+        mockAuditRepository.Setup(r => r.GetByCorrelationIdAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new List<SysAuditLog>());
         services.AddSingleton(mockAuditRepository.Object);
         
         // Create mock HTTP context accessor

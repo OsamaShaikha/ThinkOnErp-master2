@@ -12,6 +12,7 @@ public static class ApiSwaggerDocuments
     public const string Audit = ApiCategories.Audit;
     public const string Support = ApiCategories.Support;
     public const string System = ApiCategories.System;
+    public const string Hr = ApiCategories.Hr;
 
     private static readonly Dictionary<string, string> ControllerToCategoryMap = new(StringComparer.OrdinalIgnoreCase)
     {
@@ -25,12 +26,51 @@ public static class ApiSwaggerDocuments
         ["BranchAccess"] = Company,
         ["CompanyPermissions"] = Company,
 
+        // Human Resources & Payroll
+        ["StatutoryRules"] = Hr,
+        ["Departments"] = Hr,
+        ["JobGrades"] = Hr,
+        ["Positions"] = Hr,
+        ["Employees"] = Hr,
+        ["EmployeeDocuments"] = Hr,
+        ["Recruitment"] = Hr,
+        ["Attendance"] = Hr,
+        ["Leave"] = Hr,
+        ["Compensation"] = Hr,
+        ["Payroll"] = Hr,
+        ["EndOfService"] = Hr,
+        ["StatutoryReporting"] = Hr,
+        ["ExpenseClaims"] = Hr,
+        ["AssetAssignments"] = Hr,
+        ["SelfService"] = Hr,
+
         // Accounting
         ["GlAccounts"] = Accounting,
         ["AccountCategories"] = Accounting,
         ["CoaImport"] = Accounting,
         ["Currency"] = Accounting,
         ["FiscalYear"] = Accounting,
+        ["CostCenters"] = Accounting,
+        ["GlVouchers"] = Accounting,
+        ["Receipts"] = Accounting,
+        ["Payments"] = Accounting,
+        ["Customers"] = Accounting,
+        ["Vendors"] = Accounting,
+        ["Pdc"] = Accounting,
+        ["PdcRegister"] = Accounting,
+        ["BankAccounts"] = Accounting,
+        ["CashRegisters"] = Accounting,
+        ["BankReconciliation"] = Accounting,
+        ["PostingRules"] = Accounting,
+        ["AccountBalances"] = Accounting,
+        ["FiscalClosing"] = Accounting,
+        ["Subledger"] = Accounting,
+        ["GlReports"] = Accounting,
+        ["FinancialReports"] = Accounting,
+        ["GlAccountStructure"] = Accounting,
+        ["VoucherTypes"] = Accounting,
+        ["OpeningBalances"] = Accounting,
+        ["AccountStatement"] = Accounting,
 
         // Auth & User Management
         ["Auth"] = Auth,
@@ -85,17 +125,29 @@ public static class ApiSwaggerDocuments
             return string.Equals(documentName, targetCategory, StringComparison.OrdinalIgnoreCase);
         }
 
-        // 3. Fallback Route matching
-        if (string.Equals(documentName, Accounting, StringComparison.OrdinalIgnoreCase) && relativePath?.StartsWith("api/accounting", StringComparison.OrdinalIgnoreCase) == true)
-            return true;
-        if (string.Equals(documentName, SuperAdmin, StringComparison.OrdinalIgnoreCase) && relativePath?.StartsWith("api/superadmin", StringComparison.OrdinalIgnoreCase) == true)
-            return true;
-        if (string.Equals(documentName, Auth, StringComparison.OrdinalIgnoreCase) && relativePath?.StartsWith("api/auth", StringComparison.OrdinalIgnoreCase) == true)
-            return true;
-        if (string.Equals(documentName, Company, StringComparison.OrdinalIgnoreCase) && relativePath?.StartsWith("api/companies", StringComparison.OrdinalIgnoreCase) == true)
-            return true;
+        // 3. Exclusive Route Prefix matching
+        if (relativePath?.StartsWith("api/accounting", StringComparison.OrdinalIgnoreCase) == true)
+            return string.Equals(documentName, Accounting, StringComparison.OrdinalIgnoreCase);
 
-        // Default fallback to System document
+        if (relativePath?.StartsWith("api/superadmin", StringComparison.OrdinalIgnoreCase) == true)
+            return string.Equals(documentName, SuperAdmin, StringComparison.OrdinalIgnoreCase);
+
+        if (relativePath?.StartsWith("api/auth", StringComparison.OrdinalIgnoreCase) == true)
+            return string.Equals(documentName, Auth, StringComparison.OrdinalIgnoreCase);
+
+        if (relativePath?.StartsWith("api/companies", StringComparison.OrdinalIgnoreCase) == true || relativePath?.StartsWith("api/branches", StringComparison.OrdinalIgnoreCase) == true)
+            return string.Equals(documentName, Company, StringComparison.OrdinalIgnoreCase);
+
+        if (relativePath?.StartsWith("api/audit", StringComparison.OrdinalIgnoreCase) == true)
+            return string.Equals(documentName, Audit, StringComparison.OrdinalIgnoreCase);
+
+        if (relativePath?.StartsWith("api/tickets", StringComparison.OrdinalIgnoreCase) == true || relativePath?.StartsWith("api/support", StringComparison.OrdinalIgnoreCase) == true)
+            return string.Equals(documentName, Support, StringComparison.OrdinalIgnoreCase);
+
+        if (relativePath?.StartsWith("api/hr", StringComparison.OrdinalIgnoreCase) == true)
+            return string.Equals(documentName, Hr, StringComparison.OrdinalIgnoreCase);
+
+        // Default fallback to System document only if no other category claimed it
         return string.Equals(documentName, System, StringComparison.OrdinalIgnoreCase);
     }
 }

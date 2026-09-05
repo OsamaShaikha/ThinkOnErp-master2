@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using ThinkOnErp.Domain.Entities;
 using ThinkOnErp.Domain.Entities.Accounting;
+using ThinkOnErp.Domain.Entities.Hr;
 using ThinkOnErp.Infrastructure.Data.Configurations.Accounting;
 
 namespace ThinkOnErp.Infrastructure.Data;
@@ -190,6 +191,75 @@ public class OracleDbContext : DbContext
     // Opening balance staging (dedicated OB table)
     public DbSet<GlOpeningBalanceHeader> GlOpeningBalanceHeaders => Set<GlOpeningBalanceHeader>();
     public DbSet<GlOpeningBalanceDetail> GlOpeningBalanceDetails => Set<GlOpeningBalanceDetail>();
+
+    // Human Resources & Payroll
+    public DbSet<StatutoryRule> StatutoryRules => Set<StatutoryRule>();
+    public DbSet<Department> Departments => Set<Department>();
+    public DbSet<JobGrade> JobGrades => Set<JobGrade>();
+    public DbSet<Position> Positions => Set<Position>();
+    public DbSet<Employee> Employees => Set<Employee>();
+    public DbSet<EmployeeDependent> EmployeeDependents => Set<EmployeeDependent>();
+    public DbSet<EmployeeDocument> EmployeeDocuments => Set<EmployeeDocument>();
+    public DbSet<EmploymentEvent> EmploymentEvents => Set<EmploymentEvent>();
+
+    // Attendance & Time Tracking
+    public DbSet<ShiftSchedule> ShiftSchedules => Set<ShiftSchedule>();
+    public DbSet<EmployeeShiftAssignment> EmployeeShiftAssignments => Set<EmployeeShiftAssignment>();
+    public DbSet<AttendanceRecord> AttendanceRecords => Set<AttendanceRecord>();
+    public DbSet<OvertimeRecord> OvertimeRecords => Set<OvertimeRecord>();
+
+    // Leave Management
+    public DbSet<LeaveType> LeaveTypes => Set<LeaveType>();
+    public DbSet<LeavePolicy> LeavePolicies => Set<LeavePolicy>();
+    public DbSet<LeaveBalance> LeaveBalances => Set<LeaveBalance>();
+    public DbSet<LeaveRequest> LeaveRequests => Set<LeaveRequest>();
+
+    // Compensation & Salary Structure
+    public DbSet<SalaryComponent> SalaryComponents => Set<SalaryComponent>();
+    public DbSet<EmployeeSalaryStructure> EmployeeSalaryStructures => Set<EmployeeSalaryStructure>();
+    public DbSet<EmployeeSalaryStructureLine> EmployeeSalaryStructureLines => Set<EmployeeSalaryStructureLine>();
+    public DbSet<SalaryRevision> SalaryRevisions => Set<SalaryRevision>();
+    public DbSet<EmploymentContract> EmploymentContracts => Set<EmploymentContract>();
+
+    // Payroll Calculation & Processing Engine
+    public DbSet<PayrollRun> PayrollRuns => Set<PayrollRun>();
+    public DbSet<PayrollRunLine> PayrollRunLines => Set<PayrollRunLine>();
+    public DbSet<PayrollRunLineComponent> PayrollRunLineComponents => Set<PayrollRunLineComponent>();
+
+    // End-of-Service & Final Settlements
+    public DbSet<EndOfServiceProvisionAccrual> EndOfServiceProvisionAccruals => Set<EndOfServiceProvisionAccrual>();
+    public DbSet<FinalSettlement> FinalSettlements => Set<FinalSettlement>();
+
+    // Recruitment & Onboarding (Light ATS)
+    public DbSet<JobRequisition> JobRequisitions => Set<JobRequisition>();
+    public DbSet<Candidate> Candidates => Set<Candidate>();
+    public DbSet<CandidateApplication> CandidateApplications => Set<CandidateApplication>();
+    public DbSet<OnboardingTask> OnboardingTasks => Set<OnboardingTask>();
+
+    // Expense Claims & Asset Assignment
+    public DbSet<ExpenseClaim> ExpenseClaims => Set<ExpenseClaim>();
+    public DbSet<ExpenseClaimLine> ExpenseClaimLines => Set<ExpenseClaimLine>();
+    public DbSet<AssetAssignment> AssetAssignments => Set<AssetAssignment>();
+
+    // Dynamic HR & Payroll Configurations & Master Entities
+    public DbSet<WorkCalendar> WorkCalendars => Set<WorkCalendar>();
+    public DbSet<WorkCalendarDay> WorkCalendarDays => Set<WorkCalendarDay>();
+    public DbSet<PublicHoliday> PublicHolidays => Set<PublicHoliday>();
+    public DbSet<AttendancePolicy> AttendancePolicies => Set<AttendancePolicy>();
+    public DbSet<RawAttendance> RawAttendances => Set<RawAttendance>();
+    public DbSet<AttendanceDay> AttendanceDays => Set<AttendanceDay>();
+    public DbSet<AttendanceCorrectionRequest> AttendanceCorrectionRequests => Set<AttendanceCorrectionRequest>();
+    public DbSet<OvertimeRule> OvertimeRules => Set<OvertimeRule>();
+    public DbSet<ProrationPolicy> ProrationPolicies => Set<ProrationPolicy>();
+    public DbSet<DeductionPolicy> DeductionPolicies => Set<DeductionPolicy>();
+    public DbSet<TaxPolicy> TaxPolicies => Set<TaxPolicy>();
+    public DbSet<TaxBracket> TaxBrackets => Set<TaxBracket>();
+    public DbSet<SSCPolicy> SscPolicies => Set<SSCPolicy>();
+    public DbSet<PayrollPeriod> PayrollPeriods => Set<PayrollPeriod>();
+    public DbSet<PayrollCalculationSnapshot> PayrollCalculationSnapshots => Set<PayrollCalculationSnapshot>();
+    public DbSet<EmployeeLoan> EmployeeLoans => Set<EmployeeLoan>();
+    public DbSet<EmployeeAdvance> EmployeeAdvances => Set<EmployeeAdvance>();
+    public DbSet<LoanRepaymentSchedule> LoanRepaymentSchedules => Set<LoanRepaymentSchedule>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

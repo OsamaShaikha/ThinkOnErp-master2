@@ -1,3 +1,4 @@
+using System;
 using System.Linq;
 using Microsoft.Extensions.Options;
 using Swashbuckle.AspNetCore.SwaggerGen;
@@ -32,7 +33,7 @@ public class ConfigureSwaggerOptions : IConfigureOptions<SwaggerGenOptions>, ICo
 
         options.DocInclusionPredicate((docName, apiDesc) =>
         {
-            var controller = apiDesc.ActionDescriptor.RouteValues["controller"];
+            var controller = apiDesc.ActionDescriptor.RouteValues.TryGetValue("controller", out var c) ? c : null;
             return _loader.Includes(docName, apiDesc.GroupName, controller, apiDesc.RelativePath, apiDesc.HttpMethod);
         });
     }
@@ -44,5 +45,9 @@ public class ConfigureSwaggerOptions : IConfigureOptions<SwaggerGenOptions>, ICo
         {
             options.SwaggerEndpoint($"/swagger/{cat.CategoryCode}/swagger.json", cat.DisplayTitle);
         }
+
+        options.RoutePrefix = "swagger";
+        options.DisplayRequestDuration();
+        options.EnablePersistAuthorization();
     }
 }

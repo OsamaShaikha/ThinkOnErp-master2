@@ -6,12 +6,14 @@ using Scrutor;
 using System.Threading.Channels;
 using ThinkOnErp.Domain.Interfaces;
 using ThinkOnErp.Domain.Interfaces.Accounting;
+using ThinkOnErp.Domain.Interfaces.Hr;
 using ThinkOnErp.Infrastructure.Resilience;
 using ThinkOnErp.Infrastructure.Configuration;
 using ThinkOnErp.Infrastructure.Configuration.Validation;
 using ThinkOnErp.Infrastructure.Data;
 using ThinkOnErp.Infrastructure.Repositories;
 using ThinkOnErp.Infrastructure.Repositories.Accounting;
+using ThinkOnErp.Infrastructure.Repositories.Hr;
 using ThinkOnErp.Infrastructure.Services;
 using ThinkOnErp.Infrastructure.Services.Accounting;
 using ThinkOnErp.Application.Services.Accounting;
@@ -156,6 +158,29 @@ public static class DependencyInjection
         services.AddScoped<IGlOpeningBalanceRepository, GlOpeningBalanceRepository>();
         services.AddScoped<IGlCostCenterRepository, GlCostCenterRepository>();
         services.AddScoped<IAccountStatementRepository, AccountStatementRepository>();
+
+        // Register HR & Payroll repositories
+        services.AddScoped<IStatutoryRuleRepository, StatutoryRuleRepository>();
+        services.AddScoped<IDepartmentRepository, DepartmentRepository>();
+        services.AddScoped<IJobGradeRepository, JobGradeRepository>();
+        services.AddScoped<IPositionRepository, PositionRepository>();
+        services.AddScoped<IEmployeeRepository, EmployeeRepository>();
+        services.AddScoped<IEmployeeDependentRepository, EmployeeDependentRepository>();
+        services.AddScoped<IEmployeeDocumentRepository, EmployeeDocumentRepository>();
+        services.AddScoped<IEmploymentEventRepository, EmploymentEventRepository>();
+        services.AddScoped<IAttendanceRepository, AttendanceRepository>();
+        services.AddScoped<ILeaveRepository, LeaveRepository>();
+        services.AddScoped<ICompensationRepository, CompensationRepository>();
+        services.AddScoped<IPayrollRepository, PayrollRepository>();
+        services.AddScoped<IEndOfServiceRepository, EndOfServiceRepository>();
+        services.AddScoped<IRecruitmentRepository, RecruitmentRepository>();
+        services.AddScoped<IExpenseClaimRepository, ExpenseClaimRepository>();
+        services.AddScoped<IAssetAssignmentRepository, AssetAssignmentRepository>();
+        services.AddScoped<IWorkCalendarRepository, WorkCalendarRepository>();
+        services.AddScoped<IAttendanceCorrectionRepository, AttendanceCorrectionRepository>();
+        services.AddScoped<ILoanRepository, LoanRepository>();
+        services.AddScoped<IPolicyRepository, PolicyRepository>();
+        services.AddScoped<IPayrollPeriodRepository, PayrollPeriodRepository>();
 
         // Register audit logging services
         services.AddScoped<IAuditRepository, AuditRepository>();

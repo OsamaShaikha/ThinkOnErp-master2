@@ -12,4 +12,5 @@ public static class ApiCategories
     public const string Audit = "audit";
     public const string Support = "support";
     public const string System = "system";
+    public const string Hr = "hr";
 }

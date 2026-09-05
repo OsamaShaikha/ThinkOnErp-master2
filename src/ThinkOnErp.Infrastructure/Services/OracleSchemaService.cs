@@ -88,9 +88,10 @@ public class OracleSchemaService : IOracleSchemaService
         // 3. Clone tenant tables from developer schema
         await CloneFromDeveloperSchemaAsync(masterConn, schemaName);
 
-        // Ensure accounting tables, constraints, indexes, and reference data exist even when
+        // Ensure accounting and HR tables, constraints, indexes, and reference data exist even when
         // the developer template was created by an older application version.
         await EnsureAccountingSchemaAsync(masterConn, schemaName);
+        await EnsureHrSchemaAsync(masterConn, schemaName);
 
         // Reset identity sequences for tenant tables in the new schema to start from 1
         var tablesToResetTo1 = new[]
@@ -893,7 +894,7 @@ public class OracleSchemaService : IOracleSchemaService
 
         foreach (var statement in defaultStatements)
         {
-            await ExecuteRawAsync(connection, statement);
+            await ExecuteAccountingDdlAsync(connection, "Accounting column/default", statement);
         }
 
         // Seed first so adding the category foreign key also succeeds for partially provisioned
@@ -1004,16 +1005,1109 @@ public class OracleSchemaService : IOracleSchemaService
         return normalized;
     }
 
+    /// <summary>
+    /// Ensures all HR & Payroll tables, sequences, constraints, foreign keys, and statutory rules exist.
+    /// </summary>
+    private async Task EnsureHrSchemaAsync(OracleConnection connection, string schemaName)
+    {
+        schemaName = NormalizeOracleIdentifier(schemaName);
+        _logger.LogInformation("Ensuring HR & Payroll schema objects in {SchemaName}", schemaName);
+
+        var tableStatements = new (string Name, string Sql)[]
+        {
+            (
+                "HR_DEPARTMENT",
+                $"""
+                CREATE TABLE "{schemaName}"."HR_DEPARTMENT"
+                (
+                    "DEPARTMENT_CODE" NVARCHAR2(50) NOT NULL,
+                    "NAME_AR" NVARCHAR2(200) NOT NULL,
+                    "NAME_EN" NVARCHAR2(200) NOT NULL,
+                    "PARENT_DEPARTMENT_CODE" NVARCHAR2(50) NULL,
+                    "MANAGER_EMPLOYEE_CODE" NVARCHAR2(50) NULL,
+                    "COST_CENTER_CODE" NVARCHAR2(50) NULL,
+                    "IS_ACTIVE" NUMBER(1) DEFAULT 1 NOT NULL,
+                    "CREATION_USER" NVARCHAR2(100) NOT NULL,
+                    "CREATION_DATE" TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
+                    "UPDATE_USER" NVARCHAR2(100) NULL,
+                    "UPDATE_DATE" TIMESTAMP NULL,
+                    CONSTRAINT "PK_HR_DEPARTMENT" PRIMARY KEY ("DEPARTMENT_CODE")
+                )
+                """
+            ),
+            (
+                "HR_JOB_GRADE",
+                $"""
+                CREATE TABLE "{schemaName}"."HR_JOB_GRADE"
+                (
+                    "GRADE_CODE" NVARCHAR2(50) NOT NULL,
+                    "NAME_AR" NVARCHAR2(200) NOT NULL,
+                    "NAME_EN" NVARCHAR2(200) NOT NULL,
+                    "LEVEL_NO" NUMBER(5) DEFAULT 1 NOT NULL,
+                    "MIN_SALARY" NUMBER(18,3) DEFAULT 0 NOT NULL,
+                    "MID_SALARY" NUMBER(18,3) DEFAULT 0 NOT NULL,
+                    "MAX_SALARY" NUMBER(18,3) DEFAULT 0 NOT NULL,
+                    "IS_ACTIVE" NUMBER(1) DEFAULT 1 NOT NULL,
+                    "CREATION_USER" NVARCHAR2(100) NOT NULL,
+                    "CREATION_DATE" TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
+                    "UPDATE_USER" NVARCHAR2(100) NULL,
+                    "UPDATE_DATE" TIMESTAMP NULL,
+                    CONSTRAINT "PK_HR_JOB_GRADE" PRIMARY KEY ("GRADE_CODE")
+                )
+                """
+            ),
+            (
+                "HR_POSITION",
+                $"""
+                CREATE TABLE "{schemaName}"."HR_POSITION"
+                (
+                    "POSITION_CODE" NVARCHAR2(50) NOT NULL,
+                    "TITLE_AR" NVARCHAR2(200) NOT NULL,
+                    "TITLE_EN" NVARCHAR2(200) NOT NULL,
+                    "DEPARTMENT_CODE" NVARCHAR2(50) NOT NULL,
+                    "JOB_GRADE_CODE" NVARCHAR2(50) NOT NULL,
+                    "REPORTS_TO_POSITION_CODE" NVARCHAR2(50) NULL,
+                    "HEADCOUNT" NUMBER(5) DEFAULT 1 NOT NULL,
+                    "IS_ACTIVE" NUMBER(1) DEFAULT 1 NOT NULL,
+                    "CREATION_USER" NVARCHAR2(100) NOT NULL,
+                    "CREATION_DATE" TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
+                    "UPDATE_USER" NVARCHAR2(100) NULL,
+                    "UPDATE_DATE" TIMESTAMP NULL,
+                    CONSTRAINT "PK_HR_POSITION" PRIMARY KEY ("POSITION_CODE")
+                )
+                """
+            ),
+            (
+                "HR_EMPLOYEE",
+                $"""
+                CREATE TABLE "{schemaName}"."HR_EMPLOYEE"
+                (
+                    "EMPLOYEE_CODE" NVARCHAR2(50) NOT NULL,
+                    "NAME_AR" NVARCHAR2(200) NOT NULL,
+                    "NAME_EN" NVARCHAR2(200) NOT NULL,
+                    "NATIONAL_ID" NVARCHAR2(50) NOT NULL,
+                    "PASSPORT_NUMBER" NVARCHAR2(50) NULL,
+                    "NATIONALITY" NVARCHAR2(100) DEFAULT 'Jordanian' NOT NULL,
+                    "DATE_OF_BIRTH" TIMESTAMP NOT NULL,
+                    "GENDER" NVARCHAR2(20) DEFAULT 'MALE' NOT NULL,
+                    "MARITAL_STATUS" NVARCHAR2(20) DEFAULT 'SINGLE' NOT NULL,
+                    "HIRE_DATE" TIMESTAMP NOT NULL,
+                    "POSITION_CODE" NVARCHAR2(50) NULL,
+                    "DEPARTMENT_CODE" NVARCHAR2(50) NULL,
+                    "BRANCH_ID" NUMBER(19) NULL,
+                    "EMPLOYMENT_TYPE" NVARCHAR2(50) DEFAULT 'FULL_TIME' NOT NULL,
+                    "EMPLOYMENT_STATUS" NVARCHAR2(50) DEFAULT 'ACTIVE' NOT NULL,
+                    "SSC_NUMBER" NVARCHAR2(50) NULL,
+                    "IS_HIGH_RISK_ROLE" NUMBER(1) DEFAULT 0 NOT NULL,
+                    "TAX_EXEMPTION_COUNT" NUMBER(5) DEFAULT 0 NOT NULL,
+                    "BANK_ACCOUNT_NUMBER" NVARCHAR2(50) NULL,
+                    "BANK_NAME" NVARCHAR2(150) NULL,
+                    "BANK_IBAN" NVARCHAR2(50) NULL,
+                    "EMAIL" NVARCHAR2(150) NULL,
+                    "PHONE" NVARCHAR2(50) NULL,
+                    "PROBATION_END_DATE" TIMESTAMP NULL,
+                    "TERMINATION_DATE" TIMESTAMP NULL,
+                    "TERMINATION_REASON" NVARCHAR2(500) NULL,
+                    "MANAGER_EMPLOYEE_CODE" NVARCHAR2(50) NULL,
+                    "IS_ACTIVE" NUMBER(1) DEFAULT 1 NOT NULL,
+                    "CREATION_USER" NVARCHAR2(100) NOT NULL,
+                    "CREATION_DATE" TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
+                    "UPDATE_USER" NVARCHAR2(100) NULL,
+                    "UPDATE_DATE" TIMESTAMP NULL,
+                    CONSTRAINT "PK_HR_EMPLOYEE" PRIMARY KEY ("EMPLOYEE_CODE")
+                )
+                """
+            ),
+            (
+                "HR_EMPLOYEE_DEPENDENT",
+                $"""
+                CREATE TABLE "{schemaName}"."HR_EMPLOYEE_DEPENDENT"
+                (
+                    "ID" NUMBER(19) GENERATED ALWAYS AS IDENTITY NOT NULL,
+                    "EMPLOYEE_CODE" NVARCHAR2(50) NOT NULL,
+                    "NAME_AR" NVARCHAR2(200) NOT NULL,
+                    "NAME_EN" NVARCHAR2(200) NOT NULL,
+                    "RELATIONSHIP" NVARCHAR2(50) DEFAULT 'CHILD' NOT NULL,
+                    "NATIONAL_ID" NVARCHAR2(50) NULL,
+                    "DATE_OF_BIRTH" TIMESTAMP NOT NULL,
+                    "GENDER" NVARCHAR2(20) DEFAULT 'MALE' NOT NULL,
+                    "IS_TAX_EXEMPTION_CLAIMED" NUMBER(1) DEFAULT 1 NOT NULL,
+                    "IS_MEDICAL_COVERED" NUMBER(1) DEFAULT 0 NOT NULL,
+                    "IS_ACTIVE" NUMBER(1) DEFAULT 1 NOT NULL,
+                    "CREATION_USER" NVARCHAR2(100) NOT NULL,
+                    "CREATION_DATE" TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
+                    "UPDATE_USER" NVARCHAR2(100) NULL,
+                    "UPDATE_DATE" TIMESTAMP NULL,
+                    CONSTRAINT "PK_HR_EMP_DEPENDENT" PRIMARY KEY ("ID")
+                )
+                """
+            ),
+            (
+                "HR_EMPLOYEE_DOCUMENT",
+                $"""
+                CREATE TABLE "{schemaName}"."HR_EMPLOYEE_DOCUMENT"
+                (
+                    "ID" NUMBER(19) GENERATED ALWAYS AS IDENTITY NOT NULL,
+                    "EMPLOYEE_CODE" NVARCHAR2(50) NOT NULL,
+                    "DOCUMENT_TYPE" NVARCHAR2(50) DEFAULT 'NATIONAL_ID' NOT NULL,
+                    "DOCUMENT_NUMBER" NVARCHAR2(100) NULL,
+                    "FILE_REFERENCE" NVARCHAR2(500) NOT NULL,
+                    "FILE_NAME" NVARCHAR2(255) NULL,
+                    "ISSUED_DATE" TIMESTAMP NULL,
+                    "EXPIRY_DATE" TIMESTAMP NULL,
+                    "NOTES" NVARCHAR2(500) NULL,
+                    "IS_ACTIVE" NUMBER(1) DEFAULT 1 NOT NULL,
+                    "CREATION_USER" NVARCHAR2(100) NOT NULL,
+                    "CREATION_DATE" TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
+                    "UPDATE_USER" NVARCHAR2(100) NULL,
+                    "UPDATE_DATE" TIMESTAMP NULL,
+                    CONSTRAINT "PK_HR_EMP_DOCUMENT" PRIMARY KEY ("ID")
+                )
+                """
+            ),
+            (
+                "HR_EMPLOYMENT_EVENT",
+                $"""
+                CREATE TABLE "{schemaName}"."HR_EMPLOYMENT_EVENT"
+                (
+                    "ID" NUMBER(19) GENERATED ALWAYS AS IDENTITY NOT NULL,
+                    "EMPLOYEE_CODE" NVARCHAR2(50) NOT NULL,
+                    "EVENT_TYPE" NVARCHAR2(50) DEFAULT 'HIRE' NOT NULL,
+                    "EFFECTIVE_DATE" TIMESTAMP NOT NULL,
+                    "FROM_VALUE" NVARCHAR2(255) NULL,
+                    "TO_VALUE" NVARCHAR2(255) NULL,
+                    "REASON" NVARCHAR2(500) NULL,
+                    "APPROVED_BY" NVARCHAR2(100) NOT NULL,
+                    "CREATION_DATE" TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
+                    CONSTRAINT "PK_HR_EMP_EVENT" PRIMARY KEY ("ID")
+                )
+                """
+            ),
+            (
+                "HR_SHIFT_SCHEDULE",
+                $"""
+                CREATE TABLE "{schemaName}"."HR_SHIFT_SCHEDULE"
+                (
+                    "SHIFT_CODE" NVARCHAR2(50) NOT NULL,
+                    "NAME_AR" NVARCHAR2(200) NOT NULL,
+                    "NAME_EN" NVARCHAR2(200) NOT NULL,
+                    "START_TIME" INTERVAL DAY TO SECOND NOT NULL,
+                    "END_TIME" INTERVAL DAY TO SECOND NOT NULL,
+                    "BREAK_MINUTES" NUMBER(5) DEFAULT 60 NOT NULL,
+                    "WORKING_DAYS_JSON" NVARCHAR2(200) DEFAULT '["Sun","Mon","Tue","Wed","Thu"]' NOT NULL,
+                    "IS_ACTIVE" NUMBER(1) DEFAULT 1 NOT NULL,
+                    "CREATION_USER" NVARCHAR2(100) NOT NULL,
+                    "CREATION_DATE" TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
+                    "UPDATE_USER" NVARCHAR2(100) NULL,
+                    "UPDATE_DATE" TIMESTAMP NULL,
+                    CONSTRAINT "PK_HR_SHIFT_SCHEDULE" PRIMARY KEY ("SHIFT_CODE")
+                )
+                """
+            ),
+            (
+                "HR_EMP_SHIFT_ASSIGNMENT",
+                $"""
+                CREATE TABLE "{schemaName}"."HR_EMP_SHIFT_ASSIGNMENT"
+                (
+                    "ID" NUMBER(19) GENERATED ALWAYS AS IDENTITY NOT NULL,
+                    "EMPLOYEE_CODE" NVARCHAR2(50) NOT NULL,
+                    "SHIFT_CODE" NVARCHAR2(50) NOT NULL,
+                    "EFFECTIVE_FROM" TIMESTAMP NOT NULL,
+                    "EFFECTIVE_TO" TIMESTAMP NULL,
+                    "IS_ACTIVE" NUMBER(1) DEFAULT 1 NOT NULL,
+                    "CREATION_USER" NVARCHAR2(100) NOT NULL,
+                    "CREATION_DATE" TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
+                    "UPDATE_USER" NVARCHAR2(100) NULL,
+                    "UPDATE_DATE" TIMESTAMP NULL,
+                    CONSTRAINT "PK_HR_EMP_SHIFT_ASGN" PRIMARY KEY ("ID")
+                )
+                """
+            ),
+            (
+                "HR_ATTENDANCE_RECORD",
+                $"""
+                CREATE TABLE "{schemaName}"."HR_ATTENDANCE_RECORD"
+                (
+                    "ID" NUMBER(19) GENERATED ALWAYS AS IDENTITY NOT NULL,
+                    "EMPLOYEE_CODE" NVARCHAR2(50) NOT NULL,
+                    "ATTENDANCE_DATE" TIMESTAMP NOT NULL,
+                    "CLOCK_IN" TIMESTAMP NULL,
+                    "CLOCK_OUT" TIMESTAMP NULL,
+                    "SOURCE" NVARCHAR2(50) DEFAULT 'WEB' NOT NULL,
+                    "STATUS" NVARCHAR2(50) DEFAULT 'ON_TIME' NOT NULL,
+                    "LATE_MINUTES" NUMBER(10) DEFAULT 0 NOT NULL,
+                    "EARLY_LEAVE_MINUTES" NUMBER(10) DEFAULT 0 NOT NULL,
+                    "TOTAL_WORK_HOURS" NUMBER(10,2) DEFAULT 0 NOT NULL,
+                    "CORRECTED_BY" NVARCHAR2(100) NULL,
+                    "CORRECTION_REASON" NVARCHAR2(500) NULL,
+                    "IDEMPOTENCY_KEY" NVARCHAR2(100) NULL,
+                    "CREATION_USER" NVARCHAR2(100) NOT NULL,
+                    "CREATION_DATE" TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
+                    "UPDATE_USER" NVARCHAR2(100) NULL,
+                    "UPDATE_DATE" TIMESTAMP NULL,
+                    CONSTRAINT "PK_HR_ATTENDANCE" PRIMARY KEY ("ID")
+                )
+                """
+            ),
+            (
+                "HR_OVERTIME_RECORD",
+                $"""
+                CREATE TABLE "{schemaName}"."HR_OVERTIME_RECORD"
+                (
+                    "ID" NUMBER(19) GENERATED ALWAYS AS IDENTITY NOT NULL,
+                    "EMPLOYEE_CODE" NVARCHAR2(50) NOT NULL,
+                    "OVERTIME_DATE" TIMESTAMP NOT NULL,
+                    "HOURS" NUMBER(10,2) NOT NULL,
+                    "RATE_MULTIPLIER" NUMBER(5,2) DEFAULT 1.25 NOT NULL,
+                    "STATUS" NVARCHAR2(50) DEFAULT 'PENDING' NOT NULL,
+                    "REASON" NVARCHAR2(500) NULL,
+                    "APPROVED_BY" NVARCHAR2(100) NULL,
+                    "APPROVAL_DATE" TIMESTAMP NULL,
+                    "CREATION_USER" NVARCHAR2(100) NOT NULL,
+                    "CREATION_DATE" TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
+                    "UPDATE_USER" NVARCHAR2(100) NULL,
+                    "UPDATE_DATE" TIMESTAMP NULL,
+                    CONSTRAINT "PK_HR_OVERTIME" PRIMARY KEY ("ID")
+                )
+                """
+            ),
+            (
+                "HR_LEAVE_TYPE",
+                $"""
+                CREATE TABLE "{schemaName}"."HR_LEAVE_TYPE"
+                (
+                    "LEAVE_TYPE_CODE" NVARCHAR2(50) NOT NULL,
+                    "NAME_AR" NVARCHAR2(200) NOT NULL,
+                    "NAME_EN" NVARCHAR2(200) NOT NULL,
+                    "IS_PAID" NUMBER(1) DEFAULT 1 NOT NULL,
+                    "IS_STATUTORY" NUMBER(1) DEFAULT 1 NOT NULL,
+                    "REQUIRES_DOCUMENTATION" NUMBER(1) DEFAULT 0 NOT NULL,
+                    "MAX_DAYS_PER_YEAR" NUMBER(5,2) DEFAULT 14 NOT NULL,
+                    "CARRY_FORWARD_ALLOWED" NUMBER(1) DEFAULT 0 NOT NULL,
+                    "CARRY_FORWARD_CAP_DAYS" NUMBER(5,2) DEFAULT 0 NOT NULL,
+                    "IS_ACTIVE" NUMBER(1) DEFAULT 1 NOT NULL,
+                    "CREATION_USER" NVARCHAR2(100) NOT NULL,
+                    "CREATION_DATE" TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
+                    "UPDATE_USER" NVARCHAR2(100) NULL,
+                    "UPDATE_DATE" TIMESTAMP NULL,
+                    CONSTRAINT "PK_HR_LEAVE_TYPE" PRIMARY KEY ("LEAVE_TYPE_CODE")
+                )
+                """
+            ),
+            (
+                "HR_LEAVE_POLICY",
+                $"""
+                CREATE TABLE "{schemaName}"."HR_LEAVE_POLICY"
+                (
+                    "ID" NUMBER(19) GENERATED ALWAYS AS IDENTITY NOT NULL,
+                    "LEAVE_TYPE_CODE" NVARCHAR2(50) NOT NULL,
+                    "MIN_SERVICE_MONTHS" NUMBER(5) DEFAULT 0 NOT NULL,
+                    "MAX_SERVICE_MONTHS" NUMBER(5) NULL,
+                    "ANNUAL_ENTITLEMENT_DAYS" NUMBER(5,2) NOT NULL,
+                    "MONTHLY_ACCRUAL_RATE" NUMBER(5,4) NOT NULL,
+                    "IS_ACTIVE" NUMBER(1) DEFAULT 1 NOT NULL,
+                    "CREATION_USER" NVARCHAR2(100) NOT NULL,
+                    "CREATION_DATE" TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
+                    CONSTRAINT "PK_HR_LEAVE_POLICY" PRIMARY KEY ("ID")
+                )
+                """
+            ),
+            (
+                "HR_LEAVE_BALANCE",
+                $"""
+                CREATE TABLE "{schemaName}"."HR_LEAVE_BALANCE"
+                (
+                    "ID" NUMBER(19) GENERATED ALWAYS AS IDENTITY NOT NULL,
+                    "EMPLOYEE_CODE" NVARCHAR2(50) NOT NULL,
+                    "LEAVE_TYPE_CODE" NVARCHAR2(50) NOT NULL,
+                    "YEAR_NO" NUMBER(4) NOT NULL,
+                    "ACCRUED_DAYS" NUMBER(6,2) DEFAULT 0 NOT NULL,
+                    "USED_DAYS" NUMBER(6,2) DEFAULT 0 NOT NULL,
+                    "CARRIED_FORWARD_DAYS" NUMBER(6,2) DEFAULT 0 NOT NULL,
+                    "CREATION_USER" NVARCHAR2(100) NOT NULL,
+                    "CREATION_DATE" TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
+                    "UPDATE_USER" NVARCHAR2(100) NULL,
+                    "UPDATE_DATE" TIMESTAMP NULL,
+                    CONSTRAINT "PK_HR_LEAVE_BALANCE" PRIMARY KEY ("ID")
+                )
+                """
+            ),
+            (
+                "HR_LEAVE_REQUEST",
+                $"""
+                CREATE TABLE "{schemaName}"."HR_LEAVE_REQUEST"
+                (
+                    "ID" NUMBER(19) GENERATED ALWAYS AS IDENTITY NOT NULL,
+                    "EMPLOYEE_CODE" NVARCHAR2(50) NOT NULL,
+                    "LEAVE_TYPE_CODE" NVARCHAR2(50) NOT NULL,
+                    "START_DATE" TIMESTAMP NOT NULL,
+                    "END_DATE" TIMESTAMP NOT NULL,
+                    "TOTAL_DAYS" NUMBER(6,2) NOT NULL,
+                    "STATUS" NVARCHAR2(50) DEFAULT 'SUBMITTED' NOT NULL,
+                    "REASON" NVARCHAR2(500) NULL,
+                    "ATTACHMENT_REF" NVARCHAR2(500) NULL,
+                    "APPROVED_BY" NVARCHAR2(100) NULL,
+                    "APPROVAL_DATE" TIMESTAMP NULL,
+                    "REJECTION_REASON" NVARCHAR2(500) NULL,
+                    "CREATION_USER" NVARCHAR2(100) NOT NULL,
+                    "CREATION_DATE" TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
+                    "UPDATE_USER" NVARCHAR2(100) NULL,
+                    "UPDATE_DATE" TIMESTAMP NULL,
+                    CONSTRAINT "PK_HR_LEAVE_REQUEST" PRIMARY KEY ("ID")
+                )
+                """
+            ),
+            (
+                "HR_SALARY_COMPONENT",
+                $"""
+                CREATE TABLE "{schemaName}"."HR_SALARY_COMPONENT"
+                (
+                    "COMPONENT_CODE" NVARCHAR2(50) NOT NULL,
+                    "NAME_AR" NVARCHAR2(200) NOT NULL,
+                    "NAME_EN" NVARCHAR2(200) NOT NULL,
+                    "COMPONENT_TYPE" NVARCHAR2(50) DEFAULT 'EARNING' NOT NULL,
+                    "IS_TAXABLE" NUMBER(1) DEFAULT 1 NOT NULL,
+                    "IS_SSC_APPLICABLE" NUMBER(1) DEFAULT 1 NOT NULL,
+                    "CALCULATION_TYPE" NVARCHAR2(50) DEFAULT 'FIXED_AMOUNT' NOT NULL,
+                    "DEFAULT_AMOUNT" NUMBER(18,4) NULL,
+                    "DEFAULT_PERCENT" NUMBER(8,4) NULL,
+                    "GL_ACCOUNT_CODE" NVARCHAR2(50) NULL,
+                    "IS_ACTIVE" NUMBER(1) DEFAULT 1 NOT NULL,
+                    "CREATION_USER" NVARCHAR2(100) NOT NULL,
+                    "CREATION_DATE" TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
+                    "UPDATE_USER" NVARCHAR2(100) NULL,
+                    "UPDATE_DATE" TIMESTAMP NULL,
+                    CONSTRAINT "PK_HR_SAL_COMPONENT" PRIMARY KEY ("COMPONENT_CODE")
+                )
+                """
+            ),
+            (
+                "HR_EMP_SALARY_STRUCTURE",
+                $"""
+                CREATE TABLE "{schemaName}"."HR_EMP_SALARY_STRUCTURE"
+                (
+                    "ID" NUMBER(19) GENERATED ALWAYS AS IDENTITY NOT NULL,
+                    "EMPLOYEE_CODE" NVARCHAR2(50) NOT NULL,
+                    "EFFECTIVE_FROM" TIMESTAMP NOT NULL,
+                    "EFFECTIVE_TO" TIMESTAMP NULL,
+                    "BASIC_SALARY" NUMBER(18,3) NOT NULL,
+                    "CURRENCY_CODE" NVARCHAR2(10) DEFAULT 'JOD' NOT NULL,
+                    "PAYMENT_METHOD" NVARCHAR2(50) DEFAULT 'BANK_TRANSFER' NOT NULL,
+                    "IS_ACTIVE" NUMBER(1) DEFAULT 1 NOT NULL,
+                    "CREATION_USER" NVARCHAR2(100) NOT NULL,
+                    "CREATION_DATE" TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
+                    "UPDATE_USER" NVARCHAR2(100) NULL,
+                    "UPDATE_DATE" TIMESTAMP NULL,
+                    CONSTRAINT "PK_HR_SAL_STRUCTURE" PRIMARY KEY ("ID")
+                )
+                """
+            ),
+            (
+                "HR_EMP_SALARY_STRUCT_LINE",
+                $"""
+                CREATE TABLE "{schemaName}"."HR_EMP_SALARY_STRUCT_LINE"
+                (
+                    "ID" NUMBER(19) GENERATED ALWAYS AS IDENTITY NOT NULL,
+                    "STRUCTURE_ID" NUMBER(19) NOT NULL,
+                    "COMPONENT_CODE" NVARCHAR2(50) NOT NULL,
+                    "AMOUNT" NUMBER(18,3) NOT NULL,
+                    "PERCENT_VALUE" NUMBER(8,4) NULL,
+                    "IS_ACTIVE" NUMBER(1) DEFAULT 1 NOT NULL,
+                    "CREATION_USER" NVARCHAR2(100) NOT NULL,
+                    "CREATION_DATE" TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
+                    CONSTRAINT "PK_HR_SAL_STR_LINE" PRIMARY KEY ("ID")
+                )
+                """
+            ),
+            (
+                "HR_EMPLOYMENT_CONTRACT",
+                $"""
+                CREATE TABLE "{schemaName}"."HR_EMPLOYMENT_CONTRACT"
+                (
+                    "ID" NUMBER(19) GENERATED ALWAYS AS IDENTITY NOT NULL,
+                    "EMPLOYEE_CODE" NVARCHAR2(50) NOT NULL,
+                    "CONTRACT_TYPE" NVARCHAR2(50) DEFAULT 'UNLIMITED' NOT NULL,
+                    "START_DATE" TIMESTAMP NOT NULL,
+                    "END_DATE" TIMESTAMP NULL,
+                    "PROBATION_MONTHS" NUMBER(5) DEFAULT 3 NOT NULL,
+                    "NOTICE_PERIOD_DAYS" NUMBER(5) DEFAULT 30 NOT NULL,
+                    "STATUS" NVARCHAR2(50) DEFAULT 'ACTIVE' NOT NULL,
+                    "FILE_REFERENCE" NVARCHAR2(500) NULL,
+                    "NOTES" NVARCHAR2(500) NULL,
+                    "IS_ACTIVE" NUMBER(1) DEFAULT 1 NOT NULL,
+                    "CREATION_USER" NVARCHAR2(100) NOT NULL,
+                    "CREATION_DATE" TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
+                    "UPDATE_USER" NVARCHAR2(100) NULL,
+                    "UPDATE_DATE" TIMESTAMP NULL,
+                    CONSTRAINT "PK_HR_EMP_CONTRACT" PRIMARY KEY ("ID")
+                )
+                """
+            ),
+            (
+                "HR_JOB_REQUISITION",
+                $"""
+                CREATE TABLE "{schemaName}"."HR_JOB_REQUISITION"
+                (
+                    "REQUISITION_CODE" NVARCHAR2(50) NOT NULL,
+                    "POSITION_CODE" NVARCHAR2(50) NOT NULL,
+                    "DEPARTMENT_CODE" NVARCHAR2(50) NOT NULL,
+                    "BRANCH_ID" NUMBER(19) NULL,
+                    "HEADCOUNT" NUMBER(5) DEFAULT 1 NOT NULL,
+                    "STATUS" NVARCHAR2(50) DEFAULT 'OPEN' NOT NULL,
+                    "REQUESTED_BY" NVARCHAR2(50) NOT NULL,
+                    "APPROVED_BY" NVARCHAR2(100) NULL,
+                    "APPROVAL_DATE" TIMESTAMP NULL,
+                    "JOB_DESCRIPTION" NVARCHAR2(2000) NULL,
+                    "REQUIREMENTS" NVARCHAR2(2000) NULL,
+                    "CREATION_USER" NVARCHAR2(100) NOT NULL,
+                    "CREATION_DATE" TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
+                    "UPDATE_USER" NVARCHAR2(100) NULL,
+                    "UPDATE_DATE" TIMESTAMP NULL,
+                    CONSTRAINT "PK_HR_JOB_REQUISITION" PRIMARY KEY ("REQUISITION_CODE")
+                )
+                """
+            ),
+            (
+                "HR_CANDIDATE",
+                $"""
+                CREATE TABLE "{schemaName}"."HR_CANDIDATE"
+                (
+                    "CANDIDATE_CODE" NVARCHAR2(50) NOT NULL,
+                    "NAME_AR" NVARCHAR2(200) NOT NULL,
+                    "NAME_EN" NVARCHAR2(200) NOT NULL,
+                    "EMAIL" NVARCHAR2(150) NOT NULL,
+                    "PHONE" NVARCHAR2(50) NULL,
+                    "NATIONAL_ID" NVARCHAR2(50) NULL,
+                    "RESUME_FILE_REF" NVARCHAR2(500) NULL,
+                    "SOURCE" NVARCHAR2(50) DEFAULT 'DIRECT' NOT NULL,
+                    "CREATION_USER" NVARCHAR2(100) NOT NULL,
+                    "CREATION_DATE" TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
+                    "UPDATE_USER" NVARCHAR2(100) NULL,
+                    "UPDATE_DATE" TIMESTAMP NULL,
+                    CONSTRAINT "PK_HR_CANDIDATE" PRIMARY KEY ("CANDIDATE_CODE")
+                )
+                """
+            ),
+            (
+                "HR_CANDIDATE_APPLICATION",
+                $"""
+                CREATE TABLE "{schemaName}"."HR_CANDIDATE_APPLICATION"
+                (
+                    "ID" NUMBER(19) GENERATED ALWAYS AS IDENTITY NOT NULL,
+                    "CANDIDATE_CODE" NVARCHAR2(50) NOT NULL,
+                    "REQUISITION_CODE" NVARCHAR2(50) NOT NULL,
+                    "STAGE" NVARCHAR2(50) DEFAULT 'APPLIED' NOT NULL,
+                    "OFFERED_SALARY" NUMBER(18,3) NULL,
+                    "INTERVIEW_DATE" TIMESTAMP NULL,
+                    "NOTES" NVARCHAR2(1000) NULL,
+                    "HIRED_EMPLOYEE_CODE" NVARCHAR2(50) NULL,
+                    "CREATION_USER" NVARCHAR2(100) NOT NULL,
+                    "CREATION_DATE" TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
+                    "UPDATE_USER" NVARCHAR2(100) NULL,
+                    "UPDATE_DATE" TIMESTAMP NULL,
+                    CONSTRAINT "PK_HR_CAND_APP" PRIMARY KEY ("ID")
+                )
+                """
+            ),
+            (
+                "HR_ONBOARDING_TASK",
+                $"""
+                CREATE TABLE "{schemaName}"."HR_ONBOARDING_TASK"
+                (
+                    "ID" NUMBER(19) GENERATED ALWAYS AS IDENTITY NOT NULL,
+                    "EMPLOYEE_CODE" NVARCHAR2(50) NOT NULL,
+                    "TASK_NAME" NVARCHAR2(200) NOT NULL,
+                    "ASSIGNED_TO" NVARCHAR2(100) NULL,
+                    "DUE_DATE" TIMESTAMP NULL,
+                    "IS_COMPLETED" NUMBER(1) DEFAULT 0 NOT NULL,
+                    "COMPLETED_DATE" TIMESTAMP NULL,
+                    "COMPLETED_BY" NVARCHAR2(100) NULL,
+                    "NOTES" NVARCHAR2(500) NULL,
+                    "CREATION_USER" NVARCHAR2(100) NOT NULL,
+                    "CREATION_DATE" TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
+                    CONSTRAINT "PK_HR_ONBOARDING_TASK" PRIMARY KEY ("ID")
+                )
+                """
+            ),
+            (
+                "HR_PAYROLL_RUN",
+                $"""
+                CREATE TABLE "{schemaName}"."HR_PAYROLL_RUN"
+                (
+                    "ID" NUMBER(19) GENERATED ALWAYS AS IDENTITY NOT NULL,
+                    "PAY_PERIOD" NVARCHAR2(7) NOT NULL,
+                    "RUN_DATE" TIMESTAMP NOT NULL,
+                    "STATUS" NVARCHAR2(50) DEFAULT 'DRAFT' NOT NULL,
+                    "TOTAL_GROSS_SALARY" NUMBER(18,3) DEFAULT 0 NOT NULL,
+                    "TOTAL_NET_SALARY" NUMBER(18,3) DEFAULT 0 NOT NULL,
+                    "TOTAL_EMPLOYEE_SSC" NUMBER(18,3) DEFAULT 0 NOT NULL,
+                    "TOTAL_EMPLOYER_SSC" NUMBER(18,3) DEFAULT 0 NOT NULL,
+                    "TOTAL_INCOME_TAX" NUMBER(18,3) DEFAULT 0 NOT NULL,
+                    "TOTAL_NATIONAL_CONTRIB" NUMBER(18,3) DEFAULT 0 NOT NULL,
+                    "TOTAL_OTHER_DEDUCTIONS" NUMBER(18,3) DEFAULT 0 NOT NULL,
+                    "BRANCH_ID" NUMBER(19) NULL,
+                    "JOURNAL_VOUCHER_ID" NUMBER(19) NULL,
+                    "CALCULATED_BY" NVARCHAR2(100) NOT NULL,
+                    "CALCULATION_DATE" TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
+                    "APPROVED_BY" NVARCHAR2(100) NULL,
+                    "APPROVAL_DATE" TIMESTAMP NULL,
+                    "CREATION_USER" NVARCHAR2(100) NOT NULL,
+                    "CREATION_DATE" TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
+                    "UPDATE_USER" NVARCHAR2(100) NULL,
+                    "UPDATE_DATE" TIMESTAMP NULL,
+                    CONSTRAINT "PK_HR_PAYROLL_RUN" PRIMARY KEY ("ID")
+                )
+                """
+            ),
+            (
+                "HR_PAYROLL_RUN_LINE",
+                $"""
+                CREATE TABLE "{schemaName}"."HR_PAYROLL_RUN_LINE"
+                (
+                    "ID" NUMBER(19) GENERATED ALWAYS AS IDENTITY NOT NULL,
+                    "PAYROLL_RUN_ID" NUMBER(19) NOT NULL,
+                    "EMPLOYEE_CODE" NVARCHAR2(50) NOT NULL,
+                    "BASIC_SALARY" NUMBER(18,3) NOT NULL,
+                    "TOTAL_ALLOWANCES" NUMBER(18,3) DEFAULT 0 NOT NULL,
+                    "TOTAL_DEDUCTIONS" NUMBER(18,3) DEFAULT 0 NOT NULL,
+                    "GROSS_SALARY" NUMBER(18,3) NOT NULL,
+                    "EMPLOYEE_SSC" NUMBER(18,3) DEFAULT 0 NOT NULL,
+                    "EMPLOYER_SSC" NUMBER(18,3) DEFAULT 0 NOT NULL,
+                    "INCOME_TAX" NUMBER(18,3) DEFAULT 0 NOT NULL,
+                    "NET_SALARY" NUMBER(18,3) NOT NULL,
+                    "PAYMENT_STATUS" NVARCHAR2(50) DEFAULT 'UNPAID' NOT NULL,
+                    "CREATION_USER" NVARCHAR2(100) NOT NULL,
+                    "CREATION_DATE" TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
+                    CONSTRAINT "PK_HR_PAY_RUN_LINE" PRIMARY KEY ("ID")
+                )
+                """
+            ),
+            (
+                "HR_PAYROLL_RUN_LINE_COMPONENT",
+                $"""
+                CREATE TABLE "{schemaName}"."HR_PAYROLL_RUN_LINE_COMPONENT"
+                (
+                    "ID" NUMBER(19) GENERATED ALWAYS AS IDENTITY NOT NULL,
+                    "PAYROLL_LINE_ID" NUMBER(19) NOT NULL,
+                    "COMPONENT_CODE" NVARCHAR2(50) NOT NULL,
+                    "AMOUNT" NUMBER(18,3) NOT NULL,
+                    "CREATION_USER" NVARCHAR2(100) NOT NULL,
+                    "CREATION_DATE" TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
+                    CONSTRAINT "PK_HR_PAY_LINE_COMP" PRIMARY KEY ("ID")
+                )
+                """
+            ),
+            (
+                "HR_EOS_PROVISION_ACCRUAL",
+                $"""
+                CREATE TABLE "{schemaName}"."HR_EOS_PROVISION_ACCRUAL"
+                (
+                    "ID" NUMBER(19) GENERATED ALWAYS AS IDENTITY NOT NULL,
+                    "EMPLOYEE_CODE" NVARCHAR2(50) NOT NULL,
+                    "YEAR_NO" NUMBER(4) NOT NULL,
+                    "MONTH_NO" NUMBER(2) NOT NULL,
+                    "MONTHLY_PROVISION_AMOUNT" NUMBER(18,3) NOT NULL,
+                    "CUMULATIVE_PROVISION_AMOUNT" NUMBER(18,3) NOT NULL,
+                    "JOURNAL_VOUCHER_ID" NUMBER(19) NULL,
+                    "CREATION_USER" NVARCHAR2(100) NOT NULL,
+                    "CREATION_DATE" TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
+                    CONSTRAINT "PK_HR_EOS_PROVISION" PRIMARY KEY ("ID")
+                )
+                """
+            ),
+            (
+                "HR_EOS_SETTLEMENT",
+                $"""
+                CREATE TABLE "{schemaName}"."HR_EOS_SETTLEMENT"
+                (
+                    "ID" NUMBER(19) GENERATED ALWAYS AS IDENTITY NOT NULL,
+                    "EMPLOYEE_CODE" NVARCHAR2(50) NOT NULL,
+                    "SETTLEMENT_DATE" TIMESTAMP NOT NULL,
+                    "TERMINATION_TYPE" NVARCHAR2(50) DEFAULT 'RESIGNATION' NOT NULL,
+                    "TOTAL_SERVICE_YEARS" NUMBER(5,2) NOT NULL,
+                    "GRATUITY_AMOUNT" NUMBER(18,3) NOT NULL,
+                    "LEAVE_ENCASHMENT_AMOUNT" NUMBER(18,3) DEFAULT 0 NOT NULL,
+                    "DEDUCTIONS_AMOUNT" NUMBER(18,3) DEFAULT 0 NOT NULL,
+                    "NET_SETTLEMENT_AMOUNT" NUMBER(18,3) NOT NULL,
+                    "STATUS" NVARCHAR2(50) DEFAULT 'DRAFT' NOT NULL,
+                    "APPROVED_BY" NVARCHAR2(100) NULL,
+                    "APPROVAL_DATE" TIMESTAMP NULL,
+                    "JOURNAL_VOUCHER_ID" NUMBER(19) NULL,
+                    "CREATION_USER" NVARCHAR2(100) NOT NULL,
+                    "CREATION_DATE" TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
+                    "UPDATE_USER" NVARCHAR2(100) NULL,
+                    "UPDATE_DATE" TIMESTAMP NULL,
+                    CONSTRAINT "PK_HR_EOS_SETTLE" PRIMARY KEY ("ID")
+                )
+                """
+            ),
+            (
+                "HR_EXPENSE_CLAIM",
+                $"""
+                CREATE TABLE "{schemaName}"."HR_EXPENSE_CLAIM"
+                (
+                    "CLAIM_NUMBER" NVARCHAR2(50) NOT NULL,
+                    "EMPLOYEE_CODE" NVARCHAR2(50) NOT NULL,
+                    "CLAIM_DATE" TIMESTAMP NOT NULL,
+                    "TOTAL_AMOUNT" NUMBER(18,3) DEFAULT 0 NOT NULL,
+                    "CURRENCY_CODE" NVARCHAR2(10) DEFAULT 'JOD' NOT NULL,
+                    "STATUS" NVARCHAR2(50) DEFAULT 'SUBMITTED' NOT NULL,
+                    "PURPOSE" NVARCHAR2(500) NULL,
+                    "APPROVED_BY" NVARCHAR2(100) NULL,
+                    "APPROVAL_DATE" TIMESTAMP NULL,
+                    "JOURNAL_VOUCHER_ID" NUMBER(19) NULL,
+                    "CREATION_USER" NVARCHAR2(100) NOT NULL,
+                    "CREATION_DATE" TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
+                    "UPDATE_USER" NVARCHAR2(100) NULL,
+                    "UPDATE_DATE" TIMESTAMP NULL,
+                    CONSTRAINT "PK_HR_EXPENSE_CLAIM" PRIMARY KEY ("CLAIM_NUMBER")
+                )
+                """
+            ),
+            (
+                "HR_EXPENSE_CLAIM_LINE",
+                $"""
+                CREATE TABLE "{schemaName}"."HR_EXPENSE_CLAIM_LINE"
+                (
+                    "ID" NUMBER(19) GENERATED ALWAYS AS IDENTITY NOT NULL,
+                    "CLAIM_NUMBER" NVARCHAR2(50) NOT NULL,
+                    "EXPENSE_TYPE" NVARCHAR2(50) NOT NULL,
+                    "EXPENSE_DATE" TIMESTAMP NOT NULL,
+                    "AMOUNT" NUMBER(18,3) NOT NULL,
+                    "RECEIPT_FILE_REF" NVARCHAR2(500) NULL,
+                    "DESCRIPTION" NVARCHAR2(500) NULL,
+                    "CREATION_USER" NVARCHAR2(100) NOT NULL,
+                    "CREATION_DATE" TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
+                    CONSTRAINT "PK_HR_EXPENSE_LINE" PRIMARY KEY ("ID")
+                )
+                """
+            ),
+            (
+                "HR_ASSET_ASSIGNMENT",
+                $"""
+                CREATE TABLE "{schemaName}"."HR_ASSET_ASSIGNMENT"
+                (
+                    "ID" NUMBER(19) GENERATED ALWAYS AS IDENTITY NOT NULL,
+                    "ASSET_TAG" NVARCHAR2(50) NOT NULL,
+                    "ASSET_DESCRIPTION" NVARCHAR2(200) NOT NULL,
+                    "CATEGORY" NVARCHAR2(50) DEFAULT 'LAPTOP' NOT NULL,
+                    "SERIAL_NUMBER" NVARCHAR2(100) NULL,
+                    "EMPLOYEE_CODE" NVARCHAR2(50) NOT NULL,
+                    "ISSUED_DATE" TIMESTAMP NOT NULL,
+                    "RETURNED_DATE" TIMESTAMP NULL,
+                    "STATUS" NVARCHAR2(50) DEFAULT 'ASSIGNED' NOT NULL,
+                    "CONDITION_NOTES" NVARCHAR2(500) NULL,
+                    "CREATION_USER" NVARCHAR2(100) NOT NULL,
+                    "CREATION_DATE" TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
+                    "UPDATE_USER" NVARCHAR2(100) NULL,
+                    "UPDATE_DATE" TIMESTAMP NULL,
+                    CONSTRAINT "PK_HR_ASSET_ASSIGNMENT" PRIMARY KEY ("ID")
+                )
+                """
+            ),
+            (
+                "HR_STATUTORY_RULE",
+                $"""
+                CREATE TABLE "{schemaName}"."HR_STATUTORY_RULE"
+                (
+                    "ID" NUMBER(19) GENERATED ALWAYS AS IDENTITY NOT NULL,
+                    "RULE_TYPE" NVARCHAR2(50) NOT NULL,
+                    "RULE_NAME" NVARCHAR2(200) NOT NULL,
+                    "BRACKET_LOW" NUMBER(18,3) NULL,
+                    "BRACKET_HIGH" NUMBER(18,3) NULL,
+                    "RATE_PERCENT" NUMBER(8,4) NULL,
+                    "VALUE" NUMBER(18,3) NULL,
+                    "CURRENCY_CODE" NVARCHAR2(10) DEFAULT 'JOD' NOT NULL,
+                    "EFFECTIVE_FROM" TIMESTAMP NOT NULL,
+                    "EFFECTIVE_TO" TIMESTAMP NULL,
+                    "DESCRIPTION" NVARCHAR2(500) NULL,
+                    "IS_ACTIVE" NUMBER(1) DEFAULT 1 NOT NULL,
+                    "CREATION_USER" NVARCHAR2(100) NOT NULL,
+                    "CREATION_DATE" TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
+                    "UPDATE_USER" NVARCHAR2(100) NULL,
+                    "UPDATE_DATE" TIMESTAMP NULL,
+                    CONSTRAINT "PK_HR_STAT_RULE" PRIMARY KEY ("ID")
+                )
+                """
+            )
+        };
+
+        foreach (var statement in tableStatements)
+        {
+            await ExecuteAccountingDdlAsync(connection, $"HR table {statement.Name}", statement.Sql);
+        }
+
+        var constraintStatements = new (string Name, string Sql)[]
+        {
+            ("FK_HRPOS_DEPT", $"ALTER TABLE \"{schemaName}\".\"HR_POSITION\" ADD CONSTRAINT \"FK_HRPOS_DEPT\" FOREIGN KEY (\"DEPARTMENT_CODE\") REFERENCES \"{schemaName}\".\"HR_DEPARTMENT\" (\"DEPARTMENT_CODE\")"),
+            ("FK_HRPOS_GRADE", $"ALTER TABLE \"{schemaName}\".\"HR_POSITION\" ADD CONSTRAINT \"FK_HRPOS_GRADE\" FOREIGN KEY (\"JOB_GRADE_CODE\") REFERENCES \"{schemaName}\".\"HR_JOB_GRADE\" (\"GRADE_CODE\")"),
+            ("FK_HREMP_DEPT", $"ALTER TABLE \"{schemaName}\".\"HR_EMPLOYEE\" ADD CONSTRAINT \"FK_HREMP_DEPT\" FOREIGN KEY (\"DEPARTMENT_CODE\") REFERENCES \"{schemaName}\".\"HR_DEPARTMENT\" (\"DEPARTMENT_CODE\")"),
+            ("FK_HREMP_POS", $"ALTER TABLE \"{schemaName}\".\"HR_EMPLOYEE\" ADD CONSTRAINT \"FK_HREMP_POS\" FOREIGN KEY (\"POSITION_CODE\") REFERENCES \"{schemaName}\".\"HR_POSITION\" (\"POSITION_CODE\")"),
+            ("FK_HREMPDEP_EMP", $"ALTER TABLE \"{schemaName}\".\"HR_EMPLOYEE_DEPENDENT\" ADD CONSTRAINT \"FK_HREMPDEP_EMP\" FOREIGN KEY (\"EMPLOYEE_CODE\") REFERENCES \"{schemaName}\".\"HR_EMPLOYEE\" (\"EMPLOYEE_CODE\") ON DELETE CASCADE"),
+            ("FK_HREMPDOC_EMP", $"ALTER TABLE \"{schemaName}\".\"HR_EMPLOYEE_DOCUMENT\" ADD CONSTRAINT \"FK_HREMPDOC_EMP\" FOREIGN KEY (\"EMPLOYEE_CODE\") REFERENCES \"{schemaName}\".\"HR_EMPLOYEE\" (\"EMPLOYEE_CODE\") ON DELETE CASCADE"),
+            ("FK_HREMPEVT_EMP", $"ALTER TABLE \"{schemaName}\".\"HR_EMPLOYMENT_EVENT\" ADD CONSTRAINT \"FK_HREMPEVT_EMP\" FOREIGN KEY (\"EMPLOYEE_CODE\") REFERENCES \"{schemaName}\".\"HR_EMPLOYEE\" (\"EMPLOYEE_CODE\") ON DELETE CASCADE"),
+            ("FK_HREMPSHIFT_EMP", $"ALTER TABLE \"{schemaName}\".\"HR_EMP_SHIFT_ASSIGNMENT\" ADD CONSTRAINT \"FK_HREMPSHIFT_EMP\" FOREIGN KEY (\"EMPLOYEE_CODE\") REFERENCES \"{schemaName}\".\"HR_EMPLOYEE\" (\"EMPLOYEE_CODE\") ON DELETE CASCADE"),
+            ("FK_HREMPSHIFT_SHIFT", $"ALTER TABLE \"{schemaName}\".\"HR_EMP_SHIFT_ASSIGNMENT\" ADD CONSTRAINT \"FK_HREMPSHIFT_SHIFT\" FOREIGN KEY (\"SHIFT_CODE\") REFERENCES \"{schemaName}\".\"HR_SHIFT_SCHEDULE\" (\"SHIFT_CODE\")"),
+            ("FK_HRATT_EMP", $"ALTER TABLE \"{schemaName}\".\"HR_ATTENDANCE_RECORD\" ADD CONSTRAINT \"FK_HRATT_EMP\" FOREIGN KEY (\"EMPLOYEE_CODE\") REFERENCES \"{schemaName}\".\"HR_EMPLOYEE\" (\"EMPLOYEE_CODE\") ON DELETE CASCADE"),
+            ("FK_HROT_EMP", $"ALTER TABLE \"{schemaName}\".\"HR_OVERTIME_RECORD\" ADD CONSTRAINT \"FK_HROT_EMP\" FOREIGN KEY (\"EMPLOYEE_CODE\") REFERENCES \"{schemaName}\".\"HR_EMPLOYEE\" (\"EMPLOYEE_CODE\") ON DELETE CASCADE"),
+            ("FK_HRLVPOL_TYPE", $"ALTER TABLE \"{schemaName}\".\"HR_LEAVE_POLICY\" ADD CONSTRAINT \"FK_HRLVPOL_TYPE\" FOREIGN KEY (\"LEAVE_TYPE_CODE\") REFERENCES \"{schemaName}\".\"HR_LEAVE_TYPE\" (\"LEAVE_TYPE_CODE\")"),
+            ("FK_HRLVBAL_EMP", $"ALTER TABLE \"{schemaName}\".\"HR_LEAVE_BALANCE\" ADD CONSTRAINT \"FK_HRLVBAL_EMP\" FOREIGN KEY (\"EMPLOYEE_CODE\") REFERENCES \"{schemaName}\".\"HR_EMPLOYEE\" (\"EMPLOYEE_CODE\") ON DELETE CASCADE"),
+            ("FK_HRLVBAL_TYPE", $"ALTER TABLE \"{schemaName}\".\"HR_LEAVE_BALANCE\" ADD CONSTRAINT \"FK_HRLVBAL_TYPE\" FOREIGN KEY (\"LEAVE_TYPE_CODE\") REFERENCES \"{schemaName}\".\"HR_LEAVE_TYPE\" (\"LEAVE_TYPE_CODE\")"),
+            ("UX_HR_LEAVE_BAL", $"ALTER TABLE \"{schemaName}\".\"HR_LEAVE_BALANCE\" ADD CONSTRAINT \"UX_HR_LEAVE_BAL\" UNIQUE (\"EMPLOYEE_CODE\", \"LEAVE_TYPE_CODE\", \"YEAR_NO\")"),
+            ("FK_HRLVREQ_EMP", $"ALTER TABLE \"{schemaName}\".\"HR_LEAVE_REQUEST\" ADD CONSTRAINT \"FK_HRLVREQ_EMP\" FOREIGN KEY (\"EMPLOYEE_CODE\") REFERENCES \"{schemaName}\".\"HR_EMPLOYEE\" (\"EMPLOYEE_CODE\") ON DELETE CASCADE"),
+            ("FK_HRLVREQ_TYPE", $"ALTER TABLE \"{schemaName}\".\"HR_LEAVE_REQUEST\" ADD CONSTRAINT \"FK_HRLVREQ_TYPE\" FOREIGN KEY (\"LEAVE_TYPE_CODE\") REFERENCES \"{schemaName}\".\"HR_LEAVE_TYPE\" (\"LEAVE_TYPE_CODE\")"),
+            ("FK_HRSALSTR_EMP", $"ALTER TABLE \"{schemaName}\".\"HR_EMP_SALARY_STRUCTURE\" ADD CONSTRAINT \"FK_HRSALSTR_EMP\" FOREIGN KEY (\"EMPLOYEE_CODE\") REFERENCES \"{schemaName}\".\"HR_EMPLOYEE\" (\"EMPLOYEE_CODE\") ON DELETE CASCADE"),
+            ("FK_HRSALSTRLN_STR", $"ALTER TABLE \"{schemaName}\".\"HR_EMP_SALARY_STRUCT_LINE\" ADD CONSTRAINT \"FK_HRSALSTRLN_STR\" FOREIGN KEY (\"STRUCTURE_ID\") REFERENCES \"{schemaName}\".\"HR_EMP_SALARY_STRUCTURE\" (\"ID\") ON DELETE CASCADE"),
+            ("FK_HRSALSTRLN_COMP", $"ALTER TABLE \"{schemaName}\".\"HR_EMP_SALARY_STRUCT_LINE\" ADD CONSTRAINT \"FK_HRSALSTRLN_COMP\" FOREIGN KEY (\"COMPONENT_CODE\") REFERENCES \"{schemaName}\".\"HR_SALARY_COMPONENT\" (\"COMPONENT_CODE\")"),
+            ("FK_HREMPCTR_EMP", $"ALTER TABLE \"{schemaName}\".\"HR_EMPLOYMENT_CONTRACT\" ADD CONSTRAINT \"FK_HREMPCTR_EMP\" FOREIGN KEY (\"EMPLOYEE_CODE\") REFERENCES \"{schemaName}\".\"HR_EMPLOYEE\" (\"EMPLOYEE_CODE\") ON DELETE CASCADE"),
+            ("FK_HRREQ_POS", $"ALTER TABLE \"{schemaName}\".\"HR_JOB_REQUISITION\" ADD CONSTRAINT \"FK_HRREQ_POS\" FOREIGN KEY (\"POSITION_CODE\") REFERENCES \"{schemaName}\".\"HR_POSITION\" (\"POSITION_CODE\")"),
+            ("FK_HRREQ_DEPT", $"ALTER TABLE \"{schemaName}\".\"HR_JOB_REQUISITION\" ADD CONSTRAINT \"FK_HRREQ_DEPT\" FOREIGN KEY (\"DEPARTMENT_CODE\") REFERENCES \"{schemaName}\".\"HR_DEPARTMENT\" (\"DEPARTMENT_CODE\")"),
+            ("FK_HRCANDAPP_CAND", $"ALTER TABLE \"{schemaName}\".\"HR_CANDIDATE_APPLICATION\" ADD CONSTRAINT \"FK_HRCANDAPP_CAND\" FOREIGN KEY (\"CANDIDATE_CODE\") REFERENCES \"{schemaName}\".\"HR_CANDIDATE\" (\"CANDIDATE_CODE\") ON DELETE CASCADE"),
+            ("FK_HRCANDAPP_REQ", $"ALTER TABLE \"{schemaName}\".\"HR_CANDIDATE_APPLICATION\" ADD CONSTRAINT \"FK_HRCANDAPP_REQ\" FOREIGN KEY (\"REQUISITION_CODE\") REFERENCES \"{schemaName}\".\"HR_JOB_REQUISITION\" (\"REQUISITION_CODE\") ON DELETE CASCADE"),
+            ("FK_HRONBTASK_EMP", $"ALTER TABLE \"{schemaName}\".\"HR_ONBOARDING_TASK\" ADD CONSTRAINT \"FK_HRONBTASK_EMP\" FOREIGN KEY (\"EMPLOYEE_CODE\") REFERENCES \"{schemaName}\".\"HR_EMPLOYEE\" (\"EMPLOYEE_CODE\") ON DELETE CASCADE"),
+            ("FK_HRPAYLN_RUN", $"ALTER TABLE \"{schemaName}\".\"HR_PAYROLL_RUN_LINE\" ADD CONSTRAINT \"FK_HRPAYLN_RUN\" FOREIGN KEY (\"PAYROLL_RUN_ID\") REFERENCES \"{schemaName}\".\"HR_PAYROLL_RUN\" (\"ID\") ON DELETE CASCADE"),
+            ("FK_HRPAYLN_EMP", $"ALTER TABLE \"{schemaName}\".\"HR_PAYROLL_RUN_LINE\" ADD CONSTRAINT \"FK_HRPAYLN_EMP\" FOREIGN KEY (\"EMPLOYEE_CODE\") REFERENCES \"{schemaName}\".\"HR_EMPLOYEE\" (\"EMPLOYEE_CODE\")"),
+            ("FK_HRPAYLNCOMP_LN", $"ALTER TABLE \"{schemaName}\".\"HR_PAYROLL_RUN_LINE_COMPONENT\" ADD CONSTRAINT \"FK_HRPAYLNCOMP_LN\" FOREIGN KEY (\"PAYROLL_LINE_ID\") REFERENCES \"{schemaName}\".\"HR_PAYROLL_RUN_LINE\" (\"ID\") ON DELETE CASCADE"),
+            ("FK_HREOSPROV_EMP", $"ALTER TABLE \"{schemaName}\".\"HR_EOS_PROVISION_ACCRUAL\" ADD CONSTRAINT \"FK_HREOSPROV_EMP\" FOREIGN KEY (\"EMPLOYEE_CODE\") REFERENCES \"{schemaName}\".\"HR_EMPLOYEE\" (\"EMPLOYEE_CODE\") ON DELETE CASCADE"),
+            ("FK_HREOSSETTLE_EMP", $"ALTER TABLE \"{schemaName}\".\"HR_EOS_SETTLEMENT\" ADD CONSTRAINT \"FK_HREOSSETTLE_EMP\" FOREIGN KEY (\"EMPLOYEE_CODE\") REFERENCES \"{schemaName}\".\"HR_EMPLOYEE\" (\"EMPLOYEE_CODE\")"),
+            ("FK_HREXP_EMP", $"ALTER TABLE \"{schemaName}\".\"HR_EXPENSE_CLAIM\" ADD CONSTRAINT \"FK_HREXP_EMP\" FOREIGN KEY (\"EMPLOYEE_CODE\") REFERENCES \"{schemaName}\".\"HR_EMPLOYEE\" (\"EMPLOYEE_CODE\")"),
+            ("FK_HREXP_LN_CLAIM", $"ALTER TABLE \"{schemaName}\".\"HR_EXPENSE_CLAIM_LINE\" ADD CONSTRAINT \"FK_HREXP_LN_CLAIM\" FOREIGN KEY (\"CLAIM_NUMBER\") REFERENCES \"{schemaName}\".\"HR_EXPENSE_CLAIM\" (\"CLAIM_NUMBER\") ON DELETE CASCADE"),
+            ("FK_HRASSET_EMP", $"ALTER TABLE \"{schemaName}\".\"HR_ASSET_ASSIGNMENT\" ADD CONSTRAINT \"FK_HRASSET_EMP\" FOREIGN KEY (\"EMPLOYEE_CODE\") REFERENCES \"{schemaName}\".\"HR_EMPLOYEE\" (\"EMPLOYEE_CODE\")")
+        };
+
+        foreach (var constraint in constraintStatements)
+        {
+            await ExecuteAccountingDdlAsync(connection, $"HR constraint {constraint.Name}", constraint.Sql);
+        }
+
+        await SeedHrDefaultDataAsync(connection, schemaName);
+    }
+
+    private async Task SeedHrDefaultDataAsync(OracleConnection connection, string schemaName)
+    {
+        _logger.LogInformation("Seeding default HR master and test data in {SchemaName}", schemaName);
+
+        var seedStatements = new[]
+        {
+            // 1. Statutory Rules
+            $"""
+            MERGE INTO "{schemaName}"."HR_STATUTORY_RULE" target
+            USING (
+                SELECT 'SSC_EMPLOYEE_RATE' AS R_TYPE, 'Jordan SSC Employee Contribution Rate' AS R_NAME, 0.0750 AS RATE, CAST(NULL AS NUMBER(18,3)) AS VAL, CAST(NULL AS NUMBER(18,3)) AS B_LOW, CAST(NULL AS NUMBER(18,3)) AS B_HIGH FROM DUAL UNION ALL
+                SELECT 'SSC_EMPLOYER_RATE', 'Jordan SSC Employer Contribution Rate', 0.1425, NULL, NULL, NULL FROM DUAL UNION ALL
+                SELECT 'SSC_HIGH_RISK_SURCHARGE', 'Jordan SSC High Risk Surcharge', 0.0100, NULL, NULL, NULL FROM DUAL UNION ALL
+                SELECT 'SSC_MAX_CEILING', 'Jordan SSC Monthly Wage Cap', NULL, 3349.00, NULL, NULL FROM DUAL UNION ALL
+                SELECT 'MINIMUM_WAGE', 'Jordan Minimum Monthly Wage', NULL, 290.00, NULL, NULL FROM DUAL UNION ALL
+                SELECT 'PERSONAL_EXEMPTION_SELF', 'Jordan Personal Exemption', NULL, 9000.00, NULL, NULL FROM DUAL UNION ALL
+                SELECT 'PERSONAL_EXEMPTION_DEPENDENT', 'Jordan Dependent Exemption', NULL, 1000.00, NULL, NULL FROM DUAL UNION ALL
+                SELECT 'ISTD_TAX_BRACKET_1', 'ISTD Tax Bracket 1 (0-5k)', 0.0500, NULL, 0, 5000 FROM DUAL UNION ALL
+                SELECT 'ISTD_TAX_BRACKET_2', 'ISTD Tax Bracket 2 (5k-10k)', 0.1000, NULL, 5000, 10000 FROM DUAL UNION ALL
+                SELECT 'ISTD_TAX_BRACKET_3', 'ISTD Tax Bracket 3 (10k-15k)', 0.1500, NULL, 10000, 15000 FROM DUAL UNION ALL
+                SELECT 'ISTD_TAX_BRACKET_4', 'ISTD Tax Bracket 4 (15k-20k)', 0.2000, NULL, 15000, 20000 FROM DUAL UNION ALL
+                SELECT 'ISTD_TAX_BRACKET_5', 'ISTD Tax Bracket 5 (20k-1M)', 0.2500, NULL, 20000, 1000000 FROM DUAL UNION ALL
+                SELECT 'ISTD_TAX_BRACKET_6', 'ISTD Tax Bracket 6 (>1M)', 0.3000, NULL, 1000000, NULL FROM DUAL UNION ALL
+                SELECT 'OVERTIME_REGULAR_RATE', 'Overtime Regular Rate 1.25x', NULL, 1.25, NULL, NULL FROM DUAL UNION ALL
+                SELECT 'OVERTIME_HOLIDAY_RATE', 'Overtime Holiday Rate 1.50x', NULL, 1.50, NULL, NULL FROM DUAL
+            ) src
+            ON (target."RULE_TYPE" = src.R_TYPE)
+            WHEN MATCHED THEN
+                UPDATE SET target."RULE_NAME" = src.R_NAME, target."RATE_PERCENT" = src.RATE, target."VALUE" = src.VAL
+            WHEN NOT MATCHED THEN
+                INSERT ("RULE_TYPE", "RULE_NAME", "BRACKET_LOW", "BRACKET_HIGH", "RATE_PERCENT", "VALUE", "CURRENCY_CODE", "EFFECTIVE_FROM", "IS_ACTIVE", "CREATION_USER", "CREATION_DATE")
+                VALUES (src.R_TYPE, src.R_NAME, src.B_LOW, src.B_HIGH, src.RATE, src.VAL, 'JOD', CURRENT_TIMESTAMP, 1, 'system_seed', CURRENT_TIMESTAMP)
+            """,
+
+            // 2. Departments
+            $"""
+            MERGE INTO "{schemaName}"."HR_DEPARTMENT" target
+            USING (
+                SELECT 'HR' AS CODE, 'الموارد البشرية' AS NAME_AR, 'Human Resources' AS NAME_EN, 'CC-101' AS CC FROM DUAL UNION ALL
+                SELECT 'ENG', 'الهندسة وتطوير البرمجيات', 'Engineering & Software Development', 'CC-102' FROM DUAL UNION ALL
+                SELECT 'FIN', 'المالية والمحاسبة', 'Finance & Accounting', 'CC-103' FROM DUAL UNION ALL
+                SELECT 'OPS', 'العمليات واللوجستيات', 'Operations & Logistics', 'CC-104' FROM DUAL
+            ) src
+            ON (target."DEPARTMENT_CODE" = src.CODE)
+            WHEN MATCHED THEN
+                UPDATE SET target."NAME_AR" = src.NAME_AR, target."NAME_EN" = src.NAME_EN, target."COST_CENTER_CODE" = src.CC
+            WHEN NOT MATCHED THEN
+                INSERT ("DEPARTMENT_CODE", "NAME_AR", "NAME_EN", "COST_CENTER_CODE", "IS_ACTIVE", "CREATION_USER", "CREATION_DATE")
+                VALUES (src.CODE, src.NAME_AR, src.NAME_EN, src.CC, 1, 'system_seed', CURRENT_TIMESTAMP)
+            """,
+
+            // 3. Job Grades
+            $"""
+            MERGE INTO "{schemaName}"."HR_JOB_GRADE" target
+            USING (
+                SELECT 'EXEC' AS CODE, 'الإدارة التنفيذية' AS NAME_AR, 'Executive Management' AS NAME_EN, 1 AS LVL, 3000.00 AS MIN_S, 5500.00 AS MID_S, 8000.00 AS MAX_S FROM DUAL UNION ALL
+                SELECT 'SENIOR', 'المستوى الأول (متقدم)', 'Senior Level', 2, 1500.00, 2350.00, 3200.00 FROM DUAL UNION ALL
+                SELECT 'MID', 'المستوى المتوسط', 'Mid Level', 3, 800.00, 1200.00, 1600.00 FROM DUAL UNION ALL
+                SELECT 'ENTRY', 'المستوى المبتدئ', 'Entry Level', 4, 350.00, 550.00, 750.00 FROM DUAL
+            ) src
+            ON (target."GRADE_CODE" = src.CODE)
+            WHEN MATCHED THEN
+                UPDATE SET target."NAME_AR" = src.NAME_AR, target."NAME_EN" = src.NAME_EN, target."MIN_SALARY" = src.MIN_S, target."MID_SALARY" = src.MID_S, target."MAX_SALARY" = src.MAX_S
+            WHEN NOT MATCHED THEN
+                INSERT ("GRADE_CODE", "NAME_AR", "NAME_EN", "LEVEL_NO", "MIN_SALARY", "MID_SALARY", "MAX_SALARY", "IS_ACTIVE", "CREATION_USER", "CREATION_DATE")
+                VALUES (src.CODE, src.NAME_AR, src.NAME_EN, src.LVL, src.MIN_S, src.MID_S, src.MAX_S, 1, 'system_seed', CURRENT_TIMESTAMP)
+            """,
+
+            // 4. Positions
+            $"""
+            MERGE INTO "{schemaName}"."HR_POSITION" target
+            USING (
+                SELECT 'HR_DIR' AS CODE, 'مدير الموارد البشرية' AS TITLE_AR, 'HR Director' AS TITLE_EN, 'HR' AS DEPT, 'EXEC' AS GRADE, 1 AS HC FROM DUAL UNION ALL
+                SELECT 'SR_SWE', 'مهندس برمجيات أول', 'Senior Software Engineer', 'ENG', 'SENIOR', 3 FROM DUAL UNION ALL
+                SELECT 'JR_SWE', 'مهندس برمجيات مبتدئ', 'Junior Software Engineer', 'ENG', 'ENTRY', 2 FROM DUAL UNION ALL
+                SELECT 'FIN_ACC', 'محاسب عام أول', 'Senior General Accountant', 'FIN', 'SENIOR', 2 FROM DUAL UNION ALL
+                SELECT 'OPS_SUP', 'مشرف عمليات', 'Operations Supervisor', 'OPS', 'MID', 1 FROM DUAL
+            ) src
+            ON (target."POSITION_CODE" = src.CODE)
+            WHEN MATCHED THEN
+                UPDATE SET target."TITLE_AR" = src.TITLE_AR, target."TITLE_EN" = src.TITLE_EN, target."DEPARTMENT_CODE" = src.DEPT, target."JOB_GRADE_CODE" = src.GRADE, target."HEADCOUNT" = src.HC
+            WHEN NOT MATCHED THEN
+                INSERT ("POSITION_CODE", "TITLE_AR", "TITLE_EN", "DEPARTMENT_CODE", "JOB_GRADE_CODE", "HEADCOUNT", "IS_ACTIVE", "CREATION_USER", "CREATION_DATE")
+                VALUES (src.CODE, src.TITLE_AR, src.TITLE_EN, src.DEPT, src.GRADE, src.HC, 1, 'system_seed', CURRENT_TIMESTAMP)
+            """,
+
+            // 5. Shift Schedule
+            $"""
+            MERGE INTO "{schemaName}"."HR_SHIFT_SCHEDULE" target
+            USING (
+                SELECT 'GENERAL' AS CODE, 'دوام رسمي عام' AS NAME_AR, 'General Standard Shift' AS NAME_EN, NUMTODSINTERVAL(8.5, 'HOUR') AS ST, NUMTODSINTERVAL(17, 'HOUR') AS ET, 60 AS BM, '["Sun","Mon","Tue","Wed","Thu"]' AS W_DAYS FROM DUAL
+            ) src
+            ON (target."SHIFT_CODE" = src.CODE)
+            WHEN MATCHED THEN
+                UPDATE SET target."NAME_AR" = src.NAME_AR, target."NAME_EN" = src.NAME_EN, target."START_TIME" = src.ST, target."END_TIME" = src.ET
+            WHEN NOT MATCHED THEN
+                INSERT ("SHIFT_CODE", "NAME_AR", "NAME_EN", "START_TIME", "END_TIME", "BREAK_MINUTES", "WORKING_DAYS_JSON", "IS_ACTIVE", "CREATION_USER", "CREATION_DATE")
+                VALUES (src.CODE, src.NAME_AR, src.NAME_EN, src.ST, src.ET, src.BM, src.W_DAYS, 1, 'system_seed', CURRENT_TIMESTAMP)
+            """,
+
+            // 6. Leave Types
+            $"""
+            MERGE INTO "{schemaName}"."HR_LEAVE_TYPE" target
+            USING (
+                SELECT 'ANNUAL' AS CODE, 'إجازة سنوية' AS NAME_AR, 'Annual Leave' AS NAME_EN, 1 AS PAID, 1 AS STAT, 0 AS DOC, 14 AS MD, 1 AS CF, 7 AS CAP FROM DUAL UNION ALL
+                SELECT 'SICK', 'إجازة مرضية', 'Sick Leave', 1, 1, 1, 14, 0, 0 FROM DUAL UNION ALL
+                SELECT 'MATERNITY', 'إجازة أمومة', 'Maternity Leave', 1, 1, 1, 70, 0, 0 FROM DUAL UNION ALL
+                SELECT 'PATERNITY', 'إجازة أبوة', 'Paternity Leave', 1, 1, 1, 3, 0, 0 FROM DUAL UNION ALL
+                SELECT 'HAJJ', 'إجازة حج', 'Hajj Leave', 1, 1, 1, 14, 0, 0 FROM DUAL UNION ALL
+                SELECT 'BEREAVEMENT', 'إجازة عزاء', 'Bereavement Leave', 1, 1, 0, 3, 0, 0 FROM DUAL UNION ALL
+                SELECT 'UNPAID', 'إجازة بدون راتب', 'Unpaid Leave', 0, 0, 0, 30, 0, 0 FROM DUAL
+            ) src
+            ON (target."LEAVE_TYPE_CODE" = src.CODE)
+            WHEN MATCHED THEN
+                UPDATE SET target."NAME_AR" = src.NAME_AR, target."NAME_EN" = src.NAME_EN, target."MAX_DAYS_PER_YEAR" = src.MD
+            WHEN NOT MATCHED THEN
+                INSERT ("LEAVE_TYPE_CODE", "NAME_AR", "NAME_EN", "IS_PAID", "IS_STATUTORY", "REQUIRES_DOCUMENTATION", "MAX_DAYS_PER_YEAR", "CARRY_FORWARD_ALLOWED", "CARRY_FORWARD_CAP_DAYS", "IS_ACTIVE", "CREATION_USER", "CREATION_DATE")
+                VALUES (src.CODE, src.NAME_AR, src.NAME_EN, src.PAID, src.STAT, src.DOC, src.MD, src.CF, src.CAP, 1, 'system_seed', CURRENT_TIMESTAMP)
+            """,
+
+            // 7. Salary Components
+            $"""
+            MERGE INTO "{schemaName}"."HR_SALARY_COMPONENT" target
+            USING (
+                SELECT 'BASIC' AS CODE, 'الراتب الأساسي' AS NAME_AR, 'Basic Salary' AS NAME_EN, 'EARNING' AS C_TYPE, 1 AS TAX, 1 AS SSC, 'FIXED_AMOUNT' AS CALC_T FROM DUAL UNION ALL
+                SELECT 'HOUSING', 'بدل سكن', 'Housing Allowance', 'EARNING', 1, 1, 'PERCENTAGE' FROM DUAL UNION ALL
+                SELECT 'TRANSPORT', 'بدل مواصلات', 'Transport Allowance', 'EARNING', 1, 1, 'FIXED_AMOUNT' FROM DUAL UNION ALL
+                SELECT 'MOBILE', 'بدل هاتف', 'Mobile Allowance', 'EARNING', 1, 0, 'FIXED_AMOUNT' FROM DUAL UNION ALL
+                SELECT 'OVERTIME', 'عمل إضافي', 'Overtime Pay', 'EARNING', 1, 0, 'FORMULA' FROM DUAL UNION ALL
+                SELECT 'BONUS', 'مكافأة أداء', 'Performance Bonus', 'EARNING', 1, 0, 'FIXED_AMOUNT' FROM DUAL UNION ALL
+                SELECT 'UNPAID_LEAVE', 'خصم إجازة غير مدفوعة', 'Unpaid Leave Deduction', 'DEDUCTION', 0, 0, 'FORMULA' FROM DUAL
+            ) src
+            ON (target."COMPONENT_CODE" = src.CODE)
+            WHEN MATCHED THEN
+                UPDATE SET target."NAME_AR" = src.NAME_AR, target."NAME_EN" = src.NAME_EN
+            WHEN NOT MATCHED THEN
+                INSERT ("COMPONENT_CODE", "NAME_AR", "NAME_EN", "COMPONENT_TYPE", "IS_TAXABLE", "IS_SSC_APPLICABLE", "CALCULATION_TYPE", "IS_ACTIVE", "CREATION_USER", "CREATION_DATE")
+                VALUES (src.CODE, src.NAME_AR, src.NAME_EN, src.C_TYPE, src.TAX, src.SSC, src.CALC_T, 1, 'system_seed', CURRENT_TIMESTAMP)
+            """,
+
+            // 8. Employees
+            $"""
+            MERGE INTO "{schemaName}"."HR_EMPLOYEE" target
+            USING (
+                SELECT 'EMP-001' AS CODE, 'أحمد محمود منصور' AS NAME_AR, 'Ahmad Mahmoud Mansour' AS NAME_EN, '9851023456' AS NAT_ID, 'HR_DIR' AS POS, 'HR' AS DEPT, 'ahmad.mansour@thinkon.com' AS EMAIL, 'JO94ABCO000000123456789012' AS IBAN, 2 AS TAX_EX, 0 AS RISK FROM DUAL UNION ALL
+                SELECT 'EMP-002', 'سارة خالد الخطيب', 'Sara Khaled Al-Khatib', '9902034567', 'SR_SWE', 'ENG', 'sara.khatib@thinkon.com', 'JO94ABCO000000223456789012', 1, 0 FROM DUAL UNION ALL
+                SELECT 'EMP-003', 'طارق زياد النجار', 'Tariq Ziad Al-Najjar', '9953045678', 'JR_SWE', 'ENG', 'tariq.najjar@thinkon.com', 'JO94ABCO000000323456789012', 0, 0 FROM DUAL UNION ALL
+                SELECT 'EMP-004', 'نور سليم حداد', 'Noor Salim Haddad', '9884056789', 'FIN_ACC', 'FIN', 'noor.haddad@thinkon.com', 'JO94ABCO000000423456789012', 2, 0 FROM DUAL UNION ALL
+                SELECT 'EMP-005', 'عمر يوسف قاسم', 'Omar Yousef Qasim', '9925067890', 'OPS_SUP', 'OPS', 'omar.qasim@thinkon.com', 'JO94ABCO000000523456789012', 0, 1 FROM DUAL
+            ) src
+            ON (target."EMPLOYEE_CODE" = src.CODE)
+            WHEN MATCHED THEN
+                UPDATE SET target."NAME_AR" = src.NAME_AR, target."NAME_EN" = src.NAME_EN, target."EMAIL" = src.EMAIL
+            WHEN NOT MATCHED THEN
+                INSERT ("EMPLOYEE_CODE", "NAME_AR", "NAME_EN", "NATIONAL_ID", "POSITION_CODE", "DEPARTMENT_CODE", "EMAIL", "BANK_IBAN", "TAX_EXEMPTION_COUNT", "IS_HIGH_RISK_ROLE", "DATE_OF_BIRTH", "HIRE_DATE", "IS_ACTIVE", "CREATION_USER", "CREATION_DATE")
+                VALUES (src.CODE, src.NAME_AR, src.NAME_EN, src.NAT_ID, src.POS, src.DEPT, src.EMAIL, src.IBAN, src.TAX_EX, src.RISK, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 1, 'system_seed', CURRENT_TIMESTAMP)
+            """,
+
+            // 9. Employee Shifts
+            $"""
+            MERGE INTO "{schemaName}"."HR_EMP_SHIFT_ASSIGNMENT" target
+            USING (
+                SELECT 'EMP-001' AS EMP, 'GENERAL' AS SHIFT FROM DUAL UNION ALL
+                SELECT 'EMP-002', 'GENERAL' FROM DUAL UNION ALL
+                SELECT 'EMP-003', 'GENERAL' FROM DUAL UNION ALL
+                SELECT 'EMP-004', 'GENERAL' FROM DUAL UNION ALL
+                SELECT 'EMP-005', 'GENERAL' FROM DUAL
+            ) src
+            ON (target."EMPLOYEE_CODE" = src.EMP AND target."SHIFT_CODE" = src.SHIFT)
+            WHEN NOT MATCHED THEN
+                INSERT ("EMPLOYEE_CODE", "SHIFT_CODE", "EFFECTIVE_FROM", "IS_ACTIVE", "CREATION_USER", "CREATION_DATE")
+                VALUES (src.EMP, src.SHIFT, CURRENT_TIMESTAMP, 1, 'system_seed', CURRENT_TIMESTAMP)
+            """,
+
+            // 10. Salary Structures
+            $"""
+            MERGE INTO "{schemaName}"."HR_EMP_SALARY_STRUCTURE" target
+            USING (
+                SELECT 'EMP-001' AS EMP, 3500.00 AS BASIC FROM DUAL UNION ALL
+                SELECT 'EMP-002', 2000.00 FROM DUAL UNION ALL
+                SELECT 'EMP-003', 700.00 FROM DUAL UNION ALL
+                SELECT 'EMP-004', 1600.00 FROM DUAL UNION ALL
+                SELECT 'EMP-005', 1100.00 FROM DUAL
+            ) src
+            ON (target."EMPLOYEE_CODE" = src.EMP)
+            WHEN MATCHED THEN
+                UPDATE SET target."BASIC_SALARY" = src.BASIC
+            WHEN NOT MATCHED THEN
+                INSERT ("EMPLOYEE_CODE", "EFFECTIVE_FROM", "BASIC_SALARY", "CURRENCY_CODE", "PAYMENT_METHOD", "IS_ACTIVE", "CREATION_USER", "CREATION_DATE")
+                VALUES (src.EMP, CURRENT_TIMESTAMP, src.BASIC, 'JOD', 'BANK_TRANSFER', 1, 'system_seed', CURRENT_TIMESTAMP)
+            """,
+
+            // 11. Salary Structure Lines
+            $"""
+            INSERT INTO "{schemaName}"."HR_EMP_SALARY_STRUCT_LINE" ("STRUCTURE_ID", "COMPONENT_CODE", "AMOUNT", "PERCENT_VALUE", "IS_ACTIVE", "CREATION_USER", "CREATION_DATE")
+            SELECT s."ID", 'HOUSING', s."BASIC_SALARY" * 0.25, 25.00, 1, 'system_seed', CURRENT_TIMESTAMP
+            FROM "{schemaName}"."HR_EMP_SALARY_STRUCTURE" s
+            WHERE NOT EXISTS (SELECT 1 FROM "{schemaName}"."HR_EMP_SALARY_STRUCT_LINE" l WHERE l."STRUCTURE_ID" = s."ID" AND l."COMPONENT_CODE" = 'HOUSING')
+            """,
+            $"""
+            INSERT INTO "{schemaName}"."HR_EMP_SALARY_STRUCT_LINE" ("STRUCTURE_ID", "COMPONENT_CODE", "AMOUNT", "PERCENT_VALUE", "IS_ACTIVE", "CREATION_USER", "CREATION_DATE")
+            SELECT s."ID", 'TRANSPORT', 150.00, NULL, 1, 'system_seed', CURRENT_TIMESTAMP
+            FROM "{schemaName}"."HR_EMP_SALARY_STRUCTURE" s
+            WHERE NOT EXISTS (SELECT 1 FROM "{schemaName}"."HR_EMP_SALARY_STRUCT_LINE" l WHERE l."STRUCTURE_ID" = s."ID" AND l."COMPONENT_CODE" = 'TRANSPORT')
+            """,
+
+            // 12. Employment Contracts
+            $"""
+            MERGE INTO "{schemaName}"."HR_EMPLOYMENT_CONTRACT" target
+            USING (
+                SELECT 'EMP-001' AS EMP, 'UNLIMITED' AS C_TYPE FROM DUAL UNION ALL
+                SELECT 'EMP-002', 'UNLIMITED' FROM DUAL UNION ALL
+                SELECT 'EMP-003', 'LIMITED_2_YEARS' FROM DUAL UNION ALL
+                SELECT 'EMP-004', 'UNLIMITED' FROM DUAL UNION ALL
+                SELECT 'EMP-005', 'UNLIMITED' FROM DUAL
+            ) src
+            ON (target."EMPLOYEE_CODE" = src.EMP)
+            WHEN NOT MATCHED THEN
+                INSERT ("EMPLOYEE_CODE", "CONTRACT_TYPE", "START_DATE", "STATUS", "IS_ACTIVE", "CREATION_USER", "CREATION_DATE")
+                VALUES (src.EMP, src.C_TYPE, CURRENT_TIMESTAMP, 'ACTIVE', 1, 'system_seed', CURRENT_TIMESTAMP)
+            """,
+
+            // 13. Leave Balances
+            $"""
+            MERGE INTO "{schemaName}"."HR_LEAVE_BALANCE" target
+            USING (
+                SELECT 'EMP-001' AS EMP, 'ANNUAL' AS L_TYPE, 2026 AS YR, 21.00 AS ACCRUED, 4.00 AS USED, 5.00 AS CARRY FROM DUAL UNION ALL
+                SELECT 'EMP-001', 'SICK', 2026, 14.00, 1.00, 0.00 FROM DUAL UNION ALL
+                SELECT 'EMP-002', 'ANNUAL', 2026, 14.00, 3.00, 2.00 FROM DUAL UNION ALL
+                SELECT 'EMP-002', 'SICK', 2026, 14.00, 0.00, 0.00 FROM DUAL UNION ALL
+                SELECT 'EMP-003', 'ANNUAL', 2026, 14.00, 2.00, 0.00 FROM DUAL UNION ALL
+                SELECT 'EMP-004', 'ANNUAL', 2026, 14.00, 5.00, 4.00 FROM DUAL UNION ALL
+                SELECT 'EMP-005', 'ANNUAL', 2026, 14.00, 1.00, 0.00 FROM DUAL
+            ) src
+            ON (target."EMPLOYEE_CODE" = src.EMP AND target."LEAVE_TYPE_CODE" = src.L_TYPE AND target."YEAR_NO" = src.YR)
+            WHEN MATCHED THEN
+                UPDATE SET target."ACCRUED_DAYS" = src.ACCRUED, target."USED_DAYS" = src.USED
+            WHEN NOT MATCHED THEN
+                INSERT ("EMPLOYEE_CODE", "LEAVE_TYPE_CODE", "YEAR_NO", "ACCRUED_DAYS", "USED_DAYS", "CARRIED_FORWARD_DAYS", "CREATION_USER", "CREATION_DATE")
+                VALUES (src.EMP, src.L_TYPE, src.YR, src.ACCRUED, src.USED, src.CARRY, 'system_seed', CURRENT_TIMESTAMP)
+            """,
+
+            // 14. ATS Requisitions & Candidates
+            $"""
+            MERGE INTO "{schemaName}"."HR_JOB_REQUISITION" target
+            USING (
+                SELECT 'REQ-2026-001' AS CODE, 'SR_SWE' AS POS, 'ENG' AS DEPT, 2 AS HC, 'OPEN' AS STATUS, 'EMP-001' AS REQ_BY, 'Senior Software Engineer' AS DESC_EN FROM DUAL UNION ALL
+                SELECT 'REQ-2026-002', 'OPS_SUP' AS CODE, 'OPS_SUP' AS POS, 'OPS' AS DEPT, 1 AS HC, 'OPEN' AS STATUS, 'EMP-001' AS REQ_BY, 'Operations Supervisor' AS DESC_EN FROM DUAL
+            ) src
+            ON (target."REQUISITION_CODE" = src.CODE)
+            WHEN MATCHED THEN
+                UPDATE SET target."STATUS" = src.STATUS
+            WHEN NOT MATCHED THEN
+                INSERT ("REQUISITION_CODE", "POSITION_CODE", "DEPARTMENT_CODE", "HEADCOUNT", "STATUS", "REQUESTED_BY", "JOB_DESCRIPTION", "CREATION_USER", "CREATION_DATE")
+                VALUES (src.CODE, src.POS, src.DEPT, src.HC, src.STATUS, src.REQ_BY, src.DESC_EN, 'system_seed', CURRENT_TIMESTAMP)
+            """,
+            $"""
+            MERGE INTO "{schemaName}"."HR_CANDIDATE" target
+            USING (
+                SELECT 'CAND-001' AS CODE, 'رامي المصري' AS NAME_AR, 'Rami Al-Masri' AS NAME_EN, 'rami.masri@example.com' AS EMAIL, '+962788889900' AS PHONE FROM DUAL UNION ALL
+                SELECT 'CAND-002', 'ليلى الحسن' AS NAME_AR, 'Layla Al-Hasan', 'layla.hasan@example.com', '+962777778899' FROM DUAL
+            ) src
+            ON (target."CANDIDATE_CODE" = src.CODE)
+            WHEN MATCHED THEN
+                UPDATE SET target."EMAIL" = src.EMAIL
+            WHEN NOT MATCHED THEN
+                INSERT ("CANDIDATE_CODE", "NAME_AR", "NAME_EN", "EMAIL", "PHONE", "SOURCE", "CREATION_USER", "CREATION_DATE")
+                VALUES (src.CODE, src.NAME_AR, src.NAME_EN, src.EMAIL, src.PHONE, 'DIRECT', 'system_seed', CURRENT_TIMESTAMP)
+            """,
+
+            // 15. Payroll Run
+            $"""
+            MERGE INTO "{schemaName}"."HR_PAYROLL_RUN" target
+            USING (
+                SELECT '2026-07' AS PERIOD, CURRENT_TIMESTAMP AS R_DATE, 'APPROVED' AS STATUS, 11450.00 AS GROSS, 9785.45 AS NET, 858.75 AS EMP_SSC, 1631.63 AS EMPR_SSC, 805.80 AS TAX, 0.00 AS NAT_CONTRIB, 0.00 AS OTH_DED, 1 AS BR, 1001 AS JV, 'system_seed' AS CALC_BY, 'Ahmad Mansour' AS APPR_BY FROM DUAL
+            ) src
+            ON (target."PAY_PERIOD" = src.PERIOD AND target."BRANCH_ID" = src.BR)
+            WHEN MATCHED THEN
+                UPDATE SET target."STATUS" = src.STATUS, target."TOTAL_GROSS_SALARY" = src.GROSS, target."TOTAL_NET_SALARY" = src.NET
+            WHEN NOT MATCHED THEN
+                INSERT ("PAY_PERIOD", "RUN_DATE", "STATUS", "TOTAL_GROSS_SALARY", "TOTAL_NET_SALARY", "TOTAL_EMPLOYEE_SSC", "TOTAL_EMPLOYER_SSC", "TOTAL_INCOME_TAX", "TOTAL_NATIONAL_CONTRIB", "TOTAL_OTHER_DEDUCTIONS", "BRANCH_ID", "JOURNAL_VOUCHER_ID", "CALCULATED_BY", "CALCULATION_DATE", "APPROVED_BY", "APPROVAL_DATE", "CREATION_USER", "CREATION_DATE")
+                VALUES (src.PERIOD, src.R_DATE, src.STATUS, src.GROSS, src.NET, src.EMP_SSC, src.EMPR_SSC, src.TAX, src.NAT_CONTRIB, src.OTH_DED, src.BR, src.JV, src.CALC_BY, CURRENT_TIMESTAMP, src.APPR_BY, CURRENT_TIMESTAMP, 'system_seed', CURRENT_TIMESTAMP)
+            """,
+
+            // 16. Assets
+            $"""
+            MERGE INTO "{schemaName}"."HR_ASSET_ASSIGNMENT" target
+            USING (
+                SELECT 'AST-LAP-001' AS TAG, 'MacBook Pro 16' AS DESCR, 'LAPTOP' AS CAT, 'MBP2026001' AS SN, 'EMP-001' AS EMP, 'ASSIGNED' AS STATUS FROM DUAL UNION ALL
+                SELECT 'AST-LAP-002', 'Dell XPS 15', 'LAPTOP', 'DELL2026002', 'EMP-002', 'ASSIGNED' FROM DUAL UNION ALL
+                SELECT 'AST-MON-001', 'Dell UltraSharp 27 4K', 'MONITOR', 'MON2026001', 'EMP-002', 'ASSIGNED' FROM DUAL UNION ALL
+                SELECT 'AST-MOB-001', 'iPhone 15 Pro Max', 'MOBILE', 'IPH2026001', 'EMP-001', 'ASSIGNED' FROM DUAL
+            ) src
+            ON (target."ASSET_TAG" = src.TAG)
+            WHEN MATCHED THEN
+                UPDATE SET target."STATUS" = src.STATUS
+            WHEN NOT MATCHED THEN
+                INSERT ("ASSET_TAG", "ASSET_DESCRIPTION", "CATEGORY", "SERIAL_NUMBER", "EMPLOYEE_CODE", "ISSUED_DATE", "STATUS", "CREATION_USER", "CREATION_DATE")
+                VALUES (src.TAG, src.DESCR, src.CAT, src.SN, src.EMP, CURRENT_TIMESTAMP, src.STATUS, 'system_seed', CURRENT_TIMESTAMP)
+            """
+        };
+
+        foreach (var sql in seedStatements)
+        {
+            try
+            {
+                await ExecuteRawAsync(connection, sql);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Notice during direct HR data seeding in {SchemaName}", schemaName);
+            }
+        }
+    }
+
     private async Task ExecuteAccountingDdlAsync(OracleConnection connection, string objectDescription, string sql)
     {
         try
         {
             await ExecuteRawAsync(connection, sql);
         }
-        catch (OracleException ex) when (ex.Number is 955 or 1408 or 2260 or 2261 or 2264 or 2275)
+        catch (OracleException ex) when (ex.Number is 955 or 1408 or 1430 or 1442 or 2260 or 2261 or 2264 or 2275 or 2443)
         {
             _logger.LogDebug(
-                "Accounting {ObjectDescription} already exists in the requested form or an equivalent form: {Message}",
+                "Accounting/HR {ObjectDescription} already exists or is already configured in the requested form: {Message}",
                 objectDescription,
                 ex.Message);
         }
@@ -1330,6 +2424,7 @@ public class OracleSchemaService : IOracleSchemaService
                 await CloneFromDeveloperSchemaAsync(masterConn, schema);
                 await SyncTableColumnsSchemaDiffAsync(masterConn, schema);
                 await EnsureAccountingSchemaAsync(masterConn, schema);
+                await EnsureHrSchemaAsync(masterConn, schema);
 
                 // Regenerate synonyms & table access grants to ensure everything is correct
                 await GrantTenantTableAccessAsync(schema, schema);
@@ -1353,6 +2448,7 @@ public class OracleSchemaService : IOracleSchemaService
         await CloneFromDeveloperSchemaAsync(masterConn, schemaName);
         await SyncTableColumnsSchemaDiffAsync(masterConn, schemaName);
         await EnsureAccountingSchemaAsync(masterConn, schemaName);
+        await EnsureHrSchemaAsync(masterConn, schemaName);
         
         // Ensure access privileges and synonyms are up to date
         await GrantTenantTableAccessAsync(schemaName, schemaPassword);
@@ -1364,24 +2460,6 @@ public class OracleSchemaService : IOracleSchemaService
         _logger.LogInformation("Ensuring developer template schema exists: {SchemaName}", _devSchemaName);
 
         await using var masterConn = await OpenMasterConnectionAsync();
-
-        // Quick check: if DEV_TEMPLATE schema already exists and has GL_ACCOUNT table populated, skip full heavy provisioning
-        try
-        {
-            await using var checkCmd = masterConn.CreateCommand();
-            checkCmd.CommandText = $"SELECT COUNT(1) FROM \"{_devSchemaName}\".\"GL_ACCOUNT\"";
-            var countObj = await checkCmd.ExecuteScalarAsync();
-            var count = Convert.ToInt64(countObj);
-            if (count > 0)
-            {
-                _logger.LogInformation("Developer template schema {SchemaName} already provisioned ({Count} accounts found). Skipping startup auto-provisioning.", _devSchemaName, count);
-                return;
-            }
-        }
-        catch
-        {
-            // Table doesn't exist yet, proceed with full provisioning below
-        }
 
         // Enable Oracle 12c+ script mode
         await ExecuteRawAsync(masterConn, "ALTER SESSION SET \"_ORACLE_SCRIPT\" = TRUE");
@@ -1408,10 +2486,9 @@ public class OracleSchemaService : IOracleSchemaService
         // 3. Bootstrap tables from EF model into the template schema
         await BootstrapTablesFromEfModelAsync(masterConn, _devSchemaName);
 
-        // 4. Apply accounting-specific Oracle DDL that the lightweight EF bootstrap does not
-        // generate (foreign keys, check constraints, defaults, and indexes), then seed the
-        // fixed tenant-local account categories.
+        // 4. Apply accounting-specific and HR-specific Oracle DDL (foreign keys, check constraints, defaults, indexes)
         await EnsureAccountingSchemaAsync(masterConn, _devSchemaName);
+        await EnsureHrSchemaAsync(masterConn, _devSchemaName);
         
         // 5. Create synonyms for global tables in the developer template schema so it has full connectivity
         await CreateGlobalSynonymsAsync(_devSchemaName, _devSchemaPassword);
@@ -1433,57 +2510,100 @@ public class OracleSchemaService : IOracleSchemaService
     {
         _logger.LogInformation("Seeding developer template schema: {SchemaName}", _devSchemaName);
 
-        string scriptPath = Path.Combine(AppContext.BaseDirectory, "Database", "Scripts", "92_Seed_Developer_Template.sql");
-        if (!File.Exists(scriptPath))
+        var seedScriptFiles = new[]
         {
-            var dir = AppContext.BaseDirectory;
-            while (!string.IsNullOrEmpty(dir))
-            {
-                var candidate = Path.Combine(dir, "Database", "Scripts", "92_Seed_Developer_Template.sql");
-                if (File.Exists(candidate))
-                {
-                    scriptPath = candidate;
-                    break;
-                }
-                dir = Path.GetDirectoryName(dir);
-            }
-        }
-
-        if (!File.Exists(scriptPath))
-        {
-            _logger.LogWarning("Seed script not found: {Path}", scriptPath);
-            return;
-        }
-
-        var scriptContent = await File.ReadAllTextAsync(scriptPath);
-        var statements = scriptContent
-            .Split(new[] { "\r\n/\r\n", "\n/\n", "\r/\r", "\r\n/\n", "\n/\r\n" }, StringSplitOptions.RemoveEmptyEntries)
-            .Select(s => s.Trim())
-            .Where(s => !string.IsNullOrWhiteSpace(s))
-            .ToList();
+            "92_Seed_Developer_Template.sql",
+            "93_Seed_DEV_TEMPLATE_COA.sql",
+            "99_Create_HR_Payroll_Tables.sql",
+            "100_Seed_DEV_TEMPLATE_HR.sql"
+        };
 
         var hashedPassword = _passwordHashingService.HashPassword("Password@123");
-
         await using var conn = await OpenTenantConnectionAsync(_devSchemaName, _devSchemaPassword);
 
-        foreach (var stmt in statements)
+        foreach (var scriptFileName in seedScriptFiles)
         {
-            var query = stmt.Replace("'TEMP_HASH'", $"'{hashedPassword}'", StringComparison.OrdinalIgnoreCase);
-            
-            // Clean up slash characters if they are still at the end of the query
-            if (query.EndsWith("/", StringComparison.Ordinal))
+            string scriptPath = Path.Combine(AppContext.BaseDirectory, "Database", "Scripts", scriptFileName);
+            if (!File.Exists(scriptPath))
             {
-                query = query.Substring(0, query.Length - 1).Trim();
+                var dir = AppContext.BaseDirectory;
+                while (!string.IsNullOrEmpty(dir))
+                {
+                    var candidate = Path.Combine(dir, "Database", "Scripts", scriptFileName);
+                    if (File.Exists(candidate))
+                    {
+                        scriptPath = candidate;
+                        break;
+                    }
+                    dir = Path.GetDirectoryName(dir);
+                }
             }
 
-            try
+            if (!File.Exists(scriptPath))
             {
-                await ExecuteRawAsync(conn, query);
+                _logger.LogWarning("Seed script not found: {Path}", scriptPath);
+                continue;
             }
-            catch (Exception ex)
+
+            _logger.LogInformation("Executing seed script {ScriptFileName} on {SchemaName}", scriptFileName, _devSchemaName);
+            var scriptContent = await File.ReadAllTextAsync(scriptPath);
+            var rawBlocks = scriptContent
+                .Split(new[] { "\r\n/\r\n", "\n/\n", "\r/\r", "\r\n/\n", "\n/\r\n" }, StringSplitOptions.RemoveEmptyEntries)
+                .Select(s => s.Trim())
+                .Where(s => !string.IsNullOrWhiteSpace(s))
+                .ToList();
+
+            foreach (var rawBlock in rawBlocks)
             {
-                _logger.LogError(ex, "Failed to run seed statement: {Stmt}", query.Length > 200 ? query.Substring(0, 200) + "..." : query);
-                throw;
+                var block = rawBlock.Replace("'TEMP_HASH'", $"'{hashedPassword}'", StringComparison.OrdinalIgnoreCase).Trim();
+                
+                // Clean up slash characters if they are still at the end of the block
+                if (block.EndsWith("/", StringComparison.Ordinal))
+                {
+                    block = block.Substring(0, block.Length - 1).Trim();
+                }
+
+                if (string.IsNullOrWhiteSpace(block) 
+                    || block.StartsWith("SET DEFINE", StringComparison.OrdinalIgnoreCase) 
+                    || block.StartsWith("SET SERVEROUTPUT", StringComparison.OrdinalIgnoreCase))
+                    continue;
+
+                var trimmedUpper = block.TrimStart().ToUpperInvariant();
+                if (trimmedUpper.StartsWith("BEGIN") || trimmedUpper.StartsWith("DECLARE"))
+                {
+                    try
+                    {
+                        await ExecuteRawAsync(conn, block);
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogWarning(ex, "Notice during PL/SQL execution in {ScriptFileName}: {Stmt}", scriptFileName, block.Length > 200 ? block.Substring(0, 200) + "..." : block);
+                    }
+                }
+                else
+                {
+                    // Standard SQL statements - split by semicolon if multiple
+                    var subStatements = block.Split(';', StringSplitOptions.RemoveEmptyEntries)
+                        .Select(s => s.Trim())
+                        .Where(s => !string.IsNullOrWhiteSpace(s)
+                                 && !s.StartsWith("--", StringComparison.Ordinal)
+                                 && !s.Equals("COMMIT", StringComparison.OrdinalIgnoreCase));
+
+                    foreach (var sql in subStatements)
+                    {
+                        if (sql.StartsWith("--", StringComparison.Ordinal))
+                            continue;
+
+                        try
+                        {
+                            await ExecuteRawAsync(conn, sql);
+                        }
+                        catch (Exception ex)
+                        {
+                            _logger.LogWarning(ex, "Notice during SQL statement execution in {ScriptFileName}: {Stmt}", scriptFileName, sql.Length > 200 ? sql.Substring(0, 200) + "..." : sql);
+                        }
+                    }
+                }
             }
         }
 

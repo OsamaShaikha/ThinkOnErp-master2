@@ -277,16 +277,16 @@ public class ExternalStorageProviderTests
     #region AzureCLOBStorageProvider Tests
 
     [Fact]
-    public void AzureCLOBStorageProvider_Constructor_ShouldThrowWhenConnectionStringMissingContainerName()
+    public void AzureBlobStorageProvider_Constructor_ShouldThrowWhenConnectionStringMissingContainerName()
     {
         // Arrange
-        var mockCLOBServiceClient = new Mock<CLOBServiceClient>();
-        var mockLogger = new Mock<ILogger<AzureCLOBStorageProvider>>();
+        var mockBlobServiceClient = new Mock<BlobServiceClient>();
+        var mockLogger = new Mock<ILogger<AzureBlobStorageProvider>>();
         var connectionString = "AccountName=test;AccountKey=key"; // Missing ContainerName
 
         // Act & Assert
         Assert.Throws<ArgumentException>(() =>
-            new AzureCLOBStorageProvider(mockCLOBServiceClient.Object, mockLogger.Object, connectionString));
+            new AzureBlobStorageProvider(mockBlobServiceClient.Object, mockLogger.Object, connectionString));
     }
 
     [Fact]
