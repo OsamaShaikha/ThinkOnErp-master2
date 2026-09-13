@@ -1,4 +1,4 @@
-﻿using ThinkOnErp.Application.DTOs.Inventory.StockMovements;
+using ThinkOnErp.Application.DTOs.Inventory.StockMovements;
 using ThinkOnErp.Domain.Entities.Inventory;
 
 namespace ThinkOnErp.Application.Mappings.Inventory;
@@ -44,6 +44,7 @@ public static class InvStockMapper
             ItemName = entity.Item?.ItemNameLocal ?? string.Empty,
             WarehouseId = entity.WarehouseId,
             WarehouseCode = entity.Warehouse?.WarehouseCode ?? 0,
+            BinId = entity.BinId,
             OnHandQty = entity.OnHandQty,
             ReservedQty = entity.ReservedQty,
             AvailableQty = entity.OnHandQty - entity.ReservedQty,

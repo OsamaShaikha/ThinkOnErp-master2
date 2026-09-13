@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 
 namespace ThinkOnErp.Application.DTOs.Inventory.ItemGroups;
@@ -23,6 +23,7 @@ public sealed class CreateMainGroupDto
     public string? GlCogsAccount { get; set; }
     public string? GlRevenueAccount { get; set; }
     public string? GlAdjustmentAccount { get; set; }
+    public bool ShowInPos { get; set; } = true;
 }
 
 public sealed class UpdateMainGroupDto
@@ -38,6 +39,7 @@ public sealed class UpdateMainGroupDto
     public string? GlCogsAccount { get; set; }
     public string? GlRevenueAccount { get; set; }
     public string? GlAdjustmentAccount { get; set; }
+    public bool ShowInPos { get; set; } = true;
     public bool IsActive { get; set; } = true;
 }
 
@@ -53,6 +55,7 @@ public sealed class InvMainGroupDto
     public string? GlCogsAccount { get; set; }
     public string? GlRevenueAccount { get; set; }
     public string? GlAdjustmentAccount { get; set; }
+    public bool ShowInPos { get; set; } = true;
     public bool IsActive { get; set; }
     public int SubGroupsCount { get; set; }
     public int ItemsCount { get; set; }
@@ -84,6 +87,7 @@ public sealed class CreateSubGroupDto
     public string? GlCogsAccount { get; set; }
     public string? GlRevenueAccount { get; set; }
     public string? GlAdjustmentAccount { get; set; }
+    public bool ShowInPos { get; set; } = true;
 }
 
 public sealed class UpdateSubGroupDto
@@ -101,6 +105,7 @@ public sealed class UpdateSubGroupDto
     public string? GlCogsAccount { get; set; }
     public string? GlRevenueAccount { get; set; }
     public string? GlAdjustmentAccount { get; set; }
+    public bool ShowInPos { get; set; } = true;
     public bool IsActive { get; set; } = true;
 }
 
@@ -119,8 +124,33 @@ public sealed class InvSubGroupDto
     public string? GlCogsAccount { get; set; }
     public string? GlRevenueAccount { get; set; }
     public string? GlAdjustmentAccount { get; set; }
+    public bool ShowInPos { get; set; } = true;
     public bool IsActive { get; set; }
     public int ItemsCount { get; set; }
+}
+
+#endregion
+
+#region Tree Hierarchy DTOs
+
+public sealed class InvGroupTreeNodeDto
+{
+    public long Id { get; set; }
+    public long? BranchId { get; set; }
+    public long? ParentGroupId { get; set; }
+    public long GroupCode { get; set; }
+    public string GroupNameLocal { get; set; } = string.Empty;
+    public string? GroupNameEn { get; set; }
+    public int GroupLevel { get; set; }
+    public string? GlControlAccount { get; set; }
+    public string? GlCogsAccount { get; set; }
+    public string? GlRevenueAccount { get; set; }
+    public string? GlAdjustmentAccount { get; set; }
+    public bool ShowInPos { get; set; } = true;
+    public bool IsActive { get; set; } = true;
+    public int DirectChildrenCount => Children.Count;
+    public int ItemsCount { get; set; }
+    public List<InvGroupTreeNodeDto> Children { get; set; } = new();
 }
 
 #endregion

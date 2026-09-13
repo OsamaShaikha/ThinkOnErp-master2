@@ -1,5 +1,6 @@
 using MediatR;
 using Microsoft.Extensions.Logging;
+using ThinkOnErp.Domain.Exceptions;
 using ThinkOnErp.Domain.Interfaces;
 
 namespace ThinkOnErp.Application.Features.Tickets.Commands.DownloadAttachment;
@@ -35,20 +36,14 @@ public class DownloadAttachmentCommandHandler : IRequestHandler<DownloadAttachme
             var ticket = await _ticketRepository.GetByIdAsync(request.TicketId);
             if (ticket == null)
             {
-                throw new ArgumentException($"Ticket with ID {request.TicketId} not found.");
+                throw new TicketNotFoundException(request.TicketId);
             }
 
             // Get the attachment
             var attachment = await _attachmentRepository.GetByIdAsync(request.AttachmentId);
-            if (attachment == null)
+            if (attachment == null || attachment.TicketId != request.TicketId)
             {
-                throw new ArgumentException($"Attachment with ID {request.AttachmentId} not found.");
-            }
-
-            // Verify the attachment belongs to the specified ticket
-            if (attachment.TicketId != request.TicketId)
-            {
-                throw new ArgumentException($"Attachment {request.AttachmentId} does not belong to ticket {request.TicketId}.");
+                return null;
             }
 
             // Additional security validation could be added here

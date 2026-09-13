@@ -173,6 +173,109 @@ public sealed class InvItemGroupsController : ControllerBase
 
     #endregion
 
+    #region Multi-Level Tree & POS Hierarchy
+
+    /// <summary>
+    /// إضافة مجموعة أصناف جديدة على أي مستوى في الشجرة (Unified Group Creation)
+    /// </summary>
+    /// <remarks>
+    /// إذا تم ترك ParentGroupId فارغاً، تُنشأ المجموعة كمجموعة رئيسية (Level 1).
+    /// إذا تم تمرير ParentGroupId، تُنشأ كمجموعة فرعية تابعة للأب المحدد (Level = Parent.Level + 1).
+    /// </remarks>
+    [HttpPost]
+    [ProducesResponseType(typeof(ApiResponse<InvItemGroupDto>), StatusCodes.Status201Created)]
+    [ProducesResponseType(typeof(ApiResponse<InvItemGroupDto>), StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> CreateGroup([FromBody] CreateInvItemGroupDto dto, CancellationToken ct)
+    {
+        var username = User.FindFirstValue(ClaimTypes.Name) ?? "SYSTEM";
+        var result = await _groupService.CreateGroupAsync(dto, username, ct);
+        return StatusCode(result.StatusCode, result);
+    }
+
+    /// <summary>
+    /// استرجاع شجرة مجموعات الأصناف الكاملة المتداخلة (Full Hierarchical Tree View)
+    /// </summary>
+    /// <param name="branchId">فلترة حسب الفرع (اختياري)</param>
+    /// <param name="posOnly">تحديد ما إذا كان المطلوب فقط المجموعات المعلمة بنقاط البيع (ShowInPos = true)</param>
+    /// <param name="ct">Cancellation token</param>
+    /// <returns>شجرة متداخلة تحتوي على كل مجموعة وبداخلها قائمة Children الخاصة بها</returns>
+    [HttpGet("tree")]
+    [ProducesResponseType(typeof(ApiResponse<List<InvGroupTreeNodeDto>>), StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetTree(
+        [FromQuery] long? branchId,
+        [FromQuery] bool? posOnly,
+        CancellationToken ct)
+    {
+        var result = await _groupService.GetTreeAsync(branchId, posOnly, ct);
+        return StatusCode(result.StatusCode, result);
+    }
+
+    /// <summary>
+    /// استرجاع مجموعات نقاط البيع فقط (POS Groups Hierarchy)
+    /// </summary>
+    /// <remarks>
+    /// نقطة نهاية مخصصة ومحسنة لأنظمة الكاشير ونقاط البيع لاسترجاع المجموعات المسموح بعرضها في الـ POS فقط.
+    /// </remarks>
+    [HttpGet("pos")]
+    [ProducesResponseType(typeof(ApiResponse<List<InvGroupTreeNodeDto>>), StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetPosGroups([FromQuery] long? branchId, CancellationToken ct)
+    {
+        var result = await _groupService.GetPosGroupsAsync(branchId, ct);
+        return StatusCode(result.StatusCode, result);
+    }
+
+    /// <summary>
+    /// استرجاع تفاصيل مجموعة محددة بواسطة المعرف
+    /// </summary>
+    [HttpGet("{id:long}")]
+    [ProducesResponseType(typeof(ApiResponse<InvItemGroupDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<InvItemGroupDto>), StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> GetGroupById([FromRoute] long id, CancellationToken ct)
+    {
+        var result = await _groupService.GetByIdAsync(id, ct);
+        return StatusCode(result.StatusCode, result);
+    }
+
+    /// <summary>
+    /// استرجاع المجموعات الفرعية المباشرة لمجموعة محددة (Direct Children)
+    /// </summary>
+    [HttpGet("{id:long}/children")]
+    [ProducesResponseType(typeof(ApiResponse<List<InvGroupTreeNodeDto>>), StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetChildren([FromRoute] long id, CancellationToken ct)
+    {
+        var result = await _groupService.GetChildrenAsync(id, ct);
+        return StatusCode(result.StatusCode, result);
+    }
+
+    /// <summary>
+    /// تعديل بيانات مجموعة أو نقلها لأب آخر في الشجرة (مع حماية العلاقات الدائرية)
+    /// </summary>
+    [HttpPut("{id:long}")]
+    [ProducesResponseType(typeof(ApiResponse<InvItemGroupDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<InvItemGroupDto>), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ApiResponse<InvItemGroupDto>), StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> UpdateGroup([FromRoute] long id, [FromBody] UpdateInvItemGroupDto dto, CancellationToken ct)
+    {
+        var username = User.FindFirstValue(ClaimTypes.Name) ?? "SYSTEM";
+        var result = await _groupService.UpdateGroupAsync(id, dto, username, ct);
+        return StatusCode(result.StatusCode, result);
+    }
+
+    /// <summary>
+    /// حذف مجموعة أصناف (محمي ضد الحذف إذا كان يتبعها مجموعات فرعية أو أصناف)
+    /// </summary>
+    [HttpDelete("{id:long}")]
+    [ProducesResponseType(typeof(ApiResponse<bool>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<bool>), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ApiResponse<bool>), StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> DeleteGroup([FromRoute] long id, CancellationToken ct)
+    {
+        var result = await _groupService.DeleteGroupAsync(id, ct);
+        return StatusCode(result.StatusCode, result);
+    }
+
+    #endregion
+
     #region Hierarchy & Paginated View
 
     /// <summary>

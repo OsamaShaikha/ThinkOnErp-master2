@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using ThinkOnErp.Domain.Entities.Inventory;
 
@@ -22,6 +22,7 @@ public sealed class InvItemGroupConfiguration : IEntityTypeConfiguration<InvItem
         builder.Property(g => g.GlCogsAccount).HasColumnName("GL_COGS_ACCOUNT").HasMaxLength(50);
         builder.Property(g => g.GlRevenueAccount).HasColumnName("GL_REVENUE_ACCOUNT").HasMaxLength(50);
         builder.Property(g => g.GlAdjustmentAccount).HasColumnName("GL_ADJUSTMENT_ACCOUNT").HasMaxLength(50);
+        builder.Property(g => g.ShowInPos).HasColumnName("IS_SHOW_IN_POS").HasColumnType("NUMBER(1)").HasDefaultValue(true);
         builder.Property(g => g.IsActive).HasColumnName("IS_ACTIVE").HasColumnType("NUMBER(1)").HasDefaultValue(true);
         builder.Property(g => g.CreationUser).HasColumnName("CREATION_USER").HasMaxLength(100).IsRequired();
         builder.Property(g => g.CreationDate).HasColumnName("CREATION_DATE").HasColumnType("TIMESTAMP");

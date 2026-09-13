@@ -363,22 +363,34 @@ public class ComplianceReporter : IComplianceReporter
             }
 
             // Query all actions performed by the user within the date range
-            var auditEntries = await _auditQueryService.GetByActorAsync(
-                userId, 
-                startDate, 
-                endDate, 
-                cancellationToken);
+            var auditEntries = await _dbContext.SysAuditLogs
+                .AsNoTracking()
+                .Where(a => a.ActorId == userId
+                         && a.CreationDate >= startDate
+                         && a.CreationDate <= endDate)
+                .OrderBy(a => a.CreationDate)
+                .Take(500)
+                .Select(entry => new
+                {
+                    entry.CreationDate,
+                    entry.Action,
+                    entry.EntityType,
+                    entry.EntityId,
+                    entry.ExceptionType,
+                    entry.IpAddress,
+                    entry.CorrelationId
+                })
+                .ToListAsync(cancellationToken);
 
             // Convert audit entries to user activity actions (chronological order)
             var actions = auditEntries
-                .OrderBy(e => e.CreationDate)
                 .Select(entry => new UserActivityAction
                 {
                     PerformedAt = entry.CreationDate,
-                    Action = entry.Action,
-                    EntityType = entry.EntityType,
+                    Action = entry.Action ?? "Unknown",
+                    EntityType = entry.EntityType ?? "Unknown",
                     EntityId = entry.EntityId,
-                    Description = GenerateActionDescription(entry),
+                    Description = GenerateActionDescription(entry.Action, entry.EntityType, entry.EntityId, entry.ExceptionType),
                     IpAddress = entry.IpAddress,
                     CorrelationId = entry.CorrelationId
                 })
@@ -415,29 +427,29 @@ public class ComplianceReporter : IComplianceReporter
     /// <summary>
     /// Generate a human-readable description for an audit log entry action.
     /// </summary>
-    private string GenerateActionDescription(AuditLogEntry entry)
+    private string GenerateActionDescription(string? action, string? entityType, long? entityId, string? exceptionType)
     {
-        var action = entry.Action.ToUpperInvariant();
-        var entityType = entry.EntityType;
-        var entityId = entry.EntityId?.ToString() ?? "unknown";
+        var act = (action ?? "UNKNOWN").ToUpperInvariant();
+        var entType = entityType ?? "Unknown";
+        var entId = entityId?.ToString() ?? "unknown";
 
-        return action switch
+        return act switch
         {
-            "INSERT" => $"Created {entityType} (ID: {entityId})",
-            "UPDATE" => $"Updated {entityType} (ID: {entityId})",
-            "DELETE" => $"Deleted {entityType} (ID: {entityId})",
+            "INSERT" => $"Created {entType} (ID: {entId})",
+            "UPDATE" => $"Updated {entType} (ID: {entId})",
+            "DELETE" => $"Deleted {entType} (ID: {entId})",
             "LOGIN" => "Logged in to the system",
             "LOGOUT" => "Logged out from the system",
             "TOKEN_REFRESH" => "Refreshed authentication token",
             "TOKEN_REVOKE" => "Revoked authentication token",
-            "PERMISSION_GRANT" => $"Granted permission for {entityType}",
-            "PERMISSION_REVOKE" => $"Revoked permission for {entityType}",
-            "ROLE_ASSIGN" => $"Assigned role to {entityType}",
-            "ROLE_REVOKE" => $"Revoked role from {entityType}",
-            "EXCEPTION" when !string.IsNullOrEmpty(entry.ExceptionType) => 
-                $"Error occurred: {entry.ExceptionType}",
-            "CONFIGURATION_CHANGE" => $"Changed configuration: {entityType}",
-            _ => $"{action} on {entityType}" + (entry.EntityId.HasValue ? $" (ID: {entityId})" : "")
+            "PERMISSION_GRANT" => $"Granted permission for {entType}",
+            "PERMISSION_REVOKE" => $"Revoked permission for {entType}",
+            "ROLE_ASSIGN" => $"Assigned role to {entType}",
+            "ROLE_REVOKE" => $"Revoked role from {entType}",
+            "EXCEPTION" when !string.IsNullOrEmpty(exceptionType) => 
+                $"Error occurred: {exceptionType}",
+            "CONFIGURATION_CHANGE" => $"Changed configuration: {entType}",
+            _ => $"{act} on {entType}" + (entityId.HasValue ? $" (ID: {entId})" : "")
         };
     }
 
@@ -1155,54 +1167,41 @@ public class ComplianceReporter : IComplianceReporter
 
         try
         {
-            var query = from al in _dbContext.SysAuditLogs
-                        join u in _dbContext.SysUsers on al.ActorId equals u.Id into userJoin
+            var query = from al in _dbContext.SysAuditLogs.AsNoTracking()
+                        join u in _dbContext.SysUsers.AsNoTracking() on al.ActorId equals u.Id into userJoin
                         from u in userJoin.DefaultIfEmpty()
                         where al.CreationDate >= startDate
                            && al.CreationDate <= endDate
                            && (al.ActorId == dataSubjectId
                                || (al.EntityType == "SysUser" && al.EntityId == dataSubjectId))
                         orderby al.CreationDate ascending
-                        select new { al, ActorName = u != null ? u.UserName : null };
+                        select new
+                        {
+                            al.CreationDate,
+                            al.ActorId,
+                            ActorName = u != null ? u.UserName : "Unknown",
+                            EntityType = al.EntityType ?? "Unknown",
+                            al.EntityId,
+                            Action = al.Action ?? "Unknown",
+                            al.IpAddress,
+                            al.CorrelationId
+                        };
 
-            var results = await query.ToListAsync(cancellationToken);
+            var results = await query.Take(1000).ToListAsync(cancellationToken);
 
             foreach (var item in results)
             {
                 var accessEvent = new DataAccessEvent
                 {
-                    AccessedAt = item.al.CreationDate,
-                    ActorId = item.al.ActorId,
-                    ActorName = item.ActorName ?? "Unknown",
-                    EntityType = item.al.EntityType ?? "Unknown",
-                    EntityId = item.al.EntityId,
-                    Action = item.al.Action ?? "Unknown",
-                    IpAddress = item.al.IpAddress,
-                    CorrelationId = item.al.CorrelationId
+                    AccessedAt = item.CreationDate,
+                    ActorId = item.ActorId,
+                    ActorName = item.ActorName,
+                    EntityType = item.EntityType,
+                    EntityId = item.EntityId,
+                    Action = item.Action,
+                    IpAddress = item.IpAddress,
+                    CorrelationId = item.CorrelationId
                 };
-
-                if (item.al.Metadata != null)
-                {
-                    try
-                    {
-                        var metadata = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(item.al.Metadata);
-
-                        if (metadata != null)
-                        {
-                            if (metadata.ContainsKey("purpose"))
-                            {
-                                accessEvent.Purpose = metadata["purpose"].GetString();
-                            }
-                            if (metadata.ContainsKey("legalBasis"))
-                            {
-                                accessEvent.LegalBasis = metadata["legalBasis"].GetString();
-                            }
-                        }
-                    }
-                    catch (JsonException)
-                    {
-                    }
-                }
 
                 accessEvents.Add(accessEvent);
             }
@@ -1297,8 +1296,31 @@ public class ComplianceReporter : IComplianceReporter
         try
         {
             var auditLogs = await _dbContext.SysAuditLogs
+                .AsNoTracking()
                 .Where(a => a.ActorId == dataSubjectId)
                 .OrderByDescending(a => a.CreationDate)
+                .Take(200)
+                .Select(log => new
+                {
+                    log.Id,
+                    log.ActorType,
+                    log.ActorId,
+                    log.CompanyId,
+                    log.BranchId,
+                    log.Action,
+                    log.EntityType,
+                    log.EntityId,
+                    log.IpAddress,
+                    log.UserAgent,
+                    log.CorrelationId,
+                    log.HttpMethod,
+                    log.EndpointPath,
+                    log.StatusCode,
+                    log.ExecutionTimeMs,
+                    log.EventCategory,
+                    log.Severity,
+                    log.CreationDate
+                })
                 .ToListAsync(cancellationToken);
 
             var auditDataList = new List<string>();
@@ -1358,8 +1380,19 @@ public class ComplianceReporter : IComplianceReporter
         try
         {
             var authLogs = await _dbContext.SysAuditLogs
+                .AsNoTracking()
                 .Where(a => a.ActorId == dataSubjectId && a.EventCategory == "Authentication")
                 .OrderByDescending(a => a.CreationDate)
+                .Take(200)
+                .Select(log => new
+                {
+                    log.Id,
+                    log.Action,
+                    log.IpAddress,
+                    log.UserAgent,
+                    log.StatusCode,
+                    log.CreationDate
+                })
                 .ToListAsync(cancellationToken);
 
             var authDataList = new List<string>();
@@ -1375,21 +1408,6 @@ public class ComplianceReporter : IComplianceReporter
                     ["StatusCode"] = log.StatusCode,
                     ["CreationDate"] = log.CreationDate
                 };
-
-                if (log.Metadata != null)
-                {
-                    try
-                    {
-                        var metadata = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(log.Metadata);
-                        if (metadata != null)
-                        {
-                            authData["Metadata"] = metadata;
-                        }
-                    }
-                    catch (JsonException)
-                    {
-                    }
-                }
 
                 authDataList.Add(JsonSerializer.Serialize(authData, new JsonSerializerOptions
                 {
@@ -1424,10 +1442,10 @@ public class ComplianceReporter : IComplianceReporter
 
         try
         {
-            var query = from al in _dbContext.SysAuditLogs
-                        join u in _dbContext.SysUsers on al.ActorId equals u.Id into userJoin
+            var query = from al in _dbContext.SysAuditLogs.AsNoTracking()
+                        join u in _dbContext.SysUsers.AsNoTracking() on al.ActorId equals u.Id into userJoin
                         from u in userJoin.DefaultIfEmpty()
-                        join r in _dbContext.SysRoles on u.RoleId equals r.Id into roleJoin
+                        join r in _dbContext.SysRoles.AsNoTracking() on u.RoleId equals r.Id into roleJoin
                         from r in roleJoin.DefaultIfEmpty()
                         where al.CreationDate >= startDate
                            && al.CreationDate <= endDate
@@ -1445,43 +1463,36 @@ public class ComplianceReporter : IComplianceReporter
                                || al.EntityType.ToUpper().Contains("LIABILITY")
                                || _dbContext.SysSystems.Any(s => s.Id == al.SystemId && (s.SystemCode == "accounting" || s.SystemCode == "finance")))
                         orderby al.CreationDate ascending
-                        select new { al, u, r };
+                        select new
+                        {
+                            AccessedAt = al.CreationDate,
+                            ActorId = al.ActorId,
+                            ActorName = u != null ? u.UserName : "Unknown",
+                            ActorRole = r != null ? r.RoleNameEn : null,
+                            EntityType = al.EntityType ?? "Unknown",
+                            EntityId = al.EntityId,
+                            Action = al.Action ?? "Unknown",
+                            IpAddress = al.IpAddress,
+                            CorrelationId = al.CorrelationId
+                        };
 
-            var results = await query.ToListAsync(cancellationToken);
+            var results = await query.Take(1000).ToListAsync(cancellationToken);
 
             foreach (var item in results)
             {
-                var accessedAt = item.al.CreationDate;
-
                 var financialEvent = new FinancialAccessEvent
                 {
-                    AccessedAt = accessedAt,
-                    ActorId = item.al.ActorId,
-                    ActorName = item.u?.UserName ?? "Unknown",
-                    ActorRole = item.r?.RoleNameEn,
-                    EntityType = item.al.EntityType ?? "Unknown",
-                    EntityId = item.al.EntityId,
-                    Action = item.al.Action ?? "Unknown",
-                    IpAddress = item.al.IpAddress,
-                    CorrelationId = item.al.CorrelationId,
-                    OutOfHours = IsOutOfHours(accessedAt)
+                    AccessedAt = item.AccessedAt,
+                    ActorId = item.ActorId,
+                    ActorName = item.ActorName,
+                    ActorRole = item.ActorRole,
+                    EntityType = item.EntityType,
+                    EntityId = item.EntityId,
+                    Action = item.Action,
+                    IpAddress = item.IpAddress,
+                    CorrelationId = item.CorrelationId,
+                    OutOfHours = IsOutOfHours(item.AccessedAt)
                 };
-
-                if (item.al.Metadata != null)
-                {
-                    try
-                    {
-                        var metadata = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(item.al.Metadata);
-
-                        if (metadata != null && metadata.ContainsKey("businessJustification"))
-                        {
-                            financialEvent.BusinessJustification = metadata["businessJustification"].GetString();
-                        }
-                    }
-                    catch (JsonException)
-                    {
-                    }
-                }
 
                 financialAccessEvents.Add(financialEvent);
             }
@@ -1900,8 +1911,8 @@ public class ComplianceReporter : IComplianceReporter
 
         try
         {
-            var query = from al in _dbContext.SysAuditLogs
-                        join u in _dbContext.SysUsers on al.ActorId equals u.Id into userJoin
+            var query = from al in _dbContext.SysAuditLogs.AsNoTracking()
+                        join u in _dbContext.SysUsers.AsNoTracking() on al.ActorId equals u.Id into userJoin
                         from u in userJoin.DefaultIfEmpty()
                         where al.CreationDate >= startDate
                            && al.CreationDate <= endDate
@@ -1912,38 +1923,44 @@ public class ComplianceReporter : IComplianceReporter
                                || al.Severity == "Error"
                                || al.Severity == "Warning")
                         orderby al.CreationDate descending
-                        select new { al, u };
+                        select new
+                        {
+                            OccurredAt = al.CreationDate,
+                            EventCategory = al.EventCategory ?? "Unknown",
+                            Severity = al.Severity ?? "Info",
+                            Action = al.Action ?? "Unknown",
+                            ExceptionType = al.ExceptionType,
+                            ExceptionMessage = al.ExceptionMessage,
+                            BusinessDescription = al.BusinessDescription,
+                            UserId = al.ActorId,
+                            UserName = u != null ? u.UserName : null,
+                            IpAddress = al.IpAddress,
+                            CorrelationId = al.CorrelationId
+                        };
 
-            var results = await query.ToListAsync(cancellationToken);
+            var results = await query.Take(1000).ToListAsync(cancellationToken);
 
             foreach (var item in results)
             {
-                var eventCategory = item.al.EventCategory ?? "Unknown";
-                var severity = item.al.Severity ?? "Info";
-                var action = item.al.Action ?? "Unknown";
-                var exceptionType = item.al.ExceptionType;
-                var exceptionMessage = item.al.ExceptionMessage;
-                var businessDescription = item.al.BusinessDescription;
-
-                var eventType = DetermineSecurityEventType(eventCategory, action, exceptionType);
+                var eventType = DetermineSecurityEventType(item.EventCategory, item.Action, item.ExceptionType);
 
                 var description = GenerateSecurityEventDescription(
-                    eventCategory,
-                    action,
-                    exceptionType,
-                    exceptionMessage,
-                    businessDescription);
+                    item.EventCategory,
+                    item.Action,
+                    item.ExceptionType,
+                    item.ExceptionMessage,
+                    item.BusinessDescription);
 
                 var securityEvent = new SecurityEvent
                 {
-                    OccurredAt = item.al.CreationDate,
+                    OccurredAt = item.OccurredAt,
                     EventType = eventType,
-                    Severity = severity,
+                    Severity = item.Severity,
                     Description = description,
-                    UserId = item.al.ActorId,
-                    UserName = item.u?.UserName,
-                    IpAddress = item.al.IpAddress,
-                    CorrelationId = item.al.CorrelationId
+                    UserId = item.UserId,
+                    UserName = item.UserName,
+                    IpAddress = item.IpAddress,
+                    CorrelationId = item.CorrelationId
                 };
 
                 securityEvents.Add(securityEvent);

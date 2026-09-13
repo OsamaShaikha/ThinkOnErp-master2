@@ -17,6 +17,8 @@ using ThinkOnErp.Infrastructure.Services.Accounting;
 using ThinkOnErp.Application.Services.Accounting;
 using ThinkOnErp.Domain.Interfaces.Inventory;
 using ThinkOnErp.Infrastructure.Repositories.Inventory;
+using ThinkOnErp.Domain.Interfaces.Pos;
+using ThinkOnErp.Infrastructure.Repositories.Pos;
 
 
 namespace ThinkOnErp.Infrastructure;
@@ -181,6 +183,7 @@ public static class DependencyInjection
         services.AddScoped<IPdcRepository, PdcRepository>();
         services.AddScoped<IPostingRuleRepository, PostingRuleRepository>();
         services.AddScoped<IBankingRepository, BankingRepository>();
+        services.AddScoped<IPaymentMethodRepository, PaymentMethodRepository>();
         services.AddScoped<ITaxRepository, TaxRepository>();
 
         // Register inventory repositories
@@ -198,6 +201,20 @@ public static class DependencyInjection
         services.AddScoped<IInvItemGroupRepository, InvItemGroupRepository>();
         services.AddScoped<IInvBomRepository, InvBomRepository>();
         services.AddScoped<ITranslationRepository, TranslationRepository>();
+
+        // Register POS repositories
+        services.AddScoped<IPosTillRepository, PosTillRepository>();
+        services.AddScoped<IPosShiftRepository, PosShiftRepository>();
+        services.AddScoped<IPosOrderRepository, PosOrderRepository>();
+        services.AddScoped<IPosPromotionRepository, PosPromotionRepository>();
+        services.AddScoped<IPosPriceListRepository, PosPriceListRepository>();
+        services.AddScoped<IPosPrintTemplateRepository, PosPrintTemplateRepository>();
+        services.AddScoped<IPosTableRepository, PosTableRepository>();
+        services.AddScoped<IPosReservationRepository, PosReservationRepository>();
+        services.AddScoped<IPosZReportRepository, PosZReportRepository>();
+        services.AddScoped<IPosGiftCardRepository, PosGiftCardRepository>();
+        services.AddScoped<IPosBatchPrepRepository, PosBatchPrepRepository>();
+        services.AddScoped<IPosStaffAttendanceRepository, PosStaffAttendanceRepository>();
 
         // Register audit logging services
         services.AddScoped<IAuditRepository, AuditRepository>();

@@ -1,4 +1,4 @@
-﻿using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using ThinkOnErp.Domain.Entities;
 using ThinkOnErp.Domain.Interfaces;
@@ -304,7 +304,10 @@ public class TicketNotificationService : ITicketNotificationService
 
     private bool IsNotificationEnabled()
     {
-        return _configuration.GetValue<bool>(NotificationEnabledKey, true);
+        var enabled = _configuration.GetValue<bool>(NotificationEnabledKey, false);
+        if (!enabled) return false;
+        var smtpServer = _configuration.GetValue<string>(SmtpServerKey);
+        return !string.IsNullOrEmpty(smtpServer);
     }
 
     private async Task<List<SysUser>> GetTicketNotificationRecipientsAsync(SysRequestTicket ticket)

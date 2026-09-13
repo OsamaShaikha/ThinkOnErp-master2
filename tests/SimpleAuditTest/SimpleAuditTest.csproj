@@ -9,6 +9,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\ThinkOnErp.Domain\ThinkOnErp.Domain.csproj" />
+    <ProjectReference Include="..\..\src\ThinkOnErp.Infrastructure\ThinkOnErp.Infrastructure.csproj" />
   </ItemGroup>
 
   <ItemGroup>

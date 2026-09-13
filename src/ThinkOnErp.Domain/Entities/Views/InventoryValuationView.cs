@@ -11,6 +11,7 @@ public sealed class InventoryValuationView
     public long WarehouseId { get; set; }
     public long WarehouseCode { get; set; }
     public string WarehouseNameLocal { get; set; } = string.Empty;
+    public long? BinId { get; set; }
     public long ItemId { get; set; }
     public string ItemCode { get; set; } = string.Empty;
     public string ItemNameLocal { get; set; } = string.Empty;

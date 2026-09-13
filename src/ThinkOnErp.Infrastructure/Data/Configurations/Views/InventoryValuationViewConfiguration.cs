@@ -16,6 +16,7 @@ public sealed class InventoryValuationViewConfiguration : IEntityTypeConfigurati
         builder.Property(e => e.WarehouseId).HasColumnName("WAREHOUSE_ID");
         builder.Property(e => e.WarehouseCode).HasColumnName("WAREHOUSE_CODE");
         builder.Property(e => e.WarehouseNameLocal).HasColumnName("WAREHOUSE_NAME_LOCAL").HasMaxLength(200);
+        builder.Property(e => e.BinId).HasColumnName("BIN_ID");
         builder.Property(e => e.ItemId).HasColumnName("ITEM_ID");
         builder.Property(e => e.ItemCode).HasColumnName("ITEM_CODE").HasMaxLength(50);
         builder.Property(e => e.ItemNameLocal).HasColumnName("ITEM_NAME_LOCAL").HasMaxLength(200);

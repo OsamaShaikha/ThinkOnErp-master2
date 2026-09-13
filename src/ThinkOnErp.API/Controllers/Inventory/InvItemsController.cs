@@ -57,8 +57,14 @@ public class InvItemsController : ControllerBase
     /// <returns>Paginated items list.</returns>
     [HttpGet]
     [ProducesResponseType(typeof(ApiResponse<List<InvItemListDto>>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<List<InvItemListDto>>), StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> GetItems([FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 10, CancellationToken cancellationToken = default)
     {
+        if (pageNumber <= 0 || pageSize <= 0)
+        {
+            return BadRequest(ApiResponse<List<InvItemListDto>>.CreateFailure("Invalid pagination parameters. pageNumber and pageSize must be greater than zero.", statusCode: 400));
+        }
+
         var response = await _itemService.GetAllAsync(pageNumber, pageSize, cancellationToken);
         if (response.Success)
             response.Message = ResponseCodes.ItemsRetrieved;

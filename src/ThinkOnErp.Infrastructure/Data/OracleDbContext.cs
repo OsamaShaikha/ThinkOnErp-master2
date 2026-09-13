@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore;
 using ThinkOnErp.Domain.Entities;
 using ThinkOnErp.Domain.Entities.Accounting;
 using ThinkOnErp.Domain.Entities.Inventory;
+using ThinkOnErp.Domain.Entities.Pos;
 using ThinkOnErp.Domain.Entities.Views;
 using ThinkOnErp.Infrastructure.Data.Configurations.Accounting;
 
@@ -115,6 +116,7 @@ public class OracleDbContext : DbContext
     public DbSet<CashRegister> CashRegisters => Set<CashRegister>();
     public DbSet<BankReconciliation> BankReconciliations => Set<BankReconciliation>();
     public DbSet<BankStatementLine> BankStatementLines => Set<BankStatementLine>();
+    public DbSet<PaymentMethod> PaymentMethods => Set<PaymentMethod>();
 
     // Opening balance staging (dedicated OB table)
     public DbSet<GlOpeningBalanceHeader> GlOpeningBalanceHeaders => Set<GlOpeningBalanceHeader>();
@@ -152,6 +154,33 @@ public class OracleDbContext : DbContext
     public DbSet<InvCountLine> InvCountLines => Set<InvCountLine>();
     public DbSet<InvOpeningBatch> InvOpeningBatches => Set<InvOpeningBatch>();
     public DbSet<InvOpeningLine> InvOpeningLines => Set<InvOpeningLine>();
+
+    // Point of Sale (POS) Module Engine
+    public DbSet<PosTill> PosTills => Set<PosTill>();
+    public DbSet<PosShift> PosShifts => Set<PosShift>();
+    public DbSet<PosShiftCashMovement> PosShiftCashMovements => Set<PosShiftCashMovement>();
+    public DbSet<PosOrderHeader> PosOrderHeaders => Set<PosOrderHeader>();
+    public DbSet<PosOrderLine> PosOrderLines => Set<PosOrderLine>();
+    public DbSet<PosOrderLineModifier> PosOrderLineModifiers => Set<PosOrderLineModifier>();
+    public DbSet<PosOrderPayment> PosOrderPayments => Set<PosOrderPayment>();
+    public DbSet<PosOrderTax> PosOrderTaxes => Set<PosOrderTax>();
+    public DbSet<PosPromotion> PosPromotions => Set<PosPromotion>();
+    public DbSet<PosPromotionRule> PosPromotionRules => Set<PosPromotionRule>();
+    public DbSet<PosPriceList> PosPriceLists => Set<PosPriceList>();
+    public DbSet<PosPriceListItem> PosPriceListItems => Set<PosPriceListItem>();
+    public DbSet<PosFloor> PosFloors => Set<PosFloor>();
+    public DbSet<PosTable> PosTables => Set<PosTable>();
+    public DbSet<PosReservation> PosReservations => Set<PosReservation>();
+    public DbSet<PosBatchPrep> PosBatchPreps => Set<PosBatchPrep>();
+    public DbSet<PosBatchPrepLine> PosBatchPrepLines => Set<PosBatchPrepLine>();
+    public DbSet<PosZReport> PosZReports => Set<PosZReport>();
+    public DbSet<PosInventoryConflict> PosInventoryConflicts => Set<PosInventoryConflict>();
+    public DbSet<PosGiftCard> PosGiftCards => Set<PosGiftCard>();
+    public DbSet<PosGiftCardTransaction> PosGiftCardTransactions => Set<PosGiftCardTransaction>();
+    public DbSet<PosPrintTemplate> PosPrintTemplates => Set<PosPrintTemplate>();
+    public DbSet<PosPrinterRouting> PosPrinterRoutings => Set<PosPrinterRouting>();
+    public DbSet<PosStaffAttendance> PosStaffAttendances => Set<PosStaffAttendance>();
+    public DbSet<PosExternalOrder> PosExternalOrders => Set<PosExternalOrder>();
 
     // Universal Dynamic Translation
     public DbSet<SysEntityTranslation> EntityTranslations => Set<SysEntityTranslation>();

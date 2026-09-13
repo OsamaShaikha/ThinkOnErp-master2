@@ -132,4 +132,57 @@ public sealed class InvItemGroupRepository : IInvItemGroupRepository
         else
             return await _context.InvItems.CountAsync(i => i.SubGroupId == groupId && i.IsActive, ct);
     }
+
+    public async Task<int> GetGroupItemsCountAsync(long groupId, CancellationToken ct = default)
+    {
+        return await _context.InvItems.CountAsync(i => (i.MainGroupId == groupId || i.SubGroupId == groupId) && i.IsActive, ct);
+    }
+
+    public async Task<List<InvItemGroup>> GetAllActiveGroupsAsync(long? branchId = null, bool? posOnly = null, CancellationToken ct = default)
+    {
+        IQueryable<InvItemGroup> query = _context.InvItemGroups
+            .AsNoTracking()
+            .Where(g => g.IsActive);
+
+        if (branchId.HasValue)
+            query = query.Where(g => g.BranchId == branchId.Value || g.BranchId == null);
+
+        if (posOnly.HasValue && posOnly.Value)
+            query = query.Where(g => g.ShowInPos);
+
+        return await query.OrderBy(g => g.GroupLevel).ThenBy(g => g.GroupCode).ToListAsync(ct);
+    }
+
+    public async Task<List<InvItemGroup>> GetChildrenAsync(long parentGroupId, CancellationToken ct = default)
+    {
+        return await _context.InvItemGroups
+            .AsNoTracking()
+            .Where(g => g.ParentGroupId == parentGroupId && g.IsActive)
+            .OrderBy(g => g.GroupCode)
+            .ToListAsync(ct);
+    }
+
+    public async Task<bool> IsDescendantOfAsync(long potentialChildId, long ancestorId, CancellationToken ct = default)
+    {
+        if (potentialChildId == ancestorId) return true;
+
+        long? currentParentId = potentialChildId;
+        var visited = new HashSet<long>();
+
+        while (currentParentId.HasValue)
+        {
+            if (!visited.Add(currentParentId.Value)) break;
+            if (currentParentId.Value == ancestorId) return true;
+
+            var parent = await _context.InvItemGroups
+                .AsNoTracking()
+                .Where(g => g.Id == currentParentId.Value)
+                .Select(g => g.ParentGroupId)
+                .FirstOrDefaultAsync(ct);
+
+            currentParentId = parent;
+        }
+
+        return false;
+    }
 }

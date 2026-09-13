@@ -15,6 +15,7 @@ using OpenTelemetry.Metrics;
 using OpenTelemetry.Logs;
 using ThinkOnErp.API.Swagger;
 using ThinkOnErp.Domain.Interfaces;
+using ThinkOnErp.API.Hubs.Pos;
 
 // Configure Serilog before building the host
 Log.Logger = new LoggerConfiguration()
@@ -111,6 +112,19 @@ try
             ValidIssuer = jwtIssuer,
             ValidAudience = jwtAudience,
             IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSecretKey))
+        };
+        options.Events = new JwtBearerEvents
+        {
+            OnMessageReceived = context =>
+            {
+                var accessToken = context.Request.Query["access_token"];
+                var path = context.HttpContext.Request.Path;
+                if (!string.IsNullOrEmpty(accessToken) && path.StartsWithSegments("/hubs"))
+                {
+                    context.Token = accessToken;
+                }
+                return Task.CompletedTask;
+            }
         };
     });
 
@@ -284,6 +298,8 @@ try
         options.Filters.Add<ThinkOnErp.API.Filters.DynamicValidationActionFilter>();
         options.Filters.Add<ThinkOnErp.API.Filters.LocalizedApiResponseFilter>();
     });
+
+    builder.Services.AddSignalR();
     
     // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
     builder.Services.AddEndpointsApiExplorer();
@@ -428,6 +444,11 @@ Example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...'
     app.UseAuthorization();
 
     app.MapControllers();
+
+    // Map SignalR Hubs for POS real-time subsystems
+    app.MapHub<PosKdsHub>("/hubs/pos/kds");
+    app.MapHub<PosCfdHub>("/hubs/pos/cfd");
+    app.MapHub<PosTableStatusHub>("/hubs/pos/tables");
 
     // Auto-provision developer template schema on startup
     using (var scope = app.Services.CreateScope())

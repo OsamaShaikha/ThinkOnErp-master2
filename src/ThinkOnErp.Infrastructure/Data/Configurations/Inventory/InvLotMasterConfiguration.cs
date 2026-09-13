@@ -40,5 +40,9 @@ public sealed class InvLotMasterConfiguration : IEntityTypeConfiguration<InvLotM
             .HasMaxLength(50)
             .IsRequired();
 
+        builder.HasOne(e => e.Item)
+            .WithMany(i => i.Lots)
+            .HasForeignKey(e => e.ItemId)
+            .OnDelete(DeleteBehavior.Restrict);
     }
 }

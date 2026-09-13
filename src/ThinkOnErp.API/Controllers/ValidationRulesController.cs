@@ -15,7 +15,7 @@ namespace ThinkOnErp.API.Controllers;
 /// </summary>
 [ApiController]
 [Route("api/superadmin/validation-rules")]
-[Authorize]
+[Authorize(Policy = "SuperAdminOnly")]
 public class ValidationRulesController : ControllerBase
 {
     private readonly OracleDbContext _db;

@@ -40,6 +40,7 @@ public sealed class InvStockBalanceRepository : IInvStockBalanceRepository
     {
         return await _context.InvStockBalances
             .AsNoTracking()
+            .Include(b => b.Item)
             .Include(b => b.Warehouse)
             .Where(b => b.ItemId == itemId)
             .ToListAsync(cancellationToken);
@@ -50,6 +51,7 @@ public sealed class InvStockBalanceRepository : IInvStockBalanceRepository
         return await _context.InvStockBalances
             .AsNoTracking()
             .Include(b => b.Item)
+            .Include(b => b.Warehouse)
             .Where(b => b.WarehouseId == warehouseId)
             .ToListAsync(cancellationToken);
     }
@@ -102,6 +104,26 @@ public sealed class InvStockBalanceRepository : IInvStockBalanceRepository
         if (branchId.HasValue && branchId.Value > 0)
         {
             query = query.Where(v => v.BranchId == branchId.Value);
+        }
+
+        if (warehouseId.HasValue && warehouseId.Value > 0)
+        {
+            query = query.Where(v => v.WarehouseId == warehouseId.Value);
+        }
+
+        return await query
+            .OrderBy(v => v.WarehouseCode)
+            .ThenBy(v => v.ItemCode)
+            .ToListAsync(cancellationToken);
+    }
+
+    public async Task<IReadOnlyList<ThinkOnErp.Domain.Entities.Views.InventoryValuationView>> GetBalancesFromViewAsync(long? itemId, long? warehouseId, CancellationToken cancellationToken = default)
+    {
+        var query = _context.InventoryValuationViews.AsNoTracking();
+
+        if (itemId.HasValue && itemId.Value > 0)
+        {
+            query = query.Where(v => v.ItemId == itemId.Value);
         }
 
         if (warehouseId.HasValue && warehouseId.Value > 0)

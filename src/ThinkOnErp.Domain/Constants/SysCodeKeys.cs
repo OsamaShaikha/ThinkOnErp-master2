@@ -163,6 +163,21 @@ public static class SysCodeKeys
         public const int Other = 4;
     }
 
+    public static class PaymentMethods
+    {
+        public const int Mgr = 17;
+        public const int Cash = 1;
+        public const int Credit = 2;
+        public const int Card = 3;
+        public const int BankTransfer = 4;
+        public const int Cheque = 5;
+    }
+
+    public static class ItemColors
+    {
+        public const int Mgr = 32;
+    }
+
     public static class ValidationErrors
     {
         public const int Mgr = 30;

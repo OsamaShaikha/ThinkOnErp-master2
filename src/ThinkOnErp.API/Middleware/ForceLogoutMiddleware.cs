@@ -1,5 +1,6 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
+using ThinkOnErp.API.Authorization;
 using ThinkOnErp.Domain.Interfaces;
 
 namespace ThinkOnErp.API.Middleware;
@@ -23,6 +24,15 @@ public class ForceLogoutMiddleware
 
     public async Task InvokeAsync(HttpContext context, IUserRepository userRepository)
     {
+        // Force logout is tenant-user state that requires an active tenant schema.
+        // If the endpoint is not tenant-scoped (e.g. SuperAdmin endpoints), skip tenant user lookup.
+        var isTenantScoped = context.GetEndpoint()?.Metadata.GetMetadata<TenantScopedAttribute>() != null;
+        if (!isTenantScoped)
+        {
+            await _next(context);
+            return;
+        }
+
         // SuperAdmin accounts are stored centrally and are not tenant SysUser
         // records. Looking them up through IUserRepository can collide with a
         // tenant user that happens to have the same numeric ID.

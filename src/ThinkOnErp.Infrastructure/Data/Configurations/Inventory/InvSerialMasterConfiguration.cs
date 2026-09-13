@@ -39,5 +39,9 @@ public sealed class InvSerialMasterConfiguration : IEntityTypeConfiguration<InvS
         builder.Property(e => e.CurrentBinId)
             .HasColumnName("CURRENT_BIN_ID");
 
+        builder.HasOne(e => e.Item)
+            .WithMany(i => i.Serials)
+            .HasForeignKey(e => e.ItemId)
+            .OnDelete(DeleteBehavior.Restrict);
     }
 }

@@ -12,4 +12,5 @@ public interface IInvStockBalanceRepository
     Task<InvStockBalance> GetOrCreateAsync(long itemId, long warehouseId, long? binId = null, CancellationToken cancellationToken = default);
     Task SaveChangesAsync(CancellationToken cancellationToken = default);
     Task<IReadOnlyList<ThinkOnErp.Domain.Entities.Views.InventoryValuationView>> GetValuationSummaryFromViewAsync(long? branchId, long? warehouseId, CancellationToken cancellationToken = default);
+    Task<IReadOnlyList<ThinkOnErp.Domain.Entities.Views.InventoryValuationView>> GetBalancesFromViewAsync(long? itemId, long? warehouseId, CancellationToken cancellationToken = default);
 }

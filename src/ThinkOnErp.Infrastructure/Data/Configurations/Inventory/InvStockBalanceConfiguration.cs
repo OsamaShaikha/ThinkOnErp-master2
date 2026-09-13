@@ -56,5 +56,14 @@ public sealed class InvStockBalanceConfiguration : IEntityTypeConfiguration<InvS
             .HasColumnName("UPDATED_AT")
             .IsRequired();
 
+        builder.HasOne(e => e.Item)
+            .WithMany(i => i.StockBalances)
+            .HasForeignKey(e => e.ItemId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasOne(e => e.Warehouse)
+            .WithMany()
+            .HasForeignKey(e => e.WarehouseId)
+            .OnDelete(DeleteBehavior.Restrict);
     }
 }

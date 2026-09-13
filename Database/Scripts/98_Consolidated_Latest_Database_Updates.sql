@@ -45,7 +45,9 @@ USING (
     SELECT 'auth', '4. Auth & Security API (المصادقة والصلاحيات)', 'APIs for authentication, users, roles, and granular permissions', 4, 1 FROM DUAL UNION ALL
     SELECT 'audit', '5. Audit & Monitoring API (سجلات التدقيق الأمني)', 'APIs for audit logs, trail tracking, system monitoring, health status, and security alerts', 5, 1 FROM DUAL UNION ALL
     SELECT 'support', '6. Support & Ticketing API (الدعم الفني والخدمات)', 'APIs for support tickets, issue management, and ticket classifications', 6, 1 FROM DUAL UNION ALL
-    SELECT 'system', '7. System & Lookup Codes API (إعدادات كود النظام)', 'APIs for system codes, settings, document management, and public configurations', 7, 1 FROM DUAL
+    SELECT 'system', '7. System & Lookup Codes API (إعدادات كود النظام)', 'APIs for system codes, settings, document management, and public configurations', 7, 1 FROM DUAL UNION ALL
+    SELECT 'inventory', '8. Inventory & Trade Documents API (المخزون والمستندات)', 'Inventory management, items master, warehouses, stock movements, and universal trade documents', 8, 1 FROM DUAL UNION ALL
+    SELECT 'pos', '9. Point of Sale (POS) API (نقاط البيع)', 'APIs for POS shifts, tills, sales orders, offline sync, KDS kitchen boards, dining tables, reservations, and Z-reports', 9, 1 FROM DUAL
 ) src
 ON (target.CATEGORY_CODE = src.CATEGORY_CODE)
 WHEN MATCHED THEN

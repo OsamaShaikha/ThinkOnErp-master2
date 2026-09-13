@@ -21,4 +21,8 @@ public interface IInvItemGroupRepository
     Task<bool> HasSubGroupsAsync(long mainGroupId, CancellationToken ct = default);
     Task<bool> HasItemsAsync(long groupId, bool isMainGroup, CancellationToken ct = default);
     Task<int> GetItemsCountAsync(long groupId, bool isMainGroup, CancellationToken ct = default);
+    Task<int> GetGroupItemsCountAsync(long groupId, CancellationToken ct = default);
+    Task<List<InvItemGroup>> GetAllActiveGroupsAsync(long? branchId = null, bool? posOnly = null, CancellationToken ct = default);
+    Task<List<InvItemGroup>> GetChildrenAsync(long parentGroupId, CancellationToken ct = default);
+    Task<bool> IsDescendantOfAsync(long potentialChildId, long ancestorId, CancellationToken ct = default);
 }

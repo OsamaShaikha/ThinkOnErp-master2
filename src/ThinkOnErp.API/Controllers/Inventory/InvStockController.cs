@@ -91,37 +91,22 @@ public class InvStockController : ControllerBase
     [ProducesResponseType(typeof(ApiResponse<List<StockBalanceDto>>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetBalances([FromQuery] long? itemId, [FromQuery] long? warehouseId, CancellationToken cancellationToken)
     {
-        IReadOnlyList<Domain.Entities.Inventory.InvStockBalance> balances;
+        var views = await _stockBalanceRepository.GetBalancesFromViewAsync(itemId, warehouseId, cancellationToken);
 
-        if (itemId.HasValue && warehouseId.HasValue)
+        var list = views.Select(v => new StockBalanceDto
         {
-            var single = await _stockBalanceRepository.GetAsync(itemId.Value, warehouseId.Value, null, cancellationToken);
-            balances = single != null ? new[] { single } : Array.Empty<Domain.Entities.Inventory.InvStockBalance>();
-        }
-        else if (itemId.HasValue)
-        {
-            balances = await _stockBalanceRepository.GetByItemAsync(itemId.Value, cancellationToken);
-        }
-        else if (warehouseId.HasValue)
-        {
-            balances = await _stockBalanceRepository.GetByWarehouseAsync(warehouseId.Value, cancellationToken);
-        }
-        else
-        {
-            balances = await _stockBalanceRepository.GetAllAsync(cancellationToken);
-        }
-
-        var list = balances.Select(b => new StockBalanceDto
-        {
-            ItemId = b.ItemId,
-            WarehouseId = b.WarehouseId,
-            BinId = b.BinId,
-            OnHandQty = b.OnHandQty,
-            ReservedQty = b.ReservedQty,
-            AvailableQty = b.OnHandQty - b.ReservedQty,
-            OnOrderQty = b.OnOrderQty,
-            AvgCost = b.AvgCost,
-            TotalValue = b.OnHandQty * b.AvgCost
+            ItemId = v.ItemId,
+            ItemCode = v.ItemCode,
+            ItemName = v.ItemNameLocal,
+            WarehouseId = v.WarehouseId,
+            WarehouseCode = v.WarehouseCode,
+            BinId = v.BinId,
+            OnHandQty = v.OnHandQty,
+            ReservedQty = v.ReservedQty,
+            AvailableQty = v.AvailableQty,
+            OnOrderQty = v.OnOrderQty,
+            AvgCost = v.AvgCost,
+            TotalValue = v.TotalValuation
         }).ToList();
 
         return Ok(ApiResponse<List<StockBalanceDto>>.CreateSuccess(list, ResponseCodes.StockBalancesRetrieved));

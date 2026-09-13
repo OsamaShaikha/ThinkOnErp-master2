@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 
 namespace ThinkOnErp.Domain.Entities.Inventory;
@@ -16,6 +16,7 @@ public sealed class InvItemGroup
     public string? GlCogsAccount { get; set; }
     public string? GlRevenueAccount { get; set; }
     public string? GlAdjustmentAccount { get; set; }
+    public bool ShowInPos { get; set; } = true;
     public bool IsActive { get; set; } = true;
     public string CreationUser { get; set; } = "SYSTEM";
     public DateTime CreationDate { get; set; } = DateTime.UtcNow;

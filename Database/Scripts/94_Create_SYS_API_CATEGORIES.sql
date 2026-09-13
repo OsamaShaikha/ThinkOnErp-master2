@@ -1,3 +1,5 @@
+SET DEFINE OFF;
+
 -- ====================================================================
 -- Script Name: 94_Create_SYS_API_CATEGORIES.sql
 -- Description: Creates SYS_API_CATEGORIES table to persist Swagger documents & controller mappings in Oracle Database.
@@ -41,7 +43,9 @@ USING (
     SELECT 'auth', '4. Auth & Security API', 'Authentication and Authorization: login, JWT tokens, user management, roles, and fine-grained permissions.', 4, 'AuthController,UsersController,RolesController,PermissionsController', 1 FROM DUAL UNION ALL
     SELECT 'audit', '5. Audit & Security Monitoring API', 'Audit and monitoring: audit logs, entity audit trail, audit health, threat alerts, performance metrics, compliance reporting, and key management.', 5, 'AuditLogsController,AuditTrailController,AuditHealthController,AlertsController,MonitoringController,ComplianceController,KeyManagementController', 1 FROM DUAL UNION ALL
     SELECT 'support', '6. Tickets & Support API', 'Customer support & ticket management: support tickets, ticket status, and ticket types.', 6, 'TicketsController,TicketTypesController', 1 FROM DUAL UNION ALL
-    SELECT 'system', '7. System Settings & Codes API', 'System configuration & metadata: system lookup codes, global settings, modules, screens, feature toggles, health checks, document uploads, and saved searches.', 7, 'SysCodesController,SysSettingsController,ModulesController,ScreensController,FeaturesController,HealthController,DocumentsController,ConfigurationController,SavedSearchesController', 1 FROM DUAL
+    SELECT 'system', '7. System Settings & Codes API', 'System configuration & metadata: system lookup codes, global settings, modules, screens, feature toggles, health checks, document uploads, and saved searches.', 7, 'SysCodesController,SysSettingsController,ModulesController,ScreensController,FeaturesController,HealthController,DocumentsController,ConfigurationController,SavedSearchesController', 1 FROM DUAL UNION ALL
+    SELECT 'inventory', '8. Inventory & Trade Documents API', 'Inventory management, items master, main/sub groups, BOM kits & assemblies, warehouses, stock movements, FIFO costing, and universal trade documents.', 8, 'TrxDocumentsController,InvItemsController,InvItemGroupsController,InvBomController,InvWarehousesController,InvStockController,InvOpeningBalancesController', 1 FROM DUAL UNION ALL
+    SELECT 'pos', '9. Point of Sale (POS) API', 'Point of Sale operations: till sessions, shifts, orders, split payments, offline sync, dining tables, reservations, KDS kitchen display, Z-reports, batch preps, gift cards, and analytics.', 9, 'PosShiftsController,PosOrdersController,PosSyncController,PosTablesController,PosReservationsController,PosKdsController,PosZReportController,PosBatchPrepController,PosGiftCardsController,PosAnalyticsController', 1 FROM DUAL
 ) src
 ON (target.CATEGORY_CODE = src.CATEGORY_CODE)
 WHEN MATCHED THEN
@@ -57,3 +61,5 @@ WHEN NOT MATCHED THEN
 
 COMMIT;
 /
+
+EXIT;

@@ -39,4 +39,10 @@ public interface IInvItemGroupService
     Task<ApiResponse<bool>> DeleteGroupAsync(long id, CancellationToken ct = default);
 
     #endregion
+
+    #region Tree Hierarchy & POS
+    Task<ApiResponse<List<InvGroupTreeNodeDto>>> GetTreeAsync(long? branchId = null, bool? posOnly = null, CancellationToken ct = default);
+    Task<ApiResponse<List<InvGroupTreeNodeDto>>> GetPosGroupsAsync(long? branchId = null, CancellationToken ct = default);
+    Task<ApiResponse<List<InvGroupTreeNodeDto>>> GetChildrenAsync(long parentGroupId, CancellationToken ct = default);
+    #endregion
 }

@@ -12,6 +12,8 @@ public static class ApiSwaggerDocuments
     public const string Audit = ApiCategories.Audit;
     public const string Support = ApiCategories.Support;
     public const string System = ApiCategories.System;
+    public const string Inventory = ApiCategories.Inventory;
+    public const string Pos = ApiCategories.Pos;
 
     private static readonly Dictionary<string, string> ControllerToCategoryMap = new(StringComparer.OrdinalIgnoreCase)
     {
@@ -81,7 +83,19 @@ public static class ApiSwaggerDocuments
         ["Health"] = System,
         ["Documents"] = System,
         ["Configuration"] = System,
-        ["SavedSearches"] = System
+        ["SavedSearches"] = System,
+
+        // Point of Sale (POS)
+        ["PosShifts"] = Pos,
+        ["PosOrders"] = Pos,
+        ["PosSync"] = Pos,
+        ["PosTables"] = Pos,
+        ["PosReservations"] = Pos,
+        ["PosKds"] = Pos,
+        ["PosZReport"] = Pos,
+        ["PosBatchPrep"] = Pos,
+        ["PosGiftCards"] = Pos,
+        ["PosAnalytics"] = Pos
     };
 
     /// <summary>
@@ -127,6 +141,9 @@ public static class ApiSwaggerDocuments
 
         if (relativePath?.StartsWith("api/inventory", StringComparison.OrdinalIgnoreCase) == true || relativePath?.StartsWith("api/documents", StringComparison.OrdinalIgnoreCase) == true)
             return string.Equals(documentName, ApiCategories.Inventory, StringComparison.OrdinalIgnoreCase);
+
+        if (relativePath?.StartsWith("api/pos", StringComparison.OrdinalIgnoreCase) == true)
+            return string.Equals(documentName, Pos, StringComparison.OrdinalIgnoreCase);
 
         // Default fallback to System document only if no other category claimed it
         return string.Equals(documentName, System, StringComparison.OrdinalIgnoreCase);

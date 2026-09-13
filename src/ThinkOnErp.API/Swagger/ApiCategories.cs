@@ -13,4 +13,5 @@ public static class ApiCategories
     public const string Support = "support";
     public const string System = "system";
     public const string Inventory = "Inventory";
+    public const string Pos = "pos";
 }

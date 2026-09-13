@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 
 namespace ThinkOnErp.Application.DTOs.Inventory.ItemGroups;
 
@@ -15,6 +15,7 @@ public sealed class InvItemGroupDto
     public string? GlCogsAccount { get; set; }
     public string? GlRevenueAccount { get; set; }
     public string? GlAdjustmentAccount { get; set; }
+    public bool ShowInPos { get; set; } = true;
     public bool IsActive { get; set; }
 
     public List<InvItemGroupDto> SubGroups { get; set; } = new();

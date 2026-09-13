@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 
 namespace ThinkOnErp.Application.DTOs.Inventory.ItemGroups;
 
@@ -21,4 +21,5 @@ public sealed class CreateInvItemGroupDto
     public string? GlCogsAccount { get; set; }
     public string? GlRevenueAccount { get; set; }
     public string? GlAdjustmentAccount { get; set; }
+    public bool ShowInPos { get; set; } = true;
 }

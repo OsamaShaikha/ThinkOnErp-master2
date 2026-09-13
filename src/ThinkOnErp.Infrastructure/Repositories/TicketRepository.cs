@@ -62,7 +62,7 @@ public class TicketRepository : ITicketRepository
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to retrieve request tickets from database");
-            return (new List<SysRequestTicket>(), 0);
+            throw;
         }
     }
 

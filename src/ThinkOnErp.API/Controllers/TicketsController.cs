@@ -20,6 +20,7 @@ using ThinkOnErp.Application.Features.Tickets.Queries.GetTickets;
 using ThinkOnErp.Application.Features.Tickets.Queries.GetTicketVolumeReport;
 using ThinkOnErp.Application.Features.Tickets.Queries.GetWorkloadReport;
 using ThinkOnErp.Domain.Constants;
+using ThinkOnErp.Domain.Exceptions;
 
 namespace ThinkOnErp.API.Controllers;
 
@@ -569,6 +570,14 @@ public class TicketsController : ControllerBase
             }
 
             return File(result.FileContent, result.MimeType, result.FileName);
+        }
+        catch (TicketNotFoundException ex)
+        {
+            _logger.LogWarning("Ticket not found downloading attachment: {ErrorMessage}", ex.Message);
+            return NotFound(ApiResponse<object>.CreateFailure(
+                ex.Message,
+                new List<string> { ex.ErrorCode },
+                statusCode: 404));
         }
         catch (ArgumentException ex)
         {

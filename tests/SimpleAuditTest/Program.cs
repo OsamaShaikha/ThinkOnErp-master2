@@ -1,103 +1,109 @@
-using System.Threading.Channels;
+using System;
+using System.Diagnostics;
+using System.Linq;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using ThinkOnErp.Domain.Entities.Audit;
+using Oracle.ManagedDataAccess.Client;
+using ThinkOnErp.Infrastructure.Data;
+using ThinkOnErp.Infrastructure.Services;
+using ThinkOnErp.Infrastructure.Repositories;
 
-// Simple test to verify System.Threading.Channels functionality with audit events
 var loggerFactory = LoggerFactory.Create(builder => builder.AddConsole().SetMinimumLevel(LogLevel.Debug));
-var logger = loggerFactory.CreateLogger<Program>();
+var logger = loggerFactory.CreateLogger<ComplianceReporter>();
 
-logger.LogInformation("Starting simple audit channel test...");
-
-// Create a bounded channel
-var channelOptions = new BoundedChannelOptions(10)
+var optionsBuilder = new DbContextOptionsBuilder<OracleDbContext>();
+var connStr = "Data Source=(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=178.104.126.99)(PORT=1539))(CONNECT_DATA=(SERVICE_NAME=free)));User Id=THINKON_ERP;Password=thinkon_erp;Pooling=false;";
+using var conn = new OracleConnection(connStr);
+conn.Open();
+using (var cmd = conn.CreateCommand())
 {
-    FullMode = BoundedChannelFullMode.Wait,
-    SingleReader = true,
-    SingleWriter = false
-};
-
-var channel = Channel.CreateBounded<AuditEvent>(channelOptions);
-
-// Start a background task to process events
-var processingTask = Task.Run(async () =>
-{
-    var eventCount = 0;
-    await foreach (var auditEvent in channel.Reader.ReadAllAsync())
-    {
-        eventCount++;
-        logger.LogInformation("Processed audit event #{Count}: {EventType} - {Action} - {EntityType} (CorrelationId: {CorrelationId})", 
-            eventCount, auditEvent.GetType().Name, auditEvent.Action, auditEvent.EntityType, auditEvent.CorrelationId);
-        
-        // Simulate processing time
-        await Task.Delay(100);
-    }
-    logger.LogInformation("Finished processing {Count} audit events", eventCount);
-});
-
-// Create and queue some test audit events
-var events = new List<AuditEvent>
-{
-    new DataChangeAuditEvent
-    {
-        CorrelationId = "test-1",
-        ActorType = "USER",
-        ActorId = 123,
-        Action = "UPDATE",
-        EntityType = "User",
-        EntityId = 456,
-        OldValue = "{\"name\":\"John\"}",
-        NewValue = "{\"name\":\"John Doe\"}"
-    },
-    new AuthenticationAuditEvent
-    {
-        CorrelationId = "test-2",
-        ActorType = "USER",
-        ActorId = 123,
-        Action = "LOGIN",
-        EntityType = "User",
-        Success = true,
-        TokenId = "token-123"
-    },
-    new ExceptionAuditEvent
-    {
-        CorrelationId = "test-3",
-        ActorType = "SYSTEM",
-        ActorId = 0,
-        Action = "EXCEPTION",
-        EntityType = "System",
-        ExceptionType = "ValidationException",
-        ExceptionMessage = "Test validation error",
-        StackTrace = "Stack trace here...",
-        Severity = "Error"
-    }
-};
-
-// Queue the events
-logger.LogInformation("Queuing {Count} audit events...", events.Count);
-foreach (var auditEvent in events)
-{
-    await channel.Writer.WriteAsync(auditEvent);
-    logger.LogDebug("Queued: {EventType} - {CorrelationId}", auditEvent.GetType().Name, auditEvent.CorrelationId);
+    cmd.CommandText = "ALTER SESSION SET CURRENT_SCHEMA = THINKONERP_1122";
+    cmd.ExecuteNonQuery();
 }
 
-// Signal completion and wait for processing to finish
-logger.LogInformation("Signaling completion...");
-channel.Writer.Complete();
+optionsBuilder.UseOracle(conn);
+using var dbContext = new OracleDbContext(optionsBuilder.Options);
 
-await processingTask;
-
-logger.LogInformation("Simple audit channel test completed successfully!");
-
-// Test the channel health check pattern
-logger.LogInformation("Testing health check pattern...");
-
-var healthChannel = Channel.CreateBounded<string>(1);
-var healthCheckResult = healthChannel.Writer.TryWrite("health-check");
-logger.LogInformation("Health check write result: {Result}", healthCheckResult);
-
-if (healthChannel.Reader.TryRead(out var healthMessage))
+Console.WriteLine("\n=== Testing QueryDataSubjectAccessEvents with THINKONERP_1122 ===");
+var sw = Stopwatch.StartNew();
+var startDate = DateTime.UtcNow.AddDays(-30);
+var endDate = DateTime.UtcNow;
+long dataSubjectId = 1;
+try
 {
-    logger.LogInformation("Health check message: {Message}", healthMessage);
+    var countWithMetadata = await dbContext.SysAuditLogs.AsNoTracking().Where(a => a.Metadata != null).CountAsync();
+    Console.WriteLine($"Total rows with Metadata not null: {countWithMetadata}");
+}
+catch (Exception ex)
+{
+    sw.Stop();
+    Console.WriteLine($"Failed after {sw.ElapsedMilliseconds}ms: {ex.Message}");
+    if (ex.InnerException != null) Console.WriteLine($"Inner: {ex.InnerException.Message}");
 }
 
-logger.LogInformation("All tests completed successfully!");
+Console.WriteLine("\n=== Testing QuerySecurityEventsAsync query ===");
+sw.Restart();
+try
+{
+    var query = from al in dbContext.SysAuditLogs
+                join u in dbContext.SysUsers on al.ActorId equals u.Id into userJoin
+                from u in userJoin.DefaultIfEmpty()
+                where al.CreationDate >= startDate
+                   && al.CreationDate <= endDate
+                   && (al.EventCategory == "Authentication"
+                       || al.EventCategory == "Exception"
+                       || al.EventCategory == "Security"
+                       || al.Severity == "Critical"
+                       || al.Severity == "Error"
+                       || al.Severity == "Warning")
+                orderby al.CreationDate descending
+                select new { al.Id, al.CreationDate, al.EventCategory, al.Severity, ActorName = u != null ? u.UserName : null };
+
+    var results = await query.ToListAsync();
+    sw.Stop();
+    Console.WriteLine($"Security query executed in {sw.ElapsedMilliseconds}ms, count: {results.Count}");
+}
+catch (Exception ex)
+{
+    sw.Stop();
+    Console.WriteLine($"Security query failed after {sw.ElapsedMilliseconds}ms: {ex.Message}");
+}
+
+Console.WriteLine("\n=== Testing QueryFinancialDataAccessEventsAsync query ===");
+sw.Restart();
+try
+{
+    var query = from al in dbContext.SysAuditLogs
+                join u in dbContext.SysUsers on al.ActorId equals u.Id into userJoin
+                from u in userJoin.DefaultIfEmpty()
+                join r in dbContext.SysRoles on u.RoleId equals r.Id into roleJoin
+                from r in roleJoin.DefaultIfEmpty()
+                where al.CreationDate >= startDate
+                   && al.CreationDate <= endDate
+                   && (al.EntityType.ToUpper().Contains("INVOICE")
+                       || al.EntityType.ToUpper().Contains("PAYMENT")
+                       || al.EntityType.ToUpper().Contains("TRANSACTION")
+                       || al.EntityType.ToUpper().Contains("ACCOUNT")
+                       || al.EntityType.ToUpper().Contains("BUDGET")
+                       || al.EntityType.ToUpper().Contains("JOURNAL")
+                       || al.EntityType.ToUpper().Contains("LEDGER")
+                       || al.EntityType.ToUpper().Contains("FINANCIAL")
+                       || al.EntityType.ToUpper().Contains("REVENUE")
+                       || al.EntityType.ToUpper().Contains("EXPENSE")
+                       || al.EntityType.ToUpper().Contains("ASSET")
+                       || al.EntityType.ToUpper().Contains("LIABILITY")
+                       || dbContext.SysSystems.Any(s => s.Id == al.SystemId && (s.SystemCode == "accounting" || s.SystemCode == "finance")))
+                orderby al.CreationDate ascending
+                select new { al.Id, al.CreationDate, al.EntityType, ActorName = u != null ? u.UserName : null, RoleName = r != null ? r.RoleNameEn : null };
+
+    var results = await query.ToListAsync();
+    sw.Stop();
+    Console.WriteLine($"Financial query executed in {sw.ElapsedMilliseconds}ms, count: {results.Count}");
+}
+catch (Exception ex)
+{
+    sw.Stop();
+    Console.WriteLine($"Financial query failed after {sw.ElapsedMilliseconds}ms: {ex.Message}");
+}
+
+

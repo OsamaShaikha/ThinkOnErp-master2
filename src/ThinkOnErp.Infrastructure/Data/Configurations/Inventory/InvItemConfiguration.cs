@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using ThinkOnErp.Domain.Entities.Inventory;
 
@@ -61,5 +61,8 @@ public sealed class InvItemConfiguration : IEntityTypeConfiguration<InvItem>
         builder.HasOne(i => i.SubGroup).WithMany().HasForeignKey(i => i.SubGroupId).OnDelete(DeleteBehavior.Restrict);
         builder.HasMany(i => i.UomConversions).WithOne(u => u.Item).HasForeignKey(u => u.ItemId).OnDelete(DeleteBehavior.Cascade);
         builder.HasMany(i => i.Barcodes).WithOne(b => b.Item).HasForeignKey(b => b.ItemId).OnDelete(DeleteBehavior.Cascade);
+        builder.HasMany(i => i.StockBalances).WithOne(b => b.Item).HasForeignKey(b => b.ItemId).OnDelete(DeleteBehavior.Restrict);
+        builder.HasMany(i => i.Lots).WithOne(l => l.Item).HasForeignKey(l => l.ItemId).OnDelete(DeleteBehavior.Restrict);
+        builder.HasMany(i => i.Serials).WithOne(s => s.Item).HasForeignKey(s => s.ItemId).OnDelete(DeleteBehavior.Restrict);
     }
 }

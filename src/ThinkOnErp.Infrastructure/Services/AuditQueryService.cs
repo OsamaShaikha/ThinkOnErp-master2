@@ -1,4 +1,4 @@
-﻿using System.Text;
+using System.Text;
 using System.Text.Json;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Http;
@@ -511,6 +511,7 @@ public class AuditQueryService : IAuditQueryService
                      && a.CreationDate >= startDate
                      && a.CreationDate <= endDate)
             .OrderBy(a => a.CreationDate)
+            .Take(500)
             .ToListAsync(cancellationToken);
 
         return results.Select(MapToAuditLogEntry).ToList();

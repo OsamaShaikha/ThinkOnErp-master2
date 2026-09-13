@@ -1,4 +1,4 @@
-﻿namespace ThinkOnErp.Application.DTOs.Inventory.ItemGroups;
+namespace ThinkOnErp.Application.DTOs.Inventory.ItemGroups;
 
 public sealed class UpdateInvItemGroupDto
 {
@@ -9,4 +9,6 @@ public sealed class UpdateInvItemGroupDto
     public string? GlCogsAccount { get; set; }
     public string? GlRevenueAccount { get; set; }
     public string? GlAdjustmentAccount { get; set; }
+    public bool? ShowInPos { get; set; }
+    public bool? IsActive { get; set; }
 }

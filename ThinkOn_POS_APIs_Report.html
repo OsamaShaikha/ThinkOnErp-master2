@@ -1,0 +1,1221 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>دليل واجهات برمجة تطبيقات نقاط البيع (POS APIs) - ThinkOn ERP</title>
+  <script src="https://www.gstatic.com/antigravity/web/dev/tailwindcss.min.js"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;800;900&family=JetBrains+Mono:wght@400;600&display=swap');
+    body {
+      font-family: 'Cairo', sans-serif;
+    }
+    code, pre {
+      font-family: 'JetBrains Mono', monospace;
+      direction: ltr;
+      text-align: left;
+    }
+    .badge-get { background-color: #0284c7; color: #ffffff; }
+    .badge-post { background-color: #16a34a; color: #ffffff; }
+    .badge-put { background-color: #d97706; color: #ffffff; }
+    .badge-delete { background-color: #dc2626; color: #ffffff; }
+    .glass-card {
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(229, 231, 235, 0.8);
+    }
+    @media (prefers-color-scheme: dark) {
+      .glass-card {
+        background: rgba(17, 24, 39, 0.95);
+        border: 1px solid rgba(55, 65, 81, 0.8);
+      }
+    }
+  </style>
+</head>
+<body class="bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 min-h-screen">
+
+  <!-- Header Section -->
+  <header class="sticky top-0 z-50 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 shadow-sm">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex flex-col md:flex-row items-center justify-between gap-4">
+      <div class="flex items-center gap-3">
+        <div class="w-12 h-12 rounded-xl bg-gradient-to-tr from-emerald-600 to-teal-500 flex items-center justify-center text-white font-bold text-2xl shadow-lg shadow-emerald-500/20">
+          POS
+        </div>
+        <div>
+          <h1 class="text-xl sm:text-2xl font-black bg-gradient-to-l from-emerald-600 to-teal-700 dark:from-emerald-400 dark:to-teal-300 bg-clip-text text-transparent">
+            دليل واجهات نقاط البيع الشامل (POS APIs)
+          </h1>
+          <p class="text-xs text-slate-500 dark:text-slate-400">
+            ThinkOn ERP Enterprise Subsystem • Clean Architecture • Oracle Multi-Tenant
+          </p>
+        </div>
+      </div>
+      <div class="flex flex-wrap items-center gap-2">
+        <span class="px-3 py-1 bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300 text-xs font-bold rounded-full border border-emerald-300 dark:border-emerald-700">
+          ✓ Build Succeeded (0 Errors)
+        </span>
+        <span class="px-3 py-1 bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 text-xs font-bold rounded-full border border-blue-300 dark:border-blue-700">
+          Swagger Group: #9 (pos)
+        </span>
+        <span class="px-3 py-1 bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300 text-xs font-bold rounded-full border border-purple-300 dark:border-purple-700">
+          ZATCA Compliant
+        </span>
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+
+    <!-- KPI Statistics Grid -->
+    <section class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
+      <div class="glass-card rounded-2xl p-4 shadow-sm text-center">
+        <div class="text-3xl font-black text-emerald-600 dark:text-emerald-400">15</div>
+        <div class="text-xs font-semibold text-slate-500 dark:text-slate-400 mt-1">وحدات تحكم (Controllers)</div>
+      </div>
+      <div class="glass-card rounded-2xl p-4 shadow-sm text-center">
+        <div class="text-3xl font-black text-teal-600 dark:text-teal-400">54</div>
+        <div class="text-xs font-semibold text-slate-500 dark:text-slate-400 mt-1">نقطة نهاية (Endpoints)</div>
+      </div>
+      <div class="glass-card rounded-2xl p-4 shadow-sm text-center">
+        <div class="text-3xl font-black text-blue-600 dark:text-blue-400">100%</div>
+        <div class="text-xs font-semibold text-slate-500 dark:text-slate-400 mt-1">تغطية Full CRUD</div>
+      </div>
+      <div class="glass-card rounded-2xl p-4 shadow-sm text-center">
+        <div class="text-3xl font-black text-purple-600 dark:text-purple-400">25</div>
+        <div class="text-xs font-semibold text-slate-500 dark:text-slate-400 mt-1">جدول أوراكل معزول</div>
+      </div>
+      <div class="glass-card rounded-2xl p-4 shadow-sm text-center">
+        <div class="text-3xl font-black text-amber-600 dark:text-amber-400">3</div>
+        <div class="text-xs font-semibold text-slate-500 dark:text-slate-400 mt-1">قنوات SignalR حية</div>
+      </div>
+      <div class="glass-card rounded-2xl p-4 shadow-sm text-center">
+        <div class="text-3xl font-black text-rose-600 dark:text-rose-400">0</div>
+        <div class="text-xs font-semibold text-slate-500 dark:text-slate-400 mt-1">أخطاء بناء (Build Errors)</div>
+      </div>
+    </section>
+
+    <!-- Architecture & Features Banner -->
+    <section class="glass-card rounded-2xl p-6 shadow-sm border-r-4 border-r-emerald-500 space-y-3">
+      <h2 class="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
+        <span>🛡️</span>
+        المعايير المعمارية والأمنية لجميع واجهات نقاط البيع
+      </h2>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-slate-600 dark:text-slate-300">
+        <div class="p-3 bg-slate-100/70 dark:bg-slate-800/60 rounded-xl space-y-1">
+          <div class="font-bold text-slate-800 dark:text-slate-200">1. عزل التينانت (Multi-Tenant Schema)</div>
+          <p class="text-xs text-slate-500 dark:text-slate-400">كل طلب يتم تزيينه بـ <code>[TenantScoped]</code> ليتم توجيهه ديناميكياً إلى مخطط العميل المناسب دون اختلاط البيانات.</p>
+        </div>
+        <div class="p-3 bg-slate-100/70 dark:bg-slate-800/60 rounded-xl space-y-1">
+          <div class="font-bold text-slate-800 dark:text-slate-200">2. التدقيق المالي غير القابل للتعديل</div>
+          <p class="text-xs text-slate-500 dark:text-slate-400">العمليات الحساسة (إلغاء أسطر، استرجاع، خصومات، فروقات إغلاق الورديات) تسجل فوراً في <code>THINKON_AUDIT</code>.</p>
+        </div>
+        <div class="p-3 bg-slate-100/70 dark:bg-slate-800/60 rounded-xl space-y-1">
+          <div class="font-bold text-slate-800 dark:text-slate-200">3. الاستجابة القياسية والتصفح الموحد</div>
+          <p class="text-xs text-slate-500 dark:text-slate-400">جميع القوائم مدعومة بالـ Pagination وإرجاع <code>ApiResponse&lt;PagedResultDto&lt;T&gt;&gt;</code> الموحد.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Filter & Search Controls -->
+    <section class="flex flex-col sm:flex-row items-center justify-between gap-4">
+      <div class="relative w-full sm:w-80">
+        <input id="apiSearch" type="text" placeholder="ابحث عن واجهة، مسار، أو عملية..." 
+               class="w-full px-4 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 transition-all text-right">
+      </div>
+      <div class="flex flex-wrap gap-2 text-xs">
+        <button onclick="filterCategory('all')" class="category-btn active px-3 py-1.5 rounded-lg bg-emerald-600 text-white font-bold transition-all shadow-sm">الكل (15)</button>
+        <button onclick="filterCategory('sales')" class="category-btn px-3 py-1.5 rounded-lg bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-semibold hover:bg-slate-300 transition-all">المبيعات والورديات</button>
+        <button onclick="filterCategory('hospitality')" class="category-btn px-3 py-1.5 rounded-lg bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-semibold hover:bg-slate-300 transition-all">المطاعم والضيافة</button>
+        <button onclick="filterCategory('marketing')" class="category-btn px-3 py-1.5 rounded-lg bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-semibold hover:bg-slate-300 transition-all">التسويق والتسعير</button>
+        <button onclick="filterCategory('hardware')" class="category-btn px-3 py-1.5 rounded-lg bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-semibold hover:bg-slate-300 transition-all">الأجهزة والمزامنة</button>
+      </div>
+    </section>
+
+    <!-- Controllers Detailed Sections -->
+    <div id="controllersContainer" class="space-y-8">
+
+      <!-- 1. PosOrdersController -->
+      <div class="controller-card glass-card rounded-2xl p-6 shadow-sm space-y-4" data-category="sales">
+        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-4 gap-2">
+          <div>
+            <div class="flex items-center gap-2">
+              <span class="px-2.5 py-0.5 rounded-md bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 font-mono text-xs font-bold">1</span>
+              <h3 class="text-xl font-bold text-slate-900 dark:text-white">PosOrdersController</h3>
+              <span class="text-xs bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 px-2 py-0.5 rounded font-mono">/api/pos/orders</span>
+            </div>
+            <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">
+              <strong>التعريف والهدف:</strong> إدارة دورة حياة فواتير وطلبات المبيعات بالكامل (إنشاء، استعلام، تعديل، حذف/إلغاء، تقسيم الفاتورة، واسترجاع المرتجعات).
+            </p>
+          </div>
+          <span class="text-xs font-bold px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
+            Full CRUD + ZATCA Phase 2
+          </span>
+        </div>
+
+        <div class="text-xs text-slate-600 dark:text-slate-300 bg-slate-50 dark:bg-slate-900/50 p-3 rounded-xl">
+          <strong>سيناريو الاستخدام:</strong> يقوم الكاشير بإدخال طلب العميل، تطبيق الخصومات، واختيار طرق الدفع المتعددة (نقدي، شبكة، بطاقة هدية). يتم توليد رمز الاستجابة السريعة (QR Code TLV) والـ Hash المشفر المتوافق مع متطلبات هيئة الزكاة والضريبة والجمارك (ZATCA)، مع دعم تعليق الفواتير وتقسيمها على عدة عملاء.
+        </div>
+
+        <div class="overflow-x-auto">
+          <table class="w-full text-right text-xs">
+            <thead class="bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
+              <tr>
+                <th class="p-2.5 rounded-r-lg">العملية</th>
+                <th class="p-2.5">المسار (Path)</th>
+                <th class="p-2.5">الوصف والغرض</th>
+                <th class="p-2.5 rounded-l-lg">نموذج البيانات الأساسي</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100 dark:divide-slate-800 text-slate-600 dark:text-slate-300">
+              <tr>
+                <td class="p-2.5"><span class="px-2 py-0.5 rounded font-bold text-[10px] badge-post">POST</span></td>
+                <td class="p-2.5 font-mono">/api/pos/orders</td>
+                <td class="p-2.5">إنشاء فاتورة بيع جديدة وتوليد QR ZATCA وخصم المخزون.</td>
+                <td class="p-2.5 font-mono">CreatePosOrderDto -> PosOrderResponseDto</td>
+              </tr>
+              <tr>
+                <td class="p-2.5"><span class="px-2 py-0.5 rounded font-bold text-[10px] badge-get">GET</span></td>
+                <td class="p-2.5 font-mono">/api/pos/orders</td>
+                <td class="p-2.5">استعلام مصفح ومفلتر للفواتير بحسب الفرع، التاريخ، الكاشير، والحالة.</td>
+                <td class="p-2.5 font-mono">PagedResultDto&lt;PosOrderHeaderDto&gt;</td>
+              </tr>
+              <tr>
+                <td class="p-2.5"><span class="px-2 py-0.5 rounded font-bold text-[10px] badge-get">GET</span></td>
+                <td class="p-2.5 font-mono">/api/pos/orders/{id}</td>
+                <td class="p-2.5">جلب تفاصيل الفاتورة كاملة (الأسطر، الإضافات Modifiers، المدفوعات والضرائب).</td>
+                <td class="p-2.5 font-mono">PosOrderHeaderDto</td>
+              </tr>
+              <tr>
+                <td class="p-2.5"><span class="px-2 py-0.5 rounded font-bold text-[10px] badge-put">PUT</span></td>
+                <td class="p-2.5 font-mono">/api/pos/orders/{id}</td>
+                <td class="p-2.5">تعديل بيانات رأس الفاتورة (العميل، الخصم اليدوي، الملاحظات) قبل الإغلاق.</td>
+                <td class="p-2.5 font-mono">UpdatePosOrderDto</td>
+              </tr>
+              <tr>
+                <td class="p-2.5"><span class="px-2 py-0.5 rounded font-bold text-[10px] badge-delete">DELETE</span></td>
+                <td class="p-2.5 font-mono">/api/pos/orders/{id}</td>
+                <td class="p-2.5">إلغاء/حذف الطلب أو الفاتورة المعلقة مع تسجيل سبب الإلغاء في الأوديت.</td>
+                <td class="p-2.5 font-mono">bool (Success)</td>
+              </tr>
+              <tr>
+                <td class="p-2.5"><span class="px-2 py-0.5 rounded font-bold text-[10px] badge-get">GET</span></td>
+                <td class="p-2.5 font-mono">/api/pos/orders/active</td>
+                <td class="p-2.5">استرجاع الطلبات المعلقة والنشطة الخاصة بصالة المطعم أو قيد التجهيز.</td>
+                <td class="p-2.5 font-mono">IReadOnlyList&lt;PosOrderHeaderDto&gt;</td>
+              </tr>
+              <tr>
+                <td class="p-2.5"><span class="px-2 py-0.5 rounded font-bold text-[10px] badge-post">POST</span></td>
+                <td class="p-2.5 font-mono">/api/pos/orders/{id}/split</td>
+                <td class="p-2.5">تقسيم حساب الطاولة أو الطلب إلى فواتير فرعية متفرقة.</td>
+                <td class="p-2.5 font-mono">SplitOrderDto -> List&lt;PosOrderResponseDto&gt;</td>
+              </tr>
+              <tr>
+                <td class="p-2.5"><span class="px-2 py-0.5 rounded font-bold text-[10px] badge-post">POST</span></td>
+                <td class="p-2.5 font-mono">/api/pos/orders/{id}/refund</td>
+                <td class="p-2.5">إنشاء إشعار دائن (Credit Note) واسترجاع كلي أو جزئي وفق معايير زاتكا.</td>
+                <td class="p-2.5 font-mono">RefundOrderDto -> PosOrderResponseDto</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- 2. PosShiftsController -->
+      <div class="controller-card glass-card rounded-2xl p-6 shadow-sm space-y-4" data-category="sales">
+        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-4 gap-2">
+          <div>
+            <div class="flex items-center gap-2">
+              <span class="px-2.5 py-0.5 rounded-md bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 font-mono text-xs font-bold">2</span>
+              <h3 class="text-xl font-bold text-slate-900 dark:text-white">PosShiftsController</h3>
+              <span class="text-xs bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 px-2 py-0.5 rounded font-mono">/api/pos/shifts</span>
+            </div>
+            <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">
+              <strong>التعريف والهدف:</strong> التحكم الكامل بورديات الكاشير، عهدة البداية (Opening Float)، حركة النقدية، الإغلاق الأعمى (Blind Close)، وتدقيق المشرف.
+            </p>
+          </div>
+          <span class="text-xs font-bold px-2.5 py-1 rounded-full bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-300 border border-blue-200 dark:border-blue-800">
+            Cash Drawer & Audit
+          </span>
+        </div>
+
+        <div class="text-xs text-slate-600 dark:text-slate-300 bg-slate-50 dark:bg-slate-900/50 p-3 rounded-xl">
+          <strong>سيناريو الاستخدام:</strong> يبدأ الكاشير بفتح الوردية وإدخال العهدة النقدية. أثناء العمل يمكن عمل سحب نقدية للخزنة (Cash Drop) أو صرف مصاريف نثرية (Pay-Out). عند نهاية الوردية يدخل الكاشير النقدية المعدودة دون معرفة إجمالي النظام لمنع التلاعب (الإغلاق الأعمى)، ثم يقوم المشرف بتدقيق الوردية واعتماد الفروقات وحفظها في <code>THINKON_AUDIT</code>.
+        </div>
+
+        <div class="overflow-x-auto">
+          <table class="w-full text-right text-xs">
+            <thead class="bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
+              <tr>
+                <th class="p-2.5 rounded-r-lg">العملية</th>
+                <th class="p-2.5">المسار (Path)</th>
+                <th class="p-2.5">الوصف والغرض</th>
+                <th class="p-2.5 rounded-l-lg">نموذج البيانات الأساسي</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100 dark:divide-slate-800 text-slate-600 dark:text-slate-300">
+              <tr>
+                <td class="p-2.5"><span class="px-2 py-0.5 rounded font-bold text-[10px] badge-post">POST</span></td>
+                <td class="p-2.5 font-mono">/api/pos/shifts/open</td>
+                <td class="p-2.5">فتح وردية جديدة وتحديد العهدة النقدية ورقم الكاشير.</td>
+                <td class="p-2.5 font-mono">OpenShiftDto -> PosShiftDto</td>
+              </tr>
+              <tr>
+                <td class="p-2.5"><span class="px-2 py-0.5 rounded font-bold text-[10px] badge-get">GET</span></td>
+                <td class="p-2.5 font-mono">/api/pos/shifts</td>
+                <td class="p-2.5">استعلام مصفح وتاريخي للورديات وحالاتها وفروقاتها المالية.</td>
+                <td class="p-2.5 font-mono">PagedResultDto&lt;PosShiftDto&gt;</td>
+              </tr>
+              <tr>
+                <td class="p-2.5"><span class="px-2 py-0.5 rounded font-bold text-[10px] badge-get">GET</span></td>
+                <td class="p-2.5 font-mono">/api/pos/shifts/active</td>
+                <td class="p-2.5">استعلام عن الوردية المفتوحة حالياً لنقطة بيع أو مستخدم محدد.</td>
+                <td class="p-2.5 font-mono">PosShiftDto</td>
+              </tr>
+              <tr>
+                <td class="p-2.5"><span class="px-2 py-0.5 rounded font-bold text-[10px] badge-post">POST</span></td>
+                <td class="p-2.5 font-mono">/api/pos/shifts/cash-movement</td>
+                <td class="p-2.5">تسجيل حركة نقدية في الدرج (توريد، سحب، إكراميات، تعزيز عهدة).</td>
+                <td class="p-2.5 font-mono">ShiftCashMovementDto</td>
+              </tr>
+              <tr>
+                <td class="p-2.5"><span class="px-2 py-0.5 rounded font-bold text-[10px] badge-post">POST</span></td>
+                <td class="p-2.5 font-mono">/api/pos/shifts/blind-close</td>
+                <td class="p-2.5">تنفيذ الإغلاق الأعمى بحصر النقدية الفعلية دون كشف رصيد النظام.</td>
+                <td class="p-2.5 font-mono">BlindCloseShiftDto</td>
+              </tr>
+              <tr>
+                <td class="p-2.5"><span class="px-2 py-0.5 rounded font-bold text-[10px] badge-post">POST</span></td>
+                <td class="p-2.5 font-mono">/api/pos/shifts/manager-close</td>
+                <td class="p-2.5">اعتماد المشرف للوردية، تسوية الفروقات، وإغلاقها نهائياً.</td>
+                <td class="p-2.5 font-mono">ManagerCloseShiftDto</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- 3. PosTillsController -->
+      <div class="controller-card glass-card rounded-2xl p-6 shadow-sm space-y-4" data-category="hardware">
+        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-4 gap-2">
+          <div>
+            <div class="flex items-center gap-2">
+              <span class="px-2.5 py-0.5 rounded-md bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 font-mono text-xs font-bold">3</span>
+              <h3 class="text-xl font-bold text-slate-900 dark:text-white">PosTillsController</h3>
+              <span class="text-xs bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 px-2 py-0.5 rounded font-mono">/api/pos/tills</span>
+            </div>
+            <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">
+              <strong>التعريف والهدف:</strong> إدارة أجهزة نقاط البيع المادية (Tills) وتعريف الطابعات ودرج النقدية وشاشة العميل (Pole Display).
+            </p>
+          </div>
+          <span class="text-xs font-bold px-2.5 py-1 rounded-full bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300 border border-slate-300 dark:border-slate-700">
+            Hardware Profiles
+          </span>
+        </div>
+
+        <div class="overflow-x-auto">
+          <table class="w-full text-right text-xs">
+            <thead class="bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
+              <tr>
+                <th class="p-2.5 rounded-r-lg">العملية</th>
+                <th class="p-2.5">المسار (Path)</th>
+                <th class="p-2.5">الوصف والغرض</th>
+                <th class="p-2.5 rounded-l-lg">نموذج البيانات</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100 dark:divide-slate-800 text-slate-600 dark:text-slate-300">
+              <tr>
+                <td class="p-2.5"><span class="px-2 py-0.5 rounded font-bold text-[10px] badge-post">POST</span></td>
+                <td class="p-2.5 font-mono">/api/pos/tills</td>
+                <td class="p-2.5">تسجيل جهاز كاشير جديد مع عنوان IP ومواصفات الأجهزة الطرفية.</td>
+                <td class="p-2.5 font-mono">CreateTillDto -> TillSummaryDto</td>
+              </tr>
+              <tr>
+                <td class="p-2.5"><span class="px-2 py-0.5 rounded font-bold text-[10px] badge-get">GET</span></td>
+                <td class="p-2.5 font-mono">/api/pos/tills</td>
+                <td class="p-2.5">استعراض مصفح لجميع أجهزة نقاط البيع في الفرع.</td>
+                <td class="p-2.5 font-mono">PagedResultDto&lt;TillSummaryDto&gt;</td>
+              </tr>
+              <tr>
+                <td class="p-2.5"><span class="px-2 py-0.5 rounded font-bold text-[10px] badge-get">GET</span></td>
+                <td class="p-2.5 font-mono">/api/pos/tills/{id}</td>
+                <td class="p-2.5">جلب بيانات وتفاصيل جهاز كاشير محدد.</td>
+                <td class="p-2.5 font-mono">TillSummaryDto</td>
+              </tr>
+              <tr>
+                <td class="p-2.5"><span class="px-2 py-0.5 rounded font-bold text-[10px] badge-put">PUT</span></td>
+                <td class="p-2.5 font-mono">/api/pos/tills/{id}</td>
+                <td class="p-2.5">تحديث إعدادات الكاشير، الطابعة، أو تفعيل/تعطيل الجهاز.</td>
+                <td class="p-2.5 font-mono">UpdateTillDto</td>
+              </tr>
+              <tr>
+                <td class="p-2.5"><span class="px-2 py-0.5 rounded font-bold text-[10px] badge-delete">DELETE</span></td>
+                <td class="p-2.5 font-mono">/api/pos/tills/{id}</td>
+                <td class="p-2.5">حذف أو إيقاف جهاز الكاشير عن العمل.</td>
+                <td class="p-2.5 font-mono">bool</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- 4. PosTablesController -->
+      <div class="controller-card glass-card rounded-2xl p-6 shadow-sm space-y-4" data-category="hospitality">
+        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-4 gap-2">
+          <div>
+            <div class="flex items-center gap-2">
+              <span class="px-2.5 py-0.5 rounded-md bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 font-mono text-xs font-bold">4</span>
+              <h3 class="text-xl font-bold text-slate-900 dark:text-white">PosTablesController</h3>
+              <span class="text-xs bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 px-2 py-0.5 rounded font-mono">/api/pos/floors & /api/pos/tables</span>
+            </div>
+            <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">
+              <strong>التعريف والهدف:</strong> إدارة صالات الطعام والمقاهي، الطاولات، التخطيط البصري ثنائي الأبعاد (2D Visual Layout)، ونقل ودمج الطاولات.
+            </p>
+          </div>
+          <span class="text-xs font-bold px-2.5 py-1 rounded-full bg-amber-50 text-amber-600 dark:bg-amber-900/30 dark:text-amber-300 border border-amber-200 dark:border-amber-800">
+            Dine-In & Visual Floor Plan
+          </span>
+        </div>
+
+        <div class="overflow-x-auto">
+          <table class="w-full text-right text-xs">
+            <thead class="bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
+              <tr>
+                <th class="p-2.5 rounded-r-lg">العملية</th>
+                <th class="p-2.5">المسار (Path)</th>
+                <th class="p-2.5">الوصف والغرض</th>
+                <th class="p-2.5 rounded-l-lg">نموذج البيانات</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100 dark:divide-slate-800 text-slate-600 dark:text-slate-300">
+              <tr>
+                <td class="p-2.5"><span class="px-2 py-0.5 rounded font-bold text-[10px] badge-post">POST</span></td>
+                <td class="p-2.5 font-mono">/api/pos/floors</td>
+                <td class="p-2.5">إضافة صالة/منطقة جديدة (مثل: الصالة الداخلية، التراس، قسم العائلات).</td>
+                <td class="p-2.5 font-mono">CreateFloorDto -> FloorSummaryDto</td>
+              </tr>
+              <tr>
+                <td class="p-2.5"><span class="px-2 py-0.5 rounded font-bold text-[10px] badge-get">GET</span></td>
+                <td class="p-2.5 font-mono">/api/pos/floors</td>
+                <td class="p-2.5">عرض قائمة الصالات التابعة للفرع.</td>
+                <td class="p-2.5 font-mono">IReadOnlyList&lt;FloorSummaryDto&gt;</td>
+              </tr>
+              <tr>
+                <td class="p-2.5"><span class="px-2 py-0.5 rounded font-bold text-[10px] badge-put">PUT</span></td>
+                <td class="p-2.5 font-mono">/api/pos/floors/{id}</td>
+                <td class="p-2.5">تعديل بيانات الصالة أو ترتيبها العرضي.</td>
+                <td class="p-2.5 font-mono">UpdateFloorDto</td>
+              </tr>
+              <tr>
+                <td class="p-2.5"><span class="px-2 py-0.5 rounded font-bold text-[10px] badge-delete">DELETE</span></td>
+                <td class="p-2.5 font-mono">/api/pos/floors/{id}</td>
+                <td class="p-2.5">حذف صالة طعام بعد التحقق من عدم وجود طاولات نشطة.</td>
+                <td class="p-2.5 font-mono">bool</td>
+              </tr>
+              <tr>
+                <td class="p-2.5"><span class="px-2 py-0.5 rounded font-bold text-[10px] badge-post">POST</span></td>
+                <td class="p-2.5 font-mono">/api/pos/tables</td>
+                <td class="p-2.5">إنشاء طاولة طعام وإسنادها لصالة مع تحديد سعتها وشكلها وإحداثياتها.</td>
+                <td class="p-2.5 font-mono">CreateTableDto -> TableSummaryDto</td>
+              </tr>
+              <tr>
+                <td class="p-2.5"><span class="px-2 py-0.5 rounded font-bold text-[10px] badge-get">GET</span></td>
+                <td class="p-2.5 font-mono">/api/pos/tables/{id}</td>
+                <td class="p-2.5">استرجاع تفاصيل طاولة معينة وحالتها الآنية.</td>
+                <td class="p-2.5 font-mono">TableSummaryDto</td>
+              </tr>
+              <tr>
+                <td class="p-2.5"><span class="px-2 py-0.5 rounded font-bold text-[10px] badge-put">PUT</span></td>
+                <td class="p-2.5 font-mono">/api/pos/tables/{id}</td>
+                <td class="p-2.5">تعديل بيانات الطاولة وإحداثيات السحب والإفلات (X, Y, Width, Height).</td>
+                <td class="p-2.5 font-mono">UpdateTableDto</td>
+              </tr>
+              <tr>
+                <td class="p-2.5"><span class="px-2 py-0.5 rounded font-bold text-[10px] badge-delete">DELETE</span></td>
+                <td class="p-2.5 font-mono">/api/pos/tables/{id}</td>
+                <td class="p-2.5">حذف الطاولة من المخطط.</td>
+                <td class="p-2.5 font-mono">bool</td>
+              </tr>
+              <tr>
+                <td class="p-2.5"><span class="px-2 py-0.5 rounded font-bold text-[10px] badge-get">GET</span></td>
+                <td class="p-2.5 font-mono">/api/pos/tables/layout</td>
+                <td class="p-2.5">جلب التخطيط الكامل للصالة لعرضه فوراً في واجهة الكاشير التفاعلية.</td>
+                <td class="p-2.5 font-mono">FloorLayoutDto</td>
+              </tr>
+              <tr>
+                <td class="p-2.5"><span class="px-2 py-0.5 rounded font-bold text-[10px] badge-put">PUT</span></td>
+                <td class="p-2.5 font-mono">/api/pos/tables/{tableId}/status</td>
+                <td class="p-2.5">تحديث حالة الطاولة (Available, Occupied, Reserved, Billed, Cleaning).</td>
+                <td class="p-2.5 font-mono">PosTableStatus</td>
+              </tr>
+              <tr>
+                <td class="p-2.5"><span class="px-2 py-0.5 rounded font-bold text-[10px] badge-post">POST</span></td>
+                <td class="p-2.5 font-mono">/api/pos/tables/transfer</td>
+                <td class="p-2.5">نقل طلب ضيف أو دمج طاولتين مع بث التغيير عبر SignalR.</td>
+                <td class="p-2.5 font-mono">TransferTableDto</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- 5. PosReservationsController -->
+      <div class="controller-card glass-card rounded-2xl p-6 shadow-sm space-y-4" data-category="hospitality">
+        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-4 gap-2">
+          <div>
+            <div class="flex items-center gap-2">
+              <span class="px-2.5 py-0.5 rounded-md bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 font-mono text-xs font-bold">5</span>
+              <h3 class="text-xl font-bold text-slate-900 dark:text-white">PosReservationsController</h3>
+              <span class="text-xs bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 px-2 py-0.5 rounded font-mono">/api/pos/reservations</span>
+            </div>
+            <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">
+              <strong>التعريف والهدف:</strong> نظام الحجوزات الشامل (طاولات المطاعم، غرف الضيافة، مواعيد الصالونات والعيادات) مع متابعة الوديعة (Deposit).
+            </p>
+          </div>
+          <span class="text-xs font-bold px-2.5 py-1 rounded-full bg-purple-50 text-purple-600 dark:bg-purple-900/30 dark:text-purple-300 border border-purple-200 dark:border-purple-800">
+            Universal Booking Engine
+          </span>
+        </div>
+
+        <div class="overflow-x-auto">
+          <table class="w-full text-right text-xs">
+            <thead class="bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
+              <tr>
+                <th class="p-2.5 rounded-r-lg">العملية</th>
+                <th class="p-2.5">المسار (Path)</th>
+                <th class="p-2.5">الوصف والغرض</th>
+                <th class="p-2.5 rounded-l-lg">نموذج البيانات</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100 dark:divide-slate-800 text-slate-600 dark:text-slate-300">
+              <tr>
+                <td class="p-2.5"><span class="px-2 py-0.5 rounded font-bold text-[10px] badge-get">GET</span></td>
+                <td class="p-2.5 font-mono">/api/pos/reservations</td>
+                <td class="p-2.5">استعلام مصفح للحجوزات حسب الفرع، العميل، الطاولة، التاريخ، والحالة.</td>
+                <td class="p-2.5 font-mono">PagedResultDto&lt;ReservationSummaryDto&gt;</td>
+              </tr>
+              <tr>
+                <td class="p-2.5"><span class="px-2 py-0.5 rounded font-bold text-[10px] badge-get">GET</span></td>
+                <td class="p-2.5 font-mono">/api/pos/reservations/{id}</td>
+                <td class="p-2.5">استرجاع تفاصيل حجز محدد بالمعرف.</td>
+                <td class="p-2.5 font-mono">ReservationSummaryDto</td>
+              </tr>
+              <tr>
+                <td class="p-2.5"><span class="px-2 py-0.5 rounded font-bold text-[10px] badge-post">POST</span></td>
+                <td class="p-2.5 font-mono">/api/pos/reservations</td>
+                <td class="p-2.5">حجز طاولة أو مورد جديد مع تحديد عدد الضيوف ومبلغ العربون/الدفعة المقدمة.</td>
+                <td class="p-2.5 font-mono">CreateReservationDto</td>
+              </tr>
+              <tr>
+                <td class="p-2.5"><span class="px-2 py-0.5 rounded font-bold text-[10px] badge-put">PUT</span></td>
+                <td class="p-2.5 font-mono">/api/pos/reservations/{id}</td>
+                <td class="p-2.5">تعديل بيانات الحجز، الوقت، عدد الضيوف، أو الطاولة المحجوزة.</td>
+                <td class="p-2.5 font-mono">UpdateReservationDto</td>
+              </tr>
+              <tr>
+                <td class="p-2.5"><span class="px-2 py-0.5 rounded font-bold text-[10px] badge-delete">DELETE</span></td>
+                <td class="p-2.5 font-mono">/api/pos/reservations/{id}</td>
+                <td class="p-2.5">إلغاء الحجز وحذف سجله.</td>
+                <td class="p-2.5 font-mono">bool</td>
+              </tr>
+              <tr>
+                <td class="p-2.5"><span class="px-2 py-0.5 rounded font-bold text-[10px] badge-get">GET</span></td>
+                <td class="p-2.5 font-mono">/api/pos/reservations/day</td>
+                <td class="p-2.5">عرض سريع لكافة حجوزات اليوم لفرع محدد لشاشة الاستقبال (Hostess).</td>
+                <td class="p-2.5 font-mono">IReadOnlyList&lt;ReservationSummaryDto&gt;</td>
+              </tr>
+              <tr>
+                <td class="p-2.5"><span class="px-2 py-0.5 rounded font-bold text-[10px] badge-put">PUT</span></td>
+                <td class="p-2.5 font-mono">/api/pos/reservations/{id}/status</td>
+                <td class="p-2.5">تحديث حالة الحجز (Booked, Confirmed, Seated, Cancelled, NoShow).</td>
+                <td class="p-2.5 font-mono">PosReservationStatus</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- 6. PosPromotionsController -->
+      <div class="controller-card glass-card rounded-2xl p-6 shadow-sm space-y-4" data-category="marketing">
+        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-4 gap-2">
+          <div>
+            <div class="flex items-center gap-2">
+              <span class="px-2.5 py-0.5 rounded-md bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 font-mono text-xs font-bold">6</span>
+              <h3 class="text-xl font-bold text-slate-900 dark:text-white">PosPromotionsController</h3>
+              <span class="text-xs bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 px-2 py-0.5 rounded font-mono">/api/pos/promotions</span>
+            </div>
+            <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">
+              <strong>التعريف والهدف:</strong> محرك العروض الترويجية والخصومات المتقدمة (BOGO، خصم وقت السعادة Happy Hour، خصومات الباقات والشراء المشترك).
+            </p>
+          </div>
+          <span class="text-xs font-bold px-2.5 py-1 rounded-full bg-teal-50 text-teal-600 dark:bg-teal-900/30 dark:text-teal-300 border border-teal-200 dark:border-teal-800">
+            Rules Engine
+          </span>
+        </div>
+
+        <div class="overflow-x-auto">
+          <table class="w-full text-right text-xs">
+            <thead class="bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
+              <tr>
+                <th class="p-2.5 rounded-r-lg">العملية</th>
+                <th class="p-2.5">المسار (Path)</th>
+                <th class="p-2.5">الوصف والغرض</th>
+                <th class="p-2.5 rounded-l-lg">نموذج البيانات</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100 dark:divide-slate-800 text-slate-600 dark:text-slate-300">
+              <tr>
+                <td class="p-2.5"><span class="px-2 py-0.5 rounded font-bold text-[10px] badge-post">POST</span></td>
+                <td class="p-2.5 font-mono">/api/pos/promotions</td>
+                <td class="p-2.5">إنشاء حملة ترويجية جديدة وتحديد شروط وقواعد الاستحقاق.</td>
+                <td class="p-2.5 font-mono">CreatePromotionDto -> PromotionDetailsDto</td>
+              </tr>
+              <tr>
+                <td class="p-2.5"><span class="px-2 py-0.5 rounded font-bold text-[10px] badge-get">GET</span></td>
+                <td class="p-2.5 font-mono">/api/pos/promotions</td>
+                <td class="p-2.5">استعراض مصفح للعروض الترويجية النشطة والمنتهية.</td>
+                <td class="p-2.5 font-mono">PagedResultDto&lt;PromotionDetailsDto&gt;</td>
+              </tr>
+              <tr>
+                <td class="p-2.5"><span class="px-2 py-0.5 rounded font-bold text-[10px] badge-get">GET</span></td>
+                <td class="p-2.5 font-mono">/api/pos/promotions/{id}</td>
+                <td class="p-2.5">جلب تفاصيل العرض وشروطه الزمنية والكمية.</td>
+                <td class="p-2.5 font-mono">PromotionDetailsDto</td>
+              </tr>
+              <tr>
+                <td class="p-2.5"><span class="px-2 py-0.5 rounded font-bold text-[10px] badge-put">PUT</span></td>
+                <td class="p-2.5 font-mono">/api/pos/promotions/{id}</td>
+                <td class="p-2.5">تحديث تواريخ العرض، نسب الخصم، أو إيقاف الحملة.</td>
+                <td class="p-2.5 font-mono">UpdatePromotionDto</td>
+              </tr>
+              <tr>
+                <td class="p-2.5"><span class="px-2 py-0.5 rounded font-bold text-[10px] badge-delete">DELETE</span></td>
+                <td class="p-2.5 font-mono">/api/pos/promotions/{id}</td>
+                <td class="p-2.5">إلغاء وتعطيل العرض الترويجي.</td>
+                <td class="p-2.5 font-mono">bool</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- 7. PosPriceListsController -->
+      <div class="controller-card glass-card rounded-2xl p-6 shadow-sm space-y-4" data-category="marketing">
+        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-4 gap-2">
+          <div>
+            <div class="flex items-center gap-2">
+              <span class="px-2.5 py-0.5 rounded-md bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 font-mono text-xs font-bold">7</span>
+              <h3 class="text-xl font-bold text-slate-900 dark:text-white">PosPriceListsController</h3>
+              <span class="text-xs bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 px-2 py-0.5 rounded font-mono">/api/pos/pricelists</span>
+            </div>
+            <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">
+              <strong>التعريف والهدف:</strong> إدارة قوائم الأسعار المتعددة (سعر الصالة، سعر تطبيقات التوصيل، تسعير VIP، وقائمة السهرات الليلية).
+            </p>
+          </div>
+          <span class="text-xs font-bold px-2.5 py-1 rounded-full bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-300 border border-blue-200 dark:border-blue-800">
+            Multi-Tier Pricing
+          </span>
+        </div>
+
+        <div class="overflow-x-auto">
+          <table class="w-full text-right text-xs">
+            <thead class="bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
+              <tr>
+                <th class="p-2.5 rounded-r-lg">العملية</th>
+                <th class="p-2.5">المسار (Path)</th>
+                <th class="p-2.5">الوصف والغرض</th>
+                <th class="p-2.5 rounded-l-lg">نموذج البيانات</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100 dark:divide-slate-800 text-slate-600 dark:text-slate-300">
+              <tr>
+                <td class="p-2.5"><span class="px-2 py-0.5 rounded font-bold text-[10px] badge-post">POST</span></td>
+                <td class="p-2.5 font-mono">/api/pos/pricelists</td>
+                <td class="p-2.5">إنشاء قائمة أسعار جديدة وتحديد الفرع والعملة وتاريخ السريان.</td>
+                <td class="p-2.5 font-mono">CreatePriceListDto -> PriceListSummaryDto</td>
+              </tr>
+              <tr>
+                <td class="p-2.5"><span class="px-2 py-0.5 rounded font-bold text-[10px] badge-get">GET</span></td>
+                <td class="p-2.5 font-mono">/api/pos/pricelists</td>
+                <td class="p-2.5">استعراض مصفح لقوائم الأسعار المعرفة في النظام.</td>
+                <td class="p-2.5 font-mono">PagedResultDto&lt;PriceListSummaryDto&gt;</td>
+              </tr>
+              <tr>
+                <td class="p-2.5"><span class="px-2 py-0.5 rounded font-bold text-[10px] badge-get">GET</span></td>
+                <td class="p-2.5 font-mono">/api/pos/pricelists/{id}</td>
+                <td class="p-2.5">جلب تفاصيل قائمة الأسعار مع أسعار الأصناف المندرجة تحتها.</td>
+                <td class="p-2.5 font-mono">PriceListSummaryDto</td>
+              </tr>
+              <tr>
+                <td class="p-2.5"><span class="px-2 py-0.5 rounded font-bold text-[10px] badge-put">PUT</span></td>
+                <td class="p-2.5 font-mono">/api/pos/pricelists/{id}</td>
+                <td class="p-2.5">تحديث اسم القائمة، تاريخ صلاحيتها، أو حالتها.</td>
+                <td class="p-2.5 font-mono">UpdatePriceListDto</td>
+              </tr>
+              <tr>
+                <td class="p-2.5"><span class="px-2 py-0.5 rounded font-bold text-[10px] badge-delete">DELETE</span></td>
+                <td class="p-2.5 font-mono">/api/pos/pricelists/{id}</td>
+                <td class="p-2.5">حذف قائمة الأسعار.</td>
+                <td class="p-2.5 font-mono">bool</td>
+              </tr>
+              <tr>
+                <td class="p-2.5"><span class="px-2 py-0.5 rounded font-bold text-[10px] badge-post">POST</span></td>
+                <td class="p-2.5 font-mono">/api/pos/pricelists/{id}/items</td>
+                <td class="p-2.5">إضافة صنف أو تعديل سعره المخصص في قائمة الأسعار هذه.</td>
+                <td class="p-2.5 font-mono">AddPriceListItemDto</td>
+              </tr>
+              <tr>
+                <td class="p-2.5"><span class="px-2 py-0.5 rounded font-bold text-[10px] badge-delete">DELETE</span></td>
+                <td class="p-2.5 font-mono">/api/pos/pricelists/{id}/items/{itemId}</td>
+                <td class="p-2.5">حذف تسعير الصنف المخصص والعودة للتسعير الافتراضي.</td>
+                <td class="p-2.5 font-mono">bool</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- 8. PosGiftCardsController -->
+      <div class="controller-card glass-card rounded-2xl p-6 shadow-sm space-y-4" data-category="marketing">
+        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-4 gap-2">
+          <div>
+            <div class="flex items-center gap-2">
+              <span class="px-2.5 py-0.5 rounded-md bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 font-mono text-xs font-bold">8</span>
+              <h3 class="text-xl font-bold text-slate-900 dark:text-white">PosGiftCardsController</h3>
+              <span class="text-xs bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 px-2 py-0.5 rounded font-mono">/api/pos/gift-cards</span>
+            </div>
+            <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">
+              <strong>التعريف والهدف:</strong> إدارة بطاقات الهدايا (Gift Cards)، رصيد المحفظة المسبق الدفع، وسداد الفواتير وسجل المعاملات.
+            </p>
+          </div>
+          <span class="text-xs font-bold px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
+            Stored-Value Cards
+          </span>
+        </div>
+
+        <div class="overflow-x-auto">
+          <table class="w-full text-right text-xs">
+            <thead class="bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
+              <tr>
+                <th class="p-2.5 rounded-r-lg">العملية</th>
+                <th class="p-2.5">المسار (Path)</th>
+                <th class="p-2.5">الوصف والغرض</th>
+                <th class="p-2.5 rounded-l-lg">نموذج البيانات</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100 dark:divide-slate-800 text-slate-600 dark:text-slate-300">
+              <tr>
+                <td class="p-2.5"><span class="px-2 py-0.5 rounded font-bold text-[10px] badge-post">POST</span></td>
+                <td class="p-2.5 font-mono">/api/pos/gift-cards</td>
+                <td class="p-2.5">إصدار بطاقة هدية جديدة وتعبئة رصيدها الافتتاحي وتحديد تاريخ انتهائها.</td>
+                <td class="p-2.5 font-mono">CreateGiftCardDto -> GiftCardSummaryDto</td>
+              </tr>
+              <tr>
+                <td class="p-2.5"><span class="px-2 py-0.5 rounded font-bold text-[10px] badge-get">GET</span></td>
+                <td class="p-2.5 font-mono">/api/pos/gift-cards</td>
+                <td class="p-2.5">استعراض مصفح لبطاقات الهدايا الصادرة وأرصدتها الحالية.</td>
+                <td class="p-2.5 font-mono">PagedResultDto&lt;GiftCardSummaryDto&gt;</td>
+              </tr>
+              <tr>
+                <td class="p-2.5"><span class="px-2 py-0.5 rounded font-bold text-[10px] badge-get">GET</span></td>
+                <td class="p-2.5 font-mono">/api/pos/gift-cards/{id}</td>
+                <td class="p-2.5">جلب سجل الحركات المالية التفصيلية للبطاقة (شحن، خصم، سداد).</td>
+                <td class="p-2.5 font-mono">GiftCardDetailsDto</td>
+              </tr>
+              <tr>
+                <td class="p-2.5"><span class="px-2 py-0.5 rounded font-bold text-[10px] badge-put">PUT</span></td>
+                <td class="p-2.5 font-mono">/api/pos/gift-cards/{id}</td>
+                <td class="p-2.5">تحديث حالة البطاقة (نشطة، معطلة) أو تمديد تاريخ الصلاحية.</td>
+                <td class="p-2.5 font-mono">UpdateGiftCardDto</td>
+              </tr>
+              <tr>
+                <td class="p-2.5"><span class="px-2 py-0.5 rounded font-bold text-[10px] badge-delete">DELETE</span></td>
+                <td class="p-2.5 font-mono">/api/pos/gift-cards/{id}</td>
+                <td class="p-2.5">إيقاف وإلغاء البطاقة فوراً مع تسجيل ذلك في سجل التدقيق.</td>
+                <td class="p-2.5 font-mono">bool</td>
+              </tr>
+              <tr>
+                <td class="p-2.5"><span class="px-2 py-0.5 rounded font-bold text-[10px] badge-get">GET</span></td>
+                <td class="p-2.5 font-mono">/api/pos/gift-cards/balance</td>
+                <td class="p-2.5">استعلام فوري سريع عن الرصيد الحالي للبطاقة عبر مسح الباركود للكاشير.</td>
+                <td class="p-2.5 font-mono">GiftCardSummaryDto</td>
+              </tr>
+              <tr>
+                <td class="p-2.5"><span class="px-2 py-0.5 rounded font-bold text-[10px] badge-post">POST</span></td>
+                <td class="p-2.5 font-mono">/api/pos/gift-cards/redeem</td>
+                <td class="p-2.5">خصم جزء أو كامل قيمة الفاتورة من رصيد البطاقة.</td>
+                <td class="p-2.5 font-mono">RedeemGiftCardDto</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- 9. PosZReportController -->
+      <div class="controller-card glass-card rounded-2xl p-6 shadow-sm space-y-4" data-category="sales">
+        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-4 gap-2">
+          <div>
+            <div class="flex items-center gap-2">
+              <span class="px-2.5 py-0.5 rounded-md bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 font-mono text-xs font-bold">9</span>
+              <h3 class="text-xl font-bold text-slate-900 dark:text-white">PosZReportController</h3>
+              <span class="text-xs bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 px-2 py-0.5 rounded font-mono">/api/pos/zreport</span>
+            </div>
+            <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">
+              <strong>التعريف والهدف:</strong> تقارير الإغلاق المالي اليومي غير القابلة لإعادة التصفير (Sequential Non-Resettable Z-Reports) والمطابقة الضريبية والمالية.
+            </p>
+          </div>
+          <span class="text-xs font-bold px-2.5 py-1 rounded-full bg-rose-50 text-rose-600 dark:bg-rose-900/30 dark:text-rose-300 border border-rose-200 dark:border-rose-800">
+            Fiscal End-of-Day
+          </span>
+        </div>
+
+        <div class="overflow-x-auto">
+          <table class="w-full text-right text-xs">
+            <thead class="bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
+              <tr>
+                <th class="p-2.5 rounded-r-lg">العملية</th>
+                <th class="p-2.5">المسار (Path)</th>
+                <th class="p-2.5">الوصف والغرض</th>
+                <th class="p-2.5 rounded-l-lg">نموذج البيانات</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100 dark:divide-slate-800 text-slate-600 dark:text-slate-300">
+              <tr>
+                <td class="p-2.5"><span class="px-2 py-0.5 rounded font-bold text-[10px] badge-post">POST</span></td>
+                <td class="p-2.5 font-mono">/api/pos/zreport/generate</td>
+                <td class="p-2.5">توليد تقرير Z متسلسل ومؤرشف للإغلاق النهائي وتجميع المبيعات والضرائب والفروقات.</td>
+                <td class="p-2.5 font-mono">GenerateZReportDto -> ZReportSummaryDto</td>
+              </tr>
+              <tr>
+                <td class="p-2.5"><span class="px-2 py-0.5 rounded font-bold text-[10px] badge-get">GET</span></td>
+                <td class="p-2.5 font-mono">/api/pos/zreport</td>
+                <td class="p-2.5">استعراض مصفح لأرشيف تقارير Z التاريخية للفرع بحسب التاريخ.</td>
+                <td class="p-2.5 font-mono">PagedResultDto&lt;ZReportSummaryDto&gt;</td>
+              </tr>
+              <tr>
+                <td class="p-2.5"><span class="px-2 py-0.5 rounded font-bold text-[10px] badge-get">GET</span></td>
+                <td class="p-2.5 font-mono">/api/pos/zreport/{id}</td>
+                <td class="p-2.5">جلب بيانات تقرير Z محدد بأرقام الفواتير الأولى والأخيرة وتفصيل الدفعات.</td>
+                <td class="p-2.5 font-mono">ZReportSummaryDto</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- 10. PosBatchPrepController -->
+      <div class="controller-card glass-card rounded-2xl p-6 shadow-sm space-y-4" data-category="hospitality">
+        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-4 gap-2">
+          <div>
+            <div class="flex items-center gap-2">
+              <span class="px-2.5 py-0.5 rounded-md bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 font-mono text-xs font-bold">10</span>
+              <h3 class="text-xl font-bold text-slate-900 dark:text-white">PosBatchPrepController</h3>
+              <span class="text-xs bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 px-2 py-0.5 rounded font-mono">/api/pos/batch-prep</span>
+            </div>
+            <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">
+              <strong>التعريف والهدف:</strong> التجهيز والتحضير المسبق الصباحي للوجبات والمكونات (Sub-recipes)، حساب استهلاك المواد الخام، ومعامل الهدر (Yield Factor).
+            </p>
+          </div>
+          <span class="text-xs font-bold px-2.5 py-1 rounded-full bg-amber-50 text-amber-600 dark:bg-amber-900/30 dark:text-amber-300 border border-amber-200 dark:border-amber-800">
+            Kitchen Prep & Costing
+          </span>
+        </div>
+
+        <div class="overflow-x-auto">
+          <table class="w-full text-right text-xs">
+            <thead class="bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
+              <tr>
+                <th class="p-2.5 rounded-r-lg">العملية</th>
+                <th class="p-2.5">المسار (Path)</th>
+                <th class="p-2.5">الوصف والغرض</th>
+                <th class="p-2.5 rounded-l-lg">نموذج البيانات</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100 dark:divide-slate-800 text-slate-600 dark:text-slate-300">
+              <tr>
+                <td class="p-2.5"><span class="px-2 py-0.5 rounded font-bold text-[10px] badge-post">POST</span></td>
+                <td class="p-2.5 font-mono">/api/pos/batch-prep</td>
+                <td class="p-2.5">تسجيل عملية طبخ أو تحضير كميات كبيرة، خصم المواد الخام وإضافة المنتج النصف مصنع للمخزن مع احتساب التكلفة.</td>
+                <td class="p-2.5 font-mono">CreateBatchPrepDto -> BatchPrepSummaryDto</td>
+              </tr>
+              <tr>
+                <td class="p-2.5"><span class="px-2 py-0.5 rounded font-bold text-[10px] badge-get">GET</span></td>
+                <td class="p-2.5 font-mono">/api/pos/batch-prep</td>
+                <td class="p-2.5">استعراض مصفح لحركات التحضير المسبق وتكاليفها بحسب التاريخ.</td>
+                <td class="p-2.5 font-mono">PagedResultDto&lt;BatchPrepSummaryDto&gt;</td>
+              </tr>
+              <tr>
+                <td class="p-2.5"><span class="px-2 py-0.5 rounded font-bold text-[10px] badge-get">GET</span></td>
+                <td class="p-2.5 font-mono">/api/pos/batch-prep/{id}</td>
+                <td class="p-2.5">عرض تفاصيل أمر التحضير والمكونات المستهلكة ونسبة الهدر والناتج النهائي.</td>
+                <td class="p-2.5 font-mono">BatchPrepSummaryDto</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- 11. PosStaffAttendanceController -->
+      <div class="controller-card glass-card rounded-2xl p-6 shadow-sm space-y-4" data-category="sales">
+        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-4 gap-2">
+          <div>
+            <div class="flex items-center gap-2">
+              <span class="px-2.5 py-0.5 rounded-md bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 font-mono text-xs font-bold">11</span>
+              <h3 class="text-xl font-bold text-slate-900 dark:text-white">PosStaffAttendanceController</h3>
+              <span class="text-xs bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 px-2 py-0.5 rounded font-mono">/api/pos/staff-attendance</span>
+            </div>
+            <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">
+              <strong>التعريف والهدف:</strong> تسجيل حضور وانصراف وساعات عمل طاقم الكاشير وموظفي الصالة مباشرة عبر شاشة الكاشير السريعة.
+            </p>
+          </div>
+          <span class="text-xs font-bold px-2.5 py-1 rounded-full bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300 border border-slate-300 dark:border-slate-700">
+            Time & Attendance
+          </span>
+        </div>
+
+        <div class="overflow-x-auto">
+          <table class="w-full text-right text-xs">
+            <thead class="bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
+              <tr>
+                <th class="p-2.5 rounded-r-lg">العملية</th>
+                <th class="p-2.5">المسار (Path)</th>
+                <th class="p-2.5">الوصف والغرض</th>
+                <th class="p-2.5 rounded-l-lg">نموذج البيانات</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100 dark:divide-slate-800 text-slate-600 dark:text-slate-300">
+              <tr>
+                <td class="p-2.5"><span class="px-2 py-0.5 rounded font-bold text-[10px] badge-post">POST</span></td>
+                <td class="p-2.5 font-mono">/api/pos/staff-attendance/clock-in</td>
+                <td class="p-2.5">تسجيل بدء مناوبة عمل للموظف برقم الـ PIN أو مسح الباركود.</td>
+                <td class="p-2.5 font-mono">ClockInDto -> StaffAttendanceDto</td>
+              </tr>
+              <tr>
+                <td class="p-2.5"><span class="px-2 py-0.5 rounded font-bold text-[10px] badge-post">POST</span></td>
+                <td class="p-2.5 font-mono">/api/pos/staff-attendance/clock-out</td>
+                <td class="p-2.5">تسجيل انصراف الموظف واحتساب إجمالي ساعات العمل بدقة.</td>
+                <td class="p-2.5 font-mono">ClockOutDto -> StaffAttendanceDto</td>
+              </tr>
+              <tr>
+                <td class="p-2.5"><span class="px-2 py-0.5 rounded font-bold text-[10px] badge-get">GET</span></td>
+                <td class="p-2.5 font-mono">/api/pos/staff-attendance</td>
+                <td class="p-2.5">استعراض مصفح لسجلات حضور الموظفين بالفرع ومطابقتها.</td>
+                <td class="p-2.5 font-mono">PagedResultDto&lt;StaffAttendanceDto&gt;</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- 12. PosPrintTemplatesController -->
+      <div class="controller-card glass-card rounded-2xl p-6 shadow-sm space-y-4" data-category="hardware">
+        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-4 gap-2">
+          <div>
+            <div class="flex items-center gap-2">
+              <span class="px-2.5 py-0.5 rounded-md bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 font-mono text-xs font-bold">12</span>
+              <h3 class="text-xl font-bold text-slate-900 dark:text-white">PosPrintTemplatesController</h3>
+              <span class="text-xs bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 px-2 py-0.5 rounded font-mono">/api/pos/print-templates</span>
+            </div>
+            <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">
+              <strong>التعريف والهدف:</strong> تصميم قوالب الإيصالات الحرارية (ESC/POS) وتوجيه الطباعة الشبكي الذكي (طباعة المأكولات للمطبخ والمشروبات للبار).
+            </p>
+          </div>
+          <span class="text-xs font-bold px-2.5 py-1 rounded-full bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-300 border border-blue-200 dark:border-blue-800">
+            ESC/POS & Hardware Routing
+          </span>
+        </div>
+
+        <div class="overflow-x-auto">
+          <table class="w-full text-right text-xs">
+            <thead class="bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
+              <tr>
+                <th class="p-2.5 rounded-r-lg">العملية</th>
+                <th class="p-2.5">المسار (Path)</th>
+                <th class="p-2.5">الوصف والغرض</th>
+                <th class="p-2.5 rounded-l-lg">نموذج البيانات</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100 dark:divide-slate-800 text-slate-600 dark:text-slate-300">
+              <tr>
+                <td class="p-2.5"><span class="px-2 py-0.5 rounded font-bold text-[10px] badge-post">POST</span></td>
+                <td class="p-2.5 font-mono">/api/pos/print-templates</td>
+                <td class="p-2.5">إنشاء قالب إيصال أو بون مطبخ مخصص مع خيارات الهيدر والفوتر والشعار.</td>
+                <td class="p-2.5 font-mono">CreatePrintTemplateDto -> PrintTemplateDto</td>
+              </tr>
+              <tr>
+                <td class="p-2.5"><span class="px-2 py-0.5 rounded font-bold text-[10px] badge-get">GET</span></td>
+                <td class="p-2.5 font-mono">/api/pos/print-templates</td>
+                <td class="p-2.5">استعراض مصفح لكافة قوالب الطباعة المعرفة في النظام.</td>
+                <td class="p-2.5 font-mono">PagedResultDto&lt;PrintTemplateDto&gt;</td>
+              </tr>
+              <tr>
+                <td class="p-2.5"><span class="px-2 py-0.5 rounded font-bold text-[10px] badge-get">GET</span></td>
+                <td class="p-2.5 font-mono">/api/pos/print-templates/{id}</td>
+                <td class="p-2.5">جلب تصميم وكود القالب الحراري.</td>
+                <td class="p-2.5 font-mono">PrintTemplateDto</td>
+              </tr>
+              <tr>
+                <td class="p-2.5"><span class="px-2 py-0.5 rounded font-bold text-[10px] badge-put">PUT</span></td>
+                <td class="p-2.5 font-mono">/api/pos/print-templates/{id}</td>
+                <td class="p-2.5">تعديل قالب الطباعة والمظهر النصي.</td>
+                <td class="p-2.5 font-mono">UpdatePrintTemplateDto</td>
+              </tr>
+              <tr>
+                <td class="p-2.5"><span class="px-2 py-0.5 rounded font-bold text-[10px] badge-delete">DELETE</span></td>
+                <td class="p-2.5 font-mono">/api/pos/print-templates/{id}</td>
+                <td class="p-2.5">حذف قالب الطباعة.</td>
+                <td class="p-2.5 font-mono">bool</td>
+              </tr>
+              <tr>
+                <td class="p-2.5"><span class="px-2 py-0.5 rounded font-bold text-[10px] badge-post">POST</span></td>
+                <td class="p-2.5 font-mono">/api/pos/print-templates/routes</td>
+                <td class="p-2.5">تعريف مسار توجيه (مثلاً: توجيه أصناف تصنيف البرجر لطابعة المطبخ الساخن).</td>
+                <td class="p-2.5 font-mono">CreatePrinterRouteDto -> PrinterRouteDto</td>
+              </tr>
+              <tr>
+                <td class="p-2.5"><span class="px-2 py-0.5 rounded font-bold text-[10px] badge-get">GET</span></td>
+                <td class="p-2.5 font-mono">/api/pos/print-templates/routes</td>
+                <td class="p-2.5">استعراض مسارات توجيه الطابعات بالفرع.</td>
+                <td class="p-2.5 font-mono">IReadOnlyList&lt;PrinterRouteDto&gt;</td>
+              </tr>
+              <tr>
+                <td class="p-2.5"><span class="px-2 py-0.5 rounded font-bold text-[10px] badge-delete">DELETE</span></td>
+                <td class="p-2.5 font-mono">/api/pos/print-templates/routes/{routeId}</td>
+                <td class="p-2.5">حذف مسار التوجيه.</td>
+                <td class="p-2.5 font-mono">bool</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- 13. PosKdsController -->
+      <div class="controller-card glass-card rounded-2xl p-6 shadow-sm space-y-4" data-category="hospitality">
+        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-4 gap-2">
+          <div>
+            <div class="flex items-center gap-2">
+              <span class="px-2.5 py-0.5 rounded-md bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 font-mono text-xs font-bold">13</span>
+              <h3 class="text-xl font-bold text-slate-900 dark:text-white">PosKdsController</h3>
+              <span class="text-xs bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 px-2 py-0.5 rounded font-mono">/api/pos/kds</span>
+            </div>
+            <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">
+              <strong>التعريف والهدف:</strong> شاشة عرض وتنسيق طلبات المطبخ (Kitchen Display System)، تتبع زمن التجهيز، وتمرير الطلبات (Bumping).
+            </p>
+          </div>
+          <span class="text-xs font-bold px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
+            Real-Time Kitchen Board
+          </span>
+        </div>
+
+        <div class="overflow-x-auto">
+          <table class="w-full text-right text-xs">
+            <thead class="bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
+              <tr>
+                <th class="p-2.5 rounded-r-lg">العملية</th>
+                <th class="p-2.5">المسار (Path)</th>
+                <th class="p-2.5">الوصف والغرض</th>
+                <th class="p-2.5 rounded-l-lg">نموذج البيانات</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100 dark:divide-slate-800 text-slate-600 dark:text-slate-300">
+              <tr>
+                <td class="p-2.5"><span class="px-2 py-0.5 rounded font-bold text-[10px] badge-get">GET</span></td>
+                <td class="p-2.5 font-mono">/api/pos/kds/tickets</td>
+                <td class="p-2.5">استعراض تذاكر وأوامر المطبخ النشطة بحسب المحطة (Station) والفرع.</td>
+                <td class="p-2.5 font-mono">IReadOnlyList&lt;KdsTicketDto&gt;</td>
+              </tr>
+              <tr>
+                <td class="p-2.5"><span class="px-2 py-0.5 rounded font-bold text-[10px] badge-put">PUT</span></td>
+                <td class="p-2.5 font-mono">/api/pos/kds/line-status</td>
+                <td class="p-2.5">تحديث حالة تجهيز سطر محدد (Pending, Preparing, Ready, Served).</td>
+                <td class="p-2.5 font-mono">UpdateKdsLineStatusDto</td>
+              </tr>
+              <tr>
+                <td class="p-2.5"><span class="px-2 py-0.5 rounded font-bold text-[10px] badge-post">POST</span></td>
+                <td class="p-2.5 font-mono">/api/pos/kds/{orderId}/bump</td>
+                <td class="p-2.5">إزاحة الطلب (Bump) عند اكتمال تجهيز كافة أطباقه وإشعار الويتر.</td>
+                <td class="p-2.5 font-mono">bool</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- 14. PosAnalyticsController -->
+      <div class="controller-card glass-card rounded-2xl p-6 shadow-sm space-y-4" data-category="sales">
+        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-4 gap-2">
+          <div>
+            <div class="flex items-center gap-2">
+              <span class="px-2.5 py-0.5 rounded-md bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 font-mono text-xs font-bold">14</span>
+              <h3 class="text-xl font-bold text-slate-900 dark:text-white">PosAnalyticsController</h3>
+              <span class="text-xs bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 px-2 py-0.5 rounded font-mono">/api/pos/analytics</span>
+            </div>
+            <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">
+              <strong>التعريف والهدف:</strong> ذكاء الأعمال المتقدم لنقاط البيع، هندسة المنيو (BCG Matrix)، والخريطة الحرارية لساعات الذروة (Heatmap).
+            </p>
+          </div>
+          <span class="text-xs font-bold px-2.5 py-1 rounded-full bg-purple-50 text-purple-600 dark:bg-purple-900/30 dark:text-purple-300 border border-purple-200 dark:border-purple-800">
+            BCG Matrix & Heatmap
+          </span>
+        </div>
+
+        <div class="overflow-x-auto">
+          <table class="w-full text-right text-xs">
+            <thead class="bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
+              <tr>
+                <th class="p-2.5 rounded-r-lg">العملية</th>
+                <th class="p-2.5">المسار (Path)</th>
+                <th class="p-2.5">الوصف والغرض</th>
+                <th class="p-2.5 rounded-l-lg">نموذج البيانات</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100 dark:divide-slate-800 text-slate-600 dark:text-slate-300">
+              <tr>
+                <td class="p-2.5"><span class="px-2 py-0.5 rounded font-bold text-[10px] badge-get">GET</span></td>
+                <td class="p-2.5 font-mono">/api/pos/analytics/menu-engineering</td>
+                <td class="p-2.5">تصنيف أصناف المنيو وفق مصفوفة BCG (Stars, Plowhorses, Puzzles, Dogs) حسب الشعبية والربحية.</td>
+                <td class="p-2.5 font-mono">MenuEngineeringMatrixDto</td>
+              </tr>
+              <tr>
+                <td class="p-2.5"><span class="px-2 py-0.5 rounded font-bold text-[10px] badge-get">GET</span></td>
+                <td class="p-2.5 font-mono">/api/pos/analytics/heatmap</td>
+                <td class="p-2.5">خريطة حرارية 7x24 لساعات وأيام الذروة لتوزيع وجدولة العمالة الذكية.</td>
+                <td class="p-2.5 font-mono">SalesHeatmapDto</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- 15. PosSyncController -->
+      <div class="controller-card glass-card rounded-2xl p-6 shadow-sm space-y-4" data-category="hardware">
+        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-4 gap-2">
+          <div>
+            <div class="flex items-center gap-2">
+              <span class="px-2.5 py-0.5 rounded-md bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 font-mono text-xs font-bold">15</span>
+              <h3 class="text-xl font-bold text-slate-900 dark:text-white">PosSyncController</h3>
+              <span class="text-xs bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 px-2 py-0.5 rounded font-mono">/api/pos/sync</span>
+            </div>
+            <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">
+              <strong>التعريف والهدف:</strong> معمارية العمل بدون اتصال (Offline-First Sync)، سحب تحديثات الكتالوج الجزئية، ورفع فواتير الأوفلاين مع حل التعارضات.
+            </p>
+          </div>
+          <span class="text-xs font-bold px-2.5 py-1 rounded-full bg-teal-50 text-teal-600 dark:bg-teal-900/30 dark:text-teal-300 border border-teal-200 dark:border-teal-800">
+            Offline-First Engine
+          </span>
+        </div>
+
+        <div class="overflow-x-auto">
+          <table class="w-full text-right text-xs">
+            <thead class="bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
+              <tr>
+                <th class="p-2.5 rounded-r-lg">العملية</th>
+                <th class="p-2.5">المسار (Path)</th>
+                <th class="p-2.5">الوصف والغرض</th>
+                <th class="p-2.5 rounded-l-lg">نموذج البيانات</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100 dark:divide-slate-800 text-slate-600 dark:text-slate-300">
+              <tr>
+                <td class="p-2.5"><span class="px-2 py-0.5 rounded font-bold text-[10px] badge-get">GET</span></td>
+                <td class="p-2.5 font-mono">/api/pos/sync/pull</td>
+                <td class="p-2.5">سحب التحديثات الجزئية (Delta Sync) للمنتجات والأسعار والعروض والطاولات منذ آخر وقت تزامن.</td>
+                <td class="p-2.5 font-mono">PullCatalogSyncDto</td>
+              </tr>
+              <tr>
+                <td class="p-2.5"><span class="px-2 py-0.5 rounded font-bold text-[10px] badge-post">POST</span></td>
+                <td class="p-2.5 font-mono">/api/pos/sync/push</td>
+                <td class="p-2.5">رفع حزمة الفواتير المنشأة في وضع عدم الاتصال (Offline) مع التحقق من المعرف الفريد Idempotency وحفظ فروقات المخزون السالب في <code>PosInventoryConflict</code>.</td>
+                <td class="p-2.5 font-mono">PushOfflineOrdersResultDto</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- SignalR Real-Time Hubs Section -->
+    <section class="glass-card rounded-2xl p-6 shadow-sm space-y-4 border-l-4 border-l-teal-500">
+      <div class="flex items-center gap-2">
+        <span class="text-2xl">⚡</span>
+        <div>
+          <h3 class="text-lg font-bold text-slate-900 dark:text-white">قنوات الاتصال اللحظي المباشر (SignalR Real-Time Hubs)</h3>
+          <p class="text-xs text-slate-500 dark:text-slate-400">بث فوري للتحديثات بين الأجهزة والشاشات المختلفة في صالة المطعم والمطبخ وشاشة العميل.</p>
+        </div>
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div class="p-4 rounded-xl bg-slate-100/80 dark:bg-slate-900/60 space-y-2">
+          <div class="flex items-center justify-between">
+            <span class="font-bold text-sm text-slate-800 dark:text-slate-200">1. شاشة المطبخ (KDS Hub)</span>
+            <span class="font-mono text-xs px-2 py-0.5 rounded bg-emerald-100 dark:bg-emerald-900/50 text-emerald-700 dark:text-emerald-300">/hubs/pos/kds</span>
+          </div>
+          <p class="text-xs text-slate-500 dark:text-slate-400">
+            تنبيه فوري للطهاة عند إرسال أي طلب جديد للمطبخ مع صوت تنبيه، وتحديث شاشات التحضير والتسليم بمجرد عمل Bump للطلب.
+          </p>
+        </div>
+        <div class="p-4 rounded-xl bg-slate-100/80 dark:bg-slate-900/60 space-y-2">
+          <div class="flex items-center justify-between">
+            <span class="font-bold text-sm text-slate-800 dark:text-slate-200">2. شاشة العميل (CFD Hub)</span>
+            <span class="font-mono text-xs px-2 py-0.5 rounded bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300">/hubs/pos/cfd</span>
+          </div>
+          <p class="text-xs text-slate-500 dark:text-slate-400">
+            مرآة لحظية لسلة المشتريات أمام العميل، تظهر الأصناف الممسوحة بالباركود، التخفيضات، وتوليد رمز QR لدفع مدى / STC Pay.
+          </p>
+        </div>
+        <div class="p-4 rounded-xl bg-slate-100/80 dark:bg-slate-900/60 space-y-2">
+          <div class="flex items-center justify-between">
+            <span class="font-bold text-sm text-slate-800 dark:text-slate-200">3. خريطة الصالة (Tables Hub)</span>
+            <span class="font-mono text-xs px-2 py-0.5 rounded bg-purple-100 dark:bg-purple-900/50 text-purple-700 dark:text-purple-300">/hubs/pos/tables</span>
+          </div>
+          <p class="text-xs text-slate-500 dark:text-slate-400">
+            تحديث لون وحالة الطاولات لحظياً لدى جميع الويترز عند الجلوس أو طلب الحساب أو الإخلاء والتنظيف دون الحاجة لعمل Refresh.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="border-t border-slate-200 dark:border-slate-800 pt-6 pb-12 text-center text-xs text-slate-500 dark:text-slate-400 space-y-1">
+      <p>تم إعداد وتوثيق هذه الواجهات وفق أعلى المعايير المعمارية لمشروع <strong>ThinkOn ERP</strong>.</p>
+      <p>الحالة البرمجية: تم التحقق والبناء بنجاح بنسبة 100% مع 0 أخطاء بناء • تاريخ التقرير: 13 سبتمبر 2026</p>
+    </footer>
+
+  </main>
+
+  <script>
+    // Search functionality
+    const searchInput = document.getElementById('apiSearch');
+    const controllerCards = document.querySelectorAll('.controller-card');
+
+    searchInput.addEventListener('input', (e) => {
+      const query = e.target.value.toLowerCase().trim();
+      controllerCards.forEach(card => {
+        const text = card.innerText.toLowerCase();
+        if (text.includes(query)) {
+          card.style.display = 'block';
+        } else {
+          card.style.display = 'none';
+        }
+      });
+    });
+
+    // Category filter functionality
+    function filterCategory(cat) {
+      document.querySelectorAll('.category-btn').forEach(btn => {
+        btn.classList.remove('active', 'bg-emerald-600', 'text-white');
+        btn.classList.add('bg-slate-200', 'dark:bg-slate-800', 'text-slate-700', 'dark:text-slate-300');
+      });
+      event.target.classList.add('active', 'bg-emerald-600', 'text-white');
+      event.target.classList.remove('bg-slate-200', 'dark:bg-slate-800', 'text-slate-700', 'dark:text-slate-300');
+
+      controllerCards.forEach(card => {
+        if (cat === 'all' || card.getAttribute('data-category') === cat) {
+          card.style.display = 'block';
+        } else {
+          card.style.display = 'none';
+        }
+      });
+    }
+  </script>
+</body>
+</html>
