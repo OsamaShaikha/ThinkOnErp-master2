@@ -181,6 +181,9 @@ public class OracleDbContext : DbContext
     public DbSet<PosPrinterRouting> PosPrinterRoutings => Set<PosPrinterRouting>();
     public DbSet<PosStaffAttendance> PosStaffAttendances => Set<PosStaffAttendance>();
     public DbSet<PosExternalOrder> PosExternalOrders => Set<PosExternalOrder>();
+    public DbSet<PosModifierGroup> PosModifierGroups => Set<PosModifierGroup>();
+    public DbSet<PosModifierOption> PosModifierOptions => Set<PosModifierOption>();
+    public DbSet<PosItemModifierGroup> PosItemModifierGroups => Set<PosItemModifierGroup>();
 
     // Universal Dynamic Translation
     public DbSet<SysEntityTranslation> EntityTranslations => Set<SysEntityTranslation>();

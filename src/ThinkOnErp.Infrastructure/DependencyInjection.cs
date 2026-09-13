@@ -215,6 +215,7 @@ public static class DependencyInjection
         services.AddScoped<IPosGiftCardRepository, PosGiftCardRepository>();
         services.AddScoped<IPosBatchPrepRepository, PosBatchPrepRepository>();
         services.AddScoped<IPosStaffAttendanceRepository, PosStaffAttendanceRepository>();
+        services.AddScoped<IPosModifierRepository, PosModifierRepository>();
 
         // Register audit logging services
         services.AddScoped<IAuditRepository, AuditRepository>();

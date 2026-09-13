@@ -18,19 +18,22 @@ public class PosOrderService : IPosOrderService
     private readonly IPosTableRepository _tableRepository;
     private readonly IPosCalculationEngine _calculationEngine;
     private readonly IPosAuditService _auditService;
+    private readonly IPosModifierRepository _modifierRepository;
 
     public PosOrderService(
         IPosOrderRepository orderRepository,
         IPosShiftRepository shiftRepository,
         IPosTableRepository tableRepository,
         IPosCalculationEngine calculationEngine,
-        IPosAuditService auditService)
+        IPosAuditService auditService,
+        IPosModifierRepository modifierRepository)
     {
         _orderRepository = orderRepository;
         _shiftRepository = shiftRepository;
         _tableRepository = tableRepository;
         _calculationEngine = calculationEngine;
         _auditService = auditService;
+        _modifierRepository = modifierRepository;
     }
 
     public async Task<ApiResponse<PosOrderSummaryDto>> CreateOrderAsync(CreatePosOrderDto dto, string username, CancellationToken ct = default)
@@ -43,10 +46,41 @@ public class PosOrderService : IPosOrderService
                 return ApiResponse<PosOrderSummaryDto>.CreateSuccess(MapToSummary(existing), "Order retrieved from cache (idempotent)");
         }
 
-        // 2. Validate Shift
+        // 2. Validate Active Shift
         var shift = await _shiftRepository.GetShiftByIdAsync(dto.ShiftId, ct);
         if (shift == null || shift.Status != PosShiftStatus.Open)
-            return ApiResponse<PosOrderSummaryDto>.CreateFailure("Active shift not found or shift is closed", null, 400);
+            return ApiResponse<PosOrderSummaryDto>.CreateFailure("Cannot create order without an active, open shift", null, 400);
+
+        // 2.1 Validate Mandatory Modifier Groups (BRD Section 4.5)
+        foreach (var reqLine in dto.Lines)
+        {
+            var itemGroups = await _modifierRepository.GetGroupsByItemIdAsync(reqLine.ItemId, ct);
+            foreach (var grp in itemGroups.Where(g => g.IsActive))
+            {
+                var optionNames = grp.Options.Where(o => o.IsActive).Select(o => o.OptionNameLocal).ToHashSet(StringComparer.OrdinalIgnoreCase);
+                var optionItemIds = grp.Options.Where(o => o.IsActive && o.RelatedItemId.HasValue).Select(o => o.RelatedItemId!.Value).ToHashSet();
+
+                var selectedCount = reqLine.Modifiers.Count(m =>
+                    optionNames.Contains(m.ModifierName) ||
+                    (m.ModifierItemId > 0 && optionItemIds.Contains(m.ModifierItemId)));
+
+                if (grp.IsRequired && selectedCount == 0)
+                {
+                    return ApiResponse<PosOrderSummaryDto>.CreateFailure(
+                        $"Item '{reqLine.ItemName}' requires selecting at least one option from modifier group '{grp.GroupNameLocal}'",
+                        null,
+                        400);
+                }
+
+                if (grp.MaxSelections.HasValue && selectedCount > grp.MaxSelections.Value)
+                {
+                    return ApiResponse<PosOrderSummaryDto>.CreateFailure(
+                        $"Item '{reqLine.ItemName}' exceeds maximum allowed selections ({grp.MaxSelections.Value}) for modifier group '{grp.GroupNameLocal}'",
+                        null,
+                        400);
+                }
+            }
+        }
 
         // 3. Compute Totals using Calculation Engine
         var calcResult = await _calculationEngine.CalculateOrderTotalsAsync(dto.BranchId, dto, 15m, ct);

@@ -46,6 +46,7 @@ public class PosOrderRepository : IPosOrderRepository
         var query = _context.PosOrderHeaders
             .AsNoTracking()
             .Include(o => o.Lines)
+                .ThenInclude(l => l.Modifiers)
             .Include(o => o.Table)
             .Where(o => o.BranchId == branchId && o.IsActive);
 

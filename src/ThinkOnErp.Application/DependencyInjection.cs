@@ -96,6 +96,7 @@ public static class DependencyInjection
         services.AddScoped<ThinkOnErp.Application.Services.Pos.IPosGiftCardService, ThinkOnErp.Application.Services.Pos.PosGiftCardService>();
         services.AddScoped<ThinkOnErp.Application.Services.Pos.IPosStaffAttendanceService, ThinkOnErp.Application.Services.Pos.PosStaffAttendanceService>();
         services.AddScoped<ThinkOnErp.Application.Services.Pos.IPosAuditService, ThinkOnErp.Application.Services.Pos.PosAuditService>();
+        services.AddScoped<ThinkOnErp.Application.Services.Pos.IPosModifierService, ThinkOnErp.Application.Services.Pos.PosModifierService>();
 
         return services;
     }

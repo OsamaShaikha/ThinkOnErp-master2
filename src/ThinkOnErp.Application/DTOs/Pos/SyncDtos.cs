@@ -11,6 +11,7 @@ public class PullCatalogSyncDto
     public List<SyncPriceListDto> PriceLists { get; set; } = new();
     public List<SyncPromotionDto> Promotions { get; set; } = new();
     public List<SyncFloorDto> Floors { get; set; } = new();
+    public List<PosModifierGroupDto> ModifierGroups { get; set; } = new();
 }
 
 public class SyncCategoryDto

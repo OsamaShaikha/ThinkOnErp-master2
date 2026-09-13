@@ -20,6 +20,7 @@ public class PosSyncService : IPosSyncService
     private readonly IPosTableRepository _tableRepository;
     private readonly IInvItemRepository _itemRepository;
     private readonly IInvStockBalanceRepository _stockBalanceRepository;
+    private readonly IPosModifierRepository _modifierRepository;
 
     public PosSyncService(
         IPosOrderService orderService,
@@ -27,7 +28,8 @@ public class PosSyncService : IPosSyncService
         IPosPromotionRepository promotionRepository,
         IPosTableRepository tableRepository,
         IInvItemRepository itemRepository,
-        IInvStockBalanceRepository stockBalanceRepository)
+        IInvStockBalanceRepository stockBalanceRepository,
+        IPosModifierRepository modifierRepository)
     {
         _orderService = orderService;
         _orderRepository = orderRepository;
@@ -35,6 +37,7 @@ public class PosSyncService : IPosSyncService
         _tableRepository = tableRepository;
         _itemRepository = itemRepository;
         _stockBalanceRepository = stockBalanceRepository;
+        _modifierRepository = modifierRepository;
     }
 
     public async Task<ApiResponse<PullCatalogSyncDto>> PullCatalogSyncAsync(long branchId, DateTime? lastSyncTime, CancellationToken ct = default)
@@ -85,6 +88,36 @@ public class PosSyncService : IPosSyncService
                 Height = t.Height,
                 Shape = t.Shape
             }).ToList()
+        }).ToList();
+
+        // 4. Modifiers
+        var groups = await _modifierRepository.GetGroupsByBranchAsync(branchId, true, ct);
+        result.ModifierGroups = groups.Select(g => new PosModifierGroupDto
+        {
+            Id = g.Id,
+            BranchId = g.BranchId,
+            GroupCode = g.GroupCode,
+            GroupNameLocal = g.GroupNameLocal,
+            GroupNameEn = g.GroupNameEn,
+            IsRequired = g.IsRequired,
+            SelectionType = g.SelectionType,
+            MinSelections = g.MinSelections,
+            MaxSelections = g.MaxSelections,
+            SortOrder = g.SortOrder,
+            IsActive = g.IsActive,
+            Options = g.Options.Where(o => o.IsActive).Select(o => new PosModifierOptionDto
+            {
+                Id = o.Id,
+                ModifierGroupId = o.ModifierGroupId,
+                OptionNameLocal = o.OptionNameLocal,
+                OptionNameEn = o.OptionNameEn,
+                PriceAdjustment = o.PriceAdjustment,
+                RelatedItemId = o.RelatedItemId,
+                IsDefault = o.IsDefault,
+                SortOrder = o.SortOrder,
+                IsActive = o.IsActive
+            }).ToList(),
+            LinkedItemIds = g.ItemLinks.Select(l => l.ItemId).ToList()
         }).ToList();
 
         return ApiResponse<PullCatalogSyncDto>.CreateSuccess(result);
