@@ -172,6 +172,7 @@ public class SwaggerCategoryLoader
                         else if (routePath.StartsWith("api/companies", StringComparison.OrdinalIgnoreCase)) category = ApiCategories.Company;
                         else if (routePath.StartsWith("api/inventory", StringComparison.OrdinalIgnoreCase)) category = ApiCategories.Inventory;
                         else if (routePath.StartsWith("api/pos", StringComparison.OrdinalIgnoreCase)) category = ApiCategories.Pos;
+                        else if (routePath.StartsWith("api/hr", StringComparison.OrdinalIgnoreCase)) category = ApiCategories.Hr;
                         else category = ApiCategories.System;
                     }
 
@@ -313,7 +314,8 @@ public class SwaggerCategoryLoader
             (ApiCategories.Support, "6. Tickets & Support API", "Customer support & ticket management: support tickets, ticket status, and ticket types.", 6, "TicketsController,TicketTypesController"),
             (ApiCategories.System, "7. System", "System configuration & metadata: system lookup codes, global settings, modules, screens, feature toggles, health checks, document uploads, and saved searches.", 7, "SysCodesController,SysSettingsController,ModulesController,ScreensController,FeaturesController,HealthController,DocumentsController,ConfigurationController,SavedSearchesController"),
             (ApiCategories.Inventory, "8. Inventory & Trade Documents API", "Inventory management, items master, main/sub groups, BOM kits & assemblies, warehouses, stock movements, FIFO costing, and universal trade documents.", 8, "TrxDocumentsController,InvItemsController,InvItemGroupsController,InvBomController,InvWarehousesController,InvStockController,InvOpeningBalancesController"),
-            (ApiCategories.Pos, "9. Point of Sale (POS) API", "Point of Sale operations: till sessions, shifts, orders, split payments, offline sync, dining tables, reservations, KDS kitchen display, Z-reports, batch preps, gift cards, and analytics.", 9, "PosShiftsController,PosOrdersController,PosSyncController,PosTablesController,PosReservationsController,PosKdsController,PosZReportController,PosBatchPrepController,PosGiftCardsController,PosAnalyticsController")
+            (ApiCategories.Pos, "9. Point of Sale (POS) API", "Point of Sale operations: till sessions, shifts, orders, split payments, offline sync, dining tables, reservations, KDS kitchen display, Z-reports, batch preps, gift cards, and analytics.", 9, "PosShiftsController,PosOrdersController,PosSyncController,PosTablesController,PosReservationsController,PosKdsController,PosZReportController,PosBatchPrepController,PosGiftCardsController,PosAnalyticsController"),
+            (ApiCategories.Hr, "10. HR & Dynamic Payroll Engine API", "Human Resources & Payroll operations: work calendars, dynamic proration, overtime, social security contributions, progressive tax calculation, loan auto-capping, attendance corrections, variable adjustments, and balanced GL posting.", 10, "WorkCalendarsController,AttendanceCorrectionsController,PayrollPoliciesController,LoansController,PayrollAdjustmentsController,PayrollController")
         };
 
         foreach (var d in defaults)

@@ -14,4 +14,5 @@ public static class ApiCategories
     public const string System = "system";
     public const string Inventory = "Inventory";
     public const string Pos = "pos";
+    public const string Hr = "hr";
 }

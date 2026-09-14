@@ -7,6 +7,7 @@ using ThinkOnErp.Domain.Entities;
 using ThinkOnErp.Domain.Entities.Accounting;
 using ThinkOnErp.Domain.Entities.Inventory;
 using ThinkOnErp.Domain.Entities.Pos;
+using ThinkOnErp.Domain.Entities.Hr;
 using ThinkOnErp.Domain.Entities.Views;
 using ThinkOnErp.Infrastructure.Data.Configurations.Accounting;
 
@@ -184,6 +185,37 @@ public class OracleDbContext : DbContext
     public DbSet<PosModifierGroup> PosModifierGroups => Set<PosModifierGroup>();
     public DbSet<PosModifierOption> PosModifierOptions => Set<PosModifierOption>();
     public DbSet<PosItemModifierGroup> PosItemModifierGroups => Set<PosItemModifierGroup>();
+
+    // HR & Dynamic Payroll Module
+    public DbSet<WorkCalendar> WorkCalendars => Set<WorkCalendar>();
+    public DbSet<WorkCalendarDay> WorkCalendarDays => Set<WorkCalendarDay>();
+    public DbSet<PublicHoliday> PublicHolidays => Set<PublicHoliday>();
+    public DbSet<AttendancePolicy> AttendancePolicies => Set<AttendancePolicy>();
+    public DbSet<RawAttendance> RawAttendances => Set<RawAttendance>();
+    public DbSet<AttendanceDay> AttendanceDays => Set<AttendanceDay>();
+    public DbSet<AttendanceCorrectionRequest> AttendanceCorrectionRequests => Set<AttendanceCorrectionRequest>();
+    public DbSet<ShiftSchedule> ShiftSchedules => Set<ShiftSchedule>();
+    public DbSet<EmployeeShiftAssignment> EmployeeShiftAssignments => Set<EmployeeShiftAssignment>();
+    public DbSet<OvertimeRule> OvertimeRules => Set<OvertimeRule>();
+    public DbSet<ProrationPolicy> ProrationPolicies => Set<ProrationPolicy>();
+    public DbSet<DeductionPolicy> DeductionPolicies => Set<DeductionPolicy>();
+    public DbSet<TaxPolicy> TaxPolicies => Set<TaxPolicy>();
+    public DbSet<TaxBracket> TaxBrackets => Set<TaxBracket>();
+    public DbSet<SSCPolicy> SSCPolicies => Set<SSCPolicy>();
+    public DbSet<Employee> Employees => Set<Employee>();
+    public DbSet<EmployeeDependent> EmployeeDependents => Set<EmployeeDependent>();
+    public DbSet<SalaryComponent> SalaryComponents => Set<SalaryComponent>();
+    public DbSet<SalaryStructure> SalaryStructures => Set<SalaryStructure>();
+    public DbSet<SalaryStructureLine> SalaryStructureLines => Set<SalaryStructureLine>();
+    public DbSet<EmployeeLoan> EmployeeLoans => Set<EmployeeLoan>();
+    public DbSet<LoanRepaymentSchedule> LoanRepaymentSchedules => Set<LoanRepaymentSchedule>();
+    public DbSet<EmployeeAdvance> EmployeeAdvances => Set<EmployeeAdvance>();
+    public DbSet<PayrollAdjustment> PayrollAdjustments => Set<PayrollAdjustment>();
+    public DbSet<PayrollPeriod> PayrollPeriods => Set<PayrollPeriod>();
+    public DbSet<PayrollRun> PayrollRuns => Set<PayrollRun>();
+    public DbSet<PayrollRunLine> PayrollRunLines => Set<PayrollRunLine>();
+    public DbSet<PayrollRunLineComponent> PayrollRunLineComponents => Set<PayrollRunLineComponent>();
+    public DbSet<PayrollCalculationSnapshot> PayrollCalculationSnapshots => Set<PayrollCalculationSnapshot>();
 
     // Universal Dynamic Translation
     public DbSet<SysEntityTranslation> EntityTranslations => Set<SysEntityTranslation>();

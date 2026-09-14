@@ -98,6 +98,21 @@ public static class DependencyInjection
         services.AddScoped<ThinkOnErp.Application.Services.Pos.IPosAuditService, ThinkOnErp.Application.Services.Pos.PosAuditService>();
         services.AddScoped<ThinkOnErp.Application.Services.Pos.IPosModifierService, ThinkOnErp.Application.Services.Pos.PosModifierService>();
 
+        // HR & Dynamic Payroll Engine Services
+        services.AddScoped<ThinkOnErp.Application.Services.Hr.IWorkCalendarService, ThinkOnErp.Application.Services.Hr.WorkCalendarService>();
+        services.AddScoped<ThinkOnErp.Application.Services.Hr.IAttendanceCalculationEngine, ThinkOnErp.Application.Services.Hr.AttendanceCalculationEngine>();
+        services.AddScoped<ThinkOnErp.Application.Services.Hr.IAttendanceCorrectionService, ThinkOnErp.Application.Services.Hr.AttendanceCorrectionService>();
+        services.AddScoped<ThinkOnErp.Application.Services.Hr.IOvertimeCalculationService, ThinkOnErp.Application.Services.Hr.OvertimeCalculationService>();
+        services.AddScoped<ThinkOnErp.Application.Services.Hr.IPayrollProrationService, ThinkOnErp.Application.Services.Hr.PayrollProrationService>();
+        services.AddScoped<ThinkOnErp.Application.Services.Hr.ISSCCalculationService, ThinkOnErp.Application.Services.Hr.SSCCalculationService>();
+        services.AddScoped<ThinkOnErp.Application.Services.Hr.ITaxCalculationEngine, ThinkOnErp.Application.Services.Hr.TaxCalculationEngine>();
+        services.AddScoped<ThinkOnErp.Application.Services.Hr.ILoanDeductionService, ThinkOnErp.Application.Services.Hr.LoanDeductionService>();
+        services.AddScoped<ThinkOnErp.Application.Services.Hr.IPayrollAdjustmentService, ThinkOnErp.Application.Services.Hr.PayrollAdjustmentService>();
+        services.AddScoped<ThinkOnErp.Application.Services.Hr.IPayrollCalculationEngine, ThinkOnErp.Application.Services.Hr.PayrollCalculationEngine>();
+        services.AddScoped<ThinkOnErp.Application.Services.Hr.IPayrollValidationService, ThinkOnErp.Application.Services.Hr.PayrollValidationService>();
+        services.AddScoped<ThinkOnErp.Application.Services.Hr.IPayrollExplanationService, ThinkOnErp.Application.Services.Hr.PayrollExplanationService>();
+        services.AddScoped<ThinkOnErp.Application.Services.Hr.IPayrollService, ThinkOnErp.Application.Services.Hr.PayrollService>();
+
         return services;
     }
 }
