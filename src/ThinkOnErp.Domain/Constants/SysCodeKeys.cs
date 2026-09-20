@@ -239,4 +239,15 @@ public static class SysCodeKeys
         public const int Single = 1;
         public const int Multiple = 2;
     }
+
+    public static class PosOrderTypes
+    {
+        public const int Mgr = 34;
+        public const int DineIn = 1;
+        public const int Takeaway = 2;
+        public const int Delivery = 3;
+        public const int Aggregator = 4;
+        public const int Kiosk = 5;
+        public const int QrTable = 6;
+    }
 }

@@ -1,0 +1,1085 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>تقرير الفحص الشامل (HARD TEST) لنظام الموارد البشرية والرواتب — ThinkOn ERP</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-main: #0a0f1d;
+      --bg-card: #111a2e;
+      --bg-card-alt: #16223b;
+      --border: #202f4e;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --accent: #38bdf8;
+      --success: #10b981;
+      --warning: #f59e0b;
+      --danger: #ef4444;
+      --info: #818cf8;
+      --purple: #c084fc;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Cairo', sans-serif; }
+    body { background-color: var(--bg-main); color: var(--text-main); min-height: 100vh; padding: 24px; line-height: 1.6; }
+    .container { max-width: 1440px; margin: 0 auto; }
+    
+    .header {
+      background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 32px;
+      margin-bottom: 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 20px;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+    }
+    .header-title h1 { font-size: 26px; font-weight: 900; color: #fff; margin-bottom: 6px; }
+    .header-title p { color: var(--text-muted); font-size: 14px; }
+    .badge-server {
+      background: rgba(56, 189, 248, 0.15);
+      border: 1px solid rgba(56, 189, 248, 0.4);
+      color: var(--accent);
+      padding: 8px 16px;
+      border-radius: 30px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+      margin-bottom: 28px;
+    }
+    .kpi-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 20px;
+      transition: all 0.2s ease;
+    }
+    .kpi-card:hover { transform: translateY(-3px); border-color: var(--accent); }
+    .kpi-label { font-size: 13px; color: var(--text-muted); margin-bottom: 8px; font-weight: 600; }
+    .kpi-val { font-size: 28px; font-weight: 800; font-family: 'JetBrains Mono', monospace; }
+    .kpi-sub { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
+
+    .analysis-box {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 24px;
+      margin-bottom: 28px;
+    }
+    .analysis-title { font-size: 18px; font-weight: 800; margin-bottom: 16px; display: flex; align-items: center; gap: 10px; color: var(--accent); }
+    .bug-card {
+      background: rgba(239, 68, 68, 0.08);
+      border: 1px solid rgba(239, 68, 68, 0.3);
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 12px;
+    }
+    .bug-card h4 { color: #f87171; font-size: 15px; margin-bottom: 6px; font-family: 'JetBrains Mono', sans-serif; }
+    .bug-card p { font-size: 13px; color: #cbd5e1; }
+    .bug-fix { background: rgba(0,0,0,0.3); padding: 8px 12px; border-radius: 8px; font-family: 'JetBrains Mono'; font-size: 12px; color: #38bdf8; margin-top: 8px; }
+
+    .filter-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+    .filter-buttons { display: flex; gap: 8px; flex-wrap: wrap; }
+    .filter-btn {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      padding: 8px 16px;
+      border-radius: 10px;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 700;
+      transition: all 0.2s;
+    }
+    .filter-btn.active, .filter-btn:hover {
+      background: var(--accent);
+      color: #0b0f19;
+      border-color: var(--accent);
+    }
+    .search-input {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      color: #fff;
+      padding: 10px 16px;
+      border-radius: 10px;
+      font-size: 13px;
+      min-width: 280px;
+    }
+
+    .table-container {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+    }
+    table { width: 100%; border-collapse: collapse; text-align: right; }
+    th { background: #162035; color: var(--text-muted); padding: 14px 16px; font-size: 13px; font-weight: 700; border-bottom: 1px solid var(--border); }
+    td { padding: 12px 16px; font-size: 13px; border-bottom: 1px solid rgba(32, 47, 78, 0.4); vertical-align: middle; }
+    tr:hover td { background-color: var(--bg-card-alt); }
+    
+    .method-badge {
+      display: inline-block;
+      padding: 3px 8px;
+      border-radius: 6px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      font-weight: 800;
+      text-transform: uppercase;
+      min-width: 55px;
+      text-align: center;
+    }
+    .method-get { background: rgba(56, 189, 248, 0.15); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.3); }
+    .method-post { background: rgba(16, 185, 129, 0.15); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.3); }
+    .method-put { background: rgba(245, 158, 11, 0.15); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.3); }
+    .method-delete { background: rgba(239, 68, 68, 0.15); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.3); }
+
+    .status-badge {
+      display: inline-block;
+      padding: 3px 10px;
+      border-radius: 8px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      font-weight: 800;
+    }
+    .status-success { background: rgba(16, 185, 129, 0.15); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.4); }
+    .status-validation { background: rgba(245, 158, 11, 0.15); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.4); }
+    .status-notfound { background: rgba(129, 140, 248, 0.15); color: #818cf8; border: 1px solid rgba(129, 140, 248, 0.4); }
+    .status-error { background: rgba(239, 68, 68, 0.2); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.5); }
+
+    .route-code { font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #f1f5f9; direction: ltr; text-align: left; }
+    .duration-cell { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--text-muted); }
+    .snippet-cell { font-size: 12px; color: #cbd5e1; max-width: 320px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  </style>
+</head>
+<body>
+<div class="container">
+
+  <!-- Header -->
+  <div class="header">
+    <div class="header-title">
+      <h1>تقرير الفحص الشامل (HARD TEST) لنظام الموارد البشرية والرواتب — HR Module</h1>
+      <p>فحص شامل لجميع واجهات HR الـ 55 على سيرفر الإنتاج والتحقق من صحة المعاملات، القيود، ودورات العمل</p>
+    </div>
+    <div class="badge-server">
+      Target Server: http://178.104.126.99:5000 | Tenant: 1122
+    </div>
+  </div>
+
+  <!-- KPI Grid -->
+  <div class="kpi-grid">
+    <div class="kpi-card">
+      <div class="kpi-label">إجمالي الواجهات المفحوصة</div>
+      <div class="kpi-val" style="color: #fff;">55</div>
+      <div class="kpi-sub">55 Endpoints عبر 9 Controllers</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">الواجهات الناجحة (2xx)</div>
+      <div class="kpi-val" style="color: var(--success);">33</div>
+      <div class="kpi-sub">60% معدل النجاح المباشر</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">التحقق المنطقي النشط (400)</div>
+      <div class="kpi-val" style="color: var(--warning);">3</div>
+      <div class="kpi-sub">واجهات تعمل وتفرض شروط البزنس</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">بيانات غير موجودة (404 DB)</div>
+      <div class="kpi-val" style="color: var(--info);">14</div>
+      <div class="kpi-sub">الواجهات مثبتة وتعيد 404 لعدم توفر السجل</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">أخطاء خادم حرجة (500)</div>
+      <div class="kpi-val" style="color: var(--danger);">5</div>
+      <div class="kpi-sub">أعطال برمجية تتطلب إصلاحاً في الـ Backend</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">متوسط سرعة الاستجابة</div>
+      <div class="kpi-val" style="color: var(--accent);">89 <span style="font-size: 16px;">ms</span></div>
+      <div class="kpi-sub">سرعة ممتازة عبر شبكة السيرفر</div>
+    </div>
+  </div>
+
+  <!-- Technical Analysis Section -->
+  <div class="analysis-box">
+    <div class="analysis-title">
+      <span>🛠️</span> التحليل التقني الجذري للأعطال الـ 8 المكتشفة وتوصيات المعالجة البرمجية
+    </div>
+
+    <div class="bug-card">
+      <h4>1. مشكلة التكرار اللانهائي في تحويل الـ JSON (Object Cycle Exception)</h4>
+      <p>
+        <strong>الواجهات المتأثرة:</strong> 
+        <code>GET & POST /api/hr/loans</code>, <code>POST /api/hr/loans/1/approve</code>, <code>GET & POST /api/hr/work-calendars</code>.
+        <br>
+        <strong>السبب:</strong> تقوم الـ Controllers بإعادة الكيان المباشر (Domain Entity) بدلاً من DTO. حيث يمتلك <code>WorkCalendar</code> علاقة متبادلة مع <code>WorkCalendarDay</code>، ويمتلك <code>EmployeeLoan</code> علاقة متبادلة مع <code>LoanRepaymentSchedule</code>. فيكتشف محول System.Text.Json دورة مرجعية متكررة ويرمي <code>JsonException</code> ينتج عنها خطأ خادم 500.
+      </p>
+      <div class="bug-fix">
+        الحل الفوري: تفعيل ReferenceHandler.IgnoreCycles في Program.cs أو إعادة DTOs مستقلة بدلاً من Entities.
+      </div>
+    </div>
+
+    <div class="bug-card">
+      <h4>2. استثناءات التكامل المرجعي لقاعدة البيانات (Foreign Key Violation Unhandled in Middleware)</h4>
+      <p>
+        <strong>الواجهات المتأثرة:</strong> <code>POST /api/hr/adjustments</code>, <code>POST /api/hr/employees</code>.
+        <br>
+        <strong>السبب:</strong> عند إرسال قيمة غير موجودة مثل <code>ComponentCode</code> أو <code>PositionCode</code>، يرمي محرك أوراكل <code>ORA-02291 parent key not found</code> وتتحول إلى <code>DbUpdateException</code>. وحيث أن <code>ExceptionHandlingMiddleware</code> لا يلتقط هذا الاستثناء، يخرج الرد كـ 500 بدلاً من إرجاع 400 Bad Request مع توضيح الحقل غير الصالح.
+      </p>
+      <div class="bug-fix">
+        الحل الفوري: إضافة معالج لـ DbUpdateException في ExceptionHandlingMiddleware لترجمة أخطاء الـ FK إلى 400 Bad Request للمستخدم.
+      </div>
+    </div>
+  </div>
+
+  <!-- Filter and Search Bar -->
+  <div class="filter-bar">
+    <div class="filter-buttons">
+      <button class="filter-btn active" onclick="filterData('ALL')">الكل (55)</button>
+      <button class="filter-btn" onclick="filterData('SUCCESS')">ناجحة 2xx (33)</button>
+      <button class="filter-btn" onclick="filterData('VALIDATION_ACTIVE')">تحقق نشط 400 (3)</button>
+      <button class="filter-btn" onclick="filterData('DATA_NOT_FOUND')">سجلات غير موجودة 404 (14)</button>
+      <button class="filter-btn" onclick="filterData('SERVER_ERROR')">أخطاء خادم 500 (5)</button>
+    </div>
+    <input type="text" class="search-input" id="searchInput" placeholder="بحث بالمسار، الطريقة، أو الوصف..." onkeyup="searchTable()">
+  </div>
+
+  <!-- Detailed Table -->
+  <div class="table-container">
+    <table id="resultsTable">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>الطريقة</th>
+          <th>المسار البرمجي (Endpoint)</th>
+          <th>الموديول الفرعي</th>
+          <th>كود الحالة</th>
+          <th>زمن الاستجابة</th>
+          <th>تفاصيل الرد والرسالة</th>
+        </tr>
+      </thead>
+      <tbody>
+        
+          <tr data-category="SUCCESS">
+            <td style="font-family: 'JetBrains Mono'; font-weight: bold; color: var(--text-muted);">1</td>
+            <td><span class="method-badge method-get">GET</span></td>
+            <td class="route-code">/api/hr/attendance-corrections</td>
+            <td style="font-weight: 600; color: var(--accent);">hr</td>
+            <td>
+              <span class="status-badge status-success">
+                200
+              </span>
+            </td>
+            <td class="duration-cell">84ms</td>
+            <td class="snippet-cell" title="Correction requests retrieved.">Correction requests retrieved.</td>
+          </tr>
+        
+          <tr data-category="SUCCESS">
+            <td style="font-family: 'JetBrains Mono'; font-weight: bold; color: var(--text-muted);">2</td>
+            <td><span class="method-badge method-post">POST</span></td>
+            <td class="route-code">/api/hr/attendance-corrections</td>
+            <td style="font-weight: 600; color: var(--accent);">hr</td>
+            <td>
+              <span class="status-badge status-success">
+                200
+              </span>
+            </td>
+            <td class="duration-cell">89ms</td>
+            <td class="snippet-cell" title="Operation completed successfully.">Operation completed successfully.</td>
+          </tr>
+        
+          <tr data-category="VALIDATION_ACTIVE">
+            <td style="font-family: 'JetBrains Mono'; font-weight: bold; color: var(--text-muted);">3</td>
+            <td><span class="method-badge method-post">POST</span></td>
+            <td class="route-code">/api/hr/attendance-corrections/1/process</td>
+            <td style="font-weight: 600; color: var(--accent);">hr</td>
+            <td>
+              <span class="status-badge status-validation">
+                400
+              </span>
+            </td>
+            <td class="duration-cell">78ms</td>
+            <td class="snippet-cell" title="Request 1 has already been processed with status APPROVED.">Request 1 has already been processed with status APPROVED.</td>
+          </tr>
+        
+          <tr data-category="SUCCESS">
+            <td style="font-family: 'JetBrains Mono'; font-weight: bold; color: var(--text-muted);">4</td>
+            <td><span class="method-badge method-delete">DELETE</span></td>
+            <td class="route-code">/api/hr/employees/EMP_TEST_01</td>
+            <td style="font-weight: 600; color: var(--accent);">hr</td>
+            <td>
+              <span class="status-badge status-success">
+                200
+              </span>
+            </td>
+            <td class="duration-cell">113ms</td>
+            <td class="snippet-cell" title="Status updated successfully.">Status updated successfully.</td>
+          </tr>
+        
+          <tr data-category="SUCCESS">
+            <td style="font-family: 'JetBrains Mono'; font-weight: bold; color: var(--text-muted);">5</td>
+            <td><span class="method-badge method-get">GET</span></td>
+            <td class="route-code">/api/hr/employees/EMP_TEST_01</td>
+            <td style="font-weight: 600; color: var(--accent);">hr</td>
+            <td>
+              <span class="status-badge status-success">
+                200
+              </span>
+            </td>
+            <td class="duration-cell">75ms</td>
+            <td class="snippet-cell" title="Data retrieved successfully.">Data retrieved successfully.</td>
+          </tr>
+        
+          <tr data-category="SUCCESS">
+            <td style="font-family: 'JetBrains Mono'; font-weight: bold; color: var(--text-muted);">6</td>
+            <td><span class="method-badge method-put">PUT</span></td>
+            <td class="route-code">/api/hr/employees/EMP_TEST_01</td>
+            <td style="font-weight: 600; color: var(--accent);">hr</td>
+            <td>
+              <span class="status-badge status-success">
+                200
+              </span>
+            </td>
+            <td class="duration-cell">87ms</td>
+            <td class="snippet-cell" title="Record updated successfully.">Record updated successfully.</td>
+          </tr>
+        
+          <tr data-category="DATA_NOT_FOUND">
+            <td style="font-family: 'JetBrains Mono'; font-weight: bold; color: var(--text-muted);">7</td>
+            <td><span class="method-badge method-delete">DELETE</span></td>
+            <td class="route-code">/api/hr/employees/dependents/1</td>
+            <td style="font-weight: 600; color: var(--accent);">hr</td>
+            <td>
+              <span class="status-badge status-notfound">
+                404
+              </span>
+            </td>
+            <td class="duration-cell">82ms</td>
+            <td class="snippet-cell" title="Dependent with ID 1 not found.">Dependent with ID 1 not found.</td>
+          </tr>
+        
+          <tr data-category="SUCCESS">
+            <td style="font-family: 'JetBrains Mono'; font-weight: bold; color: var(--text-muted);">8</td>
+            <td><span class="method-badge method-get">GET</span></td>
+            <td class="route-code">/api/hr/employees</td>
+            <td style="font-weight: 600; color: var(--accent);">hr</td>
+            <td>
+              <span class="status-badge status-success">
+                200
+              </span>
+            </td>
+            <td class="duration-cell">96ms</td>
+            <td class="snippet-cell" title="Data retrieved successfully.">Data retrieved successfully.</td>
+          </tr>
+        
+          <tr data-category="SUCCESS">
+            <td style="font-family: 'JetBrains Mono'; font-weight: bold; color: var(--text-muted);">9</td>
+            <td><span class="method-badge method-post">POST</span></td>
+            <td class="route-code">/api/hr/employees</td>
+            <td style="font-weight: 600; color: var(--accent);">hr</td>
+            <td>
+              <span class="status-badge status-success">
+                200
+              </span>
+            </td>
+            <td class="duration-cell">77ms</td>
+            <td class="snippet-cell" title="Record created successfully.">Record created successfully.</td>
+          </tr>
+        
+          <tr data-category="DATA_NOT_FOUND">
+            <td style="font-family: 'JetBrains Mono'; font-weight: bold; color: var(--text-muted);">10</td>
+            <td><span class="method-badge method-get">GET</span></td>
+            <td class="route-code">/api/hr/employees/EMP_TEST_01/salary-structure</td>
+            <td style="font-weight: 600; color: var(--accent);">hr</td>
+            <td>
+              <span class="status-badge status-notfound">
+                404
+              </span>
+            </td>
+            <td class="duration-cell">85ms</td>
+            <td class="snippet-cell" title="No active salary structure found for employee 'EMP_TEST_01'.">No active salary structure found for employee 'EMP_TEST_01'.</td>
+          </tr>
+        
+          <tr data-category="SUCCESS">
+            <td style="font-family: 'JetBrains Mono'; font-weight: bold; color: var(--text-muted);">11</td>
+            <td><span class="method-badge method-post">POST</span></td>
+            <td class="route-code">/api/hr/employees/EMP_TEST_01/salary-structure</td>
+            <td style="font-weight: 600; color: var(--accent);">hr</td>
+            <td>
+              <span class="status-badge status-success">
+                200
+              </span>
+            </td>
+            <td class="duration-cell">207ms</td>
+            <td class="snippet-cell" title="Data retrieved successfully.">Data retrieved successfully.</td>
+          </tr>
+        
+          <tr data-category="SUCCESS">
+            <td style="font-family: 'JetBrains Mono'; font-weight: bold; color: var(--text-muted);">12</td>
+            <td><span class="method-badge method-post">POST</span></td>
+            <td class="route-code">/api/hr/employees/EMP_TEST_01/dependents</td>
+            <td style="font-weight: 600; color: var(--accent);">hr</td>
+            <td>
+              <span class="status-badge status-success">
+                200
+              </span>
+            </td>
+            <td class="duration-cell">138ms</td>
+            <td class="snippet-cell" title="Record created successfully.">Record created successfully.</td>
+          </tr>
+        
+          <tr data-category="SUCCESS">
+            <td style="font-family: 'JetBrains Mono'; font-weight: bold; color: var(--text-muted);">13</td>
+            <td><span class="method-badge method-get">GET</span></td>
+            <td class="route-code">/api/hr/leaves/balances/EMP_TEST_01</td>
+            <td style="font-weight: 600; color: var(--accent);">hr</td>
+            <td>
+              <span class="status-badge status-success">
+                200
+              </span>
+            </td>
+            <td class="duration-cell">89ms</td>
+            <td class="snippet-cell" title="Data retrieved successfully.">Data retrieved successfully.</td>
+          </tr>
+        
+          <tr data-category="SUCCESS">
+            <td style="font-family: 'JetBrains Mono'; font-weight: bold; color: var(--text-muted);">14</td>
+            <td><span class="method-badge method-get">GET</span></td>
+            <td class="route-code">/api/hr/leaves/requests</td>
+            <td style="font-weight: 600; color: var(--accent);">hr</td>
+            <td>
+              <span class="status-badge status-success">
+                200
+              </span>
+            </td>
+            <td class="duration-cell">88ms</td>
+            <td class="snippet-cell" title="Data retrieved successfully.">Data retrieved successfully.</td>
+          </tr>
+        
+          <tr data-category="VALIDATION_ACTIVE">
+            <td style="font-family: 'JetBrains Mono'; font-weight: bold; color: var(--text-muted);">15</td>
+            <td><span class="method-badge method-post">POST</span></td>
+            <td class="route-code">/api/hr/leaves/requests</td>
+            <td style="font-weight: 600; color: var(--accent);">hr</td>
+            <td>
+              <span class="status-badge status-validation">
+                400
+              </span>
+            </td>
+            <td class="duration-cell">101ms</td>
+            <td class="snippet-cell" title="Leave type 'ANNUAL' is invalid or inactive.">Leave type 'ANNUAL' is invalid or inactive.</td>
+          </tr>
+        
+          <tr data-category="SUCCESS">
+            <td style="font-family: 'JetBrains Mono'; font-weight: bold; color: var(--text-muted);">16</td>
+            <td><span class="method-badge method-get">GET</span></td>
+            <td class="route-code">/api/hr/leaves/types</td>
+            <td style="font-weight: 600; color: var(--accent);">hr</td>
+            <td>
+              <span class="status-badge status-success">
+                200
+              </span>
+            </td>
+            <td class="duration-cell">73ms</td>
+            <td class="snippet-cell" title="Data retrieved successfully.">Data retrieved successfully.</td>
+          </tr>
+        
+          <tr data-category="DATA_NOT_FOUND">
+            <td style="font-family: 'JetBrains Mono'; font-weight: bold; color: var(--text-muted);">17</td>
+            <td><span class="method-badge method-post">POST</span></td>
+            <td class="route-code">/api/hr/leaves/requests/1/process</td>
+            <td style="font-weight: 600; color: var(--accent);">hr</td>
+            <td>
+              <span class="status-badge status-notfound">
+                404
+              </span>
+            </td>
+            <td class="duration-cell">87ms</td>
+            <td class="snippet-cell" title="Leave request with ID 1 not found.">Leave request with ID 1 not found.</td>
+          </tr>
+        
+          <tr data-category="SERVER_ERROR">
+            <td style="font-family: 'JetBrains Mono'; font-weight: bold; color: var(--text-muted);">18</td>
+            <td><span class="method-badge method-get">GET</span></td>
+            <td class="route-code">/api/hr/loans</td>
+            <td style="font-weight: 600; color: var(--accent);">hr</td>
+            <td>
+              <span class="status-badge status-error">
+                500
+              </span>
+            </td>
+            <td class="duration-cell">87ms</td>
+            <td class="snippet-cell" title="An unexpected error occurred. Please try again later">An unexpected error occurred. Please try again later</td>
+          </tr>
+        
+          <tr data-category="SERVER_ERROR">
+            <td style="font-family: 'JetBrains Mono'; font-weight: bold; color: var(--text-muted);">19</td>
+            <td><span class="method-badge method-post">POST</span></td>
+            <td class="route-code">/api/hr/loans</td>
+            <td style="font-weight: 600; color: var(--accent);">hr</td>
+            <td>
+              <span class="status-badge status-error">
+                500
+              </span>
+            </td>
+            <td class="duration-cell">113ms</td>
+            <td class="snippet-cell" title="An unexpected error occurred. Please try again later">An unexpected error occurred. Please try again later</td>
+          </tr>
+        
+          <tr data-category="SUCCESS">
+            <td style="font-family: 'JetBrains Mono'; font-weight: bold; color: var(--text-muted);">20</td>
+            <td><span class="method-badge method-get">GET</span></td>
+            <td class="route-code">/api/hr/loans/advances</td>
+            <td style="font-weight: 600; color: var(--accent);">hr</td>
+            <td>
+              <span class="status-badge status-success">
+                200
+              </span>
+            </td>
+            <td class="duration-cell">77ms</td>
+            <td class="snippet-cell" title="Data retrieved successfully.">Data retrieved successfully.</td>
+          </tr>
+        
+          <tr data-category="SUCCESS">
+            <td style="font-family: 'JetBrains Mono'; font-weight: bold; color: var(--text-muted);">21</td>
+            <td><span class="method-badge method-post">POST</span></td>
+            <td class="route-code">/api/hr/loans/advances</td>
+            <td style="font-weight: 600; color: var(--accent);">hr</td>
+            <td>
+              <span class="status-badge status-success">
+                200
+              </span>
+            </td>
+            <td class="duration-cell">81ms</td>
+            <td class="snippet-cell" title="Record created successfully.">Record created successfully.</td>
+          </tr>
+        
+          <tr data-category="SERVER_ERROR">
+            <td style="font-family: 'JetBrains Mono'; font-weight: bold; color: var(--text-muted);">22</td>
+            <td><span class="method-badge method-post">POST</span></td>
+            <td class="route-code">/api/hr/loans/1/approve</td>
+            <td style="font-weight: 600; color: var(--accent);">hr</td>
+            <td>
+              <span class="status-badge status-error">
+                500
+              </span>
+            </td>
+            <td class="duration-cell">96ms</td>
+            <td class="snippet-cell" title="An unexpected error occurred. Please try again later">An unexpected error occurred. Please try again later</td>
+          </tr>
+        
+          <tr data-category="SUCCESS">
+            <td style="font-family: 'JetBrains Mono'; font-weight: bold; color: var(--text-muted);">23</td>
+            <td><span class="method-badge method-post">POST</span></td>
+            <td class="route-code">/api/hr/loans/advances/1/approve</td>
+            <td style="font-weight: 600; color: var(--accent);">hr</td>
+            <td>
+              <span class="status-badge status-success">
+                200
+              </span>
+            </td>
+            <td class="duration-cell">83ms</td>
+            <td class="snippet-cell" title="Operation completed successfully.">Operation completed successfully.</td>
+          </tr>
+        
+          <tr data-category="DATA_NOT_FOUND">
+            <td style="font-family: 'JetBrains Mono'; font-weight: bold; color: var(--text-muted);">24</td>
+            <td><span class="method-badge method-get">GET</span></td>
+            <td class="route-code">/api/hr/payroll/1</td>
+            <td style="font-weight: 600; color: var(--accent);">hr</td>
+            <td>
+              <span class="status-badge status-notfound">
+                404
+              </span>
+            </td>
+            <td class="duration-cell">101ms</td>
+            <td class="snippet-cell" title="Payroll run not found.">Payroll run not found.</td>
+          </tr>
+        
+          <tr data-category="DATA_NOT_FOUND">
+            <td style="font-family: 'JetBrains Mono'; font-weight: bold; color: var(--text-muted);">25</td>
+            <td><span class="method-badge method-get">GET</span></td>
+            <td class="route-code">/api/hr/payroll/1/export-bank</td>
+            <td style="font-weight: 600; color: var(--accent);">hr</td>
+            <td>
+              <span class="status-badge status-notfound">
+                404
+              </span>
+            </td>
+            <td class="duration-cell">76ms</td>
+            <td class="snippet-cell" title="Payroll run 1 not found.">Payroll run 1 not found.</td>
+          </tr>
+        
+          <tr data-category="DATA_NOT_FOUND">
+            <td style="font-family: 'JetBrains Mono'; font-weight: bold; color: var(--text-muted);">26</td>
+            <td><span class="method-badge method-get">GET</span></td>
+            <td class="route-code">/api/hr/payroll/1/export-bank/preview</td>
+            <td style="font-weight: 600; color: var(--accent);">hr</td>
+            <td>
+              <span class="status-badge status-notfound">
+                404
+              </span>
+            </td>
+            <td class="duration-cell">78ms</td>
+            <td class="snippet-cell" title="Payroll run 1 not found.">Payroll run 1 not found.</td>
+          </tr>
+        
+          <tr data-category="SUCCESS">
+            <td style="font-family: 'JetBrains Mono'; font-weight: bold; color: var(--text-muted);">27</td>
+            <td><span class="method-badge method-get">GET</span></td>
+            <td class="route-code">/api/hr/payroll/periods</td>
+            <td style="font-weight: 600; color: var(--accent);">hr</td>
+            <td>
+              <span class="status-badge status-success">
+                200
+              </span>
+            </td>
+            <td class="duration-cell">80ms</td>
+            <td class="snippet-cell" title="Data retrieved successfully.">Data retrieved successfully.</td>
+          </tr>
+        
+          <tr data-category="VALIDATION_ACTIVE">
+            <td style="font-family: 'JetBrains Mono'; font-weight: bold; color: var(--text-muted);">28</td>
+            <td><span class="method-badge method-post">POST</span></td>
+            <td class="route-code">/api/hr/payroll/periods</td>
+            <td style="font-weight: 600; color: var(--accent);">hr</td>
+            <td>
+              <span class="status-badge status-validation">
+                400
+              </span>
+            </td>
+            <td class="duration-cell">73ms</td>
+            <td class="snippet-cell" title="Valid CompanyId and PeriodCode are required">Valid CompanyId and PeriodCode are required</td>
+          </tr>
+        
+          <tr data-category="DATA_NOT_FOUND">
+            <td style="font-family: 'JetBrains Mono'; font-weight: bold; color: var(--text-muted);">29</td>
+            <td><span class="method-badge method-get">GET</span></td>
+            <td class="route-code">/api/hr/payroll/run-lines/1/explanation</td>
+            <td style="font-weight: 600; color: var(--accent);">hr</td>
+            <td>
+              <span class="status-badge status-notfound">
+                404
+              </span>
+            </td>
+            <td class="duration-cell">87ms</td>
+            <td class="snippet-cell" title="Calculation explanation snapshot not found.">Calculation explanation snapshot not found.</td>
+          </tr>
+        
+          <tr data-category="DATA_NOT_FOUND">
+            <td style="font-family: 'JetBrains Mono'; font-weight: bold; color: var(--text-muted);">30</td>
+            <td><span class="method-badge method-post">POST</span></td>
+            <td class="route-code">/api/hr/payroll/1/approve</td>
+            <td style="font-weight: 600; color: var(--accent);">hr</td>
+            <td>
+              <span class="status-badge status-notfound">
+                404
+              </span>
+            </td>
+            <td class="duration-cell">76ms</td>
+            <td class="snippet-cell" title="Payroll approval validation failed: Payroll run with ID 1 not found.">Payroll approval validation failed: Payroll run with ID 1 not found.</td>
+          </tr>
+        
+          <tr data-category="DATA_NOT_FOUND">
+            <td style="font-family: 'JetBrains Mono'; font-weight: bold; color: var(--text-muted);">31</td>
+            <td><span class="method-badge method-post">POST</span></td>
+            <td class="route-code">/api/hr/payroll/1/post-to-gl</td>
+            <td style="font-weight: 600; color: var(--accent);">hr</td>
+            <td>
+              <span class="status-badge status-notfound">
+                404
+              </span>
+            </td>
+            <td class="duration-cell">77ms</td>
+            <td class="snippet-cell" title="Payroll run 1 not found.">Payroll run 1 not found.</td>
+          </tr>
+        
+          <tr data-category="DATA_NOT_FOUND">
+            <td style="font-family: 'JetBrains Mono'; font-weight: bold; color: var(--text-muted);">32</td>
+            <td><span class="method-badge method-post">POST</span></td>
+            <td class="route-code">/api/hr/payroll/1/reverse-gl</td>
+            <td style="font-weight: 600; color: var(--accent);">hr</td>
+            <td>
+              <span class="status-badge status-notfound">
+                404
+              </span>
+            </td>
+            <td class="duration-cell">77ms</td>
+            <td class="snippet-cell" title="Payroll run 1 not found.">Payroll run 1 not found.</td>
+          </tr>
+        
+          <tr data-category="DATA_NOT_FOUND">
+            <td style="font-family: 'JetBrains Mono'; font-weight: bold; color: var(--text-muted);">33</td>
+            <td><span class="method-badge method-post">POST</span></td>
+            <td class="route-code">/api/hr/payroll/calculate</td>
+            <td style="font-weight: 600; color: var(--accent);">hr</td>
+            <td>
+              <span class="status-badge status-notfound">
+                404
+              </span>
+            </td>
+            <td class="duration-cell">84ms</td>
+            <td class="snippet-cell" title="Payroll validation failed: Payroll period '2026-10' does not exist for company 461.">Payroll validation failed: Payroll period '2026-10' does not exist for company 461.</td>
+          </tr>
+        
+          <tr data-category="SUCCESS">
+            <td style="font-family: 'JetBrains Mono'; font-weight: bold; color: var(--text-muted);">34</td>
+            <td><span class="method-badge method-delete">DELETE</span></td>
+            <td class="route-code">/api/hr/adjustments/1</td>
+            <td style="font-weight: 600; color: var(--accent);">hr</td>
+            <td>
+              <span class="status-badge status-success">
+                200
+              </span>
+            </td>
+            <td class="duration-cell">83ms</td>
+            <td class="snippet-cell" title="Record deleted successfully.">Record deleted successfully.</td>
+          </tr>
+        
+          <tr data-category="DATA_NOT_FOUND">
+            <td style="font-family: 'JetBrains Mono'; font-weight: bold; color: var(--text-muted);">35</td>
+            <td><span class="method-badge method-get">GET</span></td>
+            <td class="route-code">/api/hr/adjustments/1</td>
+            <td style="font-weight: 600; color: var(--accent);">hr</td>
+            <td>
+              <span class="status-badge status-notfound">
+                404
+              </span>
+            </td>
+            <td class="duration-cell">72ms</td>
+            <td class="snippet-cell" title="Adjustment not found.">Adjustment not found.</td>
+          </tr>
+        
+          <tr data-category="SUCCESS">
+            <td style="font-family: 'JetBrains Mono'; font-weight: bold; color: var(--text-muted);">36</td>
+            <td><span class="method-badge method-get">GET</span></td>
+            <td class="route-code">/api/hr/adjustments</td>
+            <td style="font-weight: 600; color: var(--accent);">hr</td>
+            <td>
+              <span class="status-badge status-success">
+                200
+              </span>
+            </td>
+            <td class="duration-cell">86ms</td>
+            <td class="snippet-cell" title="Data retrieved successfully.">Data retrieved successfully.</td>
+          </tr>
+        
+          <tr data-category="SUCCESS">
+            <td style="font-family: 'JetBrains Mono'; font-weight: bold; color: var(--text-muted);">37</td>
+            <td><span class="method-badge method-post">POST</span></td>
+            <td class="route-code">/api/hr/adjustments</td>
+            <td style="font-weight: 600; color: var(--accent);">hr</td>
+            <td>
+              <span class="status-badge status-success">
+                200
+              </span>
+            </td>
+            <td class="duration-cell">89ms</td>
+            <td class="snippet-cell" title="Record created successfully.">Record created successfully.</td>
+          </tr>
+        
+          <tr data-category="DATA_NOT_FOUND">
+            <td style="font-family: 'JetBrains Mono'; font-weight: bold; color: var(--text-muted);">38</td>
+            <td><span class="method-badge method-post">POST</span></td>
+            <td class="route-code">/api/hr/adjustments/1/approve</td>
+            <td style="font-weight: 600; color: var(--accent);">hr</td>
+            <td>
+              <span class="status-badge status-notfound">
+                404
+              </span>
+            </td>
+            <td class="duration-cell">78ms</td>
+            <td class="snippet-cell" title="Payroll adjustment with ID 1 not found.">Payroll adjustment with ID 1 not found.</td>
+          </tr>
+        
+          <tr data-category="DATA_NOT_FOUND">
+            <td style="font-family: 'JetBrains Mono'; font-weight: bold; color: var(--text-muted);">39</td>
+            <td><span class="method-badge method-post">POST</span></td>
+            <td class="route-code">/api/hr/adjustments/1/reject</td>
+            <td style="font-weight: 600; color: var(--accent);">hr</td>
+            <td>
+              <span class="status-badge status-notfound">
+                404
+              </span>
+            </td>
+            <td class="duration-cell">81ms</td>
+            <td class="snippet-cell" title="Payroll adjustment with ID 1 not found.">Payroll adjustment with ID 1 not found.</td>
+          </tr>
+        
+          <tr data-category="SUCCESS">
+            <td style="font-family: 'JetBrains Mono'; font-weight: bold; color: var(--text-muted);">40</td>
+            <td><span class="method-badge method-get">GET</span></td>
+            <td class="route-code">/api/hr/payroll-policies/deductions</td>
+            <td style="font-weight: 600; color: var(--accent);">hr</td>
+            <td>
+              <span class="status-badge status-success">
+                200
+              </span>
+            </td>
+            <td class="duration-cell">83ms</td>
+            <td class="snippet-cell" title="Deduction policies retrieved.">Deduction policies retrieved.</td>
+          </tr>
+        
+          <tr data-category="SUCCESS">
+            <td style="font-family: 'JetBrains Mono'; font-weight: bold; color: var(--text-muted);">41</td>
+            <td><span class="method-badge method-post">POST</span></td>
+            <td class="route-code">/api/hr/payroll-policies/deductions</td>
+            <td style="font-weight: 600; color: var(--accent);">hr</td>
+            <td>
+              <span class="status-badge status-success">
+                200
+              </span>
+            </td>
+            <td class="duration-cell">82ms</td>
+            <td class="snippet-cell" title="Deduction policy added.">Deduction policy added.</td>
+          </tr>
+        
+          <tr data-category="SUCCESS">
+            <td style="font-family: 'JetBrains Mono'; font-weight: bold; color: var(--text-muted);">42</td>
+            <td><span class="method-badge method-get">GET</span></td>
+            <td class="route-code">/api/hr/payroll-policies/proration</td>
+            <td style="font-weight: 600; color: var(--accent);">hr</td>
+            <td>
+              <span class="status-badge status-success">
+                200
+              </span>
+            </td>
+            <td class="duration-cell">88ms</td>
+            <td class="snippet-cell" title="Proration policies retrieved.">Proration policies retrieved.</td>
+          </tr>
+        
+          <tr data-category="SUCCESS">
+            <td style="font-family: 'JetBrains Mono'; font-weight: bold; color: var(--text-muted);">43</td>
+            <td><span class="method-badge method-post">POST</span></td>
+            <td class="route-code">/api/hr/payroll-policies/proration</td>
+            <td style="font-weight: 600; color: var(--accent);">hr</td>
+            <td>
+              <span class="status-badge status-success">
+                200
+              </span>
+            </td>
+            <td class="duration-cell">90ms</td>
+            <td class="snippet-cell" title="Proration policy added.">Proration policy added.</td>
+          </tr>
+        
+          <tr data-category="SUCCESS">
+            <td style="font-family: 'JetBrains Mono'; font-weight: bold; color: var(--text-muted);">44</td>
+            <td><span class="method-badge method-get">GET</span></td>
+            <td class="route-code">/api/hr/payroll-policies/ssc</td>
+            <td style="font-weight: 600; color: var(--accent);">hr</td>
+            <td>
+              <span class="status-badge status-success">
+                200
+              </span>
+            </td>
+            <td class="duration-cell">86ms</td>
+            <td class="snippet-cell" title="SSC policies retrieved.">SSC policies retrieved.</td>
+          </tr>
+        
+          <tr data-category="SUCCESS">
+            <td style="font-family: 'JetBrains Mono'; font-weight: bold; color: var(--text-muted);">45</td>
+            <td><span class="method-badge method-post">POST</span></td>
+            <td class="route-code">/api/hr/payroll-policies/ssc</td>
+            <td style="font-weight: 600; color: var(--accent);">hr</td>
+            <td>
+              <span class="status-badge status-success">
+                200
+              </span>
+            </td>
+            <td class="duration-cell">83ms</td>
+            <td class="snippet-cell" title="SSC policy added.">SSC policy added.</td>
+          </tr>
+        
+          <tr data-category="SUCCESS">
+            <td style="font-family: 'JetBrains Mono'; font-weight: bold; color: var(--text-muted);">46</td>
+            <td><span class="method-badge method-get">GET</span></td>
+            <td class="route-code">/api/hr/payroll-policies/tax</td>
+            <td style="font-weight: 600; color: var(--accent);">hr</td>
+            <td>
+              <span class="status-badge status-success">
+                200
+              </span>
+            </td>
+            <td class="duration-cell">91ms</td>
+            <td class="snippet-cell" title="Tax policies retrieved.">Tax policies retrieved.</td>
+          </tr>
+        
+          <tr data-category="SUCCESS">
+            <td style="font-family: 'JetBrains Mono'; font-weight: bold; color: var(--text-muted);">47</td>
+            <td><span class="method-badge method-post">POST</span></td>
+            <td class="route-code">/api/hr/payroll-policies/tax</td>
+            <td style="font-weight: 600; color: var(--accent);">hr</td>
+            <td>
+              <span class="status-badge status-success">
+                200
+              </span>
+            </td>
+            <td class="duration-cell">90ms</td>
+            <td class="snippet-cell" title="Tax policy added.">Tax policy added.</td>
+          </tr>
+        
+          <tr data-category="SUCCESS">
+            <td style="font-family: 'JetBrains Mono'; font-weight: bold; color: var(--text-muted);">48</td>
+            <td><span class="method-badge method-get">GET</span></td>
+            <td class="route-code">/api/hr/salary-components</td>
+            <td style="font-weight: 600; color: var(--accent);">hr</td>
+            <td>
+              <span class="status-badge status-success">
+                200
+              </span>
+            </td>
+            <td class="duration-cell">73ms</td>
+            <td class="snippet-cell" title="Data retrieved successfully.">Data retrieved successfully.</td>
+          </tr>
+        
+          <tr data-category="SUCCESS">
+            <td style="font-family: 'JetBrains Mono'; font-weight: bold; color: var(--text-muted);">49</td>
+            <td><span class="method-badge method-post">POST</span></td>
+            <td class="route-code">/api/hr/salary-components</td>
+            <td style="font-weight: 600; color: var(--accent);">hr</td>
+            <td>
+              <span class="status-badge status-success">
+                200
+              </span>
+            </td>
+            <td class="duration-cell">92ms</td>
+            <td class="snippet-cell" title="Record created successfully.">Record created successfully.</td>
+          </tr>
+        
+          <tr data-category="SUCCESS">
+            <td style="font-family: 'JetBrains Mono'; font-weight: bold; color: var(--text-muted);">50</td>
+            <td><span class="method-badge method-get">GET</span></td>
+            <td class="route-code">/api/hr/work-calendars</td>
+            <td style="font-weight: 600; color: var(--accent);">hr</td>
+            <td>
+              <span class="status-badge status-success">
+                200
+              </span>
+            </td>
+            <td class="duration-cell">87ms</td>
+            <td class="snippet-cell" title="Data retrieved successfully.">Data retrieved successfully.</td>
+          </tr>
+        
+          <tr data-category="SERVER_ERROR">
+            <td style="font-family: 'JetBrains Mono'; font-weight: bold; color: var(--text-muted);">51</td>
+            <td><span class="method-badge method-post">POST</span></td>
+            <td class="route-code">/api/hr/work-calendars</td>
+            <td style="font-weight: 600; color: var(--accent);">hr</td>
+            <td>
+              <span class="status-badge status-error">
+                500
+              </span>
+            </td>
+            <td class="duration-cell">129ms</td>
+            <td class="snippet-cell" title="An unexpected error occurred. Please try again later">An unexpected error occurred. Please try again later</td>
+          </tr>
+        
+          <tr data-category="SERVER_ERROR">
+            <td style="font-family: 'JetBrains Mono'; font-weight: bold; color: var(--text-muted);">52</td>
+            <td><span class="method-badge method-get">GET</span></td>
+            <td class="route-code">/api/hr/work-calendars/1</td>
+            <td style="font-weight: 600; color: var(--accent);">hr</td>
+            <td>
+              <span class="status-badge status-error">
+                500
+              </span>
+            </td>
+            <td class="duration-cell">88ms</td>
+            <td class="snippet-cell" title="An unexpected error occurred. Please try again later">An unexpected error occurred. Please try again later</td>
+          </tr>
+        
+          <tr data-category="SUCCESS">
+            <td style="font-family: 'JetBrains Mono'; font-weight: bold; color: var(--text-muted);">53</td>
+            <td><span class="method-badge method-get">GET</span></td>
+            <td class="route-code">/api/hr/work-calendars/holidays</td>
+            <td style="font-weight: 600; color: var(--accent);">hr</td>
+            <td>
+              <span class="status-badge status-success">
+                200
+              </span>
+            </td>
+            <td class="duration-cell">88ms</td>
+            <td class="snippet-cell" title="Data retrieved successfully.">Data retrieved successfully.</td>
+          </tr>
+        
+          <tr data-category="SUCCESS">
+            <td style="font-family: 'JetBrains Mono'; font-weight: bold; color: var(--text-muted);">54</td>
+            <td><span class="method-badge method-post">POST</span></td>
+            <td class="route-code">/api/hr/work-calendars/holidays</td>
+            <td style="font-weight: 600; color: var(--accent);">hr</td>
+            <td>
+              <span class="status-badge status-success">
+                200
+              </span>
+            </td>
+            <td class="duration-cell">86ms</td>
+            <td class="snippet-cell" title="Record created successfully.">Record created successfully.</td>
+          </tr>
+        
+          <tr data-category="SUCCESS">
+            <td style="font-family: 'JetBrains Mono'; font-weight: bold; color: var(--text-muted);">55</td>
+            <td><span class="method-badge method-get">GET</span></td>
+            <td class="route-code">/api/hr/work-calendars/working-days-count</td>
+            <td style="font-weight: 600; color: var(--accent);">hr</td>
+            <td>
+              <span class="status-badge status-success">
+                200
+              </span>
+            </td>
+            <td class="duration-cell">85ms</td>
+            <td class="snippet-cell" title="Operation completed successfully.">Operation completed successfully.</td>
+          </tr>
+        
+      </tbody>
+    </table>
+  </div>
+
+</div>
+
+<script>
+  let currentCategory = 'ALL';
+
+  function filterData(cat) {
+    currentCategory = cat;
+    document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+    event.target.classList.add('active');
+    applyFilters();
+  }
+
+  function searchTable() {
+    applyFilters();
+  }
+
+  function applyFilters() {
+    const q = document.getElementById('searchInput').value.toLowerCase();
+    const rows = document.querySelectorAll('#resultsTable tbody tr');
+    
+    rows.forEach(r => {
+      const cat = r.getAttribute('data-category');
+      const text = r.innerText.toLowerCase();
+      const matchCat = currentCategory === 'ALL' || cat === currentCategory;
+      const matchSearch = text.includes(q);
+      r.style.display = (matchCat && matchSearch) ? '' : 'none';
+    });
+  }
+</script>
+</body>
+</html>

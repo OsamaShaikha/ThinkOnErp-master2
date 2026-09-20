@@ -18,8 +18,12 @@ using ThinkOnErp.Application.Features.Pos.Orders.Commands.RefundOrder;
 using ThinkOnErp.Application.Features.Pos.Orders.Commands.VoidOrderLine;
 using ThinkOnErp.Application.Features.Pos.Orders.Queries.GetActiveOrders;
 using ThinkOnErp.Application.Features.Pos.Orders.Queries.GetOrderById;
+using ThinkOnErp.Application.DTOs.SysCode;
 using ThinkOnErp.Application.Services.Pos;
+using ThinkOnErp.Domain.Constants;
+using ThinkOnErp.Domain.Entities;
 using ThinkOnErp.Domain.Entities.Pos.Enums;
+using ThinkOnErp.Domain.Interfaces;
 
 namespace ThinkOnErp.API.Controllers.Pos;
 
@@ -35,11 +39,13 @@ public class PosOrdersController : ControllerBase
 {
     private readonly IMediator _mediator;
     private readonly IPosOrderService _orderService;
+    private readonly ISysCodeRepository _sysCodeRepo;
 
-    public PosOrdersController(IMediator mediator, IPosOrderService orderService)
+    public PosOrdersController(IMediator mediator, IPosOrderService orderService, ISysCodeRepository sysCodeRepo)
     {
         _mediator = mediator;
         _orderService = orderService;
+        _sysCodeRepo = sysCodeRepo;
     }
 
     /// <summary>
@@ -203,5 +209,52 @@ public class PosOrdersController : ControllerBase
     {
         var result = await _mediator.Send(new GetActiveOrdersQuery(branchId, status), ct);
         return Ok(result);
+    }
+
+    /// <summary>
+    /// Retrieves all dynamic POS Order Types from SYS_CODE (CODE_MGR = 34).
+    /// </summary>
+    /// <param name="lang">Optional language filter (1 = Arabic, 2 = English).</param>
+    /// <returns>List of order types with localized names and active state.</returns>
+    [HttpGet("orderType")]
+    [ProducesResponseType(typeof(ApiResponse<List<SysCodeLookupDto>>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<ApiResponse<List<SysCodeLookupDto>>>> GetOrderTypes([FromQuery] int? lang = null)
+    {
+        var rawCodes = await _sysCodeRepo.GetActiveByCodeMgrAsync(SysCodeKeys.PosOrderTypes.Mgr);
+
+        var lookupList = rawCodes
+            .Where(c => c.CodeMnr > 0)
+            .GroupBy(c => c.CodeMnr)
+            .Select(g =>
+            {
+                var ar = g.FirstOrDefault(x => x.CodeLang == 1);
+                var en = g.FirstOrDefault(x => x.CodeLang == 2);
+                var first = g.First();
+
+                var arDesc = ar?.CodeDesc ?? first.CodeDesc;
+                var enDesc = en?.CodeDesc ?? first.CodeDesc;
+                var val = !string.IsNullOrEmpty(first.CodeValue)
+                    ? first.CodeValue
+                    : (en?.CodeValue ?? ar?.CodeValue ?? string.Empty);
+
+                var isEnglish = lang == 2;
+                var localizedName = isEnglish
+                    ? (!string.IsNullOrEmpty(enDesc) ? enDesc : arDesc)
+                    : (!string.IsNullOrEmpty(arDesc) ? arDesc : enDesc);
+
+                return new SysCodeLookupDto
+                {
+                    Code = g.Key,
+                    Value = val,
+                    NameAr = arDesc,
+                    NameEn = enDesc,
+                    Name = localizedName,
+                    IsActive = first.IsActive
+                };
+            })
+            .OrderBy(x => x.Code)
+            .ToList();
+
+        return Ok(ApiResponse<List<SysCodeLookupDto>>.CreateSuccess(lookupList, "Order types retrieved successfully"));
     }
 }

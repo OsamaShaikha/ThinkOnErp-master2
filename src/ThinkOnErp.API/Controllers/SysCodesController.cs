@@ -217,6 +217,12 @@ public class SysCodesController : ControllerBase
         ["selection-types"] = SysCodeKeys.SelectionTypes.Mgr,
         ["selectiontypes"] = SysCodeKeys.SelectionTypes.Mgr,
         ["selectionTypes"] = SysCodeKeys.SelectionTypes.Mgr,
+        ["pos-order-types"] = SysCodeKeys.PosOrderTypes.Mgr,
+        ["posordertypes"] = SysCodeKeys.PosOrderTypes.Mgr,
+        ["posOrderTypes"] = SysCodeKeys.PosOrderTypes.Mgr,
+        ["order-types"] = SysCodeKeys.PosOrderTypes.Mgr,
+        ["ordertypes"] = SysCodeKeys.PosOrderTypes.Mgr,
+        ["orderTypes"] = SysCodeKeys.PosOrderTypes.Mgr,
     };
 
 
