@@ -35,6 +35,12 @@ public class PosStaffAttendanceService : IPosStaffAttendanceService
 
     public async Task<ApiResponse<StaffAttendanceDto>> ClockInAsync(ClockInDto dto, string username, CancellationToken ct = default)
     {
+        if (dto == null)
+            return ApiResponse<StaffAttendanceDto>.CreateFailure("Request body cannot be null", null, 400);
+
+        if (dto.BranchId <= 0 || dto.UserId <= 0)
+            return ApiResponse<StaffAttendanceDto>.CreateFailure("Valid BranchId and UserId are required", null, 400);
+
         var existing = await _repository.GetActiveClockInAsync(dto.BranchId, dto.UserId, ct);
         if (existing != null)
             return ApiResponse<StaffAttendanceDto>.CreateFailure("Staff member already has an active clock-in session", null, 400);
@@ -56,6 +62,9 @@ public class PosStaffAttendanceService : IPosStaffAttendanceService
 
     public async Task<ApiResponse<StaffAttendanceDto>> ClockOutAsync(ClockOutDto dto, string username, CancellationToken ct = default)
     {
+        if (dto == null || dto.AttendanceId <= 0)
+            return ApiResponse<StaffAttendanceDto>.CreateFailure("Valid AttendanceId is required", null, 400);
+
         var attendance = await _repository.GetByIdAsync(dto.AttendanceId, ct);
         if (attendance == null)
             return ApiResponse<StaffAttendanceDto>.CreateFailure("Attendance record not found", null, 404);

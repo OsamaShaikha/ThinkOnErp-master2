@@ -19,6 +19,7 @@ public interface ITrxTypeService
     Task<ApiResponse<TrxTransactionTypeDto>> CreateTrxTypeAsync(CreateTrxTransactionTypeDto dto, string username, CancellationToken ct = default);
     Task<ApiResponse<List<TrxTransactionTypeDto>>> GetAllTrxTypesAsync(CancellationToken ct = default);
     Task<ApiResponse<List<TrxTransactionTypeDto>>> GetTrxTypesByDocTypeAsync(int docTypeCode, CancellationToken ct = default);
+    Task<ApiResponse<List<TrxTransactionTypeDto>>> GetTrxTypesByDocTypeAsync(string docType, CancellationToken ct = default);
     Task<ApiResponse<TrxTransactionTypeDto>> GetTrxTypeByCodeAsync(int code, CancellationToken ct = default);
     Task<ApiResponse<TrxTransactionTypeDto>> UpdateTrxTypeAsync(int code, UpdateTrxTransactionTypeDto dto, string username, CancellationToken ct = default);
     Task<ApiResponse<bool>> DeleteTrxTypeAsync(int code, CancellationToken ct = default);

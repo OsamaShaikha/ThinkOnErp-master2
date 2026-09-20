@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -31,6 +31,12 @@ public sealed class InvWarehouseService : IInvWarehouseService
 
     public async Task<ApiResponse<InvWarehouseDto>> CreateAsync(CreateInvWarehouseDto request, CancellationToken cancellationToken = default)
     {
+        if (request == null)
+            return ApiResponse<InvWarehouseDto>.CreateFailure("Request body cannot be null", null, 400);
+
+        if (request.WarehouseCode <= 0 || request.BranchId <= 0 || string.IsNullOrWhiteSpace(request.WarehouseNameLocal))
+            return ApiResponse<InvWarehouseDto>.CreateFailure("WarehouseCode, BranchId, and WarehouseNameLocal are required", null, 400);
+
         var existing = await _warehouseRepository.GetByCodeAsync(request.WarehouseCode, cancellationToken);
         if (existing != null)
             return ApiResponse<InvWarehouseDto>.CreateFailure("Warehouse code already exists", null, 400);
@@ -57,6 +63,9 @@ public sealed class InvWarehouseService : IInvWarehouseService
 
     public async Task<ApiResponse<InvWarehouseDto>> UpdateAsync(long id, UpdateInvWarehouseDto request, CancellationToken cancellationToken = default)
     {
+        if (request == null)
+            return ApiResponse<InvWarehouseDto>.CreateFailure("Request body cannot be null", null, 400);
+
         var warehouse = await _warehouseRepository.GetByIdAsync(id, cancellationToken);
         if (warehouse == null)
             return ApiResponse<InvWarehouseDto>.CreateFailure("Warehouse not found", null, 404);

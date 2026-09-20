@@ -1,4 +1,4 @@
-﻿using MediatR;
+using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using ThinkOnErp.Application.Common;
@@ -596,8 +596,23 @@ public class SuperAdminController : ControllerBase
             try
             {
                 _logger.LogInformation("SuperAdmin requesting sync/upgrade of all tenant schemas");
-                await _oracleSchemaService.UpgradeExistingTenantSchemasAsync();
-                return Ok(ApiResponse<object>.CreateSuccess(null!, "All tenant schemas synced successfully", 200));
+                _ = Task.Run(async () =>
+                {
+                    try
+                    {
+                        await _oracleSchemaService.UpgradeExistingTenantSchemasAsync();
+                        _logger.LogInformation("Successfully completed background sync of all tenant schemas");
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError(ex, "Background error syncing tenant schemas");
+                    }
+                });
+
+                return Ok(ApiResponse<object>.CreateSuccess(
+                    new { Status = "Initiated", InitiatedAtUtc = DateTime.UtcNow },
+                    "All tenant schemas sync initiated in background successfully",
+                    200));
             }
             catch (Exception ex)
             {
@@ -632,7 +647,18 @@ public class SuperAdminController : ControllerBase
                     return BadRequest(ApiResponse<object>.CreateFailure("Company has no configured Oracle schema", statusCode: 400));
                 }
 
-                await _oracleSchemaService.SyncTenantSchemaAsync(company.CompanySchema, company.CompanySchema);
+                _ = Task.Run(async () =>
+                {
+                    try
+                    {
+                        await _oracleSchemaService.SyncTenantSchemaAsync(company.CompanySchema, company.CompanySchema);
+                        _logger.LogInformation("Successfully completed background sync of schema {Schema}", company.CompanySchema);
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError(ex, "Background error syncing tenant schema for {Schema}", company.CompanySchema);
+                    }
+                });
 
                 return Ok(ApiResponse<object>.CreateSuccess(
                     new
@@ -640,10 +666,11 @@ public class SuperAdminController : ControllerBase
                         CompanyId = company.Id,
                         CompanyCode = company.CompanyCode,
                         CompanySchema = company.CompanySchema,
+                        Status = "Initiated",
                         SyncedFromSchema = "DEV_TEMPLATE",
-                        SyncedAtUtc = DateTime.UtcNow
+                        InitiatedAtUtc = DateTime.UtcNow
                     },
-                    $"Tenant schema '{company.CompanySchema}' for company '{company.CompanyNameEn}' synced successfully with DEV_TEMPLATE",
+                    $"Tenant schema sync for company '{company.CompanyNameEn}' initiated successfully with DEV_TEMPLATE",
                     200));
             }
             catch (Exception ex)

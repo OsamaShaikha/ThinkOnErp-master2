@@ -83,7 +83,7 @@ public sealed class PayrollService : IPayrollService
         }
 
         var run = await _payrollPeriodRepo.GetPayrollRunByIdAsync(payrollRunId, cancellationToken);
-        if (run == null) throw new InvalidOperationException($"Payroll run {payrollRunId} not found.");
+        if (run == null) throw new KeyNotFoundException($"Payroll run {payrollRunId} not found.");
 
         run.Status = "APPROVED";
         run.ApprovedBy = user;
@@ -115,7 +115,7 @@ public sealed class PayrollService : IPayrollService
     public async Task<PostGlVoucherResultDto> PostPayrollToGlAsync(long payrollRunId, string user, CancellationToken cancellationToken = default)
     {
         var run = await _payrollPeriodRepo.GetPayrollRunByIdAsync(payrollRunId, cancellationToken);
-        if (run == null) throw new InvalidOperationException($"Payroll run {payrollRunId} not found.");
+        if (run == null) throw new KeyNotFoundException($"Payroll run {payrollRunId} not found.");
         if (run.Status != "APPROVED")
         {
             throw new InvalidOperationException($"Payroll run {payrollRunId} cannot be posted because its status is '{run.Status}' (must be APPROVED).");
@@ -294,7 +294,7 @@ public sealed class PayrollService : IPayrollService
     public async Task<PayrollRun> ReversePayrollGlVoucherAsync(long payrollRunId, string user, CancellationToken cancellationToken = default)
     {
         var run = await _payrollPeriodRepo.GetPayrollRunByIdAsync(payrollRunId, cancellationToken);
-        if (run == null) throw new InvalidOperationException($"Payroll run {payrollRunId} not found.");
+        if (run == null) throw new KeyNotFoundException($"Payroll run {payrollRunId} not found.");
         if (run.Status != "POSTED_TO_GL" || !run.JournalVoucherId.HasValue)
         {
             throw new InvalidOperationException($"Payroll run {payrollRunId} is not in POSTED_TO_GL status.");

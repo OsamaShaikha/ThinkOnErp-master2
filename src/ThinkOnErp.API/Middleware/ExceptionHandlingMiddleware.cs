@@ -190,6 +190,70 @@ public class ExceptionHandlingMiddleware
                     statusCode);
                 break;
 
+            case KeyNotFoundException keyNotFoundException:
+                statusCode = (int)HttpStatusCode.NotFound;
+                _logger.LogWarning(keyNotFoundException, "Resource not found: {Message}", keyNotFoundException.Message);
+
+                response = ApiResponse<object>.CreateFailure(
+                    keyNotFoundException.Message,
+                    new List<string> { "NOT_FOUND" },
+                    statusCode);
+                break;
+
+            case ArgumentException argumentException:
+                statusCode = (int)HttpStatusCode.BadRequest;
+                _logger.LogWarning(argumentException, "Invalid argument: {Message}", argumentException.Message);
+
+                response = ApiResponse<object>.CreateFailure(
+                    argumentException.Message,
+                    new List<string> { "INVALID_ARGUMENT" },
+                    statusCode);
+                break;
+
+            case InvalidOperationException invalidOpException:
+                if (invalidOpException.Message.Contains("not found", StringComparison.OrdinalIgnoreCase) ||
+                    invalidOpException.Message.Contains("does not exist", StringComparison.OrdinalIgnoreCase))
+                {
+                    statusCode = (int)HttpStatusCode.NotFound;
+                    _logger.LogWarning(invalidOpException, "Resource not found: {Message}", invalidOpException.Message);
+
+                    response = ApiResponse<object>.CreateFailure(
+                        invalidOpException.Message,
+                        new List<string> { "NOT_FOUND" },
+                        statusCode);
+                }
+                else
+                {
+                    statusCode = (int)HttpStatusCode.BadRequest;
+                    _logger.LogWarning(invalidOpException, "Invalid operation: {Message}", invalidOpException.Message);
+
+                    response = ApiResponse<object>.CreateFailure(
+                        invalidOpException.Message,
+                        new List<string> { "INVALID_OPERATION" },
+                        statusCode);
+                }
+                break;
+
+            case UnauthorizedAccessException unauthorizedAccess:
+                statusCode = (int)HttpStatusCode.Forbidden;
+                _logger.LogWarning(unauthorizedAccess, "Unauthorized access: {Message}", unauthorizedAccess.Message);
+
+                response = ApiResponse<object>.CreateFailure(
+                    unauthorizedAccess.Message,
+                    new List<string> { "FORBIDDEN" },
+                    statusCode);
+                break;
+
+            case BadHttpRequestException badRequestException:
+                statusCode = (int)HttpStatusCode.BadRequest;
+                _logger.LogWarning(badRequestException, "Bad HTTP request: {Message}", badRequestException.Message);
+
+                response = ApiResponse<object>.CreateFailure(
+                    badRequestException.Message,
+                    new List<string> { "BAD_REQUEST" },
+                    statusCode);
+                break;
+
             case DomainException domainException:
                 // Generic domain exception handler
                 statusCode = (int)HttpStatusCode.BadRequest;
@@ -419,6 +483,10 @@ public class ExceptionHandlingMiddleware
             AccountingNotFoundException => "NOT_FOUND",
             AccountingConflictException => "CONFLICT",
             DomainException => "DOMAIN_ERROR",
+            KeyNotFoundException => "NOT_FOUND",
+            ArgumentException => "INVALID_ARGUMENT",
+            InvalidOperationException => "INVALID_OPERATION",
+            UnauthorizedAccessException => "AUTHORIZATION_ERROR",
             _ => "UNHANDLED_EXCEPTION"
         };
     }

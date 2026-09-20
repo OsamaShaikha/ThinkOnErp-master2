@@ -113,10 +113,12 @@ public sealed class InvCostingEngine : IInvCostingEngine
     }
 
     public async Task<ApiResponse<RecalculateCostResultDto>> RecalculateCostBatchAsync(
-        RecalculateCostRequestDto request,
+        RecalculateCostRequestDto? request,
         string username,
         CancellationToken cancellationToken = default)
     {
+        request ??= new RecalculateCostRequestDto();
+
         _logger.LogInformation("Starting batch cost recalculation. ItemId: {ItemId}, WarehouseId: {WarehouseId}, FromDate: {FromDate}",
             request.ItemId, request.WarehouseId, request.FromDate);
 

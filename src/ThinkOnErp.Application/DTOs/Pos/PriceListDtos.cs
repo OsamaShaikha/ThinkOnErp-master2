@@ -1,64 +1,22 @@
-using System;
-using System.Collections.Generic;
-using ThinkOnErp.Domain.Entities.Pos.Enums;
+﻿using System;
+using ThinkOnErp.Application.DTOs.Inventory.PriceLists;
 
 namespace ThinkOnErp.Application.DTOs.Pos;
 
-public class CreatePriceListDto
-{
-    public long BranchId { get; set; }
-    public string PriceListCode { get; set; } = string.Empty;
-    public string PriceListNameLocal { get; set; } = string.Empty;
-    public string? PriceListNameEn { get; set; }
-    public PosOrderType? ApplicableOrderType { get; set; }
-    public long? CurrencyId { get; set; }
-    public bool IsDefault { get; set; }
-    public List<UpsertPriceListItemDto> Items { get; set; } = new();
-}
+[Obsolete("Use ThinkOnErp.Application.DTOs.Inventory.PriceLists.CreatePriceListDto instead")]
+public class CreatePriceListDto : ThinkOnErp.Application.DTOs.Inventory.PriceLists.CreatePriceListDto { }
 
-public class UpdatePriceListDto
-{
-    public string PriceListNameLocal { get; set; } = string.Empty;
-    public string? PriceListNameEn { get; set; }
-    public PosOrderType? ApplicableOrderType { get; set; }
-    public long? CurrencyId { get; set; }
-    public bool IsDefault { get; set; }
-    public bool IsActive { get; set; } = true;
-}
+[Obsolete("Use ThinkOnErp.Application.DTOs.Inventory.PriceLists.UpdatePriceListDto instead")]
+public class UpdatePriceListDto : ThinkOnErp.Application.DTOs.Inventory.PriceLists.UpdatePriceListDto { }
 
-public class UpsertPriceListItemDto
-{
-    public long ItemId { get; set; }
-    public decimal Price { get; set; }
-    public decimal? MinPrice { get; set; }
-}
+[Obsolete("Use ThinkOnErp.Application.DTOs.Inventory.PriceLists.UpsertPriceListItemDto instead")]
+public class UpsertPriceListItemDto : ThinkOnErp.Application.DTOs.Inventory.PriceLists.UpsertPriceListItemDto { }
 
-public class PriceListItemDto
-{
-    public long Id { get; set; }
-    public long PriceListId { get; set; }
-    public long ItemId { get; set; }
-    public string? ItemCode { get; set; }
-    public string? ItemName { get; set; }
-    public decimal Price { get; set; }
-    public decimal? MinPrice { get; set; }
-}
+[Obsolete("Use ThinkOnErp.Application.DTOs.Inventory.PriceLists.PriceListItemDto instead")]
+public class PriceListItemDto : ThinkOnErp.Application.DTOs.Inventory.PriceLists.PriceListItemDto { }
 
-public class PriceListDto
-{
-    public long Id { get; set; }
-    public long BranchId { get; set; }
-    public string PriceListCode { get; set; } = string.Empty;
-    public string PriceListNameLocal { get; set; } = string.Empty;
-    public string? PriceListNameEn { get; set; }
-    public PosOrderType? ApplicableOrderType { get; set; }
-    public long? CurrencyId { get; set; }
-    public bool IsDefault { get; set; }
-    public bool IsActive { get; set; }
-    public int ItemCount { get; set; }
-}
+[Obsolete("Use ThinkOnErp.Application.DTOs.Inventory.PriceLists.PriceListDto instead")]
+public class PriceListDto : ThinkOnErp.Application.DTOs.Inventory.PriceLists.PriceListDto { }
 
-public class PriceListDetailsDto : PriceListDto
-{
-    public List<PriceListItemDto> Items { get; set; } = new();
-}
+[Obsolete("Use ThinkOnErp.Application.DTOs.Inventory.PriceLists.PriceListDetailsDto instead")]
+public class PriceListDetailsDto : ThinkOnErp.Application.DTOs.Inventory.PriceLists.PriceListDetailsDto { }

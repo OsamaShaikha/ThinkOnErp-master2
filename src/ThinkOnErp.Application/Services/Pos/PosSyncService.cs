@@ -46,7 +46,7 @@ public class PosSyncService : IPosSyncService
 
         // 1. Items
         var (items, _) = await _itemRepository.GetAllAsync(null, 1, 10000, ct);
-        result.Items = items.Where(i => i.IsActive).Select(i => new SyncItemDto
+        result.Items = items.Where(i => i.IsActive && i.ShowInPos).Select(i => new SyncItemDto
         {
             Id = i.Id,
             ItemCode = i.ItemCode,
@@ -54,7 +54,7 @@ public class PosSyncService : IPosSyncService
             ItemNameEn = i.ItemNameEn,
             GroupId = i.MainGroupId,
             UomId = i.UomBase,
-            StandardPrice = i.StandardCost,
+            StandardPrice = i.DefaultSellingPrice > 0 ? i.DefaultSellingPrice : i.StandardCost,
             IsScaleItem = false,
             Barcode = i.ItemCode
         }).ToList();
@@ -100,7 +100,7 @@ public class PosSyncService : IPosSyncService
             GroupNameLocal = g.GroupNameLocal,
             GroupNameEn = g.GroupNameEn,
             IsRequired = g.IsRequired,
-            SelectionType = g.SelectionType,
+            SelectionType = (PosSelectionType)g.SelectionType,
             MinSelections = g.MinSelections,
             MaxSelections = g.MaxSelections,
             SortOrder = g.SortOrder,

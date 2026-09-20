@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using ThinkOnErp.Domain.Entities.Inventory;
 
@@ -19,7 +19,8 @@ public sealed class InvBomHeaderConfiguration : IEntityTypeConfiguration<InvBomH
         builder.Property(b => b.ParentItemId).HasColumnName("PARENT_ITEM_ID").IsRequired();
         builder.Property(b => b.OutputQty).HasColumnName("OUTPUT_QTY").HasColumnType("NUMBER(14,4)").HasDefaultValue(1m);
         builder.Property(b => b.UomCode).HasColumnName("UOM_CODE").HasColumnType("NUMBER(6)").IsRequired();
-        builder.Property(b => b.BomType).HasColumnName("BOM_TYPE_CODE").HasConversion<int>().HasDefaultValue(Domain.Entities.Inventory.Enums.BomType.SalesKit);
+        builder.Property(b => b.BomType).HasColumnName("BOM_TYPE_CODE").HasConversion<int>().HasSentinel((Domain.Entities.Inventory.Enums.BomType)0).HasDefaultValue(Domain.Entities.Inventory.Enums.BomType.SalesKit);
+
         builder.Property(b => b.LaborCost).HasColumnName("LABOR_COST").HasColumnType("NUMBER(18,4)").HasDefaultValue(0m);
         builder.Property(b => b.OverheadCost).HasColumnName("OVERHEAD_COST").HasColumnType("NUMBER(18,4)").HasDefaultValue(0m);
         builder.Property(b => b.IsDefault).HasColumnName("IS_DEFAULT").HasColumnType("NUMBER(1)").HasDefaultValue(true);

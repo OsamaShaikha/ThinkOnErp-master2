@@ -76,6 +76,15 @@ public class PosPromotionService : IPosPromotionService
 
     public async Task<ApiResponse<PromotionDetailsDto>> CreatePromotionAsync(CreatePromotionDto dto, string username, CancellationToken ct = default)
     {
+        if (dto == null)
+            return ApiResponse<PromotionDetailsDto>.CreateFailure("Request body cannot be null", null, 400);
+
+        if (string.IsNullOrWhiteSpace(dto.PromotionCode) || string.IsNullOrWhiteSpace(dto.PromotionNameLocal))
+            return ApiResponse<PromotionDetailsDto>.CreateFailure("Promotion code and name are required", null, 400);
+
+        if (dto.BranchId <= 0)
+            return ApiResponse<PromotionDetailsDto>.CreateFailure("Valid BranchId is required", null, 400);
+
         var promo = new PosPromotion
         {
             BranchId = dto.BranchId,
@@ -122,12 +131,17 @@ public class PosPromotionService : IPosPromotionService
 
     public async Task<ApiResponse<PromotionDetailsDto>> UpdatePromotionAsync(long id, UpdatePromotionDto dto, string username, CancellationToken ct = default)
     {
+        if (dto == null)
+            return ApiResponse<PromotionDetailsDto>.CreateFailure("Request body cannot be null", null, 400);
+
         var promo = await _repository.GetPromotionByIdAsync(id, ct);
         if (promo == null)
             return ApiResponse<PromotionDetailsDto>.CreateFailure("Promotion not found", null, 404);
 
-        promo.PromotionNameLocal = dto.PromotionNameLocal.Trim();
-        promo.PromotionNameEn = dto.PromotionNameEn?.Trim();
+        if (!string.IsNullOrWhiteSpace(dto.PromotionNameLocal))
+            promo.PromotionNameLocal = dto.PromotionNameLocal.Trim();
+        if (dto.PromotionNameEn != null)
+            promo.PromotionNameEn = dto.PromotionNameEn.Trim();
         promo.PromotionType = dto.PromotionType;
         promo.StartDate = dto.StartDate;
         promo.EndDate = dto.EndDate;

@@ -5,6 +5,8 @@ using System.Threading;
 using System.Threading.Tasks;
 using ThinkOnErp.Application.Common;
 using ThinkOnErp.Application.DTOs.Pos;
+using ThinkOnErp.Domain.Entities.Inventory;
+using ThinkOnErp.Domain.Entities.Inventory.Enums;
 using ThinkOnErp.Domain.Entities.Pos;
 using ThinkOnErp.Domain.Entities.Pos.Enums;
 using ThinkOnErp.Domain.Interfaces;
@@ -69,14 +71,14 @@ public class PosModifierService : IPosModifierService
         if (existing != null)
             return ApiResponse<PosModifierGroupDto>.CreateFailure($"Modifier group code '{dto.GroupCode}' already exists for branch {dto.BranchId}", null, 400);
 
-        var group = new PosModifierGroup
+        var group = new InvModifierGroup
         {
             BranchId = dto.BranchId,
             GroupCode = normalizedCode,
             GroupNameLocal = dto.GroupNameLocal.Trim(),
             GroupNameEn = dto.GroupNameEn?.Trim(),
             IsRequired = dto.IsRequired,
-            SelectionType = dto.SelectionType,
+            SelectionType = (ModifierSelectionType)dto.SelectionType,
             MinSelections = dto.MinSelections,
             MaxSelections = dto.MaxSelections,
             SortOrder = dto.SortOrder,
@@ -99,7 +101,7 @@ public class PosModifierService : IPosModifierService
                         return ApiResponse<PosModifierGroupDto>.CreateFailure($"Related item {opt.RelatedItemId.Value} not found", null, 404);
                 }
 
-                group.Options.Add(new PosModifierOption
+                group.Options.Add(new InvModifierOption
                 {
                     OptionNameLocal = opt.OptionNameLocal.Trim(),
                     OptionNameEn = opt.OptionNameEn?.Trim(),
@@ -125,7 +127,7 @@ public class PosModifierService : IPosModifierService
             int sort = 1;
             foreach (var itemId in distinctItemIds)
             {
-                group.ItemLinks.Add(new PosItemModifierGroup
+                group.ItemLinks.Add(new InvItemModifierGroup
                 {
                     ItemId = itemId,
                     SortOrder = sort++
@@ -156,8 +158,8 @@ public class PosModifierService : IPosModifierService
         if (string.IsNullOrWhiteSpace(dto.GroupNameLocal))
             return ApiResponse<PosModifierGroupDto>.CreateFailure("GroupNameLocal is required", null, 400);
 
-        var effectiveSelectionType = dto.SelectionType != 0 ? dto.SelectionType : group.SelectionType;
-        var (isValid, errorMsg) = ValidateSelectionConfig(effectiveSelectionType, dto.MinSelections, dto.MaxSelections);
+        var effectiveSelectionType = dto.SelectionType != 0 ? (ModifierSelectionType)dto.SelectionType : group.SelectionType;
+        var (isValid, errorMsg) = ValidateSelectionConfig((PosSelectionType)effectiveSelectionType, dto.MinSelections, dto.MaxSelections);
         if (!isValid)
             return ApiResponse<PosModifierGroupDto>.CreateFailure(errorMsg!, null, 400);
 
@@ -208,7 +210,7 @@ public class PosModifierService : IPosModifierService
                 return ApiResponse<PosModifierOptionDto>.CreateFailure($"Related item {dto.RelatedItemId.Value} not found", null, 404);
         }
 
-        PosModifierOption? option = null;
+        InvModifierOption? option = null;
         if (dto.Id.HasValue && dto.Id.Value > 0)
         {
             option = await _modifierRepository.GetOptionByIdAsync(dto.Id.Value, ct);
@@ -227,7 +229,7 @@ public class PosModifierService : IPosModifierService
         }
         else
         {
-            option = new PosModifierOption
+            option = new InvModifierOption
             {
                 ModifierGroupId = groupId,
                 OptionNameLocal = dto.OptionNameLocal.Trim(),
@@ -306,7 +308,7 @@ public class PosModifierService : IPosModifierService
             int sort = 1;
             foreach (var gId in distinctIds)
             {
-                await _modifierRepository.AddItemModifierGroupAsync(new PosItemModifierGroup
+                await _modifierRepository.AddItemModifierGroupAsync(new InvItemModifierGroup
                 {
                     ItemId = itemId,
                     ModifierGroupId = gId,
@@ -361,7 +363,7 @@ public class PosModifierService : IPosModifierService
         return (true, null);
     }
 
-    private static PosModifierGroupDto MapToGroupDto(PosModifierGroup g)
+    private static PosModifierGroupDto MapToGroupDto(InvModifierGroup g)
     {
         return new PosModifierGroupDto
         {
@@ -371,7 +373,7 @@ public class PosModifierService : IPosModifierService
             GroupNameLocal = g.GroupNameLocal,
             GroupNameEn = g.GroupNameEn,
             IsRequired = g.IsRequired,
-            SelectionType = g.SelectionType,
+            SelectionType = (PosSelectionType)g.SelectionType,
             MinSelections = g.MinSelections,
             MaxSelections = g.MaxSelections,
             SortOrder = g.SortOrder,
@@ -381,7 +383,7 @@ public class PosModifierService : IPosModifierService
         };
     }
 
-    private static PosModifierOptionDto MapToOptionDto(PosModifierOption o)
+    private static PosModifierOptionDto MapToOptionDto(InvModifierOption o)
     {
         return new PosModifierOptionDto
         {

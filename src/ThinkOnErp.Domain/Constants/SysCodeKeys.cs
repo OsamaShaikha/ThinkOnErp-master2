@@ -173,6 +173,56 @@ public static class SysCodeKeys
         public const int Cheque = 5;
     }
 
+    public static class ItemTypes
+    {
+        public const int Mgr = 18;
+        public const int Stock = 1;
+        public const int NonStock = 2;
+        public const int Service = 3;
+        public const int Kit = 4;
+        public const int Assembly = 5;
+    }
+
+    public static class CostingMethods
+    {
+        public const int Mgr = 19;
+        public const int WeightedAverage = 1;
+        public const int Fifo = 2;
+        public const int SpecificId = 3;
+        public const int Standard = 4;
+    }
+
+    public static class BomTypes
+    {
+        public const int Mgr = 20;
+        public const int SalesKit = 1;
+        public const int ProductionAssembly = 2;
+        public const int Disassembly = 3;
+    }
+
+    public static class StockTransactionTypes
+    {
+        public const int Mgr = 21;
+        public const int LocalCashSales = 1001;
+        public const int LocalCreditSales = 1002;
+        public const int ExportSales = 1003;
+        public const int PosSales = 1004;
+        public const int SalesReturnRestock = 1501;
+        public const int SalesReturnScrap = 1502;
+        public const int LocalPurchase = 2001;
+        public const int ImportPurchase = 2003;
+        public const int PurchaseReturn = 2501;
+        public const int OpeningStock = 3001;
+        public const int StockSurplus = 3002;
+        public const int FreeSamplesIn = 3003;
+        public const int StockShortage = 3011;
+        public const int ScrapWriteoff = 3012;
+        public const int InternalUse = 3014;
+        public const int InternalTransfer = 3501;
+        public const int SalesQuotation = 4001;
+        public const int PurchaseOrder = 4004;
+    }
+
     public static class ItemColors
     {
         public const int Mgr = 32;
@@ -182,4 +232,11 @@ public static class SysCodeKeys
     {
         public const int Mgr = 30;
     }
-}
+
+    public static class SelectionTypes
+    {
+        public const int Mgr = 33;
+        public const int Single = 1;
+        public const int Multiple = 2;
+    }
+}

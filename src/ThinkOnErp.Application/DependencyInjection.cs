@@ -69,10 +69,13 @@ public static class DependencyInjection
         services.AddScoped<ThinkOnErp.Application.Services.Inventory.IInvAtpCalculator, ThinkOnErp.Application.Services.Inventory.InvAtpCalculator>();
         services.AddScoped<ThinkOnErp.Application.Services.Inventory.IInvReconciliationService, ThinkOnErp.Application.Services.Inventory.InvReconciliationService>();
         services.AddScoped<ThinkOnErp.Application.Services.Inventory.ITrxDocumentService, ThinkOnErp.Application.Services.Inventory.TrxDocumentService>();
-        services.AddScoped<ThinkOnErp.Application.Services.Inventory.IInvItemGroupService, ThinkOnErp.Application.Services.Inventory.InvItemGroupService>();
+        services.AddScoped<ThinkOnErp.Application.Services.Inventory.IInvItemCategoryService, ThinkOnErp.Application.Services.Inventory.InvItemCategoryService>();
         services.AddScoped<ThinkOnErp.Application.Services.Inventory.IInvBomService, ThinkOnErp.Application.Services.Inventory.InvBomService>();
         services.AddScoped<ThinkOnErp.Application.Services.Inventory.IInvOpeningBalanceService, ThinkOnErp.Application.Services.Inventory.InvOpeningBalanceService>();
         services.AddScoped<ThinkOnErp.Application.Services.Inventory.ITrxTypeService, ThinkOnErp.Application.Services.Inventory.TrxTypeService>();
+        services.AddScoped<ThinkOnErp.Application.Services.Inventory.IInvVariantService, ThinkOnErp.Application.Services.Inventory.InvVariantService>();
+        services.AddScoped<ThinkOnErp.Application.Services.Inventory.IInvModifierService, ThinkOnErp.Application.Services.Inventory.InvModifierService>();
+        services.AddScoped<ThinkOnErp.Application.Services.Inventory.IInvPriceListService, ThinkOnErp.Application.Services.Inventory.InvPriceListService>();
         services.AddScoped<ITranslationService, TranslationService>();
 
         // POS Services
@@ -81,7 +84,6 @@ public static class DependencyInjection
         services.AddScoped<ThinkOnErp.Application.Services.Pos.IPosScaleBarcodeParser, ThinkOnErp.Application.Services.Pos.PosScaleBarcodeParser>();
         services.AddScoped<ThinkOnErp.Application.Services.Pos.IPosPromotionEngine, ThinkOnErp.Application.Services.Pos.PosPromotionEngine>();
         services.AddScoped<ThinkOnErp.Application.Services.Pos.IPosPromotionService, ThinkOnErp.Application.Services.Pos.PosPromotionService>();
-        services.AddScoped<ThinkOnErp.Application.Services.Pos.IPosPriceListService, ThinkOnErp.Application.Services.Pos.PosPriceListService>();
         services.AddScoped<ThinkOnErp.Application.Services.Pos.IPosPrintTemplateService, ThinkOnErp.Application.Services.Pos.PosPrintTemplateService>();
         services.AddScoped<ThinkOnErp.Application.Services.Pos.IPosCalculationEngine, ThinkOnErp.Application.Services.Pos.PosCalculationEngine>();
         services.AddScoped<ThinkOnErp.Application.Services.Pos.IPosOrderService, ThinkOnErp.Application.Services.Pos.PosOrderService>();
@@ -112,6 +114,9 @@ public static class DependencyInjection
         services.AddScoped<ThinkOnErp.Application.Services.Hr.IPayrollValidationService, ThinkOnErp.Application.Services.Hr.PayrollValidationService>();
         services.AddScoped<ThinkOnErp.Application.Services.Hr.IPayrollExplanationService, ThinkOnErp.Application.Services.Hr.PayrollExplanationService>();
         services.AddScoped<ThinkOnErp.Application.Services.Hr.IPayrollService, ThinkOnErp.Application.Services.Hr.PayrollService>();
+        services.AddScoped<ThinkOnErp.Application.Services.Hr.IEmployeeService, ThinkOnErp.Application.Services.Hr.EmployeeService>();
+        services.AddScoped<ThinkOnErp.Application.Services.Hr.ILeaveService, ThinkOnErp.Application.Services.Hr.LeaveService>();
+        services.AddScoped<ThinkOnErp.Application.Services.Hr.IBankPayrollExportService, ThinkOnErp.Application.Services.Hr.BankPayrollExportService>();
 
         return services;
     }

@@ -49,8 +49,11 @@ public class InvItemsController : ControllerBase
     }
 
     /// <summary>
-    /// Retrieves a paginated list of items in the catalog.
+    /// Retrieves a paginated list of items in the catalog with full details, categories, prices, barcodes, and tracking options.
     /// </summary>
+    /// <param name="search">Keyword search matching item code, name, SKU, or barcode.</param>
+    /// <param name="categoryId">Optional filter by category or subcategory.</param>
+    /// <param name="groupId">Optional alias filter by group or subcategory.</param>
     /// <param name="pageNumber">Page index (default 1).</param>
     /// <param name="pageSize">Page size (default 10).</param>
     /// <param name="cancellationToken">Cancellation token.</param>
@@ -58,14 +61,21 @@ public class InvItemsController : ControllerBase
     [HttpGet]
     [ProducesResponseType(typeof(ApiResponse<List<InvItemListDto>>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiResponse<List<InvItemListDto>>), StatusCodes.Status400BadRequest)]
-    public async Task<IActionResult> GetItems([FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 10, CancellationToken cancellationToken = default)
+    public async Task<IActionResult> GetItems(
+        [FromQuery] string? search = null,
+        [FromQuery] long? categoryId = null,
+        [FromQuery] long? groupId = null,
+        [FromQuery] int pageNumber = 1,
+        [FromQuery] int pageSize = 10,
+        CancellationToken cancellationToken = default)
     {
         if (pageNumber <= 0 || pageSize <= 0)
         {
             return BadRequest(ApiResponse<List<InvItemListDto>>.CreateFailure("Invalid pagination parameters. pageNumber and pageSize must be greater than zero.", statusCode: 400));
         }
 
-        var response = await _itemService.GetAllAsync(pageNumber, pageSize, cancellationToken);
+        var filterCategoryId = categoryId ?? groupId;
+        var response = await _itemService.GetAllAsync(search, filterCategoryId, pageNumber, pageSize, cancellationToken);
         if (response.Success)
             response.Message = ResponseCodes.ItemsRetrieved;
 
@@ -199,5 +209,28 @@ public class InvItemsController : ControllerBase
             response.Message = ResponseCodes.ItemBarcodeDeleted;
 
         return Ok(response);
+    }
+
+    /// <summary>
+    /// Adds initial opening balances per warehouse for an existing item.
+    /// </summary>
+    /// <param name="id">Item identifier.</param>
+    /// <param name="openingBalances">List of warehouse opening balances.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>Updated item details with warehouse balances.</returns>
+    [HttpPost("{id:long}/opening-balances")]
+    [ProducesResponseType(typeof(ApiResponse<InvItemDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<InvItemDto>), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> AddOpeningBalances(
+        long id,
+        [FromBody] List<ItemWarehouseOpeningBalanceDto> openingBalances,
+        CancellationToken cancellationToken)
+    {
+        var response = await _itemService.AddOpeningBalancesAsync(id, openingBalances, cancellationToken);
+        if (response.Success)
+            response.Message = ResponseCodes.OperationSuccessful;
+
+        return response.Success ? Ok(response) : BadRequest(response);
     }
 }

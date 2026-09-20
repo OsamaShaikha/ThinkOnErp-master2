@@ -38,6 +38,7 @@ public sealed class OpeningLineDto
     public decimal TotalCost { get; set; }
     public string? LotNumber { get; set; }
     public string? SerialNumber { get; set; }
+    public List<string> SerialNumbers { get; set; } = new();
     public DateTime? ExpiryDate { get; set; }
     public string? Notes { get; set; }
 }

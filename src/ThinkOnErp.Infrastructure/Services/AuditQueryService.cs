@@ -997,6 +997,7 @@ public class AuditQueryService : IAuditQueryService
 
         var results = await query
             .OrderByDescending(a => a.CreationDate)
+            .Take(5000)
             .ToListAsync(cancellationToken);
 
         return results.Select(MapToAuditLogEntry).ToList();

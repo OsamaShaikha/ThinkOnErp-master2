@@ -1,4 +1,4 @@
-﻿using System.Text;
+using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using Microsoft.EntityFrameworkCore;
@@ -200,6 +200,7 @@ public class LegacyAuditService : ILegacyAuditService
 
             var auditLogs = await query
                 .OrderByDescending(a => a.CreationDate)
+                .Take(1000)
                 .ToListAsync();
 
             var csv = new StringBuilder();

@@ -1,4 +1,4 @@
-﻿using MediatR;
+using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using ThinkOnErp.Domain.Constants;
@@ -392,19 +392,29 @@ public class CompanyController : ControllerBase
     {
         try
         {
-            _logger.LogInformation("Exporting schema changes from DEV_TEMPLATE to all tenant company schemas");
+            _logger.LogInformation("Exporting schema changes from DEV_TEMPLATE to all tenant company schemas in background");
 
-            await _oracleSchemaService.UpgradeExistingTenantSchemasAsync();
-
-            _logger.LogInformation("Successfully synced DEV_TEMPLATE changes to all tenant company schemas");
+            _ = Task.Run(async () =>
+            {
+                try
+                {
+                    await _oracleSchemaService.UpgradeExistingTenantSchemasAsync();
+                    _logger.LogInformation("Successfully completed background sync of DEV_TEMPLATE changes to all tenant company schemas");
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Background error syncing DEV_TEMPLATE changes to all tenant company schemas");
+                }
+            });
 
             return Ok(ApiResponse<object>.CreateSuccess(
                 new
                 {
+                    Status = "Initiated",
                     SyncedFromSchema = "DEV_TEMPLATE",
-                    SyncedAtUtc = DateTime.UtcNow
+                    InitiatedAtUtc = DateTime.UtcNow
                 },
-                "Successfully exported and synced all DEV_TEMPLATE changes to all tenant company schemas.",
+                "Export and sync of all DEV_TEMPLATE changes to all tenant company schemas initiated successfully.",
                 200));
         }
         catch (Exception ex)

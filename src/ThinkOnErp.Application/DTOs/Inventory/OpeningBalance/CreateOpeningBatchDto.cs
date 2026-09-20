@@ -40,7 +40,7 @@ public sealed class CreateOpeningLineDto
 
     public decimal UomFactor { get; set; } = 1;
 
-    [Range(0.0001, 99999999)]
+    [Range(0, 99999999)]
     public decimal Quantity { get; set; }
 
     [Range(0, 99999999)]
@@ -48,6 +48,12 @@ public sealed class CreateOpeningLineDto
 
     public string? LotNumber { get; set; }
     public string? SerialNumber { get; set; }
+
+    /// <summary>
+    /// قائمة الأرقام التسلسلية إذا كان الصنف يخضع للتتبع بالسيريال (List of serial numbers for serial-tracked items)
+    /// </summary>
+    public List<string>? SerialNumbers { get; set; }
+
     public DateTime? ExpiryDate { get; set; }
     public string? Notes { get; set; }
 }

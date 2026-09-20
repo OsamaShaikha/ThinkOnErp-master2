@@ -24,15 +24,18 @@ public sealed class PayrollController : ControllerBase
 {
     private readonly IPayrollService _payrollService;
     private readonly IPayrollExplanationService _explanationService;
+    private readonly IBankPayrollExportService _bankExportService;
     private readonly ILogger<PayrollController> _logger;
 
     public PayrollController(
         IPayrollService payrollService,
         IPayrollExplanationService explanationService,
+        IBankPayrollExportService bankExportService,
         ILogger<PayrollController> logger)
     {
         _payrollService = payrollService;
         _explanationService = explanationService;
+        _bankExportService = bankExportService;
         _logger = logger;
     }
 
@@ -91,6 +94,28 @@ public sealed class PayrollController : ControllerBase
         return Ok(ApiResponse<PayrollCalculationResultDto>.CreateSuccess(result, "Payroll run retrieved successfully."));
     }
 
+    [HttpGet("{id:long}/export-bank")]
+    [ProducesResponseType(typeof(FileContentResult), StatusCodes.Status200OK)]
+    public async Task<IActionResult> ExportBankFile(
+        long id,
+        [FromQuery] string? format,
+        CancellationToken cancellationToken)
+    {
+        var result = await _bankExportService.ExportPayrollToBankFormatAsync(id, format ?? "CSV", cancellationToken);
+        return File(result.FileBytes, result.ContentType, result.FileName);
+    }
+
+    [HttpGet("{id:long}/export-bank/preview")]
+    [ProducesResponseType(typeof(ApiResponse<BankPayrollExportResultDto>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<ApiResponse<BankPayrollExportResultDto>>> PreviewBankExport(
+        long id,
+        [FromQuery] string? format,
+        CancellationToken cancellationToken)
+    {
+        var result = await _bankExportService.ExportPayrollToBankFormatAsync(id, format ?? "CSV", cancellationToken);
+        return Ok(ApiResponse<BankPayrollExportResultDto>.CreateSuccess(result, "Bank payroll export preview generated successfully."));
+    }
+
     [HttpGet("run-lines/{lineId:long}/explanation")]
     [ProducesResponseType(typeof(ApiResponse<PayrollExplanationDto>), StatusCodes.Status200OK)]
     public async Task<ActionResult<ApiResponse<PayrollExplanationDto>>> GetCalculationExplanation(
@@ -115,10 +140,17 @@ public sealed class PayrollController : ControllerBase
 
     [HttpPost("periods")]
     [ProducesResponseType(typeof(ApiResponse<PayrollPeriod>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<PayrollPeriod>), StatusCodes.Status400BadRequest)]
     public async Task<ActionResult<ApiResponse<PayrollPeriod>>> CreatePeriod(
         [FromBody] PayrollPeriod period,
         CancellationToken cancellationToken)
     {
+        if (period == null)
+            return BadRequest(ApiResponse<PayrollPeriod>.CreateFailure("Request body cannot be null", statusCode: 400));
+
+        if (string.IsNullOrWhiteSpace(period.PeriodCode) || period.CompanyId <= 0)
+            return BadRequest(ApiResponse<PayrollPeriod>.CreateFailure("Valid CompanyId and PeriodCode are required", statusCode: 400));
+
         period.CreationUser = User.Identity?.Name ?? "SYSTEM";
         period.CreationDate = DateTime.UtcNow;
         var result = await _payrollService.CreatePeriodAsync(period, cancellationToken);

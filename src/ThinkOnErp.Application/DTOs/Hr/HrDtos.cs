@@ -291,3 +291,281 @@ public record PayrollValidationResultDto(
     List<string> Errors,
     List<string> Warnings
 );
+
+// Employee Management DTOs
+public record CreateEmployeeDto(
+    string EmployeeCode,
+    string NameLocal,
+    string NameEn,
+    string NationalId,
+    string Nationality,
+    string? PassportNumber,
+    DateTime DateOfBirth,
+    string Gender,
+    string MaritalStatus,
+    string? Email,
+    string? Phone,
+    DateTime HireDate,
+    DateTime? ProbationEndDate,
+    string EmploymentType,
+    string EmploymentStatus,
+    string? DepartmentCode,
+    string? PositionCode,
+    long? BranchId,
+    string? ManagerEmployeeCode,
+    string? SscNumber,
+    int TaxExemptionCount,
+    bool IsHighRiskRole,
+    string? BankName,
+    string? BankAccountNumber,
+    string? BankIban
+);
+
+public record UpdateEmployeeDto(
+    string NameLocal,
+    string NameEn,
+    string NationalId,
+    string Nationality,
+    string? PassportNumber,
+    DateTime DateOfBirth,
+    string Gender,
+    string MaritalStatus,
+    string? Email,
+    string? Phone,
+    DateTime HireDate,
+    DateTime? ProbationEndDate,
+    DateTime? TerminationDate,
+    string? TerminationReason,
+    string EmploymentType,
+    string EmploymentStatus,
+    string? DepartmentCode,
+    string? PositionCode,
+    long? BranchId,
+    string? ManagerEmployeeCode,
+    string? SscNumber,
+    int TaxExemptionCount,
+    bool IsHighRiskRole,
+    string? BankName,
+    string? BankAccountNumber,
+    string? BankIban,
+    bool IsActive
+);
+
+public record EmployeeSummaryDto(
+    string EmployeeCode,
+    string NameLocal,
+    string NameEn,
+    string NationalId,
+    string? DepartmentCode,
+    string? PositionCode,
+    string EmploymentStatus,
+    decimal? BasicSalary,
+    string? Phone,
+    string? Email
+);
+
+public record EmployeeDetailsDto(
+    string EmployeeCode,
+    string NameLocal,
+    string NameEn,
+    string NationalId,
+    string Nationality,
+    string? PassportNumber,
+    DateTime DateOfBirth,
+    string Gender,
+    string MaritalStatus,
+    string? Email,
+    string? Phone,
+    DateTime HireDate,
+    DateTime? ProbationEndDate,
+    DateTime? TerminationDate,
+    string? TerminationReason,
+    string EmploymentType,
+    string EmploymentStatus,
+    string? DepartmentCode,
+    string? PositionCode,
+    long? BranchId,
+    string? ManagerEmployeeCode,
+    string? SscNumber,
+    int TaxExemptionCount,
+    bool IsHighRiskRole,
+    string? BankName,
+    string? BankAccountNumber,
+    string? BankIban,
+    bool IsActive,
+    List<DependentDto> Dependents,
+    SalaryStructureDetailsDto? ActiveSalaryStructure
+);
+
+public record CreateDependentDto(
+    string NameLocal,
+    string NameEn,
+    string Relationship,
+    DateTime DateOfBirth,
+    string Gender,
+    string? NationalId,
+    bool IsTaxExemptionClaimed,
+    bool IsMedicalCovered
+);
+
+public record DependentDto(
+    long Id,
+    string EmployeeCode,
+    string NameLocal,
+    string NameEn,
+    string Relationship,
+    DateTime DateOfBirth,
+    string Gender,
+    string? NationalId,
+    bool IsTaxExemptionClaimed,
+    bool IsMedicalCovered,
+    bool IsActive
+);
+
+// Salary Structure & Components DTOs
+public record AssignSalaryStructureDto(
+    DateTime EffectiveFrom,
+    DateTime? EffectiveTo,
+    decimal BasicSalary,
+    string CurrencyCode,
+    string PaymentMethod,
+    List<SalaryStructureLineDto>? Lines
+);
+
+public record SalaryStructureLineDto(
+    string ComponentCode,
+    decimal Amount,
+    decimal? Percent
+);
+
+public record SalaryStructureDetailsDto(
+    long Id,
+    string EmployeeCode,
+    DateTime EffectiveFrom,
+    DateTime? EffectiveTo,
+    decimal BasicSalary,
+    string CurrencyCode,
+    string PaymentMethod,
+    bool IsActive,
+    List<SalaryStructureLineDetailDto> Lines
+);
+
+public record SalaryStructureLineDetailDto(
+    long Id,
+    string ComponentCode,
+    string ComponentNameLocal,
+    string ComponentNameEn,
+    string ComponentType,
+    decimal Amount,
+    decimal? Percent,
+    bool IsActive
+);
+
+public record CreateSalaryComponentDto(
+    string ComponentCode,
+    string NameLocal,
+    string NameEn,
+    string ComponentType, // BASIC, ALLOWANCE, DEDUCTION, EMPLOYER_CONTRIB
+    string CalculationType, // FIXED, PERCENTAGE, FORMULA
+    decimal? DefaultAmount,
+    decimal? DefaultPercent,
+    bool IsTaxable,
+    bool IsSscApplicable,
+    string? GlAccountCode
+);
+
+public record SalaryComponentDto(
+    string ComponentCode,
+    string NameLocal,
+    string NameEn,
+    string ComponentType,
+    string CalculationType,
+    decimal? DefaultAmount,
+    decimal? DefaultPercent,
+    bool IsTaxable,
+    bool IsSscApplicable,
+    string? GlAccountCode,
+    bool IsActive
+);
+
+// Leaves & Absence DTOs
+public record LeaveTypeDto(
+    string LeaveTypeCode,
+    string NameLocal,
+    string NameEn,
+    bool IsPaid,
+    bool IsStatutory,
+    decimal MaxDaysPerYear,
+    bool CarryForwardAllowed,
+    decimal CarryForwardCapDays,
+    bool RequiresDocumentation,
+    bool IsActive
+);
+
+public record SubmitLeaveRequestDto(
+    string EmployeeCode,
+    string LeaveTypeCode,
+    DateTime StartDate,
+    DateTime EndDate,
+    decimal DaysRequested,
+    string? Reason,
+    string? AttachmentFileRef
+);
+
+public record ProcessLeaveRequestDto(
+    bool Approved,
+    string? RejectionReason
+);
+
+public record LeaveRequestDto(
+    long Id,
+    string EmployeeCode,
+    string EmployeeName,
+    string LeaveTypeCode,
+    string LeaveTypeName,
+    DateTime StartDate,
+    DateTime EndDate,
+    decimal DaysRequested,
+    string Status,
+    string? Reason,
+    string? ApprovedBy,
+    DateTime? ApprovalDate,
+    string? RejectionReason,
+    DateTime CreationDate
+);
+
+public record LeaveBalanceDto(
+    string EmployeeCode,
+    string LeaveTypeCode,
+    string LeaveTypeName,
+    int YearNo,
+    decimal AccruedDays,
+    decimal UsedDays,
+    decimal CarriedForwardDays,
+    decimal RemainingDays
+);
+
+// Bank Export DTOs
+public record BankPayrollExportRecordDto(
+    int SequenceNo,
+    string EmployeeCode,
+    string NationalId,
+    string FullName,
+    string BankCode,
+    string Iban,
+    string Currency,
+    decimal NetAmount,
+    string Remarks
+);
+
+public record BankPayrollExportResultDto(
+    long PayrollRunId,
+    string PayPeriod,
+    string Format,
+    int TotalRecords,
+    decimal TotalAmount,
+    byte[] FileBytes,
+    string FileName,
+    string ContentType
+);
+

@@ -122,10 +122,21 @@ public class UsersController : ControllerBase
     {
         try
         {
+            if (command == null)
+            {
+                return BadRequest(ApiResponse<Int64>.CreateFailure(
+                    "Request body cannot be null",
+                    new List<string> { "INVALID_INPUT" },
+                    400));
+            }
+
             command.CreationUser = User.Identity?.Name ?? "system";
             _logger.LogInformation("Creating new user: {UserName}", command.UserName);
 
-            command.Password = _passwordHashingService.HashPassword(command.Password);
+            if (!string.IsNullOrEmpty(command.Password))
+            {
+                command.Password = _passwordHashingService.HashPassword(command.Password);
+            }
 
             var userId = await _mediator.Send(command);
 
@@ -141,7 +152,7 @@ public class UsersController : ControllerBase
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error creating user: {UserName}", command.UserName);
+            _logger.LogError(ex, "Error creating user: {UserName}", command?.UserName);
             throw;
         }
     }
@@ -157,6 +168,14 @@ public class UsersController : ControllerBase
     {
         try
         {
+            if (command == null)
+            {
+                return BadRequest(ApiResponse<Int64>.CreateFailure(
+                    "Request body cannot be null",
+                    new List<string> { "INVALID_INPUT" },
+                    400));
+            }
+
             command.UserId = id;
             command.UpdateUser = User.Identity?.Name ?? "system";
 

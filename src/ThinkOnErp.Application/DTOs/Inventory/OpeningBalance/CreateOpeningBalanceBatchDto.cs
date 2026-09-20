@@ -19,5 +19,6 @@ public class CreateOpeningBalanceLineDto
     public decimal UnitCost { get; set; }
     public string? LotNumber { get; set; }
     public string? SerialNumber { get; set; }
+    public List<string>? SerialNumbers { get; set; }
     public DateTime? ExpiryDate { get; set; }
 }

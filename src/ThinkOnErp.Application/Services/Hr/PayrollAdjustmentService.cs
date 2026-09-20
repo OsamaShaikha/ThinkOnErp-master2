@@ -52,7 +52,7 @@ public sealed class PayrollAdjustmentService : IPayrollAdjustmentService
     public async Task<PayrollAdjustment> ApproveAdjustmentAsync(long id, string user, CancellationToken cancellationToken = default)
     {
         var adj = await _adjustmentRepository.GetAdjustmentByIdAsync(id, cancellationToken);
-        if (adj == null) throw new InvalidOperationException($"Payroll adjustment with ID {id} not found.");
+        if (adj == null) throw new KeyNotFoundException($"Payroll adjustment with ID {id} not found.");
 
         adj.Status = "APPROVED";
         adj.UpdateUser = user;
@@ -66,7 +66,7 @@ public sealed class PayrollAdjustmentService : IPayrollAdjustmentService
     public async Task<PayrollAdjustment> RejectAdjustmentAsync(long id, string user, CancellationToken cancellationToken = default)
     {
         var adj = await _adjustmentRepository.GetAdjustmentByIdAsync(id, cancellationToken);
-        if (adj == null) throw new InvalidOperationException($"Payroll adjustment with ID {id} not found.");
+        if (adj == null) throw new KeyNotFoundException($"Payroll adjustment with ID {id} not found.");
 
         adj.Status = "REJECTED";
         adj.UpdateUser = user;

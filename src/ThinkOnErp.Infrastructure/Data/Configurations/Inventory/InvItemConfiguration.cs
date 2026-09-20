@@ -14,18 +14,29 @@ public sealed class InvItemConfiguration : IEntityTypeConfiguration<InvItem>
         builder.Property(i => i.Id).HasColumnName("ID").ValueGeneratedOnAdd();
         builder.Property(i => i.BranchId).HasColumnName("BRANCH_ID").IsRequired();
         builder.Property(i => i.ItemCode).HasColumnName("ITEM_CODE").HasMaxLength(30).IsRequired();
+        builder.Property(i => i.Sku).HasColumnName("SKU").HasMaxLength(100);
         builder.Property(i => i.ItemNameLocal).HasColumnName("ITEM_NAME_LOCAL").HasMaxLength(200).IsRequired();
         builder.Property(i => i.ItemNameEn).HasColumnName("ITEM_NAME_EN").HasMaxLength(200);
-        builder.Property(i => i.MainGroupId).HasColumnName("MAIN_GROUP_ID").IsRequired();
-        builder.Property(i => i.SubGroupId).HasColumnName("SUB_GROUP_ID");
+        builder.Property(i => i.CategoryId).HasColumnName("CATEGORY_ID").IsRequired();
+        builder.Ignore(i => i.MainCategoryId);
+        builder.Ignore(i => i.SubCategoryId);
+        builder.Ignore(i => i.MainGroupId);
+        builder.Ignore(i => i.SubGroupId);
+        builder.Ignore(i => i.MainCategory);
+        builder.Ignore(i => i.SubCategory);
+        builder.Ignore(i => i.MainGroup);
+        builder.Ignore(i => i.SubGroup);
         builder.Property(i => i.ItemType).HasColumnName("ITEM_TYPE").HasConversion<string>().HasMaxLength(20).IsRequired();
         builder.Property(i => i.UomBase).HasColumnName("UOM_BASE").HasColumnType("NUMBER(6)").IsRequired();
         builder.Property(i => i.CostingMethod).HasColumnName("COSTING_METHOD").HasConversion<string>().HasMaxLength(20).HasDefaultValue(Domain.Entities.Inventory.Enums.CostingMethod.WeightedAverage);
         builder.Property(i => i.StandardCost).HasColumnName("STANDARD_COST").HasColumnType("NUMBER(18,4)");
+        builder.Property(i => i.DefaultSellingPrice).HasColumnName("DEFAULT_SELLING_PRICE").HasColumnType("NUMBER(18,4)").HasDefaultValue(0m);
+        builder.Property(i => i.ShowInPos).HasColumnName("SHOW_IN_POS").HasColumnType("NUMBER(1)").HasDefaultValue(true);
 
         builder.Property(i => i.SerialTracking).HasColumnName("SERIAL_TRACKING").HasColumnType("NUMBER(1)");
         builder.Property(i => i.LotTracking).HasColumnName("LOT_TRACKING").HasColumnType("NUMBER(1)");
         builder.Property(i => i.ExpiryTracking).HasColumnName("EXPIRY_TRACKING").HasColumnType("NUMBER(1)");
+        builder.Property(i => i.HasVariants).HasColumnName("HAS_VARIANTS").HasColumnType("NUMBER(1)").HasDefaultValue(false);
         builder.Property(i => i.ShelfLifeDays).HasColumnName("SHELF_LIFE_DAYS");
 
         builder.Property(i => i.AllowNegativeStock).HasColumnName("ALLOW_NEGATIVE_STOCK").HasColumnType("NUMBER(1)");
@@ -48,6 +59,12 @@ public sealed class InvItemConfiguration : IEntityTypeConfiguration<InvItem>
         builder.Property(i => i.ImageBase64).HasColumnName("IMAGE_BASE64").HasColumnType("CLOB");
         builder.Property(i => i.ColorCode).HasColumnName("COLOR_CODE");
 
+        // Tax Integration
+        builder.Property(i => i.TaxRateId).HasColumnName("TAX_RATE_ID");
+        builder.Property(i => i.TaxGroupId).HasColumnName("TAX_GROUP_ID");
+        builder.Property(i => i.IsTaxExempt).HasColumnName("IS_TAX_EXEMPT").HasColumnType("NUMBER(1)").HasDefaultValue(false);
+        builder.Property(i => i.TaxExemptionReasonCode).HasColumnName("TAX_EXEMPTION_REASON_CODE").HasMaxLength(50);
+
         builder.Property(i => i.IsActive).HasColumnName("IS_ACTIVE").HasColumnType("NUMBER(1)").HasDefaultValue(true);
         builder.Property(i => i.CreationUser).HasColumnName("CREATION_USER").HasMaxLength(100).IsRequired();
         builder.Property(i => i.CreationDate).HasColumnName("CREATION_DATE").HasColumnType("TIMESTAMP");
@@ -55,14 +72,18 @@ public sealed class InvItemConfiguration : IEntityTypeConfiguration<InvItem>
         builder.Property(i => i.UpdateDate).HasColumnName("UPDATE_DATE").HasColumnType("TIMESTAMP");
 
         builder.HasIndex(i => i.ItemCode).IsUnique();
-        builder.HasIndex(i => new { i.MainGroupId, i.SubGroupId });
+        builder.HasIndex(i => i.CategoryId);
+        builder.HasIndex(i => i.TaxRateId);
+        builder.HasIndex(i => i.TaxGroupId);
 
-        builder.HasOne(i => i.MainGroup).WithMany(g => g.Items).HasForeignKey(i => i.MainGroupId).OnDelete(DeleteBehavior.Restrict);
-        builder.HasOne(i => i.SubGroup).WithMany().HasForeignKey(i => i.SubGroupId).OnDelete(DeleteBehavior.Restrict);
+        builder.HasOne(i => i.Category).WithMany(g => g.Items).HasForeignKey(i => i.CategoryId).OnDelete(DeleteBehavior.Restrict);
+        builder.HasOne(i => i.TaxRate).WithMany().HasForeignKey(i => i.TaxRateId).OnDelete(DeleteBehavior.Restrict);
+        builder.HasOne(i => i.TaxGroup).WithMany().HasForeignKey(i => i.TaxGroupId).OnDelete(DeleteBehavior.Restrict);
         builder.HasMany(i => i.UomConversions).WithOne(u => u.Item).HasForeignKey(u => u.ItemId).OnDelete(DeleteBehavior.Cascade);
         builder.HasMany(i => i.Barcodes).WithOne(b => b.Item).HasForeignKey(b => b.ItemId).OnDelete(DeleteBehavior.Cascade);
         builder.HasMany(i => i.StockBalances).WithOne(b => b.Item).HasForeignKey(b => b.ItemId).OnDelete(DeleteBehavior.Restrict);
         builder.HasMany(i => i.Lots).WithOne(l => l.Item).HasForeignKey(l => l.ItemId).OnDelete(DeleteBehavior.Restrict);
         builder.HasMany(i => i.Serials).WithOne(s => s.Item).HasForeignKey(s => s.ItemId).OnDelete(DeleteBehavior.Restrict);
+        builder.HasMany(i => i.Variants).WithOne(v => v.Item).HasForeignKey(v => v.ItemId).OnDelete(DeleteBehavior.Cascade);
     }
 }

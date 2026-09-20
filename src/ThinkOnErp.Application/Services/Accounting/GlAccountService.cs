@@ -1,4 +1,4 @@
-﻿using System.Globalization;
+using System.Globalization;
 using ThinkOnErp.Application.DTOs.Accounting;
 using ThinkOnErp.Application.Mappings.Accounting;
 using ThinkOnErp.Domain.Entities.Accounting;
@@ -622,9 +622,16 @@ public sealed class GlAccountService : IGlAccountService
         CancellationToken cancellationToken = default)
     {
         var companyId = _tenantContext.GetRequiredCompanyId();
+
+        var existing = await _repository.GetAllAsync(companyId, cancellationToken);
+        if (existing.Count > 0)
+        {
+            return existing.Select(GlAccountMapper.ToDto).ToList();
+        }
+
         var accounts = await BuildGlAccountsFromTemplateAsync(companyId, cancellationToken);
 
-        if (defaultBranchId > 0)
+        if (defaultBranchId > 0 && await _repository.BranchBelongsToCompanyAsync(companyId, defaultBranchId, cancellationToken))
         {
             foreach (var account in accounts)
             {

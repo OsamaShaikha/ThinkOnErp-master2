@@ -200,8 +200,11 @@ public static class DependencyInjection
         services.AddScoped<IInvOpeningBalanceRepository, InvOpeningBalanceRepository>();
         services.AddScoped<ITrxDocumentRepository, TrxDocumentRepository>();
         services.AddScoped<ITrxTypeRepository, TrxTypeRepository>();
-        services.AddScoped<IInvItemGroupRepository, InvItemGroupRepository>();
+        services.AddScoped<IInvItemCategoryRepository, InvItemCategoryRepository>();
         services.AddScoped<IInvBomRepository, InvBomRepository>();
+        services.AddScoped<IInvVariantRepository, InvVariantRepository>();
+        services.AddScoped<IInvModifierRepository, InvModifierRepository>();
+        services.AddScoped<IInvPriceListRepository, InvPriceListRepository>();
         services.AddScoped<ITranslationRepository, TranslationRepository>();
 
         // Register POS repositories
@@ -209,7 +212,6 @@ public static class DependencyInjection
         services.AddScoped<IPosShiftRepository, PosShiftRepository>();
         services.AddScoped<IPosOrderRepository, PosOrderRepository>();
         services.AddScoped<IPosPromotionRepository, PosPromotionRepository>();
-        services.AddScoped<IPosPriceListRepository, PosPriceListRepository>();
         services.AddScoped<IPosPrintTemplateRepository, PosPrintTemplateRepository>();
         services.AddScoped<IPosTableRepository, PosTableRepository>();
         services.AddScoped<IPosReservationRepository, PosReservationRepository>();
@@ -217,7 +219,7 @@ public static class DependencyInjection
         services.AddScoped<IPosGiftCardRepository, PosGiftCardRepository>();
         services.AddScoped<IPosBatchPrepRepository, PosBatchPrepRepository>();
         services.AddScoped<IPosStaffAttendanceRepository, PosStaffAttendanceRepository>();
-        services.AddScoped<IPosModifierRepository, PosModifierRepository>();
+        services.AddScoped<IPosModifierRepository, InvModifierRepository>();
 
         // Register HR & Payroll repositories
         services.AddScoped<IWorkCalendarRepository, WorkCalendarRepository>();
@@ -226,6 +228,8 @@ public static class DependencyInjection
         services.AddScoped<ILoanRepository, LoanRepository>();
         services.AddScoped<IPayrollPeriodRepository, PayrollPeriodRepository>();
         services.AddScoped<IPayrollAdjustmentRepository, PayrollAdjustmentRepository>();
+        services.AddScoped<IEmployeeRepository, EmployeeRepository>();
+        services.AddScoped<ILeaveRepository, LeaveRepository>();
 
         // Register audit logging services
         services.AddScoped<IAuditRepository, AuditRepository>();

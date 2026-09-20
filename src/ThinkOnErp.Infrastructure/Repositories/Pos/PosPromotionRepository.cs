@@ -84,16 +84,16 @@ public class PosPromotionRepository : IPosPromotionRepository
         return Task.CompletedTask;
     }
 
-    public async Task<PosPriceList?> GetPriceListByIdAsync(long priceListId, CancellationToken ct = default)
+    public async Task<ThinkOnErp.Domain.Entities.Inventory.InvPriceList?> GetPriceListByIdAsync(long priceListId, CancellationToken ct = default)
     {
-        return await _context.PosPriceLists
+        return await _context.InvPriceLists
             .Include(p => p.Items)
             .FirstOrDefaultAsync(p => p.Id == priceListId, ct);
     }
 
-    public async Task<PosPriceList?> GetDefaultPriceListAsync(long branchId, CancellationToken ct = default)
+    public async Task<ThinkOnErp.Domain.Entities.Inventory.InvPriceList?> GetDefaultPriceListAsync(long branchId, CancellationToken ct = default)
     {
-        return await _context.PosPriceLists
+        return await _context.InvPriceLists
             .Include(p => p.Items)
             .FirstOrDefaultAsync(p => p.BranchId == branchId && p.IsDefault && p.IsActive, ct);
     }

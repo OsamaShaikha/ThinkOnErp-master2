@@ -46,6 +46,15 @@ public class PosTillService : IPosTillService
 
     public async Task<ApiResponse<TillDto>> CreateTillAsync(CreateTillDto dto, string username, CancellationToken ct = default)
     {
+        if (dto == null)
+            return ApiResponse<TillDto>.CreateFailure("Request body cannot be null", null, 400);
+
+        if (string.IsNullOrWhiteSpace(dto.TillCode) || string.IsNullOrWhiteSpace(dto.TillName))
+            return ApiResponse<TillDto>.CreateFailure("Till code and name are required", null, 400);
+
+        if (dto.BranchId <= 0)
+            return ApiResponse<TillDto>.CreateFailure("Valid BranchId is required", null, 400);
+
         var existing = await _tillRepository.GetByCodeAsync(dto.BranchId, dto.TillCode, ct);
         if (existing != null)
             return ApiResponse<TillDto>.CreateFailure($"Till code '{dto.TillCode}' already exists for this branch", null, 400);
@@ -71,11 +80,15 @@ public class PosTillService : IPosTillService
 
     public async Task<ApiResponse<TillDto>> UpdateTillAsync(long id, UpdateTillDto dto, string username, CancellationToken ct = default)
     {
+        if (dto == null)
+            return ApiResponse<TillDto>.CreateFailure("Request body cannot be null", null, 400);
+
         var till = await _tillRepository.GetTillByIdAsync(id, ct);
         if (till == null)
             return ApiResponse<TillDto>.CreateFailure("Till not found", null, 404);
 
-        till.TillName = dto.TillName.Trim();
+        if (!string.IsNullOrWhiteSpace(dto.TillName))
+            till.TillName = dto.TillName.Trim();
         till.MachineIdentifier = dto.MachineIdentifier?.Trim();
         till.IpAddress = dto.IpAddress?.Trim();
         till.DefaultFloatAmount = dto.DefaultFloatAmount;

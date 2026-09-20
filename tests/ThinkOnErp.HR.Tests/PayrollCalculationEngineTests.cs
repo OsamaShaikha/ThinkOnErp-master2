@@ -19,6 +19,7 @@ public class PayrollCalculationEngineTests
     private readonly Mock<ITaxCalculationEngine> _taxEngineMock;
     private readonly Mock<ILoanDeductionService> _loanDeductionServiceMock;
     private readonly Mock<IPayrollAdjustmentRepository> _adjustmentRepoMock;
+    private readonly Mock<ILeaveService> _leaveServiceMock;
     private readonly PayrollCalculationEngine _engine;
 
     public PayrollCalculationEngineTests()
@@ -30,6 +31,7 @@ public class PayrollCalculationEngineTests
         _taxEngineMock = new Mock<ITaxCalculationEngine>();
         _loanDeductionServiceMock = new Mock<ILoanDeductionService>();
         _adjustmentRepoMock = new Mock<IPayrollAdjustmentRepository>();
+        _leaveServiceMock = new Mock<ILeaveService>();
 
         _engine = new PayrollCalculationEngine(
             _policyRepoMock.Object,
@@ -38,7 +40,8 @@ public class PayrollCalculationEngineTests
             _sscServiceMock.Object,
             _taxEngineMock.Object,
             _loanDeductionServiceMock.Object,
-            _adjustmentRepoMock.Object
+            _adjustmentRepoMock.Object,
+            _leaveServiceMock.Object
         );
     }
 
@@ -162,5 +165,74 @@ public class PayrollCalculationEngineTests
         Assert.Contains(line.Components, c => c.ComponentCode == "SSC_EMPR" && c.Amount == 178.125m);
         Assert.Contains(line.Components, c => c.ComponentCode == "TAX_INCOME" && c.Amount == 15.500m);
         Assert.Contains(line.Components, c => c.ComponentCode == "LOAN_DEDUCTION" && c.Amount == 50m);
+    }
+
+    [Fact]
+    public async Task UnpaidLeave_DeductsFromBasic_AndAddsComponent()
+    {
+        var period = new PayrollPeriod
+        {
+            Id = 2,
+            CompanyId = 1,
+            PeriodCode = "2026-09",
+            StartDate = new DateTime(2026, 9, 1),
+            EndDate = new DateTime(2026, 9, 30)
+        };
+
+        var employee = new Employee
+        {
+            EmployeeCode = "EMP002",
+            NameLocal = "سارة أحمد",
+            HireDate = new DateTime(2021, 1, 1),
+            IsActive = true,
+            EmploymentStatus = "ACTIVE"
+        };
+
+        var structure = new SalaryStructure
+        {
+            EmployeeCode = employee.EmployeeCode,
+            EffectiveFrom = new DateTime(2021, 1, 1),
+            BasicSalary = 900m,
+            IsActive = true
+        };
+        employee.SalaryStructures.Add(structure);
+
+        // Proration 30 base days
+        _prorationServiceMock
+            .Setup(p => p.CalculateProrationFactorAsync(1, period.StartDate, period.EndDate, employee.HireDate, null, It.IsAny<ProrationPolicy?>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new ProrationResult(1.0m, 30, 30, "CALENDAR_DAYS", "CAL_DEF"));
+
+        // 3 days of approved unpaid leave in this period
+        // Daily rate = 900 / 30 = 30 JOD/day -> 3 days = 90 JOD deduction
+        _leaveServiceMock
+            .Setup(l => l.GetUnpaidLeaveDaysInPeriodAsync(employee.EmployeeCode, period.StartDate, period.EndDate, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(3m);
+
+        _sscServiceMock
+            .Setup(s => s.CalculateSSC(It.IsAny<decimal>(), false, It.IsAny<SSCPolicy?>()))
+            .Returns(new SSCResult(810m, 60.75m, 115.425m, 0m, 0.075m, 0.1425m, 3617m, "DEF_SSC"));
+
+        _taxEngineMock
+            .Setup(t => t.CalculateIncomeTax(It.IsAny<decimal>(), It.IsAny<decimal>(), 0, It.IsAny<TaxPolicy?>()))
+            .Returns(new TaxResult(749.25m, 9000m, 0m, 9720m, 0m, 0m, "DEF_TAX"));
+
+        _loanDeductionServiceMock
+            .Setup(l => l.CalculateAndApplyDeductionsAsync(null, employee.EmployeeCode, period.PeriodCode, It.IsAny<decimal>(), It.IsAny<DeductionPolicy?>(), false, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new LoanDeductionCalculationResult(0m, 0m, 0m, new(), new()));
+
+        var line = await _engine.CalculateEmployeePayrollLineAsync(
+            period,
+            employee,
+            null,
+            null,
+            null,
+            null,
+            new List<PayrollAdjustment>()
+        );
+
+        // Basic salary after 90 JOD unpaid leave deduction = 810 JOD
+        Assert.Equal(810m, line.BasicSalary);
+        Assert.Equal(810m, line.GrossSalary);
+        Assert.Contains(line.Components, c => c.ComponentCode == "UNPAID_LEAVE" && c.Amount == 90m);
     }
 }

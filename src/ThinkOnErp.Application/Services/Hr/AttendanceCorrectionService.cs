@@ -74,6 +74,9 @@ public sealed class AttendanceCorrectionService : IAttendanceCorrectionService
 
     public async Task<AttendanceCorrectionRequest> ProcessRequestAsync(long requestId, ProcessAttendanceCorrectionDto dto, string user, CancellationToken cancellationToken = default)
     {
+        if (dto == null)
+            throw new ArgumentNullException(nameof(dto));
+
         return await ProcessCorrectionRequestAsync(requestId, dto.Approved, user, dto.RejectionReason, null, cancellationToken);
     }
 
@@ -88,7 +91,7 @@ public sealed class AttendanceCorrectionService : IAttendanceCorrectionService
         var request = await _repository.GetCorrectionRequestByIdAsync(requestId, cancellationToken);
         if (request == null)
         {
-            throw new InvalidOperationException($"Attendance correction request {requestId} not found.");
+            throw new KeyNotFoundException($"Attendance correction request {requestId} not found.");
         }
 
         if (request.Status != "PENDING")

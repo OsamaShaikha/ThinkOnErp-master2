@@ -42,6 +42,15 @@ public class PosReservationService : IPosReservationService
 
     public async Task<ApiResponse<ReservationSummaryDto>> CreateReservationAsync(CreateReservationDto dto, string username, CancellationToken ct = default)
     {
+        if (dto == null)
+            return ApiResponse<ReservationSummaryDto>.CreateFailure("Request body cannot be null", null, 400);
+
+        if (string.IsNullOrWhiteSpace(dto.CustomerName) || string.IsNullOrWhiteSpace(dto.CustomerPhone))
+            return ApiResponse<ReservationSummaryDto>.CreateFailure("Customer name and phone are required", null, 400);
+
+        if (dto.BranchId <= 0)
+            return ApiResponse<ReservationSummaryDto>.CreateFailure("Valid BranchId is required", null, 400);
+
         var today = DateTime.UtcNow.ToString("yyyyMMdd");
         var resNumber = $"RES-{dto.BranchId}-{today}-{Guid.NewGuid().ToString().Substring(0, 4).ToUpper()}";
 
@@ -112,12 +121,17 @@ public class PosReservationService : IPosReservationService
 
     public async Task<ApiResponse<ReservationSummaryDto>> UpdateReservationAsync(long id, UpdateReservationDto dto, string username, CancellationToken ct = default)
     {
+        if (dto == null)
+            return ApiResponse<ReservationSummaryDto>.CreateFailure("Request body cannot be null", null, 400);
+
         var reservation = await _reservationRepository.GetByIdAsync(id, ct);
         if (reservation == null)
             return ApiResponse<ReservationSummaryDto>.CreateFailure("Reservation not found", null, 404);
 
-        reservation.CustomerName = dto.CustomerName.Trim();
-        reservation.CustomerPhone = dto.CustomerPhone.Trim();
+        if (!string.IsNullOrWhiteSpace(dto.CustomerName))
+            reservation.CustomerName = dto.CustomerName.Trim();
+        if (!string.IsNullOrWhiteSpace(dto.CustomerPhone))
+            reservation.CustomerPhone = dto.CustomerPhone.Trim();
         reservation.CustomerEmail = dto.CustomerEmail?.Trim();
         reservation.ReservationDate = dto.ReservationDate;
         reservation.StartTime = dto.StartTime;

@@ -199,7 +199,26 @@ public class SysCodesController : ControllerBase
         ["memorypressure"] = SysCodeKeys.MemoryPressure.Mgr,
         ["key-types"] = SysCodeKeys.KeyTypes.Mgr,
         ["keytypes"] = SysCodeKeys.KeyTypes.Mgr,
+        ["stock-transaction-types"] = SysCodeKeys.StockTransactionTypes.Mgr,
+        ["stocktransactiontypes"] = SysCodeKeys.StockTransactionTypes.Mgr,
+        ["stockTransactionTypes"] = SysCodeKeys.StockTransactionTypes.Mgr,
+        ["stock-trx-types"] = SysCodeKeys.StockTransactionTypes.Mgr,
+        ["transaction-types"] = SysCodeKeys.StockTransactionTypes.Mgr,
+        ["transactiontypes"] = SysCodeKeys.StockTransactionTypes.Mgr,
+        ["bom-types"] = SysCodeKeys.BomTypes.Mgr,
+        ["bomtypes"] = SysCodeKeys.BomTypes.Mgr,
+        ["bomTypes"] = SysCodeKeys.BomTypes.Mgr,
+        ["costing-methods"] = SysCodeKeys.CostingMethods.Mgr,
+        ["costingmethods"] = SysCodeKeys.CostingMethods.Mgr,
+        ["costingMethods"] = SysCodeKeys.CostingMethods.Mgr,
+        ["item-types"] = SysCodeKeys.ItemTypes.Mgr,
+        ["itemtypes"] = SysCodeKeys.ItemTypes.Mgr,
+        ["itemTypes"] = SysCodeKeys.ItemTypes.Mgr,
+        ["selection-types"] = SysCodeKeys.SelectionTypes.Mgr,
+        ["selectiontypes"] = SysCodeKeys.SelectionTypes.Mgr,
+        ["selectionTypes"] = SysCodeKeys.SelectionTypes.Mgr,
     };
+
 
     private static List<SysCodeLookupDto> MapToLookupDtos(IEnumerable<SysCode> rawCodes, int? lang)
     {
@@ -275,8 +294,14 @@ public class SysCodesController : ControllerBase
             ("auditEventTypes", SysCodeKeys.AuditEventTypes.Mgr),
             ("payloadLoggingLevels", SysCodeKeys.PayloadLoggingLevels.Mgr),
             ("memoryPressure", SysCodeKeys.MemoryPressure.Mgr),
-            ("keyTypes", SysCodeKeys.KeyTypes.Mgr)
+            ("keyTypes", SysCodeKeys.KeyTypes.Mgr),
+            ("stockTransactionTypes", SysCodeKeys.StockTransactionTypes.Mgr),
+            ("bomTypes", SysCodeKeys.BomTypes.Mgr),
+            ("costingMethods", SysCodeKeys.CostingMethods.Mgr),
+            ("itemTypes", SysCodeKeys.ItemTypes.Mgr),
+            ("selectionTypes", SysCodeKeys.SelectionTypes.Mgr)
         };
+
 
         foreach (var (key, mgr) in keyMapping)
         {
@@ -512,7 +537,68 @@ public class SysCodesController : ControllerBase
         return Ok(ApiResponse<List<SysCodeLookupDto>>.CreateSuccess(list, "Lookup items retrieved successfully", 200));
     }
 
+    /// <summary>
+    /// استرجاع أنواع حركات المخزون في النظام (Stock Transaction Types)
+    /// </summary>
+    [HttpGet("stock-transaction-types")]
+    [HttpGet("stocktransactiontypes")]
+    [ProducesResponseType(typeof(ApiResponse<List<SysCodeLookupDto>>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<ApiResponse<List<SysCodeLookupDto>>>> GetStockTransactionTypes([FromQuery] int? lang = null)
+    {
+        var list = await GetLookupsByMgrAsync(SysCodeKeys.StockTransactionTypes.Mgr, lang);
+        return Ok(ApiResponse<List<SysCodeLookupDto>>.CreateSuccess(list, "Stock transaction types retrieved successfully", 200));
+    }
+
+    /// <summary>
+    /// استرجاع أنواع قوائم المواد وهياكل التجميع (BOM Types)
+    /// </summary>
+    [HttpGet("bom-types")]
+    [HttpGet("bomtypes")]
+    [ProducesResponseType(typeof(ApiResponse<List<SysCodeLookupDto>>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<ApiResponse<List<SysCodeLookupDto>>>> GetBomTypes([FromQuery] int? lang = null)
+    {
+        var list = await GetLookupsByMgrAsync(SysCodeKeys.BomTypes.Mgr, lang);
+        return Ok(ApiResponse<List<SysCodeLookupDto>>.CreateSuccess(list, "BOM types retrieved successfully", 200));
+    }
+
+    /// <summary>
+    /// استرجاع طرق احتساب تكلفة المخزون (Costing Methods: WeightedAverage, Fifo, SpecificId, Standard)
+    /// </summary>
+    [HttpGet("costing-methods")]
+    [HttpGet("costingmethods")]
+    [ProducesResponseType(typeof(ApiResponse<List<SysCodeLookupDto>>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<ApiResponse<List<SysCodeLookupDto>>>> GetCostingMethods([FromQuery] int? lang = null)
+    {
+        var list = await GetLookupsByMgrAsync(SysCodeKeys.CostingMethods.Mgr, lang);
+        return Ok(ApiResponse<List<SysCodeLookupDto>>.CreateSuccess(list, "Costing methods retrieved successfully", 200));
+    }
+
+    /// <summary>
+    /// استرجاع أنواع الأصناف في المخزون (Item Types: Stock, NonStock, Service, Kit, Assembly)
+    /// </summary>
+    [HttpGet("item-types")]
+    [HttpGet("itemtypes")]
+    [ProducesResponseType(typeof(ApiResponse<List<SysCodeLookupDto>>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<ApiResponse<List<SysCodeLookupDto>>>> GetItemTypes([FromQuery] int? lang = null)
+    {
+        var list = await GetLookupsByMgrAsync(SysCodeKeys.ItemTypes.Mgr, lang);
+        return Ok(ApiResponse<List<SysCodeLookupDto>>.CreateSuccess(list, "Item types retrieved successfully", 200));
+    }
+
+    /// <summary>
+    /// استرجاع أنواع الاختيار لمجموعات الإضافات في نقاط البيع (Selection Types: Single, Multiple)
+    /// </summary>
+    [HttpGet("selection-types")]
+    [HttpGet("selectiontypes")]
+    [ProducesResponseType(typeof(ApiResponse<List<SysCodeLookupDto>>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<ApiResponse<List<SysCodeLookupDto>>>> GetSelectionTypes([FromQuery] int? lang = null)
+    {
+        var list = await GetLookupsByMgrAsync(SysCodeKeys.SelectionTypes.Mgr, lang);
+        return Ok(ApiResponse<List<SysCodeLookupDto>>.CreateSuccess(list, "Selection types retrieved successfully", 200));
+    }
+
     #endregion
+
 
     /// <summary>
     /// إضافة كود جديد إلى جدول SYS_CODE (خاص بمدير النظام SuperAdmin)

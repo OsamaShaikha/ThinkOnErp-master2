@@ -1124,6 +1124,13 @@ public class AuditLogsController : ControllerBase
     {
         try
         {
+            // Default date range if not specified to prevent full historical table scans
+            if (!startDate.HasValue && !endDate.HasValue)
+            {
+                startDate = DateTime.UtcNow.AddDays(-30);
+                endDate = DateTime.UtcNow;
+            }
+
             // Validate date range
             if (startDate.HasValue && endDate.HasValue && startDate >= endDate)
             {
@@ -1207,6 +1214,12 @@ public class AuditLogsController : ControllerBase
     {
         try
         {
+            if (!startDate.HasValue && !endDate.HasValue)
+            {
+                startDate = DateTime.UtcNow.AddDays(-30);
+                endDate = DateTime.UtcNow;
+            }
+
             var filter = new DomainModels.LegacyAuditLogFilter
             {
                 Company = company,
@@ -1285,6 +1298,13 @@ public class AuditLogsController : ControllerBase
     {
         try
         {
+            // Default date range if not specified to prevent full historical table scans
+            if (!startDate.HasValue && !endDate.HasValue)
+            {
+                startDate = DateTime.UtcNow.AddDays(-30);
+                endDate = DateTime.UtcNow;
+            }
+
             // Validate date range
             if (startDate.HasValue && endDate.HasValue && startDate >= endDate)
             {

@@ -41,6 +41,15 @@ public class PosGiftCardService : IPosGiftCardService
 
     public async Task<ApiResponse<GiftCardSummaryDto>> CreateGiftCardAsync(CreateGiftCardDto dto, string username, CancellationToken ct = default)
     {
+        if (dto == null)
+            return ApiResponse<GiftCardSummaryDto>.CreateFailure("Request body cannot be null", null, 400);
+
+        if (string.IsNullOrWhiteSpace(dto.CardCode))
+            return ApiResponse<GiftCardSummaryDto>.CreateFailure("Card code is required", null, 400);
+
+        if (dto.BranchId <= 0)
+            return ApiResponse<GiftCardSummaryDto>.CreateFailure("Valid BranchId is required", null, 400);
+
         var existing = await _giftCardRepository.GetByCodeAsync(dto.BranchId, dto.CardCode, ct);
         if (existing != null)
             return ApiResponse<GiftCardSummaryDto>.CreateFailure("Card code already exists", null, 400);
@@ -95,6 +104,9 @@ public class PosGiftCardService : IPosGiftCardService
 
     public async Task<ApiResponse<GiftCardSummaryDto>> GetCardBalanceAsync(long branchId, string cardCode, CancellationToken ct = default)
     {
+        if (string.IsNullOrWhiteSpace(cardCode) || branchId <= 0)
+            return ApiResponse<GiftCardSummaryDto>.CreateFailure("Branch ID and card code are required", null, 400);
+
         var card = await _giftCardRepository.GetByCodeAsync(branchId, cardCode, ct);
         if (card == null)
             return ApiResponse<GiftCardSummaryDto>.CreateFailure("Gift card not found", null, 404);
@@ -197,6 +209,12 @@ public class PosGiftCardService : IPosGiftCardService
 
     public async Task<ApiResponse<GiftCardSummaryDto>> RedeemCardAsync(RedeemGiftCardDto dto, string username, CancellationToken ct = default)
     {
+        if (dto == null)
+            return ApiResponse<GiftCardSummaryDto>.CreateFailure("Request body cannot be null", null, 400);
+
+        if (string.IsNullOrWhiteSpace(dto.CardCode) || dto.BranchId <= 0 || dto.Amount <= 0)
+            return ApiResponse<GiftCardSummaryDto>.CreateFailure("Branch ID, card code and positive amount are required", null, 400);
+
         var card = await _giftCardRepository.GetByCodeAsync(dto.BranchId, dto.CardCode, ct);
         if (card == null)
             return ApiResponse<GiftCardSummaryDto>.CreateFailure("Gift card not found", null, 404);

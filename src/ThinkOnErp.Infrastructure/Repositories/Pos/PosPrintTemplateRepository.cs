@@ -65,7 +65,7 @@ public class PosPrintTemplateRepository : IPosPrintTemplateRepository
     {
         return await _context.PosPrinterRoutings
             .AsNoTracking()
-            .Include(r => r.ItemGroup)
+            .Include(r => r.ItemCategory)
             .Where(r => r.BranchId == branchId)
             .OrderBy(r => r.StationName)
             .ToListAsync(ct);
@@ -74,7 +74,7 @@ public class PosPrintTemplateRepository : IPosPrintTemplateRepository
     public async Task<PosPrinterRouting?> GetRoutingByIdAsync(long id, CancellationToken ct = default)
     {
         return await _context.PosPrinterRoutings
-            .Include(r => r.ItemGroup)
+            .Include(r => r.ItemCategory)
             .FirstOrDefaultAsync(r => r.Id == id, ct);
     }
 

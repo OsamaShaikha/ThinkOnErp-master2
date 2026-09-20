@@ -13,6 +13,9 @@ public sealed class CreateInvItemDto
     [MaxLength(30)]
     public string ItemCode { get; set; } = string.Empty;
 
+    [MaxLength(100)]
+    public string? Sku { get; set; }
+
     [Required]
     [MaxLength(200)]
     public string ItemNameLocal { get; set; } = string.Empty;
@@ -21,9 +24,30 @@ public sealed class CreateInvItemDto
     public string? ItemNameEn { get; set; }
 
     [Required]
-    public long MainGroupId { get; set; }
+    public long CategoryId { get; set; }
 
-    public long? SubGroupId { get; set; }
+    #region Backward Compatibility Aliases
+    public long MainCategoryId
+    {
+        get => CategoryId;
+        set => CategoryId = value;
+    }
+    public long MainGroupId
+    {
+        get => CategoryId;
+        set => CategoryId = value;
+    }
+    public long? SubGroupId
+    {
+        get => null;
+        set { if (value.HasValue) CategoryId = value.Value; }
+    }
+    public long? SubCategoryId
+    {
+        get => null;
+        set { if (value.HasValue) CategoryId = value.Value; }
+    }
+    #endregion
 
     public ItemType ItemType { get; set; } = ItemType.Stock;
 
@@ -32,6 +56,8 @@ public sealed class CreateInvItemDto
 
     public CostingMethod CostingMethod { get; set; } = CostingMethod.WeightedAverage;
     public decimal StandardCost { get; set; }
+    public decimal DefaultSellingPrice { get; set; }
+    public bool ShowInPos { get; set; } = true;
 
     public bool SerialTracking { get; set; }
     public bool LotTracking { get; set; }
@@ -57,6 +83,15 @@ public sealed class CreateInvItemDto
 
     public string? ImageBase64 { get; set; }
     public int? ColorCode { get; set; }
+
+    // Tax Integration
+    public long? TaxRateId { get; set; }
+    public long? TaxGroupId { get; set; }
+    public bool IsTaxExempt { get; set; }
+    public string? TaxExemptionReasonCode { get; set; }
+
+    // Opening Balances per Warehouse
+    public List<ItemWarehouseOpeningBalanceDto>? OpeningBalances { get; set; }
 
     public List<CreateInvItemUomDto> UomConversions { get; set; } = new();
     public List<CreateInvItemBarcodeDto> Barcodes { get; set; } = new();

@@ -44,6 +44,12 @@ public class PosZReportService : IPosZReportService
 
     public async Task<ApiResponse<ZReportSummaryDto>> GenerateZReportAsync(GenerateZReportDto dto, string username, CancellationToken ct = default)
     {
+        if (dto == null)
+            return ApiResponse<ZReportSummaryDto>.CreateFailure("Request body cannot be null", null, 400);
+
+        if (dto.BranchId <= 0)
+            return ApiResponse<ZReportSummaryDto>.CreateFailure("Valid BranchId is required", null, 400);
+
         PosShift? shift = null;
         if (dto.ShiftId.HasValue)
         {

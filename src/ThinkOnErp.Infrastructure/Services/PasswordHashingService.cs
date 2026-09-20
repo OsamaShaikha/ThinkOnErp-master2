@@ -59,8 +59,6 @@ public class PasswordHashingService
 
         var computedHash = Rfc2898DeriveBytes.Pbkdf2(password, salt, Iterations, HashAlgorithmName.SHA256, HashSize); 
         return CryptographicOperations.FixedTimeEquals(storedHash, computedHash);
-
-
-
+         
     }
 }

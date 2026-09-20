@@ -36,11 +36,14 @@ public sealed class PosPrinterRoutingConfiguration : IEntityTypeConfiguration<Po
         builder.Property(r => r.BranchId).HasColumnName("BRANCH_ID").IsRequired();
         builder.Property(r => r.StationName).HasColumnName("STATION_NAME").HasMaxLength(50).IsRequired();
         builder.Property(r => r.PrinterNameOrIp).HasColumnName("PRINTER_NAME_OR_IP").HasMaxLength(150).IsRequired();
-        builder.Property(r => r.ItemGroupId).HasColumnName("ITEM_GROUP_ID");
+        builder.Property(r => r.ItemCategoryId).HasColumnName("ITEM_CATEGORY_ID");
         builder.Property(r => r.Copies).HasColumnName("COPIES").HasDefaultValue(1);
         builder.Property(r => r.IsActive).HasColumnName("IS_ACTIVE").HasColumnType("NUMBER(1)").HasDefaultValue(true);
 
+        builder.Ignore(r => r.ItemGroupId);
+        builder.Ignore(r => r.ItemGroup);
+
         builder.HasOne(r => r.Branch).WithMany().HasForeignKey(r => r.BranchId).OnDelete(DeleteBehavior.Restrict);
-        builder.HasOne(r => r.ItemGroup).WithMany().HasForeignKey(r => r.ItemGroupId).OnDelete(DeleteBehavior.SetNull);
+        builder.HasOne(r => r.ItemCategory).WithMany().HasForeignKey(r => r.ItemCategoryId).OnDelete(DeleteBehavior.SetNull);
     }
 }

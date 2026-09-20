@@ -1,4 +1,4 @@
-﻿using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging;
 using ThinkOnErp.Application.DTOs.Accounting.PostingRules;
 using ThinkOnErp.Application.DTOs.Accounting.Vouchers;
 using ThinkOnErp.Domain.Entities.Accounting;
@@ -51,6 +51,17 @@ public sealed class PostingRuleService : IPostingRuleService
 
     public async Task<PostingRuleDto> CreateRuleAsync(CreatePostingRuleDto dto, string username, CancellationToken cancellationToken = default)
     {
+        if (dto == null)
+        {
+            throw new AccountingException("بيانات قاعدة الترحيل مطلوبة.", "INVALID_INPUT");
+        }
+
+        if (string.IsNullOrWhiteSpace(dto.Module) || string.IsNullOrWhiteSpace(dto.EventType) ||
+            string.IsNullOrWhiteSpace(dto.DebitAccountCode) || string.IsNullOrWhiteSpace(dto.CreditAccountCode))
+        {
+            throw new AccountingException("الوحدة ونوع الحركة والحساب المدين والدائن مطلوبين.", "INVALID_INPUT");
+        }
+
         var companyId = _tenantContext.GetRequiredCompanyId();
         
         var debitAcc = await _accountRepository.GetByCodeAsync(companyId, dto.DebitAccountCode, cancellationToken);
@@ -96,6 +107,11 @@ public sealed class PostingRuleService : IPostingRuleService
 
     public async Task<PostingRuleDto> UpdateRuleAsync(long id, UpdatePostingRuleDto dto, string username, CancellationToken cancellationToken = default)
     {
+        if (dto == null)
+        {
+            throw new AccountingException("بيانات قاعدة الترحيل مطلوبة.", "INVALID_INPUT");
+        }
+
         var rule = await _ruleRepository.GetByIdAsync(id, cancellationToken);
         if (rule == null)
         {
@@ -209,6 +225,28 @@ public sealed class PostingRuleService : IPostingRuleService
 
     public async Task SeedDefaultPostingRulesAsync(long? branchId, string username, CancellationToken cancellationToken = default)
     {
+        var companyId = _tenantContext.GetRequiredCompanyId();
+        if (branchId.HasValue && branchId.Value > 0)
+        {
+            var branchValid = await _accountRepository.BranchBelongsToCompanyAsync(companyId, branchId.Value, cancellationToken);
+            if (!branchValid)
+            {
+                branchId = null;
+            }
+        }
+        else
+        {
+            branchId = null;
+        }
+
+        var existingAccounts = await _accountRepository.GetAllAsync(companyId, cancellationToken);
+        if (existingAccounts.Count == 0)
+        {
+            _logger.LogWarning("Cannot seed posting rules: No GL accounts exist for company {CompanyId}", companyId);
+            return;
+        }
+        var existingCodes = existingAccounts.Select(a => a.AccountCode).ToHashSet();
+
         var defaultRules = new List<CreatePostingRuleDto>
         {
             // Sales
@@ -246,6 +284,11 @@ public sealed class PostingRuleService : IPostingRuleService
 
         foreach (var r in defaultRules)
         {
+            if (!existingCodes.Contains(r.DebitAccountCode) || !existingCodes.Contains(r.CreditAccountCode))
+            {
+                continue;
+            }
+
             var existing = await _ruleRepository.GetRuleAsync(r.Module, r.EventType, branchId, cancellationToken);
             if (existing == null)
             {

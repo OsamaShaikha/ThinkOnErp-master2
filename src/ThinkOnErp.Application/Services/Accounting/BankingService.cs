@@ -1,4 +1,4 @@
-﻿using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging;
 using ThinkOnErp.Application.DTOs.Accounting.Banking;
 using ThinkOnErp.Domain.Entities.Accounting;
 using ThinkOnErp.Domain.Exceptions;
@@ -47,6 +47,16 @@ public sealed class BankingService : IBankingService
 
     public async Task<BankAccountDto> CreateBankAccountAsync(CreateBankAccountDto dto, string username, CancellationToken cancellationToken = default)
     {
+        if (dto == null)
+        {
+            throw new AccountingException("بيانات الحساب البنكي مطلوبة.", "INVALID_INPUT");
+        }
+
+        if (string.IsNullOrWhiteSpace(dto.AccountNumber) || string.IsNullOrWhiteSpace(dto.AccountNameLocal) || string.IsNullOrWhiteSpace(dto.GlAccountCode))
+        {
+            throw new AccountingException("رقم الحساب واسم الحساب وكود الأستاذ العام مطلوبين.", "INVALID_INPUT");
+        }
+
         var companyId = _tenantContext.GetRequiredCompanyId();
         var glAcc = await _accountRepository.GetByCodeAsync(companyId, dto.GlAccountCode, cancellationToken);
         if (glAcc == null)
@@ -88,6 +98,11 @@ public sealed class BankingService : IBankingService
 
     public async Task<BankAccountDto> UpdateBankAccountAsync(long id, UpdateBankAccountDto dto, string username, CancellationToken cancellationToken = default)
     {
+        if (dto == null)
+        {
+            throw new AccountingException("بيانات الحساب البنكي مطلوبة.", "INVALID_INPUT");
+        }
+
         var account = await _bankingRepository.GetBankAccountByIdAsync(id, cancellationToken);
         if (account == null)
         {
@@ -135,6 +150,16 @@ public sealed class BankingService : IBankingService
 
     public async Task<CashRegisterDto> CreateCashRegisterAsync(CreateCashRegisterDto dto, string username, CancellationToken cancellationToken = default)
     {
+        if (dto == null)
+        {
+            throw new AccountingException("بيانات الخزينة مطلوبة.", "INVALID_INPUT");
+        }
+
+        if (string.IsNullOrWhiteSpace(dto.Code) || string.IsNullOrWhiteSpace(dto.NameLocal) || string.IsNullOrWhiteSpace(dto.GlAccountCode))
+        {
+            throw new AccountingException("رمز الخزينة واسم الخزينة وكود الأستاذ العام مطلوبين.", "INVALID_INPUT");
+        }
+
         var companyId = _tenantContext.GetRequiredCompanyId();
         var glAcc = await _accountRepository.GetByCodeAsync(companyId, dto.GlAccountCode, cancellationToken);
         if (glAcc == null)
@@ -175,6 +200,11 @@ public sealed class BankingService : IBankingService
 
     public async Task<CashRegisterDto> UpdateCashRegisterAsync(long id, UpdateCashRegisterDto dto, string username, CancellationToken cancellationToken = default)
     {
+        if (dto == null)
+        {
+            throw new AccountingException("بيانات الخزينة مطلوبة.", "INVALID_INPUT");
+        }
+
         var reg = await _bankingRepository.GetCashRegisterByIdAsync(id, cancellationToken);
         if (reg == null)
         {
@@ -205,6 +235,11 @@ public sealed class BankingService : IBankingService
 
     public async Task<BankReconciliationDto> CreateReconciliationAsync(CreateBankReconciliationDto dto, string username, CancellationToken cancellationToken = default)
     {
+        if (dto == null)
+        {
+            throw new AccountingException("بيانات التسوية مطلوبة.", "INVALID_INPUT");
+        }
+
         var bankAcc = await _bankingRepository.GetBankAccountByIdAsync(dto.BankAccountId, cancellationToken);
         if (bankAcc == null)
         {

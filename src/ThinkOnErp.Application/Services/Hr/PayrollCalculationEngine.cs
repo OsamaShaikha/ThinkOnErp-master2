@@ -38,6 +38,7 @@ public sealed class PayrollCalculationEngine : IPayrollCalculationEngine
     private readonly ITaxCalculationEngine _taxEngine;
     private readonly ILoanDeductionService _loanDeductionService;
     private readonly IPayrollAdjustmentRepository _adjustmentRepository;
+    private readonly ILeaveService _leaveService;
 
     public PayrollCalculationEngine(
         IPolicyRepository policyRepository,
@@ -46,7 +47,8 @@ public sealed class PayrollCalculationEngine : IPayrollCalculationEngine
         ISSCCalculationService sscService,
         ITaxCalculationEngine taxEngine,
         ILoanDeductionService loanDeductionService,
-        IPayrollAdjustmentRepository adjustmentRepository)
+        IPayrollAdjustmentRepository adjustmentRepository,
+        ILeaveService leaveService)
     {
         _policyRepository = policyRepository;
         _prorationService = prorationService;
@@ -55,6 +57,7 @@ public sealed class PayrollCalculationEngine : IPayrollCalculationEngine
         _taxEngine = taxEngine;
         _loanDeductionService = loanDeductionService;
         _adjustmentRepository = adjustmentRepository;
+        _leaveService = leaveService;
     }
 
     public async Task<PayrollRun> CalculatePayrollForPeriodAsync(
@@ -161,6 +164,16 @@ public sealed class PayrollCalculationEngine : IPayrollCalculationEngine
 
         decimal proratedBasic = Math.Round(nominalBasic * prorationResult.ProrationFactor, 3);
 
+        // 2b. Unpaid Leave deduction
+        decimal unpaidLeaveDays = await _leaveService.GetUnpaidLeaveDaysInPeriodAsync(
+            employee.EmployeeCode, period.StartDate, period.EndDate, cancellationToken);
+        decimal unpaidLeaveDeduction = 0m;
+        if (unpaidLeaveDays > 0 && prorationResult.TotalBaseDays > 0)
+        {
+            unpaidLeaveDeduction = Math.Round((nominalBasic / prorationResult.TotalBaseDays) * unpaidLeaveDays, 3);
+            proratedBasic = Math.Max(0m, proratedBasic - unpaidLeaveDeduction);
+        }
+
         var components = new List<PayrollRunLineComponent>();
 
         // Basic line component
@@ -172,6 +185,18 @@ public sealed class PayrollCalculationEngine : IPayrollCalculationEngine
             ComponentType = "EARNING",
             Amount = proratedBasic
         });
+
+        if (unpaidLeaveDeduction > 0)
+        {
+            components.Add(new PayrollRunLineComponent
+            {
+                ComponentCode = "UNPAID_LEAVE",
+                ComponentNameLocal = "خصم إجازة بدون راتب",
+                ComponentNameEn = "Unpaid Leave Deduction",
+                ComponentType = "DEDUCTION",
+                Amount = unpaidLeaveDeduction
+            });
+        }
 
         // 3. Allowances & Fixed Structure Lines
         decimal totalAllowances = 0m;

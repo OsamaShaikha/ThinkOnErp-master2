@@ -229,7 +229,7 @@ public sealed class LoanDeductionService : ILoanDeductionService
     public async Task<EmployeeLoan> ApproveLoanAsync(long loanId, string user, CancellationToken cancellationToken = default)
     {
         var loan = await _loanRepository.GetLoanByIdAsync(loanId, cancellationToken);
-        if (loan == null) throw new InvalidOperationException($"Loan with ID {loanId} not found.");
+        if (loan == null) throw new KeyNotFoundException($"Loan with ID {loanId} not found.");
 
         loan.Status = "ACTIVE";
         loan.ApprovedBy = user;
@@ -265,7 +265,7 @@ public sealed class LoanDeductionService : ILoanDeductionService
     public async Task<EmployeeAdvance> ApproveAdvanceAsync(long advanceId, string user, CancellationToken cancellationToken = default)
     {
         var advance = await _loanRepository.GetAdvanceByIdAsync(advanceId, cancellationToken);
-        if (advance == null) throw new InvalidOperationException($"Advance with ID {advanceId} not found.");
+        if (advance == null) throw new KeyNotFoundException($"Advance with ID {advanceId} not found.");
 
         advance.Status = "APPROVED";
         advance.ApprovedBy = user;

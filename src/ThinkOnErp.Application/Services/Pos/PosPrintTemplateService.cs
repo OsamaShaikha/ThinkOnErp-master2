@@ -76,13 +76,22 @@ public class PosPrintTemplateService : IPosPrintTemplateService
 
     public async Task<ApiResponse<PrintTemplateDto>> CreateTemplateAsync(CreatePrintTemplateDto dto, string username, CancellationToken ct = default)
     {
+        if (dto == null)
+            return ApiResponse<PrintTemplateDto>.CreateFailure("Request body cannot be null", null, 400);
+
+        if (string.IsNullOrWhiteSpace(dto.TemplateCode) || string.IsNullOrWhiteSpace(dto.TemplateName))
+            return ApiResponse<PrintTemplateDto>.CreateFailure("Template code and template name are required", null, 400);
+
+        if (dto.BranchId <= 0)
+            return ApiResponse<PrintTemplateDto>.CreateFailure("Valid BranchId is required", null, 400);
+
         var template = new PosPrintTemplate
         {
             BranchId = dto.BranchId,
             TemplateCode = dto.TemplateCode.Trim().ToUpper(),
             TemplateName = dto.TemplateName.Trim(),
-            TemplateType = dto.TemplateType.Trim(),
-            RawEscPosPattern = dto.RawEscPosPattern,
+            TemplateType = dto.TemplateType?.Trim() ?? "Receipt",
+            RawEscPosPattern = dto.RawEscPosPattern ?? string.Empty,
             IsDefault = dto.IsDefault,
             IsActive = true
         };
@@ -105,13 +114,19 @@ public class PosPrintTemplateService : IPosPrintTemplateService
 
     public async Task<ApiResponse<PrintTemplateDto>> UpdateTemplateAsync(long id, UpdatePrintTemplateDto dto, string username, CancellationToken ct = default)
     {
+        if (dto == null)
+            return ApiResponse<PrintTemplateDto>.CreateFailure("Request body cannot be null", null, 400);
+
         var template = await _repository.GetTemplateByIdAsync(id, ct);
         if (template == null)
             return ApiResponse<PrintTemplateDto>.CreateFailure("Print template not found", null, 404);
 
-        template.TemplateName = dto.TemplateName.Trim();
-        template.TemplateType = dto.TemplateType.Trim();
-        template.RawEscPosPattern = dto.RawEscPosPattern;
+        if (!string.IsNullOrWhiteSpace(dto.TemplateName))
+            template.TemplateName = dto.TemplateName.Trim();
+        if (!string.IsNullOrWhiteSpace(dto.TemplateType))
+            template.TemplateType = dto.TemplateType.Trim();
+        if (dto.RawEscPosPattern != null)
+            template.RawEscPosPattern = dto.RawEscPosPattern;
         template.IsDefault = dto.IsDefault;
         template.IsActive = dto.IsActive;
 
@@ -153,8 +168,10 @@ public class PosPrintTemplateService : IPosPrintTemplateService
             BranchId = r.BranchId,
             StationName = r.StationName,
             PrinterNameOrIp = r.PrinterNameOrIp,
-            ItemGroupId = r.ItemGroupId,
-            ItemGroupName = r.ItemGroup?.GroupNameLocal,
+            ItemCategoryId = r.ItemCategoryId,
+            ItemGroupId = r.ItemCategoryId,
+            ItemCategoryName = r.ItemCategory?.CategoryNameLocal,
+            ItemGroupName = r.ItemCategory?.CategoryNameLocal,
             Copies = r.Copies,
             IsActive = r.IsActive
         }).ToList();
@@ -174,8 +191,10 @@ public class PosPrintTemplateService : IPosPrintTemplateService
             BranchId = r.BranchId,
             StationName = r.StationName,
             PrinterNameOrIp = r.PrinterNameOrIp,
-            ItemGroupId = r.ItemGroupId,
-            ItemGroupName = r.ItemGroup?.GroupNameLocal,
+            ItemCategoryId = r.ItemCategoryId,
+            ItemGroupId = r.ItemCategoryId,
+            ItemCategoryName = r.ItemCategory?.CategoryNameLocal,
+            ItemGroupName = r.ItemCategory?.CategoryNameLocal,
             Copies = r.Copies,
             IsActive = r.IsActive
         });
@@ -183,12 +202,21 @@ public class PosPrintTemplateService : IPosPrintTemplateService
 
     public async Task<ApiResponse<PrinterRoutingDto>> CreateRoutingAsync(CreatePrinterRoutingDto dto, string username, CancellationToken ct = default)
     {
+        if (dto == null)
+            return ApiResponse<PrinterRoutingDto>.CreateFailure("Request body cannot be null", null, 400);
+
+        if (string.IsNullOrWhiteSpace(dto.StationName) || string.IsNullOrWhiteSpace(dto.PrinterNameOrIp))
+            return ApiResponse<PrinterRoutingDto>.CreateFailure("Station name and printer name or IP are required", null, 400);
+
+        if (dto.BranchId <= 0)
+            return ApiResponse<PrinterRoutingDto>.CreateFailure("Valid BranchId is required", null, 400);
+
         var routing = new PosPrinterRouting
         {
             BranchId = dto.BranchId,
             StationName = dto.StationName.Trim(),
             PrinterNameOrIp = dto.PrinterNameOrIp.Trim(),
-            ItemGroupId = dto.ItemGroupId,
+            ItemCategoryId = dto.ItemCategoryId ?? dto.ItemGroupId,
             Copies = dto.Copies > 0 ? dto.Copies : 1,
             IsActive = true
         };
@@ -202,7 +230,8 @@ public class PosPrintTemplateService : IPosPrintTemplateService
             BranchId = routing.BranchId,
             StationName = routing.StationName,
             PrinterNameOrIp = routing.PrinterNameOrIp,
-            ItemGroupId = routing.ItemGroupId,
+            ItemCategoryId = routing.ItemCategoryId,
+            ItemGroupId = routing.ItemCategoryId,
             Copies = routing.Copies,
             IsActive = routing.IsActive
         }, "Printer routing created successfully");
@@ -210,13 +239,18 @@ public class PosPrintTemplateService : IPosPrintTemplateService
 
     public async Task<ApiResponse<PrinterRoutingDto>> UpdateRoutingAsync(long id, UpdatePrinterRoutingDto dto, string username, CancellationToken ct = default)
     {
+        if (dto == null)
+            return ApiResponse<PrinterRoutingDto>.CreateFailure("Request body cannot be null", null, 400);
+
         var routing = await _repository.GetRoutingByIdAsync(id, ct);
         if (routing == null)
             return ApiResponse<PrinterRoutingDto>.CreateFailure("Printer routing not found", null, 404);
 
-        routing.StationName = dto.StationName.Trim();
-        routing.PrinterNameOrIp = dto.PrinterNameOrIp.Trim();
-        routing.ItemGroupId = dto.ItemGroupId;
+        if (!string.IsNullOrWhiteSpace(dto.StationName))
+            routing.StationName = dto.StationName.Trim();
+        if (!string.IsNullOrWhiteSpace(dto.PrinterNameOrIp))
+            routing.PrinterNameOrIp = dto.PrinterNameOrIp.Trim();
+        routing.ItemCategoryId = dto.ItemCategoryId ?? dto.ItemGroupId;
         routing.Copies = dto.Copies > 0 ? dto.Copies : 1;
         routing.IsActive = dto.IsActive;
 
@@ -229,7 +263,8 @@ public class PosPrintTemplateService : IPosPrintTemplateService
             BranchId = routing.BranchId,
             StationName = routing.StationName,
             PrinterNameOrIp = routing.PrinterNameOrIp,
-            ItemGroupId = routing.ItemGroupId,
+            ItemCategoryId = routing.ItemCategoryId,
+            ItemGroupId = routing.ItemCategoryId,
             Copies = routing.Copies,
             IsActive = routing.IsActive
         }, "Printer routing updated successfully");

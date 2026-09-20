@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -27,6 +27,12 @@ public sealed class TrxTypeService : ITrxTypeService
 
     public async Task<ApiResponse<TrxDocTypeDto>> CreateDocTypeAsync(CreateTrxDocTypeDto dto, string username, CancellationToken ct = default)
     {
+        if (dto == null)
+            return ApiResponse<TrxDocTypeDto>.CreateFailure("Request body cannot be null", null, 400);
+
+        if (dto.TypeCode <= 0 || string.IsNullOrWhiteSpace(dto.TypeKey) || string.IsNullOrWhiteSpace(dto.TypeNameLocal))
+            return ApiResponse<TrxDocTypeDto>.CreateFailure("TypeCode, TypeKey, and TypeNameLocal are required", null, 400);
+
         var existing = await _repository.GetDocTypeAsync(dto.TypeCode, ct);
         if (existing != null)
             return ApiResponse<TrxDocTypeDto>.CreateFailure($"Document type code {dto.TypeCode} already exists", null, 400);
@@ -93,6 +99,12 @@ public sealed class TrxTypeService : ITrxTypeService
 
     public async Task<ApiResponse<TrxTransactionTypeDto>> CreateTrxTypeAsync(CreateTrxTransactionTypeDto dto, string username, CancellationToken ct = default)
     {
+        if (dto == null)
+            return ApiResponse<TrxTransactionTypeDto>.CreateFailure("Request body cannot be null", null, 400);
+
+        if (dto.TrxCode <= 0 || string.IsNullOrWhiteSpace(dto.TrxNameLocal))
+            return ApiResponse<TrxTransactionTypeDto>.CreateFailure("TrxCode and TrxNameLocal are required", null, 400);
+
         var docType = await _repository.GetDocTypeAsync(dto.DocTypeCode, ct);
         if (docType == null)
             return ApiResponse<TrxTransactionTypeDto>.CreateFailure($"Parent document type {dto.DocTypeCode} not found", null, 400);
@@ -117,9 +129,36 @@ public sealed class TrxTypeService : ITrxTypeService
 
     public async Task<ApiResponse<List<TrxTransactionTypeDto>>> GetTrxTypesByDocTypeAsync(int docTypeCode, CancellationToken ct = default)
     {
+        var docType = await _repository.GetDocTypeAsync(docTypeCode, ct);
+        if (docType == null)
+            return ApiResponse<List<TrxTransactionTypeDto>>.CreateFailure($"Document type {docTypeCode} not found", null, 404);
+
         var list = await _repository.GetTrxTypesByDocTypeAsync(docTypeCode, ct);
         var dtos = list.Select(TrxTypeMapper.ToDto).ToList();
         return ApiResponse<List<TrxTransactionTypeDto>>.CreateSuccess(dtos, ResponseCodes.TrxTypesRetrieved);
+    }
+
+    public async Task<ApiResponse<List<TrxTransactionTypeDto>>> GetTrxTypesByDocTypeAsync(string docType, CancellationToken ct = default)
+    {
+        if (string.IsNullOrWhiteSpace(docType))
+            return ApiResponse<List<TrxTransactionTypeDto>>.CreateFailure("Document type identifier cannot be empty", null, 400);
+
+        if (int.TryParse(docType, out int code))
+        {
+            var byCode = await GetTrxTypesByDocTypeAsync(code, ct);
+            if (byCode.Success)
+                return byCode;
+        }
+
+        var docTypes = await _repository.GetAllDocTypesAsync(ct);
+        var matched = docTypes.FirstOrDefault(d =>
+            string.Equals(d.TypeKey, docType, StringComparison.OrdinalIgnoreCase) ||
+            string.Equals(d.DocPrefix, docType, StringComparison.OrdinalIgnoreCase));
+
+        if (matched == null)
+            return ApiResponse<List<TrxTransactionTypeDto>>.CreateFailure($"Document type '{docType}' not found", null, 404);
+
+        return await GetTrxTypesByDocTypeAsync(matched.TypeCode, ct);
     }
 
     public async Task<ApiResponse<TrxTransactionTypeDto>> GetTrxTypeByCodeAsync(int code, CancellationToken ct = default)
@@ -133,12 +172,15 @@ public sealed class TrxTypeService : ITrxTypeService
 
     public async Task<ApiResponse<TrxTransactionTypeDto>> UpdateTrxTypeAsync(int code, UpdateTrxTransactionTypeDto dto, string username, CancellationToken ct = default)
     {
+        if (dto == null)
+            return ApiResponse<TrxTransactionTypeDto>.CreateFailure("Request body cannot be null", null, 400);
+
         var entity = await _repository.GetTrxTypeAsync(code, ct);
         if (entity == null)
             return ApiResponse<TrxTransactionTypeDto>.CreateFailure($"Transaction type {code} not found", null, 404);
 
-        entity.TrxNameLocal = dto.TrxNameLocal.Trim();
-        entity.TrxNameEn = dto.TrxNameEn.Trim();
+        entity.TrxNameLocal = dto.TrxNameLocal?.Trim() ?? entity.TrxNameLocal;
+        entity.TrxNameEn = dto.TrxNameEn?.Trim() ?? entity.TrxNameEn;
         entity.AffectsStock = dto.AffectsStock;
         entity.StockDirection = dto.StockDirection;
         entity.RequiresWarehouse = dto.RequiresWarehouse;

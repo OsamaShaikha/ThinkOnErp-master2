@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -17,20 +17,28 @@ public sealed class InvOpeningBalanceService : IInvOpeningBalanceService
 {
     private readonly IInvOpeningBalanceRepository _repo;
     private readonly IInvStockLedgerService _stockLedgerService;
+    private readonly IInvLotSerialRepository _lotSerialRepository;
     private readonly ILogger<InvOpeningBalanceService> _logger;
 
     public InvOpeningBalanceService(
         IInvOpeningBalanceRepository repo,
         IInvStockLedgerService stockLedgerService,
+        IInvLotSerialRepository lotSerialRepository,
         ILogger<InvOpeningBalanceService> logger)
     {
         _repo = repo;
         _stockLedgerService = stockLedgerService;
+        _lotSerialRepository = lotSerialRepository;
         _logger = logger;
     }
 
     public async Task<ApiResponse<OpeningBatchDto>> CreateBatchAsync(CreateOpeningBatchDto dto, string username, CancellationToken ct = default)
     {
+        if (dto == null)
+            return ApiResponse<OpeningBatchDto>.CreateFailure("Request body cannot be null", null, 400);
+
+        dto.Lines ??= new();
+
         var batchNo = $"OPB-{DateTime.UtcNow.Year}-{DateTime.UtcNow.Ticks % 1000000:D6}";
         var batch = new InvOpeningBatch
         {
@@ -49,27 +57,74 @@ public sealed class InvOpeningBalanceService : IInvOpeningBalanceService
 
         foreach (var l in dto.Lines)
         {
-            var totalLine = l.Quantity * l.UnitCost;
-            batch.Lines.Add(new InvOpeningLine
+            var serialsList = new List<string>();
+            if (l.SerialNumbers != null && l.SerialNumbers.Count > 0)
             {
-                BranchId = dto.BranchId,
-                WarehouseId = l.WarehouseId,
-                ItemId = l.ItemId,
-                BinId = l.BinId,
-                UomCode = l.UomCode,
-                UomFactor = l.UomFactor,
-                Quantity = l.Quantity,
-                BaseQuantity = l.Quantity * l.UomFactor,
-                UnitCost = l.UnitCost,
-                TotalCost = totalLine,
-                LotNumber = l.LotNumber,
-                SerialNumber = l.SerialNumber,
-                ExpiryDate = l.ExpiryDate,
-                Notes = l.Notes
-            });
+                serialsList.AddRange(l.SerialNumbers.Where(s => !string.IsNullOrWhiteSpace(s)).Select(s => s.Trim()));
+            }
+            else if (!string.IsNullOrWhiteSpace(l.SerialNumber))
+            {
+                serialsList.AddRange(l.SerialNumber.Split(new[] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries).Select(s => s.Trim()));
+            }
 
-            totalQty += l.Quantity * l.UomFactor;
-            totalVal += totalLine;
+            if (l.Quantity <= 0 && serialsList.Count > 0)
+            {
+                l.Quantity = serialsList.Count;
+            }
+
+            if (serialsList.Count > 1)
+            {
+                foreach (var sn in serialsList)
+                {
+                    const decimal lineQty = 1m;
+                    var totalLine = lineQty * l.UnitCost;
+                    batch.Lines.Add(new InvOpeningLine
+                    {
+                        BranchId = dto.BranchId,
+                        WarehouseId = l.WarehouseId,
+                        ItemId = l.ItemId,
+                        BinId = l.BinId,
+                        UomCode = l.UomCode,
+                        UomFactor = l.UomFactor,
+                        Quantity = lineQty,
+                        BaseQuantity = lineQty * l.UomFactor,
+                        UnitCost = l.UnitCost,
+                        TotalCost = totalLine,
+                        LotNumber = l.LotNumber,
+                        SerialNumber = sn,
+                        ExpiryDate = l.ExpiryDate,
+                        Notes = l.Notes
+                    });
+
+                    totalQty += lineQty * l.UomFactor;
+                    totalVal += totalLine;
+                }
+            }
+            else
+            {
+                var sn = serialsList.FirstOrDefault() ?? l.SerialNumber?.Trim();
+                var totalLine = l.Quantity * l.UnitCost;
+                batch.Lines.Add(new InvOpeningLine
+                {
+                    BranchId = dto.BranchId,
+                    WarehouseId = l.WarehouseId,
+                    ItemId = l.ItemId,
+                    BinId = l.BinId,
+                    UomCode = l.UomCode,
+                    UomFactor = l.UomFactor,
+                    Quantity = l.Quantity,
+                    BaseQuantity = l.Quantity * l.UomFactor,
+                    UnitCost = l.UnitCost,
+                    TotalCost = totalLine,
+                    LotNumber = l.LotNumber,
+                    SerialNumber = sn,
+                    ExpiryDate = l.ExpiryDate,
+                    Notes = l.Notes
+                });
+
+                totalQty += l.Quantity * l.UomFactor;
+                totalVal += totalLine;
+            }
         }
 
         batch.TotalQuantity = totalQty;
@@ -98,6 +153,9 @@ public sealed class InvOpeningBalanceService : IInvOpeningBalanceService
 
     public async Task<ApiResponse<OpeningBatchDto>> UpdateBatchAsync(long id, UpdateOpeningBatchDto dto, string username, CancellationToken ct = default)
     {
+        if (dto == null)
+            return ApiResponse<OpeningBatchDto>.CreateFailure("Request body cannot be null", null, 400);
+
         var batch = await _repo.GetByIdAsync(id, ct);
         if (batch == null)
             return ApiResponse<OpeningBatchDto>.CreateFailure("Opening balance batch not found", null, 404);
@@ -116,28 +174,76 @@ public sealed class InvOpeningBalanceService : IInvOpeningBalanceService
 
             foreach (var l in dto.Lines)
             {
-                var totalLine = l.Quantity * l.UnitCost;
-                batch.Lines.Add(new InvOpeningLine
+                var serialsList = new List<string>();
+                if (l.SerialNumbers != null && l.SerialNumbers.Count > 0)
                 {
-                    BatchId = batch.Id,
-                    BranchId = batch.BranchId,
-                    WarehouseId = l.WarehouseId,
-                    ItemId = l.ItemId,
-                    BinId = l.BinId,
-                    UomCode = l.UomCode,
-                    UomFactor = l.UomFactor,
-                    Quantity = l.Quantity,
-                    BaseQuantity = l.Quantity * l.UomFactor,
-                    UnitCost = l.UnitCost,
-                    TotalCost = totalLine,
-                    LotNumber = l.LotNumber,
-                    SerialNumber = l.SerialNumber,
-                    ExpiryDate = l.ExpiryDate,
-                    Notes = l.Notes
-                });
+                    serialsList.AddRange(l.SerialNumbers.Where(s => !string.IsNullOrWhiteSpace(s)).Select(s => s.Trim()));
+                }
+                else if (!string.IsNullOrWhiteSpace(l.SerialNumber))
+                {
+                    serialsList.AddRange(l.SerialNumber.Split(new[] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries).Select(s => s.Trim()));
+                }
 
-                totalQty += l.Quantity * l.UomFactor;
-                totalVal += totalLine;
+                if (l.Quantity <= 0 && serialsList.Count > 0)
+                {
+                    l.Quantity = serialsList.Count;
+                }
+
+                if (serialsList.Count > 1)
+                {
+                    foreach (var sn in serialsList)
+                    {
+                        const decimal lineQty = 1m;
+                        var totalLine = lineQty * l.UnitCost;
+                        batch.Lines.Add(new InvOpeningLine
+                        {
+                            BatchId = batch.Id,
+                            BranchId = batch.BranchId,
+                            WarehouseId = l.WarehouseId,
+                            ItemId = l.ItemId,
+                            BinId = l.BinId,
+                            UomCode = l.UomCode,
+                            UomFactor = l.UomFactor,
+                            Quantity = lineQty,
+                            BaseQuantity = lineQty * l.UomFactor,
+                            UnitCost = l.UnitCost,
+                            TotalCost = totalLine,
+                            LotNumber = l.LotNumber,
+                            SerialNumber = sn,
+                            ExpiryDate = l.ExpiryDate,
+                            Notes = l.Notes
+                        });
+
+                        totalQty += lineQty * l.UomFactor;
+                        totalVal += totalLine;
+                    }
+                }
+                else
+                {
+                    var sn = serialsList.FirstOrDefault() ?? l.SerialNumber?.Trim();
+                    var totalLine = l.Quantity * l.UnitCost;
+                    batch.Lines.Add(new InvOpeningLine
+                    {
+                        BatchId = batch.Id,
+                        BranchId = batch.BranchId,
+                        WarehouseId = l.WarehouseId,
+                        ItemId = l.ItemId,
+                        BinId = l.BinId,
+                        UomCode = l.UomCode,
+                        UomFactor = l.UomFactor,
+                        Quantity = l.Quantity,
+                        BaseQuantity = l.Quantity * l.UomFactor,
+                        UnitCost = l.UnitCost,
+                        TotalCost = totalLine,
+                        LotNumber = l.LotNumber,
+                        SerialNumber = sn,
+                        ExpiryDate = l.ExpiryDate,
+                        Notes = l.Notes
+                    });
+
+                    totalQty += l.Quantity * l.UomFactor;
+                    totalVal += totalLine;
+                }
             }
 
             batch.TotalQuantity = totalQty;
@@ -175,6 +281,38 @@ public sealed class InvOpeningBalanceService : IInvOpeningBalanceService
 
         foreach (var line in batch.Lines)
         {
+            if (!string.IsNullOrWhiteSpace(line.SerialNumber))
+            {
+                var sn = line.SerialNumber.Trim();
+                var exists = await _lotSerialRepository.ExistsSerialNumberAsync(line.ItemId, sn, ct);
+                if (!exists)
+                {
+                    await _lotSerialRepository.AddSerialAsync(new InvSerialMaster
+                    {
+                        ItemId = line.ItemId,
+                        SerialNumber = sn,
+                        Status = SerialStatus.Available,
+                        CurrentWarehouseId = line.WarehouseId,
+                        CurrentBinId = line.BinId
+                    }, ct);
+                }
+            }
+
+            if (!string.IsNullOrWhiteSpace(line.LotNumber))
+            {
+                var lot = await _lotSerialRepository.GetByLotNumberAsync(line.ItemId, line.LotNumber.Trim(), ct);
+                if (lot == null)
+                {
+                    await _lotSerialRepository.AddLotAsync(new InvLotMaster
+                    {
+                        ItemId = line.ItemId,
+                        LotNumber = line.LotNumber.Trim(),
+                        Status = LotStatus.Active,
+                        ExpiryDate = line.ExpiryDate
+                    }, ct);
+                }
+            }
+
             var moveReq = new StockMovementRequestDto
             {
                 ItemId = line.ItemId,
@@ -192,6 +330,8 @@ public sealed class InvOpeningBalanceService : IInvOpeningBalanceService
             };
             await _stockLedgerService.PostMovementAsync(moveReq, ct);
         }
+
+        await _lotSerialRepository.SaveChangesAsync(ct);
 
         batch.StatusCode = 3; // Posted
         batch.PostedAt = DateTime.UtcNow;
@@ -236,6 +376,9 @@ public sealed class InvOpeningBalanceService : IInvOpeningBalanceService
                 TotalCost = l.TotalCost,
                 LotNumber = l.LotNumber,
                 SerialNumber = l.SerialNumber,
+                SerialNumbers = !string.IsNullOrWhiteSpace(l.SerialNumber)
+                    ? new List<string> { l.SerialNumber }
+                    : new List<string>(),
                 ExpiryDate = l.ExpiryDate,
                 Notes = l.Notes
             }).ToList()

@@ -38,7 +38,12 @@ public class CreatePrinterRoutingDto
     public long BranchId { get; set; }
     public string StationName { get; set; } = string.Empty; // e.g. KitchenHot, Bar
     public string PrinterNameOrIp { get; set; } = string.Empty;
-    public long? ItemGroupId { get; set; }
+    public long? ItemCategoryId { get; set; }
+    public long? ItemGroupId
+    {
+        get => ItemCategoryId;
+        set => ItemCategoryId = value ?? ItemCategoryId;
+    }
     public int Copies { get; set; } = 1;
 }
 
@@ -46,7 +51,12 @@ public class UpdatePrinterRoutingDto
 {
     public string StationName { get; set; } = string.Empty;
     public string PrinterNameOrIp { get; set; } = string.Empty;
-    public long? ItemGroupId { get; set; }
+    public long? ItemCategoryId { get; set; }
+    public long? ItemGroupId
+    {
+        get => ItemCategoryId;
+        set => ItemCategoryId = value ?? ItemCategoryId;
+    }
     public int Copies { get; set; } = 1;
     public bool IsActive { get; set; } = true;
 }
@@ -57,8 +67,18 @@ public class PrinterRoutingDto
     public long BranchId { get; set; }
     public string StationName { get; set; } = string.Empty;
     public string PrinterNameOrIp { get; set; } = string.Empty;
-    public long? ItemGroupId { get; set; }
-    public string? ItemGroupName { get; set; }
+    public long? ItemCategoryId { get; set; }
+    public long? ItemGroupId
+    {
+        get => ItemCategoryId;
+        set => ItemCategoryId = value;
+    }
+    public string? ItemCategoryName { get; set; }
+    public string? ItemGroupName
+    {
+        get => ItemCategoryName;
+        set => ItemCategoryName = value;
+    }
     public int Copies { get; set; }
     public bool IsActive { get; set; }
 }

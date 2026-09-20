@@ -133,7 +133,7 @@ public class OracleDbContext : DbContext
     // Inventory & Unified Trade Documents Engine
     public DbSet<TrxDocType> TrxDocTypes => Set<TrxDocType>();
     public DbSet<TrxTransactionType> TrxTransactionTypes => Set<TrxTransactionType>();
-    public DbSet<InvItemGroup> InvItemGroups => Set<InvItemGroup>();
+    public DbSet<InvItemCategory> InvItemCategories => Set<InvItemCategory>();
     public DbSet<InvItem> InvItems => Set<InvItem>();
     public DbSet<InvItemUomConversion> InvItemUomConversions => Set<InvItemUomConversion>();
     public DbSet<InvItemBarcode> InvItemBarcodes => Set<InvItemBarcode>();
@@ -155,6 +155,13 @@ public class OracleDbContext : DbContext
     public DbSet<InvCountLine> InvCountLines => Set<InvCountLine>();
     public DbSet<InvOpeningBatch> InvOpeningBatches => Set<InvOpeningBatch>();
     public DbSet<InvOpeningLine> InvOpeningLines => Set<InvOpeningLine>();
+    public DbSet<InvItemAttribute> InvItemAttributes => Set<InvItemAttribute>();
+    public DbSet<InvItemAttributeValue> InvItemAttributeValues => Set<InvItemAttributeValue>();
+    public DbSet<InvItemVariant> InvItemVariants => Set<InvItemVariant>();
+    public DbSet<InvItemVariantValue> InvItemVariantValues => Set<InvItemVariantValue>();
+    public DbSet<InvModifierGroup> InvModifierGroups => Set<InvModifierGroup>();
+    public DbSet<InvModifierOption> InvModifierOptions => Set<InvModifierOption>();
+    public DbSet<InvItemModifierGroup> InvItemModifierGroups => Set<InvItemModifierGroup>();
 
     // Point of Sale (POS) Module Engine
     public DbSet<PosTill> PosTills => Set<PosTill>();
@@ -167,8 +174,8 @@ public class OracleDbContext : DbContext
     public DbSet<PosOrderTax> PosOrderTaxes => Set<PosOrderTax>();
     public DbSet<PosPromotion> PosPromotions => Set<PosPromotion>();
     public DbSet<PosPromotionRule> PosPromotionRules => Set<PosPromotionRule>();
-    public DbSet<PosPriceList> PosPriceLists => Set<PosPriceList>();
-    public DbSet<PosPriceListItem> PosPriceListItems => Set<PosPriceListItem>();
+    public DbSet<InvPriceList> InvPriceLists => Set<InvPriceList>();
+    public DbSet<InvPriceListItem> InvPriceListItems => Set<InvPriceListItem>();
     public DbSet<PosFloor> PosFloors => Set<PosFloor>();
     public DbSet<PosTable> PosTables => Set<PosTable>();
     public DbSet<PosReservation> PosReservations => Set<PosReservation>();
@@ -182,9 +189,6 @@ public class OracleDbContext : DbContext
     public DbSet<PosPrinterRouting> PosPrinterRoutings => Set<PosPrinterRouting>();
     public DbSet<PosStaffAttendance> PosStaffAttendances => Set<PosStaffAttendance>();
     public DbSet<PosExternalOrder> PosExternalOrders => Set<PosExternalOrder>();
-    public DbSet<PosModifierGroup> PosModifierGroups => Set<PosModifierGroup>();
-    public DbSet<PosModifierOption> PosModifierOptions => Set<PosModifierOption>();
-    public DbSet<PosItemModifierGroup> PosItemModifierGroups => Set<PosItemModifierGroup>();
 
     // HR & Dynamic Payroll Module
     public DbSet<WorkCalendar> WorkCalendars => Set<WorkCalendar>();
@@ -216,6 +220,10 @@ public class OracleDbContext : DbContext
     public DbSet<PayrollRunLine> PayrollRunLines => Set<PayrollRunLine>();
     public DbSet<PayrollRunLineComponent> PayrollRunLineComponents => Set<PayrollRunLineComponent>();
     public DbSet<PayrollCalculationSnapshot> PayrollCalculationSnapshots => Set<PayrollCalculationSnapshot>();
+    public DbSet<LeaveType> LeaveTypes => Set<LeaveType>();
+    public DbSet<LeaveRequest> LeaveRequests => Set<LeaveRequest>();
+    public DbSet<LeaveBalance> LeaveBalances => Set<LeaveBalance>();
+    public DbSet<LeavePolicy> LeavePolicies => Set<LeavePolicy>();
 
     // Universal Dynamic Translation
     public DbSet<SysEntityTranslation> EntityTranslations => Set<SysEntityTranslation>();

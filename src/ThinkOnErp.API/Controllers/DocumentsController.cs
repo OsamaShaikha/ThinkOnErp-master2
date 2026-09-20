@@ -90,6 +90,11 @@ public class DocumentsController : ControllerBase
     {
         try
         {
+            if (!Request.HasFormContentType)
+            {
+                return BadRequest(ApiResponse<DocumentUploadResult>.CreateFailure("Request must be multipart/form-data with an uploaded file."));
+            }
+
             var file = Request.Form.Files.FirstOrDefault();
             if (file == null || file.Length == 0)
             {
@@ -139,6 +144,11 @@ public class DocumentsController : ControllerBase
     {
         try
         {
+            if (!Request.HasFormContentType)
+            {
+                return BadRequest(ApiResponse<List<DocumentUploadResult>>.CreateFailure("Request must be multipart/form-data with uploaded files."));
+            }
+
             var files = Request.Form.Files;
             if (files == null || files.Count == 0)
             {

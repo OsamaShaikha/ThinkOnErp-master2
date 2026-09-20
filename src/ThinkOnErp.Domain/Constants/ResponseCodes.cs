@@ -198,6 +198,12 @@ public static class ResponseCodes
     public const string ItemGroupsRetrieved = "RES_ITEM_GROUPS_RETRIEVED";
     public const string ItemGroupDetailsRetrieved = "RES_ITEM_GROUP_DETAILS_RETRIEVED";
 
+    public const string CategoryCreated = "RES_CATEGORY_CREATED";
+    public const string CategoryUpdated = "RES_CATEGORY_UPDATED";
+    public const string CategoryDeleted = "RES_CATEGORY_DELETED";
+    public const string ItemCategoriesRetrieved = "RES_CATEGORIES_RETRIEVED";
+    public const string CategoryDetailsRetrieved = "RES_CATEGORY_DETAILS_RETRIEVED";
+
     public const string BomCreated = "RES_BOM_CREATED";
     public const string BomUpdated = "RES_BOM_UPDATED";
     public const string BomDeleted = "RES_BOM_DELETED";

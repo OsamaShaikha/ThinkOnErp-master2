@@ -1,4 +1,4 @@
-﻿using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging;
 using System.Text;
 using ThinkOnErp.Application.DTOs.Accounting.Tax;
 using ThinkOnErp.Application.Services.Accounting.Tax.Declarations;
@@ -297,6 +297,9 @@ public sealed class TaxEngineService : ITaxEngineService
 
     public async Task<TaxCategoryDto> CreateCategoryAsync(CreateTaxCategoryDto dto, string username, CancellationToken cancellationToken = default)
     {
+        if (dto == null)
+            throw new AccountingException("بيانات فئة الضريبة مطلوبة.", "INVALID_INPUT");
+
         if (string.IsNullOrWhiteSpace(dto.CategoryCode))
             throw new AccountingException("رمز فئة الضريبة مطلوب.", "TAX_CAT_CODE_REQUIRED");
 
@@ -307,8 +310,8 @@ public sealed class TaxEngineService : ITaxEngineService
         var entity = new TaxCategory
         {
             CategoryCode = dto.CategoryCode.Trim().ToUpper(),
-            NameLocal = dto.NameLocal.Trim(),
-            NameEn = dto.NameEn.Trim(),
+            NameLocal = dto.NameLocal?.Trim() ?? dto.CategoryCode.Trim(),
+            NameEn = dto.NameEn?.Trim() ?? string.Empty,
             Description = dto.Description?.Trim(),
             DisplayOrder = dto.DisplayOrder,
             IsActive = true,
@@ -324,11 +327,14 @@ public sealed class TaxEngineService : ITaxEngineService
 
     public async Task<TaxCategoryDto> UpdateCategoryAsync(long id, UpdateTaxCategoryDto dto, string username, CancellationToken cancellationToken = default)
     {
+        if (dto == null)
+            throw new AccountingException("بيانات فئة الضريبة مطلوبة.", "INVALID_INPUT");
+
         var entity = await _taxRepository.GetTaxCategoryByIdAsync(id, cancellationToken)
             ?? throw new AccountingNotFoundException($"فئة الضريبة ({id}) غير موجودة.", "TAX_CAT_NOT_FOUND");
 
-        entity.NameLocal = dto.NameLocal.Trim();
-        entity.NameEn = dto.NameEn.Trim();
+        entity.NameLocal = dto.NameLocal?.Trim() ?? entity.NameLocal;
+        entity.NameEn = dto.NameEn?.Trim() ?? entity.NameEn;
         entity.Description = dto.Description?.Trim();
         entity.DisplayOrder = dto.DisplayOrder;
         entity.IsActive = dto.IsActive;
@@ -375,6 +381,9 @@ public sealed class TaxEngineService : ITaxEngineService
 
     public async Task<TaxRateDto> CreateRateAsync(CreateTaxRateDto dto, string username, CancellationToken cancellationToken = default)
     {
+        if (dto == null)
+            throw new AccountingException("بيانات النسبة الضريبية مطلوبة.", "INVALID_INPUT");
+
         if (string.IsNullOrWhiteSpace(dto.TaxRateCode))
             throw new AccountingException("رمز النسبة الضريبية مطلوب.", "TAX_RATE_CODE_REQUIRED");
 
@@ -389,8 +398,8 @@ public sealed class TaxEngineService : ITaxEngineService
         {
             TaxRateCode = dto.TaxRateCode.Trim().ToUpper(),
             TaxCategoryId = dto.TaxCategoryId,
-            NameLocal = dto.NameLocal.Trim(),
-            NameEn = dto.NameEn.Trim(),
+            NameLocal = dto.NameLocal?.Trim() ?? dto.TaxRateCode.Trim(),
+            NameEn = dto.NameEn?.Trim() ?? string.Empty,
             RatePercent = dto.RatePercent,
             RateType = dto.RateType,
             SalesTaxGlAccountCode = dto.SalesTaxGlAccountCode?.Trim(),
@@ -415,11 +424,14 @@ public sealed class TaxEngineService : ITaxEngineService
 
     public async Task<TaxRateDto> UpdateRateAsync(long id, UpdateTaxRateDto dto, string username, CancellationToken cancellationToken = default)
     {
+        if (dto == null)
+            throw new AccountingException("بيانات النسبة الضريبية مطلوبة.", "INVALID_INPUT");
+
         var entity = await _taxRepository.GetTaxRateByIdAsync(id, cancellationToken)
             ?? throw new AccountingNotFoundException($"النسبة الضريبية ({id}) غير موجودة.", "TAX_RATE_NOT_FOUND");
 
-        entity.NameLocal = dto.NameLocal.Trim();
-        entity.NameEn = dto.NameEn.Trim();
+        entity.NameLocal = dto.NameLocal?.Trim() ?? entity.NameLocal;
+        entity.NameEn = dto.NameEn?.Trim() ?? entity.NameEn;
         entity.RatePercent = dto.RatePercent;
         entity.RateType = dto.RateType;
         entity.SalesTaxGlAccountCode = dto.SalesTaxGlAccountCode?.Trim();

@@ -112,11 +112,11 @@ public sealed class TrxTypesController : ControllerBase
     /// <summary>
     /// استرجاع أنواع الحركات التابعة لنوع مستند معين (لتغذية القوائم المنسدلة في شاشات الفواتير)
     /// </summary>
-    [HttpGet("types/{docTypeCode:int}/transaction-types")]
+    [HttpGet("types/{docType}/transaction-types")]
     [ProducesResponseType(typeof(ApiResponse<List<TrxTransactionTypeDto>>), 200)]
-    public async Task<IActionResult> GetTrxTypesByDocType([FromRoute] int docTypeCode, CancellationToken ct)
+    public async Task<IActionResult> GetTrxTypesByDocType([FromRoute] string docType, CancellationToken ct)
     {
-        var result = await _service.GetTrxTypesByDocTypeAsync(docTypeCode, ct);
+        var result = await _service.GetTrxTypesByDocTypeAsync(docType, ct);
         return StatusCode(result.StatusCode, result);
     }
 

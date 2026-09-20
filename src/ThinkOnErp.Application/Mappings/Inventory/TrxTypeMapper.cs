@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Linq;
 using ThinkOnErp.Application.DTOs.Inventory.Types;
 using ThinkOnErp.Domain.Entities.Inventory;
@@ -39,11 +39,11 @@ public static class TrxTypeMapper
         return new TrxDocType
         {
             TypeCode = dto.TypeCode,
-            TypeKey = dto.TypeKey.Trim().ToUpperInvariant(),
-            TypeNameLocal = dto.TypeNameLocal.Trim(),
-            TypeNameEn = dto.TypeNameEn.Trim(),
+            TypeKey = dto.TypeKey?.Trim().ToUpperInvariant() ?? string.Empty,
+            TypeNameLocal = dto.TypeNameLocal?.Trim() ?? string.Empty,
+            TypeNameEn = dto.TypeNameEn?.Trim() ?? string.Empty,
             ModuleCode = string.IsNullOrWhiteSpace(dto.ModuleCode) ? "INVENTORY" : dto.ModuleCode.Trim().ToUpperInvariant(),
-            DocPrefix = dto.DocPrefix.Trim().ToUpperInvariant(),
+            DocPrefix = dto.DocPrefix?.Trim().ToUpperInvariant() ?? string.Empty,
             ResetPolicy = string.IsNullOrWhiteSpace(dto.ResetPolicy) ? "YEARLY" : dto.ResetPolicy.Trim().ToUpperInvariant(),
             IsSystemReserved = false,
             IsActive = dto.IsActive,
@@ -82,9 +82,9 @@ public static class TrxTypeMapper
         {
             TrxCode = dto.TrxCode,
             DocTypeCode = dto.DocTypeCode,
-            TrxKey = dto.TrxKey.Trim().ToUpperInvariant(),
-            TrxNameLocal = dto.TrxNameLocal.Trim(),
-            TrxNameEn = dto.TrxNameEn.Trim(),
+            TrxKey = dto.TrxKey?.Trim().ToUpperInvariant() ?? string.Empty,
+            TrxNameLocal = dto.TrxNameLocal?.Trim() ?? string.Empty,
+            TrxNameEn = dto.TrxNameEn?.Trim() ?? string.Empty,
             AffectsStock = dto.AffectsStock,
             StockDirection = dto.StockDirection,
             RequiresWarehouse = dto.RequiresWarehouse,

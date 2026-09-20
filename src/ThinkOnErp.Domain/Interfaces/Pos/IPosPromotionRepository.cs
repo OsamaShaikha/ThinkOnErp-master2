@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using ThinkOnErp.Domain.Entities.Inventory;
 using ThinkOnErp.Domain.Entities.Pos;
 using ThinkOnErp.Domain.Entities.Pos.Enums;
 
@@ -21,7 +22,7 @@ public interface IPosPromotionRepository
     Task AddPromotionAsync(PosPromotion promotion, CancellationToken ct = default);
     Task UpdatePromotionAsync(PosPromotion promotion, CancellationToken ct = default);
     Task DeletePromotionAsync(PosPromotion promotion, CancellationToken ct = default);
-    Task<PosPriceList?> GetPriceListByIdAsync(long priceListId, CancellationToken ct = default);
-    Task<PosPriceList?> GetDefaultPriceListAsync(long branchId, CancellationToken ct = default);
+    Task<InvPriceList?> GetPriceListByIdAsync(long priceListId, CancellationToken ct = default);
+    Task<InvPriceList?> GetDefaultPriceListAsync(long branchId, CancellationToken ct = default);
     Task SaveChangesAsync(CancellationToken ct = default);
 }
