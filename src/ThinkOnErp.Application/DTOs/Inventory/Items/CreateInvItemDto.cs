@@ -26,34 +26,13 @@ public sealed class CreateInvItemDto
     [Required]
     public long CategoryId { get; set; }
 
-    #region Backward Compatibility Aliases
-    public long MainCategoryId
-    {
-        get => CategoryId;
-        set => CategoryId = value;
-    }
-    public long MainGroupId
-    {
-        get => CategoryId;
-        set => CategoryId = value;
-    }
-    public long? SubGroupId
-    {
-        get => null;
-        set { if (value.HasValue) CategoryId = value.Value; }
-    }
-    public long? SubCategoryId
-    {
-        get => null;
-        set { if (value.HasValue) CategoryId = value.Value; }
-    }
-    #endregion
-
+    public int? ItemTypeId { get; set; }
     public ItemType ItemType { get; set; } = ItemType.Stock;
 
     [Required]
     public int UomBase { get; set; }
 
+    public int? CostingMethodId { get; set; }
     public CostingMethod CostingMethod { get; set; } = CostingMethod.WeightedAverage;
     public decimal StandardCost { get; set; }
     public decimal DefaultSellingPrice { get; set; }

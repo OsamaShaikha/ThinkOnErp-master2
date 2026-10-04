@@ -11,6 +11,9 @@ using ThinkOnErp.Application.DTOs.Inventory.Items;
 using ThinkOnErp.Application.Services.Inventory;
 using ThinkOnErp.Domain.Constants;
 
+using ThinkOnErp.Application.DTOs.SysCode;
+using ThinkOnErp.Domain.Interfaces;
+
 namespace ThinkOnErp.API.Controllers.Inventory;
 
 /// <summary>
@@ -24,10 +27,12 @@ namespace ThinkOnErp.API.Controllers.Inventory;
 public class InvItemsController : ControllerBase
 {
     private readonly IInvItemService _itemService;
+    private readonly ISysCodeRepository _sysCodeRepo;
 
-    public InvItemsController(IInvItemService itemService)
+    public InvItemsController(IInvItemService itemService, ISysCodeRepository sysCodeRepo)
     {
         _itemService = itemService;
+        _sysCodeRepo = sysCodeRepo;
     }
 
     /// <summary>
@@ -52,8 +57,7 @@ public class InvItemsController : ControllerBase
     /// Retrieves a paginated list of items in the catalog with full details, categories, prices, barcodes, and tracking options.
     /// </summary>
     /// <param name="search">Keyword search matching item code, name, SKU, or barcode.</param>
-    /// <param name="categoryId">Optional filter by category or subcategory.</param>
-    /// <param name="groupId">Optional alias filter by group or subcategory.</param>
+    /// <param name="categoryId">Optional filter by category identifier.</param>
     /// <param name="pageNumber">Page index (default 1).</param>
     /// <param name="pageSize">Page size (default 10).</param>
     /// <param name="cancellationToken">Cancellation token.</param>
@@ -64,7 +68,6 @@ public class InvItemsController : ControllerBase
     public async Task<IActionResult> GetItems(
         [FromQuery] string? search = null,
         [FromQuery] long? categoryId = null,
-        [FromQuery] long? groupId = null,
         [FromQuery] int pageNumber = 1,
         [FromQuery] int pageSize = 10,
         CancellationToken cancellationToken = default)
@@ -74,8 +77,7 @@ public class InvItemsController : ControllerBase
             return BadRequest(ApiResponse<List<InvItemListDto>>.CreateFailure("Invalid pagination parameters. pageNumber and pageSize must be greater than zero.", statusCode: 400));
         }
 
-        var filterCategoryId = categoryId ?? groupId;
-        var response = await _itemService.GetAllAsync(search, filterCategoryId, pageNumber, pageSize, cancellationToken);
+        var response = await _itemService.GetAllAsync(search, categoryId, pageNumber, pageSize, cancellationToken);
         if (response.Success)
             response.Message = ResponseCodes.ItemsRetrieved;
 
@@ -232,5 +234,39 @@ public class InvItemsController : ControllerBase
             response.Message = ResponseCodes.OperationSuccessful;
 
         return response.Success ? Ok(response) : BadRequest(response);
+    }
+
+    /// <summary>
+    /// Retrieves item types lookup from SYS_CODE (CODE_MGR = 18).
+    /// </summary>
+    /// <param name="lang">Language filter (1 = Arabic, 2 = English).</param>
+    /// <returns>List of item types.</returns>
+    [HttpGet("types")]
+    [ProducesResponseType(typeof(ApiResponse<List<SysCodeLookupDto>>), StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetItemTypes([FromQuery] int? lang = null)
+    {
+        var rawCodes = await _sysCodeRepo.GetActiveByCodeMgrAsync(SysCodeKeys.ItemTypes.Mgr);
+        var result = rawCodes.Count > 0
+            ? SysCodeLookupHelper.MapToLookupDtos(rawCodes, lang)
+            : SysCodeLookupHelper.GetFallbackLookups(SysCodeKeys.ItemTypes.Mgr, lang);
+
+        return Ok(ApiResponse<List<SysCodeLookupDto>>.CreateSuccess(result, ResponseCodes.DataRetrieved));
+    }
+
+    /// <summary>
+    /// Retrieves inventory costing methods lookup from SYS_CODE (CODE_MGR = 19).
+    /// </summary>
+    /// <param name="lang">Language filter (1 = Arabic, 2 = English).</param>
+    /// <returns>List of costing methods.</returns>
+    [HttpGet("costing-methods")]
+    [ProducesResponseType(typeof(ApiResponse<List<SysCodeLookupDto>>), StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetCostingMethods([FromQuery] int? lang = null)
+    {
+        var rawCodes = await _sysCodeRepo.GetActiveByCodeMgrAsync(SysCodeKeys.CostingMethods.Mgr);
+        var result = rawCodes.Count > 0
+            ? SysCodeLookupHelper.MapToLookupDtos(rawCodes, lang)
+            : SysCodeLookupHelper.GetFallbackLookups(SysCodeKeys.CostingMethods.Mgr, lang);
+
+        return Ok(ApiResponse<List<SysCodeLookupDto>>.CreateSuccess(result, ResponseCodes.DataRetrieved));
     }
 }

@@ -3,10 +3,17 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
 using ThinkOnErp.Application.Common;
 using ThinkOnErp.Application.DTOs.Pos;
+using ThinkOnErp.Application.DTOs.Inventory.StockMovements;
+using ThinkOnErp.Application.Services.Inventory;
+using ThinkOnErp.Application.Services.Validation;
+using ThinkOnErp.Domain.Constants;
 using ThinkOnErp.Domain.Entities.Pos;
 using ThinkOnErp.Domain.Entities.Pos.Enums;
+using ThinkOnErp.Domain.Interfaces;
+using ThinkOnErp.Domain.Interfaces.Inventory;
 using ThinkOnErp.Domain.Interfaces.Pos;
 
 namespace ThinkOnErp.Application.Services.Pos;
@@ -19,6 +26,12 @@ public class PosOrderService : IPosOrderService
     private readonly IPosCalculationEngine _calculationEngine;
     private readonly IPosAuditService _auditService;
     private readonly IPosModifierRepository _modifierRepository;
+    private readonly IInvoiceBusinessValidationService _validationService;
+    private readonly IDynamicValidationEngine _dynamicValidationEngine;
+    private readonly IInvStockLedgerService _stockLedgerService;
+    private readonly ISysSettingRepository _settingRepo;
+    private readonly IInvWarehouseRepository _warehouseRepo;
+    private readonly ILogger<PosOrderService> _logger;
 
     public PosOrderService(
         IPosOrderRepository orderRepository,
@@ -26,7 +39,13 @@ public class PosOrderService : IPosOrderService
         IPosTableRepository tableRepository,
         IPosCalculationEngine calculationEngine,
         IPosAuditService auditService,
-        IPosModifierRepository modifierRepository)
+        IPosModifierRepository modifierRepository,
+        IInvoiceBusinessValidationService validationService,
+        IDynamicValidationEngine dynamicValidationEngine,
+        IInvStockLedgerService stockLedgerService,
+        ISysSettingRepository settingRepo,
+        IInvWarehouseRepository warehouseRepo,
+        ILogger<PosOrderService> logger)
     {
         _orderRepository = orderRepository;
         _shiftRepository = shiftRepository;
@@ -34,6 +53,12 @@ public class PosOrderService : IPosOrderService
         _calculationEngine = calculationEngine;
         _auditService = auditService;
         _modifierRepository = modifierRepository;
+        _validationService = validationService;
+        _dynamicValidationEngine = dynamicValidationEngine;
+        _stockLedgerService = stockLedgerService;
+        _settingRepo = settingRepo;
+        _warehouseRepo = warehouseRepo;
+        _logger = logger;
     }
 
     public async Task<ApiResponse<PosOrderSummaryDto>> CreateOrderAsync(CreatePosOrderDto dto, string username, CancellationToken ct = default)
@@ -82,13 +107,29 @@ public class PosOrderService : IPosOrderService
             }
         }
 
-        // 3. Compute Totals using Calculation Engine
-        var calcResult = await _calculationEngine.CalculateOrderTotalsAsync(dto.BranchId, dto, 15m, ct);
+        // Dynamic Field & Schema Validation via DynamicValidationEngine
+        var fieldValidation = _dynamicValidationEngine.Validate(dto);
+        if (!fieldValidation.IsValid)
+        {
+            var firstErr = fieldValidation.Errors.First();
+            return ApiResponse<PosOrderSummaryDto>.CreateFailure(firstErr.ErrorMessage, null, 400);
+        }
 
-        // 4. Generate Order Number
-        var today = DateTime.UtcNow.ToString("yyyyMMdd");
-        var count = await _orderRepository.GetOrderCountTodayAsync(dto.BranchId, ct);
-        var orderNumber = $"ORD-{dto.BranchId}-{today}-{count + 1:D4}";
+        // Dynamic Business & Inventory Validation via InvoiceBusinessValidationService
+        var bizValidation = await _validationService.ValidatePosOrderDtoAsync(dto, ct);
+        if (!bizValidation.IsValid)
+        {
+            var errMessages = string.Join("; ", bizValidation.Errors.Select(e => e.Message));
+            return ApiResponse<PosOrderSummaryDto>.CreateFailure(errMessages, null, 400);
+        }
+
+        // 3. Compute Totals using Calculation Engine (Dynamic Tax Resolution)
+        var calcResult = await _calculationEngine.CalculateOrderTotalsAsync(dto.BranchId, dto, null, ct);
+
+        // 4. Generate Shift-scoped Order Number (0001, 0002, ...) and Fiscal Invoice Number (INV-2026-000008)
+        var orderNumber = await _orderRepository.GenerateNextShiftOrderNumberAsync(dto.ShiftId, isRefund: false, ct);
+        var currentYear = DateTime.UtcNow.Year;
+        var invoiceNumber = await _orderRepository.GenerateNextInvoiceNumberAsync(dto.BranchId, currentYear, isRefund: false, ct);
 
         var order = new PosOrderHeader
         {
@@ -96,7 +137,7 @@ public class PosOrderService : IPosOrderService
             ShiftId = dto.ShiftId,
             TillId = dto.TillId,
             OrderNumber = orderNumber,
-            InvoiceNumber = $"INV-{dto.BranchId}-{today}-{count + 1:D4}",
+            InvoiceNumber = invoiceNumber,
             ClientUuid = string.IsNullOrWhiteSpace(dto.ClientUuid) ? Guid.NewGuid().ToString() : dto.ClientUuid,
             OrderType = dto.OrderType,
             Status = dto.Status == PosOrderStatus.Parked ? PosOrderStatus.Parked : PosOrderStatus.Draft,
@@ -165,16 +206,25 @@ public class PosOrderService : IPosOrderService
             order.Lines.Add(orderLine);
         }
 
-        // 6. Build Taxes
-        order.Taxes.Add(new PosOrderTax
+        // 6. Build Taxes Dynamically from calculated lines
+        var taxGroups = calcResult.Lines.GroupBy(l => l.TaxPercent);
+        foreach (var tg in taxGroups)
         {
-            TaxRateId = 1, // Default VAT
-            TaxRateCode = "VAT_15",
-            TaxPercent = 15m,
-            TaxableAmount = calcResult.NetTaxableAmount,
-            TaxAmount = calcResult.TaxAmount,
-            IsInclusive = false
-        });
+            var sampleItemId = tg.First().ItemId;
+            var taxRateEntity = await _validationService.GetEffectiveTaxRateAsync(sampleItemId, dto.BranchId, ct);
+            var taxableAmt = tg.Sum(l => l.LineNetBeforeTax);
+            var taxAmt = tg.Sum(l => l.TaxAmount);
+
+            order.Taxes.Add(new PosOrderTax
+            {
+                TaxRateId = taxRateEntity?.Id ?? 1,
+                TaxRateCode = taxRateEntity?.TaxRateCode ?? $"VAT_{tg.Key:0.#}",
+                TaxPercent = tg.Key,
+                TaxableAmount = taxableAmt,
+                TaxAmount = taxAmt,
+                IsInclusive = false
+            });
+        }
 
         // 7. Process Initial Payments if provided
         if (dto.Payments.Any())
@@ -233,6 +283,11 @@ public class PosOrderService : IPosOrderService
         await _orderRepository.SaveChangesAsync(ct);
         await _shiftRepository.UpdateShiftAsync(shift, ct);
         await _shiftRepository.SaveChangesAsync(ct);
+
+        if (order.IsPaid)
+        {
+            await DeductOrderStockIfRealtimeAsync(order, ct);
+        }
 
         return await GetOrderByIdAsync(order.Id, ct);
     }
@@ -305,6 +360,11 @@ public class PosOrderService : IPosOrderService
             await _shiftRepository.SaveChangesAsync(ct);
         }
 
+        if (order.IsPaid)
+        {
+            await DeductOrderStockIfRealtimeAsync(order, ct);
+        }
+
         return await GetOrderByIdAsync(order.Id, ct);
     }
 
@@ -336,16 +396,17 @@ public class PosOrderService : IPosOrderService
         if (!originalOrder.IsPaid)
             return ApiResponse<PosOrderSummaryDto>.CreateFailure("Cannot refund an unpaid order", null, 400);
 
-        var today = DateTime.UtcNow.ToString("yyyyMMdd");
-        var count = await _orderRepository.GetOrderCountTodayAsync(originalOrder.BranchId, ct);
+        var orderNumber = await _orderRepository.GenerateNextShiftOrderNumberAsync(originalOrder.ShiftId, isRefund: true, ct);
+        var currentYear = DateTime.UtcNow.Year;
+        var invoiceNumber = await _orderRepository.GenerateNextInvoiceNumberAsync(originalOrder.BranchId, currentYear, isRefund: true, ct);
 
         var refundOrder = new PosOrderHeader
         {
             BranchId = originalOrder.BranchId,
             ShiftId = originalOrder.ShiftId,
             TillId = originalOrder.TillId,
-            OrderNumber = $"REF-{originalOrder.BranchId}-{today}-{count + 1:D4}",
-            InvoiceNumber = $"RF-INV-{originalOrder.BranchId}-{today}-{count + 1:D4}",
+            OrderNumber = orderNumber,
+            InvoiceNumber = invoiceNumber,
             ClientUuid = Guid.NewGuid().ToString(),
             OrderType = originalOrder.OrderType,
             Status = PosOrderStatus.Refunded,
@@ -405,6 +466,8 @@ public class PosOrderService : IPosOrderService
 
         await _orderRepository.AddOrderAsync(refundOrder, ct);
         await _orderRepository.SaveChangesAsync(ct);
+
+        await RestockRefundOrderIfRealtimeAsync(refundOrder, originalOrder, ct);
 
         await _auditService.LogRefundOrderAsync(
             originalOrder.BranchId,
@@ -635,5 +698,126 @@ public class PosOrderService : IPosOrderService
                 PaymentDate = p.PaymentDate
             }).ToList()
         };
+    }
+
+    private async Task DeductOrderStockIfRealtimeAsync(PosOrderHeader order, CancellationToken ct)
+    {
+        try
+        {
+            var setting = await _settingRepo.GetByCodeAsync(SysSettingKeys.PosStockDeductionMode);
+            var mode = SysCodeKeys.PosStockDeductionModes.RealTime;
+            if (setting != null && int.TryParse(setting.SettingValue, out var configuredMode))
+            {
+                mode = configuredMode;
+            }
+
+            if (mode != SysCodeKeys.PosStockDeductionModes.RealTime)
+            {
+                _logger.LogInformation("POS Stock deduction mode is {Mode} (not RealTime). Skipping real-time deduction for Order {OrderNumber}", mode, order.OrderNumber);
+                return;
+            }
+
+            var warehouseId = await ResolvePosWarehouseIdAsync(order.BranchId, ct);
+            if (warehouseId <= 0)
+            {
+                _logger.LogWarning("No valid warehouse found for POS real-time stock deduction in branch {BranchId}", order.BranchId);
+                return;
+            }
+
+            foreach (var line in order.Lines.Where(l => !l.IsVoided && l.Quantity > 0))
+            {
+                var moveReq = new StockMovementRequestDto
+                {
+                    ItemId = line.ItemId,
+                    WarehouseId = warehouseId,
+                    Quantity = line.Quantity,
+                    UomCode = line.UomId > 0 ? line.UomId : 1,
+                    TransactionType = SysCodeKeys.StockTransactionTypes.PosSales, // 1004
+                    SourceDocId = order.InvoiceNumber ?? order.OrderNumber,
+                    SourceDocType = "POS_INVOICE",
+                    SourceModule = "POS",
+                    Notes = $"POS Real-time deduction for Order #{order.OrderNumber}"
+                };
+
+                var postResult = await _stockLedgerService.PostMovementAsync(moveReq, ct);
+                if (!postResult.Success)
+                {
+                    _logger.LogWarning("POS real-time stock deduction warning for Item {ItemId}: {Message}", line.ItemId, postResult.Message);
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to perform POS real-time stock deduction for Order {OrderId}", order.Id);
+        }
+    }
+
+    private async Task RestockRefundOrderIfRealtimeAsync(PosOrderHeader refundOrder, PosOrderHeader originalOrder, CancellationToken ct)
+    {
+        try
+        {
+            var setting = await _settingRepo.GetByCodeAsync(SysSettingKeys.PosStockDeductionMode);
+            var mode = SysCodeKeys.PosStockDeductionModes.RealTime;
+            if (setting != null && int.TryParse(setting.SettingValue, out var configuredMode))
+            {
+                mode = configuredMode;
+            }
+
+            if (mode != SysCodeKeys.PosStockDeductionModes.RealTime)
+            {
+                return;
+            }
+
+            var warehouseId = await ResolvePosWarehouseIdAsync(originalOrder.BranchId, ct);
+            if (warehouseId <= 0) return;
+
+            foreach (var line in refundOrder.Lines.Where(l => !l.IsVoided && Math.Abs(l.Quantity) > 0))
+            {
+                var moveReq = new StockMovementRequestDto
+                {
+                    ItemId = line.ItemId,
+                    WarehouseId = warehouseId,
+                    Quantity = Math.Abs(line.Quantity),
+                    UomCode = line.UomId > 0 ? line.UomId : 1,
+                    TransactionType = SysCodeKeys.StockTransactionTypes.SalesReturnRestock, // 1501
+                    SourceDocId = refundOrder.InvoiceNumber ?? refundOrder.OrderNumber,
+                    SourceDocType = "POS_REFUND",
+                    SourceModule = "POS",
+                    Notes = $"POS Real-time restock for Refund #{refundOrder.OrderNumber}"
+                };
+
+                var postResult = await _stockLedgerService.PostMovementAsync(moveReq, ct);
+                if (!postResult.Success)
+                {
+                    _logger.LogWarning("POS real-time stock restock warning for Item {ItemId}: {Message}", line.ItemId, postResult.Message);
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to perform POS real-time restock for Refund {RefundOrderId}", refundOrder.Id);
+        }
+    }
+
+    private async Task<long> ResolvePosWarehouseIdAsync(long branchId, CancellationToken ct)
+    {
+        var whSetting = await _settingRepo.GetByCodeAsync(SysSettingKeys.PosDefaultWarehouseId);
+        if (whSetting != null && long.TryParse(whSetting.SettingValue, out var whId) && whId > 0)
+        {
+            return whId;
+        }
+
+        try
+        {
+            var warehouses = await _warehouseRepo.GetAllByBranchAsync(branchId, ct);
+            var activeWh = warehouses.FirstOrDefault(w => w.IsActive);
+            if (activeWh != null) return activeWh.Id;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Error fetching warehouses for branch {BranchId}", branchId);
+        }
+
+        return 61; // Default fallback POS warehouse
     }
 }

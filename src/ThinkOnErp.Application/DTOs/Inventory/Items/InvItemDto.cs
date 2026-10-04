@@ -10,19 +10,15 @@ public class InvItemDto
     public string ItemNameLocal { get; set; } = string.Empty;
     public string ItemNameEn { get; set; } = string.Empty;
     public string DisplayName { get; set; } = string.Empty;
+    public int ItemTypeId { get; set; } = 1;
     public string ItemType { get; set; } = string.Empty;
+    public string ItemTypeName { get; set; } = string.Empty;
     public long CategoryId { get; set; }
     public string? CategoryName { get; set; }
-    public long MainCategoryId => CategoryId;
-    public string? MainCategoryName => CategoryName;
-    public long MainGroupId => CategoryId;
-    public string? MainGroupName => CategoryName;
-    public long? SubGroupId => null;
-    public string? SubGroupName => null;
-    public long? SubCategoryId => null;
-    public string? SubCategoryName => null;
     public int UomBase { get; set; }
+    public int CostingMethodId { get; set; } = 1;
     public string CostingMethod { get; set; } = string.Empty;
+    public string CostingMethodName { get; set; } = string.Empty;
     public decimal StandardCost { get; set; }
     public decimal DefaultSellingPrice { get; set; }
     public bool ShowInPos { get; set; } = true;
@@ -63,6 +59,7 @@ public class InvItemDto
 
     public List<InvItemUomDto> UomConversions { get; set; } = new();
     public List<InvItemBarcodeDto> Barcodes { get; set; } = new();
+    public List<string> Serials { get; set; } = new();
 }
 
 public class InvItemUomDto

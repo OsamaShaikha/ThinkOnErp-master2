@@ -112,6 +112,55 @@ public class PosOrderRepository : IPosOrderRepository
             .CountAsync(o => o.BranchId == branchId && o.CreationDate.Date == DateTime.UtcNow.Date, ct);
     }
 
+    public async Task<string> GenerateNextShiftOrderNumberAsync(long shiftId, bool isRefund, CancellationToken ct = default)
+    {
+        var prefix = isRefund ? "R" : "";
+        var existingOrderNumbers = await _context.PosOrderHeaders
+            .Where(o => o.ShiftId == shiftId && o.IsRefund == isRefund)
+            .Select(o => o.OrderNumber)
+            .ToListAsync(ct);
+
+        int maxSeq = 0;
+        foreach (var num in existingOrderNumbers)
+        {
+            if (string.IsNullOrWhiteSpace(num)) continue;
+            var s = isRefund && num.StartsWith("R", StringComparison.OrdinalIgnoreCase) ? num.Substring(1) : num;
+            if (int.TryParse(s, out int parsed))
+            {
+                if (parsed > maxSeq) maxSeq = parsed;
+            }
+        }
+
+        int nextSeq = maxSeq > 0 ? maxSeq + 1 : existingOrderNumbers.Count + 1;
+        return $"{prefix}{nextSeq:D4}";
+    }
+
+    public async Task<string> GenerateNextInvoiceNumberAsync(long branchId, int year, bool isRefund, CancellationToken ct = default)
+    {
+        var prefix = isRefund ? $"RET-{year}-" : $"INV-{year}-";
+
+        var existingNumbers = await _context.PosOrderHeaders
+            .Where(o => o.BranchId == branchId && o.InvoiceNumber != null && o.InvoiceNumber.StartsWith(prefix))
+            .Select(o => o.InvoiceNumber!)
+            .ToListAsync(ct);
+
+        int maxSeq = 0;
+        foreach (var num in existingNumbers)
+        {
+            if (num.Length > prefix.Length)
+            {
+                var sub = num.Substring(prefix.Length);
+                if (int.TryParse(sub, out int parsed))
+                {
+                    if (parsed > maxSeq) maxSeq = parsed;
+                }
+            }
+        }
+
+        int nextSeq = maxSeq + 1;
+        return $"{prefix}{nextSeq:D6}";
+    }
+
     public async Task AddOrderAsync(PosOrderHeader order, CancellationToken ct = default)
     {
         await _context.PosOrderHeaders.AddAsync(order, ct);

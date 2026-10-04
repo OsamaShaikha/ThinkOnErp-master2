@@ -14,19 +14,13 @@ public class InvItemListDto
     public long CategoryId { get; set; }
     public string? CategoryName { get; set; }
 
-    public long MainCategoryId => CategoryId;
-    public string? MainCategoryName => CategoryName;
-    public long MainGroupId => CategoryId;
-    public string? MainGroupName => CategoryName;
-
-    public long? SubCategoryId => null;
-    public string? SubCategoryName => null;
-    public long? SubGroupId => null;
-    public string? SubGroupName => null;
-
+    public int ItemTypeId { get; set; } = 1;
     public string ItemType { get; set; } = string.Empty;
+    public string ItemTypeName { get; set; } = string.Empty;
     public int UomBase { get; set; }
+    public int CostingMethodId { get; set; } = 1;
     public string CostingMethod { get; set; } = string.Empty;
+    public string CostingMethodName { get; set; } = string.Empty;
     public decimal StandardCost { get; set; }
     public decimal DefaultSellingPrice { get; set; }
 
@@ -54,5 +48,6 @@ public class InvItemListDto
     public bool IsTaxExempt { get; set; }
 
     public List<string> Barcodes { get; set; } = new();
+    public List<string> Serials { get; set; } = new();
     public bool IsActive { get; set; }
 }

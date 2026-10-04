@@ -66,6 +66,11 @@ public sealed class CreateTrxDocumentLineDto
 
     public decimal UomFactor { get; set; } = 1;
 
+    /// <summary>
+    /// Unified quantity for the line. The system automatically determines whether it is Inbound or Outbound based on the transaction type (StockDirection).
+    /// </summary>
+    public decimal? Quantity { get; set; }
+
     public decimal QuantityIn { get; set; }
     public decimal QuantityOut { get; set; }
 

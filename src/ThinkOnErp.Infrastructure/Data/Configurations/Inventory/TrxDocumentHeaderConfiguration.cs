@@ -9,8 +9,8 @@ public sealed class TrxDocumentHeaderConfiguration : IEntityTypeConfiguration<Tr
     public void Configure(EntityTypeBuilder<TrxDocumentHeader> builder)
     {
         builder.ToTable("TRX_DOCUMENT_HEADER");
-        // Composite PK: BRANCH_ID, DOC_YEAR, DOC_TYPE, ID
-        builder.HasKey(h => new { h.BranchId, h.DocYear, h.DocType, h.Id });
+        // Composite PK: BRANCH_ID, DOC_YEAR, TRX_TYPE, ID
+        builder.HasKey(h => new { h.BranchId, h.DocYear, h.TrxType, h.Id });
 
         builder.Property(h => h.BranchId).HasColumnName("BRANCH_ID");
         builder.Property(h => h.DocYear).HasColumnName("DOC_YEAR");
@@ -69,7 +69,7 @@ public sealed class TrxDocumentHeaderConfiguration : IEntityTypeConfiguration<Tr
         builder.HasOne(h => h.ToWarehouse).WithMany().HasForeignKey(h => h.ToWarehouseId).OnDelete(DeleteBehavior.Restrict);
 
         builder.HasMany(h => h.Lines).WithOne(l => l.DocumentHeader)
-            .HasForeignKey(l => new { l.BranchId, l.DocYear, l.DocType, l.DocId })
+            .HasForeignKey(l => new { l.BranchId, l.DocYear, l.TrxType, l.DocId })
             .OnDelete(DeleteBehavior.Cascade);
     }
 }

@@ -1,4 +1,4 @@
-﻿using System.Collections.Concurrent;
+using System.Collections.Concurrent;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -97,13 +97,32 @@ public class ValidationRuleCacheService : IValidationRuleCacheService
         new() { EntityName = "StockMovement", FieldName = "Quantity", RuleType = "RANGE", RuleValue = "0.0001..999999999", ErrorCode = ErrorCodes.PositiveNumberRequired },
         new() { EntityName = "StockMovement", FieldName = "UomCode", RuleType = "REQUIRED", ErrorCode = ErrorCodes.FieldRequired },
 
-        // Trade Documents
+        // Trade Documents & Invoices
         new() { EntityName = "TrxDocument", FieldName = "BranchId", RuleType = "REQUIRED", ErrorCode = ErrorCodes.FieldRequired },
         new() { EntityName = "TrxDocument", FieldName = "DocYear", RuleType = "RANGE", RuleValue = "2000..2099", ErrorCode = ErrorCodes.OutOfRange },
         new() { EntityName = "TrxDocument", FieldName = "DocType", RuleType = "REQUIRED", ErrorCode = ErrorCodes.DocTypeRequired },
         new() { EntityName = "TrxDocument", FieldName = "TrxType", RuleType = "REQUIRED", ErrorCode = ErrorCodes.TrxTypeRequired },
+        new() { EntityName = "TrxDocument", FieldName = "ExchangeRate", RuleType = "RANGE", RuleValue = "0.000001..999999", ErrorCode = ErrorCodes.InvalidExchangeRate },
+        new() { EntityName = "TrxDocument", FieldName = "DiscountAmount", RuleType = "RANGE", RuleValue = "0..999999999999", ErrorCode = ErrorCodes.OutOfRange },
         new() { EntityName = "TrxDocumentLine", FieldName = "ItemId", RuleType = "REQUIRED", ErrorCode = ErrorCodes.FieldRequired },
         new() { EntityName = "TrxDocumentLine", FieldName = "UomCode", RuleType = "REQUIRED", ErrorCode = ErrorCodes.FieldRequired },
+        new() { EntityName = "TrxDocumentLine", FieldName = "UnitPrice", RuleType = "RANGE", RuleValue = "0..999999999999", ErrorCode = ErrorCodes.OutOfRange },
+        new() { EntityName = "TrxDocumentLine", FieldName = "QuantityIn", RuleType = "RANGE", RuleValue = "0..999999999", ErrorCode = ErrorCodes.OutOfRange },
+        new() { EntityName = "TrxDocumentLine", FieldName = "QuantityOut", RuleType = "RANGE", RuleValue = "0..999999999", ErrorCode = ErrorCodes.OutOfRange },
+        new() { EntityName = "TrxDocumentLine", FieldName = "DiscountPercent", RuleType = "RANGE", RuleValue = "0..100", ErrorCode = ErrorCodes.OutOfRange },
+        new() { EntityName = "TrxDocumentLine", FieldName = "TaxRate", RuleType = "RANGE", RuleValue = "0..100", ErrorCode = ErrorCodes.InvalidTaxPercent },
+
+        // Point of Sale (POS) Orders & Payments
+        new() { EntityName = "PosOrder", FieldName = "BranchId", RuleType = "REQUIRED", ErrorCode = ErrorCodes.FieldRequired },
+        new() { EntityName = "PosOrder", FieldName = "ShiftId", RuleType = "REQUIRED", ErrorCode = ErrorCodes.FieldRequired },
+        new() { EntityName = "PosOrder", FieldName = "TillId", RuleType = "REQUIRED", ErrorCode = ErrorCodes.FieldRequired },
+        new() { EntityName = "PosOrder", FieldName = "DiscountPercent", RuleType = "RANGE", RuleValue = "0..100", ErrorCode = ErrorCodes.OutOfRange },
+        new() { EntityName = "PosOrder", FieldName = "DiscountAmount", RuleType = "RANGE", RuleValue = "0..999999999999", ErrorCode = ErrorCodes.OutOfRange },
+        new() { EntityName = "PosOrderLine", FieldName = "ItemId", RuleType = "REQUIRED", ErrorCode = ErrorCodes.FieldRequired },
+        new() { EntityName = "PosOrderLine", FieldName = "Quantity", RuleType = "REQUIRED", ErrorCode = ErrorCodes.FieldRequired },
+        new() { EntityName = "PosOrderLine", FieldName = "UnitPrice", RuleType = "RANGE", RuleValue = "0..999999999999", ErrorCode = ErrorCodes.OutOfRange },
+        new() { EntityName = "PosOrderLine", FieldName = "DiscountPercent", RuleType = "RANGE", RuleValue = "0..100", ErrorCode = ErrorCodes.OutOfRange },
+        new() { EntityName = "PosOrderPayment", FieldName = "Amount", RuleType = "RANGE", RuleValue = "0.0001..999999999999", ErrorCode = ErrorCodes.OutOfRange },
 
         // GL Voucher Type
         new() { EntityName = "GlVoucherType", FieldName = "TypeCode", RuleType = "REQUIRED", ErrorCode = ErrorCodes.FieldRequired },

@@ -17,11 +17,15 @@ public static class InvItemMapper
             Sku = entity.Sku,
             ItemNameLocal = entity.ItemNameLocal,
             ItemNameEn = entity.ItemNameEn,
+            ItemTypeId = (int)entity.ItemType,
             ItemType = entity.ItemType.ToString(),
+            ItemTypeName = ResolveItemTypeName((int)entity.ItemType),
             CategoryId = entity.CategoryId,
             CategoryName = entity.Category?.CategoryNameLocal,
             UomBase = entity.UomBase,
+            CostingMethodId = (int)entity.CostingMethod,
             CostingMethod = entity.CostingMethod.ToString(),
+            CostingMethodName = ResolveCostingMethodName((int)entity.CostingMethod),
             StandardCost = entity.StandardCost,
             DefaultSellingPrice = entity.DefaultSellingPrice,
             ShowInPos = entity.ShowInPos,
@@ -80,7 +84,27 @@ public static class InvItemMapper
                 Barcode = b.Barcode,
                 BarcodeType = b.BarcodeType.ToString(),
                 UomCode = b.UomCode
-            }).ToList() ?? new()
+            }).ToList() ?? new(),
+            Serials = entity.Serials?.Where(s => s.Status == ThinkOnErp.Domain.Entities.Inventory.Enums.SerialStatus.Available).Select(s => s.SerialNumber).ToList() ?? new()
         };
     }
+
+    public static string ResolveItemTypeName(int code) => code switch
+    {
+        1 => "مخزني",
+        2 => "غير مخزني",
+        3 => "خدمي",
+        4 => "طقم / كيت",
+        5 => "تجميعي / تصنيعي",
+        _ => "مخزني"
+    };
+
+    public static string ResolveCostingMethodName(int code) => code switch
+    {
+        1 => "المتوسط المرجح",
+        2 => "الوارد أولاً صادر أولاً (FIFO)",
+        3 => "التمييز المحدد / التكلفة الفعلية",
+        4 => "التكلفة المعيارية",
+        _ => "المتوسط المرجح"
+    };
 }

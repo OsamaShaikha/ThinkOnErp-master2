@@ -51,6 +51,14 @@ public sealed class InvItemService : IInvItemService
             return ApiResponse<InvItemDto>.CreateFailure($"Item code '{request.ItemCode}' already exists", null, 400);
         }
 
+        var itemType = request.ItemTypeId.HasValue && Enum.IsDefined(typeof(ItemType), request.ItemTypeId.Value)
+            ? (ItemType)request.ItemTypeId.Value
+            : request.ItemType;
+
+        var costingMethod = request.CostingMethodId.HasValue && Enum.IsDefined(typeof(CostingMethod), request.CostingMethodId.Value)
+            ? (CostingMethod)request.CostingMethodId.Value
+            : request.CostingMethod;
+
         var item = new InvItem
         {
             BranchId = request.BranchId,
@@ -59,9 +67,9 @@ public sealed class InvItemService : IInvItemService
             ItemNameLocal = request.ItemNameLocal.Trim(),
             ItemNameEn = request.ItemNameEn?.Trim() ?? string.Empty,
             CategoryId = request.CategoryId,
-            ItemType = request.ItemType,
+            ItemType = itemType,
             UomBase = request.UomBase,
-            CostingMethod = request.CostingMethod,
+            CostingMethod = costingMethod,
             StandardCost = request.StandardCost,
             DefaultSellingPrice = request.DefaultSellingPrice,
             ShowInPos = request.ShowInPos,
@@ -219,10 +227,26 @@ public sealed class InvItemService : IInvItemService
 
         if (!string.IsNullOrWhiteSpace(request.ItemNameLocal)) item.ItemNameLocal = request.ItemNameLocal.Trim();
         if (request.Sku != null) item.Sku = string.IsNullOrWhiteSpace(request.Sku) ? null : request.Sku.Trim().ToUpperInvariant();
-        if (!string.IsNullOrWhiteSpace(request.ItemType) && Enum.TryParse<ItemType>(request.ItemType, true, out var itemType)) item.ItemType = itemType;
+        if (request.ItemTypeId.HasValue && Enum.IsDefined(typeof(ItemType), request.ItemTypeId.Value))
+        {
+            item.ItemType = (ItemType)request.ItemTypeId.Value;
+        }
+        else if (!string.IsNullOrWhiteSpace(request.ItemType) && Enum.TryParse<ItemType>(request.ItemType, true, out var itemType))
+        {
+            item.ItemType = itemType;
+        }
+
         if (request.CategoryId.HasValue) item.CategoryId = request.CategoryId.Value;
         if (request.UomBase.HasValue) item.UomBase = request.UomBase.Value;
-        if (!string.IsNullOrWhiteSpace(request.CostingMethod) && Enum.TryParse<CostingMethod>(request.CostingMethod, true, out var cm)) item.CostingMethod = cm;
+
+        if (request.CostingMethodId.HasValue && Enum.IsDefined(typeof(CostingMethod), request.CostingMethodId.Value))
+        {
+            item.CostingMethod = (CostingMethod)request.CostingMethodId.Value;
+        }
+        else if (!string.IsNullOrWhiteSpace(request.CostingMethod) && Enum.TryParse<CostingMethod>(request.CostingMethod, true, out var cm))
+        {
+            item.CostingMethod = cm;
+        }
         if (request.StandardCost.HasValue) item.StandardCost = request.StandardCost.Value;
         if (request.DefaultSellingPrice.HasValue) item.DefaultSellingPrice = request.DefaultSellingPrice.Value;
         if (request.ShowInPos.HasValue) item.ShowInPos = request.ShowInPos.Value;
@@ -303,9 +327,13 @@ public sealed class InvItemService : IInvItemService
             DisplayName = i.ItemNameLocal,
             CategoryId = i.CategoryId,
             CategoryName = i.Category?.CategoryNameLocal,
+            ItemTypeId = (int)i.ItemType,
             ItemType = i.ItemType.ToString(),
+            ItemTypeName = InvItemMapper.ResolveItemTypeName((int)i.ItemType),
             UomBase = i.UomBase,
+            CostingMethodId = (int)i.CostingMethod,
             CostingMethod = i.CostingMethod.ToString(),
+            CostingMethodName = InvItemMapper.ResolveCostingMethodName((int)i.CostingMethod),
             StandardCost = i.StandardCost,
             DefaultSellingPrice = i.DefaultSellingPrice,
             OnHandTotal = i.StockBalances?.Sum(b => b.OnHandQty) ?? 0,
@@ -329,6 +357,7 @@ public sealed class InvItemService : IInvItemService
             TaxGroupCode = i.TaxGroup?.GroupCode,
             IsTaxExempt = i.IsTaxExempt,
             Barcodes = i.Barcodes?.Select(b => b.Barcode).ToList() ?? new(),
+            Serials = i.Serials?.Where(s => s.Status == ThinkOnErp.Domain.Entities.Inventory.Enums.SerialStatus.Available).Select(s => s.SerialNumber).ToList() ?? new(),
             IsActive = i.IsActive
         }).ToList();
 
@@ -553,20 +582,25 @@ public sealed class InvItemService : IInvItemService
             DisplayName = i.ItemNameLocal,
             CategoryId = i.CategoryId,
             CategoryName = i.Category?.CategoryNameLocal,
+            ItemTypeId = (int)i.ItemType,
             ItemType = i.ItemType.ToString(),
+            ItemTypeName = InvItemMapper.ResolveItemTypeName((int)i.ItemType),
             UomBase = i.UomBase,
             DefaultSellingPrice = i.DefaultSellingPrice,
-            ShowInPos = i.ShowInPos,
             OnHandTotal = i.StockBalances?.Sum(b => b.OnHandQty) ?? 0,
             AllowNegativeStock = i.AllowNegativeStock,
             ImageBase64 = i.ImageBase64,
             ColorCode = i.ColorCode,
             HasVariants = i.HasVariants,
+            SerialTracking = i.SerialTracking,
             TaxRateId = i.TaxRateId,
             TaxRateCode = i.TaxRate?.TaxRateCode,
             TaxRatePercent = i.TaxRate?.RatePercent,
             IsTaxExempt = i.IsTaxExempt,
             Barcodes = i.Barcodes?.Select(b => b.Barcode).ToList() ?? new(),
+            Serials = i.SerialTracking
+                ? (i.Serials?.Where(s => s.Status == ThinkOnErp.Domain.Entities.Inventory.Enums.SerialStatus.Available).Select(s => s.SerialNumber).ToList() ?? new())
+                : new(),
             IsActive = i.IsActive
         }).ToList();
 
@@ -593,9 +627,28 @@ public sealed class InvItemService : IInvItemService
             item = await _itemRepository.GetByCodeAsync(barcode.Trim().ToUpper(), cancellationToken);
         }
 
+        // If not matched by barcode or item code, check if it matches an active serial number
+        if (item == null)
+        {
+            var (serials, total) = await _lotSerialRepository.GetSerialsPagedAsync(
+                pageNumber: 1,
+                pageSize: 1,
+                itemId: null,
+                warehouseId: null,
+                status: ThinkOnErp.Domain.Entities.Inventory.Enums.SerialStatus.Available,
+                search: barcode.Trim(),
+                cancellationToken: cancellationToken);
+
+            var matchingSerial = serials.FirstOrDefault(s => string.Equals(s.SerialNumber, barcode.Trim(), System.StringComparison.OrdinalIgnoreCase));
+            if (matchingSerial != null)
+            {
+                item = await _itemRepository.GetByIdAsync(matchingSerial.ItemId, cancellationToken);
+            }
+        }
+
         if (item == null || !item.IsActive || !item.ShowInPos)
         {
-            return ApiResponse<PosItemDto>.CreateFailure($"Item with barcode '{barcode}' not found, inactive, or not allowed in POS", null, 404);
+            return ApiResponse<PosItemDto>.CreateFailure($"Item with barcode/serial '{barcode}' not found, inactive, or not allowed in POS", null, 404);
         }
 
         var dto = new PosItemDto
@@ -608,25 +661,103 @@ public sealed class InvItemService : IInvItemService
             DisplayName = item.ItemNameLocal,
             CategoryId = item.CategoryId,
             CategoryName = item.Category?.CategoryNameLocal,
+            ItemTypeId = (int)item.ItemType,
             ItemType = item.ItemType.ToString(),
+            ItemTypeName = InvItemMapper.ResolveItemTypeName((int)item.ItemType),
             UomBase = item.UomBase,
             DefaultSellingPrice = item.DefaultSellingPrice,
-            ShowInPos = item.ShowInPos,
             OnHandTotal = item.StockBalances?.Sum(b => b.OnHandQty) ?? 0,
             AllowNegativeStock = item.AllowNegativeStock,
             ImageBase64 = item.ImageBase64,
             ColorCode = item.ColorCode,
             HasVariants = item.HasVariants,
+            SerialTracking = item.SerialTracking,
             TaxRateId = item.TaxRateId,
             TaxRateCode = item.TaxRate?.TaxRateCode,
             TaxRatePercent = item.TaxRate?.RatePercent,
             IsTaxExempt = item.IsTaxExempt,
             Barcodes = item.Barcodes?.Select(b => b.Barcode).ToList() ?? new(),
+            Serials = item.SerialTracking
+                ? (item.Serials?.Where(s => s.Status == ThinkOnErp.Domain.Entities.Inventory.Enums.SerialStatus.Available).Select(s => s.SerialNumber).ToList() ?? new())
+                : new(),
             IsActive = item.IsActive
         };
 
         dto.DisplayName = await _translationService.ResolveDisplayNameAsync("ITEM", item.Id, "Name", !string.IsNullOrWhiteSpace(item.ItemNameEn) ? item.ItemNameEn : item.ItemNameLocal, null, cancellationToken);
 
         return ApiResponse<PosItemDto>.CreateSuccess(dto);
+    }
+
+    public async Task<ApiResponse<PosItemDto>> GetPosItemByIdAsync(long id, CancellationToken cancellationToken = default)
+    {
+        var item = await _itemRepository.GetByIdAsync(id, cancellationToken);
+        if (item == null || !item.IsActive || !item.ShowInPos)
+        {
+            return ApiResponse<PosItemDto>.CreateFailure($"Item with id '{id}' not found, inactive, or not allowed in POS", null, 404);
+        }
+
+        var dto = new PosItemDto
+        {
+            Id = item.Id,
+            ItemCode = item.ItemCode,
+            Sku = item.Sku,
+            ItemNameLocal = item.ItemNameLocal,
+            ItemNameEn = item.ItemNameEn,
+            DisplayName = item.ItemNameLocal,
+            CategoryId = item.CategoryId,
+            CategoryName = item.Category?.CategoryNameLocal,
+            ItemTypeId = (int)item.ItemType,
+            ItemType = item.ItemType.ToString(),
+            ItemTypeName = InvItemMapper.ResolveItemTypeName((int)item.ItemType),
+            UomBase = item.UomBase,
+            DefaultSellingPrice = item.DefaultSellingPrice,
+            OnHandTotal = item.StockBalances?.Sum(b => b.OnHandQty) ?? 0,
+            AllowNegativeStock = item.AllowNegativeStock,
+            ImageBase64 = item.ImageBase64,
+            ColorCode = item.ColorCode,
+            HasVariants = item.HasVariants,
+            SerialTracking = item.SerialTracking,
+            TaxRateId = item.TaxRateId,
+            TaxRateCode = item.TaxRate?.TaxRateCode,
+            TaxRatePercent = item.TaxRate?.RatePercent,
+            IsTaxExempt = item.IsTaxExempt,
+            Barcodes = item.Barcodes?.Select(b => b.Barcode).ToList() ?? new(),
+            Serials = item.SerialTracking
+                ? (item.Serials?.Where(s => s.Status == ThinkOnErp.Domain.Entities.Inventory.Enums.SerialStatus.Available).Select(s => s.SerialNumber).ToList() ?? new())
+                : new(),
+            IsActive = item.IsActive
+        };
+
+        dto.DisplayName = await _translationService.ResolveDisplayNameAsync("ITEM", item.Id, "Name", !string.IsNullOrWhiteSpace(item.ItemNameEn) ? item.ItemNameEn : item.ItemNameLocal, null, cancellationToken);
+
+        return ApiResponse<PosItemDto>.CreateSuccess(dto);
+    }
+
+    public async Task<ApiResponse<List<string>>> GetPosItemSerialsAsync(
+        long itemId,
+        long? warehouseId = null,
+        CancellationToken cancellationToken = default)
+    {
+        var item = await _itemRepository.GetByIdAsync(itemId, cancellationToken);
+        if (item == null || !item.IsActive || !item.ShowInPos)
+        {
+            return ApiResponse<List<string>>.CreateFailure($"Item with id '{itemId}' not found, inactive, or not allowed in POS", null, 404);
+        }
+
+        if (!item.SerialTracking)
+        {
+            return ApiResponse<List<string>>.CreateSuccess(new List<string>(), "Item does not track serial numbers");
+        }
+
+        var (serials, _) = await _lotSerialRepository.GetSerialsPagedAsync(
+            pageNumber: 1,
+            pageSize: 1000,
+            itemId: itemId,
+            warehouseId: warehouseId,
+            status: ThinkOnErp.Domain.Entities.Inventory.Enums.SerialStatus.Available,
+            cancellationToken: cancellationToken);
+
+        var list = serials.Select(s => s.SerialNumber).ToList();
+        return ApiResponse<List<string>>.CreateSuccess(list, "Available serials retrieved successfully");
     }
 }

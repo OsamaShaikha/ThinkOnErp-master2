@@ -4,32 +4,11 @@ public class UpdateInvItemDto
 {
     public string? ItemNameLocal { get; set; }
     public string? Sku { get; set; }
+    public int? ItemTypeId { get; set; }
     public string? ItemType { get; set; }
     public long? CategoryId { get; set; }
-
-    #region Backward Compatibility Aliases
-    public long? MainCategoryId
-    {
-        get => CategoryId;
-        set => CategoryId = value ?? CategoryId;
-    }
-    public long? MainGroupId
-    {
-        get => CategoryId;
-        set => CategoryId = value ?? CategoryId;
-    }
-    public long? SubGroupId
-    {
-        get => null;
-        set { if (value.HasValue) CategoryId = value.Value; }
-    }
-    public long? SubCategoryId
-    {
-        get => null;
-        set { if (value.HasValue) CategoryId = value.Value; }
-    }
-    #endregion
     public int? UomBase { get; set; }
+    public int? CostingMethodId { get; set; }
     public string? CostingMethod { get; set; }
     public decimal? StandardCost { get; set; }
     public decimal? DefaultSellingPrice { get; set; }

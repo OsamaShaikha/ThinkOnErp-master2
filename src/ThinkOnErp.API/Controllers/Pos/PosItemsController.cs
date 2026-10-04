@@ -12,6 +12,9 @@ using ThinkOnErp.Application.DTOs.Pos;
 using ThinkOnErp.Application.Services.Inventory;
 using ThinkOnErp.Domain.Constants;
 
+using ThinkOnErp.Application.DTOs.SysCode;
+using ThinkOnErp.Domain.Interfaces;
+
 namespace ThinkOnErp.API.Controllers.Pos;
 
 /// <summary>
@@ -25,18 +28,19 @@ namespace ThinkOnErp.API.Controllers.Pos;
 public class PosItemsController : ControllerBase
 {
     private readonly IInvItemService _itemService;
+    private readonly ISysCodeRepository _sysCodeRepo;
 
-    public PosItemsController(IInvItemService itemService)
+    public PosItemsController(IInvItemService itemService, ISysCodeRepository sysCodeRepo)
     {
         _itemService = itemService;
+        _sysCodeRepo = sysCodeRepo;
     }
 
     /// <summary>
     /// Retrieves items catalog formatted for POS cash register with prices, stock, tax rates, images, colors, and barcode filters.
     /// </summary>
     /// <param name="search">Keyword search matching item code, name, SKU, or barcode.</param>
-    /// <param name="groupId">Optional filter by main or sub group.</param>
-    /// <param name="onlyPosVisible">Whether to filter items whose group has ShowInPos = true (default true).</param>
+    /// <param name="categoryId">Optional filter by category ID.</param>
     /// <param name="pageNumber">Page index (default 1).</param>
     /// <param name="pageSize">Items per page (default 20).</param>
     /// <param name="cancellationToken">Cancellation token.</param>
@@ -46,8 +50,7 @@ public class PosItemsController : ControllerBase
     [ProducesResponseType(typeof(ApiResponse<List<PosItemDto>>), StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> GetPosItems(
         [FromQuery] string? search = null,
-        [FromQuery] long? groupId = null,
-        [FromQuery] bool onlyPosVisible = true,
+        [FromQuery] long? categoryId = null,
         [FromQuery] int pageNumber = 1,
         [FromQuery] int pageSize = 20,
         CancellationToken cancellationToken = default)
@@ -57,7 +60,7 @@ public class PosItemsController : ControllerBase
             return BadRequest(ApiResponse<List<PosItemDto>>.CreateFailure("Invalid pagination parameters. pageNumber and pageSize must be greater than zero.", statusCode: 400));
         }
 
-        var response = await _itemService.GetPosItemsAsync(search, groupId, onlyPosVisible, pageNumber, pageSize, cancellationToken);
+        var response = await _itemService.GetPosItemsAsync(search, categoryId, true, pageNumber, pageSize, cancellationToken);
         if (response.Success)
             response.Message = ResponseCodes.ItemsRetrieved;
 
@@ -65,22 +68,17 @@ public class PosItemsController : ControllerBase
     }
 
     /// <summary>
-    /// Retrieves full item details by ID for POS (including barcodes, UOM conversions, tax rates, warehouse balances, and variants).
+    /// Retrieves full item details by ID for POS (including barcodes, tax rates, prices, images, and colors).
     /// </summary>
     /// <param name="id">Item identifier.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
-    /// <returns>Complete item profile.</returns>
+    /// <returns>Matched POS item profile.</returns>
     [HttpGet("{id:long}")]
-    [ProducesResponseType(typeof(ApiResponse<InvItemDto>), StatusCodes.Status200OK)]
-    [ProducesResponseType(typeof(ApiResponse<InvItemDto>), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ApiResponse<PosItemDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<PosItemDto>), StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetPosItemById(long id, CancellationToken cancellationToken)
     {
-        var response = await _itemService.GetByIdAsync(id, cancellationToken);
-        if (response.Success && (response.Data == null || !response.Data.IsActive || !response.Data.ShowInPos))
-        {
-            return NotFound(ApiResponse<InvItemDto>.CreateFailure("Item not found, inactive, or not allowed in POS", null, 404));
-        }
-
+        var response = await _itemService.GetPosItemByIdAsync(id, cancellationToken);
         if (response.Success)
             response.Message = ResponseCodes.ItemDetailsRetrieved;
 
@@ -103,5 +101,44 @@ public class PosItemsController : ControllerBase
             response.Message = ResponseCodes.DataRetrieved;
 
         return response.Success ? Ok(response) : NotFound(response);
+    }
+
+    /// <summary>
+    /// Retrieves available serial numbers for a specific POS item (filtered by Available status).
+    /// </summary>
+    /// <param name="id">Item identifier.</param>
+    /// <param name="warehouseId">Optional warehouse filter.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>List of available serial numbers.</returns>
+    [HttpGet("{id:long}/serials")]
+    [ProducesResponseType(typeof(ApiResponse<List<string>>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<List<string>>), StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> GetPosItemSerials(
+        long id,
+        [FromQuery] long? warehouseId = null,
+        CancellationToken cancellationToken = default)
+    {
+        var response = await _itemService.GetPosItemSerialsAsync(id, warehouseId, cancellationToken);
+        if (response.Success)
+            response.Message = ResponseCodes.DataRetrieved;
+
+        return response.Success ? Ok(response) : NotFound(response);
+    }
+
+    /// <summary>
+    /// Retrieves item types lookup from SYS_CODE (CODE_MGR = 18) for POS.
+    /// </summary>
+    /// <param name="lang">Language filter (1 = Arabic, 2 = English).</param>
+    /// <returns>List of item types.</returns>
+    [HttpGet("types")]
+    [ProducesResponseType(typeof(ApiResponse<List<SysCodeLookupDto>>), StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetItemTypes([FromQuery] int? lang = null)
+    {
+        var rawCodes = await _sysCodeRepo.GetActiveByCodeMgrAsync(SysCodeKeys.ItemTypes.Mgr);
+        var result = rawCodes.Count > 0
+            ? SysCodeLookupHelper.MapToLookupDtos(rawCodes, lang)
+            : SysCodeLookupHelper.GetFallbackLookups(SysCodeKeys.ItemTypes.Mgr, lang);
+
+        return Ok(ApiResponse<List<SysCodeLookupDto>>.CreateSuccess(result, ResponseCodes.DataRetrieved));
     }
 }

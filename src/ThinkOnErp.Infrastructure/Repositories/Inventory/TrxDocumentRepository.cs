@@ -18,12 +18,12 @@ public sealed class TrxDocumentRepository : ITrxDocumentRepository
         _context = context;
     }
 
-    public async Task<TrxDocumentHeader?> GetByKeyAsync(long branchId, int docYear, int docType, long id, CancellationToken ct = default)
+    public async Task<TrxDocumentHeader?> GetByKeyAsync(long branchId, int docYear, int trxType, long id, CancellationToken ct = default)
     {
         return await _context.TrxDocumentHeaders
             .Include(h => h.Lines)
                 .ThenInclude(l => l.Item)
-            .FirstOrDefaultAsync(h => h.BranchId == branchId && h.DocYear == docYear && h.DocType == docType && h.Id == id, ct);
+            .FirstOrDefaultAsync(h => h.BranchId == branchId && h.DocYear == docYear && h.TrxType == trxType && h.Id == id, ct);
     }
 
     public async Task<TrxDocumentHeader?> GetByDocNoAsync(long branchId, int docYear, int docType, string docNo, CancellationToken ct = default)
@@ -57,10 +57,10 @@ public sealed class TrxDocumentRepository : ITrxDocumentRepository
         return (items, totalCount);
     }
 
-    public async Task<long> GetNextIdAsync(long branchId, int docYear, int docType, CancellationToken ct = default)
+    public async Task<long> GetNextIdAsync(long branchId, int docYear, int trxType, CancellationToken ct = default)
     {
         var maxId = await _context.TrxDocumentHeaders
-            .Where(h => h.BranchId == branchId && h.DocYear == docYear && h.DocType == docType)
+            .Where(h => h.BranchId == branchId && h.DocYear == docYear && h.TrxType == trxType)
             .Select(h => (long?)h.Id)
             .MaxAsync(ct);
 

@@ -5,6 +5,8 @@ using System.Threading;
 using System.Threading.Tasks;
 using ThinkOnErp.Application.DTOs.Pos;
 
+using ThinkOnErp.Application.Services.Validation;
+
 namespace ThinkOnErp.Application.Services.Pos;
 
 public class PosOrderCalculationResult
@@ -45,30 +47,34 @@ public interface IPosCalculationEngine
     Task<PosOrderCalculationResult> CalculateOrderTotalsAsync(
         long branchId,
         CreatePosOrderDto orderDto,
-        decimal defaultTaxRatePercent = 15m,
+        decimal? defaultTaxRatePercent = null,
         CancellationToken ct = default);
 }
 
 public class PosCalculationEngine : IPosCalculationEngine
 {
     private readonly IPosPromotionEngine _promotionEngine;
+    private readonly IInvoiceBusinessValidationService _validationService;
 
-    public PosCalculationEngine(IPosPromotionEngine promotionEngine)
+    public PosCalculationEngine(
+        IPosPromotionEngine promotionEngine,
+        IInvoiceBusinessValidationService validationService)
     {
         _promotionEngine = promotionEngine;
+        _validationService = validationService;
     }
 
     public async Task<PosOrderCalculationResult> CalculateOrderTotalsAsync(
         long branchId,
         CreatePosOrderDto orderDto,
-        decimal defaultTaxRatePercent = 15m,
+        decimal? defaultTaxRatePercent = null,
         CancellationToken ct = default)
     {
         var result = new PosOrderCalculationResult();
         decimal rawSubtotal = 0m;
         decimal totalLineDiscounts = 0m;
 
-        // Step 1: Calculate Line Gross, Modifiers, and Line-Level Discounts
+        // Step 1: Calculate Line Gross, Modifiers, Line Discounts and Dynamic Item Tax
         foreach (var line in orderDto.Lines)
         {
             var lineGross = line.Quantity * line.UnitPrice;
@@ -87,6 +93,9 @@ public class PosCalculationEngine : IPosCalculationEngine
             rawSubtotal += baseLineTotal;
             totalLineDiscounts += lineDiscount;
 
+            // Resolve dynamic tax rate per item from database
+            decimal itemTaxPercent = defaultTaxRatePercent ?? await _validationService.GetEffectiveTaxRatePercentAsync(line.ItemId, branchId, ct);
+
             result.Lines.Add(new CalculatedLineResult
             {
                 LineNumber = line.LineNumber,
@@ -97,7 +106,7 @@ public class PosCalculationEngine : IPosCalculationEngine
                 ModifiersTotal = modExtra,
                 LineDiscount = lineDiscount,
                 LineNetBeforeTax = lineNet,
-                TaxPercent = defaultTaxRatePercent
+                TaxPercent = itemTaxPercent
             });
         }
 

@@ -60,6 +60,7 @@ public static class DependencyInjection
         services.AddScoped<IAccountStatementService, AccountStatementService>();
         services.AddScoped<ITaxEngineService, TaxEngineService>();
         services.AddScoped<ThinkOnErp.Application.Services.Validation.IDynamicValidationEngine, ThinkOnErp.Application.Services.Validation.DynamicValidationEngine>();
+        services.AddScoped<ThinkOnErp.Application.Services.Validation.IInvoiceBusinessValidationService, ThinkOnErp.Application.Services.Validation.InvoiceBusinessValidationService>();
 
         // Inventory & Unified Trade Documents Engine
         services.AddScoped<ThinkOnErp.Application.Services.Inventory.IInvItemService, ThinkOnErp.Application.Services.Inventory.InvItemService>();
