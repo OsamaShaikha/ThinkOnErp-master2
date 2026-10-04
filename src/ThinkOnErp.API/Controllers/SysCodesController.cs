@@ -223,6 +223,13 @@ public class SysCodesController : ControllerBase
         ["order-types"] = SysCodeKeys.PosOrderTypes.Mgr,
         ["ordertypes"] = SysCodeKeys.PosOrderTypes.Mgr,
         ["orderTypes"] = SysCodeKeys.PosOrderTypes.Mgr,
+        ["pos-stock-deduction-modes"] = SysCodeKeys.PosStockDeductionModes.Mgr,
+        ["posstockdeductionmodes"] = SysCodeKeys.PosStockDeductionModes.Mgr,
+        ["posStockDeductionModes"] = SysCodeKeys.PosStockDeductionModes.Mgr,
+        ["stock-deduction-modes"] = SysCodeKeys.PosStockDeductionModes.Mgr,
+        ["validation-errors"] = SysCodeKeys.ValidationErrors.Mgr,
+        ["validationerrors"] = SysCodeKeys.ValidationErrors.Mgr,
+        ["validationErrors"] = SysCodeKeys.ValidationErrors.Mgr,
     };
 
 
@@ -305,7 +312,10 @@ public class SysCodesController : ControllerBase
             ("bomTypes", SysCodeKeys.BomTypes.Mgr),
             ("costingMethods", SysCodeKeys.CostingMethods.Mgr),
             ("itemTypes", SysCodeKeys.ItemTypes.Mgr),
-            ("selectionTypes", SysCodeKeys.SelectionTypes.Mgr)
+            ("selectionTypes", SysCodeKeys.SelectionTypes.Mgr),
+            ("validationErrors", SysCodeKeys.ValidationErrors.Mgr),
+            ("posOrderTypes", SysCodeKeys.PosOrderTypes.Mgr),
+            ("posStockDeductionModes", SysCodeKeys.PosStockDeductionModes.Mgr)
         };
 
 
@@ -601,6 +611,52 @@ public class SysCodesController : ControllerBase
     {
         var list = await GetLookupsByMgrAsync(SysCodeKeys.SelectionTypes.Mgr, lang);
         return Ok(ApiResponse<List<SysCodeLookupDto>>.CreateSuccess(list, "Selection types retrieved successfully", 200));
+    }
+
+    /// <summary>
+    /// استرجاع رسائل وأكواد أخطاء وقواعد التحقق في النظام (Validation Error Codes & Messages)
+    /// </summary>
+    [HttpGet("validation-errors")]
+    [HttpGet("validationerrors")]
+    [ProducesResponseType(typeof(ApiResponse<List<SysCodeLookupDto>>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<ApiResponse<List<SysCodeLookupDto>>>> GetValidationErrors([FromQuery] int? lang = null)
+    {
+        var list = await GetLookupsByMgrAsync(SysCodeKeys.ValidationErrors.Mgr, lang);
+        return Ok(ApiResponse<List<SysCodeLookupDto>>.CreateSuccess(list, "Validation errors retrieved successfully", 200));
+    }
+
+    /// <summary>
+    /// استرجاع أنواع طلبات نقاط البيع (محلي/صالة، سفري/تيك أواي، توصيل، تطبيقات، كيوسك، باركود طاولة) (POS Order Types)
+    /// </summary>
+    [HttpGet("pos-order-types")]
+    [HttpGet("posordertypes")]
+    [HttpGet("order-types")]
+    [ProducesResponseType(typeof(ApiResponse<List<SysCodeLookupDto>>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<ApiResponse<List<SysCodeLookupDto>>>> GetPosOrderTypes([FromQuery] int? lang = null)
+    {
+        var list = await GetLookupsByMgrAsync(SysCodeKeys.PosOrderTypes.Mgr, lang);
+        if (list.Count == 0)
+        {
+            list = SysCodeLookupHelper.GetFallbackLookups(SysCodeKeys.PosOrderTypes.Mgr, lang);
+        }
+        return Ok(ApiResponse<List<SysCodeLookupDto>>.CreateSuccess(list, "POS order types retrieved successfully", 200));
+    }
+
+    /// <summary>
+    /// استرجاع طرق خصم المخزون لنقاط البيع (خصم فوري لحظي، خصم تجميعي عند إغلاق الوردية، بدون خصم آلي) (POS Stock Deduction Modes)
+    /// </summary>
+    [HttpGet("pos-stock-deduction-modes")]
+    [HttpGet("posstockdeductionmodes")]
+    [HttpGet("stock-deduction-modes")]
+    [ProducesResponseType(typeof(ApiResponse<List<SysCodeLookupDto>>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<ApiResponse<List<SysCodeLookupDto>>>> GetPosStockDeductionModes([FromQuery] int? lang = null)
+    {
+        var list = await GetLookupsByMgrAsync(SysCodeKeys.PosStockDeductionModes.Mgr, lang);
+        if (list.Count == 0)
+        {
+            list = SysCodeLookupHelper.GetFallbackLookups(SysCodeKeys.PosStockDeductionModes.Mgr, lang);
+        }
+        return Ok(ApiResponse<List<SysCodeLookupDto>>.CreateSuccess(list, "POS stock deduction modes retrieved successfully", 200));
     }
 
     #endregion

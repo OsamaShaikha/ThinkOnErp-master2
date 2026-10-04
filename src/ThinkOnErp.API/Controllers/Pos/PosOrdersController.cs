@@ -257,4 +257,22 @@ public class PosOrdersController : ControllerBase
 
         return Ok(ApiResponse<List<SysCodeLookupDto>>.CreateSuccess(lookupList, "Order types retrieved successfully"));
     }
+
+    /// <summary>
+    /// Retrieves all POS Stock Deduction Modes from SYS_CODE (CODE_MGR = 35).
+    /// </summary>
+    /// <param name="lang">Optional language filter (1 = Arabic, 2 = English).</param>
+    /// <returns>List of stock deduction modes with localized descriptions.</returns>
+    [HttpGet("stock-deduction-modes")]
+    [ProducesResponseType(typeof(ApiResponse<List<SysCodeLookupDto>>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<ApiResponse<List<SysCodeLookupDto>>>> GetStockDeductionModes([FromQuery] int? lang = null)
+    {
+        var rawCodes = await _sysCodeRepo.GetActiveByCodeMgrAsync(SysCodeKeys.PosStockDeductionModes.Mgr);
+
+        var lookupList = rawCodes.Count > 0
+            ? SysCodeLookupHelper.MapToLookupDtos(rawCodes, lang)
+            : SysCodeLookupHelper.GetFallbackLookups(SysCodeKeys.PosStockDeductionModes.Mgr, lang);
+
+        return Ok(ApiResponse<List<SysCodeLookupDto>>.CreateSuccess(lookupList, "Stock deduction modes retrieved successfully"));
+    }
 }

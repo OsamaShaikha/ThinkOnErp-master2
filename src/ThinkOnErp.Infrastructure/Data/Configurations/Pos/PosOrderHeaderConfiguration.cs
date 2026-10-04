@@ -60,7 +60,8 @@ public sealed class PosOrderHeaderConfiguration : IEntityTypeConfiguration<PosOr
         builder.Property(o => o.UpdateUser).HasColumnName("UPDATE_USER").HasMaxLength(100);
         builder.Property(o => o.UpdateDate).HasColumnName("UPDATE_DATE").HasColumnType("TIMESTAMP");
 
-        builder.HasIndex(o => new { o.BranchId, o.OrderNumber }).IsUnique();
+        builder.HasIndex(o => new { o.BranchId, o.ShiftId, o.OrderNumber }).IsUnique();
+        builder.HasIndex(o => new { o.BranchId, o.InvoiceNumber }).IsUnique();
         builder.HasIndex(o => new { o.BranchId, o.ClientUuid }).IsUnique();
 
         builder.HasOne(o => o.Branch).WithMany().HasForeignKey(o => o.BranchId).OnDelete(DeleteBehavior.Restrict);

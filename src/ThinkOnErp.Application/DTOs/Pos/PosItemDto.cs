@@ -12,21 +12,17 @@ public class PosItemDto
     public string DisplayName { get; set; } = string.Empty;
     public long CategoryId { get; set; }
     public string? CategoryName { get; set; }
-    public long MainGroupId => CategoryId;
-    public string? MainGroupName => CategoryName;
-    public long? SubGroupId => null;
-    public string? SubGroupName => null;
-    public long? SubCategoryId => null;
-    public string? SubCategoryName => null;
+    public int ItemTypeId { get; set; } = 1;
     public string ItemType { get; set; } = string.Empty;
+    public string ItemTypeName { get; set; } = string.Empty;
     public int UomBase { get; set; }
     public decimal DefaultSellingPrice { get; set; }
-    public bool ShowInPos { get; set; } = true;
     public decimal OnHandTotal { get; set; }
     public bool AllowNegativeStock { get; set; }
     public string? ImageBase64 { get; set; }
     public int? ColorCode { get; set; }
     public bool HasVariants { get; set; }
+    public bool SerialTracking { get; set; }
 
     // Tax Integration for POS
     public long? TaxRateId { get; set; }
@@ -36,6 +32,9 @@ public class PosItemDto
 
     // Barcodes for scanner matching
     public List<string> Barcodes { get; set; } = new();
+
+    // Available serial numbers for cashier selection
+    public List<string> Serials { get; set; } = new();
 
     public bool IsActive { get; set; }
 }

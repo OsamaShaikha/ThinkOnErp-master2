@@ -12,6 +12,8 @@ using ThinkOnErp.Domain.Entities.Inventory;
 using ThinkOnErp.Domain.Entities.Inventory.Enums;
 using ThinkOnErp.Domain.Interfaces.Inventory;
 
+using ThinkOnErp.Application.Services.Validation;
+
 namespace ThinkOnErp.Application.Services.Inventory;
 
 public sealed class TrxDocumentService : ITrxDocumentService
@@ -21,6 +23,8 @@ public sealed class TrxDocumentService : ITrxDocumentService
     private readonly IInvBomRepository _bomRepository;
     private readonly IInvItemRepository _itemRepository;
     private readonly IInvStockLedgerService _stockLedgerService;
+    private readonly IInvoiceBusinessValidationService _validationService;
+    private readonly IDynamicValidationEngine _dynamicValidationEngine;
     private readonly ILogger<TrxDocumentService> _logger;
 
     public TrxDocumentService(
@@ -29,6 +33,8 @@ public sealed class TrxDocumentService : ITrxDocumentService
         IInvBomRepository bomRepository,
         IInvItemRepository itemRepository,
         IInvStockLedgerService stockLedgerService,
+        IInvoiceBusinessValidationService validationService,
+        IDynamicValidationEngine dynamicValidationEngine,
         ILogger<TrxDocumentService> logger)
     {
         _docRepository = docRepository;
@@ -36,16 +42,69 @@ public sealed class TrxDocumentService : ITrxDocumentService
         _bomRepository = bomRepository;
         _itemRepository = itemRepository;
         _stockLedgerService = stockLedgerService;
+        _validationService = validationService;
+        _dynamicValidationEngine = dynamicValidationEngine;
         _logger = logger;
     }
 
     public async Task<ApiResponse<TrxDocumentDto>> CreateDocumentAsync(CreateTrxDocumentDto dto, string username, CancellationToken ct = default)
     {
+        // 1. Dynamic Field & Schema Validation via DynamicValidationEngine
+        var fieldValidation = _dynamicValidationEngine.Validate(dto);
+        if (!fieldValidation.IsValid)
+        {
+            var firstErr = fieldValidation.Errors.First();
+            return ApiResponse<TrxDocumentDto>.CreateFailure(firstErr.ErrorMessage, null, 400);
+        }
+
         var docType = await _typeRepository.GetDocTypeAsync(dto.DocType, ct);
         var trxType = await _typeRepository.GetTrxTypeAsync(dto.TrxType, ct);
 
         if (docType == null || trxType == null)
             return ApiResponse<TrxDocumentDto>.CreateFailure("Invalid document type or transaction type", null, 400);
+
+        // 1.5 Auto-determine Stock Direction for lines if unified Quantity is supplied
+        if (trxType.AffectsStock)
+        {
+            foreach (var l in dto.Lines)
+            {
+                if (l.Quantity.HasValue && l.Quantity.Value > 0)
+                {
+                    if (trxType.StockDirection < 0)
+                    {
+                        l.QuantityOut = l.Quantity.Value;
+                        l.QuantityIn = 0;
+                    }
+                    else if (trxType.StockDirection > 0)
+                    {
+                        l.QuantityIn = l.Quantity.Value;
+                        l.QuantityOut = 0;
+                    }
+                    else if (dto.DocType == 350) // Internal Warehouse Transfer
+                    {
+                        l.QuantityOut = l.Quantity.Value;
+                        l.QuantityIn = l.Quantity.Value;
+                    }
+                }
+            }
+        }
+
+        // 2. Dynamic Business, Stock, Credit & Fiscal Period Validation
+        var bizValidation = await _validationService.ValidateWarehouseDocumentDtoAsync(dto, ct);
+        if (!bizValidation.IsValid)
+        {
+            var errMessages = string.Join("; ", bizValidation.Errors.Select(e => e.Message));
+            return ApiResponse<TrxDocumentDto>.CreateFailure(errMessages, null, 400);
+        }
+
+        // 3. Resolve dynamic tax rates for lines if not explicitly passed
+        foreach (var l in dto.Lines)
+        {
+            if (l.TaxRate == 0)
+            {
+                l.TaxRate = await _validationService.GetEffectiveTaxRatePercentAsync(l.ItemId, dto.BranchId, ct);
+            }
+        }
 
         var docMonth = dto.DocDate.Month;
         var nextSerial = await _docRepository.GenerateNextSerialNoAsync(dto.BranchId, dto.DocYear, docMonth, dto.DocType, docType.ResetPolicy, ct);
@@ -58,9 +117,9 @@ public sealed class TrxDocumentService : ITrxDocumentService
         return ApiResponse<TrxDocumentDto>.CreateSuccess(TrxDocumentMapper.ToDto(created), "Document created successfully", 201);
     }
 
-    public async Task<ApiResponse<TrxDocumentDto>> GetDocumentByKeyAsync(long branchId, int docYear, int docType, long id, CancellationToken ct = default)
+    public async Task<ApiResponse<TrxDocumentDto>> GetDocumentByKeyAsync(long branchId, int docYear, int trxType, long id, CancellationToken ct = default)
     {
-        var doc = await _docRepository.GetByKeyAsync(branchId, docYear, docType, id, ct);
+        var doc = await _docRepository.GetByKeyAsync(branchId, docYear, trxType, id, ct);
         if (doc == null)
             return ApiResponse<TrxDocumentDto>.CreateFailure("Document not found", null, 404);
 
@@ -78,9 +137,9 @@ public sealed class TrxDocumentService : ITrxDocumentService
         return ApiResponse<PagedResultDto<TrxDocumentDto>>.CreateSuccess(pagedResult);
     }
 
-    public async Task<ApiResponse<TrxDocumentDto>> UpdateDocumentAsync(long branchId, int docYear, int docType, long id, UpdateTrxDocumentDto dto, string username, CancellationToken ct = default)
+    public async Task<ApiResponse<TrxDocumentDto>> UpdateDocumentAsync(long branchId, int docYear, int trxType, long id, UpdateTrxDocumentDto dto, string username, CancellationToken ct = default)
     {
-        var doc = await _docRepository.GetByKeyAsync(branchId, docYear, docType, id, ct);
+        var doc = await _docRepository.GetByKeyAsync(branchId, docYear, trxType, id, ct);
         if (doc == null)
             return ApiResponse<TrxDocumentDto>.CreateFailure("Document not found", null, 404);
 
@@ -176,9 +235,9 @@ public sealed class TrxDocumentService : ITrxDocumentService
         return ApiResponse<TrxDocumentDto>.CreateSuccess(TrxDocumentMapper.ToDto(doc), "Document updated successfully");
     }
 
-    public async Task<ApiResponse<bool>> DeleteDocumentAsync(long branchId, int docYear, int docType, long id, string username, CancellationToken ct = default)
+    public async Task<ApiResponse<bool>> DeleteDocumentAsync(long branchId, int docYear, int trxType, long id, string username, CancellationToken ct = default)
     {
-        var doc = await _docRepository.GetByKeyAsync(branchId, docYear, docType, id, ct);
+        var doc = await _docRepository.GetByKeyAsync(branchId, docYear, trxType, id, ct);
         if (doc == null)
             return ApiResponse<bool>.CreateFailure("Document not found", null, 404);
 
@@ -189,19 +248,27 @@ public sealed class TrxDocumentService : ITrxDocumentService
         return ApiResponse<bool>.CreateSuccess(true, "Document deleted successfully");
     }
 
-    public async Task<ApiResponse<TrxDocumentDto>> PostDocumentAsync(long branchId, int docYear, int docType, long id, string username, CancellationToken ct = default)
+    public async Task<ApiResponse<TrxDocumentDto>> PostDocumentAsync(long branchId, int docYear, int trxType, long id, string username, CancellationToken ct = default)
     {
-        var doc = await _docRepository.GetByKeyAsync(branchId, docYear, docType, id, ct);
+        var doc = await _docRepository.GetByKeyAsync(branchId, docYear, trxType, id, ct);
         if (doc == null)
             return ApiResponse<TrxDocumentDto>.CreateFailure("Document not found", null, 404);
 
         if (doc.DocStatusCode != 1)
             return ApiResponse<TrxDocumentDto>.CreateFailure("Only draft documents can be posted", null, 400);
 
-        var trxType = await _typeRepository.GetTrxTypeAsync(doc.TrxType, ct);
+        // Dynamic Business & Inventory Pre-Posting Validation
+        var bizValidation = await _validationService.ValidateWarehouseDocumentAsync(doc, ct);
+        if (!bizValidation.IsValid)
+        {
+            var errMessages = string.Join("; ", bizValidation.Errors.Select(e => e.Message));
+            return ApiResponse<TrxDocumentDto>.CreateFailure(errMessages, null, 400);
+        }
+
+        var trxTypeConfig = await _typeRepository.GetTrxTypeAsync(doc.TrxType, ct);
         decimal totalCost = 0;
 
-        if (trxType != null && trxType.AffectsStock)
+        if (trxTypeConfig != null && trxTypeConfig.AffectsStock)
         {
             foreach (var line in doc.Lines)
             {
@@ -237,15 +304,16 @@ public sealed class TrxDocumentService : ITrxDocumentService
                 }
                 else
                 {
-                    var whId = line.QuantityIn > 0 ? (doc.ToWarehouseId ?? 1) : (doc.FromWarehouseId ?? 1);
+                    var isStockIn = trxTypeConfig.StockDirection > 0;
+                    var whId = isStockIn ? (doc.ToWarehouseId ?? 1) : (doc.FromWarehouseId ?? 1);
                     var moveReq = new StockMovementRequestDto
                     {
                         ItemId = line.ItemId,
                         WarehouseId = whId,
-                        Quantity = line.QuantityIn > 0 ? line.QuantityIn : line.QuantityOut,
+                        Quantity = isStockIn ? line.QuantityIn : line.QuantityOut,
                         UomCode = line.UomCode,
                         UnitCost = line.UnitCost,
-                        TransactionType = line.QuantityIn > 0 ? (int)TransactionType.GrnReceipt : (int)TransactionType.SalesIssue,
+                        TransactionType = isStockIn ? (int)TransactionType.GrnReceipt : (int)TransactionType.SalesIssue,
                         LotNumber = line.LotNumber,
                         SerialNumber = line.SerialNumber,
                         SourceDocId = doc.DocNo

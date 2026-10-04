@@ -1,0 +1,1182 @@
+﻿[
+    {
+        "scenarioId":  "POS-01",
+        "caseType":  "Authentication",
+        "nameEn":  "Cashier Authentication and JWT Token Retrieval",
+        "method":  "Post",
+        "endpoint":  "/api/auth/login",
+        "expectedStatus":  200,
+        "actualStatus":  200,
+        "durationMs":  288,
+        "passed":  true,
+        "validationNotes":  "Status code matched expected (200). Bearer token acquired successfully.",
+        "requestPayload":  {
+                               "userName":  "admin",
+                               "language":  2,
+                               "password":  "Admin@123",
+                               "companyCode":  "1122"
+                           },
+        "responseBody":  {
+                             "success":  true,
+                             "statusCode":  200,
+                             "message":  "Operation completed successfully.",
+                             "data":  {
+                                          "accessToken":  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiIxIiwiaHR0cDovL3NjaGVtYXMueG1sc29hcC5vcmcvd3MvMjAwNS8wNS9pZGVudGl0eS9jbGFpbXMvbmFtZWlkZW50aWZpZXIiOiIxIiwidXNlck5hbWUiOiJhZG1pbiIsImh0dHA6Ly9zY2hlbWFzLnhtbHNvYXAub3JnL3dzLzIwMDUvMDUvaWRlbnRpdHkvY2xhaW1zL25hbWUiOiJhZG1pbiIsInJvbGUiOiIxIiwiaHR0cDovL3NjaGVtYXMubWljcm9zb2Z0LmNvbS93cy8yMDA4LzA2L2lkZW50aXR5L2NsYWltcy9yb2xlIjoiMSIsImNvbXBhbnlJZCI6IjQ2MSIsImJyYW5jaElkIjoiMSIsImlzQWRtaW4iOiJ0cnVlIiwibGFuZyI6IjIiLCJkZWZhdWx0TGFuZyI6IjEiLCJpYXQiOjE3OTA5NzkzMzUsImNvbXBhbnlDb2RlIjoiMTEyMiIsImNvbXBhbnlTY2hlbWEiOiJUSElOS09ORVJQXzExMjIiLCJuYmYiOjE3OTA5NzkzMzUsImV4cCI6MTc5MTA2NTczNSwiaXNzIjoiVGhpbmtPbkVycEFQSSIsImF1ZCI6IlRoaW5rT25FcnBDbGllbnQifQ.rP3moE9RNlQ73XM1q6PYtCnf_sp6fuBV40tbfd5v2Ys",
+                                          "expiresAt":  "2026-10-03T22:15:35.302261Z",
+                                          "tokenType":  "Bearer",
+                                          "refreshToken":  "JE7IdCMZ/Pp8Mf0+SM5urNyKyyp9O4ZWOU2BOcVGnW6vx/XIcssj5YUo7hueum0Bze11G+GdGz+o6d8ORY5r9A==",
+                                          "refreshTokenExpiresAt":  "2026-10-09T22:15:35.3026072Z",
+                                          "companyCode":  "1122",
+                                          "companySchema":  "THINKONERP_1122",
+                                          "language":  2,
+                                          "user":  {
+                                                       "userId":  1,
+                                                       "nameLocal":  "مدير النظام",
+                                                       "nameEn":  "Admin",
+                                                       "userName":  "admin",
+                                                       "phone":  null,
+                                                       "phone2":  null,
+                                                       "roleId":  1,
+                                                       "branchId":  1,
+                                                       "branchIds":  [
+                                                                         1
+                                                                     ],
+                                                       "primaryBranchId":  1,
+                                                       "email":  null,
+                                                       "lastLoginDate":  null,
+                                                       "isActive":  true,
+                                                       "isAdmin":  true,
+                                                       "defaultLang":  1,
+                                                       "activeLanguage":  2,
+                                                       "creationUser":  "admin",
+                                                       "creationDate":  "2026-08-09T21:14:50",
+                                                       "updateUser":  "admin",
+                                                       "updateDate":  "2026-10-02T22:14:28"
+                                                   }
+                                      },
+                             "errors":  null,
+                             "timestamp":  "2026-10-02T22:15:35.304564Z",
+                             "traceId":  "fef539ee-b382-45b5-a95b-861dfd8795bb"
+                         }
+    },
+    {
+        "scenarioId":  "POS-02",
+        "caseType":  "Takeaway (Direct Cash)",
+        "nameEn":  "Fast Takeaway Cash Order (Completed and Fully Paid)",
+        "method":  "Post",
+        "endpoint":  "/api/pos/orders",
+        "expectedStatus":  200,
+        "actualStatus":  200,
+        "durationMs":  165,
+        "passed":  true,
+        "validationNotes":  "Status code matched expected (200). Order #ORD-1-20261002-0015 created and closed as Completed.",
+        "requestPayload":  {
+                               "lines":  [
+                                             {
+                                                 "quantity":  1,
+                                                 "uomId":  1,
+                                                 "lineNumber":  1,
+                                                 "itemId":  162,
+                                                 "itemName":  "Office Desk",
+                                                 "unitPrice":  150,
+                                                 "itemCode":  "ITM-OB-98083"
+                                             }
+                                         ],
+                               "payments":  [
+                                                {
+                                                    "amount":  174,
+                                                    "paymentMethod":  1,
+                                                    "currencyCode":  "JOD"
+                                                }
+                                            ],
+                               "tillId":  41,
+                               "shiftId":  61,
+                               "orderType":  2,
+                               "branchId":  1,
+                               "notes":  "Fast direct takeaway cash sale"
+                           },
+        "responseBody":  {
+                             "success":  true,
+                             "statusCode":  200,
+                             "message":  "Operation completed successfully.",
+                             "data":  {
+                                          "id":  131,
+                                          "branchId":  1,
+                                          "shiftId":  61,
+                                          "tillId":  41,
+                                          "orderNumber":  "ORD-1-20261002-0015",
+                                          "invoiceNumber":  "INV-1-20261002-0015",
+                                          "clientUuid":  "430c7eae-c002-45b7-8427-53aaef6f6647",
+                                          "orderType":  "Takeaway",
+                                          "status":  "Completed",
+                                          "customerId":  null,
+                                          "customerName":  null,
+                                          "tableId":  null,
+                                          "tableNumber":  null,
+                                          "covers":  1,
+                                          "subtotalAmount":  150,
+                                          "discountAmount":  0,
+                                          "taxAmount":  24.00,
+                                          "serviceChargeAmount":  0,
+                                          "deliveryFee":  0,
+                                          "tipAmount":  0,
+                                          "totalAmount":  174.00,
+                                          "paidAmount":  174,
+                                          "changeAmount":  0,
+                                          "isPaid":  true,
+                                          "isRefund":  false,
+                                          "eInvoiceQrCode":  null,
+                                          "eInvoiceHash":  null,
+                                          "creationDate":  "2026-10-02T22:15:35.4887286Z",
+                                          "creationUser":  "admin",
+                                          "lines":  [
+                                                        {
+                                                            "id":  113,
+                                                            "lineNumber":  1,
+                                                            "itemId":  162,
+                                                            "itemCode":  "ITM-OB-98083",
+                                                            "itemName":  "Office Desk",
+                                                            "quantity":  1,
+                                                            "uomId":  1,
+                                                            "unitPrice":  150,
+                                                            "discountAmount":  0,
+                                                            "taxAmount":  24.00,
+                                                            "lineTotal":  174.00,
+                                                            "kdsStatus":  "Pending",
+                                                            "prepStation":  null,
+                                                            "isScaleItem":  false,
+                                                            "scaleWeight":  null,
+                                                            "isVoided":  false,
+                                                            "voidReason":  null,
+                                                            "modifiers":  [
+
+                                                                          ]
+                                                        }
+                                                    ],
+                                          "payments":  [
+                                                           {
+                                                               "id":  108,
+                                                               "paymentMethod":  "Cash",
+                                                               "amount":  174,
+                                                               "tenderedAmount":  0,
+                                                               "changeAmount":  0,
+                                                               "cardNumberMasked":  null,
+                                                               "transactionReference":  null,
+                                                               "paymentDate":  "2026-10-02T22:15:35.4907833Z"
+                                                           }
+                                                       ]
+                                      },
+                             "errors":  null,
+                             "timestamp":  "2026-10-02T22:15:35.5002348Z",
+                             "traceId":  "dd818842-5927-46e3-acb6-bfa577e316b0"
+                         }
+    },
+    {
+        "scenarioId":  "POS-03",
+        "caseType":  "Dine-In (Hospitality)",
+        "nameEn":  "Dine-In Order with Table 41 and Service Charge",
+        "method":  "Post",
+        "endpoint":  "/api/pos/orders",
+        "expectedStatus":  200,
+        "actualStatus":  200,
+        "durationMs":  171,
+        "passed":  true,
+        "validationNotes":  "Status code matched expected (200). Dine-in Order #ORD-1-20261002-0016 settled on Table 41.",
+        "requestPayload":  {
+                               "payments":  [
+                                                {
+                                                    "amount":  189,
+                                                    "paymentMethod":  1,
+                                                    "currencyCode":  "JOD"
+                                                }
+                                            ],
+                               "covers":  4,
+                               "tillId":  41,
+                               "orderType":  1,
+                               "serviceChargeAmount":  15,
+                               "notes":  "Dine-in Order on Table 41 with 4 Covers",
+                               "shiftId":  61,
+                               "lines":  [
+                                             {
+                                                 "quantity":  1,
+                                                 "uomId":  1,
+                                                 "lineNumber":  1,
+                                                 "itemId":  162,
+                                                 "itemName":  "Office Desk",
+                                                 "unitPrice":  150,
+                                                 "itemCode":  "ITM-OB-98083"
+                                             }
+                                         ],
+                               "branchId":  1,
+                               "tableId":  41
+                           },
+        "responseBody":  {
+                             "success":  true,
+                             "statusCode":  200,
+                             "message":  "Operation completed successfully.",
+                             "data":  {
+                                          "id":  132,
+                                          "branchId":  1,
+                                          "shiftId":  61,
+                                          "tillId":  41,
+                                          "orderNumber":  "ORD-1-20261002-0016",
+                                          "invoiceNumber":  "INV-1-20261002-0016",
+                                          "clientUuid":  "416cab5c-00de-4cad-9f59-57cdc0038fd3",
+                                          "orderType":  "DineIn",
+                                          "status":  "Completed",
+                                          "customerId":  null,
+                                          "customerName":  null,
+                                          "tableId":  41,
+                                          "tableNumber":  "2",
+                                          "covers":  4,
+                                          "subtotalAmount":  150,
+                                          "discountAmount":  0,
+                                          "taxAmount":  24.00,
+                                          "serviceChargeAmount":  15,
+                                          "deliveryFee":  0,
+                                          "tipAmount":  0,
+                                          "totalAmount":  189.00,
+                                          "paidAmount":  189,
+                                          "changeAmount":  0,
+                                          "isPaid":  true,
+                                          "isRefund":  false,
+                                          "eInvoiceQrCode":  null,
+                                          "eInvoiceHash":  null,
+                                          "creationDate":  "2026-10-02T22:15:35.6634017Z",
+                                          "creationUser":  "admin",
+                                          "lines":  [
+                                                        {
+                                                            "id":  114,
+                                                            "lineNumber":  1,
+                                                            "itemId":  162,
+                                                            "itemCode":  "ITM-OB-98083",
+                                                            "itemName":  "Office Desk",
+                                                            "quantity":  1,
+                                                            "uomId":  1,
+                                                            "unitPrice":  150,
+                                                            "discountAmount":  0,
+                                                            "taxAmount":  24.00,
+                                                            "lineTotal":  174.00,
+                                                            "kdsStatus":  "Pending",
+                                                            "prepStation":  null,
+                                                            "isScaleItem":  false,
+                                                            "scaleWeight":  null,
+                                                            "isVoided":  false,
+                                                            "voidReason":  null,
+                                                            "modifiers":  [
+
+                                                                          ]
+                                                        }
+                                                    ],
+                                          "payments":  [
+                                                           {
+                                                               "id":  109,
+                                                               "paymentMethod":  "Cash",
+                                                               "amount":  189,
+                                                               "tenderedAmount":  0,
+                                                               "changeAmount":  0,
+                                                               "cardNumberMasked":  null,
+                                                               "transactionReference":  null,
+                                                               "paymentDate":  "2026-10-02T22:15:35.6655968Z"
+                                                           }
+                                                       ]
+                                      },
+                             "errors":  null,
+                             "timestamp":  "2026-10-02T22:15:35.6806858Z",
+                             "traceId":  "06537da5-4eca-4b68-8de3-8f3489792039"
+                         }
+    },
+    {
+        "scenarioId":  "POS-04",
+        "caseType":  "Delivery",
+        "nameEn":  "Home Delivery Order with Delivery Fee and Driver Tip",
+        "method":  "Post",
+        "endpoint":  "/api/pos/orders",
+        "expectedStatus":  200,
+        "actualStatus":  200,
+        "durationMs":  165,
+        "passed":  true,
+        "validationNotes":  "Status code matched expected (200). Delivery Order #ORD-1-20261002-0017 settled with fee and tip.",
+        "requestPayload":  {
+                               "payments":  [
+                                                {
+                                                    "amount":  181,
+                                                    "paymentMethod":  1,
+                                                    "currencyCode":  "JOD"
+                                                }
+                                            ],
+                               "tillId":  41,
+                               "orderType":  3,
+                               "customerId":  1,
+                               "customerName":  "Ahmad Customer",
+                               "shiftId":  61,
+                               "deliveryFee":  5,
+                               "tipAmount":  2,
+                               "lines":  [
+                                             {
+                                                 "quantity":  1,
+                                                 "uomId":  1,
+                                                 "lineNumber":  1,
+                                                 "itemId":  162,
+                                                 "itemName":  "Office Desk",
+                                                 "unitPrice":  150,
+                                                 "itemCode":  "ITM-OB-98083"
+                                             }
+                                         ],
+                               "branchId":  1,
+                               "notes":  "Home delivery to Amman City Center"
+                           },
+        "responseBody":  {
+                             "success":  true,
+                             "statusCode":  200,
+                             "message":  "Operation completed successfully.",
+                             "data":  {
+                                          "id":  133,
+                                          "branchId":  1,
+                                          "shiftId":  61,
+                                          "tillId":  41,
+                                          "orderNumber":  "ORD-1-20261002-0017",
+                                          "invoiceNumber":  "INV-1-20261002-0017",
+                                          "clientUuid":  "0e004ad7-72df-4d2e-b79d-1da84f1302ea",
+                                          "orderType":  "Delivery",
+                                          "status":  "Completed",
+                                          "customerId":  1,
+                                          "customerName":  "Ahmad Customer",
+                                          "tableId":  null,
+                                          "tableNumber":  null,
+                                          "covers":  1,
+                                          "subtotalAmount":  150,
+                                          "discountAmount":  0,
+                                          "taxAmount":  24.00,
+                                          "serviceChargeAmount":  0,
+                                          "deliveryFee":  5,
+                                          "tipAmount":  2,
+                                          "totalAmount":  181.00,
+                                          "paidAmount":  181,
+                                          "changeAmount":  0,
+                                          "isPaid":  true,
+                                          "isRefund":  false,
+                                          "eInvoiceQrCode":  null,
+                                          "eInvoiceHash":  null,
+                                          "creationDate":  "2026-10-02T22:15:35.8497842Z",
+                                          "creationUser":  "admin",
+                                          "lines":  [
+                                                        {
+                                                            "id":  115,
+                                                            "lineNumber":  1,
+                                                            "itemId":  162,
+                                                            "itemCode":  "ITM-OB-98083",
+                                                            "itemName":  "Office Desk",
+                                                            "quantity":  1,
+                                                            "uomId":  1,
+                                                            "unitPrice":  150,
+                                                            "discountAmount":  0,
+                                                            "taxAmount":  24.00,
+                                                            "lineTotal":  174.00,
+                                                            "kdsStatus":  "Pending",
+                                                            "prepStation":  null,
+                                                            "isScaleItem":  false,
+                                                            "scaleWeight":  null,
+                                                            "isVoided":  false,
+                                                            "voidReason":  null,
+                                                            "modifiers":  [
+
+                                                                          ]
+                                                        }
+                                                    ],
+                                          "payments":  [
+                                                           {
+                                                               "id":  110,
+                                                               "paymentMethod":  "Cash",
+                                                               "amount":  181,
+                                                               "tenderedAmount":  0,
+                                                               "changeAmount":  0,
+                                                               "cardNumberMasked":  null,
+                                                               "transactionReference":  null,
+                                                               "paymentDate":  "2026-10-02T22:15:35.8515564Z"
+                                                           }
+                                                       ]
+                                      },
+                             "errors":  null,
+                             "timestamp":  "2026-10-02T22:15:35.8610596Z",
+                             "traceId":  "9c1b700a-c306-4b1f-b8f9-7f24030c5356"
+                         }
+    },
+    {
+        "scenarioId":  "POS-05",
+        "caseType":  "Aggregator Integration",
+        "nameEn":  "External Aggregator Order (Talabat / Jahez Online Paid)",
+        "method":  "Post",
+        "endpoint":  "/api/pos/orders",
+        "expectedStatus":  200,
+        "actualStatus":  200,
+        "durationMs":  165,
+        "passed":  true,
+        "validationNotes":  "Status code matched expected (200). Aggregator order #ORD-1-20261002-0018 created and settled via AggregatorPaid.",
+        "requestPayload":  {
+                               "lines":  [
+                                             {
+                                                 "quantity":  1,
+                                                 "uomId":  1,
+                                                 "lineNumber":  1,
+                                                 "itemId":  162,
+                                                 "itemName":  "Office Desk",
+                                                 "unitPrice":  150,
+                                                 "itemCode":  "ITM-OB-98083"
+                                             }
+                                         ],
+                               "payments":  [
+                                                {
+                                                    "amount":  174,
+                                                    "paymentMethod":  10,
+                                                    "transactionReference":  "TAL-9942",
+                                                    "currencyCode":  "JOD"
+                                                }
+                                            ],
+                               "tillId":  41,
+                               "shiftId":  61,
+                               "orderType":  4,
+                               "branchId":  1,
+                               "notes":  "Talabat Aggregator Order #TAL-9942"
+                           },
+        "responseBody":  {
+                             "success":  true,
+                             "statusCode":  200,
+                             "message":  "Operation completed successfully.",
+                             "data":  {
+                                          "id":  134,
+                                          "branchId":  1,
+                                          "shiftId":  61,
+                                          "tillId":  41,
+                                          "orderNumber":  "ORD-1-20261002-0018",
+                                          "invoiceNumber":  "INV-1-20261002-0018",
+                                          "clientUuid":  "5be37790-f5c7-4c27-afec-7c0dbef018eb",
+                                          "orderType":  "Aggregator",
+                                          "status":  "Completed",
+                                          "customerId":  null,
+                                          "customerName":  null,
+                                          "tableId":  null,
+                                          "tableNumber":  null,
+                                          "covers":  1,
+                                          "subtotalAmount":  150,
+                                          "discountAmount":  0,
+                                          "taxAmount":  24.00,
+                                          "serviceChargeAmount":  0,
+                                          "deliveryFee":  0,
+                                          "tipAmount":  0,
+                                          "totalAmount":  174.00,
+                                          "paidAmount":  174,
+                                          "changeAmount":  0,
+                                          "isPaid":  true,
+                                          "isRefund":  false,
+                                          "eInvoiceQrCode":  null,
+                                          "eInvoiceHash":  null,
+                                          "creationDate":  "2026-10-02T22:15:36.0220141Z",
+                                          "creationUser":  "admin",
+                                          "lines":  [
+                                                        {
+                                                            "id":  116,
+                                                            "lineNumber":  1,
+                                                            "itemId":  162,
+                                                            "itemCode":  "ITM-OB-98083",
+                                                            "itemName":  "Office Desk",
+                                                            "quantity":  1,
+                                                            "uomId":  1,
+                                                            "unitPrice":  150,
+                                                            "discountAmount":  0,
+                                                            "taxAmount":  24.00,
+                                                            "lineTotal":  174.00,
+                                                            "kdsStatus":  "Pending",
+                                                            "prepStation":  null,
+                                                            "isScaleItem":  false,
+                                                            "scaleWeight":  null,
+                                                            "isVoided":  false,
+                                                            "voidReason":  null,
+                                                            "modifiers":  [
+
+                                                                          ]
+                                                        }
+                                                    ],
+                                          "payments":  [
+                                                           {
+                                                               "id":  111,
+                                                               "paymentMethod":  "AggregatorPaid",
+                                                               "amount":  174,
+                                                               "tenderedAmount":  0,
+                                                               "changeAmount":  0,
+                                                               "cardNumberMasked":  null,
+                                                               "transactionReference":  "TAL-9942",
+                                                               "paymentDate":  "2026-10-02T22:15:36.0245145Z"
+                                                           }
+                                                       ]
+                                      },
+                             "errors":  null,
+                             "timestamp":  "2026-10-02T22:15:36.0346212Z",
+                             "traceId":  "a0268869-f0a1-48c2-bd37-3624fc65ce86"
+                         }
+    },
+    {
+        "scenarioId":  "POS-06",
+        "caseType":  "Split Payment",
+        "nameEn":  "Split Tender Payment (Cash 100 + Mada/Card 74)",
+        "method":  "Post",
+        "endpoint":  "/api/pos/orders",
+        "expectedStatus":  200,
+        "actualStatus":  200,
+        "durationMs":  164,
+        "passed":  true,
+        "validationNotes":  "Status code matched expected (200). Split payment successful: 2 tenders recorded totaling 174 JOD.",
+        "requestPayload":  {
+                               "lines":  [
+                                             {
+                                                 "quantity":  1,
+                                                 "uomId":  1,
+                                                 "lineNumber":  1,
+                                                 "itemId":  162,
+                                                 "itemName":  "Office Desk",
+                                                 "unitPrice":  150,
+                                                 "itemCode":  "ITM-OB-98083"
+                                             }
+                                         ],
+                               "payments":  [
+                                                {
+                                                    "amount":  100,
+                                                    "paymentMethod":  1,
+                                                    "currencyCode":  "JOD"
+                                                },
+                                                {
+                                                    "currencyCode":  "JOD",
+                                                    "amount":  74,
+                                                    "paymentMethod":  2,
+                                                    "transactionReference":  "TXN-998812",
+                                                    "authCode":  "AUTH-4411",
+                                                    "cardNumberMasked":  "****-****-****-4242"
+                                                }
+                                            ],
+                               "tillId":  41,
+                               "shiftId":  61,
+                               "orderType":  2,
+                               "branchId":  1,
+                               "notes":  "Split Payment: Cash 100 JOD and Card 74 JOD"
+                           },
+        "responseBody":  {
+                             "success":  true,
+                             "statusCode":  200,
+                             "message":  "Operation completed successfully.",
+                             "data":  {
+                                          "id":  135,
+                                          "branchId":  1,
+                                          "shiftId":  61,
+                                          "tillId":  41,
+                                          "orderNumber":  "ORD-1-20261002-0019",
+                                          "invoiceNumber":  "INV-1-20261002-0019",
+                                          "clientUuid":  "5944b52b-ab1a-4bdd-a254-9044e8a276c3",
+                                          "orderType":  "Takeaway",
+                                          "status":  "Completed",
+                                          "customerId":  null,
+                                          "customerName":  null,
+                                          "tableId":  null,
+                                          "tableNumber":  null,
+                                          "covers":  1,
+                                          "subtotalAmount":  150,
+                                          "discountAmount":  0,
+                                          "taxAmount":  24.00,
+                                          "serviceChargeAmount":  0,
+                                          "deliveryFee":  0,
+                                          "tipAmount":  0,
+                                          "totalAmount":  174.00,
+                                          "paidAmount":  174,
+                                          "changeAmount":  0,
+                                          "isPaid":  true,
+                                          "isRefund":  false,
+                                          "eInvoiceQrCode":  null,
+                                          "eInvoiceHash":  null,
+                                          "creationDate":  "2026-10-02T22:15:36.1909879Z",
+                                          "creationUser":  "admin",
+                                          "lines":  [
+                                                        {
+                                                            "id":  117,
+                                                            "lineNumber":  1,
+                                                            "itemId":  162,
+                                                            "itemCode":  "ITM-OB-98083",
+                                                            "itemName":  "Office Desk",
+                                                            "quantity":  1,
+                                                            "uomId":  1,
+                                                            "unitPrice":  150,
+                                                            "discountAmount":  0,
+                                                            "taxAmount":  24.00,
+                                                            "lineTotal":  174.00,
+                                                            "kdsStatus":  "Pending",
+                                                            "prepStation":  null,
+                                                            "isScaleItem":  false,
+                                                            "scaleWeight":  null,
+                                                            "isVoided":  false,
+                                                            "voidReason":  null,
+                                                            "modifiers":  [
+
+                                                                          ]
+                                                        }
+                                                    ],
+                                          "payments":  [
+                                                           {
+                                                               "id":  112,
+                                                               "paymentMethod":  "Cash",
+                                                               "amount":  100,
+                                                               "tenderedAmount":  0,
+                                                               "changeAmount":  0,
+                                                               "cardNumberMasked":  null,
+                                                               "transactionReference":  null,
+                                                               "paymentDate":  "2026-10-02T22:15:36.1929031Z"
+                                                           },
+                                                           {
+                                                               "id":  113,
+                                                               "paymentMethod":  "Card",
+                                                               "amount":  74,
+                                                               "tenderedAmount":  0,
+                                                               "changeAmount":  0,
+                                                               "cardNumberMasked":  "****-****-****-4242",
+                                                               "transactionReference":  "TXN-998812",
+                                                               "paymentDate":  "2026-10-02T22:15:36.1929217Z"
+                                                           }
+                                                       ]
+                                      },
+                             "errors":  null,
+                             "timestamp":  "2026-10-02T22:15:36.202843Z",
+                             "traceId":  "a31a25d6-b146-47ab-8876-cd21062561f9"
+                         }
+    },
+    {
+        "scenarioId":  "POS-07",
+        "caseType":  "Parked Order",
+        "nameEn":  "Park Active Order to Free Cashier Terminal (Hold Order)",
+        "method":  "Post",
+        "endpoint":  "/api/pos/orders/136/park",
+        "expectedStatus":  200,
+        "actualStatus":  200,
+        "durationMs":  87,
+        "passed":  true,
+        "validationNotes":  "Status code matched expected (200). Order #136 status transitioned to Parked.",
+        "requestPayload":  null,
+        "responseBody":  {
+                             "success":  true,
+                             "statusCode":  200,
+                             "message":  "Operation completed successfully.",
+                             "data":  {
+                                          "id":  136,
+                                          "branchId":  1,
+                                          "shiftId":  61,
+                                          "tillId":  41,
+                                          "orderNumber":  "ORD-1-20261002-0020",
+                                          "invoiceNumber":  "INV-1-20261002-0020",
+                                          "clientUuid":  "2088517e-3343-4bc2-add6-155633d39a60",
+                                          "orderType":  "Takeaway",
+                                          "status":  "Parked",
+                                          "customerId":  null,
+                                          "customerName":  null,
+                                          "tableId":  null,
+                                          "tableNumber":  null,
+                                          "covers":  1,
+                                          "subtotalAmount":  150,
+                                          "discountAmount":  0,
+                                          "taxAmount":  24,
+                                          "serviceChargeAmount":  0,
+                                          "deliveryFee":  0,
+                                          "tipAmount":  0,
+                                          "totalAmount":  174,
+                                          "paidAmount":  0,
+                                          "changeAmount":  0,
+                                          "isPaid":  false,
+                                          "isRefund":  false,
+                                          "eInvoiceQrCode":  null,
+                                          "eInvoiceHash":  null,
+                                          "creationDate":  "2026-10-02T22:15:36.367409",
+                                          "creationUser":  "admin",
+                                          "lines":  [
+                                                        {
+                                                            "id":  118,
+                                                            "lineNumber":  1,
+                                                            "itemId":  162,
+                                                            "itemCode":  "ITM-OB-98083",
+                                                            "itemName":  "Office Desk",
+                                                            "quantity":  1,
+                                                            "uomId":  1,
+                                                            "unitPrice":  150,
+                                                            "discountAmount":  0,
+                                                            "taxAmount":  24,
+                                                            "lineTotal":  174,
+                                                            "kdsStatus":  "Pending",
+                                                            "prepStation":  null,
+                                                            "isScaleItem":  false,
+                                                            "scaleWeight":  null,
+                                                            "isVoided":  false,
+                                                            "voidReason":  null,
+                                                            "modifiers":  [
+
+                                                                          ]
+                                                        }
+                                                    ],
+                                          "payments":  [
+
+                                                       ]
+                                      },
+                             "errors":  null,
+                             "timestamp":  "2026-10-02T22:15:36.4709922Z",
+                             "traceId":  "71d889b4-8004-4643-b2d7-9791599268cc"
+                         }
+    },
+    {
+        "scenarioId":  "POS-08",
+        "caseType":  "Order Management",
+        "nameEn":  "Query Active and Parked Orders for Branch 1",
+        "method":  "Get",
+        "endpoint":  "/api/pos/orders/active?branchId=1\u0026status=2",
+        "expectedStatus":  200,
+        "actualStatus":  200,
+        "durationMs":  77,
+        "passed":  true,
+        "validationNotes":  "Status code matched expected (200). Retrieved 2 active/parked orders successfully.",
+        "requestPayload":  null,
+        "responseBody":  {
+                             "success":  true,
+                             "statusCode":  200,
+                             "message":  "Operation completed successfully.",
+                             "data":  [
+                                          {
+                                              "id":  136,
+                                              "branchId":  1,
+                                              "shiftId":  61,
+                                              "tillId":  41,
+                                              "orderNumber":  "ORD-1-20261002-0020",
+                                              "invoiceNumber":  "INV-1-20261002-0020",
+                                              "clientUuid":  "2088517e-3343-4bc2-add6-155633d39a60",
+                                              "orderType":  "Takeaway",
+                                              "status":  "Parked",
+                                              "customerId":  null,
+                                              "customerName":  null,
+                                              "tableId":  null,
+                                              "tableNumber":  null,
+                                              "covers":  1,
+                                              "subtotalAmount":  150,
+                                              "discountAmount":  0,
+                                              "taxAmount":  24,
+                                              "serviceChargeAmount":  0,
+                                              "deliveryFee":  0,
+                                              "tipAmount":  0,
+                                              "totalAmount":  174,
+                                              "paidAmount":  0,
+                                              "changeAmount":  0,
+                                              "isPaid":  false,
+                                              "isRefund":  false,
+                                              "eInvoiceQrCode":  null,
+                                              "eInvoiceHash":  null,
+                                              "creationDate":  "2026-10-02T22:15:36.367409",
+                                              "creationUser":  "admin",
+                                              "lines":  [
+                                                            {
+                                                                "id":  118,
+                                                                "lineNumber":  1,
+                                                                "itemId":  162,
+                                                                "itemCode":  "ITM-OB-98083",
+                                                                "itemName":  "Office Desk",
+                                                                "quantity":  1,
+                                                                "uomId":  1,
+                                                                "unitPrice":  150,
+                                                                "discountAmount":  0,
+                                                                "taxAmount":  24,
+                                                                "lineTotal":  174,
+                                                                "kdsStatus":  "Pending",
+                                                                "prepStation":  null,
+                                                                "isScaleItem":  false,
+                                                                "scaleWeight":  null,
+                                                                "isVoided":  false,
+                                                                "voidReason":  null,
+                                                                "modifiers":  [
+
+                                                                              ]
+                                                            }
+                                                        ],
+                                              "payments":  [
+
+                                                           ]
+                                          },
+                                          {
+                                              "id":  127,
+                                              "branchId":  1,
+                                              "shiftId":  61,
+                                              "tillId":  41,
+                                              "orderNumber":  "ORD-1-20261002-0011",
+                                              "invoiceNumber":  "INV-1-20261002-0011",
+                                              "clientUuid":  "8a8b9683-43bb-4a6d-9fb7-5528443cb5c5",
+                                              "orderType":  "Takeaway",
+                                              "status":  "Parked",
+                                              "customerId":  null,
+                                              "customerName":  null,
+                                              "tableId":  null,
+                                              "tableNumber":  null,
+                                              "covers":  1,
+                                              "subtotalAmount":  150,
+                                              "discountAmount":  0,
+                                              "taxAmount":  24,
+                                              "serviceChargeAmount":  0,
+                                              "deliveryFee":  0,
+                                              "tipAmount":  0,
+                                              "totalAmount":  174,
+                                              "paidAmount":  0,
+                                              "changeAmount":  0,
+                                              "isPaid":  false,
+                                              "isRefund":  false,
+                                              "eInvoiceQrCode":  null,
+                                              "eInvoiceHash":  null,
+                                              "creationDate":  "2026-10-02T22:12:20.735631",
+                                              "creationUser":  "admin",
+                                              "lines":  [
+                                                            {
+                                                                "id":  108,
+                                                                "lineNumber":  1,
+                                                                "itemId":  162,
+                                                                "itemCode":  "ITM-OB-98083",
+                                                                "itemName":  "Office Desk",
+                                                                "quantity":  1,
+                                                                "uomId":  1,
+                                                                "unitPrice":  150,
+                                                                "discountAmount":  0,
+                                                                "taxAmount":  24,
+                                                                "lineTotal":  174,
+                                                                "kdsStatus":  "Pending",
+                                                                "prepStation":  null,
+                                                                "isScaleItem":  false,
+                                                                "scaleWeight":  null,
+                                                                "isVoided":  false,
+                                                                "voidReason":  null,
+                                                                "modifiers":  [
+
+                                                                              ]
+                                                            }
+                                                        ],
+                                              "payments":  [
+
+                                                           ]
+                                          }
+                                      ],
+                             "errors":  null,
+                             "timestamp":  "2026-10-02T22:15:36.5527552Z",
+                             "traceId":  "4ae36a1b-df01-4d06-a9fc-c68be5045d16"
+                         }
+    },
+    {
+        "scenarioId":  "POS-09",
+        "caseType":  "Parked Order Settle",
+        "nameEn":  "Resume and Settle Payment on Parked Order #136",
+        "method":  "Post",
+        "endpoint":  "/api/pos/orders/136/payments",
+        "expectedStatus":  200,
+        "actualStatus":  200,
+        "durationMs":  156,
+        "passed":  true,
+        "validationNotes":  "Status code matched expected (200). Parked order #136 successfully settled and completed.",
+        "requestPayload":  {
+                               "paymentMethod":  1,
+                               "amount":  174.0,
+                               "currencyCode":  "JOD"
+                           },
+        "responseBody":  {
+                             "success":  true,
+                             "statusCode":  200,
+                             "message":  "Operation completed successfully.",
+                             "data":  {
+                                          "id":  136,
+                                          "branchId":  1,
+                                          "shiftId":  61,
+                                          "tillId":  41,
+                                          "orderNumber":  "ORD-1-20261002-0020",
+                                          "invoiceNumber":  "INV-1-20261002-0020",
+                                          "clientUuid":  "2088517e-3343-4bc2-add6-155633d39a60",
+                                          "orderType":  "Takeaway",
+                                          "status":  "Completed",
+                                          "customerId":  null,
+                                          "customerName":  null,
+                                          "tableId":  null,
+                                          "tableNumber":  null,
+                                          "covers":  1,
+                                          "subtotalAmount":  150,
+                                          "discountAmount":  0,
+                                          "taxAmount":  24,
+                                          "serviceChargeAmount":  0,
+                                          "deliveryFee":  0,
+                                          "tipAmount":  0,
+                                          "totalAmount":  174,
+                                          "paidAmount":  174.0,
+                                          "changeAmount":  0,
+                                          "isPaid":  true,
+                                          "isRefund":  false,
+                                          "eInvoiceQrCode":  null,
+                                          "eInvoiceHash":  null,
+                                          "creationDate":  "2026-10-02T22:15:36.367409",
+                                          "creationUser":  "admin",
+                                          "lines":  [
+                                                        {
+                                                            "id":  118,
+                                                            "lineNumber":  1,
+                                                            "itemId":  162,
+                                                            "itemCode":  "ITM-OB-98083",
+                                                            "itemName":  "Office Desk",
+                                                            "quantity":  1,
+                                                            "uomId":  1,
+                                                            "unitPrice":  150,
+                                                            "discountAmount":  0,
+                                                            "taxAmount":  24,
+                                                            "lineTotal":  174,
+                                                            "kdsStatus":  "Pending",
+                                                            "prepStation":  null,
+                                                            "isScaleItem":  false,
+                                                            "scaleWeight":  null,
+                                                            "isVoided":  false,
+                                                            "voidReason":  null,
+                                                            "modifiers":  [
+
+                                                                          ]
+                                                        }
+                                                    ],
+                                          "payments":  [
+                                                           {
+                                                               "id":  114,
+                                                               "paymentMethod":  "Cash",
+                                                               "amount":  174.0,
+                                                               "tenderedAmount":  0,
+                                                               "changeAmount":  0,
+                                                               "cardNumberMasked":  null,
+                                                               "transactionReference":  null,
+                                                               "paymentDate":  "2026-10-02T22:15:36.7124185Z"
+                                                           }
+                                                       ]
+                                      },
+                             "errors":  null,
+                             "timestamp":  "2026-10-02T22:15:36.719199Z",
+                             "traceId":  "59277932-4c65-43e8-a34b-b5b1262b1af8"
+                         }
+    },
+    {
+        "scenarioId":  "POS-10",
+        "caseType":  "Void Line",
+        "nameEn":  "Void Order Line with Supervisor Approval Tracking",
+        "method":  "Post",
+        "endpoint":  "/api/pos/orders/void-line",
+        "expectedStatus":  200,
+        "actualStatus":  200,
+        "durationMs":  154,
+        "passed":  true,
+        "validationNotes":  "Status code matched expected (200). Line #119 marked as Voided and totals recalculated to 116 JOD.",
+        "requestPayload":  {
+                               "orderId":  137,
+                               "approvedBy":  "shift_supervisor",
+                               "reason":  "Customer cancelled this item",
+                               "orderLineId":  119
+                           },
+        "responseBody":  {
+                             "success":  true,
+                             "statusCode":  200,
+                             "message":  "Operation completed successfully.",
+                             "data":  {
+                                          "id":  137,
+                                          "branchId":  1,
+                                          "shiftId":  61,
+                                          "tillId":  41,
+                                          "orderNumber":  "ORD-1-20261002-0021",
+                                          "invoiceNumber":  "INV-1-20261002-0021",
+                                          "clientUuid":  "45b4b75d-3615-44b3-922b-af26e1e6b865",
+                                          "orderType":  "Takeaway",
+                                          "status":  "Draft",
+                                          "customerId":  null,
+                                          "customerName":  null,
+                                          "tableId":  null,
+                                          "tableNumber":  null,
+                                          "covers":  1,
+                                          "subtotalAmount":  100,
+                                          "discountAmount":  0,
+                                          "taxAmount":  16,
+                                          "serviceChargeAmount":  0,
+                                          "deliveryFee":  0,
+                                          "tipAmount":  0,
+                                          "totalAmount":  116,
+                                          "paidAmount":  0,
+                                          "changeAmount":  0,
+                                          "isPaid":  false,
+                                          "isRefund":  false,
+                                          "eInvoiceQrCode":  null,
+                                          "eInvoiceHash":  null,
+                                          "creationDate":  "2026-10-02T22:15:36.890298",
+                                          "creationUser":  "admin",
+                                          "lines":  [
+                                                        {
+                                                            "id":  119,
+                                                            "lineNumber":  1,
+                                                            "itemId":  162,
+                                                            "itemCode":  "ITM-OB-98083",
+                                                            "itemName":  "Office Desk",
+                                                            "quantity":  1,
+                                                            "uomId":  1,
+                                                            "unitPrice":  150,
+                                                            "discountAmount":  0,
+                                                            "taxAmount":  24,
+                                                            "lineTotal":  174,
+                                                            "kdsStatus":  "Pending",
+                                                            "prepStation":  null,
+                                                            "isScaleItem":  false,
+                                                            "scaleWeight":  null,
+                                                            "isVoided":  true,
+                                                            "voidReason":  "Customer cancelled this item",
+                                                            "modifiers":  [
+
+                                                                          ]
+                                                        },
+                                                        {
+                                                            "id":  120,
+                                                            "lineNumber":  2,
+                                                            "itemId":  162,
+                                                            "itemCode":  "ITM-OB-98083",
+                                                            "itemName":  "Office Chair",
+                                                            "quantity":  2,
+                                                            "uomId":  1,
+                                                            "unitPrice":  50,
+                                                            "discountAmount":  0,
+                                                            "taxAmount":  16,
+                                                            "lineTotal":  116,
+                                                            "kdsStatus":  "Pending",
+                                                            "prepStation":  null,
+                                                            "isScaleItem":  false,
+                                                            "scaleWeight":  null,
+                                                            "isVoided":  false,
+                                                            "voidReason":  null,
+                                                            "modifiers":  [
+
+                                                                          ]
+                                                        }
+                                                    ],
+                                          "payments":  [
+
+                                                       ]
+                                      },
+                             "errors":  null,
+                             "timestamp":  "2026-10-02T22:15:37.0611089Z",
+                             "traceId":  "cbe7a2ac-3947-455e-a3ee-2af447f773ae"
+                         }
+    },
+    {
+        "scenarioId":  "POS-11",
+        "caseType":  "Refund and Returns",
+        "nameEn":  "Issue Refund and Return Inventory (Credit Note Order)",
+        "method":  "Post",
+        "endpoint":  "/api/pos/orders/refund",
+        "expectedStatus":  200,
+        "actualStatus":  200,
+        "durationMs":  156,
+        "passed":  true,
+        "validationNotes":  "Status code matched expected (200). Refund Order #REF-1-20261002-0022 generated with negative balance (-174 JOD).",
+        "requestPayload":  {
+                               "orderId":  131,
+                               "returnToInventory":  true,
+                               "refundLines":  [
+                                                   {
+                                                       "orderLineId":  113,
+                                                       "quantityToRefund":  1
+                                                   }
+                                               ],
+                               "approvedBy":  "manager_admin",
+                               "refundPayments":  [
+                                                      {
+                                                          "paymentMethod":  1,
+                                                          "amount":  174
+                                                      }
+                                                  ],
+                               "refundReason":  "Damaged item returned by customer"
+                           },
+        "responseBody":  {
+                             "success":  true,
+                             "statusCode":  200,
+                             "message":  "Operation completed successfully.",
+                             "data":  {
+                                          "id":  138,
+                                          "branchId":  1,
+                                          "shiftId":  61,
+                                          "tillId":  41,
+                                          "orderNumber":  "REF-1-20261002-0022",
+                                          "invoiceNumber":  "RF-INV-1-20261002-0022",
+                                          "clientUuid":  "68e8346c-000a-4400-9685-e91b0fad33d8",
+                                          "orderType":  "Takeaway",
+                                          "status":  "Refunded",
+                                          "customerId":  null,
+                                          "customerName":  null,
+                                          "tableId":  null,
+                                          "tableNumber":  null,
+                                          "covers":  1,
+                                          "subtotalAmount":  -150,
+                                          "discountAmount":  0,
+                                          "taxAmount":  -24,
+                                          "serviceChargeAmount":  0,
+                                          "deliveryFee":  0,
+                                          "tipAmount":  0,
+                                          "totalAmount":  -174,
+                                          "paidAmount":  -174,
+                                          "changeAmount":  0,
+                                          "isPaid":  true,
+                                          "isRefund":  true,
+                                          "eInvoiceQrCode":  null,
+                                          "eInvoiceHash":  null,
+                                          "creationDate":  "2026-10-02T22:15:37.2335999Z",
+                                          "creationUser":  "admin",
+                                          "lines":  [
+                                                        {
+                                                            "id":  121,
+                                                            "lineNumber":  1,
+                                                            "itemId":  162,
+                                                            "itemCode":  "ITM-OB-98083",
+                                                            "itemName":  "Office Desk",
+                                                            "quantity":  -1,
+                                                            "uomId":  1,
+                                                            "unitPrice":  150,
+                                                            "discountAmount":  0,
+                                                            "taxAmount":  -24,
+                                                            "lineTotal":  -150,
+                                                            "kdsStatus":  "Pending",
+                                                            "prepStation":  null,
+                                                            "isScaleItem":  false,
+                                                            "scaleWeight":  null,
+                                                            "isVoided":  false,
+                                                            "voidReason":  null,
+                                                            "modifiers":  [
+
+                                                                          ]
+                                                        }
+                                                    ],
+                                          "payments":  [
+
+                                                       ]
+                                      },
+                             "errors":  null,
+                             "timestamp":  "2026-10-02T22:15:37.2410043Z",
+                             "traceId":  "fd20ecee-0c07-4e03-997a-bd9389a4f4b2"
+                         }
+    },
+    {
+        "scenarioId":  "POS-12",
+        "caseType":  "Order Cancellation",
+        "nameEn":  "Delete Unpaid Draft Order #137",
+        "method":  "Delete",
+        "endpoint":  "/api/pos/orders/137",
+        "expectedStatus":  200,
+        "actualStatus":  200,
+        "durationMs":  78,
+        "passed":  true,
+        "validationNotes":  "Status code matched expected (200). Unpaid order #137 deleted successfully.",
+        "requestPayload":  null,
+        "responseBody":  {
+                             "success":  true,
+                             "statusCode":  200,
+                             "message":  "Record deleted successfully.",
+                             "data":  true,
+                             "errors":  null,
+                             "timestamp":  "2026-10-02T22:15:37.3240411Z",
+                             "traceId":  "7ea175c5-fdc7-4e06-b2ca-cd7a28f2aba9"
+                         }
+    }
+]

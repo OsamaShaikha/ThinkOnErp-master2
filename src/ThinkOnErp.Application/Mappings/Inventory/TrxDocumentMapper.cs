@@ -46,7 +46,7 @@ public static class TrxDocumentMapper
         {
             var baseQtyIn = l.QuantityIn * l.UomFactor;
             var baseQtyOut = l.QuantityOut * l.UomFactor;
-            var activeQty = l.QuantityIn > 0 ? l.QuantityIn : l.QuantityOut;
+            var activeQty = l.QuantityOut > 0 ? l.QuantityOut : l.QuantityIn;
             var lineGross = activeQty * l.UnitPrice;
             var lineNet = lineGross - l.DiscountAmount;
             var taxAmt = lineNet * (l.TaxRate / 100m);

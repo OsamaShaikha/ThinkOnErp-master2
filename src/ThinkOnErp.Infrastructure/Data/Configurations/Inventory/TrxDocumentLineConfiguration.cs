@@ -9,8 +9,8 @@ public sealed class TrxDocumentLineConfiguration : IEntityTypeConfiguration<TrxD
     public void Configure(EntityTypeBuilder<TrxDocumentLine> builder)
     {
         builder.ToTable("TRX_DOCUMENT_LINE");
-        // Composite PK: BRANCH_ID, DOC_YEAR, DOC_TYPE, DOC_ID, LINE_NO
-        builder.HasKey(l => new { l.BranchId, l.DocYear, l.DocType, l.DocId, l.LineNo });
+        // Composite PK: BRANCH_ID, DOC_YEAR, TRX_TYPE, DOC_ID, LINE_NO
+        builder.HasKey(l => new { l.BranchId, l.DocYear, l.TrxType, l.DocId, l.LineNo });
 
         builder.Property(l => l.BranchId).HasColumnName("BRANCH_ID");
         builder.Property(l => l.DocYear).HasColumnName("DOC_YEAR");

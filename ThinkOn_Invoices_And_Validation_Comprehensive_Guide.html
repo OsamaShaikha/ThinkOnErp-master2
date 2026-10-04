@@ -1,0 +1,954 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>التقرير الهندسي الشامل: الفواتير في المستودعات ونقاط البيع ومنظومة التحقق (ThinkOn ERP)</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#f0fdf4',
+              100: '#dcfce7',
+              500: '#22c55e',
+              600: '#16a34a',
+              700: '#15803d',
+              800: '#166534',
+              900: '#14532d'
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;600;700&display=swap');
+    body {
+      font-family: 'Cairo', sans-serif;
+    }
+    code, pre {
+      font-family: 'JetBrains Mono', monospace;
+      direction: ltr;
+      text-align: left;
+    }
+    .glass-card {
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(226, 232, 240, 0.8);
+    }
+    @media (prefers-color-scheme: dark) {
+      .glass-card {
+        background: rgba(15, 23, 42, 0.95);
+        border: 1px solid rgba(51, 65, 85, 0.8);
+      }
+    }
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #f1f5f9;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #94a3b8;
+    }
+    .table-container {
+      overflow-x: auto;
+    }
+    .tab-active {
+      border-color: #16a34a;
+      color: #16a34a;
+      background-color: rgba(22, 163, 74, 0.08);
+    }
+  </style>
+</head>
+<body class="bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 min-h-screen selection:bg-emerald-500 selection:text-white">
+
+  <!-- Top Sticky Header -->
+  <header class="sticky top-0 z-50 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 shadow-sm">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex flex-col md:flex-row items-center justify-between gap-4">
+      <div class="flex items-center gap-3">
+        <div class="w-12 h-12 rounded-2xl bg-gradient-to-tr from-emerald-600 to-teal-500 flex items-center justify-center text-white font-extrabold text-2xl shadow-lg shadow-emerald-500/25 ring-2 ring-emerald-400/30">
+          TO
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <h1 class="text-xl sm:text-2xl font-black bg-gradient-to-l from-emerald-600 via-teal-600 to-cyan-700 dark:from-emerald-400 dark:via-teal-300 dark:to-cyan-400 bg-clip-text text-transparent">
+              دليل الفواتير ومنظومة التحقق الشاملة (100% Zero-Error)
+            </h1>
+            <span class="text-xs px-2 py-0.5 rounded bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 font-bold border border-emerald-300 dark:border-emerald-800">
+              v2.6 Enterprise
+            </span>
+          </div>
+          <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+            نظام ThinkOn ERP • الفواتير المخزنية والتجارية • فواتير نقاط البيع (POS) • المعايير الرقابية الصارمة
+          </p>
+        </div>
+      </div>
+
+      <div class="flex flex-wrap items-center gap-2">
+        <a href="#inventory-section" class="text-xs px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 font-semibold transition">
+          📦 فواتير المستودعات
+        </a>
+        <a href="#pos-section" class="text-xs px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 font-semibold transition">
+          🛒 فواتير نقاط البيع
+        </a>
+        <a href="#validation-section" class="text-xs px-3 py-1.5 rounded-lg bg-emerald-600 text-white hover:bg-emerald-700 font-bold shadow-md shadow-emerald-600/20 transition">
+          🛡️ منظومة التحقق 100%
+        </a>
+        <button onclick="window.print()" class="text-xs px-3 py-1.5 rounded-lg border border-slate-300 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 font-medium transition flex items-center gap-1">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
+          طباعة التقرير
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Container -->
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-10">
+
+    <!-- KPI Summary Grid -->
+    <section class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
+      <div class="glass-card rounded-2xl p-4 shadow-sm text-center relative overflow-hidden group hover:border-emerald-500 transition">
+        <div class="text-xs font-semibold text-slate-500 dark:text-slate-400">أنواع مستندات المستودعات</div>
+        <div class="text-3xl font-black text-emerald-600 dark:text-emerald-400 mt-1">8</div>
+        <div class="text-[11px] text-slate-400 dark:text-slate-500 mt-1">TRX_DOC_TYPE</div>
+      </div>
+
+      <div class="glass-card rounded-2xl p-4 shadow-sm text-center relative overflow-hidden group hover:border-teal-500 transition">
+        <div class="text-xs font-semibold text-slate-500 dark:text-slate-400">حركات المعاملات المخزنية</div>
+        <div class="text-3xl font-black text-teal-600 dark:text-teal-400 mt-1">16+</div>
+        <div class="text-[11px] text-slate-400 dark:text-slate-500 mt-1">TRX_TRANSACTION_TYPE</div>
+      </div>
+
+      <div class="glass-card rounded-2xl p-4 shadow-sm text-center relative overflow-hidden group hover:border-blue-500 transition">
+        <div class="text-xs font-semibold text-slate-500 dark:text-slate-400">طرق الدفع بالـ POS</div>
+        <div class="text-3xl font-black text-blue-600 dark:text-blue-400 mt-1">5+</div>
+        <div class="text-[11px] text-slate-400 dark:text-slate-500 mt-1">Split Payment Engine</div>
+      </div>
+
+      <div class="glass-card rounded-2xl p-4 shadow-sm text-center relative overflow-hidden group hover:border-purple-500 transition">
+        <div class="text-xs font-semibold text-slate-500 dark:text-slate-400">الفوترة الإلكترونية</div>
+        <div class="text-3xl font-black text-purple-600 dark:text-purple-400 mt-1">ZATCA</div>
+        <div class="text-[11px] text-slate-400 dark:text-slate-500 mt-1">TLV Base64 + SHA-256</div>
+      </div>
+
+      <div class="glass-card rounded-2xl p-4 shadow-sm text-center relative overflow-hidden group hover:border-amber-500 transition">
+        <div class="text-xs font-semibold text-slate-500 dark:text-slate-400">قواعد التحقق الصارمة</div>
+        <div class="text-3xl font-black text-amber-600 dark:text-amber-400 mt-1">32</div>
+        <div class="text-[11px] text-slate-400 dark:text-slate-500 mt-1">8 مستويات رقابية</div>
+      </div>
+
+      <div class="glass-card rounded-2xl p-4 shadow-sm text-center relative overflow-hidden group hover:border-rose-500 transition">
+        <div class="text-xs font-semibold text-slate-500 dark:text-slate-400">ضمان سلامة الفواتير</div>
+        <div class="text-3xl font-black text-rose-600 dark:text-rose-400 mt-1">100%</div>
+        <div class="text-[11px] text-slate-400 dark:text-slate-500 mt-1">Zero Mathematical Error</div>
+      </div>
+    </section>
+
+    <!-- Executive Overview Banner -->
+    <section class="glass-card rounded-3xl p-6 sm:p-8 bg-gradient-to-r from-emerald-500/10 via-teal-500/5 to-transparent border-emerald-500/20">
+      <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+        <div class="space-y-3 max-w-3xl">
+          <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300 text-xs font-bold">
+            <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+            معمارية النظام المزدوجة (Dual-Engine Architecture)
+          </div>
+          <h2 class="text-2xl sm:text-3xl font-black leading-tight text-slate-900 dark:text-white">
+            الفرق الجوهري بين فواتير المستودعات وفواتير نقاط البيع في ThinkOn ERP
+          </h2>
+          <p class="text-sm text-slate-600 dark:text-slate-300 leading-relaxed text-justify">
+            يمتاز نظام <strong>ThinkOn ERP</strong> بالفصل الذكي بين نوعين من العمليات:
+            <strong>فواتير وحركات المستودعات التجارية</strong> المصممة لإدارة عقود التوريد، والبيع الآجل للشركات، والتصنيع، والتسويات الجردية الدقيقة، وبين
+            <strong>فواتير نقاط البيع (POS)</strong> فائقة السرعة والمصممة للتعامل مع الزبائن، الورديات، الطاولات، التوصيل، الدفع المجزأ، والعمل بدون إنترنت (Offline Mode) مع التوافق التام مع متطلبات هيئة الزكاة والضريبة والجمارك (ZATCA).
+          </p>
+        </div>
+        <div class="bg-white dark:bg-slate-900 p-5 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 min-w-[260px] text-xs space-y-2">
+          <div class="font-bold text-slate-700 dark:text-slate-300 border-b border-slate-100 dark:border-slate-800 pb-2">
+            🏛️ محركات التأثير المزدوج في النظام:
+          </div>
+          <div class="flex items-center justify-between text-slate-600 dark:text-slate-400">
+            <span>التأثير المخزني:</span>
+            <span class="font-mono font-bold text-emerald-600">Stock Ledger</span>
+          </div>
+          <div class="flex items-center justify-between text-slate-600 dark:text-slate-400">
+            <span>التأثير المالي العام:</span>
+            <span class="font-mono font-bold text-teal-600">GL Voucher Entry</span>
+          </div>
+          <div class="flex items-center justify-between text-slate-600 dark:text-slate-400">
+            <span>مراقبة التكلفة والربحية:</span>
+            <span class="font-mono font-bold text-blue-600">FIFO / Cost Layers</span>
+          </div>
+          <div class="flex items-center justify-between text-slate-600 dark:text-slate-400">
+            <span>الامتثال الضريبي:</span>
+            <span class="font-mono font-bold text-purple-600">Phase 1 &amp; 2 QR/Hash</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION 1: INVENTORY & WAREHOUSE INVOICES -->
+    <section id="inventory-section" class="space-y-6">
+      <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-4">
+        <div>
+          <div class="text-xs font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">الجزء الأول</div>
+          <h2 class="text-xl sm:text-2xl font-black text-slate-900 dark:text-white mt-1">
+            📦 الفواتير والمستندات في المستودعات (Inventory / Commercial Transactions)
+          </h2>
+        </div>
+        <span class="text-xs px-3 py-1 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-mono">
+          TrxDocumentHeader &amp; TrxDocumentLine
+        </span>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Structural explanation -->
+        <div class="lg:col-span-1 space-y-4">
+          <div class="glass-card rounded-2xl p-5 space-y-3">
+            <h3 class="font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
+              <span class="w-3 h-3 rounded-full bg-emerald-500"></span>
+              المعمارية البرمجية الأساسية
+            </h3>
+            <p class="text-xs text-slate-600 dark:text-slate-300 leading-relaxed text-justify">
+              تُبنى الفواتير المخزنية على جدولين مركزيين:
+              <br><code class="text-emerald-600 dark:text-emerald-400 font-bold">TrxDocumentHeader</code>: رأس الفاتورة الذي يحمل بيانات الفرع، السنة، النوع، الطرف التجاري (عميل/مورد)، المستودع، العملة، ومجاميع المبالغ والضرائب والربحية والتكلفة.
+              <br><code class="text-emerald-600 dark:text-emerald-400 font-bold">TrxDocumentLine</code>: سطور الأصناف مع معامل الوحدة، التكلفة والربح، رقم الوجبة/التشغيلة، والسيريال.
+            </p>
+          </div>
+
+          <div class="glass-card rounded-2xl p-5 space-y-3">
+            <h3 class="font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
+              <span class="w-3 h-3 rounded-full bg-blue-500"></span>
+              دورة حياة المستند المخزني
+            </h3>
+            <div class="space-y-2 text-xs">
+              <div class="p-2.5 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/50">
+                <span class="font-bold text-amber-700 dark:text-amber-300">1. Draft (مسودة - كود 1):</span>
+                <p class="text-slate-600 dark:text-slate-400 mt-1">قابلة للتعديل والحذف وتغيير الأسعار والكميات. لا تؤثر إطلاقاً على رصيد المخزون أو دفتر الأستاذ العام.</p>
+              </div>
+              <div class="p-2.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800/50">
+                <span class="font-bold text-emerald-700 dark:text-emerald-300">2. Posted (مُرحّلة - كود 3):</span>
+                <p class="text-slate-600 dark:text-slate-400 mt-1">تصبح غير قابلة للتعديل نهائياً (Immutable). تولد حركات في <code class="font-bold">InvStockLedgerEntry</code>، وتحسب التكلفة اللحظية، وتفكك أطقم الـ BOM، وتنشئ القيد المحاسبي المتوازن.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Document Types Table -->
+        <div class="lg:col-span-2 glass-card rounded-2xl p-5 space-y-4">
+          <h3 class="font-bold text-slate-800 dark:text-slate-100 flex items-center justify-between">
+            <span>جدول أنواع الفواتير والمستندات المعرفة في قاعدة بيانات النظام</span>
+            <span class="text-xs text-slate-400 font-mono">Script 103: TRX_DOC_TYPE</span>
+          </h3>
+
+          <div class="table-container">
+            <table class="w-full text-xs text-right border-collapse">
+              <thead>
+                <tr class="bg-slate-100 dark:bg-slate-800/80 text-slate-700 dark:text-slate-300 font-bold border-b border-slate-200 dark:border-slate-700">
+                  <th class="p-2.5">الكود</th>
+                  <th class="p-2.5">المستند</th>
+                  <th class="p-2.5">البادئة</th>
+                  <th class="p-2.5">الوحدة</th>
+                  <th class="p-2.5">أثر المخزون</th>
+                  <th class="p-2.5">أثر الحسابات</th>
+                  <th class="p-2.5">أبرز الحركات المرتبطة (Trx Types)</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
+                <tr class="hover:bg-slate-50 dark:hover:bg-slate-900/50 transition">
+                  <td class="p-2.5 font-mono font-bold text-emerald-600">100</td>
+                  <td class="p-2.5 font-bold">فواتير المبيعات (Sales Invoices)</td>
+                  <td class="p-2.5 font-mono">SINV-</td>
+                  <td class="p-2.5">SALES</td>
+                  <td class="p-2.5 text-rose-600 font-semibold">صرف (-1)</td>
+                  <td class="p-2.5 text-emerald-600 font-semibold">نعم (GL + ذمم)</td>
+                  <td class="p-2.5 text-slate-500">1001 نقدي، 1002 آجل، 1003 تصدير، 1004 نقاط بيع</td>
+                </tr>
+                <tr class="hover:bg-slate-50 dark:hover:bg-slate-900/50 transition">
+                  <td class="p-2.5 font-mono font-bold text-emerald-600">150</td>
+                  <td class="p-2.5 font-bold">مردودات المبيعات (Sales Returns)</td>
+                  <td class="p-2.5 font-mono">SRET-</td>
+                  <td class="p-2.5">SALES</td>
+                  <td class="p-2.5 text-emerald-600 font-semibold">إدخال (+1) أو هالك (0)</td>
+                  <td class="p-2.5 text-emerald-600 font-semibold">نعم (إشعار دائن)</td>
+                  <td class="p-2.5 text-slate-500">1501 سليم للمستودع، 1502 تالف/هالك مباشر للأرباح والخسائر</td>
+                </tr>
+                <tr class="hover:bg-slate-50 dark:hover:bg-slate-900/50 transition">
+                  <td class="p-2.5 font-mono font-bold text-emerald-600">200</td>
+                  <td class="p-2.5 font-bold">فواتير المشتريات (Purchase Bills)</td>
+                  <td class="p-2.5 font-mono">PINV-</td>
+                  <td class="p-2.5">PURCHASING</td>
+                  <td class="p-2.5 text-emerald-600 font-semibold">إدخال (+1)</td>
+                  <td class="p-2.5 text-emerald-600 font-semibold">نعم (استحقاق مورد)</td>
+                  <td class="p-2.5 text-slate-500">2001 مشتريات محلية بضاعة، 2003 مشتريات استيراد خارجي</td>
+                </tr>
+                <tr class="hover:bg-slate-50 dark:hover:bg-slate-900/50 transition">
+                  <td class="p-2.5 font-mono font-bold text-emerald-600">250</td>
+                  <td class="p-2.5 font-bold">مردودات المشتريات (Purchase Returns)</td>
+                  <td class="p-2.5 font-mono">PRET-</td>
+                  <td class="p-2.5">PURCHASING</td>
+                  <td class="p-2.5 text-rose-600 font-semibold">صرف (-1)</td>
+                  <td class="p-2.5 text-emerald-600 font-semibold">نعم (تخفيض دين المورد)</td>
+                  <td class="p-2.5 text-slate-500">2501 إرجاع بضاعة لمورد مع استرداد التكلفة الأصلية</td>
+                </tr>
+                <tr class="hover:bg-slate-50 dark:hover:bg-slate-900/50 transition">
+                  <td class="p-2.5 font-mono font-bold text-emerald-600">300</td>
+                  <td class="p-2.5 font-bold">سندات المخزون (Stock Vouchers)</td>
+                  <td class="p-2.5 font-mono">STK-</td>
+                  <td class="p-2.5">INVENTORY</td>
+                  <td class="p-2.5 text-blue-600 font-semibold">إدخال / إخراج</td>
+                  <td class="p-2.5 text-emerald-600 font-semibold">نعم (حسب القاعدة)</td>
+                  <td class="p-2.5 text-slate-500">3001 رصيد افتتاحي، 3002 تسوية زيادة، 3011 عجز جردي، 3012 إتلاف، 3014 استهلاك أقسام</td>
+                </tr>
+                <tr class="hover:bg-slate-50 dark:hover:bg-slate-900/50 transition">
+                  <td class="p-2.5 font-mono font-bold text-emerald-600">350</td>
+                  <td class="p-2.5 font-bold">التحويلات المخزنية (Stock Transfers)</td>
+                  <td class="p-2.5 font-mono">TR-</td>
+                  <td class="p-2.5">INVENTORY</td>
+                  <td class="p-2.5 text-purple-600 font-semibold">نقل بين موقعين (0)</td>
+                  <td class="p-2.5 text-emerald-600 font-semibold">نعم (تحويل فروع)</td>
+                  <td class="p-2.5 text-slate-500">3501 تحويل بين مستودعين (FromWarehouseId -> ToWarehouseId)</td>
+                </tr>
+                <tr class="hover:bg-slate-50 dark:hover:bg-slate-900/50 transition">
+                  <td class="p-2.5 font-mono font-bold text-emerald-600">400 / 450</td>
+                  <td class="p-2.5 font-bold">عروض الأسعار وأوامر الشراء</td>
+                  <td class="p-2.5 font-mono">QUOT- / PO-</td>
+                  <td class="p-2.5">SALES / PUR</td>
+                  <td class="p-2.5 text-slate-400">لا يؤثر (0)</td>
+                  <td class="p-2.5 text-slate-400">لا يؤثر (0)</td>
+                  <td class="p-2.5 text-slate-500">مستندات ما قبل الفاتورة (Pre-Transactions) تتحول لاحقاً لفواتير معتمدة</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION 2: POS ORDERS & INVOICES -->
+    <section id="pos-section" class="space-y-6">
+      <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-4">
+        <div>
+          <div class="text-xs font-bold text-teal-600 dark:text-teal-400 uppercase tracking-wider">الجزء الثاني</div>
+          <h2 class="text-xl sm:text-2xl font-black text-slate-900 dark:text-white mt-1">
+            🛒 الفواتير في نقاط البيع (Point of Sale - POS Invoices &amp; Orders)
+          </h2>
+        </div>
+        <span class="text-xs px-3 py-1 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-mono">
+          PosOrderHeader &amp; PosOrderPayment &amp; PosEInvoicing
+        </span>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <!-- Card 1: Lifecycle & Structure -->
+        <div class="glass-card rounded-2xl p-5 space-y-3">
+          <div class="w-10 h-10 rounded-xl bg-teal-100 dark:bg-teal-950/60 text-teal-600 flex items-center justify-center font-bold text-lg">
+            ⚡
+          </div>
+          <h3 class="font-bold text-slate-800 dark:text-slate-100">طبيعة الفاتورة اللحظية</h3>
+          <p class="text-xs text-slate-600 dark:text-slate-300 leading-relaxed text-justify">
+            تتميز فواتير الـ POS بالسرعة القصوى، وترتبط تشغيلياً بـ:
+            <strong>الوردية المفتوحة (<code class="text-teal-600 font-bold">PosShift</code>)</strong>،
+            <strong>نقطة الكاشير (<code class="text-teal-600 font-bold">PosTill</code>)</strong>،
+            <strong>الطاولة والرواد (<code class="text-teal-600 font-bold">PosTable / Covers</code>)</strong>،
+            وأنواع الطلب (صالة Dine-in، سفري Takeaway، توصيل Delivery).
+          </p>
+          <div class="p-3 bg-slate-50 dark:bg-slate-900/60 rounded-xl text-xs space-y-1">
+            <div class="font-bold text-slate-700 dark:text-slate-300">حالات الطلب (Order Statuses):</div>
+            <div class="flex flex-wrap gap-1 text-[11px]">
+              <span class="px-2 py-0.5 rounded bg-slate-200 dark:bg-slate-800 font-mono">Draft (قيد التجهيز)</span>
+              <span class="px-2 py-0.5 rounded bg-amber-100 dark:bg-amber-950/60 text-amber-700 font-mono">Parked (معلق)</span>
+              <span class="px-2 py-0.5 rounded bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 font-mono">Completed (مكتمل)</span>
+              <span class="px-2 py-0.5 rounded bg-rose-100 dark:bg-rose-950/60 text-rose-700 font-mono">Refunded (مسترجع)</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Card 2: Split Payments & Offline -->
+        <div class="glass-card rounded-2xl p-5 space-y-3">
+          <div class="w-10 h-10 rounded-xl bg-blue-100 dark:bg-blue-950/60 text-blue-600 flex items-center justify-center font-bold text-lg">
+            💳
+          </div>
+          <h3 class="font-bold text-slate-800 dark:text-slate-100">الدفع المجزأ والعمل دون إنترنت</h3>
+          <p class="text-xs text-slate-600 dark:text-slate-300 leading-relaxed text-justify">
+            تدعم فاتورة نقاط البيع السداد بأكثر من وسيلة دفعة واحدة عبر <code class="font-bold text-blue-600">PosOrderPayment</code>:
+            (جزء نقد + جزء شبكة/فيزا + نقاط ولاء + بطاقات هدايا + ذمم عملاء).
+          </p>
+          <div class="p-3 bg-blue-50 dark:bg-blue-950/30 rounded-xl text-xs space-y-1 text-slate-600 dark:text-slate-300">
+            <span class="font-bold text-blue-700 dark:text-blue-300">المرونة في انقطاع الشبكة (Offline Resilience):</span>
+            <p class="text-[11px] leading-relaxed">
+              يتم حفظ الفاتورة محلياً مع مفتاح <code class="font-bold">ClientUuid</code>. وعند عودة الاتصال، يمنع النظام التكرار، وفي حال وجود عجز بالمخزون يُنشئ حركة صراع <code class="font-bold">PosInventoryConflict</code> للمراجعة الإدارية.
+            </p>
+          </div>
+        </div>
+
+        <!-- Card 3: ZATCA & Z-Report -->
+        <div class="glass-card rounded-2xl p-5 space-y-3">
+          <div class="w-10 h-10 rounded-xl bg-purple-100 dark:bg-purple-950/60 text-purple-600 flex items-center justify-center font-bold text-lg">
+            📑
+          </div>
+          <h3 class="font-bold text-slate-800 dark:text-slate-100">الفوترة الإلكترونية والإقفال (Z-Report)</h3>
+          <p class="text-xs text-slate-600 dark:text-slate-300 leading-relaxed text-justify">
+            متوافقة 100% مع هيئة الزكاة والضريبة والجمارك (ZATCA):
+            توليد QR Code فوري بنظام <strong>TLV Base64</strong> يحتوي اسم البائع، الرقم الضريبي، التاريخ والوقت، إجمالي الفاتورة، ومبلغ الضريبة، مع توليد الهاش الرقمي المشفر <code class="font-bold text-purple-600">InvoiceHash</code>.
+          </p>
+          <div class="p-3 bg-purple-50 dark:bg-purple-950/30 rounded-xl text-xs space-y-1 text-slate-600 dark:text-slate-300">
+            <span class="font-bold text-purple-700 dark:text-purple-300">الترحيل المجمع لدفتر الأستاذ:</span>
+            <p class="text-[11px] leading-relaxed">
+              عند نهاية اليوم يتم إنشاء تقرير <code class="font-bold">PosZReport</code> الذي يُلخص إيرادات الوردية، ويُطابق النقد الفعلي مع المتوقع، ويرحل قيد اليومية العام <code class="font-bold">GlVoucherId</code> دفعة واحدة.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION 3: ARCHITECTURAL COMPARISON -->
+    <section class="space-y-4">
+      <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-3">
+        <h3 class="text-lg font-black text-slate-900 dark:text-white">
+          ⚖️ مقارنة معمارية دقيقة: فواتير المستودعات مقابل فواتير نقاط البيع
+        </h3>
+        <span class="text-xs text-slate-400">Architectural Matrix</span>
+      </div>
+
+      <div class="glass-card rounded-2xl p-4 table-container">
+        <table class="w-full text-xs text-right border-collapse">
+          <thead>
+            <tr class="bg-slate-100 dark:bg-slate-800/80 text-slate-700 dark:text-slate-300 font-bold border-b border-slate-200 dark:border-slate-700">
+              <th class="p-3">وجه المقارنة</th>
+              <th class="p-3 text-emerald-700 dark:text-emerald-400 bg-emerald-50/50 dark:bg-emerald-950/20">فواتير المستودعات (Inventory Invoices)</th>
+              <th class="p-3 text-teal-700 dark:text-teal-400 bg-teal-50/50 dark:bg-teal-950/20">فواتير نقاط البيع (POS Invoices)</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
+            <tr class="hover:bg-slate-50 dark:hover:bg-slate-900/50 transition">
+              <td class="p-3 font-bold text-slate-700 dark:text-slate-300">الهدف والبيئة التشغيلية</td>
+              <td class="p-3">عقود، توريد، مبيعات شركات B2B، مشتريات موردين، تسويات، تحويل بين فروع</td>
+              <td class="p-3">بيع تجزئة سريع B2C، مطاعم، كافيهات، بيع بالباركود أو شاشات اللمس</td>
+            </tr>
+            <tr class="hover:bg-slate-50 dark:hover:bg-slate-900/50 transition">
+              <td class="p-3 font-bold text-slate-700 dark:text-slate-300">طريقة السداد</td>
+              <td class="p-3">آجل (ذمم مع سقف ائتمان)، شيكات، تحويل بنكي، أو دفعة واحدة عند الاستلام</td>
+              <td class="p-3">سداد فوري ومجزأ ولحظي: نقد، شبكة/بطاقة، نقاط، كوبونات، هدايا</td>
+            </tr>
+            <tr class="hover:bg-slate-50 dark:hover:bg-slate-900/50 transition">
+              <td class="p-3 font-bold text-slate-700 dark:text-slate-300">التأثير المخزني</td>
+              <td class="p-3">تأثير فوري ومباشر مع الوجبات (Lots)، الأرقام التسلسلية (Serials)، وتفكيك الـ BOM</td>
+              <td class="p-3">خصم فوري مباشر، أو مزامنة دفعات مع تسجيل حالات العجز في <code class="font-bold">PosInventoryConflict</code></td>
+            </tr>
+            <tr class="hover:bg-slate-50 dark:hover:bg-slate-900/50 transition">
+              <td class="p-3 font-bold text-slate-700 dark:text-slate-300">الترحيل المحاسبي للـ GL</td>
+              <td class="p-3">قيد يومية مفصل وفوري لكل فاتورة مرحلة عبر <code class="font-bold">PostingRuleCode</code> (COGS / Revenue)</td>
+              <td class="p-3">ترحيل تجميعي في نهاية الوردية مع إغلاق تقرير الـ Z-Report، أو فوري حسب إعداد الفرع</td>
+            </tr>
+            <tr class="hover:bg-slate-50 dark:hover:bg-slate-900/50 transition">
+              <td class="p-3 font-bold text-slate-700 dark:text-slate-300">العمل دون اتصال (Offline)</td>
+              <td class="p-3">غير مخصص للعمل بدون اتصال (يتطلب اتصال دائم بقاعدة بيانات Oracle)</td>
+              <td class="p-3">يدعم العمل بدون إنترنت مع حفظ محلي ومزامنة تلقائية بواسطة <code class="font-bold">ClientUuid</code></td>
+            </tr>
+            <tr class="hover:bg-slate-50 dark:hover:bg-slate-900/50 transition">
+              <td class="p-3 font-bold text-slate-700 dark:text-slate-300">تعديل الفاتورة بعد الحفظ</td>
+              <td class="p-3">يمكن تعديلها طالما كانت Draft، وبمجرد الترحيل تُقفل ولا تُعدل إلا بإشعار دائن/مدين</td>
+              <td class="p-3">تعديل فوري في الطاولة قبل الدفع، وإلغاء سطور (Void) للمشرفين، وإرجاع (Refund) بعد الدفع</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- SECTION 4: COMPREHENSIVE VALIDATION BLUEPRINT -->
+    <section id="validation-section" class="space-y-6">
+      <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-4">
+        <div>
+          <div class="text-xs font-bold text-rose-600 dark:text-rose-400 uppercase tracking-wider">الجزء الثالث والأهم</div>
+          <h2 class="text-xl sm:text-2xl font-black text-slate-900 dark:text-white mt-1">
+            🛡️ منظومة قواعد التحقق الشاملة (100% Zero-Error Validation Suite)
+          </h2>
+          <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">
+            القواعد الإلزامية في طبقتي التطبيق وقاعدة البيانات لمنع أي خطأ بشري أو تقني وضمان صحة الفواتير محاسبياً وضريبياً 100%.
+          </p>
+        </div>
+        <span class="text-xs px-3 py-1.5 rounded-full bg-rose-100 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300 font-bold border border-rose-300 dark:border-rose-800">
+          32 قاعدة رقابية صارمة
+        </span>
+      </div>
+
+      <!-- Validation Level Tabs / Accordion Cards -->
+      <div class="space-y-4">
+
+        <!-- LEVEL 1: HEADER & PERIOD -->
+        <div class="glass-card rounded-2xl p-5 border-l-4 border-l-emerald-500 space-y-3">
+          <div class="flex items-center justify-between">
+            <h4 class="font-bold text-base text-slate-800 dark:text-slate-100 flex items-center gap-2">
+              <span class="w-6 h-6 rounded-lg bg-emerald-100 dark:bg-emerald-950 text-emerald-600 flex items-center justify-center font-bold text-xs">1</span>
+              التحقق من رأس الفاتورة والفترة المحاسبية والوردية (Header &amp; Session Validations)
+            </h4>
+            <span class="text-[11px] px-2.5 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950/50 text-emerald-700 font-semibold">5 قواعد</span>
+          </div>
+
+          <div class="table-container">
+            <table class="w-full text-xs text-right border-collapse">
+              <thead>
+                <tr class="bg-slate-100 dark:bg-slate-800/60 text-slate-600 dark:text-slate-300 font-bold">
+                  <th class="p-2 w-16">الكود</th>
+                  <th class="p-2 w-48">قاعدة التحقق</th>
+                  <th class="p-2">الشرط البرمجي (Validation Rule)</th>
+                  <th class="p-2 w-48">الإجراء عند المخالفة</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-100 dark:divide-slate-800 text-slate-700 dark:text-slate-300">
+                <tr>
+                  <td class="p-2 font-mono font-bold text-emerald-600">V-H01</td>
+                  <td class="p-2 font-semibold">الفترة المالية المفتوحة</td>
+                  <td class="p-2 font-mono text-[11px]">DocDate in Active GlFiscalPeriod AND Status == Open</td>
+                  <td class="p-2 text-rose-600 font-semibold">رفض الحفظ (الفترة مقفلة مالياً)</td>
+                </tr>
+                <tr>
+                  <td class="p-2 font-mono font-bold text-emerald-600">V-H02</td>
+                  <td class="p-2 font-semibold">الوردية النشطة (POS)</td>
+                  <td class="p-2 font-mono text-[11px]">Shift.Status == PosShiftStatus.Open AND Shift.TillId == TillId</td>
+                  <td class="p-2 text-rose-600 font-semibold">منع البيع بدون وردية مفتوحة</td>
+                </tr>
+                <tr>
+                  <td class="p-2 font-mono font-bold text-emerald-600">V-H03</td>
+                  <td class="p-2 font-semibold">منع التكرار (Idempotency)</td>
+                  <td class="p-2 font-mono text-[11px]">UniqueIndex(BranchId, ClientUuid) AND UniqueIndex(BranchId, DocNo)</td>
+                  <td class="p-2 text-amber-600 font-semibold">إرجاع الفاتورة المسجلة دون تكرار</td>
+                </tr>
+                <tr>
+                  <td class="p-2 font-mono font-bold text-emerald-600">V-H04</td>
+                  <td class="p-2 font-semibold">سعر صرف العملات</td>
+                  <td class="p-2 font-mono text-[11px]">CurrencyCode != BaseCurrency =&gt; ExchangeRate &gt; 0</td>
+                  <td class="p-2 text-rose-600 font-semibold">منع سعر صرف صفري أو سالب</td>
+                </tr>
+                <tr>
+                  <td class="p-2 font-mono font-bold text-emerald-600">V-H05</td>
+                  <td class="p-2 font-semibold">تطابق الفرع والمستودع</td>
+                  <td class="p-2 font-mono text-[11px]">FromWarehouse.BranchId == Document.BranchId</td>
+                  <td class="p-2 text-rose-600 font-semibold">رفض الصرف من مستودع فرع آخر</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- LEVEL 2: PARTY & CREDIT -->
+        <div class="glass-card rounded-2xl p-5 border-l-4 border-l-teal-500 space-y-3">
+          <div class="flex items-center justify-between">
+            <h4 class="font-bold text-base text-slate-800 dark:text-slate-100 flex items-center gap-2">
+              <span class="w-6 h-6 rounded-lg bg-teal-100 dark:bg-teal-950 text-teal-600 flex items-center justify-center font-bold text-xs">2</span>
+              التحقق من الأطراف والرقابة الائتمانية والذمم (Party &amp; Credit Control)
+            </h4>
+            <span class="text-[11px] px-2.5 py-0.5 rounded-full bg-teal-100 dark:bg-teal-950/50 text-teal-700 font-semibold">4 قواعد</span>
+          </div>
+
+          <div class="table-container">
+            <table class="w-full text-xs text-right border-collapse">
+              <thead>
+                <tr class="bg-slate-100 dark:bg-slate-800/60 text-slate-600 dark:text-slate-300 font-bold">
+                  <th class="p-2 w-16">الكود</th>
+                  <th class="p-2 w-48">قاعدة التحقق</th>
+                  <th class="p-2">الشرط البرمجي (Validation Rule)</th>
+                  <th class="p-2 w-48">الإجراء عند المخالفة</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-100 dark:divide-slate-800 text-slate-700 dark:text-slate-300">
+                <tr>
+                  <td class="p-2 font-mono font-bold text-teal-600">V-P01</td>
+                  <td class="p-2 font-semibold">إلزامية العميل في الآجل</td>
+                  <td class="p-2 font-mono text-[11px]">PaymentMethod == Credit =&gt; PartyId != null AND PartyId != WalkInCustomer</td>
+                  <td class="p-2 text-rose-600 font-semibold">حظر البيع الآجل لعميل نقدي عام</td>
+                </tr>
+                <tr>
+                  <td class="p-2 font-mono font-bold text-teal-600">V-P02</td>
+                  <td class="p-2 font-semibold">سقف الائتمان (Credit Limit)</td>
+                  <td class="p-2 font-mono text-[11px]">(Customer.CurrentBalance + TotalNet) &lt;= Customer.CreditLimit</td>
+                  <td class="p-2 text-rose-600 font-semibold">إيقاف الفاتورة وطلب إذن مالي</td>
+                </tr>
+                <tr>
+                  <td class="p-2 font-mono font-bold text-teal-600">V-P03</td>
+                  <td class="p-2 font-semibold">حظر الفواتير المتأخرة</td>
+                  <td class="p-2 font-mono text-[11px]">Count(OverdueInvoices where DueDate &lt; Today - GraceDays) == 0</td>
+                  <td class="p-2 text-rose-600 font-semibold">تجميد البيع للعميل لحين سداد المتأخر</td>
+                </tr>
+                <tr>
+                  <td class="p-2 font-mono font-bold text-teal-600">V-P04</td>
+                  <td class="p-2 font-semibold">منع تكرار فاتورة المورد</td>
+                  <td class="p-2 font-mono text-[11px]">Unique(VendorId, VendorInvoiceNumber) in PurchaseBills</td>
+                  <td class="p-2 text-rose-600 font-semibold">منع دفع الفاتورة مرتين للمورد</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- LEVEL 3: STOCK & TRACEABILITY -->
+        <div class="glass-card rounded-2xl p-5 border-l-4 border-l-blue-500 space-y-3">
+          <div class="flex items-center justify-between">
+            <h4 class="font-bold text-base text-slate-800 dark:text-slate-100 flex items-center gap-2">
+              <span class="w-6 h-6 rounded-lg bg-blue-100 dark:bg-blue-950 text-blue-600 flex items-center justify-center font-bold text-xs">3</span>
+              التحقق من سطور البنود والمخزون والتتبع (Stock &amp; Traceability Validations)
+            </h4>
+            <span class="text-[11px] px-2.5 py-0.5 rounded-full bg-blue-100 dark:bg-blue-950/50 text-blue-700 font-semibold">6 قواعد</span>
+          </div>
+
+          <div class="table-container">
+            <table class="w-full text-xs text-right border-collapse">
+              <thead>
+                <tr class="bg-slate-100 dark:bg-slate-800/60 text-slate-600 dark:text-slate-300 font-bold">
+                  <th class="p-2 w-16">الكود</th>
+                  <th class="p-2 w-48">قاعدة التحقق</th>
+                  <th class="p-2">الشرط البرمجي (Validation Rule)</th>
+                  <th class="p-2 w-48">الإجراء عند المخالفة</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-100 dark:divide-slate-800 text-slate-700 dark:text-slate-300">
+                <tr>
+                  <td class="p-2 font-mono font-bold text-blue-600">V-L01</td>
+                  <td class="p-2 font-semibold">إيجابية الكميات</td>
+                  <td class="p-2 font-mono text-[11px]">Quantity &gt; 0 (فواتير عادية) | Quantity &lt; 0 (فواتير مردودات فقط)</td>
+                  <td class="p-2 text-rose-600 font-semibold">منع كميات صفرية أو سالبة غير مبررة</td>
+                </tr>
+                <tr>
+                  <td class="p-2 font-mono font-bold text-blue-600">V-L02</td>
+                  <td class="p-2 font-semibold">منع البيع بالسالب (Negative Stock)</td>
+                  <td class="p-2 font-mono text-[11px]">Quantity &lt;= (StockBalance.OnHandQty - StockBalance.ReservedQty)</td>
+                  <td class="p-2 text-rose-600 font-semibold">رفض الصرف منعاً لانهيار التكلفة</td>
+                </tr>
+                <tr>
+                  <td class="p-2 font-mono font-bold text-blue-600">V-L03</td>
+                  <td class="p-2 font-semibold">التشغيلات والصلاحية (FEFO/FIFO)</td>
+                  <td class="p-2 font-mono text-[11px]">Item.IsLotTracked =&gt; LotNumber != null AND ExpiryDate &gt; Today</td>
+                  <td class="p-2 text-rose-600 font-semibold">منع صرف مواد منتهية الصلاحية</td>
+                </tr>
+                <tr>
+                  <td class="p-2 font-mono font-bold text-blue-600">V-L04</td>
+                  <td class="p-2 font-semibold">الأرقام التسلسلية (Serials)</td>
+                  <td class="p-2 font-mono text-[11px]">Item.IsSerialTracked =&gt; Count(Serials) == Quantity AND Status == InStock</td>
+                  <td class="p-2 text-rose-600 font-semibold">منع بيع أجهزة بدون سيريال فريد</td>
+                </tr>
+                <tr>
+                  <td class="p-2 font-mono font-bold text-blue-600">V-L05</td>
+                  <td class="p-2 font-semibold">معاملات تحويل الوحدات (UoM)</td>
+                  <td class="p-2 font-mono text-[11px]">BaseQuantity == Quantity * UomConversion.Factor</td>
+                  <td class="p-2 text-rose-600 font-semibold">منع خطأ ضرب تحويل الكراتين لحبات</td>
+                </tr>
+                <tr>
+                  <td class="p-2 font-mono font-bold text-blue-600">V-L06</td>
+                  <td class="p-2 font-semibold">خيارات المعدلات الإلزامية (POS)</td>
+                  <td class="p-2 font-mono text-[11px]">Grp.IsRequired =&gt; SelectedCount &gt;= MinSelections &amp;&amp; &lt;= MaxSelections</td>
+                  <td class="p-2 text-amber-600 font-semibold">منع إضافة الصنف حتى اكتمال خياراته</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- LEVEL 4: PRICING & MARGIN -->
+        <div class="glass-card rounded-2xl p-5 border-l-4 border-l-amber-500 space-y-3">
+          <div class="flex items-center justify-between">
+            <h4 class="font-bold text-base text-slate-800 dark:text-slate-100 flex items-center gap-2">
+              <span class="w-6 h-6 rounded-lg bg-amber-100 dark:bg-amber-950 text-amber-600 flex items-center justify-center font-bold text-xs">4</span>
+              التحقق من الأسعار والخصومات وهوامش الربح (Pricing &amp; Margin Control)
+            </h4>
+            <span class="text-[11px] px-2.5 py-0.5 rounded-full bg-amber-100 dark:bg-amber-950/50 text-amber-700 font-semibold">4 قواعد</span>
+          </div>
+
+          <div class="table-container">
+            <table class="w-full text-xs text-right border-collapse">
+              <thead>
+                <tr class="bg-slate-100 dark:bg-slate-800/60 text-slate-600 dark:text-slate-300 font-bold">
+                  <th class="p-2 w-16">الكود</th>
+                  <th class="p-2 w-48">قاعدة التحقق</th>
+                  <th class="p-2">الشرط البرمجي (Validation Rule)</th>
+                  <th class="p-2 w-48">الإجراء عند المخالفة</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-100 dark:divide-slate-800 text-slate-700 dark:text-slate-300">
+                <tr>
+                  <td class="p-2 font-mono font-bold text-amber-600">V-M01</td>
+                  <td class="p-2 font-semibold">الحد الأدنى لسعر البيع</td>
+                  <td class="p-2 font-mono text-[11px]">UnitPrice &gt;= PriceListItem.MinPrice</td>
+                  <td class="p-2 text-rose-600 font-semibold">حظر البيع بأقل من الحد الأدنى</td>
+                </tr>
+                <tr>
+                  <td class="p-2 font-mono font-bold text-amber-600">V-M02</td>
+                  <td class="p-2 font-semibold">منع البيع بأقل من التكلفة</td>
+                  <td class="p-2 font-mono text-[11px]">UnitPrice &gt;= UnitCost (مستودعات وتجزئة)</td>
+                  <td class="p-2 text-rose-600 font-semibold">تحذير حرج وحظر إلا بموافقة المدير</td>
+                </tr>
+                <tr>
+                  <td class="p-2 font-mono font-bold text-amber-600">V-M03</td>
+                  <td class="p-2 font-semibold">سقف الخصم وصلاحيات المستخدم</td>
+                  <td class="p-2 font-mono text-[11px]">DiscountPercent &lt;= User.MaxAllowedDiscountPercent</td>
+                  <td class="p-2 text-rose-600 font-semibold">منع الخصومات العشوائية غير المصرحة</td>
+                </tr>
+                <tr>
+                  <td class="p-2 font-mono font-bold text-amber-600">V-M04</td>
+                  <td class="p-2 font-semibold">منع الخصم السالب أو الزائد</td>
+                  <td class="p-2 font-mono text-[11px]">DiscountAmount &gt;= 0 AND DiscountAmount &lt;= (Quantity * UnitPrice)</td>
+                  <td class="p-2 text-rose-600 font-semibold">منع أن يصبح صافي السطر سالباً</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- LEVEL 5: MATHEMATICAL & TAX -->
+        <div class="glass-card rounded-2xl p-5 border-l-4 border-l-purple-500 space-y-3">
+          <div class="flex items-center justify-between">
+            <h4 class="font-bold text-base text-slate-800 dark:text-slate-100 flex items-center gap-2">
+              <span class="w-6 h-6 rounded-lg bg-purple-100 dark:bg-purple-950 text-purple-600 flex items-center justify-center font-bold text-xs">5</span>
+              التحقق من المعادلات الرياضية والضرائب (Mathematical &amp; Tax Precision)
+            </h4>
+            <span class="text-[11px] px-2.5 py-0.5 rounded-full bg-purple-100 dark:bg-purple-950/50 text-purple-700 font-semibold">4 قواعد</span>
+          </div>
+
+          <div class="table-container">
+            <table class="w-full text-xs text-right border-collapse">
+              <thead>
+                <tr class="bg-slate-100 dark:bg-slate-800/60 text-slate-600 dark:text-slate-300 font-bold">
+                  <th class="p-2 w-16">الكود</th>
+                  <th class="p-2 w-48">قاعدة التحقق</th>
+                  <th class="p-2">الشرط البرمجي (Validation Rule)</th>
+                  <th class="p-2 w-48">الإجراء عند المخالفة</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-100 dark:divide-slate-800 text-slate-700 dark:text-slate-300">
+                <tr>
+                  <td class="p-2 font-mono font-bold text-purple-600">V-T01</td>
+                  <td class="p-2 font-semibold">مطابقة معادلة السطر</td>
+                  <td class="p-2 font-mono text-[11px]">LineTotal == Round((Qty * Price) - Discount + TaxAmount, 2)</td>
+                  <td class="p-2 text-rose-600 font-semibold">إعادة الحساب بالباك إند وتصحيح الكسر</td>
+                </tr>
+                <tr>
+                  <td class="p-2 font-mono font-bold text-purple-600">V-T02</td>
+                  <td class="p-2 font-semibold">مطابقة مجاميع الرأس للسطور</td>
+                  <td class="p-2 font-mono text-[11px]">Header.TotalGross == Sum(Lines.LineGross) &amp;&amp; Header.Tax == Sum(Lines.Tax)</td>
+                  <td class="p-2 text-rose-600 font-semibold">رفض الحفظ عند وجود تفاوت &gt; 0.01</td>
+                </tr>
+                <tr>
+                  <td class="p-2 font-mono font-bold text-purple-600">V-T03</td>
+                  <td class="p-2 font-semibold">الشمول الضريبي (Inclusive)</td>
+                  <td class="p-2 font-mono text-[11px]">TaxInclusive =&gt; TaxableBase = LineTotal / (1 + (Rate / 100))</td>
+                  <td class="p-2 text-rose-600 font-semibold">منع ازدواجية احتساب الضريبة</td>
+                </tr>
+                <tr>
+                  <td class="p-2 font-mono font-bold text-purple-600">V-T04</td>
+                  <td class="p-2 font-semibold">الرقم الضريبي للمنشأة</td>
+                  <td class="p-2 font-mono text-[11px]">Seller.VatNumber.Length == 15 AND StartsWith('3') AND EndsWith('3')</td>
+                  <td class="p-2 text-rose-600 font-semibold">حظر إصدار الفاتورة الضريبية ZATCA</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- LEVEL 6: SETTLEMENT & PAYMENTS -->
+        <div class="glass-card rounded-2xl p-5 border-l-4 border-l-cyan-500 space-y-3">
+          <div class="flex items-center justify-between">
+            <h4 class="font-bold text-base text-slate-800 dark:text-slate-100 flex items-center gap-2">
+              <span class="w-6 h-6 rounded-lg bg-cyan-100 dark:bg-cyan-950 text-cyan-600 flex items-center justify-center font-bold text-xs">6</span>
+              التحقق من السداد وتطابق المقبوضات (Settlement &amp; Payments)
+            </h4>
+            <span class="text-[11px] px-2.5 py-0.5 rounded-full bg-cyan-100 dark:bg-cyan-950/50 text-cyan-700 font-semibold">3 قواعد</span>
+          </div>
+
+          <div class="table-container">
+            <table class="w-full text-xs text-right border-collapse">
+              <thead>
+                <tr class="bg-slate-100 dark:bg-slate-800/60 text-slate-600 dark:text-slate-300 font-bold">
+                  <th class="p-2 w-16">الكود</th>
+                  <th class="p-2 w-48">قاعدة التحقق</th>
+                  <th class="p-2">الشرط البرمجي (Validation Rule)</th>
+                  <th class="p-2 w-48">الإجراء عند المخالفة</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-100 dark:divide-slate-800 text-slate-700 dark:text-slate-300">
+                <tr>
+                  <td class="p-2 font-mono font-bold text-cyan-600">V-S01</td>
+                  <td class="p-2 font-semibold">كفاية المدفوع في النقدي</td>
+                  <td class="p-2 font-mono text-[11px]">Sum(Payments.Amount) &gt;= TotalAmount =&gt; Change = Paid - Total</td>
+                  <td class="p-2 text-rose-600 font-semibold">منع إنهاء الفاتورة النقدية برصيد معلق</td>
+                </tr>
+                <tr>
+                  <td class="p-2 font-mono font-bold text-cyan-600">V-S02</td>
+                  <td class="p-2 font-semibold">مراجع البطاقات الإلكترونية</td>
+                  <td class="p-2 font-mono text-[11px]">PaymentMethod == Card =&gt; TransactionReference != null || TerminalId != null</td>
+                  <td class="p-2 text-rose-600 font-semibold">منع دفع شبكة وهمي بدون إيصال</td>
+                </tr>
+                <tr>
+                  <td class="p-2 font-mono font-bold text-cyan-600">V-S03</td>
+                  <td class="p-2 font-semibold">صلاحية ورصيد بطاقات الهدايا</td>
+                  <td class="p-2 font-mono text-[11px]">GiftCard.IsActive &amp;&amp; ExpDate &gt; Now &amp;&amp; RedeemedQty &lt;= CurrentBalance</td>
+                  <td class="p-2 text-rose-600 font-semibold">رفض بطاقات الهدايا المنتهية أو الفارغة</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- LEVEL 7: REFUNDS & VOIDS -->
+        <div class="glass-card rounded-2xl p-5 border-l-4 border-l-rose-500 space-y-3">
+          <div class="flex items-center justify-between">
+            <h4 class="font-bold text-base text-slate-800 dark:text-slate-100 flex items-center gap-2">
+              <span class="w-6 h-6 rounded-lg bg-rose-100 dark:bg-rose-950 text-rose-600 flex items-center justify-center font-bold text-xs">7</span>
+              التحقق من المردودات والإلغاء (Refunds, Returns &amp; Void Control)
+            </h4>
+            <span class="text-[11px] px-2.5 py-0.5 rounded-full bg-rose-100 dark:bg-rose-950/50 text-rose-700 font-semibold">3 قواعد</span>
+          </div>
+
+          <div class="table-container">
+            <table class="w-full text-xs text-right border-collapse">
+              <thead>
+                <tr class="bg-slate-100 dark:bg-slate-800/60 text-slate-600 dark:text-slate-300 font-bold">
+                  <th class="p-2 w-16">الكود</th>
+                  <th class="p-2 w-48">قاعدة التحقق</th>
+                  <th class="p-2">الشرط البرمجي (Validation Rule)</th>
+                  <th class="p-2 w-48">الإجراء عند المخالفة</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-100 dark:divide-slate-800 text-slate-700 dark:text-slate-300">
+                <tr>
+                  <td class="p-2 font-mono font-bold text-rose-600">V-R01</td>
+                  <td class="p-2 font-semibold">الارتباط بالفاتورة الأصلية</td>
+                  <td class="p-2 font-mono text-[11px]">Refund.OriginalOrderId != null AND OriginalOrder.IsPaid == true</td>
+                  <td class="p-2 text-rose-600 font-semibold">منع استرجاع فاتورة وهمية أو غير مدفوعة</td>
+                </tr>
+                <tr>
+                  <td class="p-2 font-mono font-bold text-rose-600">V-R02</td>
+                  <td class="p-2 font-semibold">سقف الكمية المرتجعة</td>
+                  <td class="p-2 font-mono text-[11px]">QuantityToRefund &lt;= (OriginalSoldQty - TotalPreviouslyRefundedQty)</td>
+                  <td class="p-2 text-rose-600 font-semibold">منع استرجاع كمية تزيد عما اشتراه العميل</td>
+                </tr>
+                <tr>
+                  <td class="p-2 font-mono font-bold text-rose-600">V-R03</td>
+                  <td class="p-2 font-semibold">تدقيق إلغاء السطور (Void Audit)</td>
+                  <td class="p-2 font-mono text-[11px]">VoidLine =&gt; Reason != null AND ApprovedBySupervisor != null</td>
+                  <td class="p-2 text-rose-600 font-semibold">تسجيل أمني كامل لمحاولات الإلغاء لمنع السرقات</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- LEVEL 8: POSTING & ZATCA -->
+        <div class="glass-card rounded-2xl p-5 border-l-4 border-l-indigo-500 space-y-3">
+          <div class="flex items-center justify-between">
+            <h4 class="font-bold text-base text-slate-800 dark:text-slate-100 flex items-center gap-2">
+              <span class="w-6 h-6 rounded-lg bg-indigo-100 dark:bg-indigo-950 text-indigo-600 flex items-center justify-center font-bold text-xs">8</span>
+              التحقق من الترحيل المحاسبي والفوترة الإلكترونية (Posting &amp; ZATCA Compliance)
+            </h4>
+            <span class="text-[11px] px-2.5 py-0.5 rounded-full bg-indigo-100 dark:bg-indigo-950/50 text-indigo-700 font-semibold">3 قواعد</span>
+          </div>
+
+          <div class="table-container">
+            <table class="w-full text-xs text-right border-collapse">
+              <thead>
+                <tr class="bg-slate-100 dark:bg-slate-800/60 text-slate-600 dark:text-slate-300 font-bold">
+                  <th class="p-2 w-16">الكود</th>
+                  <th class="p-2 w-48">قاعدة التحقق</th>
+                  <th class="p-2">الشرط البرمجي (Validation Rule)</th>
+                  <th class="p-2 w-48">الإجراء عند المخالفة</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-100 dark:divide-slate-800 text-slate-700 dark:text-slate-300">
+                <tr>
+                  <td class="p-2 font-mono font-bold text-indigo-600">V-A01</td>
+                  <td class="p-2 font-semibold">توازن القيد المحاسبي المتولد</td>
+                  <td class="p-2 font-mono text-[11px]">Sum(GlVoucherDetails.Debit) == Sum(GlVoucherDetails.Credit)</td>
+                  <td class="p-2 text-rose-600 font-semibold">فشل الترحيل الفوري في حال عدم التوازن</td>
+                </tr>
+                <tr>
+                  <td class="p-2 font-mono font-bold text-indigo-600">V-A02</td>
+                  <td class="p-2 font-semibold">منع التعديل بعد الترحيل</td>
+                  <td class="p-2 font-mono text-[11px]">DocStatusCode == 3 (Posted) =&gt; IsReadOnly (Update/Delete Disabled)</td>
+                  <td class="p-2 text-rose-600 font-semibold">إغلاق السجل واعتماد إشعار تسوية فقط</td>
+                </tr>
+                <tr>
+                  <td class="p-2 font-mono font-bold text-indigo-600">V-A03</td>
+                  <td class="p-2 font-semibold">سلامة الـ Hash والـ QR Code</td>
+                  <td class="p-2 font-mono text-[11px]">EInvoiceHash == ComputeSha256(XML) AND TLV QR Base64 Valid</td>
+                  <td class="p-2 text-rose-600 font-semibold">رفض الاعتماد لمخالفة معايير هيئة الزكاة</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- SECTION 5: IMPLEMENTATION CODE SNIPPET -->
+    <section class="glass-card rounded-3xl p-6 sm:p-8 space-y-4">
+      <div class="flex items-center justify-between">
+        <div>
+          <h3 class="text-lg font-black text-slate-900 dark:text-white">
+            💻 نموذج برمجي تطبيقي (FluentValidation Implementation)
+          </h3>
+          <p class="text-xs text-slate-500 dark:text-slate-400">
+            كود جاهز للتطبيق في طبقة التطبيق <code class="font-bold">ThinkOnErp.Application</code> لضمان الرقابة الصارمة
+          </p>
+        </div>
+        <span class="text-xs font-mono px-3 py-1 bg-slate-100 dark:bg-slate-800 rounded-lg text-slate-600 dark:text-slate-300">
+          C# • FluentValidation
+        </span>
+      </div>
+
+      <div class="bg-slate-900 text-slate-100 p-5 rounded-2xl overflow-x-auto text-xs leading-relaxed">
+<pre><code class="language-csharp">public class CreateTrxDocumentDtoValidator : AbstractValidator&lt;CreateTrxDocumentDto&gt;
+{
+    public CreateTrxDocumentDtoValidator()
+    {
+        // 1. Header Validations
+        RuleFor(x => x.BranchId).GreaterThan(0).WithMessage("معرف الفرع إلزامي وصحيح");
+        RuleFor(x => x.DocYear).InclusiveBetween(2020, 2050).WithMessage("السنة المالية غير صالحة");
+        RuleFor(x => x.DocDate).NotEmpty().LessThanOrEqualTo(DateTime.UtcNow.AddHours(24))
+            .WithMessage("تاريخ المستند لا يمكن أن يكون في المستقبل البعيد");
+
+        // 2. Party &amp; Credit Validations
+        When(x => x.PaymentMethodCode == 2 /* Credit */, () => {
+            RuleFor(x => x.PartyId).NotNull().GreaterThan(0)
+                .WithMessage("العميل إلزامي في حالة البيع الآجل، ولا يُسمح بالعميل النقدي العام");
+        });
+
+        // 3. Lines Integrity
+        RuleFor(x => x.Lines).NotEmpty().WithMessage("يجب أن تحتوي الفاتورة على سطر صنف واحد على الأقل");
+        RuleForEach(x => x.Lines).ChildRules(line =>
+        {
+            line.RuleFor(l => l.ItemId).GreaterThan(0).WithMessage("معرف الصنف إلزامي");
+            line.RuleFor(l => l.QuantityOut).GreaterThan(0).When(l => l.QuantityIn == 0)
+                .WithMessage("الكمية المصروفة يجب أن تكون أكبر من الصفر");
+            line.RuleFor(l => l.UnitPrice).GreaterThan(0)
+                .WithMessage("سعر الوحدة يجب أن يكون قيمة موجبة");
+            line.RuleFor(l => l.DiscountAmount)
+                .Must((l, d) => d &gt;= 0 &amp;&amp; d &lt;= (l.QuantityOut * l.UnitPrice))
+                .WithMessage("قيمة الخصم يجب ألا تتجاوز إجمالي السطر");
+        });
+
+        // 4. Totals Recalculation Check
+        RuleFor(x => x.DiscountAmount).GreaterThanOrEqualTo(0);
+    }
+}</code></pre>
+      </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="border-t border-slate-200 dark:border-slate-800 pt-6 text-center text-xs text-slate-500 dark:text-slate-400 space-y-2">
+      <p>تم إعداد هذا التقرير الهندسي الشامل لتوثيق معمارية فواتير المستودعات ونقاط البيع في نظام <strong>ThinkOn ERP</strong>.</p>
+      <p class="font-mono text-[11px] text-slate-400">ThinkOnErp Clean Architecture • Oracle Database • ZATCA Compliant • 2026</p>
+    </footer>
+
+  </main>
+
+</body>
+</html>

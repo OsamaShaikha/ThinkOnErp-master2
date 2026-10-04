@@ -28,6 +28,7 @@ public sealed class InvItemRepository : IInvItemRepository
                 .ThenInclude(sb => sb.Warehouse)
             .Include(i => i.TaxRate)
             .Include(i => i.TaxGroup)
+            .Include(i => i.Serials)
             .FirstOrDefaultAsync(i => i.Id == id, cancellationToken);
     }
 
@@ -38,6 +39,7 @@ public sealed class InvItemRepository : IInvItemRepository
             .Include(i => i.Barcodes)
             .Include(i => i.TaxRate)
             .Include(i => i.TaxGroup)
+            .Include(i => i.Serials)
             .FirstOrDefaultAsync(i => i.ItemCode == itemCode, cancellationToken);
     }
 
@@ -56,6 +58,7 @@ public sealed class InvItemRepository : IInvItemRepository
             .Include(i => i.StockBalances)
             .Include(i => i.TaxRate)
             .Include(i => i.TaxGroup)
+            .Include(i => i.Serials)
             .AsQueryable();
 
         if (categoryId.HasValue && categoryId.Value > 0)
@@ -100,6 +103,7 @@ public sealed class InvItemRepository : IInvItemRepository
             .Include(i => i.TaxRate)
             .Include(i => i.TaxGroup)
             .Include(i => i.Category)
+            .Include(i => i.Serials)
             .Where(i => i.IsActive && i.ShowInPos)
             .AsQueryable();
 

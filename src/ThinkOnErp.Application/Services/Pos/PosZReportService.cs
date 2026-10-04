@@ -1,11 +1,18 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
 using ThinkOnErp.Application.Common;
 using ThinkOnErp.Application.DTOs.Pos;
+using ThinkOnErp.Application.DTOs.Inventory.StockMovements;
+using ThinkOnErp.Application.Services.Inventory;
+using ThinkOnErp.Domain.Constants;
 using ThinkOnErp.Domain.Entities.Pos;
 using ThinkOnErp.Domain.Entities.Pos.Enums;
+using ThinkOnErp.Domain.Interfaces;
+using ThinkOnErp.Domain.Interfaces.Inventory;
 using ThinkOnErp.Domain.Interfaces.Pos;
 
 namespace ThinkOnErp.Application.Services.Pos;
@@ -29,17 +36,29 @@ public class PosZReportService : IPosZReportService
     private readonly IPosShiftRepository _shiftRepository;
     private readonly IPosOrderRepository _orderRepository;
     private readonly IPosAuditService _auditService;
+    private readonly IInvStockLedgerService _stockLedgerService;
+    private readonly ISysSettingRepository _settingRepo;
+    private readonly IInvWarehouseRepository _warehouseRepo;
+    private readonly ILogger<PosZReportService> _logger;
 
     public PosZReportService(
         IPosZReportRepository zReportRepository,
         IPosShiftRepository shiftRepository,
         IPosOrderRepository orderRepository,
-        IPosAuditService auditService)
+        IPosAuditService auditService,
+        IInvStockLedgerService stockLedgerService,
+        ISysSettingRepository settingRepo,
+        IInvWarehouseRepository warehouseRepo,
+        ILogger<PosZReportService> logger)
     {
         _zReportRepository = zReportRepository;
         _shiftRepository = shiftRepository;
         _orderRepository = orderRepository;
         _auditService = auditService;
+        _stockLedgerService = stockLedgerService;
+        _settingRepo = settingRepo;
+        _warehouseRepo = warehouseRepo;
+        _logger = logger;
     }
 
     public async Task<ApiResponse<ZReportSummaryDto>> GenerateZReportAsync(GenerateZReportDto dto, string username, CancellationToken ct = default)
@@ -104,6 +123,8 @@ public class PosZReportService : IPosZReportService
 
         await _zReportRepository.AddZReportAsync(zReport, ct);
         await _zReportRepository.SaveChangesAsync(ct);
+
+        await DeductShiftConsolidatedStockIfConfiguredAsync(shiftOrders, zReport, username, ct);
 
         await _auditService.LogZReportGeneratedAsync(
             zReport.BranchId,
@@ -176,5 +197,116 @@ public class PosZReportService : IPosZReportService
             IsPostedToGl = z.IsPostedToGl,
             GeneratedBy = z.GeneratedBy
         };
+    }
+
+    private async Task DeductShiftConsolidatedStockIfConfiguredAsync(
+        List<PosOrderHeader> shiftOrders,
+        PosZReport zReport,
+        string username,
+        CancellationToken ct)
+    {
+        try
+        {
+            var setting = await _settingRepo.GetByCodeAsync(SysSettingKeys.PosStockDeductionMode);
+            if (setting == null || !int.TryParse(setting.SettingValue, out var mode) || mode != SysCodeKeys.PosStockDeductionModes.Consolidated)
+            {
+                return; // Only process if mode is explicitly Consolidated (2)
+            }
+
+            var warehouseId = await ResolvePosWarehouseIdAsync(zReport.BranchId, ct);
+            if (warehouseId <= 0)
+            {
+                _logger.LogWarning("No active warehouse found for consolidated POS stock deduction in branch {BranchId}", zReport.BranchId);
+                return;
+            }
+
+            // Group sales lines by ItemId and UomId
+            var salesLines = shiftOrders
+                .Where(o => !o.IsRefund && o.IsPaid)
+                .SelectMany(o => o.Lines)
+                .Where(l => !l.IsVoided && l.Quantity > 0)
+                .GroupBy(l => new { l.ItemId, l.UomId });
+
+            foreach (var g in salesLines)
+            {
+                var totalQty = g.Sum(l => l.Quantity);
+                var moveReq = new StockMovementRequestDto
+                {
+                    ItemId = g.Key.ItemId,
+                    WarehouseId = warehouseId,
+                    Quantity = totalQty,
+                    UomCode = g.Key.UomId > 0 ? g.Key.UomId : 1,
+                    TransactionType = SysCodeKeys.StockTransactionTypes.PosSales, // 1004
+                    SourceDocId = $"Z-REP-{zReport.ZSequenceNumber}",
+                    SourceDocType = "POS_ZREPORT",
+                    SourceModule = "POS",
+                    Notes = $"Consolidated POS deduction for Shift #{zReport.ShiftId}, Z-Report #{zReport.ZSequenceNumber}"
+                };
+
+                var postResult = await _stockLedgerService.PostMovementAsync(moveReq, ct);
+                if (!postResult.Success)
+                {
+                    _logger.LogWarning("Consolidated stock deduction warning for Item {ItemId}: {Message}", g.Key.ItemId, postResult.Message);
+                }
+            }
+
+            // Group refund lines by ItemId and UomId for restock
+            var refundLines = shiftOrders
+                .Where(o => o.IsRefund && o.IsPaid)
+                .SelectMany(o => o.Lines)
+                .Where(l => !l.IsVoided && Math.Abs(line_qty(l)) > 0)
+                .GroupBy(l => new { l.ItemId, l.UomId });
+
+            foreach (var g in refundLines)
+            {
+                var totalQty = g.Sum(l => Math.Abs(l.Quantity));
+                var moveReq = new StockMovementRequestDto
+                {
+                    ItemId = g.Key.ItemId,
+                    WarehouseId = warehouseId,
+                    Quantity = totalQty,
+                    UomCode = g.Key.UomId > 0 ? g.Key.UomId : 1,
+                    TransactionType = SysCodeKeys.StockTransactionTypes.SalesReturnRestock, // 1501
+                    SourceDocId = $"Z-REP-{zReport.ZSequenceNumber}",
+                    SourceDocType = "POS_ZREPORT_REFUND",
+                    SourceModule = "POS",
+                    Notes = $"Consolidated POS restock for Shift #{zReport.ShiftId}, Z-Report #{zReport.ZSequenceNumber}"
+                };
+
+                var postResult = await _stockLedgerService.PostMovementAsync(moveReq, ct);
+                if (!postResult.Success)
+                {
+                    _logger.LogWarning("Consolidated stock restock warning for Item {ItemId}: {Message}", g.Key.ItemId, postResult.Message);
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to perform consolidated POS stock deduction for Z-Report {ZReportId}", zReport.Id);
+        }
+    }
+
+    private static decimal line_qty(PosOrderLine line) => line.Quantity;
+
+    private async Task<long> ResolvePosWarehouseIdAsync(long branchId, CancellationToken ct)
+    {
+        var whSetting = await _settingRepo.GetByCodeAsync(SysSettingKeys.PosDefaultWarehouseId);
+        if (whSetting != null && long.TryParse(whSetting.SettingValue, out var whId) && whId > 0)
+        {
+            return whId;
+        }
+
+        try
+        {
+            var warehouses = await _warehouseRepo.GetAllByBranchAsync(branchId, ct);
+            var activeWh = warehouses.FirstOrDefault(w => w.IsActive);
+            if (activeWh != null) return activeWh.Id;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Error fetching warehouses for branch {BranchId}", branchId);
+        }
+
+        return 61; // Default fallback POS warehouse
     }
 }

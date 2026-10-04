@@ -23,6 +23,8 @@ public interface IPosOrderRepository
         int pageSize = 20,
         CancellationToken ct = default);
     Task<int> GetOrderCountTodayAsync(long branchId, CancellationToken ct = default);
+    Task<string> GenerateNextShiftOrderNumberAsync(long shiftId, bool isRefund, CancellationToken ct = default);
+    Task<string> GenerateNextInvoiceNumberAsync(long branchId, int year, bool isRefund, CancellationToken ct = default);
     Task AddOrderAsync(PosOrderHeader order, CancellationToken ct = default);
     Task UpdateOrderAsync(PosOrderHeader order, CancellationToken ct = default);
     Task DeleteOrderAsync(PosOrderHeader order, CancellationToken ct = default);

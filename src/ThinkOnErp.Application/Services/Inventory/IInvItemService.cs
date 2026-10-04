@@ -30,4 +30,11 @@ public interface IInvItemService
     Task<ApiResponse<ThinkOnErp.Application.DTOs.Pos.PosItemDto>> GetPosItemByBarcodeAsync(
         string barcode,
         CancellationToken cancellationToken = default);
+    Task<ApiResponse<ThinkOnErp.Application.DTOs.Pos.PosItemDto>> GetPosItemByIdAsync(
+        long id,
+        CancellationToken cancellationToken = default);
+    Task<ApiResponse<List<string>>> GetPosItemSerialsAsync(
+        long itemId,
+        long? warehouseId = null,
+        CancellationToken cancellationToken = default);
 }

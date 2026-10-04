@@ -250,4 +250,12 @@ public static class SysCodeKeys
         public const int Kiosk = 5;
         public const int QrTable = 6;
     }
+
+    public static class PosStockDeductionModes
+    {
+        public const int Mgr = 35;
+        public const int RealTime = 1;
+        public const int Consolidated = 2;
+        public const int None = 3;
+    }
 }
