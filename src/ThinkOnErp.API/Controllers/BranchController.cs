@@ -1,4 +1,4 @@
-﻿using MediatR;
+using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using ThinkOnErp.API.Authorization;
@@ -183,6 +183,10 @@ public class BranchController : ControllerBase
                 BaseCurrencyId = dto.BaseCurrencyId,
                 RoundingRules = dto.RoundingRules,
                 UsersLimit = dto.UsersLimit,
+                Latitude = dto.Latitude,
+                Longitude = dto.Longitude,
+                GeofenceRadiusMeters = dto.GeofenceRadiusMeters > 0 ? dto.GeofenceRadiusMeters : 100.0m,
+                EnforceGeofence = dto.EnforceGeofence,
                 BranchLogo = branchLogo != null ? await ReadFileBytesAsync(branchLogo) : null,
                 Systems = dto.Systems,
                 CreationUser = User.Identity?.Name ?? "system"
@@ -275,6 +279,10 @@ public class BranchController : ControllerBase
                 BaseCurrencyId = dto.BaseCurrencyId,
                 RoundingRules = dto.RoundingRules,
                 UsersLimit = dto.UsersLimit,
+                Latitude = dto.Latitude,
+                Longitude = dto.Longitude,
+                GeofenceRadiusMeters = dto.GeofenceRadiusMeters,
+                EnforceGeofence = dto.EnforceGeofence,
                 BranchLogo = branchLogo != null ? await ReadFileBytesAsync(branchLogo) : null,
                 UpdateUser = User.Identity?.Name ?? "system"
             };

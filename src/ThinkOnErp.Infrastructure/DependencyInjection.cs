@@ -173,6 +173,8 @@ public static class DependencyInjection
         services.AddScoped<ILegacyAuditService, LegacyAuditService>();
         services.AddScoped<ICurrentTenantContext, HttpCurrentTenantContext>();
         services.AddScoped<ICoaWorkbookReader, XlsxCoaWorkbookReader>();
+        services.AddScoped<ThinkOnErp.Application.Services.Hr.IXlsxEmployeeWorkbookReader, ThinkOnErp.Infrastructure.Services.Hr.XlsxEmployeeWorkbookReader>();
+        services.AddScoped<ThinkOnErp.Application.Services.Hr.IXlsxEmployeeWorkbookWriter, ThinkOnErp.Infrastructure.Services.Hr.XlsxEmployeeWorkbookWriter>();
         services.AddScoped<IGlVoucherRepository, GlVoucherRepository>();
         services.AddScoped<IGlOpeningBalanceRepository, GlOpeningBalanceRepository>();
         services.AddScoped<IGlCostCenterRepository, GlCostCenterRepository>();

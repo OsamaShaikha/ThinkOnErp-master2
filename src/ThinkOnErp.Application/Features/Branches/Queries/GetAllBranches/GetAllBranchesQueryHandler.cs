@@ -1,4 +1,4 @@
-﻿using MediatR;
+using MediatR;
 using ThinkOnErp.Application.DTOs.Branch;
 using ThinkOnErp.Domain.Interfaces;
 
@@ -47,6 +47,10 @@ public class GetAllBranchesQueryHandler : IRequestHandler<GetAllBranchesQuery, L
                 HasLogo = b.BranchLogoPath != null,
                 BranchLogoBase64 = logoBase64,
                 IsActive = b.IsActive,
+                Latitude = b.Latitude,
+                Longitude = b.Longitude,
+                GeofenceRadiusMeters = b.GeofenceRadiusMeters,
+                EnforceGeofence = b.EnforceGeofence,
                 CreationUser = b.CreationUser,
                 CreationDate = b.CreationDate,
                 UpdateUser = b.UpdateUser,

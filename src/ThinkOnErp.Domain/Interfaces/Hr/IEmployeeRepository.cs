@@ -17,6 +17,13 @@ public interface IEmployeeRepository
         int pageSize = 20,
         CancellationToken cancellationToken = default);
 
+    Task<IReadOnlyList<Employee>> GetAllEmployeesForExportAsync(
+        string? searchKeyword = null,
+        string? departmentCode = null,
+        string? status = null,
+        long? branchId = null,
+        CancellationToken cancellationToken = default);
+
     Task<Employee?> GetEmployeeByCodeAsync(string employeeCode, CancellationToken cancellationToken = default);
     Task<bool> ExistsByCodeAsync(string employeeCode, CancellationToken cancellationToken = default);
     Task<bool> ExistsByNationalIdAsync(string nationalId, string? excludeEmployeeCode = null, CancellationToken cancellationToken = default);

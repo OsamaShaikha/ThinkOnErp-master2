@@ -1,0 +1,1753 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ThinkOnERP · الموارد البشرية وإدارة الإجازات والبصمات والموظفين</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #070e1a;
+      --panel: #0d1726;
+      --panel2: #132238;
+      --line: #1e3553;
+      --line-bright: #2f5380;
+      --text: #f0f6fc;
+      --muted: #94a9c9;
+      --primary: #2563eb;
+      --primary-hover: #1d4ed8;
+      --ok: #10b981;
+      --ok-hover: #059669;
+      --bad: #ef4444;
+      --warn: #f59e0b;
+      --purple: #8b5cf6;
+      --cyan: #06b6d4;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: radial-gradient(circle at 10% 20%, #0a1729 0%, #070e1a 70%, #041018 100%);
+      color: var(--text);
+      font-family: 'Cairo', 'Inter', Segoe UI, sans-serif;
+      min-height: 100vh;
+    }
+    header {
+      padding: 16px 30px;
+      border-bottom: 1px solid var(--line);
+      background: rgba(13, 23, 38, 0.85);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      backdrop-filter: blur(14px);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 15px;
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+    .logo-badge {
+      width: 44px;
+      height: 44px;
+      background: linear-gradient(135deg, #10b981, #2563eb);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-size: 20px;
+      color: white;
+      box-shadow: 0 4px 14px rgba(16, 185, 129, 0.35);
+    }
+    h1 {
+      margin: 0;
+      font-size: 19px;
+      font-weight: 700;
+      letter-spacing: -0.3px;
+    }
+    .sub {
+      color: var(--muted);
+      font-size: 12.5px;
+      margin-top: 2px;
+    }
+    .header-actions {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+    .badge {
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .badge-ok { background: rgba(16, 185, 129, 0.15); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.3); }
+    .badge-warn { background: rgba(245, 158, 11, 0.15); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.3); }
+    .badge-bad { background: rgba(239, 68, 68, 0.15); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.3); }
+
+    /* Modern Navigation Tabs */
+    .nav-tabs {
+      display: flex;
+      background: rgba(13, 23, 38, 0.95);
+      border-bottom: 1px solid var(--line);
+      padding: 0 30px;
+      gap: 10px;
+      overflow-x: auto;
+    }
+    .tab-btn {
+      padding: 14px 20px;
+      border: none;
+      background: none;
+      color: var(--muted);
+      font-family: inherit;
+      font-size: 13.5px;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      border-bottom: 3px solid transparent;
+      transition: all 0.2s;
+      white-space: nowrap;
+    }
+    .tab-btn:hover {
+      color: var(--text);
+      background: rgba(255, 255, 255, 0.02);
+    }
+    .tab-btn.active {
+      color: #60a5fa;
+      border-bottom-color: #2563eb;
+      background: rgba(37, 99, 235, 0.05);
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 370px 1fr;
+      gap: 22px;
+      padding: 24px 30px;
+      max-width: 1700px;
+      margin: 0 auto;
+    }
+    @media(max-width: 1100px) {
+      .layout { grid-template-columns: 1fr; }
+    }
+    .card {
+      background: rgba(13, 23, 38, 0.75);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 20px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+      backdrop-filter: blur(8px);
+      margin-bottom: 20px;
+    }
+    .card-title {
+      font-size: 15px;
+      font-weight: 700;
+      margin: 0 0 14px 0;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: #e2e8f0;
+      border-bottom: 1px solid rgba(30, 53, 83, 0.5);
+      padding-bottom: 10px;
+    }
+    label {
+      display: block;
+      color: var(--muted);
+      font-size: 12.5px;
+      margin: 10px 0 5px;
+      font-weight: 600;
+    }
+    input, select, textarea {
+      width: 100%;
+      background: #08111d;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      color: var(--text);
+      padding: 9px 12px;
+      font-size: 13.5px;
+      font-family: inherit;
+      outline: none;
+      transition: all 0.2s;
+    }
+    input:focus, select:focus, textarea:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.2);
+    }
+    .row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      background: linear-gradient(135deg, var(--ok), var(--ok-hover));
+      color: white;
+      border: none;
+      border-radius: 10px;
+      padding: 9px 14px;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s;
+      box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25);
+    }
+    .btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 6px 16px rgba(16, 185, 129, 0.35);
+    }
+    .btn-primary {
+      background: linear-gradient(135deg, var(--primary), var(--primary-hover));
+      box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
+    }
+    .btn-primary:hover {
+      box-shadow: 0 6px 16px rgba(37, 99, 235, 0.35);
+    }
+    .btn-purple {
+      background: linear-gradient(135deg, var(--purple), #7c3aed);
+      box-shadow: 0 4px 12px rgba(139, 92, 246, 0.25);
+    }
+    .btn-purple:hover {
+      box-shadow: 0 6px 16px rgba(139, 92, 246, 0.35);
+    }
+    .btn-secondary {
+      background: #142236;
+      border: 1px solid var(--line);
+      color: #cbd5e1;
+      box-shadow: none;
+    }
+    .btn-secondary:hover {
+      background: #1e3352;
+      border-color: var(--line-bright);
+    }
+    .btn-warn {
+      background: linear-gradient(135deg, var(--warn), #d97706);
+      box-shadow: 0 4px 12px rgba(245, 158, 11, 0.25);
+    }
+    .btn-bad {
+      background: linear-gradient(135deg, var(--bad), #b91c1c);
+      box-shadow: 0 4px 12px rgba(239, 68, 68, 0.25);
+    }
+    .btn-block { width: 100%; margin-top: 10px; }
+
+    /* Drop Zone */
+    .dropzone {
+      border: 2px dashed var(--line-bright);
+      border-radius: 14px;
+      padding: 24px 16px;
+      text-align: center;
+      background: rgba(8, 17, 29, 0.5);
+      cursor: pointer;
+      transition: all 0.2s;
+      position: relative;
+    }
+    .dropzone:hover, .dropzone.dragover {
+      border-color: var(--primary);
+      background: rgba(37, 99, 235, 0.08);
+    }
+    .dropzone-icon {
+      font-size: 34px;
+      margin-bottom: 8px;
+    }
+    .dropzone input[type=file] {
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      cursor: pointer;
+    }
+    .file-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: #15273f;
+      border: 1px solid var(--line);
+      padding: 8px 14px;
+      border-radius: 20px;
+      font-size: 13px;
+      color: #93c5fd;
+      margin-top: 10px;
+    }
+
+    /* Stats bar */
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+      gap: 14px;
+      margin-bottom: 20px;
+    }
+    .stat-card {
+      background: rgba(13, 23, 38, 0.7);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 16px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .stat-val {
+      font-size: 24px;
+      font-weight: 800;
+      color: white;
+      margin-top: 4px;
+    }
+    .stat-label {
+      font-size: 12.5px;
+      color: var(--muted);
+    }
+
+    /* Tables */
+    .table-container {
+      overflow-x: auto;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: #09121f;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: right;
+      font-size: 13px;
+    }
+    th, td {
+      padding: 11px 14px;
+      border-bottom: 1px solid var(--line);
+      white-space: nowrap;
+    }
+    th {
+      background: #0d1b2e;
+      color: #94a3b8;
+      font-weight: 700;
+      position: sticky;
+      top: 0;
+    }
+    tr:hover td {
+      background: rgba(255, 255, 255, 0.02);
+    }
+    .tag {
+      padding: 3px 8px;
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: 700;
+      display: inline-block;
+    }
+    .tag-active { background: rgba(16, 185, 129, 0.2); color: #34d399; }
+    .tag-suspended { background: rgba(245, 158, 11, 0.2); color: #fbbf24; }
+    .tag-terminated { background: rgba(239, 68, 68, 0.2); color: #f87171; }
+    .tag-pending { background: rgba(245, 158, 11, 0.25); color: #fcd34d; border: 1px solid rgba(245, 158, 11, 0.4); }
+    .tag-approved { background: rgba(16, 185, 129, 0.2); color: #6ee7b7; border: 1px solid rgba(16, 185, 129, 0.4); }
+    .tag-rejected { background: rgba(239, 68, 68, 0.2); color: #fca5a5; border: 1px solid rgba(239, 68, 68, 0.4); }
+
+    /* Filter Bar */
+    .filter-bar {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+      align-items: flex-end;
+    }
+    .filter-item {
+      flex: 1;
+      min-width: 170px;
+    }
+
+    /* Error log table */
+    .log-box {
+      margin-top: 14px;
+      padding: 14px;
+      border-radius: 12px;
+      font-size: 13px;
+      max-height: 250px;
+      overflow-y: auto;
+    }
+    .log-box.error {
+      background: rgba(239, 68, 68, 0.1);
+      border: 1px solid rgba(239, 68, 68, 0.3);
+      color: #fca5a5;
+    }
+    .log-box.success {
+      background: rgba(16, 185, 129, 0.1);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+      color: #86efac;
+    }
+    .log-box table {
+      margin-top: 8px;
+      font-size: 12px;
+    }
+    .log-box th {
+      background: rgba(0, 0, 0, 0.2);
+    }
+    .code-txt {
+      font-family: monospace;
+      color: #7dd3fc;
+      background: rgba(0,0,0,0.3);
+      padding: 2px 6px;
+      border-radius: 4px;
+    }
+
+    .info-note {
+      font-size: 12px;
+      color: var(--muted);
+      line-height: 1.6;
+      background: rgba(15, 23, 42, 0.6);
+      border-right: 3px solid #3b82f6;
+      padding: 8px 12px;
+      border-radius: 6px;
+      margin-top: 10px;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="brand">
+    <div class="logo-badge">HR</div>
+    <div>
+      <h1>نظام ThinkOnERP · الموارد البشرية وإدارة الإجازات وتصحيح البصمات</h1>
+      <div class="sub">HR Employee Management · Excel Import/Export · Vacation Accrual · Missing Punch Regularization</div>
+    </div>
+  </div>
+  <div class="header-actions">
+    <span id="connBadge" class="badge badge-warn">غير متصل بالخادم</span>
+    <button class="btn btn-secondary" onclick="exportExcel()">
+      <span>📥</span> تصدير الموظفين
+    </button>
+    <button class="btn btn-secondary" onclick="downloadTemplate()">
+      <span>📄</span> نموذج الإكسل
+    </button>
+  </div>
+</header>
+
+<!-- Navigation Tabs -->
+<nav class="nav-tabs">
+  <button id="tabBtnEmployees" class="tab-btn active" onclick="switchTab('employees')">
+    <span>👥</span> إدارة الموظفين واستيراد إكسل (Employees & Import/Export)
+  </button>
+  <button id="tabBtnVacations" class="tab-btn" onclick="switchTab('vacations')">
+    <span>🏖️</span> أرصدة وإدارة الإجازات (Vacation Accrual & Grants)
+  </button>
+  <button id="tabBtnCorrections" class="tab-btn" onclick="switchTab('corrections')">
+    <span>⏱️</span> تصحيح البصمة المفقودة والاعتمادات (Missing Punch Corrections)
+  </button>
+</nav>
+
+<!-- View 1: Employees & Excel Import/Export -->
+<div id="viewEmployees" class="layout">
+  <!-- Left Column: Auth & Import -->
+  <aside>
+    <!-- Authentication Card -->
+    <div class="card">
+      <div class="card-title">🔐 تسجيل الدخول وربط الـ API</div>
+      <label>عنوان الخادم (API Base URL)</label>
+      <input id="apiBase" value="http://localhost:5000">
+
+      <label>كود الشركة (Company Code)</label>
+      <input id="companyCode" placeholder="مثال: TECH01">
+
+      <div class="row">
+        <div>
+          <label>اسم المستخدم</label>
+          <input id="username" placeholder="tech_admin">
+        </div>
+        <div>
+          <label>كلمة المرور</label>
+          <input id="password" type="password" placeholder="••••••••">
+        </div>
+      </div>
+      <button class="btn btn-primary btn-block" onclick="login()">دخول الشركة (Login)</button>
+
+      <label>أو الصق رمز التوكن مباشرة (Bearer Token)</label>
+      <textarea id="manualToken" rows="2" placeholder="eyJhbGciOi..."></textarea>
+      <button class="btn btn-secondary btn-block" onclick="applyToken()">تطبيق التوكن</button>
+    </div>
+
+    <!-- Excel Import Card -->
+    <div class="card">
+      <div class="card-title">📊 استيراد الموظفين من إكسل (Excel Import)</div>
+      
+      <div class="dropzone" id="dropzone">
+        <input type="file" id="fileInput" accept=".xlsx" onchange="handleFileSelected(this.files)">
+        <div class="dropzone-icon">📁</div>
+        <div style="font-weight:700;">اسحب ملف الإكسل هنا أو اضغط للاختيار</div>
+        <div class="sub" style="margin-top:4px;">يدعم ملفات .xlsx فقط وبكلا اللغتين العربية والإنجليزية</div>
+      </div>
+
+      <div id="fileInfo" style="display:none; text-align:center;">
+        <div class="file-pill">
+          <span>📄</span>
+          <span id="fileName">employees.xlsx</span>
+          <span id="fileSize" style="color:var(--muted); font-size:11px;">(0 KB)</span>
+        </div>
+      </div>
+
+      <div style="margin: 14px 0 6px;">
+        <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
+          <input type="checkbox" id="chkUpdateExisting" style="width:18px; height:18px; margin:0;">
+          <span>تحديث الموظفين الحاليين إذا وُجدوا (Update Existing)</span>
+        </label>
+      </div>
+
+      <div class="row" style="margin-top:14px;">
+        <button class="btn btn-secondary" onclick="validateExcelFile()">
+          <span>🔍</span> فحص الملف (Validate)
+        </button>
+        <button class="btn btn-ok" onclick="importExcelFile()">
+          <span>⚡</span> استيراد الآن (Import)
+        </button>
+      </div>
+
+      <!-- Import Feedback -->
+      <div id="importResult" style="display:none;"></div>
+    </div>
+  </aside>
+
+  <!-- Right Column: Stats & Employees Explorer -->
+  <main>
+    <!-- Stats Row -->
+    <div class="stats-row">
+      <div class="stat-card">
+        <div>
+          <div class="stat-label">إجمالي الموظفين</div>
+          <div class="stat-val" id="statTotal">0</div>
+        </div>
+        <div style="font-size:28px;">👥</div>
+      </div>
+      <div class="stat-card">
+        <div>
+          <div class="stat-label">الموظفون على رأس عملهم</div>
+          <div class="stat-val" id="statActive" style="color:#34d399;">0</div>
+        </div>
+        <div style="font-size:28px;">🟢</div>
+      </div>
+      <div class="stat-card">
+        <div>
+          <div class="stat-label">الأقسام المسجلة</div>
+          <div class="stat-val" id="statDepts" style="color:#60a5fa;">0</div>
+        </div>
+        <div style="font-size:28px;">🏢</div>
+      </div>
+    </div>
+
+    <!-- Explorer Card -->
+    <div class="card">
+      <div class="card-title" style="justify-content:space-between;">
+        <span>📋 قائمة الموظفين (Employees Explorer)</span>
+        <button class="btn btn-secondary" style="padding:6px 12px; font-size:12px;" onclick="loadEmployees()">
+          🔄 تحديث القائمة
+        </button>
+      </div>
+
+      <!-- Filters -->
+      <div class="filter-bar">
+        <div class="filter-item" style="flex:2;">
+          <label>بحث (الاسم، الكود، الرقم الوطني، الهاتف)</label>
+          <input id="txtSearch" placeholder="ابحث هنا..." onkeyup="if(event.key==='Enter') loadEmployees()">
+        </div>
+        <div class="filter-item">
+          <label>القسم (Department)</label>
+          <input id="txtDept" placeholder="كود القسم" onkeyup="if(event.key==='Enter') loadEmployees()">
+        </div>
+        <div class="filter-item">
+          <label>الحالة (Status)</label>
+          <select id="selStatus" onchange="loadEmployees()">
+            <option value="">جميع الحالات (ALL)</option>
+            <option value="ACTIVE">على رأس عمله (ACTIVE)</option>
+            <option value="SUSPENDED">معلق (SUSPENDED)</option>
+            <option value="TERMINATED">منهي الخدمة (TERMINATED)</option>
+          </select>
+        </div>
+        <div style="display:flex; align-items:flex-end;">
+          <button class="btn btn-primary" onclick="loadEmployees()">بحث</button>
+        </div>
+      </div>
+
+      <!-- Table Container -->
+      <div class="table-container">
+        <table id="employeesTable">
+          <thead>
+            <tr>
+              <th>كود الموظف</th>
+              <th>الاسم بالعربي</th>
+              <th>الاسم بالإنجليزي</th>
+              <th>الرقم الوطني</th>
+              <th>القسم</th>
+              <th>المسمى الوظيفي</th>
+              <th>الحالة</th>
+              <th>الراتب الأساسي</th>
+              <th>الهاتف</th>
+              <th>إجراءات سريعة</th>
+            </tr>
+          </thead>
+          <tbody id="employeesTbody">
+            <tr>
+              <td colspan="10" style="text-align:center; padding:30px; color:var(--muted);">
+                يرجى تسجيل الدخول لعرض الموظفين.
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Pagination -->
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-top:14px; color:var(--muted); font-size:13px;">
+        <span id="pageInfo">الصفحة 1 من 1 (0 موظف)</span>
+        <div style="display:flex; gap:8px;">
+          <button class="btn btn-secondary" id="btnPrev" onclick="changePage(-1)" style="padding:6px 12px;">السابق</button>
+          <button class="btn btn-secondary" id="btnNext" onclick="changePage(1)" style="padding:6px 12px;">التالي</button>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- View 2: Vacations Accrual & Grants Management -->
+<div id="viewVacations" class="layout" style="display:none;">
+  <!-- Left Column: Operations -->
+  <aside>
+    <!-- Operation 1: Monthly Accrual -->
+    <div class="card">
+      <div class="card-title">⚡ الاستحقاق الشهري التراكمي (Accrual)</div>
+      <div class="info-note">
+        يحسب تلقائياً حسب مدة خدمة الموظف:
+        <br>• أقل من 5 سنوات: <strong>1.17 يوم/شهر</strong> (14 يوم/سنة)
+        <br>• 5 سنوات فأكثر: <strong>1.75 يوم/شهر</strong> (21 يوم/سنة)
+        <br>• يراعي تاريخ التعيين خلال الشهر وسقف الرصيد السنوي.
+      </div>
+      <div class="row">
+        <div>
+          <label>السنة</label>
+          <input id="accrueYear" type="number" value="2026">
+        </div>
+        <div>
+          <label>الشهر (1 - 12)</label>
+          <input id="accrueMonth" type="number" min="1" max="12" value="3">
+        </div>
+      </div>
+      <label>كود الموظف (اتركه فارغاً لكل الموظفين النشطين)</label>
+      <input id="accrueEmpCode" placeholder="اختياري: EMP001">
+
+      <button class="btn btn-primary btn-block" onclick="runMonthlyAccrual()">
+        <span>⚡</span> تشغيل الاستحقاق الشهري
+      </button>
+    </div>
+
+    <!-- Operation 2: Upfront Yearly Grant -->
+    <div class="card">
+      <div class="card-title">🎁 المنح السنوي المسبق (Yearly Grant)</div>
+      <div class="info-note">
+        يمنح الرصيد السنوي كاملاً (14 أو 21 يوماً) دفعة واحدة في بداية السنة للشركات التي تمنح الرصيد مقدماً.
+      </div>
+      <div class="row">
+        <div>
+          <label>السنة</label>
+          <input id="grantYear" type="number" value="2026">
+        </div>
+        <div>
+          <label>نوع الإجازة</label>
+          <input id="grantLeaveType" value="ANNUAL" readonly>
+        </div>
+      </div>
+      <label>كود الموظف (اتركه فارغاً لمنح الجميع)</label>
+      <input id="grantEmpCode" placeholder="اختياري: EMP001">
+
+      <button class="btn btn-purple btn-block" onclick="runYearlyGrant()">
+        <span>🎁</span> توزيع المنح السنوي المسبق
+      </button>
+    </div>
+
+    <!-- Operation 3: Manual Adjustment / Opening Balance -->
+    <div class="card">
+      <div class="card-title">📝 رصيد افتتاحي / تسوية يدوية (Adjustment)</div>
+      <label>كود الموظف *</label>
+      <input id="adjEmpCode" placeholder="EMP001">
+
+      <div class="row">
+        <div>
+          <label>السنة</label>
+          <input id="adjYear" type="number" value="2026">
+        </div>
+        <div>
+          <label>الأيام (+ أو -)</label>
+          <input id="adjDays" type="number" step="0.5" value="10">
+        </div>
+      </div>
+
+      <label>نوع الحركة</label>
+      <select id="adjType">
+        <option value="OPENING_BALANCE">رصيد افتتاحي (OPENING_BALANCE)</option>
+        <option value="ADJUSTMENT">تسوية / بدل عمل إضافي (ADJUSTMENT)</option>
+        <option value="BONUS">مكافأة أيام إجازة (BONUS)</option>
+        <option value="CORRECTION">تصحيح إداري (CORRECTION)</option>
+      </select>
+
+      <label>السبب / ملاحظات</label>
+      <input id="adjReason" placeholder="مثال: رصيد افتتاحي عند نقل النظام أو تعويض إضافي">
+
+      <button class="btn btn-ok btn-block" onclick="saveManualGrant()">
+        <span>💾</span> حفظ الرصيد / التعديل
+      </button>
+    </div>
+
+    <!-- Operation 4: Year-End Rollover -->
+    <div class="card">
+      <div class="card-title">🔁 ترحيل نهاية العام (Rollover)</div>
+      <div class="info-note">
+        ينقل الرصيد المتبقي إلى العام الجديد بحد أقصى <strong>7 أيام</strong> (سقف الترحيل القانوني) وتُسقط الأيام الزائدة تلقائياً.
+      </div>
+      <div class="row">
+        <div>
+          <label>من عام</label>
+          <input id="rollFromYear" type="number" value="2025">
+        </div>
+        <div>
+          <label>إلى عام</label>
+          <input id="rollToYear" type="number" value="2026">
+        </div>
+      </div>
+      <button class="btn btn-warn btn-block" onclick="runYearEndRollover()">
+        <span>🔁</span> تشغيل ترحيل الأرصدة
+      </button>
+    </div>
+  </aside>
+
+  <!-- Right Column: Balances Explorer & Results -->
+  <main>
+    <!-- Vacation Stats -->
+    <div class="stats-row">
+      <div class="stat-card">
+        <div>
+          <div class="stat-label">المستحق / الممنوح للموظف</div>
+          <div class="stat-val" id="cardAccrued" style="color:#60a5fa;">-</div>
+        </div>
+        <div style="font-size:26px;">📈</div>
+      </div>
+      <div class="stat-card">
+        <div>
+          <div class="stat-label">المرحل من العام السابق</div>
+          <div class="stat-val" id="cardCarried" style="color:#fbbf24;">-</div>
+        </div>
+        <div style="font-size:26px;">🔄</div>
+      </div>
+      <div class="stat-card">
+        <div>
+          <div class="stat-label">الأيام المستهلكة</div>
+          <div class="stat-val" id="cardUsed" style="color:#f87171;">-</div>
+        </div>
+        <div style="font-size:26px;">📉</div>
+      </div>
+      <div class="stat-card" style="border-color:#10b981; background:rgba(16,185,129,0.08);">
+        <div>
+          <div class="stat-label" style="color:#86efac; font-weight:700;">الرصيد المتاح حالياً</div>
+          <div class="stat-val" id="cardRemaining" style="color:#34d399;">-</div>
+        </div>
+        <div style="font-size:26px;">✨</div>
+      </div>
+    </div>
+
+    <!-- Active Employee Balance Inquirer -->
+    <div class="card">
+      <div class="card-title" style="justify-content:space-between;">
+        <span>🔍 استعلام رصيد إجازات الموظف</span>
+        <div style="display:flex; gap:10px;">
+          <input id="balSearchCode" placeholder="كود الموظف..." style="width:160px; padding:6px 10px;">
+          <input id="balSearchYear" type="number" value="2026" style="width:100px; padding:6px 10px;">
+          <button class="btn btn-primary" style="padding:6px 14px;" onclick="inquireEmployeeBalance()">
+            استعلام
+          </button>
+        </div>
+      </div>
+
+      <!-- Employee Banner -->
+      <div id="empBanner" style="display:none; background:#0e1b2f; border:1px solid var(--line); border-radius:12px; padding:16px; margin-bottom:16px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+          <div>
+            <h3 id="empBannerName" style="margin:0; font-size:18px; color:white;">-</h3>
+            <div id="empBannerMeta" style="color:var(--muted); font-size:13px; margin-top:4px;">-</div>
+          </div>
+          <div style="text-align:left;">
+            <div style="font-size:12px; color:var(--muted);">سنة الرصيد المعروضة</div>
+            <div id="empBannerYear" style="font-size:20px; font-weight:800; color:#93c5fd;">2026</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Balances Table -->
+      <div class="table-container">
+        <table id="balancesTable">
+          <thead>
+            <tr>
+              <th>كود الإجازة</th>
+              <th>نوع الإجازة</th>
+              <th>السنة</th>
+              <th>المستحق / الممنوح</th>
+              <th>المرحل من العام السابق</th>
+              <th>المستهلك</th>
+              <th>الرصيد المتبقي</th>
+              <th>إجراء فوري</th>
+            </tr>
+          </thead>
+          <tbody id="balancesTbody">
+            <tr>
+              <td colspan="8" style="text-align:center; padding:30px; color:var(--muted);">
+                أدخل كود الموظف واضغط استعلام لعرض أرصدة الإجازات.
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Operations Output Log Box -->
+    <div class="card">
+      <div class="card-title">📜 سجل نتائج العمليات الفورية (Live Execution Log)</div>
+      <div id="vacationResultBox" class="log-box success" style="max-height:350px;">
+        جاهز لتنفيذ عمليات الاستحقاق أو المنح أو الترحيل...
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- View 3: Missing Punch & Attendance Corrections Management -->
+<div id="viewCorrections" class="layout" style="display:none;">
+  <!-- Left Column: Submit Correction Request -->
+  <aside>
+    <div class="card">
+      <div class="card-title">📝 تقديم طلب تصحيح بصمة مفقودة (Missing Punch)</div>
+      <div class="info-note">
+        يُستخدم عند نسيان تسجيل الحضور أو الانصراف أو عطل جهاز البصمة.
+        <br>• ينشأ الطلب بحالة <strong>معلق (PENDING)</strong>.
+        <br>• عند اعتماد المدير، يتم تصفير النقص واحتساب ساعات العمل والتأخير تلقائياً.
+      </div>
+
+      <label>كود الموظف *</label>
+      <input id="corrEmpCode" placeholder="مثال: EMP001">
+
+      <label>تاريخ يوم الحضور *</label>
+      <input id="corrDate" type="date">
+
+      <div class="row">
+        <div>
+          <label>وقت الدخول المطلوب</label>
+          <input id="corrCheckIn" type="datetime-local">
+        </div>
+        <div>
+          <label>وقت الخروج المطلوب</label>
+          <input id="corrCheckOut" type="datetime-local">
+        </div>
+      </div>
+
+      <label>سبب النسيان / مبرر التصحيح *</label>
+      <textarea id="corrReason" rows="3" placeholder="مثال: نسيان تسجيل الخروج عند المغادرة أو عطل جهاز البصمة في الفرع"></textarea>
+
+      <button class="btn btn-primary btn-block" onclick="submitCorrectionRequest()">
+        <span>📤</span> إرسال طلب التصحيح للاعتماد
+      </button>
+
+      <div id="corrSubmitFeedback" style="display:none; margin-top:12px;" class="log-box"></div>
+    </div>
+  </aside>
+
+  <!-- Right Column: Approvals & Requests Explorer -->
+  <main>
+    <!-- Stats Row for Corrections -->
+    <div class="stats-row">
+      <div class="stat-card">
+        <div>
+          <div class="stat-label">طلبات معلقة بانتظار الاعتماد</div>
+          <div class="stat-val" id="statCorrPending" style="color:#fbbf24;">0</div>
+        </div>
+        <div style="font-size:28px;">⏳</div>
+      </div>
+      <div class="stat-card">
+        <div>
+          <div class="stat-label">طلبات معتمدة</div>
+          <div class="stat-val" id="statCorrApproved" style="color:#34d399;">0</div>
+        </div>
+        <div style="font-size:28px;">✅</div>
+      </div>
+      <div class="stat-card">
+        <div>
+          <div class="stat-label">طلبات مرفوضة</div>
+          <div class="stat-val" id="statCorrRejected" style="color:#f87171;">0</div>
+        </div>
+        <div style="font-size:28px;">❌</div>
+      </div>
+    </div>
+
+    <!-- Requests Table Card -->
+    <div class="card">
+      <div class="card-title" style="justify-content:space-between;">
+        <span>📋 سجل طلبات تصحيح الحضور واعتمادات المدير (Attendance Approvals)</span>
+        <button class="btn btn-secondary" style="padding:6px 12px; font-size:12px;" onclick="loadCorrectionRequests()">
+          🔄 تحديث الطلبات
+        </button>
+      </div>
+
+      <!-- Filters -->
+      <div class="filter-bar">
+        <div class="filter-item" style="flex:2;">
+          <label>كود الموظف</label>
+          <input id="corrSearchEmp" placeholder="ابحث بكود الموظف..." onkeyup="if(event.key==='Enter') loadCorrectionRequests()">
+        </div>
+        <div class="filter-item">
+          <label>حالة الطلب</label>
+          <select id="corrSearchStatus" onchange="loadCorrectionRequests()">
+            <option value="">جميع الحالات (ALL)</option>
+            <option value="PENDING" selected>معلق بانتظار الاعتماد (PENDING)</option>
+            <option value="APPROVED">معتمد (APPROVED)</option>
+            <option value="REJECTED">مرفوض (REJECTED)</option>
+          </select>
+        </div>
+        <div style="display:flex; align-items:flex-end;">
+          <button class="btn btn-primary" onclick="loadCorrectionRequests()">تصفية</button>
+        </div>
+      </div>
+
+      <!-- Table Container -->
+      <div class="table-container">
+        <table id="correctionsTable">
+          <thead>
+            <tr>
+              <th>رقم الطلب</th>
+              <th>الموظف</th>
+              <th>تاريخ اليوم</th>
+              <th>البصمة المسجلة سابقاً</th>
+              <th>البصمة المطلوبة</th>
+              <th>السبب / المبرر</th>
+              <th>الحالة</th>
+              <th>المعتمد</th>
+              <th>الإجراء الإداري</th>
+            </tr>
+          </thead>
+          <tbody id="correctionsTbody">
+            <tr>
+              <td colspan="9" style="text-align:center; padding:30px; color:var(--muted);">
+                يرجى تسجيل الدخول أو الضغط على تحديث لعرض طلبات التصحيح.
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script>
+  let jwtToken = localStorage.getItem('thinkon_token') || '';
+  let currentPage = 1;
+  const pageSize = 15;
+  let totalEmployees = 0;
+  let selectedFile = null;
+  let currentActiveTab = 'employees';
+
+  // Set default today in date picker
+  const todayStr = new Date().toISOString().slice(0, 10);
+  const corrDateEl = document.getElementById('corrDate');
+  if (corrDateEl) corrDateEl.value = todayStr;
+
+  if (jwtToken) {
+    document.getElementById('manualToken').value = jwtToken;
+    setConnected(true);
+  }
+
+  function getBaseUrl() {
+    return document.getElementById('apiBase').value.replace(/\/$/, '');
+  }
+
+  function setConnected(connected, user = '') {
+    const badge = document.getElementById('connBadge');
+    if (connected) {
+      badge.className = 'badge badge-ok';
+      badge.textContent = `متصل بالخادم ${user ? '(' + user + ')' : '✓'}`;
+      loadEmployees();
+      loadCorrectionRequests();
+    } else {
+      badge.className = 'badge badge-warn';
+      badge.textContent = 'غير متصل بالخادم';
+    }
+  }
+
+  function switchTab(tab) {
+    currentActiveTab = tab;
+    document.getElementById('tabBtnEmployees').className = tab === 'employees' ? 'tab-btn active' : 'tab-btn';
+    document.getElementById('tabBtnVacations').className = tab === 'vacations' ? 'tab-btn active' : 'tab-btn';
+    document.getElementById('tabBtnCorrections').className = tab === 'corrections' ? 'tab-btn active' : 'tab-btn';
+
+    document.getElementById('viewEmployees').style.display = tab === 'employees' ? 'grid' : 'none';
+    document.getElementById('viewVacations').style.display = tab === 'vacations' ? 'grid' : 'none';
+    document.getElementById('viewCorrections').style.display = tab === 'corrections' ? 'grid' : 'none';
+
+    if (tab === 'corrections') {
+      loadCorrectionRequests();
+    }
+  }
+
+  function openEmployeeVacations(empCode) {
+    switchTab('vacations');
+    document.getElementById('balSearchCode').value = empCode;
+    document.getElementById('accrueEmpCode').value = empCode;
+    document.getElementById('grantEmpCode').value = empCode;
+    document.getElementById('adjEmpCode').value = empCode;
+    inquireEmployeeBalance();
+  }
+
+  function openEmployeeCorrections(empCode) {
+    switchTab('corrections');
+    document.getElementById('corrEmpCode').value = empCode;
+    document.getElementById('corrSearchEmp').value = empCode;
+    loadCorrectionRequests();
+  }
+
+  async function login() {
+    const base = getBaseUrl();
+    const companyCode = document.getElementById('companyCode').value.trim();
+    const username = document.getElementById('username').value.trim();
+    const password = document.getElementById('password').value;
+
+    if (!username || !password) {
+      alert('يرجى إدخال اسم المستخدم وكلمة المرور');
+      return;
+    }
+
+    try {
+      const res = await fetch(`${base}/api/Auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ companyCode, username, password })
+      });
+      const data = await res.json();
+      if (res.ok && data.success && data.data?.token) {
+        jwtToken = data.data.token;
+        localStorage.setItem('thinkon_token', jwtToken);
+        document.getElementById('manualToken').value = jwtToken;
+        setConnected(true, username);
+      } else {
+        alert('فشل تسجيل الدخول: ' + (data.message || 'خطأ في المصادقة'));
+      }
+    } catch (e) {
+      alert('تعذر الاتصال بالخادم: ' + e.message);
+    }
+  }
+
+  function applyToken() {
+    const t = document.getElementById('manualToken').value.trim();
+    if (t) {
+      jwtToken = t;
+      localStorage.setItem('thinkon_token', t);
+      setConnected(true);
+    }
+  }
+
+  function handleFileSelected(files) {
+    if (files && files.length > 0) {
+      selectedFile = files[0];
+      document.getElementById('fileName').textContent = selectedFile.name;
+      document.getElementById('fileSize').textContent = `(${(selectedFile.size / 1024).toFixed(1)} KB)`;
+      document.getElementById('fileInfo').style.display = 'block';
+    }
+  }
+
+  async function downloadTemplate() {
+    const base = getBaseUrl();
+    try {
+      const res = await fetch(`${base}/api/hr/employees/export-template`, {
+        headers: jwtToken ? { 'Authorization': `Bearer ${jwtToken}` } : {}
+      });
+      if (!res.ok) throw new Error('فشل تحميل النموذج من الخادم');
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'Employee_Import_Template.xlsx';
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (e) {
+      alert('خطأ أثناء تحميل النموذج: ' + e.message);
+    }
+  }
+
+  async function exportExcel() {
+    const base = getBaseUrl();
+    const search = encodeURIComponent(document.getElementById('txtSearch').value.trim());
+    const dept = encodeURIComponent(document.getElementById('txtDept').value.trim());
+    const status = encodeURIComponent(document.getElementById('selStatus').value);
+
+    let url = `${base}/api/hr/employees/export?`;
+    if (search) url += `searchKeyword=${search}&`;
+    if (dept) url += `departmentCode=${dept}&`;
+    if (status) url += `status=${status}&`;
+
+    try {
+      const res = await fetch(url, {
+        headers: jwtToken ? { 'Authorization': `Bearer ${jwtToken}` } : {}
+      });
+      if (!res.ok) throw new Error('فشل تصدير ملف الإكسل');
+      const blob = await res.blob();
+      const downloadUrl = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = downloadUrl;
+      a.download = `Employees_${new Date().toISOString().slice(0,10)}.xlsx`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(downloadUrl);
+    } catch (e) {
+      alert('خطأ أثناء تصدير الموظفين: ' + e.message);
+    }
+  }
+
+  async function validateExcelFile() {
+    if (!selectedFile) {
+      alert('يرجى اختيار ملف إكسل (.xlsx) أولاً');
+      return;
+    }
+    const base = getBaseUrl();
+    const formData = new FormData();
+    formData.append('file', selectedFile);
+
+    const resBox = document.getElementById('importResult');
+    resBox.style.display = 'block';
+    resBox.className = 'log-box';
+    resBox.innerHTML = 'جاري فحص الملف والتحقق من صحة البيانات...';
+
+    try {
+      const res = await fetch(`${base}/api/hr/employees/import/validate`, {
+        method: 'POST',
+        headers: jwtToken ? { 'Authorization': `Bearer ${jwtToken}` } : {},
+        body: formData
+      });
+      const data = await res.json();
+      renderImportResult(data, false);
+    } catch (e) {
+      resBox.className = 'log-box error';
+      resBox.innerHTML = `خطأ أثناء الاتصال بالخادم: ${e.message}`;
+    }
+  }
+
+  async function importExcelFile() {
+    if (!selectedFile) {
+      alert('يرجى اختيار ملف إكسل (.xlsx) أولاً');
+      return;
+    }
+    const base = getBaseUrl();
+    const updateExisting = document.getElementById('chkUpdateExisting').checked;
+    const formData = new FormData();
+    formData.append('file', selectedFile);
+
+    const resBox = document.getElementById('importResult');
+    resBox.style.display = 'block';
+    resBox.className = 'log-box';
+    resBox.innerHTML = 'جاري استيراد وحفظ الموظفين في قاعدة البيانات...';
+
+    try {
+      const res = await fetch(`${base}/api/hr/employees/import?updateExisting=${updateExisting}`, {
+        method: 'POST',
+        headers: jwtToken ? { 'Authorization': `Bearer ${jwtToken}` } : {},
+        body: formData
+      });
+      const data = await res.json();
+      renderImportResult(data, true);
+      if (res.ok && data.success) {
+        loadEmployees();
+      }
+    } catch (e) {
+      resBox.className = 'log-box error';
+      resBox.innerHTML = `خطأ أثناء الاستيراد: ${e.message}`;
+    }
+  }
+
+  function renderImportResult(data, isCommit) {
+    const resBox = document.getElementById('importResult');
+    resBox.style.display = 'block';
+
+    const result = data.data || {};
+    const isValid = data.success && (!result.errors || result.errors.length === 0);
+
+    if (isValid) {
+      resBox.className = 'log-box success';
+      let html = `<strong>✓ ${data.message || 'تمت العملية بنجاح!'}</strong><br>`;
+      html += `إجمالي السجلات: ${result.totalRows || 0} | سليم: ${result.successCount || 0}`;
+      if (isCommit) {
+        html += ` | تمت الإضافة: ${result.insertedCount || 0} | تم التحديث: ${result.updatedCount || 0}`;
+      }
+      if (result.warnings && result.warnings.length > 0) {
+        html += `<div style="margin-top:8px; color:#fde047;"><strong>ملاحظات:</strong><ul>${result.warnings.map(w => `<li>${w}</li>`).join('')}</ul></div>`;
+      }
+      resBox.innerHTML = html;
+    } else {
+      resBox.className = 'log-box error';
+      let html = `<strong>⚠️ ${data.message || 'فشلت العملية، توجد أخطاء في البيانات'}</strong>`;
+      if (result.errors && result.errors.length > 0) {
+        html += `<table><thead><tr><th>السطر</th><th>العمود</th><th>السبب</th></tr></thead><tbody>`;
+        for (const err of result.errors) {
+          html += `<tr><td>${err.rowNumber || '-'}</td><td><span class="code-txt">${err.column || 'عام'}</span></td><td>${err.message}</td></tr>`;
+        }
+        html += `</tbody></table>`;
+      }
+      resBox.innerHTML = html;
+    }
+  }
+
+  async function loadEmployees() {
+    if (!jwtToken) return;
+    const base = getBaseUrl();
+    const search = encodeURIComponent(document.getElementById('txtSearch').value.trim());
+    const dept = encodeURIComponent(document.getElementById('txtDept').value.trim());
+    const status = encodeURIComponent(document.getElementById('selStatus').value);
+
+    let url = `${base}/api/hr/employees?pageIndex=${currentPage}&pageSize=${pageSize}`;
+    if (search) url += `&searchKeyword=${search}`;
+    if (dept) url += `&departmentCode=${dept}`;
+    if (status) url += `&status=${status}`;
+
+    try {
+      const res = await fetch(url, {
+        headers: { 'Authorization': `Bearer ${jwtToken}` }
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        renderEmployees(data.data);
+      } else {
+        document.getElementById('employeesTbody').innerHTML = `<tr><td colspan="10" style="text-align:center; color:var(--bad);">فشل جلب الموظفين: ${data.message}</td></tr>`;
+      }
+    } catch (e) {
+      document.getElementById('employeesTbody').innerHTML = `<tr><td colspan="10" style="text-align:center; color:var(--bad);">خطأ: ${e.message}</td></tr>`;
+    }
+  }
+
+  function renderEmployees(paged) {
+    const tbody = document.getElementById('employeesTbody');
+    const items = paged.items || [];
+    totalEmployees = paged.totalCount || 0;
+
+    document.getElementById('statTotal').textContent = totalEmployees;
+    const activeCount = items.filter(i => (i.employmentStatus || i.status) === 'ACTIVE').length;
+    document.getElementById('statActive').textContent = activeCount;
+    const depts = new Set(items.map(i => i.departmentCode).filter(Boolean));
+    document.getElementById('statDepts').textContent = depts.size;
+
+    document.getElementById('pageInfo').textContent = `الصفحة ${currentPage} من ${Math.ceil(totalEmployees / pageSize) || 1} (${totalEmployees} موظف)`;
+
+    if (items.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="10" style="text-align:center; padding:30px; color:var(--muted);">لا يوجد موظفون مطابقون لشروط البحث.</td></tr>`;
+      return;
+    }
+
+    tbody.innerHTML = items.map(e => {
+      const st = e.employmentStatus || e.status || 'ACTIVE';
+      const tagClass = st === 'ACTIVE' ? 'tag-active' : (st === 'SUSPENDED' ? 'tag-suspended' : 'tag-terminated');
+      const salary = e.basicSalary ? Number(e.basicSalary).toFixed(2) + ' JOD' : '-';
+
+      return `
+        <tr>
+          <td><span class="code-txt">${e.employeeCode}</span></td>
+          <td><strong>${e.nameLocal || '-'}</strong></td>
+          <td style="color:var(--muted);">${e.nameEn || '-'}</td>
+          <td>${e.nationalId || '-'}</td>
+          <td>${e.departmentCode || '-'}</td>
+          <td>${e.positionCode || '-'}</td>
+          <td><span class="tag ${tagClass}">${st}</span></td>
+          <td>${salary}</td>
+          <td>${e.phone || '-'}</td>
+          <td style="white-space:nowrap;">
+            <button class="btn btn-secondary" style="padding:4px 8px; font-size:11.5px;" onclick="openEmployeeVacations('${e.employeeCode}')" title="أرصدة الإجازات">
+              🏖️ الإجازات
+            </button>
+            <button class="btn btn-secondary" style="padding:4px 8px; font-size:11.5px; margin-right:4px;" onclick="openEmployeeCorrections('${e.employeeCode}')" title="طلب تصحيح بصمة">
+              ⏱️ البصمة
+            </button>
+          </td>
+        </tr>
+      `;
+    }).join('');
+  }
+
+  function changePage(delta) {
+    const maxPage = Math.ceil(totalEmployees / pageSize) || 1;
+    const next = currentPage + delta;
+    if (next >= 1 && next <= maxPage) {
+      currentPage = next;
+      loadEmployees();
+    }
+  }
+
+  /* ================== VACATION BALANCES & ACCRUAL METHODS ================== */
+
+  async function inquireEmployeeBalance() {
+    const base = getBaseUrl();
+    const empCode = document.getElementById('balSearchCode').value.trim();
+    const year = parseInt(document.getElementById('balSearchYear').value) || 2026;
+
+    if (!empCode) {
+      alert('يرجى إدخال كود الموظف');
+      return;
+    }
+
+    try {
+      const res = await fetch(`${base}/api/hr/leaves/balances/${encodeURIComponent(empCode)}?year=${year}`, {
+        headers: jwtToken ? { 'Authorization': `Bearer ${jwtToken}` } : {}
+      });
+      const data = await res.json();
+
+      if (res.ok && data.success) {
+        renderBalances(empCode, year, data.data || []);
+      } else {
+        alert('تعذر جلب الأرصدة: ' + (data.message || 'خطأ غير معروف'));
+      }
+    } catch (e) {
+      alert('خطأ أثناء جلب الرصيد: ' + e.message);
+    }
+  }
+
+  function renderBalances(empCode, year, balances) {
+    document.getElementById('empBanner').style.display = 'block';
+    document.getElementById('empBannerName').textContent = `الموظف: ${empCode}`;
+    document.getElementById('empBannerMeta').textContent = `السنة المالية: ${year} · عدد السجلات: ${balances.length}`;
+    document.getElementById('empBannerYear').textContent = year;
+
+    const tbody = document.getElementById('balancesTbody');
+    if (!balances || balances.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; padding:20px; color:var(--muted);">لا يوجد رصيد مسجل لهذا الموظف لعام ${year}. يمكنك تشغيل الاستحقاق أو منح رصيد افتتاحي.</td></tr>`;
+      document.getElementById('cardAccrued').textContent = '0';
+      document.getElementById('cardCarried').textContent = '0';
+      document.getElementById('cardUsed').textContent = '0';
+      document.getElementById('cardRemaining').textContent = '0';
+      return;
+    }
+
+    let totAccrued = 0, totCarried = 0, totUsed = 0, totRemaining = 0;
+
+    tbody.innerHTML = balances.map(b => {
+      totAccrued += Number(b.accruedDays || 0);
+      totCarried += Number(b.carriedForwardDays || 0);
+      totUsed += Number(b.usedDays || 0);
+      totRemaining += Number(b.remainingDays || 0);
+
+      return `
+        <tr>
+          <td><span class="code-txt">${b.leaveTypeCode}</span></td>
+          <td><strong>${b.leaveTypeNameLocal || b.leaveTypeCode}</strong></td>
+          <td>${b.yearNo}</td>
+          <td style="color:#60a5fa; font-weight:700;">${Number(b.accruedDays).toFixed(2)}</td>
+          <td style="color:#fbbf24;">${Number(b.carriedForwardDays).toFixed(2)}</td>
+          <td style="color:#f87171;">${Number(b.usedDays).toFixed(2)}</td>
+          <td style="color:#34d399; font-weight:800; font-size:14px;">${Number(b.remainingDays).toFixed(2)}</td>
+          <td>
+            <button class="btn btn-secondary" style="padding:4px 8px; font-size:11px;" onclick="prepareQuickAdjustment('${b.employeeCode}', '${b.leaveTypeCode}', ${b.yearNo})">
+              تسوية
+            </button>
+          </td>
+        </tr>
+      `;
+    }).join('');
+
+    document.getElementById('cardAccrued').textContent = totAccrued.toFixed(2);
+    document.getElementById('cardCarried').textContent = totCarried.toFixed(2);
+    document.getElementById('cardUsed').textContent = totUsed.toFixed(2);
+    document.getElementById('cardRemaining').textContent = totRemaining.toFixed(2);
+  }
+
+  function prepareQuickAdjustment(code, typeCode, year) {
+    document.getElementById('adjEmpCode').value = code;
+    document.getElementById('adjYear').value = year;
+    window.scrollTo({ top: 300, behavior: 'smooth' });
+  }
+
+  async function runMonthlyAccrual() {
+    const base = getBaseUrl();
+    const yearNo = parseInt(document.getElementById('accrueYear').value);
+    const monthNo = parseInt(document.getElementById('accrueMonth').value);
+    const employeeCode = document.getElementById('accrueEmpCode').value.trim() || null;
+
+    const payload = {
+      yearNo,
+      monthNo,
+      leaveTypeCode: 'ANNUAL',
+      employeeCode
+    };
+
+    const log = document.getElementById('vacationResultBox');
+    log.className = 'log-box';
+    log.innerHTML = `جاري تشغيل الاستحقاق الشهري لشهر ${monthNo}/${yearNo}...`;
+
+    try {
+      const res = await fetch(`${base}/api/hr/leaves/balances/accrue-monthly`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(jwtToken ? { 'Authorization': `Bearer ${jwtToken}` } : {})
+        },
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json();
+
+      if (res.ok && data.success) {
+        log.className = 'log-box success';
+        const d = data.data;
+        let html = `<strong>✓ تم تنفيذ الاستحقاق الشهري بنجاح!</strong><br>`;
+        html += `الموظفون المعالجون: ${d.totalEmployeesProcessed} | السجلات المحدثة: ${d.updatedBalancesCount} | إجمالي الأيام المضافة: ${d.totalDaysAccrued}`;
+        if (d.details && d.details.length > 0) {
+          html += `<ul style="margin-top:8px;">${d.details.slice(0, 10).map(s => `<li>${s}</li>`).join('')}</ul>`;
+          if (d.details.length > 10) html += `<div>... والمزيد (${d.details.length - 10} موظف آخر)</div>`;
+        }
+        log.innerHTML = html;
+        if (employeeCode) inquireEmployeeBalance();
+      } else {
+        log.className = 'log-box error';
+        log.innerHTML = `<strong>⚠️ فشل الاستحقاق الشهري:</strong> ${data.message || 'خطأ غير معروف'}`;
+      }
+    } catch (e) {
+      log.className = 'log-box error';
+      log.innerHTML = `خطأ أثناء الاتصال بالخادم: ${e.message}`;
+    }
+  }
+
+  async function runYearlyGrant() {
+    const base = getBaseUrl();
+    const yearNo = parseInt(document.getElementById('grantYear').value);
+    const employeeCode = document.getElementById('grantEmpCode').value.trim() || null;
+
+    if (!confirm(`هل أنت متأكد من رغبتك في تطبيق المنح السنوي المسبق لعام ${yearNo}؟`)) return;
+
+    const payload = {
+      yearNo,
+      leaveTypeCode: 'ANNUAL',
+      departmentCode: null,
+      employeeCode,
+      prorateForMidYearHires: true
+    };
+
+    const log = document.getElementById('vacationResultBox');
+    log.className = 'log-box';
+    log.innerHTML = `جاري توزيع المنح السنوي المسبق لعام ${yearNo}...`;
+
+    try {
+      const res = await fetch(`${base}/api/hr/leaves/balances/yearly-grant`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(jwtToken ? { 'Authorization': `Bearer ${jwtToken}` } : {})
+        },
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json();
+
+      if (res.ok && data.success) {
+        log.className = 'log-box success';
+        const d = data.data;
+        let html = `<strong>✓ تم تنفيذ المنح السنوي المسبق بنجاح!</strong><br>`;
+        html += `الموظفون المعالجون: ${d.totalEmployeesProcessed} | السجلات المحدثة: ${d.updatedBalancesCount} | إجمالي الأيام الممنوحة: ${d.totalDaysAccrued}`;
+        if (d.details && d.details.length > 0) {
+          html += `<ul style="margin-top:8px;">${d.details.slice(0, 10).map(s => `<li>${s}</li>`).join('')}</ul>`;
+        }
+        log.innerHTML = html;
+        if (employeeCode) inquireEmployeeBalance();
+      } else {
+        log.className = 'log-box error';
+        log.innerHTML = `<strong>⚠️ فشل المنح السنوي:</strong> ${data.message || 'خطأ غير معروف'}`;
+      }
+    } catch (e) {
+      log.className = 'log-box error';
+      log.innerHTML = `خطأ أثناء الاتصال: ${e.message}`;
+    }
+  }
+
+  async function saveManualGrant() {
+    const base = getBaseUrl();
+    const employeeCode = document.getElementById('adjEmpCode').value.trim();
+    const yearNo = parseInt(document.getElementById('adjYear').value);
+    const days = parseFloat(document.getElementById('adjDays').value);
+    const adjustmentType = document.getElementById('adjType').value;
+    const reason = document.getElementById('adjReason').value.trim();
+
+    if (!employeeCode || isNaN(days)) {
+      alert('يرجى تحديد كود الموظف وعدد الأيام');
+      return;
+    }
+
+    const payload = {
+      employeeCode,
+      leaveTypeCode: 'ANNUAL',
+      yearNo,
+      days,
+      adjustmentType,
+      reason
+    };
+
+    const log = document.getElementById('vacationResultBox');
+    log.className = 'log-box';
+    log.innerHTML = `جاري حفظ التعديل للموظف ${employeeCode}...`;
+
+    try {
+      const res = await fetch(`${base}/api/hr/leaves/balances/grant`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(jwtToken ? { 'Authorization': `Bearer ${jwtToken}` } : {})
+        },
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json();
+
+      if (res.ok && data.success) {
+        log.className = 'log-box success';
+        const b = data.data;
+        log.innerHTML = `<strong>✓ تم حفظ التعديل بنجاح!</strong><br>الموظف: ${b.employeeCode} | الأيام المستحقة: ${b.accruedDays} | المتبقي: ${b.remainingDays}`;
+        document.getElementById('balSearchCode').value = employeeCode;
+        document.getElementById('balSearchYear').value = yearNo;
+        inquireEmployeeBalance();
+      } else {
+        log.className = 'log-box error';
+        log.innerHTML = `<strong>⚠️ فشل الحفظ:</strong> ${data.message || 'خطأ غير معروف'}`;
+      }
+    } catch (e) {
+      log.className = 'log-box error';
+      log.innerHTML = `خطأ أثناء الحفظ: ${e.message}`;
+    }
+  }
+
+  async function runYearEndRollover() {
+    const base = getBaseUrl();
+    const fromYear = parseInt(document.getElementById('rollFromYear').value);
+    const toYear = parseInt(document.getElementById('rollToYear').value);
+
+    if (!confirm(`هل أنت متأكد من ترحيل أرصدة الإجازات من عام ${fromYear} إلى عام ${toYear} مع تطبيق سقف الترحيل القانوني (7 أيام)؟`)) return;
+
+    const payload = {
+      fromYear,
+      toYear,
+      leaveTypeCode: 'ANNUAL'
+    };
+
+    const log = document.getElementById('vacationResultBox');
+    log.className = 'log-box';
+    log.innerHTML = `جاري ترحيل الأرصدة من ${fromYear} إلى ${toYear}...`;
+
+    try {
+      const res = await fetch(`${base}/api/hr/leaves/balances/year-end-rollover`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(jwtToken ? { 'Authorization': `Bearer ${jwtToken}` } : {})
+        },
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json();
+
+      if (res.ok && data.success) {
+        log.className = 'log-box success';
+        const d = data.data;
+        let html = `<strong>✓ تم ترحيل أرصدة نهاية العام بنجاح!</strong><br>`;
+        html += `الموظفون المعالجون: ${d.totalEmployeesProcessed} | سجلات الترحيل: ${d.rolloverBalancesCount} | إجمالي الأيام المرحلة: ${d.totalDaysCarriedForward} | الأيام المسقطة لانتهاء الصلاحية: ${d.totalDaysExpired}`;
+        if (d.details && d.details.length > 0) {
+          html += `<ul style="margin-top:8px;">${d.details.slice(0, 10).map(s => `<li>${s}</li>`).join('')}</ul>`;
+        }
+        log.innerHTML = html;
+      } else {
+        log.className = 'log-box error';
+        log.innerHTML = `<strong>⚠️ فشل الترحيل:</strong> ${data.message || 'خطأ غير معروف'}`;
+      }
+    } catch (e) {
+      log.className = 'log-box error';
+      log.innerHTML = `خطأ أثناء الاتصال: ${e.message}`;
+    }
+  }
+
+  /* ================== MISSING PUNCH & ATTENDANCE CORRECTIONS ================== */
+
+  async function submitCorrectionRequest() {
+    const base = getBaseUrl();
+    const employeeCode = document.getElementById('corrEmpCode').value.trim();
+    const dateVal = document.getElementById('corrDate').value;
+    const checkInVal = document.getElementById('corrCheckIn').value;
+    const checkOutVal = document.getElementById('corrCheckOut').value;
+    const reason = document.getElementById('corrReason').value.trim();
+    const feedback = document.getElementById('corrSubmitFeedback');
+
+    if (!employeeCode || !dateVal || !reason) {
+      alert('يرجى تحديد كود الموظف، تاريخ الحضور، ومبرر التصحيح');
+      return;
+    }
+
+    if (!checkInVal && !checkOutVal) {
+      alert('يرجى إدخال وقت الدخول أو الخروج المطلوب تصحيحه على الأقل');
+      return;
+    }
+
+    feedback.style.display = 'block';
+    feedback.className = 'log-box';
+    feedback.innerHTML = 'جاري إرسال طلب تصحيح البصمة...';
+
+    const payload = {
+      employeeCode,
+      attendanceDate: dateVal,
+      requestedCheckIn: checkInVal ? new Date(checkInVal).toISOString() : null,
+      requestedCheckOut: checkOutVal ? new Date(checkOutVal).toISOString() : null,
+      reason
+    };
+
+    try {
+      const res = await fetch(`${base}/api/hr/attendance-corrections`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(jwtToken ? { 'Authorization': `Bearer ${jwtToken}` } : {})
+        },
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json();
+
+      if (res.ok && data.success) {
+        feedback.className = 'log-box success';
+        feedback.innerHTML = `<strong>✓ تم إرسال طلب التصحيح بنجاح!</strong> رقم الطلب: #${data.data.id} (الحالة: معلق بانتظار الاعتماد).`;
+        document.getElementById('corrReason').value = '';
+        loadCorrectionRequests();
+      } else {
+        feedback.className = 'log-box error';
+        feedback.innerHTML = `<strong>⚠️ فشل إرسال الطلب:</strong> ${data.message || 'خطأ غير معروف'}`;
+      }
+    } catch (e) {
+      feedback.className = 'log-box error';
+      feedback.innerHTML = `خطأ أثناء الاتصال: ${e.message}`;
+    }
+  }
+
+  async function loadCorrectionRequests() {
+    if (!jwtToken) return;
+    const base = getBaseUrl();
+    const emp = encodeURIComponent(document.getElementById('corrSearchEmp').value.trim());
+    const status = encodeURIComponent(document.getElementById('corrSearchStatus').value);
+
+    let url = `${base}/api/hr/attendance-corrections?`;
+    if (emp) url += `employeeCode=${emp}&`;
+    if (status) url += `status=${status}&`;
+
+    try {
+      const res = await fetch(url, {
+        headers: { 'Authorization': `Bearer ${jwtToken}` }
+      });
+      const data = await res.json();
+
+      if (res.ok && data.success) {
+        renderCorrectionRequests(data.data || []);
+      } else {
+        document.getElementById('correctionsTbody').innerHTML = `<tr><td colspan="9" style="text-align:center; color:var(--bad);">فشل جلب الطلبات: ${data.message}</td></tr>`;
+      }
+    } catch (e) {
+      document.getElementById('correctionsTbody').innerHTML = `<tr><td colspan="9" style="text-align:center; color:var(--bad);">خطأ: ${e.message}</td></tr>`;
+    }
+  }
+
+  function renderCorrectionRequests(list) {
+    const tbody = document.getElementById('correctionsTbody');
+
+    const pending = list.filter(r => r.status === 'PENDING').length;
+    const approved = list.filter(r => r.status === 'APPROVED').length;
+    const rejected = list.filter(r => r.status === 'REJECTED').length;
+
+    document.getElementById('statCorrPending').textContent = pending;
+    document.getElementById('statCorrApproved').textContent = approved;
+    document.getElementById('statCorrRejected').textContent = rejected;
+
+    if (list.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="9" style="text-align:center; padding:30px; color:var(--muted);">لا توجد طلبات تصحيح مطابقة.</td></tr>`;
+      return;
+    }
+
+    tbody.innerHTML = list.map(r => {
+      const stClass = r.status === 'APPROVED' ? 'tag-approved' : (r.status === 'REJECTED' ? 'tag-rejected' : 'tag-pending');
+      const stName = r.status === 'APPROVED' ? 'معتمد' : (r.status === 'REJECTED' ? 'مرفوض' : 'معلق');
+
+      const dateStr = r.attendanceDate ? r.attendanceDate.slice(0, 10) : '-';
+      const oldIn = r.oldCheckIn ? r.oldCheckIn.slice(11, 16) : '<span style="color:#f87171;">مفقودة</span>';
+      const oldOut = r.oldCheckOut ? r.oldCheckOut.slice(11, 16) : '<span style="color:#f87171;">مفقودة</span>';
+
+      const reqIn = r.requestedCheckIn ? r.requestedCheckIn.slice(11, 16) : '-';
+      const reqOut = r.requestedCheckOut ? r.requestedCheckOut.slice(11, 16) : '-';
+
+      const approverInfo = r.approvedBy ? `${r.approvedBy} (${(r.approvalDate || '').slice(0,10)})` : '-';
+
+      let actionHtml = '';
+      if (r.status === 'PENDING') {
+        actionHtml = `
+          <div style="display:flex; gap:6px;">
+            <button class="btn btn-ok" style="padding:4px 8px; font-size:11px;" onclick="processCorrection(${r.id}, true)">
+              ✓ موافقة
+            </button>
+            <button class="btn btn-bad" style="padding:4px 8px; font-size:11px;" onclick="processCorrection(${r.id}, false)">
+              ✗ رفض
+            </button>
+          </div>
+        `;
+      } else {
+        actionHtml = `<span style="color:var(--muted); font-size:11.5px;">تم اتخاذ الإجراء</span>`;
+      }
+
+      return `
+        <tr>
+          <td>#${r.id}</td>
+          <td><span class="code-txt">${r.employeeCode}</span></td>
+          <td><strong>${dateStr}</strong></td>
+          <td>${oldIn} ➔ ${oldOut}</td>
+          <td style="color:#93c5fd; font-weight:700;">${reqIn} ➔ ${reqOut}</td>
+          <td style="max-width:180px; overflow:hidden; text-overflow:ellipsis;" title="${r.reason}">${r.reason}</td>
+          <td><span class="tag ${stClass}">${stName}</span></td>
+          <td>${approverInfo}</td>
+          <td>${actionHtml}</td>
+        </tr>
+      `;
+    }).join('');
+  }
+
+  async function processCorrection(id, isApproved) {
+    let rejectionReason = null;
+    if (!isApproved) {
+      rejectionReason = prompt('يرجى إدخال سبب رفض طلب تصحيح البصمة:');
+      if (rejectionReason === null) return; // user cancelled
+    } else {
+      if (!confirm(`هل أنت متأكد من اعتماد طلب تصحيح البصمة رقم #${id} وتحديث ساعات الحضور؟`)) return;
+    }
+
+    const base = getBaseUrl();
+    const payload = {
+      approved: isApproved,
+      rejectionReason
+    };
+
+    try {
+      const res = await fetch(`${base}/api/hr/attendance-corrections/${id}/process`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(jwtToken ? { 'Authorization': `Bearer ${jwtToken}` } : {})
+        },
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json();
+
+      if (res.ok && data.success) {
+        alert(isApproved ? 'تم اعتماد التصحيح بنجاح وتحديث ساعات الدوام!' : 'تم رفض طلب التصحيح.');
+        loadCorrectionRequests();
+      } else {
+        alert('فشل معالجة الطلب: ' + (data.message || 'خطأ غير معروف'));
+      }
+    } catch (e) {
+      alert('خطأ أثناء الاتصال: ' + e.message);
+    }
+  }
+</script>
+</body>
+</html>

@@ -1,4 +1,4 @@
-﻿using System.Text.Json.Serialization;
+using System.Text.Json.Serialization;
 
 namespace ThinkOnErp.Application.DTOs.Branch;
 
@@ -92,6 +92,26 @@ public class BranchDto
     /// Indicates if the branch is active
     /// </summary>
     public bool IsActive { get; set; }
+
+    /// <summary>
+    /// GPS Latitude coordinate of the branch
+    /// </summary>
+    public decimal? Latitude { get; set; }
+
+    /// <summary>
+    /// GPS Longitude coordinate of the branch
+    /// </summary>
+    public decimal? Longitude { get; set; }
+
+    /// <summary>
+    /// Allowed attendance check-in/out proximity radius in meters
+    /// </summary>
+    public decimal GeofenceRadiusMeters { get; set; } = 100.0m;
+
+    /// <summary>
+    /// Indicates if geofence validation is enforced for this branch
+    /// </summary>
+    public bool EnforceGeofence { get; set; } = true;
 
     /// <summary>
     /// Username of the user who created this record

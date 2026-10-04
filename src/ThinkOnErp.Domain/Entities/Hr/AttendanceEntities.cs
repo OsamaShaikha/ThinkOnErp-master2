@@ -19,6 +19,12 @@ public sealed class AttendancePolicy
     public bool IsDefault { get; set; }
     public bool IsActive { get; set; } = true;
 
+    // Geofencing Controls
+    public bool EnforceGeofence { get; set; } = true;
+    public int DefaultAllowedRadiusMeters { get; set; } = 100;
+    public string GeofenceViolationAction { get; set; } = "REJECT"; // REJECT, FLAG_AND_ALLOW
+    public bool AllowAnyBranchPunch { get; set; } = false;
+
     public string CreationUser { get; set; } = string.Empty;
     public DateTime CreationDate { get; set; } = DateTime.UtcNow;
     public string? UpdateUser { get; set; }
@@ -34,6 +40,13 @@ public sealed class RawAttendance
     public string? DeviceId { get; set; }
     public string? ExternalReference { get; set; } // Can store PunchHash (SHA256)
     public string Source { get; set; } = "BIOMETRIC"; // BIOMETRIC, MANUAL, MOBILE_APP
+    public long? BranchId { get; set; }
+    public decimal? Latitude { get; set; }
+    public decimal? Longitude { get; set; }
+    public decimal? AccuracyMeters { get; set; }
+    public decimal? DistanceToBranchMeters { get; set; }
+    public bool? IsWithinGeofence { get; set; }
+    public string? GeofenceStatus { get; set; } // INSIDE, OUTSIDE_RANGE, NO_LOCATION, NO_BRANCH_COORDS
     public bool IsProcessed { get; set; }
     public DateTime? ProcessedDate { get; set; }
 
@@ -57,6 +70,21 @@ public sealed class AttendanceDay
     public decimal OvertimeHours { get; set; }
     public string Status { get; set; } = "PRESENT"; // PRESENT, ABSENT, REST_DAY, HOLIDAY, ON_LEAVE
     public bool HasMissingPunch { get; set; }
+
+    // Geofence & Location Tracking
+    public long? CheckInBranchId { get; set; }
+    public decimal? CheckInLatitude { get; set; }
+    public decimal? CheckInLongitude { get; set; }
+    public decimal? CheckInDistanceMeters { get; set; }
+    public bool? IsCheckInWithinGeofence { get; set; }
+
+    public long? CheckOutBranchId { get; set; }
+    public decimal? CheckOutLatitude { get; set; }
+    public decimal? CheckOutLongitude { get; set; }
+    public decimal? CheckOutDistanceMeters { get; set; }
+    public bool? IsCheckOutWithinGeofence { get; set; }
+
+    public bool HasGeofenceViolation { get; set; }
     public string? LeaveTypeCode { get; set; }
     public string? Notes { get; set; }
 

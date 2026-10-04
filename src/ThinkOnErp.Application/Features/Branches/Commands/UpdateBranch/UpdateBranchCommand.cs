@@ -1,4 +1,4 @@
-﻿using MediatR;
+using MediatR;
 
 namespace ThinkOnErp.Application.Features.Branches.Commands.UpdateBranch;
 
@@ -20,5 +20,9 @@ public class UpdateBranchCommand : IRequest<Int64>
     public Int64? FiscalYearId { get; set; }
     public byte[]? BranchLogo { get; set; }
     public int? UsersLimit { get; set; }
+    public decimal? Latitude { get; set; }
+    public decimal? Longitude { get; set; }
+    public decimal? GeofenceRadiusMeters { get; set; }
+    public bool? EnforceGeofence { get; set; }
     public string UpdateUser { get; set; } = string.Empty;
 }

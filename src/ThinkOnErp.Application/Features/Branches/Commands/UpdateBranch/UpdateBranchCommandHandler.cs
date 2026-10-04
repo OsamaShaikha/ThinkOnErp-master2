@@ -1,4 +1,4 @@
-﻿using MediatR;
+using MediatR;
 using ThinkOnErp.Domain.Entities;
 using ThinkOnErp.Domain.Interfaces;
 
@@ -33,6 +33,12 @@ public class UpdateBranchCommandHandler : IRequestHandler<UpdateBranchCommand, I
         existing.BaseCurrencyId = request.BaseCurrencyId;
         existing.RoundingRules = request.RoundingRules;
         existing.UsersLimit = request.UsersLimit;
+        if (request.Latitude.HasValue) existing.Latitude = request.Latitude.Value;
+        if (request.Longitude.HasValue) existing.Longitude = request.Longitude.Value;
+        if (request.GeofenceRadiusMeters.HasValue && request.GeofenceRadiusMeters.Value > 0)
+            existing.GeofenceRadiusMeters = request.GeofenceRadiusMeters.Value;
+        if (request.EnforceGeofence.HasValue)
+            existing.EnforceGeofence = request.EnforceGeofence.Value;
         existing.UpdateUser = request.UpdateUser;
         existing.UpdateDate = DateTime.UtcNow;
 

@@ -11,6 +11,8 @@ public interface ILeaveRepository
     Task<IReadOnlyList<LeaveType>> GetLeaveTypesAsync(bool activeOnly = true, CancellationToken cancellationToken = default);
     Task<LeaveType?> GetLeaveTypeByCodeAsync(string leaveTypeCode, CancellationToken cancellationToken = default);
     Task AddLeaveTypeAsync(LeaveType leaveType, CancellationToken cancellationToken = default);
+    Task UpdateLeaveTypeAsync(LeaveType leaveType, CancellationToken cancellationToken = default);
+    Task DeleteLeaveTypeAsync(LeaveType leaveType, CancellationToken cancellationToken = default);
 
     Task<(IReadOnlyList<LeaveRequest> Items, int TotalCount)> GetLeaveRequestsPagedAsync(
         string? employeeCode = null,
@@ -28,12 +30,16 @@ public interface ILeaveRepository
 
     Task<LeaveBalance?> GetLeaveBalanceAsync(string employeeCode, string leaveTypeCode, int year, CancellationToken cancellationToken = default);
     Task<IReadOnlyList<LeaveBalance>> GetEmployeeBalancesAsync(string employeeCode, int year, CancellationToken cancellationToken = default);
+    Task<IReadOnlyList<LeaveBalance>> GetLeaveBalancesByYearAsync(int year, string? leaveTypeCode = null, CancellationToken cancellationToken = default);
     Task AddLeaveBalanceAsync(LeaveBalance balance, CancellationToken cancellationToken = default);
     Task UpdateLeaveBalanceAsync(LeaveBalance balance, CancellationToken cancellationToken = default);
 
     Task<IReadOnlyList<LeaveRequest>> GetApprovedUnpaidLeavesInPeriodAsync(string employeeCode, DateTime periodStart, DateTime periodEnd, CancellationToken cancellationToken = default);
 
     Task<IReadOnlyList<LeavePolicy>> GetActiveLeavePoliciesAsync(CancellationToken cancellationToken = default);
+    Task<LeavePolicy?> GetLeavePolicyByTypeCodeAsync(string leaveTypeCode, CancellationToken cancellationToken = default);
+    Task AddLeavePolicyAsync(LeavePolicy policy, CancellationToken cancellationToken = default);
+    Task UpdateLeavePolicyAsync(LeavePolicy policy, CancellationToken cancellationToken = default);
 
     Task SaveChangesAsync(CancellationToken cancellationToken = default);
 }

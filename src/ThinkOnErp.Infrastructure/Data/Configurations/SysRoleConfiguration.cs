@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using ThinkOnErp.Domain.Entities;
 
@@ -108,6 +108,10 @@ builder.Property(e => e.BranchNameEn).HasColumnName("NAME_EN").HasMaxLength(200)
         builder.Property(e => e.CreationDate).HasColumnName("CREATION_DATE");
         builder.Property(e => e.UpdateUser).HasColumnName("UPDATE_USER").HasMaxLength(100);
         builder.Property(e => e.UpdateDate).HasColumnName("UPDATE_DATE");
+        builder.Property(e => e.Latitude).HasColumnName("LATITUDE").HasPrecision(10, 7);
+        builder.Property(e => e.Longitude).HasColumnName("LONGITUDE").HasPrecision(11, 7);
+        builder.Property(e => e.GeofenceRadiusMeters).HasColumnName("GEOFENCE_RADIUS_METERS").HasPrecision(10, 2);
+        builder.Property(e => e.EnforceGeofence).HasColumnName("ENFORCE_GEOFENCE").HasConversion<string>(v => v ? "1" : "0", v => v == "1" || v == "Y" || v == "true").HasMaxLength(1);
 
         // Navigation
         builder.HasOne(e => e.BaseCurrency).WithMany().HasForeignKey(e => e.BaseCurrencyId).OnDelete(DeleteBehavior.SetNull);

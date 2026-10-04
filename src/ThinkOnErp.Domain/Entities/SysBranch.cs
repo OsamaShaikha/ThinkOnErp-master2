@@ -1,4 +1,4 @@
-﻿namespace ThinkOnErp.Domain.Entities;
+namespace ThinkOnErp.Domain.Entities;
 
 public class SysBranch
 {
@@ -22,6 +22,10 @@ public class SysBranch
     public DateTime? CreationDate { get; set; }
     public string? UpdateUser { get; set; }
     public DateTime? UpdateDate { get; set; }
+    public decimal? Latitude { get; set; }
+    public decimal? Longitude { get; set; }
+    public decimal GeofenceRadiusMeters { get; set; } = 100.0m;
+    public bool EnforceGeofence { get; set; } = true;
     public SysCurrency? BaseCurrency { get; set; }
     public SysCompany? Company { get; set; }
 }

@@ -104,6 +104,8 @@ public static class DependencyInjection
         services.AddScoped<ThinkOnErp.Application.Services.Hr.IWorkCalendarService, ThinkOnErp.Application.Services.Hr.WorkCalendarService>();
         services.AddScoped<ThinkOnErp.Application.Services.Hr.IAttendanceCalculationEngine, ThinkOnErp.Application.Services.Hr.AttendanceCalculationEngine>();
         services.AddScoped<ThinkOnErp.Application.Services.Hr.IAttendanceCorrectionService, ThinkOnErp.Application.Services.Hr.AttendanceCorrectionService>();
+        services.AddScoped<ThinkOnErp.Application.Services.Hr.IGeoLocationService, ThinkOnErp.Application.Services.Hr.GeoLocationService>();
+        services.AddScoped<ThinkOnErp.Application.Services.Hr.IHrAttendanceService, ThinkOnErp.Application.Services.Hr.HrAttendanceService>();
         services.AddScoped<ThinkOnErp.Application.Services.Hr.IOvertimeCalculationService, ThinkOnErp.Application.Services.Hr.OvertimeCalculationService>();
         services.AddScoped<ThinkOnErp.Application.Services.Hr.IPayrollProrationService, ThinkOnErp.Application.Services.Hr.PayrollProrationService>();
         services.AddScoped<ThinkOnErp.Application.Services.Hr.ISSCCalculationService, ThinkOnErp.Application.Services.Hr.SSCCalculationService>();
@@ -117,6 +119,7 @@ public static class DependencyInjection
         services.AddScoped<ThinkOnErp.Application.Services.Hr.IEmployeeService, ThinkOnErp.Application.Services.Hr.EmployeeService>();
         services.AddScoped<ThinkOnErp.Application.Services.Hr.ILeaveService, ThinkOnErp.Application.Services.Hr.LeaveService>();
         services.AddScoped<ThinkOnErp.Application.Services.Hr.IBankPayrollExportService, ThinkOnErp.Application.Services.Hr.BankPayrollExportService>();
+        services.AddScoped<ThinkOnErp.Application.Services.Hr.IEmployeeExcelService, ThinkOnErp.Application.Services.Hr.EmployeeExcelService>();
 
         return services;
     }

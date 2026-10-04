@@ -1,4 +1,4 @@
-﻿using MediatR;
+using MediatR;
 using ThinkOnErp.Application.DTOs.Branch;
 using ThinkOnErp.Domain.Interfaces;
 
@@ -47,6 +47,10 @@ public class GetBranchByIdQueryHandler : IRequestHandler<GetBranchByIdQuery, Bra
             HasLogo = branch.BranchLogoPath != null,
             BranchLogoBase64 = logoBase64,
             IsActive = branch.IsActive,
+            Latitude = branch.Latitude,
+            Longitude = branch.Longitude,
+            GeofenceRadiusMeters = branch.GeofenceRadiusMeters,
+            EnforceGeofence = branch.EnforceGeofence,
             CreationUser = branch.CreationUser,
             CreationDate = branch.CreationDate,
             UpdateUser = branch.UpdateUser,

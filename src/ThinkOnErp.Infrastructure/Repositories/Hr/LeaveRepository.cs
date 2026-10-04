@@ -39,6 +39,19 @@ public sealed class LeaveRepository : ILeaveRepository
         await _context.LeaveTypes.AddAsync(leaveType, cancellationToken);
     }
 
+    public Task UpdateLeaveTypeAsync(LeaveType leaveType, CancellationToken cancellationToken = default)
+    {
+        _context.LeaveTypes.Update(leaveType);
+        return Task.CompletedTask;
+    }
+
+    public Task DeleteLeaveTypeAsync(LeaveType leaveType, CancellationToken cancellationToken = default)
+    {
+        leaveType.IsActive = false;
+        _context.LeaveTypes.Update(leaveType);
+        return Task.CompletedTask;
+    }
+
     public async Task<(IReadOnlyList<LeaveRequest> Items, int TotalCount)> GetLeaveRequestsPagedAsync(
         string? employeeCode = null,
         string? leaveTypeCode = null,
@@ -125,6 +138,21 @@ public sealed class LeaveRepository : ILeaveRepository
             .ToListAsync(cancellationToken);
     }
 
+    public async Task<IReadOnlyList<LeaveBalance>> GetLeaveBalancesByYearAsync(int year, string? leaveTypeCode = null, CancellationToken cancellationToken = default)
+    {
+        var query = _context.LeaveBalances
+            .Include(b => b.LeaveType)
+            .Include(b => b.Employee)
+            .Where(b => b.YearNo == year);
+
+        if (!string.IsNullOrWhiteSpace(leaveTypeCode))
+        {
+            query = query.Where(b => b.LeaveTypeCode == leaveTypeCode);
+        }
+
+        return await query.ToListAsync(cancellationToken);
+    }
+
     public async Task AddLeaveBalanceAsync(LeaveBalance balance, CancellationToken cancellationToken = default)
     {
         await _context.LeaveBalances.AddAsync(balance, cancellationToken);
@@ -155,6 +183,24 @@ public sealed class LeaveRepository : ILeaveRepository
             .Include(p => p.LeaveType)
             .Where(p => p.IsActive)
             .ToListAsync(cancellationToken);
+    }
+
+    public async Task<LeavePolicy?> GetLeavePolicyByTypeCodeAsync(string leaveTypeCode, CancellationToken cancellationToken = default)
+    {
+        return await _context.LeavePolicies
+            .Include(p => p.LeaveType)
+            .FirstOrDefaultAsync(p => p.LeaveTypeCode == leaveTypeCode && p.IsActive, cancellationToken);
+    }
+
+    public async Task AddLeavePolicyAsync(LeavePolicy policy, CancellationToken cancellationToken = default)
+    {
+        await _context.LeavePolicies.AddAsync(policy, cancellationToken);
+    }
+
+    public Task UpdateLeavePolicyAsync(LeavePolicy policy, CancellationToken cancellationToken = default)
+    {
+        _context.LeavePolicies.Update(policy);
+        return Task.CompletedTask;
     }
 
     public async Task SaveChangesAsync(CancellationToken cancellationToken = default)

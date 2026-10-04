@@ -25,6 +25,10 @@ public sealed class AttendancePolicyConfiguration : IEntityTypeConfiguration<Att
         builder.Property(p => p.MissingPunchHandling).HasColumnName("MISSING_PUNCH_HANDLING").HasMaxLength(100).IsRequired();
         builder.Property(p => p.IsDefault).HasColumnName("IS_DEFAULT").IsRequired();
         builder.Property(p => p.IsActive).HasColumnName("IS_ACTIVE").IsRequired();
+        builder.Property(p => p.EnforceGeofence).HasColumnName("ENFORCE_GEOFENCE").IsRequired();
+        builder.Property(p => p.DefaultAllowedRadiusMeters).HasColumnName("DEFAULT_RADIUS_METERS").IsRequired();
+        builder.Property(p => p.GeofenceViolationAction).HasColumnName("GEOFENCE_VIOLATION_ACTION").HasMaxLength(50).IsRequired();
+        builder.Property(p => p.AllowAnyBranchPunch).HasColumnName("ALLOW_ANY_BRANCH_PUNCH").IsRequired();
 
         builder.Property(p => p.CreationUser).HasColumnName("CREATION_USER").HasMaxLength(200).IsRequired();
         builder.Property(p => p.CreationDate).HasColumnName("CREATION_DATE").IsRequired();
@@ -47,6 +51,13 @@ public sealed class RawAttendanceConfiguration : IEntityTypeConfiguration<RawAtt
         builder.Property(r => r.DeviceId).HasColumnName("DEVICE_ID").HasMaxLength(200);
         builder.Property(r => r.ExternalReference).HasColumnName("EXTERNAL_REFERENCE").HasMaxLength(200);
         builder.Property(r => r.Source).HasColumnName("SOURCE").HasMaxLength(100).IsRequired();
+        builder.Property(r => r.BranchId).HasColumnName("BRANCH_ID");
+        builder.Property(r => r.Latitude).HasColumnName("LATITUDE").HasPrecision(10, 7);
+        builder.Property(r => r.Longitude).HasColumnName("LONGITUDE").HasPrecision(11, 7);
+        builder.Property(r => r.AccuracyMeters).HasColumnName("ACCURACY_METERS").HasPrecision(8, 2);
+        builder.Property(r => r.DistanceToBranchMeters).HasColumnName("DISTANCE_METERS").HasPrecision(10, 2);
+        builder.Property(r => r.IsWithinGeofence).HasColumnName("IS_WITHIN_GEOFENCE");
+        builder.Property(r => r.GeofenceStatus).HasColumnName("GEOFENCE_STATUS").HasMaxLength(50);
         builder.Property(r => r.IsProcessed).HasColumnName("IS_PROCESSED").IsRequired();
         builder.Property(r => r.ProcessedDate).HasColumnName("PROCESSED_DATE");
 
@@ -76,6 +87,22 @@ public sealed class AttendanceDayConfiguration : IEntityTypeConfiguration<Attend
         builder.Property(a => a.OvertimeHours).HasColumnName("OVERTIME_HOURS").HasPrecision(5, 2).IsRequired();
         builder.Property(a => a.Status).HasColumnName("STATUS").HasMaxLength(100).IsRequired();
         builder.Property(a => a.HasMissingPunch).HasColumnName("HAS_MISSING_PUNCH").IsRequired();
+
+        // Geofence mappings
+        builder.Property(a => a.CheckInBranchId).HasColumnName("CHECK_IN_BRANCH_ID");
+        builder.Property(a => a.CheckInLatitude).HasColumnName("CHECK_IN_LATITUDE").HasPrecision(10, 7);
+        builder.Property(a => a.CheckInLongitude).HasColumnName("CHECK_IN_LONGITUDE").HasPrecision(11, 7);
+        builder.Property(a => a.CheckInDistanceMeters).HasColumnName("CHECK_IN_DISTANCE_METERS").HasPrecision(10, 2);
+        builder.Property(a => a.IsCheckInWithinGeofence).HasColumnName("IS_CHECK_IN_WITHIN_GEOFENCE");
+
+        builder.Property(a => a.CheckOutBranchId).HasColumnName("CHECK_OUT_BRANCH_ID");
+        builder.Property(a => a.CheckOutLatitude).HasColumnName("CHECK_OUT_LATITUDE").HasPrecision(10, 7);
+        builder.Property(a => a.CheckOutLongitude).HasColumnName("CHECK_OUT_LONGITUDE").HasPrecision(11, 7);
+        builder.Property(a => a.CheckOutDistanceMeters).HasColumnName("CHECK_OUT_DISTANCE_METERS").HasPrecision(10, 2);
+        builder.Property(a => a.IsCheckOutWithinGeofence).HasColumnName("IS_CHECK_OUT_WITHIN_GEOFENCE");
+
+        builder.Property(a => a.HasGeofenceViolation).HasColumnName("HAS_GEOFENCE_VIOLATION").IsRequired();
+
         builder.Property(a => a.LeaveTypeCode).HasColumnName("LEAVE_TYPE_CODE").HasMaxLength(100);
         builder.Property(a => a.Notes).HasColumnName("NOTES").HasMaxLength(1000);
 

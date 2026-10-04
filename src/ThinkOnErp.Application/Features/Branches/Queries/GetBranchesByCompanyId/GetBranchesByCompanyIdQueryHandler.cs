@@ -1,4 +1,4 @@
-﻿using MediatR;
+using MediatR;
 using ThinkOnErp.Application.DTOs.Branch;
 using ThinkOnErp.Domain.Interfaces;
 
@@ -45,6 +45,10 @@ public class GetBranchesByCompanyIdQueryHandler : IRequestHandler<GetBranchesByC
                 BaseCurrencyId = b.BaseCurrencyId,
                 RoundingRules = b.RoundingRules,
                 IsActive = b.IsActive,
+                Latitude = b.Latitude,
+                Longitude = b.Longitude,
+                GeofenceRadiusMeters = b.GeofenceRadiusMeters,
+                EnforceGeofence = b.EnforceGeofence,
                 CreationUser = b.CreationUser,
                 CreationDate = b.CreationDate,
                 UpdateUser = b.UpdateUser,

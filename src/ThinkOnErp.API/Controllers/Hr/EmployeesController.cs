@@ -22,13 +22,16 @@ namespace ThinkOnErp.API.Controllers.Hr;
 public sealed class EmployeesController : ControllerBase
 {
     private readonly IEmployeeService _employeeService;
+    private readonly IEmployeeExcelService _excelService;
     private readonly ILogger<EmployeesController> _logger;
 
     public EmployeesController(
         IEmployeeService employeeService,
+        IEmployeeExcelService excelService,
         ILogger<EmployeesController> logger)
     {
         _employeeService = employeeService;
+        _excelService = excelService;
         _logger = logger;
     }
 
@@ -49,6 +52,84 @@ public sealed class EmployeesController : ControllerBase
         var pagedResult = new PagedResultDto<EmployeeSummaryDto>(items, totalCount, pageIndex, pageSize);
 
         return Ok(ApiResponse<PagedResultDto<EmployeeSummaryDto>>.CreateSuccess(pagedResult, "Employees retrieved successfully."));
+    }
+
+    [HttpGet("export")]
+    [ProducesResponseType(typeof(FileContentResult), StatusCodes.Status200OK)]
+    public async Task<IActionResult> ExportEmployees(
+        [FromQuery] string? searchKeyword,
+        [FromQuery] string? departmentCode,
+        [FromQuery] string? status,
+        [FromQuery] long? branchId,
+        CancellationToken cancellationToken)
+    {
+        var bytes = await _excelService.ExportEmployeesAsync(
+            searchKeyword, departmentCode, status, branchId, cancellationToken);
+
+        var fileName = $"Employees_{DateTime.UtcNow:yyyyMMdd_HHmmss}.xlsx";
+        return File(bytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", fileName);
+    }
+
+    [HttpGet("export-template")]
+    [ProducesResponseType(typeof(FileContentResult), StatusCodes.Status200OK)]
+    public async Task<IActionResult> DownloadTemplate(CancellationToken cancellationToken)
+    {
+        var bytes = await _excelService.GenerateTemplateAsync(cancellationToken);
+        return File(bytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "Employee_Import_Template.xlsx");
+    }
+
+    [HttpPost("import/validate")]
+    [Consumes("multipart/form-data")]
+    [ProducesResponseType(typeof(ApiResponse<EmployeeImportResultDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<EmployeeImportResultDto>), StatusCodes.Status400BadRequest)]
+    public async Task<ActionResult<ApiResponse<EmployeeImportResultDto>>> ValidateImport(
+        IFormFile? file,
+        CancellationToken cancellationToken)
+    {
+        if (file == null || file.Length == 0)
+        {
+            return BadRequest(ApiResponse<EmployeeImportResultDto>.CreateFailure("Please provide a valid Excel (.xlsx) file."));
+        }
+
+        await using var stream = file.OpenReadStream();
+        var result = await _excelService.ValidateWorkbookAsync(stream, cancellationToken);
+
+        var message = result.IsValid
+            ? $"File validated successfully. {result.SuccessCount} rows valid."
+            : $"Validation found {result.FailureCount} rows with issues.";
+
+        return Ok(ApiResponse<EmployeeImportResultDto>.CreateSuccess(result, message));
+    }
+
+    [HttpPost("import")]
+    [Consumes("multipart/form-data")]
+    [ProducesResponseType(typeof(ApiResponse<EmployeeImportResultDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<EmployeeImportResultDto>), StatusCodes.Status400BadRequest)]
+    public async Task<ActionResult<ApiResponse<EmployeeImportResultDto>>> ImportEmployees(
+        IFormFile? file,
+        [FromQuery] bool updateExisting = false,
+        CancellationToken cancellationToken = default)
+    {
+        if (file == null || file.Length == 0)
+        {
+            return BadRequest(ApiResponse<EmployeeImportResultDto>.CreateFailure("Please provide a valid Excel (.xlsx) file."));
+        }
+
+        var user = User.Identity?.Name ?? "SYSTEM";
+        await using var stream = file.OpenReadStream();
+        var result = await _excelService.ImportEmployeesAsync(stream, updateExisting, user, cancellationToken);
+
+        if (!result.IsValid)
+        {
+            return BadRequest(ApiResponse<EmployeeImportResultDto>.CreateFailure(
+                $"Import failed with {result.FailureCount} errors.",
+                statusCode: StatusCodes.Status400BadRequest,
+                errors: result.Errors.Select(e => $"Row {e.RowNumber} [{e.Column}]: {e.Message}").ToList()));
+        }
+
+        return Ok(ApiResponse<EmployeeImportResultDto>.CreateSuccess(
+            result,
+            $"Import completed successfully. {result.InsertedCount} created, {result.UpdatedCount} updated."));
     }
 
     [HttpGet("{code}")]

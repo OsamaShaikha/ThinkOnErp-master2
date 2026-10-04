@@ -1,4 +1,4 @@
-﻿using MediatR;
+using MediatR;
 using ThinkOnErp.Domain.Entities;
 using ThinkOnErp.Domain.Interfaces;
 
@@ -33,6 +33,10 @@ public class CreateBranchCommandHandler : IRequestHandler<CreateBranchCommand, I
             BaseCurrencyId = request.BaseCurrencyId,
             RoundingRules = request.RoundingRules,
             UsersLimit = request.UsersLimit,
+            Latitude = request.Latitude,
+            Longitude = request.Longitude,
+            GeofenceRadiusMeters = request.GeofenceRadiusMeters > 0 ? request.GeofenceRadiusMeters : 100.0m,
+            EnforceGeofence = request.EnforceGeofence,
             IsActive = true,
             CreationUser = request.CreationUser,
             CreationDate = DateTime.UtcNow

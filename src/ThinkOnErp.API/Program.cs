@@ -371,14 +371,9 @@ Example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...'
             options.IncludeXmlComments(domainXmlPath);
         }
 
-        // Group endpoints by tags for better organization
+        // Group endpoints by tags for better organization (Categories / Accordions in Swagger UI)
         options.TagActionsBy(api =>
         {
-            if (api.GroupName != null)
-            {
-                return new[] { api.GroupName };
-            }
-
             var controllerName = api.ActionDescriptor.RouteValues["controller"];
             return new[] { controllerName ?? "Default" };
         });

@@ -502,6 +502,31 @@ public record LeaveTypeDto(
     bool IsActive
 );
 
+public record CreateLeaveTypeDto(
+    string LeaveTypeCode,
+    string NameLocal,
+    string NameEn,
+    bool IsPaid = true,
+    bool IsStatutory = true,
+    decimal MaxDaysPerYear = 14m,
+    bool CarryForwardAllowed = false,
+    decimal CarryForwardCapDays = 0m,
+    bool RequiresDocumentation = false,
+    bool IsActive = true
+);
+
+public record UpdateLeaveTypeDto(
+    string NameLocal,
+    string NameEn,
+    bool IsPaid,
+    bool IsStatutory,
+    decimal MaxDaysPerYear,
+    bool CarryForwardAllowed,
+    decimal CarryForwardCapDays,
+    bool RequiresDocumentation,
+    bool IsActive
+);
+
 public record SubmitLeaveRequestDto(
     string EmployeeCode,
     string LeaveTypeCode,
@@ -568,4 +593,166 @@ public record BankPayrollExportResultDto(
     string FileName,
     string ContentType
 );
+
+// Employee Excel Import/Export DTOs
+public sealed class EmployeeImportResultDto
+{
+    public int TotalRows { get; set; }
+    public int SuccessCount { get; set; }
+    public int FailureCount { get; set; }
+    public int InsertedCount { get; set; }
+    public int UpdatedCount { get; set; }
+    public bool IsValid => FailureCount == 0;
+    public List<EmployeeImportErrorDto> Errors { get; set; } = new();
+    public List<string> Warnings { get; set; } = new();
+}
+
+public sealed record EmployeeImportErrorDto(
+    int RowNumber,
+    string? Column,
+    string Code,
+    string Message
+);
+
+public sealed class EmployeeImportRowDto
+{
+    public int RowNumber { get; set; }
+    public string EmployeeCode { get; set; } = string.Empty;
+    public string NameLocal { get; set; } = string.Empty;
+    public string NameEn { get; set; } = string.Empty;
+    public string NationalId { get; set; } = string.Empty;
+    public string Nationality { get; set; } = string.Empty;
+    public string? PassportNumber { get; set; }
+    public DateTime? DateOfBirth { get; set; }
+    public string Gender { get; set; } = "M";
+    public string MaritalStatus { get; set; } = "SINGLE";
+    public string? Email { get; set; }
+    public string? Phone { get; set; }
+    public DateTime? HireDate { get; set; }
+    public DateTime? ProbationEndDate { get; set; }
+    public DateTime? TerminationDate { get; set; }
+    public string? TerminationReason { get; set; }
+    public string EmploymentType { get; set; } = "FULL_TIME";
+    public string EmploymentStatus { get; set; } = "ACTIVE";
+    public string? DepartmentCode { get; set; }
+    public string? PositionCode { get; set; }
+    public long? BranchId { get; set; }
+    public string? ManagerEmployeeCode { get; set; }
+    public string? SscNumber { get; set; }
+    public int TaxExemptionCount { get; set; }
+    public bool IsHighRiskRole { get; set; }
+    public string? BankName { get; set; }
+    public string? BankAccountNumber { get; set; }
+    public string? BankIban { get; set; }
+    public decimal? BasicSalary { get; set; }
+    public bool IsActive { get; set; } = true;
+}
+
+public sealed class EmployeeExportRowDto
+{
+    public string EmployeeCode { get; set; } = string.Empty;
+    public string NameLocal { get; set; } = string.Empty;
+    public string NameEn { get; set; } = string.Empty;
+    public string NationalId { get; set; } = string.Empty;
+    public string Nationality { get; set; } = string.Empty;
+    public string? PassportNumber { get; set; }
+    public DateTime DateOfBirth { get; set; }
+    public string Gender { get; set; } = "M";
+    public string MaritalStatus { get; set; } = "SINGLE";
+    public string? Email { get; set; }
+    public string? Phone { get; set; }
+    public DateTime HireDate { get; set; }
+    public DateTime? ProbationEndDate { get; set; }
+    public DateTime? TerminationDate { get; set; }
+    public string? TerminationReason { get; set; }
+    public string EmploymentType { get; set; } = "FULL_TIME";
+    public string EmploymentStatus { get; set; } = "ACTIVE";
+    public string? DepartmentCode { get; set; }
+    public string? PositionCode { get; set; }
+    public long? BranchId { get; set; }
+    public string? ManagerEmployeeCode { get; set; }
+    public string? SscNumber { get; set; }
+    public int TaxExemptionCount { get; set; }
+    public bool IsHighRiskRole { get; set; }
+    public string? BankName { get; set; }
+    public string? BankAccountNumber { get; set; }
+    public string? BankIban { get; set; }
+    public decimal? BasicSalary { get; set; }
+    public bool IsActive { get; set; } = true;
+}
+
+// Vacation Accrual, Grant & Rollover DTOs
+public record GrantLeaveBalanceDto(
+    string EmployeeCode,
+    string LeaveTypeCode,
+    int YearNo,
+    decimal Days,
+    string AdjustmentType, // OPENING_BALANCE, MANUAL_GRANT, COMPENSATORY, CORRECTION
+    string? Reason
+);
+
+public record YearlyLeaveAllocationDto(
+    int YearNo,
+    string? LeaveTypeCode,
+    string? DepartmentCode,
+    string? EmployeeCode,
+    bool ProrateForMidYearHires
+);
+
+public record MonthlyLeaveAccrualDto(
+    int YearNo,
+    int MonthNo,
+    string? LeaveTypeCode,
+    string? EmployeeCode
+);
+
+public record YearEndRolloverDto(
+    int FromYear,
+    int ToYear,
+    string? LeaveTypeCode
+);
+
+public record LeaveAccrualResultDto(
+    int TotalEmployeesProcessed,
+    int UpdatedBalancesCount,
+    decimal TotalDaysAccrued,
+    List<string> Details
+);
+
+public record LeaveRolloverResultDto(
+    int TotalEmployeesProcessed,
+    int RolloverBalancesCount,
+    decimal TotalDaysCarriedForward,
+    decimal TotalDaysExpired,
+    List<string> Details
+);
+
+public record LeavePolicyDetailsDto(
+    long Id,
+    string PolicyName,
+    string LeaveTypeCode,
+    string AccrualMethod,
+    decimal AccrualRate,
+    string ApplicableTo,
+    int MinServiceMonths,
+    int Tier1YearsThreshold,
+    decimal Tier1Days,
+    decimal Tier2Days,
+    bool IsActive
+);
+
+public record CreateLeavePolicyDto(
+    string PolicyName,
+    string LeaveTypeCode,
+    string AccrualMethod,
+    decimal AccrualRate,
+    string ApplicableTo,
+    int MinServiceMonths,
+    int Tier1YearsThreshold,
+    decimal Tier1Days,
+    decimal Tier2Days,
+    bool IsActive
+);
+
+
 

@@ -74,6 +74,52 @@ public sealed class EmployeeRepository : IEmployeeRepository
         return (items, totalCount);
     }
 
+    public async Task<IReadOnlyList<Employee>> GetAllEmployeesForExportAsync(
+        string? searchKeyword = null,
+        string? departmentCode = null,
+        string? status = null,
+        long? branchId = null,
+        CancellationToken cancellationToken = default)
+    {
+        var query = _context.Employees
+            .Include(e => e.SalaryStructures.Where(s => s.IsActive))
+                .ThenInclude(s => s.Lines.Where(l => l.IsActive))
+                    .ThenInclude(l => l.Component)
+            .AsNoTracking()
+            .AsQueryable();
+
+        if (!string.IsNullOrWhiteSpace(searchKeyword))
+        {
+            var kw = searchKeyword.Trim().ToLower();
+            query = query.Where(e =>
+                e.EmployeeCode.ToLower().Contains(kw) ||
+                e.NameLocal.ToLower().Contains(kw) ||
+                e.NameEn.ToLower().Contains(kw) ||
+                e.NationalId.ToLower().Contains(kw) ||
+                (e.Phone != null && e.Phone.Contains(kw)) ||
+                (e.Email != null && e.Email.ToLower().Contains(kw)));
+        }
+
+        if (!string.IsNullOrWhiteSpace(departmentCode))
+        {
+            query = query.Where(e => e.DepartmentCode == departmentCode);
+        }
+
+        if (!string.IsNullOrWhiteSpace(status))
+        {
+            query = query.Where(e => e.EmploymentStatus == status);
+        }
+
+        if (branchId.HasValue)
+        {
+            query = query.Where(e => e.BranchId == branchId.Value);
+        }
+
+        return await query
+            .OrderBy(e => e.EmployeeCode)
+            .ToListAsync(cancellationToken);
+    }
+
     public async Task<Employee?> GetEmployeeByCodeAsync(string employeeCode, CancellationToken cancellationToken = default)
     {
         return await _context.Employees

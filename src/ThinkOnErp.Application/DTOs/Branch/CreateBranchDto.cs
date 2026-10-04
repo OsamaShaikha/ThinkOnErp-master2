@@ -1,4 +1,4 @@
-﻿namespace ThinkOnErp.Application.DTOs.Branch;
+namespace ThinkOnErp.Application.DTOs.Branch;
 
 public class CreateBranchDto
 {
@@ -31,5 +31,9 @@ public class CreateBranchDto
     public Int64? BaseCurrencyId { get; set; }
     public int? RoundingRules { get; set; }
     public int? UsersLimit { get; set; }
+    public decimal? Latitude { get; set; }
+    public decimal? Longitude { get; set; }
+    public decimal GeofenceRadiusMeters { get; set; } = 100.0m;
+    public bool EnforceGeofence { get; set; } = true;
     public List<long>? Systems { get; set; }
 }

@@ -1,4 +1,4 @@
-﻿using MediatR;
+using MediatR;
 
 namespace ThinkOnErp.Application.Features.Branches.Commands.CreateBranch;
 
@@ -19,6 +19,10 @@ public class CreateBranchCommand : IRequest<Int64>
     public Int64? FiscalYearId { get; set; }
     public byte[]? BranchLogo { get; set; }
     public int? UsersLimit { get; set; }
+    public decimal? Latitude { get; set; }
+    public decimal? Longitude { get; set; }
+    public decimal GeofenceRadiusMeters { get; set; } = 100.0m;
+    public bool EnforceGeofence { get; set; } = true;
     public string CreationUser { get; set; } = string.Empty;
 
     public List<long>? Systems { get; set; }
