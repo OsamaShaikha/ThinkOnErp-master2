@@ -683,6 +683,7 @@ public class PosOrderService : IPosOrderService
                     ModifierItemId = m.ModifierItemId,
                     ModifierName = m.ModifierName,
                     Quantity = m.Quantity,
+                    UnitPrice = m.UnitPrice,
                     ExtraPrice = m.ExtraPrice
                 }).ToList()
             }).ToList(),

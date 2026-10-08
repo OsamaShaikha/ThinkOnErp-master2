@@ -1,7 +1,6 @@
-﻿using MediatR;
+using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using ThinkOnErp.API.Authorization;
 using ThinkOnErp.Application.Common;
 using ThinkOnErp.Application.DTOs.Currency;
 using ThinkOnErp.Application.Features.Currencies.Commands.CreateCurrency;
@@ -19,7 +18,6 @@ namespace ThinkOnErp.API.Controllers;
 /// </summary>
 [ApiController]
 [Route("api/currencies")]
-[TenantScoped]
 [Authorize]
 public class CurrencyController : ControllerBase
 {

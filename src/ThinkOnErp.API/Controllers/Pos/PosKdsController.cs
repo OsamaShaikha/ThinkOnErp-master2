@@ -10,6 +10,10 @@ using ThinkOnErp.Application.Common;
 using ThinkOnErp.Application.DTOs.Pos;
 using ThinkOnErp.Application.Services.Pos;
 
+using ThinkOnErp.Application.DTOs.SysCode;
+using ThinkOnErp.Domain.Constants;
+using ThinkOnErp.Domain.Interfaces;
+
 namespace ThinkOnErp.API.Controllers.Pos;
 
 /// <summary>
@@ -23,10 +27,12 @@ namespace ThinkOnErp.API.Controllers.Pos;
 public class PosKdsController : ControllerBase
 {
     private readonly IPosKdsService _kdsService;
+    private readonly ISysCodeRepository _sysCodeRepo;
 
-    public PosKdsController(IPosKdsService kdsService)
+    public PosKdsController(IPosKdsService kdsService, ISysCodeRepository sysCodeRepo)
     {
         _kdsService = kdsService;
+        _sysCodeRepo = sysCodeRepo;
     }
 
     /// <summary>
@@ -69,5 +75,25 @@ public class PosKdsController : ControllerBase
     {
         var result = await _kdsService.BumpTicketAsync(orderId, ct);
         return result.Success ? Ok(result) : NotFound(result);
+    }
+
+    /// <summary>
+    /// Retrieves all dynamic KDS Prep Line Statuses from SYS_CODE (CODE_MGR = 38).
+    /// </summary>
+    /// <param name="lang">Optional language filter (1 = Arabic, 2 = English).</param>
+    /// <returns>List of KDS prep statuses with localized names.</returns>
+    [HttpGet("statuses")]
+    [HttpGet("line-statuses")]
+    [HttpGet("line-status")]
+    [ProducesResponseType(typeof(ApiResponse<List<SysCodeLookupDto>>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<ApiResponse<List<SysCodeLookupDto>>>> GetKdsStatuses([FromQuery] int? lang = null)
+    {
+        var rawCodes = await _sysCodeRepo.GetActiveByCodeMgrAsync(SysCodeKeys.PosKdsStatuses.Mgr);
+
+        var lookupList = rawCodes.Count > 0
+            ? SysCodeLookupHelper.MapToLookupDtos(rawCodes, lang)
+            : SysCodeLookupHelper.GetFallbackLookups(SysCodeKeys.PosKdsStatuses.Mgr, lang);
+
+        return Ok(ApiResponse<List<SysCodeLookupDto>>.CreateSuccess(lookupList, "KDS prep statuses retrieved successfully"));
     }
 }

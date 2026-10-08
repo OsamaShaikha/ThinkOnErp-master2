@@ -283,7 +283,8 @@ public class ExceptionHandlingMiddleware
         // Serialize and write the response
         var jsonResponse = JsonSerializer.Serialize(response, new JsonSerializerOptions
         {
-            PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+            ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles
         });
 
         await context.Response.WriteAsync(jsonResponse);

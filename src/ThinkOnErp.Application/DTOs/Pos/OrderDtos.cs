@@ -9,9 +9,19 @@ public class CreatePosOrderDto
     public long BranchId { get; set; }
     public long ShiftId { get; set; }
     public long TillId { get; set; }
-    public string ClientUuid { get; set; } = string.Empty;
+    /// <summary>
+    /// معرّف فريد للطلب يتم توليده من جهاز الكاشير (UUID) لمنع تكرار الفاتورة عند تكرار الإرسال أو العمل بدون اتصال (اختياري - يُنشأ تلقائياً في السيرفر إن تُرك فارغاً).
+    /// </summary>
+    public string? ClientUuid { get; set; }
 
+    /// <summary>
+    /// نوع الطلب: يقبل الرقم الكودي من SYS_CODE (CODE_MGR = 34) أو النص (1: DineIn, 2: Takeaway, 3: Delivery, 4: Aggregator, 5: Kiosk, 6: QrTable).
+    /// </summary>
     public PosOrderType OrderType { get; set; } = PosOrderType.DineIn;
+
+    /// <summary>
+    /// حالة الطلب: يقبل الرقم الكودي من SYS_CODE (CODE_MGR = 36) أو النص (1: Draft, 2: Parked, 3: SentToKitchen, 4: Ready, 5: Completed, 6: Voided, 7: Refunded).
+    /// </summary>
     public PosOrderStatus Status { get; set; } = PosOrderStatus.Draft;
 
     public long? CustomerId { get; set; }
@@ -64,6 +74,9 @@ public class CreatePosOrderLineModifierDto
 
 public class CreatePosOrderPaymentDto
 {
+    /// <summary>
+    /// طريقة الدفع: يقبل الرقم الكودي من SYS_CODE (CODE_MGR = 37) أو النص (1: Cash, 2: Card, 3: Split, 4: CustomerAccount, 5: Cheque, 6: BankTransfer, 7: DigitalWallet, 8: LoyaltyPoints, 9: GiftCard, 10: AggregatorPaid).
+    /// </summary>
     public PosPaymentMethod PaymentMethod { get; set; }
     public decimal Amount { get; set; }
     public decimal TenderedAmount { get; set; }
@@ -90,7 +103,9 @@ public class PosOrderSummaryDto
     public string ClientUuid { get; set; } = string.Empty;
 
     public PosOrderType OrderType { get; set; }
+    public int OrderTypeCode => (int)OrderType;
     public PosOrderStatus Status { get; set; }
+    public int StatusCode => (int)Status;
 
     public long? CustomerId { get; set; }
     public string? CustomerName { get; set; }
@@ -147,6 +162,7 @@ public class PosOrderLineModifierDto
     public long ModifierItemId { get; set; }
     public string ModifierName { get; set; } = string.Empty;
     public decimal Quantity { get; set; }
+    public decimal UnitPrice { get; set; }
     public decimal ExtraPrice { get; set; }
 }
 
@@ -154,6 +170,7 @@ public class PosOrderPaymentSummaryDto
 {
     public long Id { get; set; }
     public PosPaymentMethod PaymentMethod { get; set; }
+    public int PaymentMethodCode => (int)PaymentMethod;
     public decimal Amount { get; set; }
     public decimal TenderedAmount { get; set; }
     public decimal ChangeAmount { get; set; }

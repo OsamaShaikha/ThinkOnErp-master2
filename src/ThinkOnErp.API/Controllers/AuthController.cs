@@ -70,6 +70,11 @@ public class AuthController : ControllerBase
         {
             _logger.LogInformation("Login attempt for user: {UserName} company: {CompanyCode}", command.UserName, command.CompanyCode);
 
+            if (command.Language.HasValue && command.Language.Value > 0)
+            {
+                HttpContext.Items["SessionLanguage"] = command.Language.Value;
+            }
+
             // Look up company by code
             var company = await _companyRepository.GetByCodeAsync(command.CompanyCode);
             if (company == null)
@@ -155,10 +160,6 @@ public class AuthController : ControllerBase
                     statusCode: 401));
             }
 
-            if (command.Language.HasValue && command.Language.Value > 0)
-            {
-                HttpContext.Items["SessionLanguage"] = command.Language.Value;
-            }
 
             // Generate JWT token with company schema context and requested language
             var tokenDto = _jwtTokenService.GenerateToken(user, company.CompanyCode, company.CompanySchema, command.Language);

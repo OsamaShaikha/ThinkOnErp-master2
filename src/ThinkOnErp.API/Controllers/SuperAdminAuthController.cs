@@ -39,6 +39,11 @@ public class SuperAdminAuthController : ControllerBase
         {
             _logger.LogInformation("Super admin login attempt for user: {UserName}", command.UserName);
 
+            if (command.Language.HasValue && command.Language.Value > 0)
+            {
+                HttpContext.Items["SessionLanguage"] = command.Language.Value;
+            }
+
             var superAdmin = await _superAdminRepository.GetByUsernameAsync(command.UserName);
 
             if (superAdmin == null || !_passwordHashingService.VerifyPassword(command.Password, superAdmin.Password))
@@ -47,11 +52,6 @@ public class SuperAdminAuthController : ControllerBase
                 return Unauthorized(ApiResponse<TokenDto>.CreateFailure(
                     "Invalid credentials. Please verify your username and password",
                     statusCode: 401));
-            }
-
-            if (command.Language.HasValue && command.Language.Value > 0)
-            {
-                HttpContext.Items["SessionLanguage"] = command.Language.Value;
             }
 
             var tokenDto = _jwtTokenService.GenerateToken(superAdmin, command.Language);

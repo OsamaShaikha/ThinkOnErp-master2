@@ -223,10 +223,27 @@ public class SysCodesController : ControllerBase
         ["order-types"] = SysCodeKeys.PosOrderTypes.Mgr,
         ["ordertypes"] = SysCodeKeys.PosOrderTypes.Mgr,
         ["orderTypes"] = SysCodeKeys.PosOrderTypes.Mgr,
+        ["pos-order-statuses"] = SysCodeKeys.PosOrderStatuses.Mgr,
+        ["posorderstatuses"] = SysCodeKeys.PosOrderStatuses.Mgr,
+        ["posOrderStatuses"] = SysCodeKeys.PosOrderStatuses.Mgr,
+        ["order-statuses"] = SysCodeKeys.PosOrderStatuses.Mgr,
+        ["orderstatuses"] = SysCodeKeys.PosOrderStatuses.Mgr,
+        ["orderStatuses"] = SysCodeKeys.PosOrderStatuses.Mgr,
         ["pos-stock-deduction-modes"] = SysCodeKeys.PosStockDeductionModes.Mgr,
         ["posstockdeductionmodes"] = SysCodeKeys.PosStockDeductionModes.Mgr,
         ["posStockDeductionModes"] = SysCodeKeys.PosStockDeductionModes.Mgr,
         ["stock-deduction-modes"] = SysCodeKeys.PosStockDeductionModes.Mgr,
+        ["pos-payment-methods"] = SysCodeKeys.PosPaymentMethods.Mgr,
+        ["pospaymentmethods"] = SysCodeKeys.PosPaymentMethods.Mgr,
+        ["posPaymentMethods"] = SysCodeKeys.PosPaymentMethods.Mgr,
+        ["pos-kds-statuses"] = SysCodeKeys.PosKdsStatuses.Mgr,
+        ["poskdsstatuses"] = SysCodeKeys.PosKdsStatuses.Mgr,
+        ["posKdsStatuses"] = SysCodeKeys.PosKdsStatuses.Mgr,
+        ["kds-statuses"] = SysCodeKeys.PosKdsStatuses.Mgr,
+        ["kdsstatuses"] = SysCodeKeys.PosKdsStatuses.Mgr,
+        ["kdsStatuses"] = SysCodeKeys.PosKdsStatuses.Mgr,
+        ["kds-line-statuses"] = SysCodeKeys.PosKdsStatuses.Mgr,
+        ["kds-line-status"] = SysCodeKeys.PosKdsStatuses.Mgr,
         ["validation-errors"] = SysCodeKeys.ValidationErrors.Mgr,
         ["validationerrors"] = SysCodeKeys.ValidationErrors.Mgr,
         ["validationErrors"] = SysCodeKeys.ValidationErrors.Mgr,
@@ -315,7 +332,10 @@ public class SysCodesController : ControllerBase
             ("selectionTypes", SysCodeKeys.SelectionTypes.Mgr),
             ("validationErrors", SysCodeKeys.ValidationErrors.Mgr),
             ("posOrderTypes", SysCodeKeys.PosOrderTypes.Mgr),
-            ("posStockDeductionModes", SysCodeKeys.PosStockDeductionModes.Mgr)
+            ("posOrderStatuses", SysCodeKeys.PosOrderStatuses.Mgr),
+            ("posStockDeductionModes", SysCodeKeys.PosStockDeductionModes.Mgr),
+            ("posPaymentMethods", SysCodeKeys.PosPaymentMethods.Mgr),
+            ("posKdsStatuses", SysCodeKeys.PosKdsStatuses.Mgr)
         };
 
 
@@ -657,6 +677,59 @@ public class SysCodesController : ControllerBase
             list = SysCodeLookupHelper.GetFallbackLookups(SysCodeKeys.PosStockDeductionModes.Mgr, lang);
         }
         return Ok(ApiResponse<List<SysCodeLookupDto>>.CreateSuccess(list, "POS stock deduction modes retrieved successfully", 200));
+    }
+
+    /// <summary>
+    /// استرجاع حالات طلبات نقاط البيع (مسودة، معلق، مرسل للمطبخ، جاهز، مكتمل، ملغي، مسترجع) (POS Order Statuses)
+    /// </summary>
+    [HttpGet("pos-order-statuses")]
+    [HttpGet("posorderstatuses")]
+    [HttpGet("order-statuses")]
+    [HttpGet("orderstatuses")]
+    [ProducesResponseType(typeof(ApiResponse<List<SysCodeLookupDto>>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<ApiResponse<List<SysCodeLookupDto>>>> GetPosOrderStatuses([FromQuery] int? lang = null)
+    {
+        var list = await GetLookupsByMgrAsync(SysCodeKeys.PosOrderStatuses.Mgr, lang);
+        if (list.Count == 0)
+        {
+            list = SysCodeLookupHelper.GetFallbackLookups(SysCodeKeys.PosOrderStatuses.Mgr, lang);
+        }
+        return Ok(ApiResponse<List<SysCodeLookupDto>>.CreateSuccess(list, "POS order statuses retrieved successfully", 200));
+    }
+
+    /// <summary>
+    /// استرجاع طرق الدفع الخاصة بنقاط البيع (نقدي، بطاقة، مجزأ، حساب عميل، شيك، تحويل، محفظة، نقاط، بطاقة هدايا...) (POS Payment Methods)
+    /// </summary>
+    [HttpGet("pos-payment-methods")]
+    [HttpGet("pospaymentmethods")]
+    [ProducesResponseType(typeof(ApiResponse<List<SysCodeLookupDto>>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<ApiResponse<List<SysCodeLookupDto>>>> GetPosPaymentMethods([FromQuery] int? lang = null)
+    {
+        var list = await GetLookupsByMgrAsync(SysCodeKeys.PosPaymentMethods.Mgr, lang);
+        if (list.Count == 0)
+        {
+            list = SysCodeLookupHelper.GetFallbackLookups(SysCodeKeys.PosPaymentMethods.Mgr, lang);
+        }
+        return Ok(ApiResponse<List<SysCodeLookupDto>>.CreateSuccess(list, "POS payment methods retrieved successfully", 200));
+    }
+
+    /// <summary>
+    /// استرجاع حالات بنود شاشة المطبخ (قيد الانتظار، جاري التحضير، جاهز، تم التقديم) (KDS Prep Statuses)
+    /// </summary>
+    [HttpGet("pos-kds-statuses")]
+    [HttpGet("poskdsstatuses")]
+    [HttpGet("kds-statuses")]
+    [HttpGet("kdsstatuses")]
+    [HttpGet("kds-line-statuses")]
+    [ProducesResponseType(typeof(ApiResponse<List<SysCodeLookupDto>>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<ApiResponse<List<SysCodeLookupDto>>>> GetPosKdsStatuses([FromQuery] int? lang = null)
+    {
+        var list = await GetLookupsByMgrAsync(SysCodeKeys.PosKdsStatuses.Mgr, lang);
+        if (list.Count == 0)
+        {
+            list = SysCodeLookupHelper.GetFallbackLookups(SysCodeKeys.PosKdsStatuses.Mgr, lang);
+        }
+        return Ok(ApiResponse<List<SysCodeLookupDto>>.CreateSuccess(list, "KDS prep statuses retrieved successfully", 200));
     }
 
     #endregion

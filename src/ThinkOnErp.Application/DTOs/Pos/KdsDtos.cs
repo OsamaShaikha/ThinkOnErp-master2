@@ -9,6 +9,7 @@ public class KdsTicketDto
     public long OrderId { get; set; }
     public string OrderNumber { get; set; } = string.Empty;
     public PosOrderType OrderType { get; set; }
+    public int OrderTypeCode => (int)OrderType;
     public string? TableNumber { get; set; }
     public string? CustomerName { get; set; }
     public DateTime CreatedAt { get; set; }
@@ -24,6 +25,7 @@ public class KdsTicketLineDto
     public string ItemName { get; set; } = string.Empty;
     public decimal Quantity { get; set; }
     public PosKdsStatus Status { get; set; }
+    public int StatusCode => (int)Status;
     public string? PrepStation { get; set; }
     public string? SpecialInstructions { get; set; }
     public List<string> Modifiers { get; set; } = new();
@@ -33,6 +35,10 @@ public class UpdateKdsLineStatusDto
 {
     public long OrderId { get; set; }
     public long LineId { get; set; }
+
+    /// <summary>
+    /// الحالة الجديدة للبند في شاشة المطبخ (KDS): يقبل رقم الكود من SYS_CODE (CODE_MGR = 38) أو النص (1: Pending قيد الانتظار, 2: Preparing جاري التحضير, 3: Ready جاهز للتسليم, 4: Served تم التقديم).
+    /// </summary>
     public PosKdsStatus NewStatus { get; set; }
 }
 

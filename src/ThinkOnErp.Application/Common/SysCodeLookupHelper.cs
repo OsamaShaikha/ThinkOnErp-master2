@@ -88,6 +88,36 @@ public static class SysCodeLookupHelper
                 new() { Code = 2, Value = "2", NameAr = "خصم تجميعي عند إغلاق الوردية (تقرير Z)", NameEn = "Consolidated deduction at shift close (Z-Report)", Name = isEnglish ? "Consolidated deduction at shift close (Z-Report)" : "خصم تجميعي عند إغلاق الوردية (تقرير Z)", IsActive = 1 },
                 new() { Code = 3, Value = "3", NameAr = "بدون خصم مخزني", NameEn = "No stock deduction", Name = isEnglish ? "No stock deduction" : "بدون خصم مخزني", IsActive = 1 },
             },
+            SysCodeKeys.PosOrderStatuses.Mgr => new List<SysCodeLookupDto>
+            {
+                new() { Code = 1, Value = "Draft", NameAr = "مسودة", NameEn = "Draft", Name = isEnglish ? "Draft" : "مسودة", IsActive = 1 },
+                new() { Code = 2, Value = "Parked", NameAr = "معلق (Parked)", NameEn = "Parked", Name = isEnglish ? "Parked" : "معلق (Parked)", IsActive = 1 },
+                new() { Code = 3, Value = "SentToKitchen", NameAr = "مرسل للمطبخ", NameEn = "Sent to Kitchen", Name = isEnglish ? "Sent to Kitchen" : "مرسل للمطبخ", IsActive = 1 },
+                new() { Code = 4, Value = "Ready", NameAr = "جاهز للتسليم", NameEn = "Ready", Name = isEnglish ? "Ready" : "جاهز للتسليم", IsActive = 1 },
+                new() { Code = 5, Value = "Completed", NameAr = "مكتمل ومسدد", NameEn = "Completed", Name = isEnglish ? "Completed" : "مكتمل ومسدد", IsActive = 1 },
+                new() { Code = 6, Value = "Voided", NameAr = "ملغي", NameEn = "Voided", Name = isEnglish ? "Voided" : "ملغي", IsActive = 1 },
+                new() { Code = 7, Value = "Refunded", NameAr = "مسترجع", NameEn = "Refunded", Name = isEnglish ? "Refunded" : "مسترجع", IsActive = 1 },
+            },
+            SysCodeKeys.PosPaymentMethods.Mgr => new List<SysCodeLookupDto>
+            {
+                new() { Code = 1, Value = "Cash", NameAr = "نقداً (كاش)", NameEn = "Cash", Name = isEnglish ? "Cash" : "نقداً (كاش)", IsActive = 1 },
+                new() { Code = 2, Value = "Card", NameAr = "بطاقة دفع / مدى", NameEn = "Card", Name = isEnglish ? "Card" : "بطاقة دفع / مدى", IsActive = 1 },
+                new() { Code = 3, Value = "Split", NameAr = "دفع مجزأ / متعدد", NameEn = "Split Payment", Name = isEnglish ? "Split Payment" : "دفع مجزأ / متعدد", IsActive = 1 },
+                new() { Code = 4, Value = "CustomerAccount", NameAr = "حساب عميل (آجل)", NameEn = "Customer Account", Name = isEnglish ? "Customer Account" : "حساب عميل (آجل)", IsActive = 1 },
+                new() { Code = 5, Value = "Cheque", NameAr = "شيك", NameEn = "Cheque", Name = isEnglish ? "Cheque" : "شيك", IsActive = 1 },
+                new() { Code = 6, Value = "BankTransfer", NameAr = "تحويل بنكي", NameEn = "Bank Transfer", Name = isEnglish ? "Bank Transfer" : "تحويل بنكي", IsActive = 1 },
+                new() { Code = 7, Value = "DigitalWallet", NameAr = "محفظة رقمية", NameEn = "Digital Wallet", Name = isEnglish ? "Digital Wallet" : "محفظة رقمية", IsActive = 1 },
+                new() { Code = 8, Value = "LoyaltyPoints", NameAr = "نقاط ولاء", NameEn = "Loyalty Points", Name = isEnglish ? "Loyalty Points" : "نقاط ولاء", IsActive = 1 },
+                new() { Code = 9, Value = "GiftCard", NameAr = "بطاقة هدايا", NameEn = "Gift Card", Name = isEnglish ? "Gift Card" : "بطاقة هدايا", IsActive = 1 },
+                new() { Code = 10, Value = "AggregatorPaid", NameAr = "مسدد عبر منصة التوصيل", NameEn = "Aggregator Paid", Name = isEnglish ? "Aggregator Paid" : "مسدد عبر منصة التوصيل", IsActive = 1 },
+            },
+            SysCodeKeys.PosKdsStatuses.Mgr => new List<SysCodeLookupDto>
+            {
+                new() { Code = 1, Value = "Pending", NameAr = "قيد الانتظار", NameEn = "Pending", Name = isEnglish ? "Pending" : "قيد الانتظار", IsActive = 1 },
+                new() { Code = 2, Value = "Preparing", NameAr = "جاري التحضير", NameEn = "Preparing", Name = isEnglish ? "Preparing" : "جاري التحضير", IsActive = 1 },
+                new() { Code = 3, Value = "Ready", NameAr = "جاهز للتسليم", NameEn = "Ready", Name = isEnglish ? "Ready" : "جاهز للتسليم", IsActive = 1 },
+                new() { Code = 4, Value = "Served", NameAr = "تم التقديم", NameEn = "Served", Name = isEnglish ? "Served" : "تم التقديم", IsActive = 1 },
+            },
             _ => new List<SysCodeLookupDto>()
         };
     }

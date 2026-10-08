@@ -258,4 +258,40 @@ public static class SysCodeKeys
         public const int Consolidated = 2;
         public const int None = 3;
     }
+
+    public static class PosOrderStatuses
+    {
+        public const int Mgr = 36;
+        public const int Draft = 1;
+        public const int Parked = 2;
+        public const int SentToKitchen = 3;
+        public const int Ready = 4;
+        public const int Completed = 5;
+        public const int Voided = 6;
+        public const int Refunded = 7;
+    }
+
+    public static class PosPaymentMethods
+    {
+        public const int Mgr = 37;
+        public const int Cash = 1;
+        public const int Card = 2;
+        public const int Split = 3;
+        public const int CustomerAccount = 4;
+        public const int Cheque = 5;
+        public const int BankTransfer = 6;
+        public const int DigitalWallet = 7;
+        public const int LoyaltyPoints = 8;
+        public const int GiftCard = 9;
+        public const int AggregatorPaid = 10;
+    }
+
+    public static class PosKdsStatuses
+    {
+        public const int Mgr = 38;
+        public const int Pending = 1;
+        public const int Preparing = 2;
+        public const int Ready = 3;
+        public const int Served = 4;
+    }
 }

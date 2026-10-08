@@ -216,46 +216,59 @@ public class PosOrdersController : ControllerBase
     /// </summary>
     /// <param name="lang">Optional language filter (1 = Arabic, 2 = English).</param>
     /// <returns>List of order types with localized names and active state.</returns>
+    [HttpGet("order-types")]
+    [HttpGet("ordertypes")]
     [HttpGet("orderType")]
     [ProducesResponseType(typeof(ApiResponse<List<SysCodeLookupDto>>), StatusCodes.Status200OK)]
     public async Task<ActionResult<ApiResponse<List<SysCodeLookupDto>>>> GetOrderTypes([FromQuery] int? lang = null)
     {
         var rawCodes = await _sysCodeRepo.GetActiveByCodeMgrAsync(SysCodeKeys.PosOrderTypes.Mgr);
 
-        var lookupList = rawCodes
-            .Where(c => c.CodeMnr > 0)
-            .GroupBy(c => c.CodeMnr)
-            .Select(g =>
-            {
-                var ar = g.FirstOrDefault(x => x.CodeLang == 1);
-                var en = g.FirstOrDefault(x => x.CodeLang == 2);
-                var first = g.First();
-
-                var arDesc = ar?.CodeDesc ?? first.CodeDesc;
-                var enDesc = en?.CodeDesc ?? first.CodeDesc;
-                var val = !string.IsNullOrEmpty(first.CodeValue)
-                    ? first.CodeValue
-                    : (en?.CodeValue ?? ar?.CodeValue ?? string.Empty);
-
-                var isEnglish = lang == 2;
-                var localizedName = isEnglish
-                    ? (!string.IsNullOrEmpty(enDesc) ? enDesc : arDesc)
-                    : (!string.IsNullOrEmpty(arDesc) ? arDesc : enDesc);
-
-                return new SysCodeLookupDto
-                {
-                    Code = g.Key,
-                    Value = val,
-                    NameAr = arDesc,
-                    NameEn = enDesc,
-                    Name = localizedName,
-                    IsActive = first.IsActive
-                };
-            })
-            .OrderBy(x => x.Code)
-            .ToList();
+        var lookupList = rawCodes.Count > 0
+            ? SysCodeLookupHelper.MapToLookupDtos(rawCodes, lang)
+            : SysCodeLookupHelper.GetFallbackLookups(SysCodeKeys.PosOrderTypes.Mgr, lang);
 
         return Ok(ApiResponse<List<SysCodeLookupDto>>.CreateSuccess(lookupList, "Order types retrieved successfully"));
+    }
+
+    /// <summary>
+    /// Retrieves all dynamic POS Order Statuses from SYS_CODE (CODE_MGR = 36).
+    /// </summary>
+    /// <param name="lang">Optional language filter (1 = Arabic, 2 = English).</param>
+    /// <returns>List of order statuses with localized names.</returns>
+    [HttpGet("order-statuses")]
+    [HttpGet("orderstatuses")]
+    [HttpGet("orderStatus")]
+    [HttpGet("statuses")]
+    [ProducesResponseType(typeof(ApiResponse<List<SysCodeLookupDto>>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<ApiResponse<List<SysCodeLookupDto>>>> GetOrderStatuses([FromQuery] int? lang = null)
+    {
+        var rawCodes = await _sysCodeRepo.GetActiveByCodeMgrAsync(SysCodeKeys.PosOrderStatuses.Mgr);
+
+        var lookupList = rawCodes.Count > 0
+            ? SysCodeLookupHelper.MapToLookupDtos(rawCodes, lang)
+            : SysCodeLookupHelper.GetFallbackLookups(SysCodeKeys.PosOrderStatuses.Mgr, lang);
+
+        return Ok(ApiResponse<List<SysCodeLookupDto>>.CreateSuccess(lookupList, "Order statuses retrieved successfully"));
+    }
+
+    /// <summary>
+    /// Retrieves all dynamic POS Payment Methods from SYS_CODE (CODE_MGR = 37).
+    /// </summary>
+    /// <param name="lang">Optional language filter (1 = Arabic, 2 = English).</param>
+    /// <returns>List of payment methods with localized names.</returns>
+    [HttpGet("payment-methods")]
+    [HttpGet("paymentmethods")]
+    [ProducesResponseType(typeof(ApiResponse<List<SysCodeLookupDto>>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<ApiResponse<List<SysCodeLookupDto>>>> GetPaymentMethods([FromQuery] int? lang = null)
+    {
+        var rawCodes = await _sysCodeRepo.GetActiveByCodeMgrAsync(SysCodeKeys.PosPaymentMethods.Mgr);
+
+        var lookupList = rawCodes.Count > 0
+            ? SysCodeLookupHelper.MapToLookupDtos(rawCodes, lang)
+            : SysCodeLookupHelper.GetFallbackLookups(SysCodeKeys.PosPaymentMethods.Mgr, lang);
+
+        return Ok(ApiResponse<List<SysCodeLookupDto>>.CreateSuccess(lookupList, "POS payment methods retrieved successfully"));
     }
 
     /// <summary>
@@ -264,6 +277,7 @@ public class PosOrdersController : ControllerBase
     /// <param name="lang">Optional language filter (1 = Arabic, 2 = English).</param>
     /// <returns>List of stock deduction modes with localized descriptions.</returns>
     [HttpGet("stock-deduction-modes")]
+    [HttpGet("stockdeductionmodes")]
     [ProducesResponseType(typeof(ApiResponse<List<SysCodeLookupDto>>), StatusCodes.Status200OK)]
     public async Task<ActionResult<ApiResponse<List<SysCodeLookupDto>>>> GetStockDeductionModes([FromQuery] int? lang = null)
     {

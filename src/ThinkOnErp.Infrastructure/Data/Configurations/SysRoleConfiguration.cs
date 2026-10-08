@@ -66,7 +66,7 @@ builder.Property(e => e.CompanyNameEn).HasColumnName("NAME_EN").HasMaxLength(200
         builder.Property(e => e.CompanyCode).HasColumnName("COMPANY_CODE").HasMaxLength(50);
         builder.Property(e => e.DefaultBranchId).HasColumnName("DEFAULT_BRANCH_ID");
         builder.Property(e => e.CompanyLogoPath).HasColumnName("COMPANY_LOGO_PATH").HasMaxLength(500);
-        builder.Property(e => e.IsActive).HasColumnName("IS_ACTIVE").HasConversion<string>(v => v ? "1" : "0", v => v == "1" || v == "Y" || v == "true").HasMaxLength(1);
+        builder.Property(e => e.IsActive).HasColumnName("IS_ACTIVE").HasColumnType("NUMBER(1)");
         builder.Property(e => e.CreatedBySuperAdminId).HasColumnName("CREATED_BY_SUPER_ADMIN_ID");
         builder.Property(e => e.CompanySchema).HasColumnName("COMPANY_SCHEMA").HasMaxLength(100);
         builder.HasIndex(e => e.CompanySchema).IsUnique().HasDatabaseName("IX_SYS_COMPANY_SCHEMA");
@@ -88,30 +88,31 @@ public class SysBranchConfiguration : IEntityTypeConfiguration<SysBranch>
     {
         builder.ToTable("SYS_BRANCH", t => t.ExcludeFromMigrations());
         builder.HasKey(e => e.Id);
-        builder.Property(e => e.Id).ValueGeneratedOnAdd();
+        builder.Property(e => e.Id).HasColumnName("Id").ValueGeneratedOnAdd();
         builder.Property(e => e.CompanyId).HasColumnName("COMPANY_ID");
-builder.Property(e => e.BranchNameLocal).HasColumnName("NAME_LOCAL").HasMaxLength(200).IsRequired();
-builder.Property(e => e.BranchNameEn).HasColumnName("NAME_EN").HasMaxLength(200).IsRequired();
+        builder.Property(e => e.BranchNameLocal).HasColumnName("NAME_LOCAL").HasMaxLength(200).IsRequired();
+        builder.Property(e => e.BranchNameEn).HasColumnName("NAME_EN").HasMaxLength(200).IsRequired();
         builder.Property(e => e.Phone).HasColumnName("PHONE").HasMaxLength(50);
         builder.Property(e => e.Mobile).HasColumnName("MOBILE").HasMaxLength(50);
         builder.Property(e => e.Fax).HasColumnName("FAX").HasMaxLength(50);
         builder.Property(e => e.Email).HasColumnName("EMAIL").HasMaxLength(200);
         builder.Property(e => e.TaxNumber).HasColumnName("TAX_NUMBER").HasMaxLength(50);
-        builder.Property(e => e.IsHeadBranch).HasColumnName("IS_HEAD_BRANCH").HasConversion<string>(v => v ? "1" : "0", v => v == "1" || v == "Y" || v == "true").HasMaxLength(1);
+        builder.Property(e => e.IsHeadBranch).HasColumnName("IS_HEAD_BRANCH").HasColumnType("NUMBER(1)");
         builder.Property(e => e.DefaultLang).HasColumnName("DEFAULT_LANG");
         builder.Property(e => e.BaseCurrencyId).HasColumnName("BASE_CURRENCY_ID");
         builder.Property(e => e.RoundingRules).HasColumnName("ROUNDING_RULES");
         builder.Property(e => e.BranchLogoPath).HasColumnName("BRANCH_LOGO_PATH").HasMaxLength(500);
         builder.Property(e => e.UsersLimit).HasColumnName("USERS_LIMIT");
-        builder.Property(e => e.IsActive).HasColumnName("IS_ACTIVE").HasConversion<string>(v => v ? "1" : "0", v => v == "1" || v == "Y" || v == "true").HasMaxLength(1);
+        builder.Property(e => e.IsActive).HasColumnName("IS_ACTIVE").HasColumnType("NUMBER(1)");
         builder.Property(e => e.CreationUser).HasColumnName("CREATION_USER").HasMaxLength(100).IsRequired();
         builder.Property(e => e.CreationDate).HasColumnName("CREATION_DATE");
         builder.Property(e => e.UpdateUser).HasColumnName("UPDATE_USER").HasMaxLength(100);
         builder.Property(e => e.UpdateDate).HasColumnName("UPDATE_DATE");
-        builder.Property(e => e.Latitude).HasColumnName("LATITUDE").HasPrecision(10, 7);
-        builder.Property(e => e.Longitude).HasColumnName("LONGITUDE").HasPrecision(11, 7);
-        builder.Property(e => e.GeofenceRadiusMeters).HasColumnName("GEOFENCE_RADIUS_METERS").HasPrecision(10, 2);
-        builder.Property(e => e.EnforceGeofence).HasColumnName("ENFORCE_GEOFENCE").HasConversion<string>(v => v ? "1" : "0", v => v == "1" || v == "Y" || v == "true").HasMaxLength(1);
+
+        builder.Ignore(e => e.Latitude);
+        builder.Ignore(e => e.Longitude);
+        builder.Ignore(e => e.GeofenceRadiusMeters);
+        builder.Ignore(e => e.EnforceGeofence);
 
         // Navigation
         builder.HasOne(e => e.BaseCurrency).WithMany().HasForeignKey(e => e.BaseCurrencyId).OnDelete(DeleteBehavior.SetNull);
@@ -138,8 +139,8 @@ builder.Property(e => e.FullNameEn).HasColumnName("NAME_EN").HasMaxLength(200).I
         builder.Ignore(e => e.BranchId);
         builder.Property(e => e.Email).HasColumnName("EMAIL").HasMaxLength(200);
         builder.Property(e => e.LastLoginDate).HasColumnName("LAST_LOGIN_DATE");
-        builder.Property(e => e.IsActive).HasColumnName("IS_ACTIVE").HasConversion<string>(v => v ? "1" : "0", v => v == "1" || v == "Y" || v == "true").HasMaxLength(1);
-        builder.Property(e => e.IsAdmin).HasColumnName("IS_ADMIN").HasConversion<string>(v => v ? "1" : "0", v => v == "1" || v == "Y" || v == "true").HasMaxLength(1);
+        builder.Property(e => e.IsActive).HasColumnName("IS_ACTIVE").HasColumnType("NUMBER(1)");
+        builder.Property(e => e.IsAdmin).HasColumnName("IS_ADMIN").HasColumnType("NUMBER(1)");
         builder.Property(e => e.DefaultLang).HasColumnName("DEFAULT_LANG").HasColumnType("NUMBER(3)").HasDefaultValue(1);
         builder.Property(e => e.CreationUser).HasColumnName("CREATION_USER").HasMaxLength(100).IsRequired();
         builder.Property(e => e.CreationDate).HasColumnName("CREATION_DATE");
@@ -164,8 +165,8 @@ builder.Property(e => e.FiscalYearNameLocal).HasColumnName("NAME_LOCAL").HasMaxL
 builder.Property(e => e.FiscalYearNameEn).HasColumnName("NAME_EN").HasMaxLength(200);
         builder.Property(e => e.StartDate).HasColumnName("START_DATE").IsRequired();
         builder.Property(e => e.EndDate).HasColumnName("END_DATE").IsRequired();
-        builder.Property(e => e.IsClosed).HasColumnName("IS_CLOSED").HasConversion<string>(v => v ? "1" : "0", v => v == "1" || v == "Y" || v == "true").HasMaxLength(1);
-        builder.Property(e => e.IsActive).HasColumnName("IS_ACTIVE").HasConversion<string>(v => v ? "1" : "0", v => v == "1" || v == "Y" || v == "true").HasMaxLength(1);
+        builder.Property(e => e.IsClosed).HasColumnName("IS_CLOSED").HasColumnType("NUMBER(1)");
+        builder.Property(e => e.IsActive).HasColumnName("IS_ACTIVE").HasColumnType("NUMBER(1)");
         builder.Property(e => e.CreationUser).HasColumnName("CREATION_USER").HasMaxLength(100).IsRequired();
         builder.Property(e => e.CreationDate).HasColumnName("CREATION_DATE");
         builder.Property(e => e.UpdateUser).HasColumnName("UPDATE_USER").HasMaxLength(100);

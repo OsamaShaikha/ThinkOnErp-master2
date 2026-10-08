@@ -333,9 +333,12 @@ public sealed class TaxEngineService : ITaxEngineService
         var entity = await _taxRepository.GetTaxCategoryByIdAsync(id, cancellationToken)
             ?? throw new AccountingNotFoundException($"فئة الضريبة ({id}) غير موجودة.", "TAX_CAT_NOT_FOUND");
 
-        entity.NameLocal = dto.NameLocal?.Trim() ?? entity.NameLocal;
-        entity.NameEn = dto.NameEn?.Trim() ?? entity.NameEn;
-        entity.Description = dto.Description?.Trim();
+        if (!string.IsNullOrWhiteSpace(dto.NameLocal))
+            entity.NameLocal = dto.NameLocal.Trim();
+        if (!string.IsNullOrWhiteSpace(dto.NameEn))
+            entity.NameEn = dto.NameEn.Trim();
+        if (dto.Description != null)
+            entity.Description = string.IsNullOrWhiteSpace(dto.Description) ? null : dto.Description.Trim();
         entity.DisplayOrder = dto.DisplayOrder;
         entity.IsActive = dto.IsActive;
         entity.UpdateUser = username;
@@ -430,8 +433,10 @@ public sealed class TaxEngineService : ITaxEngineService
         var entity = await _taxRepository.GetTaxRateByIdAsync(id, cancellationToken)
             ?? throw new AccountingNotFoundException($"النسبة الضريبية ({id}) غير موجودة.", "TAX_RATE_NOT_FOUND");
 
-        entity.NameLocal = dto.NameLocal?.Trim() ?? entity.NameLocal;
-        entity.NameEn = dto.NameEn?.Trim() ?? entity.NameEn;
+        if (!string.IsNullOrWhiteSpace(dto.NameLocal))
+            entity.NameLocal = dto.NameLocal.Trim();
+        if (!string.IsNullOrWhiteSpace(dto.NameEn))
+            entity.NameEn = dto.NameEn.Trim();
         entity.RatePercent = dto.RatePercent;
         entity.RateType = dto.RateType;
         entity.SalesTaxGlAccountCode = dto.SalesTaxGlAccountCode?.Trim();

@@ -37,6 +37,7 @@ public class PosOrderRepository : IPosOrderRepository
     {
         return await _context.PosOrderHeaders
             .Include(o => o.Lines)
+                .ThenInclude(l => l.Modifiers)
             .Include(o => o.Payments)
             .FirstOrDefaultAsync(o => o.BranchId == branchId && o.ClientUuid == clientUuid, ct);
     }
@@ -76,6 +77,7 @@ public class PosOrderRepository : IPosOrderRepository
         var query = _context.PosOrderHeaders
             .AsNoTracking()
             .Include(o => o.Lines)
+                .ThenInclude(l => l.Modifiers)
             .Include(o => o.Payments)
             .Include(o => o.Customer)
             .Include(o => o.Table)
