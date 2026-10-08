@@ -35,6 +35,7 @@ public sealed class PayrollAdjustmentsController : ControllerBase
 
     [HttpPost]
     [ProducesResponseType(typeof(ApiResponse<PayrollAdjustment>), StatusCodes.Status200OK)]
+    [HrPermission("hr-payroll-adjustments", "create")]
     public async Task<ActionResult<ApiResponse<PayrollAdjustment>>> CreateAdjustment(
         [FromBody] CreatePayrollAdjustmentDto dto,
         CancellationToken cancellationToken)
@@ -46,6 +47,7 @@ public sealed class PayrollAdjustmentsController : ControllerBase
 
     [HttpPost("{id:long}/approve")]
     [ProducesResponseType(typeof(ApiResponse<PayrollAdjustment>), StatusCodes.Status200OK)]
+    [HrPermission("hr-payroll-adjustments", "approve")]
     public async Task<ActionResult<ApiResponse<PayrollAdjustment>>> ApproveAdjustment(
         long id,
         CancellationToken cancellationToken)
@@ -57,6 +59,7 @@ public sealed class PayrollAdjustmentsController : ControllerBase
 
     [HttpPost("{id:long}/reject")]
     [ProducesResponseType(typeof(ApiResponse<PayrollAdjustment>), StatusCodes.Status200OK)]
+    [HrPermission("hr-payroll-adjustments", "reject")]
     public async Task<ActionResult<ApiResponse<PayrollAdjustment>>> RejectAdjustment(
         long id,
         CancellationToken cancellationToken)
@@ -68,6 +71,7 @@ public sealed class PayrollAdjustmentsController : ControllerBase
 
     [HttpGet]
     [ProducesResponseType(typeof(ApiResponse<IReadOnlyList<PayrollAdjustmentDto>>), StatusCodes.Status200OK)]
+    [HrPermission("hr-payroll-adjustments", "view")]
     public async Task<ActionResult<ApiResponse<IReadOnlyList<PayrollAdjustmentDto>>>> GetAdjustments(
         [FromQuery] long companyId,
         [FromQuery] string? employeeCode,
@@ -81,6 +85,7 @@ public sealed class PayrollAdjustmentsController : ControllerBase
 
     [HttpGet("{id:long}")]
     [ProducesResponseType(typeof(ApiResponse<PayrollAdjustment>), StatusCodes.Status200OK)]
+    [HrPermission("hr-payroll-adjustments", "view")]
     public async Task<ActionResult<ApiResponse<PayrollAdjustment>>> GetAdjustmentById(
         long id,
         CancellationToken cancellationToken)
@@ -92,6 +97,7 @@ public sealed class PayrollAdjustmentsController : ControllerBase
 
     [HttpDelete("{id:long}")]
     [ProducesResponseType(typeof(ApiResponse<bool>), StatusCodes.Status200OK)]
+    [HrPermission("hr-payroll-adjustments", "delete")]
     public async Task<ActionResult<ApiResponse<bool>>> DeleteAdjustment(
         long id,
         CancellationToken cancellationToken)

@@ -54,7 +54,7 @@ public class LoanDeductionServiceTests
             AllowNegativeNetPay = false
         };
 
-        var result = await _service.CalculateAndApplyDeductionsAsync(null, empCode, payPeriod, netPayBeforeLoans, policy);
+        var result = await _service.CalculateAndApplyDeductionsAsync(null, empCode, payPeriod, netPayBeforeLoans, policy, persistChanges: true);
 
         Assert.Equal(200m, result.TotalScheduledDeduction);
         Assert.Equal(200m, result.TotalActualDeduction);
@@ -97,7 +97,7 @@ public class LoanDeductionServiceTests
             AllowNegativeNetPay = false
         };
 
-        var result = await _service.CalculateAndApplyDeductionsAsync(null, empCode, payPeriod, netPayBeforeLoans, policy);
+        var result = await _service.CalculateAndApplyDeductionsAsync(null, empCode, payPeriod, netPayBeforeLoans, policy, persistChanges: true);
 
         Assert.Equal(600m, result.TotalScheduledDeduction);
         Assert.Equal(400m, result.TotalActualDeduction);
@@ -142,7 +142,7 @@ public class LoanDeductionServiceTests
             AllowNegativeNetPay = false
         };
 
-        var result = await _service.CalculateAndApplyDeductionsAsync(null, empCode, payPeriod, netPayBeforeLoans, policy);
+        var result = await _service.CalculateAndApplyDeductionsAsync(null, empCode, payPeriod, netPayBeforeLoans, policy, persistChanges: true);
 
         Assert.Equal(250m, result.TotalScheduledDeduction);
         Assert.Equal(150m, result.TotalActualDeduction);

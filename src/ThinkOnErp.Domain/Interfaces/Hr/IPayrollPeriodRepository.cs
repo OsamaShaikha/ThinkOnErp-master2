@@ -14,6 +14,7 @@ public interface IPayrollPeriodRepository
     Task UpdatePeriodAsync(PayrollPeriod period, CancellationToken cancellationToken = default);
 
     Task<PayrollRun?> GetPayrollRunByIdAsync(long id, CancellationToken cancellationToken = default);
+    Task<PayrollPeriod?> GetPeriodForRunAsync(PayrollRun run, CancellationToken cancellationToken = default);
     Task<PayrollRun?> GetPayrollRunByPeriodAsync(string payPeriod, long? branchId = null, CancellationToken cancellationToken = default);
     Task AddPayrollRunAsync(PayrollRun run, CancellationToken cancellationToken = default);
     Task UpdatePayrollRunAsync(PayrollRun run, CancellationToken cancellationToken = default);

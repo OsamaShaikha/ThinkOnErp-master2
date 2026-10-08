@@ -293,6 +293,9 @@ public record PayrollValidationResultDto(
 );
 
 // Employee Management DTOs
+public record LinkEmployeeUserDto(long? UserId);
+public record EmployeeUserLinkDto(string EmployeeCode, long? UserId);
+
 public record CreateEmployeeDto(
     string EmployeeCode,
     string NameLocal,
@@ -361,7 +364,8 @@ public record EmployeeSummaryDto(
     string EmploymentStatus,
     decimal? BasicSalary,
     string? Phone,
-    string? Email
+    string? Email,
+    long? UserId = null
 );
 
 public record EmployeeDetailsDto(
@@ -394,7 +398,8 @@ public record EmployeeDetailsDto(
     string? BankIban,
     bool IsActive,
     List<DependentDto> Dependents,
-    SalaryStructureDetailsDto? ActiveSalaryStructure
+    SalaryStructureDetailsDto? ActiveSalaryStructure,
+    long? UserId = null
 );
 
 public record CreateDependentDto(

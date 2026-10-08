@@ -56,12 +56,32 @@ public sealed class LoanDeductionService : ILoanDeductionService
     {
         // 1. Fetch pending schedules and approved advances for this period
         var allSchedules = await _loanRepository.GetPendingSchedulesForPeriodAsync(payPeriod, cancellationToken);
-        var empSchedules = allSchedules.Where(s => s.EmployeeLoan?.EmployeeCode == employeeCode && s.Status == "PENDING").ToList();
+        var empSchedules = allSchedules.Where(s => s.EmployeeLoan?.EmployeeCode == employeeCode &&
+            (s.Status == "PENDING" || s.Status == "PARTIAL" || s.Status == "SKIPPED"))
+            .OrderBy(s => s.PayPeriod).ThenBy(s => s.InstallmentNo).ToList();
 
         var allAdvances = await _loanRepository.GetAdvancesAsync(employeeCode, payPeriod, cancellationToken);
         var empAdvances = allAdvances.Where(a => a.Status == "APPROVED" && a.RemainingBalance > 0).ToList();
 
-        decimal totalScheduledLoans = empSchedules.Sum(s => s.ScheduledAmount);
+        if (!persistChanges)
+        {
+            // Preview copies must never mutate EF-tracked balances or repayment state.
+            var loans = new Dictionary<long, EmployeeLoan>();
+            empSchedules = empSchedules.Select(s =>
+            {
+                var copy = CopyScalars(s);
+                if (s.EmployeeLoan != null)
+                {
+                    if (!loans.TryGetValue(s.EmployeeLoanId, out var loan))
+                        loans[s.EmployeeLoanId] = loan = CopyScalars(s.EmployeeLoan);
+                    copy.EmployeeLoan = loan;
+                }
+                return copy;
+            }).ToList();
+            empAdvances = empAdvances.Select(CopyScalars).ToList();
+        }
+
+        decimal totalScheduledLoans = empSchedules.Sum(s => Math.Max(0m, s.ScheduledAmount - s.PaidAmount));
         decimal totalScheduledAdvances = empAdvances.Sum(a => a.RemainingBalance);
         decimal totalScheduled = totalScheduledLoans + totalScheduledAdvances;
 
@@ -120,10 +140,10 @@ public sealed class LoanDeductionService : ILoanDeductionService
         // 4. Priority 2: Scheduled Loan Repayments
         foreach (var schedule in empSchedules)
         {
-            decimal due = schedule.ScheduledAmount;
+            decimal due = Math.Max(0m, schedule.ScheduledAmount - schedule.PaidAmount);
             decimal deduct = Math.Min(due, remainingCap);
 
-            schedule.PaidAmount = deduct;
+            schedule.PaidAmount += deduct;
             schedule.CarriedForwardAmount = due - deduct;
             schedule.PayrollRunLineId = runLineId;
             schedule.PaidDate = DateTime.UtcNow;
@@ -178,6 +198,15 @@ public sealed class LoanDeductionService : ILoanDeductionService
             updatedSchedules,
             updatedAdvances
         );
+    }
+
+    private static T CopyScalars<T>(T source) where T : class, new()
+    {
+        var copy = new T();
+        foreach (var property in typeof(T).GetProperties().Where(p => p.CanRead && p.CanWrite &&
+            (p.PropertyType.IsValueType || p.PropertyType == typeof(string))))
+            property.SetValue(copy, property.GetValue(source));
+        return copy;
     }
 
     public async Task<EmployeeLoan> CreateLoanApplicationAsync(CreateLoanApplicationDto dto, string user, CancellationToken cancellationToken = default)

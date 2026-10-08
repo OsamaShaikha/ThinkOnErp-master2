@@ -73,6 +73,7 @@ public sealed class LeaveBalanceConfiguration : IEntityTypeConfiguration<LeaveBa
     public void Configure(EntityTypeBuilder<LeaveBalance> builder)
     {
         builder.ToTable("HR_LEAVE_BALANCE");
+        builder.HasIndex(e => new { e.EmployeeCode, e.LeaveTypeCode, e.YearNo }).IsUnique().HasDatabaseName("UX_HR_LEAVE_BALANCE_YEAR");
 
         builder.HasKey(e => e.Id);
         builder.Property(e => e.Id).HasColumnName("ID").ValueGeneratedOnAdd();

@@ -43,13 +43,16 @@ public interface ILeaveService
 
 public sealed class LeaveService : ILeaveService
 {
+    private readonly IHrUnitOfWork? _unitOfWork;
+
     private readonly ILeaveRepository _leaveRepo;
     private readonly IEmployeeRepository _employeeRepo;
 
-    public LeaveService(ILeaveRepository leaveRepo, IEmployeeRepository employeeRepo)
+    public LeaveService(ILeaveRepository leaveRepo, IEmployeeRepository employeeRepo, IHrUnitOfWork? unitOfWork = null)
     {
         _leaveRepo = leaveRepo;
         _employeeRepo = employeeRepo;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<IReadOnlyList<LeaveTypeDto>> GetLeaveTypesAsync(bool activeOnly = true, CancellationToken cancellationToken = default)
@@ -94,13 +97,14 @@ public sealed class LeaveService : ILeaveService
         if (string.IsNullOrWhiteSpace(dto.LeaveTypeCode))
             throw new ArgumentException("Leave type code is required.", nameof(dto.LeaveTypeCode));
 
-        var existing = await _leaveRepo.GetLeaveTypeByCodeAsync(dto.LeaveTypeCode, cancellationToken);
+        var normalizedCode = dto.LeaveTypeCode.Trim().ToUpperInvariant();
+        var existing = await _leaveRepo.GetLeaveTypeByCodeAsync(normalizedCode, cancellationToken);
         if (existing != null)
             throw new InvalidOperationException($"Leave type with code '{dto.LeaveTypeCode}' already exists.");
 
         var entity = new LeaveType
         {
-            LeaveTypeCode = dto.LeaveTypeCode.Trim().ToUpperInvariant(),
+            LeaveTypeCode = normalizedCode,
             NameLocal = dto.NameLocal,
             NameEn = dto.NameEn,
             IsPaid = dto.IsPaid,
@@ -282,7 +286,10 @@ public sealed class LeaveService : ILeaveService
         );
     }
 
-    public async Task<LeaveRequestDto> ProcessLeaveRequestAsync(long requestId, ProcessLeaveRequestDto dto, string user, CancellationToken cancellationToken = default)
+    public Task<LeaveRequestDto> ProcessLeaveRequestAsync(long requestId, ProcessLeaveRequestDto dto, string user, CancellationToken cancellationToken = default) =>
+        _unitOfWork == null ? ProcessLeaveRequestAsyncCore(requestId, dto, user, cancellationToken) : _unitOfWork.ExecuteAsync(() => ProcessLeaveRequestAsyncCore(requestId, dto, user, cancellationToken), cancellationToken);
+
+    private async Task<LeaveRequestDto> ProcessLeaveRequestAsyncCore(long requestId, ProcessLeaveRequestDto dto, string user, CancellationToken cancellationToken = default)
     {
         var request = await _leaveRepo.GetLeaveRequestByIdAsync(requestId, cancellationToken);
         if (request == null)
@@ -295,17 +302,16 @@ public sealed class LeaveService : ILeaveService
             throw new InvalidOperationException($"Leave request {requestId} has already been processed with status '{request.Status}'.");
         }
 
-        request.Status = dto.Approved ? "APPROVED" : "REJECTED";
-        request.ApprovedBy = user;
-        request.ApprovalDate = DateTime.UtcNow;
-        request.RejectionReason = dto.RejectionReason;
-        request.UpdateUser = user;
-        request.UpdateDate = DateTime.UtcNow;
-
         if (dto.Approved && request.LeaveType != null && request.LeaveType.IsPaid)
         {
             int year = request.StartDate.Year;
             var balance = await _leaveRepo.GetLeaveBalanceAsync(request.EmployeeCode, request.LeaveTypeCode, year, cancellationToken);
+            var available = balance == null ? request.LeaveType.MaxDaysPerYear : balance.AccruedDays + balance.CarriedForwardDays - balance.UsedDays;
+            if (request.DaysRequested <= 0 || request.DaysRequested > available)
+                throw new InvalidOperationException("Insufficient leave balance at approval. Refresh the balance and review the request.");
+            if (request.EndDate.Year != year)
+                throw new InvalidOperationException("Split cross-year leave requests into separate yearly requests before approval.");
+
             if (balance == null)
             {
                 balance = new LeaveBalance
@@ -329,6 +335,13 @@ public sealed class LeaveService : ILeaveService
                 await _leaveRepo.UpdateLeaveBalanceAsync(balance, cancellationToken);
             }
         }
+
+        request.Status = dto.Approved ? "APPROVED" : "REJECTED";
+        request.ApprovedBy = user;
+        request.ApprovalDate = DateTime.UtcNow;
+        request.RejectionReason = dto.RejectionReason;
+        request.UpdateUser = user;
+        request.UpdateDate = DateTime.UtcNow;
 
         await _leaveRepo.UpdateLeaveRequestAsync(request, cancellationToken);
         await _leaveRepo.SaveChangesAsync(cancellationToken);

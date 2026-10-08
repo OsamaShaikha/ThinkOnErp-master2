@@ -35,6 +35,7 @@ public sealed class AttendanceCorrectionsController : ControllerBase
 
     [HttpPost]
     [ProducesResponseType(typeof(ApiResponse<AttendanceCorrectionRequest>), StatusCodes.Status200OK)]
+    [HrPermission("hr-attendance-corrections", "create", selfService: true)]
     public async Task<ActionResult<ApiResponse<AttendanceCorrectionRequest>>> SubmitCorrection(
         [FromBody] AttendanceCorrectionRequestDto dto,
         CancellationToken cancellationToken)
@@ -46,6 +47,7 @@ public sealed class AttendanceCorrectionsController : ControllerBase
 
     [HttpPost("{id:long}/process")]
     [ProducesResponseType(typeof(ApiResponse<AttendanceCorrectionRequest>), StatusCodes.Status200OK)]
+    [HrPermission("hr-attendance-corrections", "approve")]
     public async Task<ActionResult<ApiResponse<AttendanceCorrectionRequest>>> ProcessCorrection(
         long id,
         [FromBody] ProcessAttendanceCorrectionDto dto,
@@ -58,6 +60,7 @@ public sealed class AttendanceCorrectionsController : ControllerBase
 
     [HttpGet]
     [ProducesResponseType(typeof(ApiResponse<IReadOnlyList<AttendanceCorrectionRequest>>), StatusCodes.Status200OK)]
+    [HrPermission("hr-attendance-corrections", "view", selfService: true)]
     public async Task<ActionResult<ApiResponse<IReadOnlyList<AttendanceCorrectionRequest>>>> GetCorrections(
         [FromQuery] string? employeeCode,
         [FromQuery] string? status,

@@ -63,6 +63,12 @@ public class ExceptionHandlingMiddleware
         // Handle different exception types
         switch (exception)
         {
+            case Microsoft.EntityFrameworkCore.DbUpdateConcurrencyException:
+            case Oracle.ManagedDataAccess.Client.OracleException directOracle when directOracle.Number == 8177:
+            case Microsoft.EntityFrameworkCore.DbUpdateException update when update.InnerException is Oracle.ManagedDataAccess.Client.OracleException oracle && oracle.Number == 8177:
+                statusCode = StatusCodes.Status409Conflict;
+                response = ApiResponse<object>.CreateFailure("This record changed during processing. Refresh it and retry the operation.", statusCode: statusCode);
+                break;
             case ValidationException validationException:
                 statusCode = (int)HttpStatusCode.BadRequest;
                 var errors = validationException.Errors

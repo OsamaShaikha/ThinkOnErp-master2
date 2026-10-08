@@ -165,6 +165,12 @@ public class PermissionsController : ControllerBase
 
             foreach (var feature in features)
             {
+                if (screen.ScreenCode.StartsWith("hr-", StringComparison.OrdinalIgnoreCase))
+                {
+                    if (await _permissionService.CanAccessAsync(userId, screen.Id, feature.Id))
+                        allowedFeatures.Add(new { feature.Id, feature.FeatureCode, feature.FeatureName });
+                    continue;
+                }
                 if (revokedFeatures.Any(r => r.ScreenId == screen.Id && r.FeatureId == feature.Id))
                     continue;
 

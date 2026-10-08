@@ -18,6 +18,12 @@ public sealed class PayrollPeriodRepository : IPayrollPeriodRepository
         _context = context;
     }
 
+    public async Task<PayrollPeriod?> GetPeriodForRunAsync(PayrollRun run, CancellationToken cancellationToken = default)
+    {
+        var companyId = await _context.SysBranches.Where(b => b.Id == run.BranchId).Select(b => (long?)b.CompanyId).SingleOrDefaultAsync(cancellationToken);
+        return companyId.HasValue ? await GetPeriodByCodeAsync(companyId.Value, run.PayPeriod, cancellationToken) : null;
+    }
+
     public async Task<IReadOnlyList<PayrollPeriod>> GetPeriodsAsync(long companyId, int? fiscalYear = null, CancellationToken cancellationToken = default)
     {
         var query = _context.PayrollPeriods

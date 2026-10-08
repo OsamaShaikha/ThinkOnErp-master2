@@ -204,6 +204,14 @@ public sealed class EmployeeExcelService : IEmployeeExcelService
                     continue;
                 }
 
+                if (existing.UserId.HasValue && existing.BranchId != r.BranchId &&
+                    !await _employeeRepo.IsUserAvailableForEmployeeAsync(existing.UserId.Value, r.BranchId, cancellationToken))
+                {
+                    result.Errors.Add(new EmployeeImportErrorDto(r.RowNumber, "BranchId", "LINKED_USER_BRANCH_ACCESS",
+                        "The linked login account must have access to the new employee branch."));
+                    continue;
+                }
+
                 // Update existing employee
                 existing.NameLocal = r.NameLocal;
                 existing.NameEn = r.NameEn;

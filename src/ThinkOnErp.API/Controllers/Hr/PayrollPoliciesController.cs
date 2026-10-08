@@ -36,6 +36,7 @@ public sealed class PayrollPoliciesController : ControllerBase
     // Proration Policy
     [HttpGet("proration")]
     [ProducesResponseType(typeof(ApiResponse<IReadOnlyList<ProrationPolicy>>), StatusCodes.Status200OK)]
+    [HrPermission("hr-payroll-policies", "view")]
     public async Task<ActionResult<ApiResponse<IReadOnlyList<ProrationPolicy>>>> GetProrationPolicies(
         [FromQuery] long companyId,
         CancellationToken cancellationToken)
@@ -46,6 +47,7 @@ public sealed class PayrollPoliciesController : ControllerBase
 
     [HttpPost("proration")]
     [ProducesResponseType(typeof(ApiResponse<ProrationPolicy>), StatusCodes.Status200OK)]
+    [HrPermission("hr-payroll-policies", "create")]
     public async Task<ActionResult<ApiResponse<ProrationPolicy>>> AddProrationPolicy(
         [FromBody] ProrationPolicyDto dto,
         CancellationToken cancellationToken)
@@ -72,6 +74,7 @@ public sealed class PayrollPoliciesController : ControllerBase
     // SSC Policy
     [HttpGet("ssc")]
     [ProducesResponseType(typeof(ApiResponse<IReadOnlyList<SSCPolicy>>), StatusCodes.Status200OK)]
+    [HrPermission("hr-payroll-policies", "view")]
     public async Task<ActionResult<ApiResponse<IReadOnlyList<SSCPolicy>>>> GetSSCPolicies(
         [FromQuery] long companyId,
         CancellationToken cancellationToken)
@@ -82,6 +85,7 @@ public sealed class PayrollPoliciesController : ControllerBase
 
     [HttpPost("ssc")]
     [ProducesResponseType(typeof(ApiResponse<SSCPolicy>), StatusCodes.Status200OK)]
+    [HrPermission("hr-payroll-policies", "create")]
     public async Task<ActionResult<ApiResponse<SSCPolicy>>> AddSSCPolicy(
         [FromBody] SSCPolicyDto dto,
         CancellationToken cancellationToken)
@@ -111,6 +115,7 @@ public sealed class PayrollPoliciesController : ControllerBase
     // Tax Policy
     [HttpGet("tax")]
     [ProducesResponseType(typeof(ApiResponse<IReadOnlyList<TaxPolicy>>), StatusCodes.Status200OK)]
+    [HrPermission("hr-payroll-policies", "view")]
     public async Task<ActionResult<ApiResponse<IReadOnlyList<TaxPolicy>>>> GetTaxPolicies(
         [FromQuery] long companyId,
         CancellationToken cancellationToken)
@@ -121,6 +126,7 @@ public sealed class PayrollPoliciesController : ControllerBase
 
     [HttpPost("tax")]
     [ProducesResponseType(typeof(ApiResponse<TaxPolicy>), StatusCodes.Status200OK)]
+    [HrPermission("hr-payroll-policies", "create")]
     public async Task<ActionResult<ApiResponse<TaxPolicy>>> AddTaxPolicy(
         [FromBody] TaxPolicyDto dto,
         CancellationToken cancellationToken)
@@ -167,6 +173,7 @@ public sealed class PayrollPoliciesController : ControllerBase
     // Deduction Policy
     [HttpGet("deductions")]
     [ProducesResponseType(typeof(ApiResponse<IReadOnlyList<DeductionPolicy>>), StatusCodes.Status200OK)]
+    [HrPermission("hr-payroll-policies", "view")]
     public async Task<ActionResult<ApiResponse<IReadOnlyList<DeductionPolicy>>>> GetDeductionPolicies(
         [FromQuery] long companyId,
         CancellationToken cancellationToken)
@@ -177,6 +184,7 @@ public sealed class PayrollPoliciesController : ControllerBase
 
     [HttpPost("deductions")]
     [ProducesResponseType(typeof(ApiResponse<DeductionPolicy>), StatusCodes.Status200OK)]
+    [HrPermission("hr-payroll-policies", "create")]
     public async Task<ActionResult<ApiResponse<DeductionPolicy>>> AddDeductionPolicy(
         [FromBody] DeductionPolicyDto dto,
         CancellationToken cancellationToken)

@@ -41,6 +41,7 @@ public sealed class PayrollController : ControllerBase
 
     [HttpPost("calculate")]
     [ProducesResponseType(typeof(ApiResponse<PayrollCalculationResultDto>), StatusCodes.Status200OK)]
+    [HrPermission("hr-payroll", "edit")]
     public async Task<ActionResult<ApiResponse<PayrollCalculationResultDto>>> CalculatePayroll(
         [FromBody] CreatePayrollRunDto dto,
         CancellationToken cancellationToken)
@@ -52,6 +53,7 @@ public sealed class PayrollController : ControllerBase
 
     [HttpPost("{id:long}/approve")]
     [ProducesResponseType(typeof(ApiResponse<PayrollRun>), StatusCodes.Status200OK)]
+    [HrPermission("hr-payroll", "approve")]
     public async Task<ActionResult<ApiResponse<PayrollRun>>> ApprovePayroll(
         long id,
         CancellationToken cancellationToken)
@@ -63,6 +65,7 @@ public sealed class PayrollController : ControllerBase
 
     [HttpPost("{id:long}/post-to-gl")]
     [ProducesResponseType(typeof(ApiResponse<PostGlVoucherResultDto>), StatusCodes.Status200OK)]
+    [HrPermission("hr-payroll", "post")]
     public async Task<ActionResult<ApiResponse<PostGlVoucherResultDto>>> PostToGl(
         long id,
         CancellationToken cancellationToken)
@@ -74,6 +77,7 @@ public sealed class PayrollController : ControllerBase
 
     [HttpPost("{id:long}/reverse-gl")]
     [ProducesResponseType(typeof(ApiResponse<PayrollRun>), StatusCodes.Status200OK)]
+    [HrPermission("hr-payroll", "reverse")]
     public async Task<ActionResult<ApiResponse<PayrollRun>>> ReverseGl(
         long id,
         CancellationToken cancellationToken)
@@ -85,6 +89,7 @@ public sealed class PayrollController : ControllerBase
 
     [HttpGet("{id:long}")]
     [ProducesResponseType(typeof(ApiResponse<PayrollCalculationResultDto>), StatusCodes.Status200OK)]
+    [HrPermission("hr-payroll", "view")]
     public async Task<ActionResult<ApiResponse<PayrollCalculationResultDto>>> GetPayrollRun(
         long id,
         CancellationToken cancellationToken)
@@ -96,6 +101,7 @@ public sealed class PayrollController : ControllerBase
 
     [HttpGet("{id:long}/export-bank")]
     [ProducesResponseType(typeof(FileContentResult), StatusCodes.Status200OK)]
+    [HrPermission("hr-payroll", "export")]
     public async Task<IActionResult> ExportBankFile(
         long id,
         [FromQuery] string? format,
@@ -107,6 +113,7 @@ public sealed class PayrollController : ControllerBase
 
     [HttpGet("{id:long}/export-bank/preview")]
     [ProducesResponseType(typeof(ApiResponse<BankPayrollExportResultDto>), StatusCodes.Status200OK)]
+    [HrPermission("hr-payroll", "view")]
     public async Task<ActionResult<ApiResponse<BankPayrollExportResultDto>>> PreviewBankExport(
         long id,
         [FromQuery] string? format,
@@ -118,6 +125,7 @@ public sealed class PayrollController : ControllerBase
 
     [HttpGet("run-lines/{lineId:long}/explanation")]
     [ProducesResponseType(typeof(ApiResponse<PayrollExplanationDto>), StatusCodes.Status200OK)]
+    [HrPermission("hr-payroll", "view")]
     public async Task<ActionResult<ApiResponse<PayrollExplanationDto>>> GetCalculationExplanation(
         long lineId,
         CancellationToken cancellationToken)
@@ -129,6 +137,7 @@ public sealed class PayrollController : ControllerBase
 
     [HttpGet("periods")]
     [ProducesResponseType(typeof(ApiResponse<IReadOnlyList<PayrollPeriod>>), StatusCodes.Status200OK)]
+    [HrPermission("hr-payroll", "view")]
     public async Task<ActionResult<ApiResponse<IReadOnlyList<PayrollPeriod>>>> GetPeriods(
         [FromQuery] long companyId,
         [FromQuery] int? year,
@@ -141,6 +150,7 @@ public sealed class PayrollController : ControllerBase
     [HttpPost("periods")]
     [ProducesResponseType(typeof(ApiResponse<PayrollPeriod>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiResponse<PayrollPeriod>), StatusCodes.Status400BadRequest)]
+    [HrPermission("hr-payroll", "create")]
     public async Task<ActionResult<ApiResponse<PayrollPeriod>>> CreatePeriod(
         [FromBody] PayrollPeriod period,
         CancellationToken cancellationToken)

@@ -296,6 +296,7 @@ try
     builder.Services.AddControllers(options =>
     {
         options.Filters.Add<ThinkOnErp.API.Filters.DynamicValidationActionFilter>();
+        options.Filters.Add<ThinkOnErp.API.Authorization.HrAccessFilter>();
         options.Filters.Add<ThinkOnErp.API.Filters.LocalizedApiResponseFilter>();
     })
     .AddJsonOptions(options =>

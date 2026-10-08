@@ -52,6 +52,12 @@ public class ForceLogoutMiddleware
                 {
                     // Get user from database to check force logout date
                     var user = await userRepository.GetByIdAsync(userId);
+                    if (user == null || !user.IsActive)
+                    {
+                        context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+                        await context.Response.WriteAsJsonAsync(new { success = false, message = "Account is inactive or no longer exists." });
+                        return;
+                    }
                     
                     if (user != null && user.ForceLogoutDate.HasValue)
                     {

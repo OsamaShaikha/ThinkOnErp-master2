@@ -35,6 +35,7 @@ public sealed class WorkCalendarsController : ControllerBase
 
     [HttpPost]
     [ProducesResponseType(typeof(ApiResponse<WorkCalendar>), StatusCodes.Status200OK)]
+    [HrPermission("hr-work-calendars", "create")]
     public async Task<ActionResult<ApiResponse<WorkCalendar>>> CreateCalendar(
         [FromBody] CreateWorkCalendarDto dto,
         CancellationToken cancellationToken)
@@ -46,6 +47,7 @@ public sealed class WorkCalendarsController : ControllerBase
 
     [HttpGet]
     [ProducesResponseType(typeof(ApiResponse<IReadOnlyList<WorkCalendar>>), StatusCodes.Status200OK)]
+    [HrPermission("hr-work-calendars", "view")]
     public async Task<ActionResult<ApiResponse<IReadOnlyList<WorkCalendar>>>> GetCalendars(
         [FromQuery] long companyId,
         CancellationToken cancellationToken)
@@ -56,6 +58,7 @@ public sealed class WorkCalendarsController : ControllerBase
 
     [HttpGet("{id:long}")]
     [ProducesResponseType(typeof(ApiResponse<WorkCalendar>), StatusCodes.Status200OK)]
+    [HrPermission("hr-work-calendars", "view")]
     public async Task<ActionResult<ApiResponse<WorkCalendar>>> GetCalendarById(
         long id,
         CancellationToken cancellationToken)
@@ -67,6 +70,7 @@ public sealed class WorkCalendarsController : ControllerBase
 
     [HttpPost("holidays")]
     [ProducesResponseType(typeof(ApiResponse<PublicHoliday>), StatusCodes.Status200OK)]
+    [HrPermission("hr-work-calendars", "create")]
     public async Task<ActionResult<ApiResponse<PublicHoliday>>> CreateHoliday(
         [FromBody] CreatePublicHolidayDto dto,
         CancellationToken cancellationToken)
@@ -78,6 +82,7 @@ public sealed class WorkCalendarsController : ControllerBase
 
     [HttpGet("holidays")]
     [ProducesResponseType(typeof(ApiResponse<IReadOnlyList<PublicHoliday>>), StatusCodes.Status200OK)]
+    [HrPermission("hr-work-calendars", "view")]
     public async Task<ActionResult<ApiResponse<IReadOnlyList<PublicHoliday>>>> GetHolidays(
         [FromQuery] long companyId,
         [FromQuery] int? year,
@@ -89,6 +94,7 @@ public sealed class WorkCalendarsController : ControllerBase
 
     [HttpGet("working-days-count")]
     [ProducesResponseType(typeof(ApiResponse<int>), StatusCodes.Status200OK)]
+    [HrPermission("hr-work-calendars", "view")]
     public async Task<ActionResult<ApiResponse<int>>> CountWorkingDays(
         [FromQuery] long companyId,
         [FromQuery] DateTime startDate,

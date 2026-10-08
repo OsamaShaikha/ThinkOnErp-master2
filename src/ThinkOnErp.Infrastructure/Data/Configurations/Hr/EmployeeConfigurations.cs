@@ -11,6 +11,10 @@ public sealed class EmployeeConfiguration : IEntityTypeConfiguration<Employee>
         builder.ToTable("HR_EMPLOYEE");
         builder.HasKey(e => e.EmployeeCode);
         builder.Property(e => e.EmployeeCode).HasColumnName("EMPLOYEE_CODE").HasMaxLength(100);
+        builder.Property(e => e.UserId).HasColumnName("USER_ID");
+        builder.HasIndex(e => e.UserId).IsUnique().HasDatabaseName("UX_HR_EMPLOYEE_USER_ID");
+        builder.HasOne(e => e.User).WithOne().HasForeignKey<Employee>(e => e.UserId)
+            .OnDelete(DeleteBehavior.Restrict).HasConstraintName("FK_HR_EMPLOYEE_USER");
 
         builder.Property(e => e.NameLocal).HasColumnName("NAME_LOCAL").HasMaxLength(400).IsRequired();
         builder.Property(e => e.NameEn).HasColumnName("NAME_EN").HasMaxLength(400).IsRequired();

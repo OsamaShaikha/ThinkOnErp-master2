@@ -25,6 +25,8 @@ public interface IEmployeeRepository
         CancellationToken cancellationToken = default);
 
     Task<Employee?> GetEmployeeByCodeAsync(string employeeCode, CancellationToken cancellationToken = default);
+    Task<Employee?> GetEmployeeByUserIdAsync(long userId, CancellationToken cancellationToken = default);
+    Task<bool> IsUserAvailableForEmployeeAsync(long userId, long? branchId, CancellationToken cancellationToken = default);
     Task<bool> ExistsByCodeAsync(string employeeCode, CancellationToken cancellationToken = default);
     Task<bool> ExistsByNationalIdAsync(string nationalId, string? excludeEmployeeCode = null, CancellationToken cancellationToken = default);
     Task AddEmployeeAsync(Employee employee, CancellationToken cancellationToken = default);

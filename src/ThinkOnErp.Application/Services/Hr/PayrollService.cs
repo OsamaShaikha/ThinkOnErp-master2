@@ -24,6 +24,9 @@ public interface IPayrollService
 
 public sealed class PayrollService : IPayrollService
 {
+    private readonly IHrUnitOfWork? _unitOfWork;
+    private readonly IHrPayrollPostingService? _postingService;
+
     private readonly IPayrollPeriodRepository _payrollPeriodRepo;
     private readonly IPayrollCalculationEngine _calculationEngine;
     private readonly IPayrollValidationService _validationService;
@@ -37,7 +40,7 @@ public sealed class PayrollService : IPayrollService
         IPayrollValidationService validationService,
         ILoanDeductionService loanDeductionService,
         IPolicyRepository policyRepo,
-        IGlVoucherRepository glVoucherRepo)
+        IGlVoucherRepository glVoucherRepo, IHrUnitOfWork? unitOfWork = null, IHrPayrollPostingService? postingService = null)
     {
         _payrollPeriodRepo = payrollPeriodRepo;
         _calculationEngine = calculationEngine;
@@ -45,10 +48,13 @@ public sealed class PayrollService : IPayrollService
         _loanDeductionService = loanDeductionService;
         _policyRepo = policyRepo;
         _glVoucherRepo = glVoucherRepo;
+        _unitOfWork = unitOfWork;
+        _postingService = postingService;
     }
 
     public async Task<PayrollCalculationResultDto> CreateAndCalculatePayrollRunAsync(CreatePayrollRunDto dto, string user, CancellationToken cancellationToken = default)
     {
+        if (!dto.BranchId.HasValue) throw new ArgumentException("Calculate a separate payroll run for each branch.");
         // 1. Validation
         var validation = await _validationService.ValidatePreCalculationAsync(dto.CompanyId, dto.PayPeriod, dto.BranchId, cancellationToken);
         if (!validation.IsValid)
@@ -74,7 +80,10 @@ public sealed class PayrollService : IPayrollService
         return MapToResultDto(run);
     }
 
-    public async Task<PayrollRun> ApprovePayrollRunAsync(long payrollRunId, string user, CancellationToken cancellationToken = default)
+    public Task<PayrollRun> ApprovePayrollRunAsync(long payrollRunId, string user, CancellationToken cancellationToken = default) =>
+        _unitOfWork == null ? ApprovePayrollRunAsyncCore(payrollRunId, user, cancellationToken) : _unitOfWork.ExecuteAsync(() => ApprovePayrollRunAsyncCore(payrollRunId, user, cancellationToken), cancellationToken);
+
+    private async Task<PayrollRun> ApprovePayrollRunAsyncCore(long payrollRunId, string user, CancellationToken cancellationToken = default)
     {
         var validation = await _validationService.ValidatePostApprovalAsync(payrollRunId, cancellationToken);
         if (!validation.IsValid)
@@ -92,11 +101,13 @@ public sealed class PayrollService : IPayrollService
         run.UpdateDate = DateTime.UtcNow;
 
         // Apply and persist loan deductions for each line
-        var deductionPolicy = await _policyRepo.GetActiveDeductionPolicyAsync(1, DateTime.UtcNow, cancellationToken);
+        var period = await _payrollPeriodRepo.GetPeriodForRunAsync(run, cancellationToken)
+            ?? throw new InvalidOperationException("The payroll period and branch company must exist before approval.");
+        var deductionPolicy = await _policyRepo.GetActiveDeductionPolicyAsync(period.CompanyId, period.StartDate, cancellationToken);
         foreach (var line in run.Lines)
         {
             decimal netBeforeLoans = line.GrossSalary - line.SscEmployeeContrib - line.IncomeTaxWithheld - line.NationalContribWithheld - (line.OtherDeductions - (line.Snapshot?.LoanDeductionsApplied ?? 0m));
-            await _loanDeductionService.CalculateAndApplyDeductionsAsync(
+            var settled = await _loanDeductionService.CalculateAndApplyDeductionsAsync(
                 line.Id,
                 line.EmployeeCode,
                 run.PayPeriod,
@@ -105,6 +116,8 @@ public sealed class PayrollService : IPayrollService
                 persistChanges: true,
                 cancellationToken: cancellationToken
             );
+            if (line.Snapshot != null && settled.TotalActualDeduction != line.Snapshot.LoanDeductionsApplied)
+                throw new InvalidOperationException("Loan balances changed since calculation. Recalculate the payroll before approval.");
         }
 
         await _payrollPeriodRepo.UpdatePayrollRunAsync(run, cancellationToken);
@@ -112,7 +125,10 @@ public sealed class PayrollService : IPayrollService
         return run;
     }
 
-    public async Task<PostGlVoucherResultDto> PostPayrollToGlAsync(long payrollRunId, string user, CancellationToken cancellationToken = default)
+    public Task<PostGlVoucherResultDto> PostPayrollToGlAsync(long payrollRunId, string user, CancellationToken cancellationToken = default) =>
+        _unitOfWork == null ? PostPayrollToGlAsyncCore(payrollRunId, user, cancellationToken) : _unitOfWork.ExecuteAsync(() => PostPayrollToGlAsyncCore(payrollRunId, user, cancellationToken), cancellationToken);
+
+    private async Task<PostGlVoucherResultDto> PostPayrollToGlAsyncCore(long payrollRunId, string user, CancellationToken cancellationToken = default)
     {
         var run = await _payrollPeriodRepo.GetPayrollRunByIdAsync(payrollRunId, cancellationToken);
         if (run == null) throw new KeyNotFoundException($"Payroll run {payrollRunId} not found.");
@@ -121,25 +137,32 @@ public sealed class PayrollService : IPayrollService
             throw new InvalidOperationException($"Payroll run {payrollRunId} cannot be posted because its status is '{run.Status}' (must be APPROVED).");
         }
 
-        long branchId = run.BranchId ?? 1;
-        int year = DateTime.UtcNow.Year;
-        int month = DateTime.UtcNow.Month;
-        int voucherType = 1; // General Journal
+        long branchId = run.BranchId ?? throw new InvalidOperationException("The payroll run must have a branch.");
+        var period = await _payrollPeriodRepo.GetPeriodForRunAsync(run, cancellationToken)
+            ?? throw new InvalidOperationException("Payroll period was not found.");
+        var postingDate = period.PayDate == default ? period.EndDate : period.PayDate;
+        var posting = _postingService == null ? throw new InvalidOperationException("Payroll posting configuration service is required.") :
+            await _postingService.ResolveAsync(branchId, postingDate, cancellationToken);
+        int year = postingDate.Year;
+        int month = postingDate.Month;
+        int voucherType = posting.Configuration.VoucherType;
 
         long voucherNo = await _glVoucherRepo.GenerateNextSerialNoAsync(branchId, year, month, voucherType, "YEARLY", cancellationToken);
 
         decimal totalDebit = run.TotalGrossSalary + run.TotalEmployerSsc;
         decimal totalCredit = run.TotalNetSalary + run.TotalEmployeeSsc + run.TotalEmployerSsc + run.TotalIncomeTax + run.TotalNationalContrib + run.TotalOtherDeductions;
 
+        if (Math.Abs(totalDebit - totalCredit) > 0.001m) throw new InvalidOperationException("Payroll journal is not balanced.");
+
         var voucher = new GlVoucherHeader
         {
             BranchId = branchId,
-            FiscalYearId = 1,
+            FiscalYearId = posting.FiscalYearId,
             VoucherYear = year,
             VoucherMonth = month,
             VoucherType = voucherType,
             VoucherNo = voucherNo,
-            VoucherDate = DateTime.UtcNow,
+            VoucherDate = postingDate,
             Description = $"قيد استحقاق رواتب وأجور شهر {run.PayPeriod}",
             TotalAmount = totalDebit,
             TotalLocalDebit = totalDebit,
@@ -163,7 +186,7 @@ public sealed class PayrollService : IPayrollService
         voucher.Details.Add(new GlVoucherDetail
         {
             LineSer = lineSer++,
-            AccountCode = "5101", // مصاريف الرواتب والأجور
+            AccountCode = posting.Configuration.SalaryExpense, // مصاريف الرواتب والأجور
             Debit = run.TotalGrossSalary,
             Credit = 0m,
             LocalDebit = run.TotalGrossSalary,
@@ -171,7 +194,7 @@ public sealed class PayrollService : IPayrollService
             BaseDebit = run.TotalGrossSalary,
             BaseCredit = 0m,
             Description = $"مصاريف الرواتب والأجور - {run.PayPeriod}",
-            CurrencyId = 1,
+            CurrencyId = posting.Configuration.CurrencyId,
             ExchangeRate = 1.0m,
             BranchId = branchId
         });
@@ -180,7 +203,7 @@ public sealed class PayrollService : IPayrollService
         voucher.Details.Add(new GlVoucherDetail
         {
             LineSer = lineSer++,
-            AccountCode = "5102", // مصاريف مساهمة الشركة في الضمان
+            AccountCode = posting.Configuration.EmployerSscExpense, // مصاريف مساهمة الشركة في الضمان
             Debit = run.TotalEmployerSsc,
             Credit = 0m,
             LocalDebit = run.TotalEmployerSsc,
@@ -188,7 +211,7 @@ public sealed class PayrollService : IPayrollService
             BaseDebit = run.TotalEmployerSsc,
             BaseCredit = 0m,
             Description = $"مساهمة الشركة في الضمان الاجتماعي - {run.PayPeriod}",
-            CurrencyId = 1,
+            CurrencyId = posting.Configuration.CurrencyId,
             ExchangeRate = 1.0m,
             BranchId = branchId
         });
@@ -197,7 +220,7 @@ public sealed class PayrollService : IPayrollService
         voucher.Details.Add(new GlVoucherDetail
         {
             LineSer = lineSer++,
-            AccountCode = "2101", // أمانات رواتب مستحقة الدفع
+            AccountCode = posting.Configuration.SalaryPayable, // أمانات رواتب مستحقة الدفع
             Debit = 0m,
             Credit = run.TotalNetSalary,
             LocalDebit = 0m,
@@ -205,7 +228,7 @@ public sealed class PayrollService : IPayrollService
             BaseDebit = 0m,
             BaseCredit = run.TotalNetSalary,
             Description = $"صافي الرواتب المستحقة للموظفين - {run.PayPeriod}",
-            CurrencyId = 1,
+            CurrencyId = posting.Configuration.CurrencyId,
             ExchangeRate = 1.0m,
             BranchId = branchId
         });
@@ -215,7 +238,7 @@ public sealed class PayrollService : IPayrollService
         voucher.Details.Add(new GlVoucherDetail
         {
             LineSer = lineSer++,
-            AccountCode = "2102", // أمانات المؤسسة العامة للضمان الاجتماعي
+            AccountCode = posting.Configuration.SscPayable, // أمانات المؤسسة العامة للضمان الاجتماعي
             Debit = 0m,
             Credit = totalSscPayable,
             LocalDebit = 0m,
@@ -223,7 +246,7 @@ public sealed class PayrollService : IPayrollService
             BaseDebit = 0m,
             BaseCredit = totalSscPayable,
             Description = $"أمانات الضمان الاجتماعي (موظف + صاحب عمل) - {run.PayPeriod}",
-            CurrencyId = 1,
+            CurrencyId = posting.Configuration.CurrencyId,
             ExchangeRate = 1.0m,
             BranchId = branchId
         });
@@ -233,7 +256,7 @@ public sealed class PayrollService : IPayrollService
         voucher.Details.Add(new GlVoucherDetail
         {
             LineSer = lineSer++,
-            AccountCode = "2103", // أمانات ضريبة الدخل المستقطعة
+            AccountCode = posting.Configuration.TaxPayable, // أمانات ضريبة الدخل المستقطعة
             Debit = 0m,
             Credit = totalTaxPayable,
             LocalDebit = 0m,
@@ -241,7 +264,7 @@ public sealed class PayrollService : IPayrollService
             BaseDebit = 0m,
             BaseCredit = totalTaxPayable,
             Description = $"أمانات ضريبة الدخل والتكافل الوطني - {run.PayPeriod}",
-            CurrencyId = 1,
+            CurrencyId = posting.Configuration.CurrencyId,
             ExchangeRate = 1.0m,
             BranchId = branchId
         });
@@ -252,7 +275,7 @@ public sealed class PayrollService : IPayrollService
             voucher.Details.Add(new GlVoucherDetail
             {
                 LineSer = lineSer++,
-                AccountCode = "1105", // سلف وقروض الموظفين / اقتطاعات أخرى
+                AccountCode = posting.Configuration.DeductionsPayable, // سلف وقروض الموظفين / اقتطاعات أخرى
                 Debit = 0m,
                 Credit = run.TotalOtherDeductions,
                 LocalDebit = 0m,
@@ -260,7 +283,7 @@ public sealed class PayrollService : IPayrollService
                 BaseDebit = 0m,
                 BaseCredit = run.TotalOtherDeductions,
                 Description = $"استرداد سلف واقتطاعات موظفين - {run.PayPeriod}",
-                CurrencyId = 1,
+                CurrencyId = posting.Configuration.CurrencyId,
                 ExchangeRate = 1.0m,
                 BranchId = branchId
             });
@@ -291,7 +314,10 @@ public sealed class PayrollService : IPayrollService
         );
     }
 
-    public async Task<PayrollRun> ReversePayrollGlVoucherAsync(long payrollRunId, string user, CancellationToken cancellationToken = default)
+    public Task<PayrollRun> ReversePayrollGlVoucherAsync(long payrollRunId, string user, CancellationToken cancellationToken = default) =>
+        _unitOfWork == null ? ReversePayrollGlVoucherAsyncCore(payrollRunId, user, cancellationToken) : _unitOfWork.ExecuteAsync(() => ReversePayrollGlVoucherAsyncCore(payrollRunId, user, cancellationToken), cancellationToken);
+
+    private async Task<PayrollRun> ReversePayrollGlVoucherAsyncCore(long payrollRunId, string user, CancellationToken cancellationToken = default)
     {
         var run = await _payrollPeriodRepo.GetPayrollRunByIdAsync(payrollRunId, cancellationToken);
         if (run == null) throw new KeyNotFoundException($"Payroll run {payrollRunId} not found.");

@@ -45,6 +45,21 @@ public class PermissionService : IPermissionService
         if (user == null || !user.IsActive)
             return false;
 
+        var hrScreen = await _context.Set<SysScreen>().FirstOrDefaultAsync(s => s.Id == screenId);
+        if (hrScreen?.ScreenCode.StartsWith("hr-", StringComparison.OrdinalIgnoreCase) == true)
+        {
+            if (user.IsAdmin) return true;
+            if (hrScreen.ScreenCode == "hr-payroll-posting" ||
+                (hrScreen.ScreenCode == "hr-employees" && (await _context.Set<SysFeature>().FindAsync(featureId))?.FeatureCode == "link-user")) return false;
+            if (!hrScreen.IsActive || !await _context.Set<SysSystem>().AnyAsync(s => s.Id == hrScreen.SystemId && s.IsActive) ||
+                !await _context.Set<SysScreenFeature>().AnyAsync(sf => sf.ScreenId == screenId && sf.FeatureId == featureId && sf.Feature!.IsActive)) return false;
+            var branches = await _context.SysUserBranches.Where(b => b.UserId == userId)
+                .Join(_context.SysBranches.Where(b => b.IsActive && b.CompanyId == user.CompanyId), a => a.BranchId, b => b.Id, (a,b) => b.Id).Distinct().ToListAsync();
+            foreach (var branch in branches)
+                if (await Hr.HrPermissionRules.BranchDecisionAsync(_context, user, hrScreen, featureId, branch) == true) return true;
+            return false;
+        }
+
         if (user.IsAdmin)
             return true;
 

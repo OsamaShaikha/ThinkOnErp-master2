@@ -55,7 +55,8 @@ public sealed class LoanRepository : ILoanRepository
     {
         return await _context.LoanRepaymentSchedules
             .Include(s => s.EmployeeLoan)
-            .Where(s => s.PayPeriod == payPeriod && (s.Status == "PENDING" || s.Status == "PARTIAL") && s.EmployeeLoan!.Status == "ACTIVE")
+            .Where(s => string.Compare(s.PayPeriod, payPeriod) <= 0 &&
+                (s.Status == "PENDING" || s.Status == "PARTIAL" || s.Status == "SKIPPED") && s.EmployeeLoan!.Status == "ACTIVE")
             .ToListAsync(cancellationToken);
     }
 

@@ -21,6 +21,8 @@ public interface IEmployeeService
         CancellationToken cancellationToken = default);
 
     Task<EmployeeDetailsDto?> GetEmployeeByCodeAsync(string employeeCode, CancellationToken cancellationToken = default);
+    Task<EmployeeUserLinkDto?> GetEmployeeUserLinkAsync(long userId, CancellationToken cancellationToken = default);
+    Task<EmployeeUserLinkDto> LinkEmployeeUserAsync(string employeeCode, long? userId, string user, CancellationToken cancellationToken = default);
     Task<EmployeeDetailsDto> CreateEmployeeAsync(CreateEmployeeDto dto, string user, CancellationToken cancellationToken = default);
     Task<EmployeeDetailsDto> UpdateEmployeeAsync(string employeeCode, UpdateEmployeeDto dto, string user, CancellationToken cancellationToken = default);
     Task DeleteEmployeeAsync(string employeeCode, string user, CancellationToken cancellationToken = default);
@@ -42,6 +44,38 @@ public sealed class EmployeeService : IEmployeeService
     public EmployeeService(IEmployeeRepository employeeRepo)
     {
         _employeeRepo = employeeRepo;
+    }
+
+    public async Task<EmployeeUserLinkDto?> GetEmployeeUserLinkAsync(long userId, CancellationToken cancellationToken = default)
+    {
+        var employee = await _employeeRepo.GetEmployeeByUserIdAsync(userId, cancellationToken);
+        return employee == null ? null : new EmployeeUserLinkDto(employee.EmployeeCode, employee.UserId);
+    }
+
+    public async Task<EmployeeUserLinkDto> LinkEmployeeUserAsync(string employeeCode, long? userId, string user, CancellationToken cancellationToken = default)
+    {
+        var employee = await _employeeRepo.GetEmployeeByCodeAsync(employeeCode, cancellationToken)
+            ?? throw new KeyNotFoundException($"Employee with code '{employeeCode}' not found.");
+
+        if (userId.HasValue)
+        {
+            if (userId.Value <= 0)
+                throw new ArgumentException("User ID must be positive.");
+            if (!employee.IsActive || employee.EmploymentStatus != "ACTIVE")
+                throw new InvalidOperationException("Only active employees can be linked to a login account.");
+            if (!await _employeeRepo.IsUserAvailableForEmployeeAsync(userId.Value, employee.BranchId, cancellationToken))
+                throw new InvalidOperationException("User must be active, exist in this tenant, and have access to the employee's branch.");
+            var existing = await _employeeRepo.GetEmployeeByUserIdAsync(userId.Value, cancellationToken);
+            if (existing != null && existing.EmployeeCode != employee.EmployeeCode)
+                throw new InvalidOperationException("This user is already linked to another employee.");
+        }
+
+        employee.UserId = userId;
+        employee.UpdateUser = user;
+        employee.UpdateDate = DateTime.UtcNow;
+        await _employeeRepo.UpdateEmployeeAsync(employee, cancellationToken);
+        await _employeeRepo.SaveChangesAsync(cancellationToken);
+        return new EmployeeUserLinkDto(employee.EmployeeCode, employee.UserId);
     }
 
     public async Task<(IReadOnlyList<EmployeeSummaryDto> Items, int TotalCount)> GetEmployeesPagedAsync(
@@ -73,7 +107,8 @@ public sealed class EmployeeService : IEmployeeService
                 e.EmploymentStatus,
                 activeStructure?.BasicSalary,
                 e.Phone,
-                e.Email
+                e.Email,
+                e.UserId
             );
         }).ToList();
 
@@ -90,7 +125,8 @@ public sealed class EmployeeService : IEmployeeService
 
     public async Task<EmployeeDetailsDto> CreateEmployeeAsync(CreateEmployeeDto dto, string user, CancellationToken cancellationToken = default)
     {
-        if (await _employeeRepo.ExistsByCodeAsync(dto.EmployeeCode, cancellationToken))
+        var normalizedCode = dto.EmployeeCode.Trim().ToUpperInvariant();
+        if (await _employeeRepo.ExistsByCodeAsync(normalizedCode, cancellationToken))
         {
             throw new InvalidOperationException($"Employee with code '{dto.EmployeeCode}' already exists.");
         }
@@ -102,7 +138,7 @@ public sealed class EmployeeService : IEmployeeService
 
         var emp = new Employee
         {
-            EmployeeCode = dto.EmployeeCode.Trim().ToUpperInvariant(),
+            EmployeeCode = normalizedCode,
             NameLocal = dto.NameLocal,
             NameEn = dto.NameEn,
             NationalId = dto.NationalId,
@@ -142,6 +178,10 @@ public sealed class EmployeeService : IEmployeeService
     {
         var emp = await _employeeRepo.GetEmployeeByCodeAsync(employeeCode, cancellationToken);
         if (emp == null) throw new InvalidOperationException($"Employee with code '{employeeCode}' not found.");
+
+        if (emp.UserId.HasValue && emp.BranchId != dto.BranchId &&
+            !await _employeeRepo.IsUserAvailableForEmployeeAsync(emp.UserId.Value, dto.BranchId, cancellationToken))
+            throw new InvalidOperationException("The linked user must have access to the new employee branch. Unlink the account or assign its branch access first.");
 
         if (await _employeeRepo.ExistsByNationalIdAsync(dto.NationalId, employeeCode, cancellationToken))
         {
@@ -223,12 +263,7 @@ public sealed class EmployeeService : IEmployeeService
 
         await _employeeRepo.AddDependentAsync(dep, cancellationToken);
 
-        // Update employee tax exemption count if claimed
-        if (dep.IsTaxExemptionClaimed)
-        {
-            emp.TaxExemptionCount++;
-            await _employeeRepo.UpdateEmployeeAsync(emp, cancellationToken);
-        }
+        // TaxExemptionCount is for additional manual exemptions; dependents are counted separately.
 
         await _employeeRepo.SaveChangesAsync(cancellationToken);
 
@@ -253,11 +288,6 @@ public sealed class EmployeeService : IEmployeeService
         if (dep == null) throw new InvalidOperationException($"Dependent with ID {dependentId} not found.");
 
         var emp = await _employeeRepo.GetEmployeeByCodeAsync(dep.EmployeeCode, cancellationToken);
-        if (emp != null && dep.IsTaxExemptionClaimed && emp.TaxExemptionCount > 0)
-        {
-            emp.TaxExemptionCount--;
-            await _employeeRepo.UpdateEmployeeAsync(emp, cancellationToken);
-        }
 
         await _employeeRepo.DeleteDependentAsync(dep, cancellationToken);
         await _employeeRepo.SaveChangesAsync(cancellationToken);
@@ -268,9 +298,12 @@ public sealed class EmployeeService : IEmployeeService
         var emp = await _employeeRepo.GetEmployeeByCodeAsync(employeeCode, cancellationToken);
         if (emp == null) throw new InvalidOperationException($"Employee with code '{employeeCode}' not found.");
 
-        // Deactivate previous active structures or end their effective date
+        if (dto.BasicSalary < 0 || (dto.EffectiveTo.HasValue && dto.EffectiveTo < dto.EffectiveFrom))
+            throw new ArgumentException("Salary amount and effective date range are invalid.");
         var existingStructures = await _employeeRepo.GetSalaryStructuresAsync(employeeCode, cancellationToken);
-        foreach (var existing in existingStructures.Where(s => s.IsActive && (!s.EffectiveTo.HasValue || s.EffectiveTo.Value >= dto.EffectiveFrom)))
+        if (existingStructures.Any(s => s.IsActive && s.EffectiveFrom >= dto.EffectiveFrom))
+            throw new InvalidOperationException("A salary structure already starts on or after this date. Update or remove that future structure before assigning a backdated salary.");
+        foreach (var existing in existingStructures.Where(s => s.IsActive && s.EffectiveFrom < dto.EffectiveFrom && (!s.EffectiveTo.HasValue || s.EffectiveTo.Value >= dto.EffectiveFrom)))
         {
             existing.EffectiveTo = dto.EffectiveFrom.AddDays(-1);
             existing.UpdateUser = user;
@@ -341,7 +374,8 @@ public sealed class EmployeeService : IEmployeeService
 
     public async Task<SalaryComponentDto> CreateSalaryComponentAsync(CreateSalaryComponentDto dto, string user, CancellationToken cancellationToken = default)
     {
-        var existing = await _employeeRepo.GetSalaryComponentByCodeAsync(dto.ComponentCode, cancellationToken);
+        var normalizedComponent = dto.ComponentCode.Trim().ToUpperInvariant();
+        var existing = await _employeeRepo.GetSalaryComponentByCodeAsync(normalizedComponent, cancellationToken);
         if (existing != null)
         {
             throw new InvalidOperationException($"Salary component '{dto.ComponentCode}' already exists.");
@@ -349,7 +383,7 @@ public sealed class EmployeeService : IEmployeeService
 
         var component = new SalaryComponent
         {
-            ComponentCode = dto.ComponentCode.Trim().ToUpperInvariant(),
+            ComponentCode = normalizedComponent,
             NameLocal = dto.NameLocal,
             NameEn = dto.NameEn,
             ComponentType = dto.ComponentType.ToUpperInvariant(),
@@ -433,7 +467,8 @@ public sealed class EmployeeService : IEmployeeService
             emp.BankIban,
             emp.IsActive,
             dependents,
-            activeStructure == null ? null : MapToStructureDetailsDto(activeStructure)
+            activeStructure == null ? null : MapToStructureDetailsDto(activeStructure),
+            emp.UserId
         );
     }
 

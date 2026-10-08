@@ -235,4 +235,56 @@ public class PayrollCalculationEngineTests
         Assert.Equal(810m, line.GrossSalary);
         Assert.Contains(line.Components, c => c.ComponentCode == "UNPAID_LEAVE" && c.Amount == 90m);
     }
+
+    private (PayrollPeriod Period, Employee Employee) PrepareRegressionPayroll()
+    {
+        var period = new PayrollPeriod { CompanyId = 1, PeriodCode = "2026-10", StartDate = new(2026, 10, 1), EndDate = new(2026, 10, 31) };
+        var employee = new Employee { EmployeeCode = "REGRESSION", HireDate = new(2020, 1, 1) };
+        employee.SalaryStructures.Add(new SalaryStructure { BasicSalary = 1000, EffectiveFrom = new(2020, 1, 1) });
+        _prorationServiceMock.Setup(p => p.CalculateProrationFactorAsync(1, period.StartDate, period.EndDate, employee.HireDate, null, null, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new ProrationResult(1, 31, 31, "CALENDAR_DAYS", "TEST"));
+        _sscServiceMock.Setup(s => s.CalculateSSC(It.IsAny<decimal>(), false, null)).Returns(new SSCResult(1000, 0, 0, 0, 0, 0, 0, "TEST"));
+        _taxEngineMock.Setup(t => t.CalculateIncomeTax(It.IsAny<decimal>(), 0, It.IsAny<int>(), null)).Returns(new TaxResult(0, 0, 0, 0, 0, 0, "TEST"));
+        _loanDeductionServiceMock.Setup(l => l.CalculateAndApplyDeductionsAsync(null, employee.EmployeeCode, period.PeriodCode, It.IsAny<decimal>(), null, false, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new LoanDeductionCalculationResult(0, 0, 0, new(), new()));
+        return (period, employee);
+    }
+
+    [Fact]
+    public async Task ExemptComponentsRemainInGrossButExcludedFromTaxAndSsc()
+    {
+        var (period, employee) = PrepareRegressionPayroll();
+        employee.SalaryStructures[0].Lines.Add(new SalaryStructureLine { Amount = 100, ComponentCode = "EXEMPT", Component = new SalaryComponent { ComponentType = "ALLOWANCE", IsTaxable = false, IsSscApplicable = false } });
+        var adjustments = new[] { new PayrollAdjustment { Amount = 50, AdjustmentType = "EARNING", ComponentCode = "BONUS", Component = new SalaryComponent { IsTaxable = true, IsSscApplicable = false } } };
+        var line = await _engine.CalculateEmployeePayrollLineAsync(period, employee, null, null, null, null, adjustments);
+        Assert.Equal(1150m, line.GrossSalary);
+        _sscServiceMock.Verify(s => s.CalculateSSC(1000m, false, null), Times.Once);
+        _taxEngineMock.Verify(t => t.CalculateIncomeTax(1050m, 0, 0, null), Times.Once);
+    }
+
+    [Fact]
+    public async Task ValidOvertimeEntersPayrollAndInvalidPunchDoesNot()
+    {
+        var (period, employee) = PrepareRegressionPayroll();
+        var attendance = new Mock<IAttendanceCorrectionRepository>();
+        attendance.Setup(a => a.GetAttendanceDaysAsync(employee.EmployeeCode, period.StartDate, period.EndDate, It.IsAny<CancellationToken>())).ReturnsAsync(new[] {
+            new AttendanceDay { AttendanceDate = period.StartDate, OvertimeHours = 2, LastCheckOut = period.StartDate.AddHours(18) },
+            new AttendanceDay { AttendanceDate = period.StartDate.AddDays(1), OvertimeHours = 4, HasMissingPunch = true }
+        });
+        _overtimeServiceMock.Setup(o => o.CalculateOvertimeEarningsAsync(1, 1000, 2, "NORMAL", period.StartDate, It.IsAny<CancellationToken>())).ReturnsAsync(20m);
+        var engine = new PayrollCalculationEngine(_policyRepoMock.Object, _prorationServiceMock.Object, _overtimeServiceMock.Object,
+            _sscServiceMock.Object, _taxEngineMock.Object, _loanDeductionServiceMock.Object, _adjustmentRepoMock.Object, _leaveServiceMock.Object, attendance.Object);
+        var line = await engine.CalculateEmployeePayrollLineAsync(period, employee, null, null, null, null, Array.Empty<PayrollAdjustment>());
+        Assert.Equal(1020m, line.GrossSalary);
+        Assert.Equal(2m, line.Snapshot!.OvertimeHoursApplied);
+        Assert.Equal(20m, line.Snapshot.OvertimeEarningsApplied);
+        _overtimeServiceMock.Verify(o => o.CalculateOvertimeEarningsAsync(It.IsAny<long>(), It.IsAny<decimal>(), It.IsAny<decimal>(), It.IsAny<string>(), It.IsAny<DateTime>(), It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task MissingSalaryStopsCalculationInsteadOfGeneratingZeroSalary()
+    {
+        var (period, employee) = PrepareRegressionPayroll(); employee.SalaryStructures.Clear();
+        await Assert.ThrowsAsync<InvalidOperationException>(() => _engine.CalculateEmployeePayrollLineAsync(period, employee, null, null, null, null, Array.Empty<PayrollAdjustment>()));
+    }
 }

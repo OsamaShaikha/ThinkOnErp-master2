@@ -19,6 +19,21 @@ public sealed class EmployeeRepository : IEmployeeRepository
         _context = context;
     }
 
+    public Task<Employee?> GetEmployeeByUserIdAsync(long userId, CancellationToken cancellationToken = default)
+    {
+        return _context.Employees.FirstOrDefaultAsync(e => e.UserId == userId, cancellationToken);
+    }
+
+    public async Task<bool> IsUserAvailableForEmployeeAsync(long userId, long? branchId, CancellationToken cancellationToken = default)
+    {
+        if (!await _context.SysUsers.AnyAsync(u => u.Id == userId && u.IsActive &&
+            (!_context.HrScopeEnabled || u.CompanyId == _context.HrScopeCompanyId), cancellationToken))
+            return false;
+
+        return !branchId.HasValue || await _context.SysUserBranches.AnyAsync(
+            b => b.UserId == userId && b.BranchId == branchId.Value, cancellationToken);
+    }
+
     public async Task<(IReadOnlyList<Employee> Items, int TotalCount)> GetEmployeesAsync(
         string? searchKeyword = null,
         string? departmentCode = null,
@@ -222,6 +237,40 @@ public sealed class EmployeeRepository : IEmployeeRepository
 
     public async Task SaveChangesAsync(CancellationToken cancellationToken = default)
     {
-        await _context.SaveChangesAsync(cancellationToken);
+        try
+        {
+            // Excel rows are bound inside the service, so enforce write scope again at persistence.
+            if (_context.HrScopeEnabled)
+            {
+                foreach (var entry in _context.ChangeTracker.Entries<Employee>().Where(e =>
+                    e.State is EntityState.Added or EntityState.Modified or EntityState.Deleted).ToList())
+                {
+                    var branchId = entry.Entity.BranchId;
+                    if ((!_context.HrScopeAllBranches && (!branchId.HasValue || !_context.HrScopeBranchIds.Contains(branchId.Value))) ||
+                        (branchId.HasValue && !await _context.SysBranches.AnyAsync(b => b.Id == branchId && b.CompanyId == _context.HrScopeCompanyId && b.IsActive, cancellationToken)))
+                        throw new UnauthorizedAccessException("Employee changes must remain inside the permitted company and branches.");
+                }
+            }
+            foreach (var entry in _context.ChangeTracker.Entries<Employee>().Where(e => e.Entity.UserId.HasValue &&
+                (!e.Entity.IsActive || e.Entity.EmploymentStatus != "ACTIVE")))
+            {
+                var account = await _context.SysUsers.SingleOrDefaultAsync(u => u.Id == entry.Entity.UserId, cancellationToken);
+                if (account != null)
+                {
+                    account.IsActive = false;
+                    account.ForceLogoutDate = DateTime.UtcNow;
+                    account.RefreshToken = null;
+                    account.RefreshTokenExpiry = null;
+                    account.UpdateUser = entry.Entity.UpdateUser;
+                    account.UpdateDate = DateTime.UtcNow;
+                }
+            }
+            await _context.SaveChangesAsync(cancellationToken);
+        }
+        catch (DbUpdateException ex) when (ex.InnerException is Oracle.ManagedDataAccess.Client.OracleException oracle &&
+            oracle.Number == 1 && oracle.Message.Contains("UX_HR_EMPLOYEE_USER_ID", StringComparison.OrdinalIgnoreCase))
+        {
+            throw new InvalidOperationException("This user is already linked to another employee.", ex);
+        }
     }
 }

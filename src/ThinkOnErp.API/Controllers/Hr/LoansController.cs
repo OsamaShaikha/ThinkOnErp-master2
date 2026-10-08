@@ -35,6 +35,7 @@ public sealed class LoansController : ControllerBase
 
     [HttpPost]
     [ProducesResponseType(typeof(ApiResponse<EmployeeLoan>), StatusCodes.Status200OK)]
+    [HrPermission("hr-loans", "create", selfService: true)]
     public async Task<ActionResult<ApiResponse<EmployeeLoan>>> CreateLoan(
         [FromBody] CreateLoanApplicationDto dto,
         CancellationToken cancellationToken)
@@ -46,6 +47,7 @@ public sealed class LoansController : ControllerBase
 
     [HttpPost("{id:long}/approve")]
     [ProducesResponseType(typeof(ApiResponse<EmployeeLoan>), StatusCodes.Status200OK)]
+    [HrPermission("hr-loans", "approve")]
     public async Task<ActionResult<ApiResponse<EmployeeLoan>>> ApproveLoan(
         long id,
         CancellationToken cancellationToken)
@@ -57,6 +59,7 @@ public sealed class LoansController : ControllerBase
 
     [HttpGet]
     [ProducesResponseType(typeof(ApiResponse<IReadOnlyList<EmployeeLoan>>), StatusCodes.Status200OK)]
+    [HrPermission("hr-loans", "view", selfService: true)]
     public async Task<ActionResult<ApiResponse<IReadOnlyList<EmployeeLoan>>>> GetLoans(
         [FromQuery] string? employeeCode,
         [FromQuery] string? status,
@@ -68,6 +71,7 @@ public sealed class LoansController : ControllerBase
 
     [HttpPost("advances")]
     [ProducesResponseType(typeof(ApiResponse<EmployeeAdvance>), StatusCodes.Status200OK)]
+    [HrPermission("hr-loans", "create", selfService: true)]
     public async Task<ActionResult<ApiResponse<EmployeeAdvance>>> CreateAdvance(
         [FromBody] CreateAdvanceRequestDto dto,
         CancellationToken cancellationToken)
@@ -79,6 +83,7 @@ public sealed class LoansController : ControllerBase
 
     [HttpPost("advances/{id:long}/approve")]
     [ProducesResponseType(typeof(ApiResponse<EmployeeAdvance>), StatusCodes.Status200OK)]
+    [HrPermission("hr-loans", "approve")]
     public async Task<ActionResult<ApiResponse<EmployeeAdvance>>> ApproveAdvance(
         long id,
         CancellationToken cancellationToken)
@@ -90,6 +95,7 @@ public sealed class LoansController : ControllerBase
 
     [HttpGet("advances")]
     [ProducesResponseType(typeof(ApiResponse<IReadOnlyList<EmployeeAdvance>>), StatusCodes.Status200OK)]
+    [HrPermission("hr-loans", "view", selfService: true)]
     public async Task<ActionResult<ApiResponse<IReadOnlyList<EmployeeAdvance>>>> GetAdvances(
         [FromQuery] string? employeeCode,
         [FromQuery] string? targetPayPeriod,

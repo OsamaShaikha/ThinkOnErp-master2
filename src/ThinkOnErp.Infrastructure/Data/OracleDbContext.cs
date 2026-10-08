@@ -15,6 +15,12 @@ namespace ThinkOnErp.Infrastructure.Data;
 
 public class OracleDbContext : DbContext
 {
+    // Set by the HR access filter from authoritative tenant/account data per request.
+    public bool HrScopeEnabled { get; set; }
+    public long HrScopeCompanyId { get; set; }
+    public bool HrScopeAllBranches { get; set; }
+    public List<long> HrScopeBranchIds { get; set; } = new();
+    public string? HrScopeEmployeeCode { get; set; }
     public OracleDbContext(DbContextOptions<OracleDbContext> options) : base(options)
     {
     }
@@ -241,6 +247,48 @@ public class OracleDbContext : DbContext
 
         // Apply all entity configurations in Infrastructure assembly automatically
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(OracleDbContext).Assembly);
+        modelBuilder.Entity<Employee>().HasQueryFilter(e => !HrScopeEnabled ||
+            ((HrScopeAllBranches || (e.BranchId.HasValue && HrScopeBranchIds.Contains(e.BranchId.Value))) &&
+             (HrScopeEmployeeCode == null || e.EmployeeCode == HrScopeEmployeeCode)));
+        foreach (var entity in modelBuilder.Model.GetEntityTypes().Where(e => e.ClrType != typeof(Employee) &&
+            e.GetTableName()?.StartsWith("HR_") == true).ToList())
+        {
+            if (entity.FindProperty("EmployeeCode") != null && entity.FindProperty("CompanyId") != null)
+                typeof(OracleDbContext).GetMethod(nameof(SetCompanyEmployeeScope), System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)!
+                    .MakeGenericMethod(entity.ClrType).Invoke(this, new object[] { modelBuilder });
+            else if (entity.FindProperty("EmployeeCode") != null)
+                typeof(OracleDbContext).GetMethod(nameof(SetEmployeeScope), System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)!
+                    .MakeGenericMethod(entity.ClrType).Invoke(this, new object[] { modelBuilder });
+            else if (entity.FindProperty("CompanyId") != null)
+                typeof(OracleDbContext).GetMethod(nameof(SetCompanyScope), System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)!
+                    .MakeGenericMethod(entity.ClrType).Invoke(this, new object[] { modelBuilder });
+        }
+        modelBuilder.Entity<PayrollRun>().HasQueryFilter(r => !HrScopeEnabled || HrScopeAllBranches ||
+            (r.BranchId.HasValue && HrScopeBranchIds.Contains(r.BranchId.Value)));
+        modelBuilder.Entity<EmployeeDependent>().HasQueryFilter(r => !HrScopeEnabled || Employees.Any(e => e.EmployeeCode == r.EmployeeCode));
+        modelBuilder.Entity<PayrollRunLineComponent>().HasQueryFilter(r => !HrScopeEnabled ||
+            PayrollRunLines.Any(l => l.Id == r.PayrollLineId));
+        modelBuilder.Entity<LoanRepaymentSchedule>().HasQueryFilter(r => !HrScopeEnabled || EmployeeLoans.Any(l => l.Id == r.EmployeeLoanId));
+        modelBuilder.Entity<LeaveBalance>().Property(e => e.UsedDays).IsConcurrencyToken();
+        modelBuilder.Entity<LeaveRequest>().Property(e => e.Status).IsConcurrencyToken();
+        modelBuilder.Entity<PayrollRun>().Property(e => e.Status).IsConcurrencyToken();
+        modelBuilder.Entity<EmployeeLoan>().Property(e => e.RemainingBalance).IsConcurrencyToken();
+        modelBuilder.Entity<EmployeeAdvance>().Property(e => e.RemainingBalance).IsConcurrencyToken();
+        modelBuilder.Entity<LoanRepaymentSchedule>().Property(e => e.PaidAmount).IsConcurrencyToken();
+        modelBuilder.Entity<PayrollPostingConfiguration>().HasQueryFilter(r => !HrScopeEnabled ||
+            (HrScopeAllBranches || HrScopeBranchIds.Contains(r.BranchId)));
     }
+
+    private void SetEmployeeScope<TEntity>(ModelBuilder builder) where TEntity : class =>
+        builder.Entity<TEntity>().HasQueryFilter(row => !HrScopeEnabled ||
+            Employees.Any(e => e.EmployeeCode == EF.Property<string>(row, "EmployeeCode")));
+
+    private void SetCompanyScope<TEntity>(ModelBuilder builder) where TEntity : class =>
+        builder.Entity<TEntity>().HasQueryFilter(row => !HrScopeEnabled || EF.Property<long>(row, "CompanyId") == HrScopeCompanyId);
+
+    private void SetCompanyEmployeeScope<TEntity>(ModelBuilder builder) where TEntity : class =>
+        builder.Entity<TEntity>().HasQueryFilter(row => !HrScopeEnabled ||
+            (EF.Property<long>(row, "CompanyId") == HrScopeCompanyId &&
+             Employees.Any(e => e.EmployeeCode == EF.Property<string>(row, "EmployeeCode"))));
 
 }

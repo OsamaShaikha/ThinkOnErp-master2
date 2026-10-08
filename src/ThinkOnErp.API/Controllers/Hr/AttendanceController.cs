@@ -38,6 +38,7 @@ public sealed class AttendanceController : ControllerBase
     [HttpPost("check-in")]
     [ProducesResponseType(typeof(ApiResponse<AttendancePunchResultDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiResponse<AttendancePunchResultDto>), StatusCodes.Status400BadRequest)]
+    [HrPermission("hr-attendance", "create", selfService: true)]
     public async Task<ActionResult<ApiResponse<AttendancePunchResultDto>>> CheckIn(
         [FromBody] CheckInRequestDto dto,
         CancellationToken cancellationToken)
@@ -65,6 +66,7 @@ public sealed class AttendanceController : ControllerBase
     [HttpPost("check-out")]
     [ProducesResponseType(typeof(ApiResponse<AttendancePunchResultDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiResponse<AttendancePunchResultDto>), StatusCodes.Status400BadRequest)]
+    [HrPermission("hr-attendance", "create", selfService: true)]
     public async Task<ActionResult<ApiResponse<AttendancePunchResultDto>>> CheckOut(
         [FromBody] CheckOutRequestDto dto,
         CancellationToken cancellationToken)
@@ -92,6 +94,7 @@ public sealed class AttendanceController : ControllerBase
     [HttpGet("today-status")]
     [ProducesResponseType(typeof(ApiResponse<TodayAttendanceStatusDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [HrPermission("hr-attendance", "view", selfService: true)]
     public async Task<ActionResult<ApiResponse<TodayAttendanceStatusDto>>> GetTodayStatus(
         [FromQuery] string employeeCode,
         CancellationToken cancellationToken)
@@ -110,6 +113,7 @@ public sealed class AttendanceController : ControllerBase
     /// </summary>
     [HttpGet("nearby-branches")]
     [ProducesResponseType(typeof(ApiResponse<IReadOnlyList<NearbyBranchDto>>), StatusCodes.Status200OK)]
+    [HrPermission("hr-attendance", "view", selfService: true)]
     public async Task<ActionResult<ApiResponse<IReadOnlyList<NearbyBranchDto>>>> GetNearbyBranches(
         [FromQuery] decimal latitude,
         [FromQuery] decimal longitude,

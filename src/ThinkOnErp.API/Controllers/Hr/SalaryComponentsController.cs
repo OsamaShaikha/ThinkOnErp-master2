@@ -34,6 +34,7 @@ public sealed class SalaryComponentsController : ControllerBase
 
     [HttpGet]
     [ProducesResponseType(typeof(ApiResponse<IReadOnlyList<SalaryComponentDto>>), StatusCodes.Status200OK)]
+    [HrPermission("hr-salary-components", "view")]
     public async Task<ActionResult<ApiResponse<IReadOnlyList<SalaryComponentDto>>>> GetComponents(
         CancellationToken cancellationToken)
     {
@@ -43,6 +44,7 @@ public sealed class SalaryComponentsController : ControllerBase
 
     [HttpPost]
     [ProducesResponseType(typeof(ApiResponse<SalaryComponentDto>), StatusCodes.Status200OK)]
+    [HrPermission("hr-salary-components", "create")]
     public async Task<ActionResult<ApiResponse<SalaryComponentDto>>> CreateComponent(
         [FromBody] CreateSalaryComponentDto dto,
         CancellationToken cancellationToken)

@@ -37,6 +37,7 @@ public sealed class EmployeesController : ControllerBase
 
     [HttpGet]
     [ProducesResponseType(typeof(ApiResponse<PagedResultDto<EmployeeSummaryDto>>), StatusCodes.Status200OK)]
+    [HrPermission("hr-employees", "view")]
     public async Task<ActionResult<ApiResponse<PagedResultDto<EmployeeSummaryDto>>>> GetEmployees(
         [FromQuery] string? searchKeyword,
         [FromQuery] string? departmentCode,
@@ -56,6 +57,7 @@ public sealed class EmployeesController : ControllerBase
 
     [HttpGet("export")]
     [ProducesResponseType(typeof(FileContentResult), StatusCodes.Status200OK)]
+    [HrPermission("hr-employees", "export")]
     public async Task<IActionResult> ExportEmployees(
         [FromQuery] string? searchKeyword,
         [FromQuery] string? departmentCode,
@@ -71,6 +73,7 @@ public sealed class EmployeesController : ControllerBase
     }
 
     [HttpGet("export-template")]
+    [HrPermission("hr-employees", "view")]
     [ProducesResponseType(typeof(FileContentResult), StatusCodes.Status200OK)]
     public async Task<IActionResult> DownloadTemplate(CancellationToken cancellationToken)
     {
@@ -82,6 +85,7 @@ public sealed class EmployeesController : ControllerBase
     [Consumes("multipart/form-data")]
     [ProducesResponseType(typeof(ApiResponse<EmployeeImportResultDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiResponse<EmployeeImportResultDto>), StatusCodes.Status400BadRequest)]
+    [HrPermission("hr-employees", "import")]
     public async Task<ActionResult<ApiResponse<EmployeeImportResultDto>>> ValidateImport(
         IFormFile? file,
         CancellationToken cancellationToken)
@@ -105,6 +109,7 @@ public sealed class EmployeesController : ControllerBase
     [Consumes("multipart/form-data")]
     [ProducesResponseType(typeof(ApiResponse<EmployeeImportResultDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiResponse<EmployeeImportResultDto>), StatusCodes.Status400BadRequest)]
+    [HrPermission("hr-employees", "import")]
     public async Task<ActionResult<ApiResponse<EmployeeImportResultDto>>> ImportEmployees(
         IFormFile? file,
         [FromQuery] bool updateExisting = false,
@@ -134,6 +139,7 @@ public sealed class EmployeesController : ControllerBase
 
     [HttpGet("{code}")]
     [ProducesResponseType(typeof(ApiResponse<EmployeeDetailsDto>), StatusCodes.Status200OK)]
+    [HrPermission("hr-employees", "view")]
     public async Task<ActionResult<ApiResponse<EmployeeDetailsDto>>> GetEmployeeByCode(
         string code,
         CancellationToken cancellationToken)
@@ -147,8 +153,33 @@ public sealed class EmployeesController : ControllerBase
         return Ok(ApiResponse<EmployeeDetailsDto>.CreateSuccess(result, "Employee retrieved successfully."));
     }
 
+    [HttpGet("me/user-link")]
+    [HrPermission("hr-employees", "view", selfService: true)]
+    public async Task<ActionResult<ApiResponse<EmployeeUserLinkDto>>> GetMyEmployeeLink(CancellationToken cancellationToken)
+    {
+        if (!long.TryParse(User.FindFirst("userId")?.Value, out var userId) || userId <= 0)
+            return Unauthorized();
+
+        var result = await _employeeService.GetEmployeeUserLinkAsync(userId, cancellationToken);
+        return result == null
+            ? NotFound(ApiResponse<EmployeeUserLinkDto>.CreateFailure("No employee is linked to this account.", statusCode: 404))
+            : Ok(ApiResponse<EmployeeUserLinkDto>.CreateSuccess(result, "Employee link retrieved successfully."));
+    }
+
+    [HttpPut("{code}/user-link")]
+    [Authorize(Policy = "AdminOnly")]
+    [HrPermission("hr-employees", "link-user")]
+    public async Task<ActionResult<ApiResponse<EmployeeUserLinkDto>>> LinkEmployeeUser(
+        string code, [FromBody] LinkEmployeeUserDto dto, CancellationToken cancellationToken)
+    {
+        var result = await _employeeService.LinkEmployeeUserAsync(
+            code, dto.UserId, User.Identity?.Name ?? "SYSTEM", cancellationToken);
+        return Ok(ApiResponse<EmployeeUserLinkDto>.CreateSuccess(result, "Employee login account updated successfully."));
+    }
+
     [HttpPost]
     [ProducesResponseType(typeof(ApiResponse<EmployeeDetailsDto>), StatusCodes.Status200OK)]
+    [HrPermission("hr-employees", "create")]
     public async Task<ActionResult<ApiResponse<EmployeeDetailsDto>>> CreateEmployee(
         [FromBody] CreateEmployeeDto dto,
         CancellationToken cancellationToken)
@@ -160,6 +191,7 @@ public sealed class EmployeesController : ControllerBase
 
     [HttpPut("{code}")]
     [ProducesResponseType(typeof(ApiResponse<EmployeeDetailsDto>), StatusCodes.Status200OK)]
+    [HrPermission("hr-employees", "edit")]
     public async Task<ActionResult<ApiResponse<EmployeeDetailsDto>>> UpdateEmployee(
         string code,
         [FromBody] UpdateEmployeeDto dto,
@@ -172,6 +204,7 @@ public sealed class EmployeesController : ControllerBase
 
     [HttpDelete("{code}")]
     [ProducesResponseType(typeof(ApiResponse<bool>), StatusCodes.Status200OK)]
+    [HrPermission("hr-employees", "delete")]
     public async Task<ActionResult<ApiResponse<bool>>> DeleteEmployee(
         string code,
         CancellationToken cancellationToken)
@@ -183,6 +216,7 @@ public sealed class EmployeesController : ControllerBase
 
     [HttpPost("{code}/dependents")]
     [ProducesResponseType(typeof(ApiResponse<DependentDto>), StatusCodes.Status200OK)]
+    [HrPermission("hr-employees", "create")]
     public async Task<ActionResult<ApiResponse<DependentDto>>> AddDependent(
         string code,
         [FromBody] CreateDependentDto dto,
@@ -195,6 +229,7 @@ public sealed class EmployeesController : ControllerBase
 
     [HttpDelete("dependents/{id:long}")]
     [ProducesResponseType(typeof(ApiResponse<bool>), StatusCodes.Status200OK)]
+    [HrPermission("hr-employees", "delete")]
     public async Task<ActionResult<ApiResponse<bool>>> DeleteDependent(
         long id,
         CancellationToken cancellationToken)
@@ -206,6 +241,7 @@ public sealed class EmployeesController : ControllerBase
 
     [HttpPost("{code}/salary-structure")]
     [ProducesResponseType(typeof(ApiResponse<SalaryStructureDetailsDto>), StatusCodes.Status200OK)]
+    [HrPermission("hr-employees", "create")]
     public async Task<ActionResult<ApiResponse<SalaryStructureDetailsDto>>> AssignSalaryStructure(
         string code,
         [FromBody] AssignSalaryStructureDto dto,
@@ -218,6 +254,7 @@ public sealed class EmployeesController : ControllerBase
 
     [HttpGet("{code}/salary-structure")]
     [ProducesResponseType(typeof(ApiResponse<SalaryStructureDetailsDto>), StatusCodes.Status200OK)]
+    [HrPermission("hr-employees", "view")]
     public async Task<ActionResult<ApiResponse<SalaryStructureDetailsDto>>> GetSalaryStructure(
         string code,
         [FromQuery] DateTime? asOfDate,

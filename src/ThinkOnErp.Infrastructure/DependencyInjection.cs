@@ -80,6 +80,9 @@ public static class DependencyInjection
                 b.UseOracleSQLCompatibility(OracleSQLCompatibility.DatabaseVersion19);
             }));
 
+        services.AddScoped<ThinkOnErp.Application.Services.Hr.IHrUnitOfWork, ThinkOnErp.Infrastructure.Services.Hr.HrUnitOfWork>();
+        services.AddScoped<ThinkOnErp.Application.Services.Hr.IHrPayrollPostingService, ThinkOnErp.Infrastructure.Services.Hr.HrPayrollPostingService>();
+
         services.AddDbContext<SupportDbContext>(options =>
             options.UseOracle(connectionString, b =>
             {

@@ -39,6 +39,7 @@ public sealed class PayrollCalculationEngine : IPayrollCalculationEngine
     private readonly ILoanDeductionService _loanDeductionService;
     private readonly IPayrollAdjustmentRepository _adjustmentRepository;
     private readonly ILeaveService _leaveService;
+    private readonly IAttendanceCorrectionRepository? _attendanceRepository;
 
     public PayrollCalculationEngine(
         IPolicyRepository policyRepository,
@@ -48,7 +49,8 @@ public sealed class PayrollCalculationEngine : IPayrollCalculationEngine
         ITaxCalculationEngine taxEngine,
         ILoanDeductionService loanDeductionService,
         IPayrollAdjustmentRepository adjustmentRepository,
-        ILeaveService leaveService)
+        ILeaveService leaveService,
+        IAttendanceCorrectionRepository? attendanceRepository = null)
     {
         _policyRepository = policyRepository;
         _prorationService = prorationService;
@@ -58,6 +60,7 @@ public sealed class PayrollCalculationEngine : IPayrollCalculationEngine
         _loanDeductionService = loanDeductionService;
         _adjustmentRepository = adjustmentRepository;
         _leaveService = leaveService;
+        _attendanceRepository = attendanceRepository;
     }
 
     public async Task<PayrollRun> CalculatePayrollForPeriodAsync(
@@ -149,7 +152,9 @@ public sealed class PayrollCalculationEngine : IPayrollCalculationEngine
             .OrderByDescending(s => s.EffectiveFrom)
             .FirstOrDefault();
 
-        decimal nominalBasic = structure?.BasicSalary ?? 0m;
+        if (structure == null)
+            throw new InvalidOperationException($"Employee '{employee.EmployeeCode}' has no active salary structure covering this payroll period.");
+        decimal nominalBasic = structure.BasicSalary;
 
         // 2. Dynamic Proration
         var prorationResult = await _prorationService.CalculateProrationFactorAsync(
@@ -200,6 +205,8 @@ public sealed class PayrollCalculationEngine : IPayrollCalculationEngine
 
         // 3. Allowances & Fixed Structure Lines
         decimal totalAllowances = 0m;
+        decimal taxableAllowances = 0m;
+        decimal sscAllowances = 0m;
         decimal otherFixedDeductions = 0m;
 
         if (structure?.Lines != null)
@@ -219,6 +226,8 @@ public sealed class PayrollCalculationEngine : IPayrollCalculationEngine
                 if (compType == "ALLOWANCE" || compType == "EARNING")
                 {
                     totalAllowances += proratedCompAmount;
+                    if (line.Component?.IsTaxable != false) taxableAllowances += proratedCompAmount;
+                    if (line.Component?.IsSscApplicable != false) sscAllowances += proratedCompAmount;
                     components.Add(new PayrollRunLineComponent
                     {
                         ComponentCode = line.ComponentCode,
@@ -246,9 +255,25 @@ public sealed class PayrollCalculationEngine : IPayrollCalculationEngine
         // 4. Overtime (0 hours default unless integrated from daily attendance)
         decimal overtimeHours = 0m;
         decimal overtimeEarnings = 0m;
+        if (_attendanceRepository != null)
+        {
+            var days = await _attendanceRepository.GetAttendanceDaysAsync(employee.EmployeeCode, period.StartDate, period.EndDate, cancellationToken);
+            foreach (var day in days.Where(d => d.OvertimeHours > 0 && !d.HasMissingPunch && !d.HasGeofenceViolation && d.LastCheckOut.HasValue))
+            {
+                overtimeHours += day.OvertimeHours;
+                var dayType = day.Status == "HOLIDAY" ? "HOLIDAY" : day.Status == "REST_DAY" ? "WEEKEND" : "NORMAL";
+                overtimeEarnings += await _overtimeService.CalculateOvertimeEarningsAsync(period.CompanyId, nominalBasic,
+                    day.OvertimeHours, dayType, day.AttendanceDate, cancellationToken);
+            }
+            if (overtimeEarnings > 0) components.Add(new PayrollRunLineComponent { ComponentCode = "OVERTIME",
+                ComponentNameLocal = "العمل الإضافي", ComponentNameEn = "Overtime", ComponentType = "EARNING", Amount = overtimeEarnings });
+        }
+
 
         // 5. Variable Adjustments (from HR_PAYROLL_ADJUSTMENT)
         decimal variableEarnings = 0m;
+        decimal taxableVariable = 0m;
+        decimal sscVariable = 0m;
         decimal variableDeductions = 0m;
 
         foreach (var adj in adjustments)
@@ -256,6 +281,8 @@ public sealed class PayrollCalculationEngine : IPayrollCalculationEngine
             if (adj.AdjustmentType == "EARNING")
             {
                 variableEarnings += adj.Amount;
+                if (adj.Component?.IsTaxable != false) taxableVariable += adj.Amount;
+                if (adj.Component?.IsSscApplicable != false) sscVariable += adj.Amount;
                 components.Add(new PayrollRunLineComponent
                 {
                     ComponentCode = adj.ComponentCode,
@@ -285,7 +312,7 @@ public sealed class PayrollCalculationEngine : IPayrollCalculationEngine
 
         // 7. SSC Calculation
         // In Jordanian labor law: Basic + applicable allowances form the SSC eligible salary
-        decimal sscEligibleSalary = grossSalary;
+        decimal sscEligibleSalary = proratedBasic + sscAllowances + sscVariable;
         var sscResult = _sscService.CalculateSSC(sscEligibleSalary, employee.IsHighRiskRole, sscPolicy);
 
         components.Add(new PayrollRunLineComponent
@@ -308,7 +335,8 @@ public sealed class PayrollCalculationEngine : IPayrollCalculationEngine
 
         // 8. Income Tax Calculation
         int dependentCount = employee.Dependents.Count(d => d.IsActive && d.IsTaxExemptionClaimed) + employee.TaxExemptionCount;
-        var taxResult = _taxEngine.CalculateIncomeTax(grossSalary, sscResult.EmployeeContribution, dependentCount, taxPolicy);
+        var taxableGross = proratedBasic + taxableAllowances + taxableVariable + overtimeEarnings;
+        var taxResult = _taxEngine.CalculateIncomeTax(taxableGross, sscResult.EmployeeContribution, dependentCount, taxPolicy);
 
         components.Add(new PayrollRunLineComponent
         {

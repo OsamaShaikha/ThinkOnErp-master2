@@ -34,6 +34,7 @@ public sealed class LeavesController : ControllerBase
 
     [HttpGet("types")]
     [ProducesResponseType(typeof(ApiResponse<IReadOnlyList<LeaveTypeDto>>), StatusCodes.Status200OK)]
+    [HrPermission("hr-leaves", "view", selfService: true)]
     public async Task<ActionResult<ApiResponse<IReadOnlyList<LeaveTypeDto>>>> GetLeaveTypes(
         [FromQuery] bool activeOnly = true,
         CancellationToken cancellationToken = default)
@@ -45,6 +46,7 @@ public sealed class LeavesController : ControllerBase
     [HttpGet("types/{code}")]
     [ProducesResponseType(typeof(ApiResponse<LeaveTypeDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [HrPermission("hr-leaves", "view", selfService: true)]
     public async Task<ActionResult<ApiResponse<LeaveTypeDto>>> GetLeaveTypeByCode(
         string code,
         CancellationToken cancellationToken = default)
@@ -60,6 +62,7 @@ public sealed class LeavesController : ControllerBase
     [HttpPost("types")]
     [ProducesResponseType(typeof(ApiResponse<LeaveTypeDto>), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [HrPermission("hr-leaves", "create")]
     public async Task<ActionResult<ApiResponse<LeaveTypeDto>>> CreateLeaveType(
         [FromBody] CreateLeaveTypeDto dto,
         CancellationToken cancellationToken = default)
@@ -72,6 +75,7 @@ public sealed class LeavesController : ControllerBase
     [HttpPut("types/{code}")]
     [ProducesResponseType(typeof(ApiResponse<LeaveTypeDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [HrPermission("hr-leaves", "edit")]
     public async Task<ActionResult<ApiResponse<LeaveTypeDto>>> UpdateLeaveType(
         string code,
         [FromBody] UpdateLeaveTypeDto dto,
@@ -85,6 +89,7 @@ public sealed class LeavesController : ControllerBase
     [HttpDelete("types/{code}")]
     [ProducesResponseType(typeof(ApiResponse<bool>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [HrPermission("hr-leaves", "delete")]
     public async Task<ActionResult<ApiResponse<bool>>> DeleteLeaveType(
         string code,
         CancellationToken cancellationToken = default)
@@ -100,6 +105,7 @@ public sealed class LeavesController : ControllerBase
 
     [HttpGet("requests")]
     [ProducesResponseType(typeof(ApiResponse<PagedResultDto<LeaveRequestDto>>), StatusCodes.Status200OK)]
+    [HrPermission("hr-leaves", "view", selfService: true)]
     public async Task<ActionResult<ApiResponse<PagedResultDto<LeaveRequestDto>>>> GetLeaveRequests(
         [FromQuery] string? employeeCode,
         [FromQuery] string? leaveTypeCode,
@@ -119,6 +125,7 @@ public sealed class LeavesController : ControllerBase
 
     [HttpPost("requests")]
     [ProducesResponseType(typeof(ApiResponse<LeaveRequestDto>), StatusCodes.Status200OK)]
+    [HrPermission("hr-leaves", "create", selfService: true)]
     public async Task<ActionResult<ApiResponse<LeaveRequestDto>>> SubmitLeaveRequest(
         [FromBody] SubmitLeaveRequestDto dto,
         CancellationToken cancellationToken)
@@ -130,6 +137,7 @@ public sealed class LeavesController : ControllerBase
 
     [HttpPost("requests/{id:long}/process")]
     [ProducesResponseType(typeof(ApiResponse<LeaveRequestDto>), StatusCodes.Status200OK)]
+    [HrPermission("hr-leaves", "approve")]
     public async Task<ActionResult<ApiResponse<LeaveRequestDto>>> ProcessLeaveRequest(
         long id,
         [FromBody] ProcessLeaveRequestDto dto,
@@ -142,6 +150,7 @@ public sealed class LeavesController : ControllerBase
 
     [HttpGet("balances/{employeeCode}")]
     [ProducesResponseType(typeof(ApiResponse<IReadOnlyList<LeaveBalanceDto>>), StatusCodes.Status200OK)]
+    [HrPermission("hr-leaves", "view", selfService: true)]
     public async Task<ActionResult<ApiResponse<IReadOnlyList<LeaveBalanceDto>>>> GetEmployeeBalances(
         string employeeCode,
         [FromQuery] int? year,
@@ -154,6 +163,7 @@ public sealed class LeavesController : ControllerBase
     [HttpPost("balances/grant")]
     [ProducesResponseType(typeof(ApiResponse<LeaveBalanceDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [HrPermission("hr-leaves", "edit")]
     public async Task<ActionResult<ApiResponse<LeaveBalanceDto>>> GrantOrAdjustBalance(
         [FromBody] GrantLeaveBalanceDto dto,
         CancellationToken cancellationToken = default)
@@ -166,6 +176,7 @@ public sealed class LeavesController : ControllerBase
     [HttpPost("balances/accrue-monthly")]
     [ProducesResponseType(typeof(ApiResponse<LeaveAccrualResultDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [HrPermission("hr-leaves", "edit")]
     public async Task<ActionResult<ApiResponse<LeaveAccrualResultDto>>> RunMonthlyAccrual(
         [FromBody] MonthlyLeaveAccrualDto dto,
         CancellationToken cancellationToken = default)
@@ -178,6 +189,7 @@ public sealed class LeavesController : ControllerBase
     [HttpPost("balances/yearly-grant")]
     [ProducesResponseType(typeof(ApiResponse<LeaveAccrualResultDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [HrPermission("hr-leaves", "edit")]
     public async Task<ActionResult<ApiResponse<LeaveAccrualResultDto>>> RunYearlyAllocation(
         [FromBody] YearlyLeaveAllocationDto dto,
         CancellationToken cancellationToken = default)
@@ -190,6 +202,7 @@ public sealed class LeavesController : ControllerBase
     [HttpPost("balances/year-end-rollover")]
     [ProducesResponseType(typeof(ApiResponse<LeaveRolloverResultDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [HrPermission("hr-leaves", "edit")]
     public async Task<ActionResult<ApiResponse<LeaveRolloverResultDto>>> RunYearEndRollover(
         [FromBody] YearEndRolloverDto dto,
         CancellationToken cancellationToken = default)
@@ -201,6 +214,7 @@ public sealed class LeavesController : ControllerBase
 
     [HttpGet("policies")]
     [ProducesResponseType(typeof(ApiResponse<IReadOnlyList<LeavePolicyDetailsDto>>), StatusCodes.Status200OK)]
+    [HrPermission("hr-leaves", "view")]
     public async Task<ActionResult<ApiResponse<IReadOnlyList<LeavePolicyDetailsDto>>>> GetLeavePolicies(
         CancellationToken cancellationToken = default)
     {
@@ -211,6 +225,7 @@ public sealed class LeavesController : ControllerBase
     [HttpPost("policies")]
     [ProducesResponseType(typeof(ApiResponse<LeavePolicyDetailsDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [HrPermission("hr-leaves", "create")]
     public async Task<ActionResult<ApiResponse<LeavePolicyDetailsDto>>> CreateOrUpdateLeavePolicy(
         [FromBody] CreateLeavePolicyDto dto,
         CancellationToken cancellationToken = default)

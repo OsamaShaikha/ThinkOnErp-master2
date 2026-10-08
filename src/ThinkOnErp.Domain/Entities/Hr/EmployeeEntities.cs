@@ -6,6 +6,9 @@ namespace ThinkOnErp.Domain.Entities.Hr;
 public sealed class Employee
 {
     public string EmployeeCode { get; set; } = string.Empty;
+    public long? UserId { get; set; }
+    [System.Text.Json.Serialization.JsonIgnore]
+    public ThinkOnErp.Domain.Entities.SysUser? User { get; set; }
     public string NameLocal { get; set; } = string.Empty;
     public string NameEn { get; set; } = string.Empty;
     public string NationalId { get; set; } = string.Empty;
