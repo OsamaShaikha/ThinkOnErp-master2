@@ -145,4 +145,33 @@ public sealed class ArSubledgerRepository : IArSubledgerRepository
             .ThenBy(v => v.DueDate)
             .ToListAsync(cancellationToken);
     }
+
+    public async Task<decimal> GetCustomerBalanceAsync(string customerCode, CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(customerCode))
+        {
+            return 0m;
+        }
+
+        return await _context.ArSubledgerTransactions
+            .AsNoTracking()
+            .Where(t => t.CustomerCode == customerCode)
+            .SumAsync(t => (decimal?)t.LocalAmount, cancellationToken) ?? 0m;
+    }
+
+    public async Task<Dictionary<string, decimal>> GetCustomersBalancesAsync(IEnumerable<string> customerCodes, CancellationToken cancellationToken = default)
+    {
+        var list = customerCodes.Where(c => !string.IsNullOrWhiteSpace(c)).Distinct().ToList();
+        if (list.Count == 0)
+        {
+            return new Dictionary<string, decimal>();
+        }
+
+        return await _context.ArSubledgerTransactions
+            .AsNoTracking()
+            .Where(t => list.Contains(t.CustomerCode))
+            .GroupBy(t => t.CustomerCode)
+            .Select(g => new { CustomerCode = g.Key, Balance = g.Sum(t => t.LocalAmount) })
+            .ToDictionaryAsync(x => x.CustomerCode, x => x.Balance, cancellationToken);
+    }
 }

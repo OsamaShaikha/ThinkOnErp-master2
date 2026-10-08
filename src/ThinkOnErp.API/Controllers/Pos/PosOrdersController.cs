@@ -154,6 +154,27 @@ public class PosOrdersController : ControllerBase
     }
 
     /// <summary>
+    /// Updates the status of an existing order (e.g. Parked -> SentToKitchen, Draft -> SentToKitchen, SentToKitchen -> Ready).
+    /// Accepts numeric SYS_CODE (1: Draft, 2: Parked, 3: SentToKitchen, 4: Ready, 5: Completed, 6: Voided, 7: Refunded) or enum string name.
+    /// </summary>
+    [HttpPut("{orderId:long}/status")]
+    [HttpPatch("{orderId:long}/status")]
+    [ProducesResponseType(typeof(ApiResponse<PosOrderSummaryDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<PosOrderSummaryDto>), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ApiResponse<PosOrderSummaryDto>), StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<ApiResponse<PosOrderSummaryDto>>> UpdateOrderStatus(
+        long orderId,
+        [FromBody] UpdatePosOrderStatusDto dto,
+        CancellationToken ct)
+    {
+        var username = User.FindFirstValue(ClaimTypes.Name) ?? "SYSTEM";
+        var result = await _orderService.UpdateOrderStatusAsync(orderId, dto.Status, username, ct);
+        return result.Success 
+            ? Ok(result) 
+            : (result.StatusCode == 404 ? NotFound(result) : BadRequest(result));
+    }
+
+    /// <summary>
     /// Issues a full or partial refund for a previously completed order and reverses inventory/commissions.
     /// </summary>
     [HttpPost("refund")]

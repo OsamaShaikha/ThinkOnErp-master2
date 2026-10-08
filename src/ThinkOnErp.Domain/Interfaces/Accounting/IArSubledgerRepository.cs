@@ -16,4 +16,6 @@ public interface IArSubledgerRepository
     void RemoveCashApplication(ArCashApplication application);
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
     Task<IReadOnlyList<ThinkOnErp.Domain.Entities.Views.ArAgingAnalysisView>> GetAgingAnalysisFromViewAsync(long? branchId, DateTime asOfDate, CancellationToken cancellationToken = default);
+    Task<decimal> GetCustomerBalanceAsync(string customerCode, CancellationToken cancellationToken = default);
+    Task<Dictionary<string, decimal>> GetCustomersBalancesAsync(IEnumerable<string> customerCodes, CancellationToken cancellationToken = default);
 }

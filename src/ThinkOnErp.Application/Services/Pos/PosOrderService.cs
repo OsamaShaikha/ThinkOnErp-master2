@@ -140,7 +140,7 @@ public class PosOrderService : IPosOrderService
             InvoiceNumber = invoiceNumber,
             ClientUuid = string.IsNullOrWhiteSpace(dto.ClientUuid) ? Guid.NewGuid().ToString() : dto.ClientUuid,
             OrderType = dto.OrderType,
-            Status = dto.Status == PosOrderStatus.Parked ? PosOrderStatus.Parked : PosOrderStatus.Draft,
+            Status = dto.Status != 0 ? dto.Status : PosOrderStatus.Draft,
             CustomerId = dto.CustomerId,
             CustomerName = dto.CustomerName,
             TableId = dto.TableId,
@@ -184,6 +184,7 @@ public class PosOrderService : IPosOrderService
                 LineTotal = calculated?.LineTotal ?? (reqLine.Quantity * reqLine.UnitPrice),
                 PrepStation = reqLine.PrepStation,
                 KdsStatus = PosKdsStatus.Pending,
+                KdsSentAt = (dto.Status == PosOrderStatus.SentToKitchen || dto.Status == PosOrderStatus.Completed) ? DateTime.UtcNow : null,
                 IsScaleItem = reqLine.IsScaleItem,
                 ScaleWeight = reqLine.ScaleWeight,
                 ScaleBarcode = reqLine.ScaleBarcode,
@@ -564,7 +565,22 @@ public class PosOrderService : IPosOrderService
             return ApiResponse<PosOrderSummaryDto>.CreateFailure("Order not found", null, 404);
 
         if (order.Status == PosOrderStatus.Completed || order.Status == PosOrderStatus.Voided || order.Status == PosOrderStatus.Refunded)
-            return ApiResponse<PosOrderSummaryDto>.CreateFailure("Only Draft or Parked orders can be updated", null, 400);
+            return ApiResponse<PosOrderSummaryDto>.CreateFailure("Completed, voided, or refunded orders cannot be modified", null, 400);
+
+        if (dto.Status.HasValue && dto.Status.Value != 0)
+        {
+            if (dto.Status.Value == PosOrderStatus.SentToKitchen)
+            {
+                foreach (var line in order.Lines.Where(l => !l.IsVoided))
+                {
+                    if (!line.KdsSentAt.HasValue)
+                        line.KdsSentAt = DateTime.UtcNow;
+                    if (line.KdsStatus == 0)
+                        line.KdsStatus = PosKdsStatus.Pending;
+                }
+            }
+            order.Status = dto.Status.Value;
+        }
 
         order.CustomerId = dto.CustomerId;
         order.CustomerName = dto.CustomerName;
@@ -590,6 +606,60 @@ public class PosOrderService : IPosOrderService
         await _orderRepository.SaveChangesAsync(ct);
 
         return ApiResponse<PosOrderSummaryDto>.CreateSuccess(MapToSummary(order), "Order updated successfully");
+    }
+
+    public async Task<ApiResponse<PosOrderSummaryDto>> UpdateOrderStatusAsync(long orderId, PosOrderStatus newStatus, string username, CancellationToken ct = default)
+    {
+        var order = await _orderRepository.GetOrderByIdAsync(orderId, ct);
+        if (order == null)
+            return ApiResponse<PosOrderSummaryDto>.CreateFailure("Order not found", null, 404);
+
+        if (order.Status == PosOrderStatus.Voided)
+            return ApiResponse<PosOrderSummaryDto>.CreateFailure("Voided orders cannot be updated", null, 400);
+
+        if (order.Status == PosOrderStatus.Refunded)
+            return ApiResponse<PosOrderSummaryDto>.CreateFailure("Refunded orders cannot be updated", null, 400);
+
+        if (order.Status == PosOrderStatus.Completed && newStatus != PosOrderStatus.Refunded && newStatus != PosOrderStatus.Voided)
+            return ApiResponse<PosOrderSummaryDto>.CreateFailure("Completed orders cannot have their status reverted", null, 400);
+
+        if (newStatus == PosOrderStatus.Parked && order.IsPaid)
+            return ApiResponse<PosOrderSummaryDto>.CreateFailure("Paid order cannot be parked", null, 400);
+
+        if (newStatus == PosOrderStatus.SentToKitchen)
+        {
+            foreach (var line in order.Lines.Where(l => !l.IsVoided))
+            {
+                if (!line.KdsSentAt.HasValue)
+                    line.KdsSentAt = DateTime.UtcNow;
+
+                if (line.KdsStatus == 0)
+                    line.KdsStatus = PosKdsStatus.Pending;
+            }
+        }
+        else if (newStatus == PosOrderStatus.Voided)
+        {
+            if (order.TableId.HasValue)
+            {
+                var table = await _tableRepository.GetTableByIdAsync(order.TableId.Value, ct);
+                if (table != null && table.ActiveOrderId == order.Id)
+                {
+                    table.Status = PosTableStatus.Available;
+                    table.ActiveOrderId = null;
+                    table.StatusChangedAt = DateTime.UtcNow;
+                }
+            }
+            order.IsActive = false;
+        }
+
+        order.Status = newStatus;
+        order.UpdateUser = username;
+        order.UpdateDate = DateTime.UtcNow;
+
+        await _orderRepository.UpdateOrderAsync(order, ct);
+        await _orderRepository.SaveChangesAsync(ct);
+
+        return await GetOrderByIdAsync(order.Id, ct);
     }
 
     public async Task<ApiResponse<bool>> DeleteOrderAsync(long orderId, string username, CancellationToken ct = default)

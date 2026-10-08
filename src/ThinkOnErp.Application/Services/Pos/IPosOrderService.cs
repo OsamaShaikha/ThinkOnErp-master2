@@ -28,5 +28,6 @@ public interface IPosOrderService
         int pageSize = 20,
         CancellationToken ct = default);
     Task<ApiResponse<PosOrderSummaryDto>> UpdateOrderAsync(long orderId, UpdatePosOrderDto dto, string username, CancellationToken ct = default);
+    Task<ApiResponse<PosOrderSummaryDto>> UpdateOrderStatusAsync(long orderId, PosOrderStatus newStatus, string username, CancellationToken ct = default);
     Task<ApiResponse<bool>> DeleteOrderAsync(long orderId, string username, CancellationToken ct = default);
 }

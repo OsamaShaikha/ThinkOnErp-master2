@@ -294,4 +294,12 @@ public static class SysCodeKeys
         public const int Ready = 3;
         public const int Served = 4;
     }
+
+    public static class PosCustomerSettlementTypes
+    {
+        public const int Mgr = 39;
+        public const int OnAccount = 1;
+        public const int SpecificInvoice = 2;
+        public const int AllInvoices = 3;
+    }
 }

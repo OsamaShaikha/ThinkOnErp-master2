@@ -205,6 +205,10 @@ public class VoidLineDto
 
 public class UpdatePosOrderDto
 {
+    /// <summary>
+    /// حالة الطلب الاختيارية: يقبل رقم الكود من SYS_CODE (CODE_MGR = 36) أو النص.
+    /// </summary>
+    public PosOrderStatus? Status { get; set; }
     public long? CustomerId { get; set; }
     public string? CustomerName { get; set; }
     public long? TableId { get; set; }
@@ -216,5 +220,13 @@ public class UpdatePosOrderDto
     public decimal DeliveryFee { get; set; }
     public decimal TipAmount { get; set; }
     public string? Notes { get; set; }
+}
+
+public class UpdatePosOrderStatusDto
+{
+    /// <summary>
+    /// الحالة الجديدة للطلب: يقبل رقم الكود من SYS_CODE (CODE_MGR = 36) أو النص (1: Draft مسودة, 2: Parked معلق, 3: SentToKitchen مرسل للمطبخ, 4: Ready جاهز, 5: Completed مكتمل, 6: Voided ملغي, 7: Refunded مسترجع).
+    /// </summary>
+    public PosOrderStatus Status { get; set; }
 }
 

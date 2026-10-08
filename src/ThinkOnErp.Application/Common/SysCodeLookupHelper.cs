@@ -118,6 +118,12 @@ public static class SysCodeLookupHelper
                 new() { Code = 3, Value = "Ready", NameAr = "جاهز للتسليم", NameEn = "Ready", Name = isEnglish ? "Ready" : "جاهز للتسليم", IsActive = 1 },
                 new() { Code = 4, Value = "Served", NameAr = "تم التقديم", NameEn = "Served", Name = isEnglish ? "Served" : "تم التقديم", IsActive = 1 },
             },
+            SysCodeKeys.PosCustomerSettlementTypes.Mgr => new List<SysCodeLookupDto>
+            {
+                new() { Code = 1, Value = "OnAccount", NameAr = "دفعة على الحساب (توزيع تلقائي FIFO)", NameEn = "On Account (Auto FIFO)", Name = isEnglish ? "On Account (Auto FIFO)" : "دفعة على الحساب (توزيع تلقائي FIFO)", IsActive = 1 },
+                new() { Code = 2, Value = "SpecificInvoice", NameAr = "سداد فاتورة محددة", NameEn = "Specific Invoice", Name = isEnglish ? "Specific Invoice" : "سداد فاتورة محددة", IsActive = 1 },
+                new() { Code = 3, Value = "AllInvoices", NameAr = "سداد كامل الفواتير المفتوحة", NameEn = "All Open Invoices", Name = isEnglish ? "All Open Invoices" : "سداد كامل الفواتير المفتوحة", IsActive = 1 },
+            },
             _ => new List<SysCodeLookupDto>()
         };
     }

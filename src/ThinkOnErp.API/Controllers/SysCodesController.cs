@@ -247,6 +247,13 @@ public class SysCodesController : ControllerBase
         ["validation-errors"] = SysCodeKeys.ValidationErrors.Mgr,
         ["validationerrors"] = SysCodeKeys.ValidationErrors.Mgr,
         ["validationErrors"] = SysCodeKeys.ValidationErrors.Mgr,
+        ["pos-customer-settlement-types"] = SysCodeKeys.PosCustomerSettlementTypes.Mgr,
+        ["poscustomersettlementtypes"] = SysCodeKeys.PosCustomerSettlementTypes.Mgr,
+        ["posCustomerSettlementTypes"] = SysCodeKeys.PosCustomerSettlementTypes.Mgr,
+        ["customer-settlement-types"] = SysCodeKeys.PosCustomerSettlementTypes.Mgr,
+        ["settlement-types"] = SysCodeKeys.PosCustomerSettlementTypes.Mgr,
+        ["settlementtypes"] = SysCodeKeys.PosCustomerSettlementTypes.Mgr,
+        ["settlementTypes"] = SysCodeKeys.PosCustomerSettlementTypes.Mgr,
     };
 
 
@@ -335,7 +342,8 @@ public class SysCodesController : ControllerBase
             ("posOrderStatuses", SysCodeKeys.PosOrderStatuses.Mgr),
             ("posStockDeductionModes", SysCodeKeys.PosStockDeductionModes.Mgr),
             ("posPaymentMethods", SysCodeKeys.PosPaymentMethods.Mgr),
-            ("posKdsStatuses", SysCodeKeys.PosKdsStatuses.Mgr)
+            ("posKdsStatuses", SysCodeKeys.PosKdsStatuses.Mgr),
+            ("posCustomerSettlementTypes", SysCodeKeys.PosCustomerSettlementTypes.Mgr)
         };
 
 
@@ -730,6 +738,24 @@ public class SysCodesController : ControllerBase
             list = SysCodeLookupHelper.GetFallbackLookups(SysCodeKeys.PosKdsStatuses.Mgr, lang);
         }
         return Ok(ApiResponse<List<SysCodeLookupDto>>.CreateSuccess(list, "KDS prep statuses retrieved successfully", 200));
+    }
+
+    /// <summary>
+    /// استرجاع أنواع سداد الذمم في نقاط البيع (دفعة على الحساب / فاتورة محددة / كامل الفواتير) (POS Customer Settlement Types)
+    /// </summary>
+    [HttpGet("pos-customer-settlement-types")]
+    [HttpGet("poscustomersettlementtypes")]
+    [HttpGet("settlement-types")]
+    [HttpGet("settlementtypes")]
+    [ProducesResponseType(typeof(ApiResponse<List<SysCodeLookupDto>>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<ApiResponse<List<SysCodeLookupDto>>>> GetPosCustomerSettlementTypes([FromQuery] int? lang = null)
+    {
+        var list = await GetLookupsByMgrAsync(SysCodeKeys.PosCustomerSettlementTypes.Mgr, lang);
+        if (list.Count == 0)
+        {
+            list = SysCodeLookupHelper.GetFallbackLookups(SysCodeKeys.PosCustomerSettlementTypes.Mgr, lang);
+        }
+        return Ok(ApiResponse<List<SysCodeLookupDto>>.CreateSuccess(list, "POS customer settlement types retrieved successfully", 200));
     }
 
     #endregion

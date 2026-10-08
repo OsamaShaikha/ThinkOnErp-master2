@@ -1,4 +1,4 @@
-﻿namespace ThinkOnErp.Application.DTOs.Pos;
+namespace ThinkOnErp.Application.DTOs.Pos;
 
 /// <summary>
 /// بيانات العميل المهيأة والمخصصة لشاشات ونقاط البيع (POS Customer)
@@ -15,6 +15,9 @@ public sealed class PosCustomerDto
     public string? TaxNumber { get; set; }
     public string? Address { get; set; }
     public decimal? CreditLimit { get; set; }
+    public decimal CurrentBalance { get; set; }
+    public decimal? AvailableCredit => CreditLimit.HasValue ? CreditLimit.Value - CurrentBalance : null;
+    public bool IsCreditBlocked => CreditLimit.HasValue && CurrentBalance > CreditLimit.Value;
     public int PaymentTermsDays { get; set; }
     public long? BranchId { get; set; }
     public bool IsActive { get; set; } = true;
