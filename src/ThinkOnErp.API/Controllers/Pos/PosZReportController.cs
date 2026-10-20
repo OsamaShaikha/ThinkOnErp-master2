@@ -45,6 +45,28 @@ public class PosZReportController : ControllerBase
     }
 
     /// <summary>
+    /// Generates an on-demand live X-Report (Mid-shift snapshot) without closing the shift or resetting counters.
+    /// </summary>
+    /// <param name="branchId">Branch ID.</param>
+    /// <param name="shiftId">Optional shift ID (defaults to active open shift).</param>
+    /// <param name="tillId">Optional till ID.</param>
+    /// <param name="ct">Cancellation token.</param>
+    /// <returns>Comprehensive live financial and operational snapshot of the active cashier shift.</returns>
+    [HttpGet("x-report")]
+    [ProducesResponseType(typeof(ApiResponse<XReportSummaryDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<XReportSummaryDto>), StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<ApiResponse<XReportSummaryDto>>> GenerateXReport(
+        [FromQuery] long branchId,
+        [FromQuery] long? shiftId = null,
+        [FromQuery] long? tillId = null,
+        CancellationToken ct = default)
+    {
+        var username = User.FindFirstValue(ClaimTypes.Name) ?? "SYSTEM";
+        var result = await _zReportService.GenerateXReportAsync(branchId, shiftId, tillId, username, ct);
+        return result.Success ? Ok(result) : NotFound(result);
+    }
+
+    /// <summary>
     /// Retrieves a paginated list of archived Z-Reports filtered by branch and date range.
     /// </summary>
     [HttpGet]
@@ -72,6 +94,20 @@ public class PosZReportController : ControllerBase
         CancellationToken ct)
     {
         var result = await _zReportService.GetZReportByIdAsync(id, ct);
+        return result.Success ? Ok(result) : NotFound(result);
+    }
+
+    /// <summary>
+    /// Retrieves the Z-Report generated for a specific shift session.
+    /// </summary>
+    [HttpGet("by-shift/{shiftId:long}")]
+    [ProducesResponseType(typeof(ApiResponse<ZReportSummaryDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<ZReportSummaryDto>), StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<ApiResponse<ZReportSummaryDto>>> GetZReportByShiftId(
+        long shiftId,
+        CancellationToken ct)
+    {
+        var result = await _zReportService.GetZReportByShiftIdAsync(shiftId, ct);
         return result.Success ? Ok(result) : NotFound(result);
     }
 }

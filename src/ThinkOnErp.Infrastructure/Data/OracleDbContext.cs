@@ -195,6 +195,7 @@ public class OracleDbContext : DbContext
     public DbSet<PosPrinterRouting> PosPrinterRoutings => Set<PosPrinterRouting>();
     public DbSet<PosStaffAttendance> PosStaffAttendances => Set<PosStaffAttendance>();
     public DbSet<PosExternalOrder> PosExternalOrders => Set<PosExternalOrder>();
+    public DbSet<PosBranchSetting> PosBranchSettings => Set<PosBranchSetting>();
 
     // HR & Dynamic Payroll Module
     public DbSet<WorkCalendar> WorkCalendars => Set<WorkCalendar>();

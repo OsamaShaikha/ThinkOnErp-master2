@@ -39,9 +39,16 @@ public class PosTable
     public long? ActiveOrderId { get; set; }
     public DateTime? StatusChangedAt { get; set; }
 
+    /// <summary>
+    /// في حال تم دمج هذه الطاولة كطاولة تابعة، يتم تخزين معرف الطاولة الرئيسية هنا.
+    /// </summary>
+    public long? ParentTableId { get; set; }
+
     public bool IsActive { get; set; } = true;
 
     // Navigation
     public PosFloor? Floor { get; set; }
     public PosOrderHeader? ActiveOrder { get; set; }
+    public PosTable? ParentTable { get; set; }
+    public ICollection<PosTable> MergedTables { get; set; } = new List<PosTable>();
 }

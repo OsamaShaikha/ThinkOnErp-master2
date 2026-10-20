@@ -373,7 +373,7 @@ public class InvoiceBusinessValidationService : IInvoiceBusinessValidationServic
                 {
                     result.AddError("Payments", "مبلغ الدفعة يجب أن يكون أكبر من الصفر.", ErrorCodes.PositiveNumberRequired);
                 }
-                if (p.PaymentMethod == PosPaymentMethod.Card && string.IsNullOrWhiteSpace(p.TransactionReference) && string.IsNullOrWhiteSpace(p.AuthCode))
+                if (p.PaymentMethod == (int)PosPaymentMethod.Card && string.IsNullOrWhiteSpace(p.TransactionReference) && string.IsNullOrWhiteSpace(p.AuthCode))
                 {
                     result.AddWarning("يُفضل إدخال رقم العملية المرجعي للبطاقة لضمان مطابقة الكاشير البنكية.");
                 }

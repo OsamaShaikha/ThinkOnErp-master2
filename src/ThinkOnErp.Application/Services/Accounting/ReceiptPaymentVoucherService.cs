@@ -1,4 +1,4 @@
-﻿using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging;
 using ThinkOnErp.Application.DTOs.Accounting.Subledger;
 using ThinkOnErp.Application.DTOs.Accounting.Vouchers;
 using ThinkOnErp.Domain.Entities.Accounting;
@@ -60,7 +60,7 @@ public sealed class ReceiptPaymentVoucherService : IReceiptPaymentVoucherService
             {
                 throw new AccountingNotFoundException($"العميل برمز ({dto.CustomerCode}) غير موجود.", "CUSTOMER_NOT_FOUND");
             }
-            creditAccountCode = customer.ArControlAccountCode;
+            creditAccountCode = !string.IsNullOrWhiteSpace(customer.ArControlAccountCode) ? customer.ArControlAccountCode : "112101";
             partyType = "CUSTOMER";
             partyCode = customer.CustomerCode;
         }
@@ -164,7 +164,7 @@ public sealed class ReceiptPaymentVoucherService : IReceiptPaymentVoucherService
             {
                 throw new AccountingNotFoundException($"العميل برمز ({dto.CustomerCode}) غير موجود.", "CUSTOMER_NOT_FOUND");
             }
-            creditAccountCode = customer.ArControlAccountCode;
+            creditAccountCode = !string.IsNullOrWhiteSpace(customer.ArControlAccountCode) ? customer.ArControlAccountCode : "112101";
             partyType = "CUSTOMER";
             partyCode = customer.CustomerCode;
         }

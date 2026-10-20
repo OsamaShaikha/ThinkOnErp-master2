@@ -21,6 +21,8 @@ public class PosShift
     public decimal OpeningFloat { get; set; }
     public decimal TotalCashSales { get; set; }
     public decimal TotalCardSales { get; set; }
+    public decimal TotalCustomerAccountSales { get; set; }
+    public decimal TotalHospitalitySales { get; set; }
     public decimal TotalOtherSales { get; set; }
     public decimal TotalCashRefunds { get; set; }
     public decimal TotalCardRefunds { get; set; }
@@ -29,10 +31,15 @@ public class PosShift
     public decimal TotalPayOut { get; set; }
     public decimal TotalTipPayout { get; set; }
 
-    // Blind close values
+    // Cash blind close values
     public decimal ExpectedCashInDrawer { get; set; }
     public decimal? CountedCashAmount { get; set; }
     public decimal? VarianceAmount { get; set; }
+
+    // Card terminal reconciliation values
+    public decimal ExpectedCardAmount { get; set; }
+    public decimal? CountedCardAmount { get; set; }
+    public decimal? CardVarianceAmount { get; set; }
 
     // Manager Audit
     public bool IsAudited { get; set; }

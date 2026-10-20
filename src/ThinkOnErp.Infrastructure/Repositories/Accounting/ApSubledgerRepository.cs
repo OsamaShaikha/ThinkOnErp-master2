@@ -63,7 +63,6 @@ public sealed class ApSubledgerRepository : IApSubledgerRepository
     {
         return await _context.ApSubledgerTransactions
             .Include(t => t.Currency)
-            .Include(t => t.Voucher)
             .Where(t => t.VendorCode == vendorCode && t.OpenAmount > 0)
             .OrderBy(t => t.TransactionDate)
             .ThenBy(t => t.Id)
@@ -74,7 +73,6 @@ public sealed class ApSubledgerRepository : IApSubledgerRepository
     {
         return await _context.ApSubledgerTransactions
             .Include(t => t.Currency)
-            .Include(t => t.Voucher)
             .Where(t => t.VendorCode == vendorCode && t.OpenAmount < 0)
             .OrderBy(t => t.TransactionDate)
             .ThenBy(t => t.Id)

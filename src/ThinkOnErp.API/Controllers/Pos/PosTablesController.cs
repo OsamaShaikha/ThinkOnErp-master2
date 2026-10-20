@@ -238,4 +238,46 @@ public class PosTablesController : ControllerBase
         var result = await _tableService.TransferTableAsync(dto, username, ct);
         return result.Success ? Ok(result) : BadRequest(result);
     }
+
+    /// <summary>
+    /// Merges one or more secondary tables with a primary table (e.g. for large parties or banquets), combining their capacity and orders.
+    /// دمج وشبك طاولتين أو أكثر معاً لخدمة مجموعة أو عائلة كبيرة وتوحيد الطلبات والحساب.
+    /// </summary>
+    [HttpPost("merge")]
+    [ProducesResponseType(typeof(ApiResponse<MergeTablesResultDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<MergeTablesResultDto>), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ApiResponse<MergeTablesResultDto>), StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<ApiResponse<MergeTablesResultDto>>> MergeTables(
+        [FromBody] MergeTablesDto dto,
+        CancellationToken ct)
+    {
+        var username = User.FindFirstValue(ClaimTypes.Name) ?? "SYSTEM";
+        var result = await _tableService.MergeTablesAsync(dto, username, ct);
+        if (!result.Success)
+        {
+            return result.StatusCode == 404 ? NotFound(result) : BadRequest(result);
+        }
+        return Ok(result);
+    }
+
+    /// <summary>
+    /// Unmerges a secondary table from its primary table and returns it to Available status.
+    /// فك دمج طاولة فرعية وإعادتها لحالة طاولة مستقلة متاحة.
+    /// </summary>
+    [HttpPost("{tableId:long}/unmerge")]
+    [ProducesResponseType(typeof(ApiResponse<TableDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<TableDto>), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ApiResponse<TableDto>), StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<ApiResponse<TableDto>>> UnmergeTable(
+        [FromRoute] long tableId,
+        CancellationToken ct)
+    {
+        var username = User.FindFirstValue(ClaimTypes.Name) ?? "SYSTEM";
+        var result = await _tableService.UnmergeTableAsync(tableId, username, ct);
+        if (!result.Success)
+        {
+            return result.StatusCode == 404 ? NotFound(result) : BadRequest(result);
+        }
+        return Ok(result);
+    }
 }

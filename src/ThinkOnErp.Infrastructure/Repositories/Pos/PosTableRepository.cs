@@ -80,7 +80,25 @@ public class PosTableRepository : IPosTableRepository
         return await _context.PosTables
             .Include(t => t.Floor)
             .Include(t => t.ActiveOrder)
+            .Include(t => t.MergedTables)
+            .Include(t => t.ParentTable)
             .FirstOrDefaultAsync(t => t.Id == tableId, ct);
+    }
+
+    public async Task<IReadOnlyList<PosTable>> GetTablesByActiveOrderIdAsync(long orderId, CancellationToken ct = default)
+    {
+        return await _context.PosTables
+            .Include(t => t.Floor)
+            .Where(t => t.ActiveOrderId == orderId && t.IsActive)
+            .ToListAsync(ct);
+    }
+
+    public async Task<IReadOnlyList<PosTable>> GetMergedTablesAsync(long primaryTableId, CancellationToken ct = default)
+    {
+        return await _context.PosTables
+            .Include(t => t.Floor)
+            .Where(t => t.ParentTableId == primaryTableId && t.IsActive)
+            .ToListAsync(ct);
     }
 
     public async Task AddTableAsync(PosTable table, CancellationToken ct = default)
@@ -106,7 +124,7 @@ public class PosTableRepository : IPosTableRepository
         if (table != null)
         {
             table.Status = status;
-            table.ActiveOrderId = activeOrderId;
+            table.ActiveOrderId = (activeOrderId.HasValue && activeOrderId.Value > 0) ? activeOrderId.Value : null;
             table.StatusChangedAt = System.DateTime.UtcNow;
             await _context.SaveChangesAsync(ct);
         }

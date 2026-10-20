@@ -44,11 +44,13 @@ public sealed class PosTableConfiguration : IEntityTypeConfiguration<PosTable>
         builder.Property(t => t.Shape).HasColumnName("SHAPE").HasMaxLength(30).HasDefaultValue("Square");
 
         builder.Property(t => t.ActiveOrderId).HasColumnName("ACTIVE_ORDER_ID");
+        builder.Property(t => t.ParentTableId).HasColumnName("PARENT_TABLE_ID");
         builder.Property(t => t.StatusChangedAt).HasColumnName("STATUS_CHANGED_AT").HasColumnType("TIMESTAMP");
         builder.Property(t => t.IsActive).HasColumnName("IS_ACTIVE").HasColumnType("NUMBER(1)").HasDefaultValue(true);
 
         builder.HasIndex(t => new { t.FloorId, t.TableNumber }).IsUnique();
         builder.HasOne(t => t.Floor).WithMany(f => f.Tables).HasForeignKey(t => t.FloorId).OnDelete(DeleteBehavior.Cascade);
         builder.HasOne(t => t.ActiveOrder).WithMany().HasForeignKey(t => t.ActiveOrderId).OnDelete(DeleteBehavior.SetNull);
+        builder.HasOne(t => t.ParentTable).WithMany(p => p.MergedTables).HasForeignKey(t => t.ParentTableId).OnDelete(DeleteBehavior.SetNull);
     }
 }

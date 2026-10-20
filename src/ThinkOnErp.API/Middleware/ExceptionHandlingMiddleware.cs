@@ -9,6 +9,7 @@ using ThinkOnErp.Domain.Entities.Audit;
 using ThinkOnErp.Domain.Exceptions;
 using ThinkOnErp.Domain.Interfaces;
 using ThinkOnErp.Infrastructure.Services;
+using Microsoft.EntityFrameworkCore;
 
 namespace ThinkOnErp.API.Middleware;
 
@@ -270,6 +271,121 @@ public class ExceptionHandlingMiddleware
                     domainException.Message,
                     new List<string> { domainException.ErrorCode },
                     statusCode);
+                break;
+            case Oracle.ManagedDataAccess.Client.OracleException oracleException:
+                if (oracleException.Number == 2291)
+                {
+                    statusCode = (int)HttpStatusCode.BadRequest;
+                    _logger.LogWarning(oracleException, "Foreign key constraint violation (parent not found): {Message}", oracleException.Message);
+                    response = ApiResponse<object>.CreateFailure(
+                        "السجل المرجعي المرتبط غير موجود أو تم حذفه.",
+                        new List<string> { "FOREIGN_KEY_VIOLATION" },
+                        statusCode);
+                }
+                else if (oracleException.Number == 2292)
+                {
+                    statusCode = (int)HttpStatusCode.Conflict;
+                    _logger.LogWarning(oracleException, "Foreign key constraint violation (child records exist): {Message}", oracleException.Message);
+                    response = ApiResponse<object>.CreateFailure(
+                        "لا يمكن حذف أو تعديل هذا السجل لوجود سجلات مرتبطة به.",
+                        new List<string> { "FOREIGN_KEY_RESTRICT" },
+                        statusCode);
+                }
+                else if (oracleException.Number == 1)
+                {
+                    statusCode = (int)HttpStatusCode.Conflict;
+                    _logger.LogWarning(oracleException, "Unique constraint violation: {Message}", oracleException.Message);
+                    response = ApiResponse<object>.CreateFailure(
+                        "السجل مكرر ومسجل مسبقاً في النظام.",
+                        new List<string> { "DUPLICATE_KEY_VIOLATION" },
+                        statusCode);
+                }
+                else
+                {
+                    statusCode = (int)HttpStatusCode.BadRequest;
+                    _logger.LogWarning(oracleException, "Oracle error {Number}: {Message}", oracleException.Number, oracleException.Message);
+                    response = ApiResponse<object>.CreateFailure(
+                        "حدث خطأ في قاعدة البيانات أثناء تنفيذ العملية.",
+                        new List<string> { $"ORA_{oracleException.Number}" },
+                        statusCode);
+                }
+                break;
+
+            case DbUpdateException dbUpdateException:
+                var innerMsg = dbUpdateException.InnerException?.Message ?? dbUpdateException.Message;
+                if (dbUpdateException.InnerException is Oracle.ManagedDataAccess.Client.OracleException innerOracle)
+                {
+                    if (innerOracle.Number == 2291)
+                    {
+                        statusCode = (int)HttpStatusCode.BadRequest;
+                        _logger.LogWarning(dbUpdateException, "Foreign key constraint violation (parent not found): {Message}", innerMsg);
+                        response = ApiResponse<object>.CreateFailure(
+                            "السجل المرجعي المرتبط غير موجود أو تم حذفه.",
+                            new List<string> { "FOREIGN_KEY_VIOLATION" },
+                            statusCode);
+                        break;
+                    }
+                    if (innerOracle.Number == 2292)
+                    {
+                        statusCode = (int)HttpStatusCode.Conflict;
+                        _logger.LogWarning(dbUpdateException, "Foreign key constraint violation (child records exist): {Message}", innerMsg);
+                        response = ApiResponse<object>.CreateFailure(
+                            "لا يمكن حذف أو تعديل هذا السجل لوجود سجلات مرتبطة به.",
+                            new List<string> { "FOREIGN_KEY_RESTRICT" },
+                            statusCode);
+                        break;
+                    }
+                    if (innerOracle.Number == 1)
+                    {
+                        statusCode = (int)HttpStatusCode.Conflict;
+                        _logger.LogWarning(dbUpdateException, "Unique constraint violation: {Message}", innerMsg);
+                        response = ApiResponse<object>.CreateFailure(
+                            "السجل مكرر ومسجل مسبقاً في النظام.",
+                            new List<string> { "DUPLICATE_KEY_VIOLATION" },
+                            statusCode);
+                        break;
+                    }
+                }
+
+                if (innerMsg.Contains("ORA-02291", StringComparison.OrdinalIgnoreCase) ||
+                    innerMsg.Contains("parent key not found", StringComparison.OrdinalIgnoreCase))
+                {
+                    statusCode = (int)HttpStatusCode.BadRequest;
+                    _logger.LogWarning(dbUpdateException, "Foreign key constraint violation (parent not found): {Message}", innerMsg);
+                    response = ApiResponse<object>.CreateFailure(
+                        "السجل المرجعي المرتبط غير موجود أو تم حذفه.",
+                        new List<string> { "FOREIGN_KEY_VIOLATION" },
+                        statusCode);
+                }
+                else if (innerMsg.Contains("ORA-02292", StringComparison.OrdinalIgnoreCase) ||
+                         innerMsg.Contains("child record found", StringComparison.OrdinalIgnoreCase))
+                {
+                    statusCode = (int)HttpStatusCode.Conflict;
+                    _logger.LogWarning(dbUpdateException, "Foreign key constraint violation (child records exist): {Message}", innerMsg);
+                    response = ApiResponse<object>.CreateFailure(
+                        "لا يمكن حذف أو تعديل هذا السجل لوجود سجلات مرتبطة به.",
+                        new List<string> { "FOREIGN_KEY_RESTRICT" },
+                        statusCode);
+                }
+                else if (innerMsg.Contains("ORA-00001", StringComparison.OrdinalIgnoreCase) ||
+                         innerMsg.Contains("unique constraint", StringComparison.OrdinalIgnoreCase))
+                {
+                    statusCode = (int)HttpStatusCode.Conflict;
+                    _logger.LogWarning(dbUpdateException, "Unique constraint violation: {Message}", innerMsg);
+                    response = ApiResponse<object>.CreateFailure(
+                        "السجل مكرر ومسجل مسبقاً في النظام.",
+                        new List<string> { "DUPLICATE_KEY_VIOLATION" },
+                        statusCode);
+                }
+                else
+                {
+                    statusCode = (int)HttpStatusCode.BadRequest;
+                    _logger.LogWarning(dbUpdateException, "Database update error: {Message}", innerMsg);
+                    response = ApiResponse<object>.CreateFailure(
+                        "حدث خطأ أثناء حفظ البيانات في قاعدة البيانات.",
+                        new List<string> { "DB_UPDATE_ERROR" },
+                        statusCode);
+                }
                 break;
 
             default:

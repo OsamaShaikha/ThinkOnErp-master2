@@ -91,8 +91,9 @@ public class PosShiftsController : ControllerBase
     }
 
     /// <summary>
-    /// Performs a Blind Close: cashier inputs actual counted cash without seeing expected balance.
+    /// Closes a cashier shift with tender reconciliation and automatically generates the fiscal Z-Report.
     /// </summary>
+    [HttpPost("close")]
     [HttpPost("blind-close")]
     [ProducesResponseType(typeof(ApiResponse<PosShiftSummaryDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiResponse<PosShiftSummaryDto>), StatusCodes.Status400BadRequest)]

@@ -30,6 +30,7 @@ public class PosZReport
     public decimal CashPaymentsTotal { get; set; }
     public decimal CardPaymentsTotal { get; set; }
     public decimal CustomerAccountPaymentsTotal { get; set; }
+    public decimal HospitalityPaymentsTotal { get; set; }
     public decimal OtherPaymentsTotal { get; set; }
 
     // Cash reconciliation
@@ -39,6 +40,11 @@ public class PosZReport
     public decimal ExpectedDrawerCash { get; set; }
     public decimal ActualCountedCash { get; set; }
     public decimal CashVariance { get; set; }
+
+    // Card reconciliation
+    public decimal ExpectedCardAmount { get; set; }
+    public decimal ActualCountedCard { get; set; }
+    public decimal CardVariance { get; set; }
 
     public bool IsPostedToGl { get; set; }
     public long? GlVoucherId { get; set; }

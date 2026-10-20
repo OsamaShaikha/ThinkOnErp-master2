@@ -29,5 +29,9 @@ public interface IPosOrderService
         CancellationToken ct = default);
     Task<ApiResponse<PosOrderSummaryDto>> UpdateOrderAsync(long orderId, UpdatePosOrderDto dto, string username, CancellationToken ct = default);
     Task<ApiResponse<PosOrderSummaryDto>> UpdateOrderStatusAsync(long orderId, PosOrderStatus newStatus, string username, CancellationToken ct = default);
+    Task<ApiResponse<PosOrderSummaryDto>> AddOrderLinesAsync(long orderId, AddOrderLinesDto dto, string username, CancellationToken ct = default);
+    Task<ApiResponse<PosOrderSummaryDto>> UpdateOrderLineAsync(long orderId, long lineId, UpdateOrderLineDto dto, string username, CancellationToken ct = default);
+    Task<ApiResponse<SplitOrderResultDto>> SplitOrderAsync(long orderId, SplitPosOrderDto dto, string username, CancellationToken ct = default);
+    Task<ApiResponse<ExchangeOrderResultDto>> ExchangeOrderAsync(ExchangeOrderDto dto, string username, CancellationToken ct = default);
     Task<ApiResponse<bool>> DeleteOrderAsync(long orderId, string username, CancellationToken ct = default);
 }

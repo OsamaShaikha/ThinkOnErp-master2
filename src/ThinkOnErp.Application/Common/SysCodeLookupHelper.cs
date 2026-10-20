@@ -103,13 +103,14 @@ public static class SysCodeLookupHelper
                 new() { Code = 1, Value = "Cash", NameAr = "نقداً (كاش)", NameEn = "Cash", Name = isEnglish ? "Cash" : "نقداً (كاش)", IsActive = 1 },
                 new() { Code = 2, Value = "Card", NameAr = "بطاقة دفع / مدى", NameEn = "Card", Name = isEnglish ? "Card" : "بطاقة دفع / مدى", IsActive = 1 },
                 new() { Code = 3, Value = "Split", NameAr = "دفع مجزأ / متعدد", NameEn = "Split Payment", Name = isEnglish ? "Split Payment" : "دفع مجزأ / متعدد", IsActive = 1 },
-                new() { Code = 4, Value = "CustomerAccount", NameAr = "حساب عميل (آجل)", NameEn = "Customer Account", Name = isEnglish ? "Customer Account" : "حساب عميل (آجل)", IsActive = 1 },
+                new() { Code = 99, Value = "CustomerAccount", NameAr = "حساب عميل (آجل)", NameEn = "Customer Account", Name = isEnglish ? "Customer Account" : "حساب عميل (آجل)", IsActive = 1 },
                 new() { Code = 5, Value = "Cheque", NameAr = "شيك", NameEn = "Cheque", Name = isEnglish ? "Cheque" : "شيك", IsActive = 1 },
                 new() { Code = 6, Value = "BankTransfer", NameAr = "تحويل بنكي", NameEn = "Bank Transfer", Name = isEnglish ? "Bank Transfer" : "تحويل بنكي", IsActive = 1 },
                 new() { Code = 7, Value = "DigitalWallet", NameAr = "محفظة رقمية", NameEn = "Digital Wallet", Name = isEnglish ? "Digital Wallet" : "محفظة رقمية", IsActive = 1 },
                 new() { Code = 8, Value = "LoyaltyPoints", NameAr = "نقاط ولاء", NameEn = "Loyalty Points", Name = isEnglish ? "Loyalty Points" : "نقاط ولاء", IsActive = 1 },
                 new() { Code = 9, Value = "GiftCard", NameAr = "بطاقة هدايا", NameEn = "Gift Card", Name = isEnglish ? "Gift Card" : "بطاقة هدايا", IsActive = 1 },
                 new() { Code = 10, Value = "AggregatorPaid", NameAr = "مسدد عبر منصة التوصيل", NameEn = "Aggregator Paid", Name = isEnglish ? "Aggregator Paid" : "مسدد عبر منصة التوصيل", IsActive = 1 },
+                new() { Code = 98, Value = "Hospitality", NameAr = "ضيافة", NameEn = "Hospitality", Name = isEnglish ? "Hospitality" : "ضيافة", IsActive = 1 },
             },
             SysCodeKeys.PosKdsStatuses.Mgr => new List<SysCodeLookupDto>
             {

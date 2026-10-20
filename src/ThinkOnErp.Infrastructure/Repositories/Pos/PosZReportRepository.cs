@@ -36,6 +36,14 @@ public class PosZReportRepository : IPosZReportRepository
             .FirstOrDefaultAsync(z => z.Id == id, ct);
     }
 
+    public async Task<PosZReport?> GetByShiftIdAsync(long shiftId, CancellationToken ct = default)
+    {
+        return await _context.PosZReports
+            .Include(z => z.Till)
+            .Include(z => z.Shift)
+            .FirstOrDefaultAsync(z => z.ShiftId == shiftId, ct);
+    }
+
     public async Task<(IReadOnlyList<PosZReport> Items, long TotalCount)> GetZReportsPagedAsync(
         long branchId,
         DateTime? fromDate = null,

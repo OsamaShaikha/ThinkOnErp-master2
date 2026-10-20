@@ -81,10 +81,14 @@ public class PosCalculationEngine : IPosCalculationEngine
             var modExtra = line.Modifiers.Sum(m => m.Quantity * m.ExtraPrice);
             var baseLineTotal = lineGross + modExtra;
 
-            decimal lineDiscount = line.DiscountAmount;
-            if (line.DiscountPercent > 0)
+            decimal lineDiscount = 0m;
+            if (line.DiscountAmount > 0)
             {
-                lineDiscount += baseLineTotal * (line.DiscountPercent / 100m);
+                lineDiscount = line.DiscountAmount;
+            }
+            else if (line.DiscountPercent > 0)
+            {
+                lineDiscount = baseLineTotal * (line.DiscountPercent / 100m);
             }
 
             lineDiscount = Math.Min(lineDiscount, baseLineTotal); // Cannot exceed line price
@@ -123,10 +127,14 @@ public class PosCalculationEngine : IPosCalculationEngine
         var netAfterPromo = netAfterLineDiscounts - result.PromotionDiscountsAmount;
 
         // Step 3: Apply Manual Invoice-Level Discount
-        decimal orderDiscount = orderDto.ManualDiscountAmount;
-        if (orderDto.ManualDiscountPercent > 0)
+        decimal orderDiscount = 0m;
+        if (orderDto.ManualDiscountAmount > 0)
         {
-            orderDiscount += netAfterPromo * (orderDto.ManualDiscountPercent / 100m);
+            orderDiscount = orderDto.ManualDiscountAmount;
+        }
+        else if (orderDto.ManualDiscountPercent > 0)
+        {
+            orderDiscount = netAfterPromo * (orderDto.ManualDiscountPercent / 100m);
         }
         result.OrderDiscountAmount = Math.Min(orderDiscount, netAfterPromo);
 

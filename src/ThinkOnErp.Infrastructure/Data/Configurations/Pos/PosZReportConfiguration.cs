@@ -34,6 +34,7 @@ public sealed class PosZReportConfiguration : IEntityTypeConfiguration<PosZRepor
         builder.Property(z => z.CashPaymentsTotal).HasColumnName("CASH_PAYMENTS_TOTAL").HasColumnType("NUMBER(18,4)").HasDefaultValue(0m);
         builder.Property(z => z.CardPaymentsTotal).HasColumnName("CARD_PAYMENTS_TOTAL").HasColumnType("NUMBER(18,4)").HasDefaultValue(0m);
         builder.Property(z => z.CustomerAccountPaymentsTotal).HasColumnName("CUSTOMER_ACCOUNT_TOTAL").HasColumnType("NUMBER(18,4)").HasDefaultValue(0m);
+        builder.Property(z => z.HospitalityPaymentsTotal).HasColumnName("HOSPITALITY_TOTAL").HasColumnType("NUMBER(18,4)").HasDefaultValue(0m);
         builder.Property(z => z.OtherPaymentsTotal).HasColumnName("OTHER_PAYMENTS_TOTAL").HasColumnType("NUMBER(18,4)").HasDefaultValue(0m);
 
         builder.Property(z => z.OpeningFloat).HasColumnName("OPENING_FLOAT").HasColumnType("NUMBER(18,4)").HasDefaultValue(0m);
@@ -42,6 +43,10 @@ public sealed class PosZReportConfiguration : IEntityTypeConfiguration<PosZRepor
         builder.Property(z => z.ExpectedDrawerCash).HasColumnName("EXPECTED_DRAWER_CASH").HasColumnType("NUMBER(18,4)").HasDefaultValue(0m);
         builder.Property(z => z.ActualCountedCash).HasColumnName("ACTUAL_COUNTED_CASH").HasColumnType("NUMBER(18,4)").HasDefaultValue(0m);
         builder.Property(z => z.CashVariance).HasColumnName("CASH_VARIANCE").HasColumnType("NUMBER(18,4)").HasDefaultValue(0m);
+
+        builder.Property(z => z.ExpectedCardAmount).HasColumnName("EXPECTED_CARD_AMOUNT").HasColumnType("NUMBER(18,4)").HasDefaultValue(0m);
+        builder.Property(z => z.ActualCountedCard).HasColumnName("ACTUAL_COUNTED_CARD").HasColumnType("NUMBER(18,4)").HasDefaultValue(0m);
+        builder.Property(z => z.CardVariance).HasColumnName("CARD_VARIANCE").HasColumnType("NUMBER(18,4)").HasDefaultValue(0m);
 
         builder.Property(z => z.IsPostedToGl).HasColumnName("IS_POSTED_TO_GL").HasColumnType("NUMBER(1)").HasDefaultValue(false);
         builder.Property(z => z.GlVoucherId).HasColumnName("GL_VOUCHER_ID");

@@ -9,12 +9,12 @@ using ThinkOnErp.API.Authorization;
 using ThinkOnErp.API.Swagger;
 using ThinkOnErp.Application.Common;
 using ThinkOnErp.Application.DTOs.Pos;
-using ThinkOnErp.Application.Services.Accounting;
+using ThinkOnErp.Domain.Interfaces.Accounting;
 
 namespace ThinkOnErp.API.Controllers.Pos;
 
 /// <summary>
-/// Point of Sale Payment Methods API: Provides active payment methods filtered specifically for POS cashier stations.
+/// Point of Sale Payment Methods API: Provides active payment methods directly from the enterprise Payment Methods accounting ledger.
 /// </summary>
 [ApiController]
 [Route("api/pos/payment-methods")]
@@ -23,55 +23,114 @@ namespace ThinkOnErp.API.Controllers.Pos;
 [Authorize]
 public class PosPaymentMethodsController : ControllerBase
 {
-    private readonly IPaymentMethodService _paymentMethodService;
+    private readonly IPaymentMethodRepository _paymentMethodRepo;
 
-    public PosPaymentMethodsController(IPaymentMethodService paymentMethodService)
+    public PosPaymentMethodsController(IPaymentMethodRepository paymentMethodRepo)
     {
-        _paymentMethodService = paymentMethodService;
+        _paymentMethodRepo = paymentMethodRepo;
     }
 
     /// <summary>
-    /// Retrieves payment methods enabled exclusively for Point of Sale (ShowInPos = true, IsActive = true).
+    /// Retrieves active payment methods configured for POS cashiers with their exact numeric IDs, accounting GL accounts, and fees.
     /// </summary>
-    /// <param name="branchId">Optional filter by branch.</param>
-    /// <param name="methodType">Optional filter by method type (CASH, CARD, BANK, etc.).</param>
+    /// <param name="branchId">Optional branch filter.</param>
+    /// <param name="lang">Optional language filter (1 = Arabic, 2 = English).</param>
     /// <param name="cancellationToken">Cancellation token.</param>
-    /// <returns>List of POS-ready payment methods.</returns>
+    /// <returns>List of POS payment methods configured in the accounting ledger.</returns>
     [HttpGet]
     [ProducesResponseType(typeof(ApiResponse<IReadOnlyList<PosPaymentMethodDto>>), StatusCodes.Status200OK)]
     public async Task<ActionResult<ApiResponse<IReadOnlyList<PosPaymentMethodDto>>>> GetPosPaymentMethods(
         [FromQuery] long? branchId = null,
-        [FromQuery] string? methodType = null,
+        [FromQuery] int? lang = null,
         CancellationToken cancellationToken = default)
     {
-        // Enforce POS filtering: showInPos = true, activeOnly = true
-        var methods = await _paymentMethodService.GetAllAsync(
+        var methods = await _paymentMethodRepo.GetAllAsync(
             branchId: branchId,
-            methodType: methodType,
+            methodType: null,
             showInPos: true,
             showInInvoices: null,
             activeOnly: true,
             ct: cancellationToken);
 
-        var posDtos = methods.Select(m => new PosPaymentMethodDto
+        var isEnglish = lang == 2;
+        var list = new List<PosPaymentMethodDto>();
+
+        foreach (var m in methods)
         {
-            Id = m.Id,
-            BranchId = m.BranchId,
-            Code = m.Code,
-            NameLocal = m.NameLocal,
-            NameEn = m.NameEn,
-            MethodType = m.MethodType,
-            CommissionPercent = m.CommissionPercent,
-            CommissionFixedAmount = m.CommissionFixedAmount,
-            RequiresReference = m.RequiresReference,
-            RequiresDueDate = m.RequiresDueDate,
-            DisplayOrder = m.DisplayOrder,
-            IsActive = m.IsActive
-        }).OrderBy(m => m.DisplayOrder).ThenBy(m => m.NameLocal).ToList();
+            var codeUpper = m.Code?.Trim().ToUpperInvariant() ?? string.Empty;
+            var typeUpper = m.MethodType?.Trim().ToUpperInvariant() ?? string.Empty;
+
+            bool isCustAccount = codeUpper == "CUSTOMER_ACCOUNT" || typeUpper is "ACCOUNT" or "CUSTOMER_ACCOUNT" or "CREDIT_ACCOUNT" or "CREDIT";
+            bool isHospitality = codeUpper == "HOSPITALITY" || typeUpper == "HOSPITALITY";
+
+            // تثبيت الذمم على 99 والضيافة على 98 لجميع الفروع
+            int methodId = isCustAccount ? 99 : (isHospitality ? 98 : (int)m.Id);
+            int displayOrder = isCustAccount ? 99 : (isHospitality ? 98 : m.DisplayOrder);
+
+            list.Add(new PosPaymentMethodDto
+            {
+                Id = methodId,
+                Code = isCustAccount ? "CUSTOMER_ACCOUNT" : (isHospitality ? "HOSPITALITY" : m.Code),
+                Name = isEnglish ? (!string.IsNullOrEmpty(m.NameEn) ? m.NameEn : m.NameLocal) : (!string.IsNullOrEmpty(m.NameLocal) ? m.NameLocal : m.NameEn),
+                NameEn = m.NameEn,
+                Type = isCustAccount ? "ACCOUNT" : (isHospitality ? "HOSPITALITY" : m.MethodType),
+                RequiresReference = m.RequiresReference,
+                RequiresDueDate = m.RequiresDueDate,
+                GlAccountCode = isHospitality ? "632102" : (isCustAccount ? "112101" : m.GlAccountCode),
+                CommissionPercent = m.CommissionPercent,
+                DisplayOrder = displayOrder,
+                IsActive = m.IsActive
+            });
+        }
+
+        // ضمان توفر الذمم (99) والضيافة (98) لكل الفروع بشكل دائم
+        if (!list.Any(x => x.Id == 99 || x.Code == "CUSTOMER_ACCOUNT"))
+        {
+            list.Add(new PosPaymentMethodDto
+            {
+                Id = 99,
+                Code = "CUSTOMER_ACCOUNT",
+                Name = isEnglish ? "Customer Account" : "حساب عميل (آجل)",
+                NameEn = "Customer Account",
+                Type = "ACCOUNT",
+                RequiresReference = false,
+                RequiresDueDate = false,
+                GlAccountCode = "112101",
+                CommissionPercent = 0,
+                DisplayOrder = 99,
+                IsActive = true
+            });
+        }
+
+        if (!list.Any(x => x.Id == 98 || x.Code == "HOSPITALITY"))
+        {
+            list.Add(new PosPaymentMethodDto
+            {
+                Id = 98,
+                Code = "HOSPITALITY",
+                Name = isEnglish ? "Hospitality" : "ضيافة",
+                NameEn = "Hospitality",
+                Type = "HOSPITALITY",
+                RequiresReference = false,
+                RequiresDueDate = false,
+                GlAccountCode = "632102",
+                CommissionPercent = 0,
+                DisplayOrder = 98,
+                IsActive = true
+            });
+        }
+
+        // إزالة التكرار وترتيب العرض
+        var result = list
+            .GroupBy(x => x.Id)
+            .Select(g => g.First())
+            .OrderBy(x => x.DisplayOrder)
+            .ThenBy(x => x.Id)
+            .ToList();
 
         return Ok(ApiResponse<IReadOnlyList<PosPaymentMethodDto>>.CreateSuccess(
-            posDtos,
-            "تم جلب وسائل الدفع الخاصة بنقاط البيع بنجاح",
+            result,
+            "تم جلب وسائل الدفع لنقاط البيع بنجاح مع تثبيت الذمم على 99 والضيافة على 98 لجميع الفروع",
             200));
     }
 }

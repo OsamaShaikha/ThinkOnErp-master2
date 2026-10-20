@@ -100,6 +100,8 @@ public class TableDto
     public decimal Height { get; set; }
     public string Shape { get; set; } = "Square";
     public long? ActiveOrderId { get; set; }
+    public long? ParentTableId { get; set; }
+    public List<long> MergedTableIds { get; set; } = new();
     public bool IsActive { get; set; }
 }
 
@@ -126,6 +128,8 @@ public class TableLayoutDto
     public decimal Height { get; set; }
     public string Shape { get; set; } = "Square";
     public long? ActiveOrderId { get; set; }
+    public long? ParentTableId { get; set; }
+    public List<long> MergedTableIds { get; set; } = new();
 }
 
 public class UpdateTablePositionDto
@@ -142,6 +146,55 @@ public class TransferTableDto
     public long FromTableId { get; set; }
     public long ToTableId { get; set; }
     public string Reason { get; set; } = string.Empty;
+}
+
+public class MergeTablesDto
+{
+    /// <summary>
+    /// الطاولة الرئيسية التي سيتم تجميع الطلب والحساب عليها.
+    /// </summary>
+    public long PrimaryTableId { get; set; }
+
+    /// <summary>
+    /// قائمة الطاولات الفرعية المطلوب دمجها وشبكها مع الطاولة الرئيسية.
+    /// </summary>
+    public List<long> SecondaryTableIds { get; set; } = new();
+
+    /// <summary>
+    /// سبب الدمج (مثال: عائلة كبيرة، حفل، جمع طاولات).
+    /// </summary>
+    public string? Reason { get; set; }
+}
+
+public class MergeTablesResultDto
+{
+    /// <summary>
+    /// الطاولة الرئيسية بعد التحديث.
+    /// </summary>
+    public TableDto PrimaryTable { get; set; } = null!;
+
+    /// <summary>
+    /// قائمة الطاولات التابعة بعد دمجها.
+    /// </summary>
+    public List<TableDto> SecondaryTables { get; set; } = new();
+
+    /// <summary>
+    /// السعة الإجمالية المجمعة لجميع الطاولات بعد الشبك.
+    /// </summary>
+    public int TotalCombinedCapacity { get; set; }
+
+    /// <summary>
+    /// تفاصيل الفاتورة النشطة الموحدة (إن وجدت).
+    /// </summary>
+    public PosOrderSummaryDto? ActiveOrder { get; set; }
+}
+
+public class UnmergeTableDto
+{
+    /// <summary>
+    /// الطاولة الفرعية المراد فك دمجها من الطاولة الرئيسية.
+    /// </summary>
+    public long TableId { get; set; }
 }
 
 // =================== RESERVATIONS ===================

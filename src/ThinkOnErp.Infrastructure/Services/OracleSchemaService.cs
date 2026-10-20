@@ -216,7 +216,11 @@ public class OracleSchemaService : IOracleSchemaService
         var csb = new OracleConnectionStringBuilder(baseConnectionString)
         {
             UserID = schemaName,
-            Password = schemaPassword
+            Password = schemaPassword,
+            MinPoolSize = 0,
+            ValidateConnection = true,
+            ConnectionLifeTime = 120,
+            ConnectionTimeout = 15
         };
         return csb.ConnectionString;
     }
@@ -1346,67 +1350,79 @@ public class OracleSchemaService : IOracleSchemaService
             _logger.LogWarning(ex, "Failed to set DBMS_METADATA session transform parameters. Output DDL may contain storage clauses.");
         }
 
-        foreach (var obj in objects)
+        var pendingObjects = objects.Where(o => !GlobalTables.Contains(o.Name)).ToList();
+        for (int pass = 1; pass <= 4 && pendingObjects.Count > 0; pass++)
         {
-            if (GlobalTables.Contains(obj.Name))
-                continue;
-
-            _logger.LogDebug("Retrieving DDL for {Type} {Name} from {SourceSchema}", obj.Type, obj.Name, _devSchemaName);
-
-            string ddl = "";
-            try
+            var failedObjects = new List<(string Name, string Type)>();
+            foreach (var obj in pendingObjects)
             {
-                await using var cmd = connection.CreateCommand();
-                cmd.CommandText = "SELECT DBMS_METADATA.GET_DDL(:objType, :objName, :sourceSchema) FROM DUAL";
-                cmd.Parameters.Add(new OracleParameter("objType", obj.Type == "PACKAGE BODY" ? "PACKAGE_BODY" : obj.Type));
-                cmd.Parameters.Add(new OracleParameter("objName", obj.Name));
-                cmd.Parameters.Add(new OracleParameter("sourceSchema", _devSchemaName));
+                _logger.LogDebug("Retrieving DDL for {Type} {Name} from {SourceSchema} (Pass {Pass})", obj.Type, obj.Name, _devSchemaName, pass);
 
-                var result = await cmd.ExecuteScalarAsync();
-                ddl = result?.ToString() ?? "";
-            }
-            catch (Exception ex)
-            {
-                _logger.LogWarning(ex, "Failed to get DDL for {Type} {Name}", obj.Type, obj.Name);
-                continue;
-            }
-
-            if (string.IsNullOrWhiteSpace(ddl))
-                continue;
-
-            // Retarget DDL to the target schema name
-            var pattern = $"\"{_devSchemaName}\".";
-            var replacement = $"\"{targetSchema}\".";
-            ddl = ddl.Replace(pattern, replacement, StringComparison.OrdinalIgnoreCase);
-            ddl = ddl.Replace($"\"{_devSchemaName}\"", $"\"{targetSchema}\"", StringComparison.OrdinalIgnoreCase);
-            ddl = System.Text.RegularExpressions.Regex.Replace(ddl, @"SHARING\s*=\s*\w+", "", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
-
-            // For programmable routines (VIEW, FUNCTION, PROCEDURE, PACKAGE, TRIGGER, TYPE), ensure CREATE OR REPLACE
-            if (obj.Type is "VIEW" or "FUNCTION" or "PROCEDURE" or "PACKAGE" or "PACKAGE BODY" or "TRIGGER" or "TYPE")
-            {
-                if (ddl.TrimStart().StartsWith("CREATE ", StringComparison.OrdinalIgnoreCase) &&
-                    !ddl.TrimStart().StartsWith("CREATE OR REPLACE", StringComparison.OrdinalIgnoreCase))
+                string ddl = "";
+                try
                 {
-                    var trimmed = ddl.TrimStart();
-                    ddl = "CREATE OR REPLACE " + trimmed.Substring(7);
+                    await using var cmd = connection.CreateCommand();
+                    cmd.CommandText = "SELECT DBMS_METADATA.GET_DDL(:objType, :objName, :sourceSchema) FROM DUAL";
+                    cmd.Parameters.Add(new OracleParameter("objType", obj.Type == "PACKAGE BODY" ? "PACKAGE_BODY" : obj.Type));
+                    cmd.Parameters.Add(new OracleParameter("objName", obj.Name));
+                    cmd.Parameters.Add(new OracleParameter("sourceSchema", _devSchemaName));
+
+                    var result = await cmd.ExecuteScalarAsync();
+                    ddl = result?.ToString() ?? "";
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "Failed to get DDL for {Type} {Name}", obj.Type, obj.Name);
+                    continue;
+                }
+
+                if (string.IsNullOrWhiteSpace(ddl))
+                    continue;
+
+                // Retarget DDL to the target schema name
+                var pattern = $"\"{_devSchemaName}\".";
+                var replacement = $"\"{targetSchema}\".";
+                ddl = ddl.Replace(pattern, replacement, StringComparison.OrdinalIgnoreCase);
+                ddl = ddl.Replace($"\"{_devSchemaName}\"", $"\"{targetSchema}\"", StringComparison.OrdinalIgnoreCase);
+                ddl = System.Text.RegularExpressions.Regex.Replace(ddl, @"SHARING\s*=\s*\w+", "", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+                ddl = System.Text.RegularExpressions.Regex.Replace(ddl, @"DEFAULT\s+COLLATION\s+""[^""]+""", "", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+
+                // For programmable routines (VIEW, FUNCTION, PROCEDURE, PACKAGE, TRIGGER, TYPE), ensure CREATE OR REPLACE
+                if (obj.Type is "VIEW" or "FUNCTION" or "PROCEDURE" or "PACKAGE" or "PACKAGE BODY" or "TRIGGER" or "TYPE")
+                {
+                    if (ddl.TrimStart().StartsWith("CREATE ", StringComparison.OrdinalIgnoreCase) &&
+                        !ddl.TrimStart().StartsWith("CREATE OR REPLACE", StringComparison.OrdinalIgnoreCase))
+                    {
+                        var trimmed = ddl.TrimStart();
+                        ddl = "CREATE OR REPLACE " + trimmed.Substring(7);
+                    }
+                }
+
+                _logger.LogDebug("Executing DDL for {Type} {TargetSchema}.{Name}", obj.Type, targetSchema, obj.Name);
+                try
+                {
+                    await using var cmd = connection.CreateCommand();
+                    cmd.CommandText = ddl;
+                    await cmd.ExecuteNonQueryAsync();
+                }
+                catch (OracleException ex) when (ex.Number == 955 || ex.Number == 2261 || ex.Number == 2264 || ex.Number == 1917)
+                {
+                    _logger.LogDebug("Object/constraint {Name} already exists or is redundant: {Msg}", obj.Name, ex.Message);
+                }
+                catch (Exception ex)
+                {
+                    failedObjects.Add(obj);
+                    if (pass == 4)
+                    {
+                        _logger.LogWarning(ex, "Error creating cloned {Type} {TargetSchema}.{Name}. DDL was: {Ddl}", obj.Type, targetSchema, obj.Name, ddl);
+                    }
+                    else
+                    {
+                        _logger.LogDebug("Deferred {Type} {TargetSchema}.{Name} to next pass: {Msg}", obj.Type, targetSchema, obj.Name, ex.Message);
+                    }
                 }
             }
-
-            _logger.LogDebug("Executing DDL for {Type} {TargetSchema}.{Name}", obj.Type, targetSchema, obj.Name);
-            try
-            {
-                await using var cmd = connection.CreateCommand();
-                cmd.CommandText = ddl;
-                await cmd.ExecuteNonQueryAsync();
-            }
-            catch (OracleException ex) when (ex.Number == 955 || ex.Number == 2261 || ex.Number == 2264 || ex.Number == 1917)
-            {
-                _logger.LogDebug("Object/constraint {Name} already exists or is redundant: {Msg}", obj.Name, ex.Message);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogWarning(ex, "Error creating cloned {Type} {TargetSchema}.{Name}. DDL was: {Ddl}", obj.Type, targetSchema, obj.Name, ddl);
-            }
+            pendingObjects = failedObjects;
         }
     }
 
@@ -1571,13 +1587,12 @@ public class OracleSchemaService : IOracleSchemaService
 
         var fySql = $@"
             INSERT INTO ""{schemaName}"".""SYS_FISCAL_YEAR""
-            (""COMPANY_ID"", ""BRANCH_ID"", ""FISCAL_YEAR_CODE"", ""NAME_LOCAL"", ""NAME_EN"", ""START_DATE"", ""END_DATE"", ""IS_CLOSED"", ""IS_ACTIVE"", ""CREATION_USER"", ""CREATION_DATE"")
-            VALUES (:companyId, :branchId, :fyCode, :nameAr, :nameEn, :startDate, :endDate, 0, 1, :creationUser, SYSDATE)
+            (""BRANCH_ID"", ""FISCAL_YEAR_CODE"", ""NAME_LOCAL"", ""NAME_EN"", ""START_DATE"", ""END_DATE"", ""IS_CLOSED"", ""IS_ACTIVE"", ""CREATION_USER"", ""CREATION_DATE"")
+            VALUES (:branchId, :fyCode, :nameAr, :nameEn, :startDate, :endDate, 0, 1, :creationUser, SYSDATE)
             RETURNING ""Id"" INTO :fyId";
 
         await using var fyCmd = tenantConn.CreateCommand();
         fyCmd.CommandText = fySql;
-        fyCmd.Parameters.Add(new OracleParameter("companyId", companyId));
         fyCmd.Parameters.Add(new OracleParameter("branchId", branchId));
         fyCmd.Parameters.Add(new OracleParameter("fyCode", fyCode));
         fyCmd.Parameters.Add(new OracleParameter("nameAr", fyNameLocal));

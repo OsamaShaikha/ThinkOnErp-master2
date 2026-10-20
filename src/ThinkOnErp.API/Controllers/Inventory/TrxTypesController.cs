@@ -101,7 +101,6 @@ public sealed class TrxTypesController : ControllerBase
     /// استرجاع كافة أنواع الحركات التجارية والمخزنية
     /// </summary>
     [HttpGet("transaction-types")]
-    [HttpGet("trx-types")]
     [ProducesResponseType(typeof(ApiResponse<List<TrxTransactionTypeDto>>), 200)]
     public async Task<IActionResult> GetAllTrxTypes(CancellationToken ct)
     {

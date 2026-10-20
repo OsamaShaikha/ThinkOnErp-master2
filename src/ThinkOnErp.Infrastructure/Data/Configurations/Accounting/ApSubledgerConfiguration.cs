@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using ThinkOnErp.Domain.Entities.Accounting;
 
@@ -113,16 +113,19 @@ public sealed class ApSubledgerTransactionConfiguration : IEntityTypeConfigurati
         builder.HasOne(e => e.Voucher)
             .WithMany()
             .HasForeignKey(e => e.VoucherId)
+            .IsRequired(false)
             .OnDelete(DeleteBehavior.Cascade);
 
         builder.HasOne(e => e.JournalLine)
             .WithMany()
             .HasForeignKey(e => e.JournalLineId)
+            .IsRequired(false)
             .OnDelete(DeleteBehavior.Cascade);
 
         builder.HasOne(e => e.Currency)
             .WithMany()
             .HasForeignKey(e => e.CurrencyId)
+            .IsRequired(false)
             .OnDelete(DeleteBehavior.Restrict);
     }
 }

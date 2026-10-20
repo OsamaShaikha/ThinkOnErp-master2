@@ -70,5 +70,6 @@ public sealed class PosOrderHeaderConfiguration : IEntityTypeConfiguration<PosOr
         builder.HasOne(o => o.Customer).WithMany().HasForeignKey(o => o.CustomerId).OnDelete(DeleteBehavior.Restrict);
         builder.HasOne(o => o.Table).WithMany().HasForeignKey(o => o.TableId).OnDelete(DeleteBehavior.Restrict);
         builder.HasOne(o => o.GlVoucher).WithMany().HasForeignKey(o => o.GlVoucherId).OnDelete(DeleteBehavior.Restrict);
+        builder.HasOne(o => o.OriginalOrder).WithMany().HasForeignKey(o => o.OriginalOrderId).OnDelete(DeleteBehavior.Restrict);
     }
 }

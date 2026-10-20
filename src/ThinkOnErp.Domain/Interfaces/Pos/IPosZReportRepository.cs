@@ -10,6 +10,7 @@ public interface IPosZReportRepository
 {
     Task<long> GetNextZSequenceNumberAsync(long branchId, CancellationToken ct = default);
     Task<PosZReport?> GetByIdAsync(long id, CancellationToken ct = default);
+    Task<PosZReport?> GetByShiftIdAsync(long shiftId, CancellationToken ct = default);
     Task<(IReadOnlyList<PosZReport> Items, long TotalCount)> GetZReportsPagedAsync(
         long branchId,
         DateTime? fromDate = null,

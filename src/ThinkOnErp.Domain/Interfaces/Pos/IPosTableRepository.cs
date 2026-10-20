@@ -20,6 +20,8 @@ public interface IPosTableRepository
     // Tables
     Task<IReadOnlyList<PosTable>> GetTablesByFloorAsync(long floorId, CancellationToken ct = default);
     Task<PosTable?> GetTableByIdAsync(long tableId, CancellationToken ct = default);
+    Task<IReadOnlyList<PosTable>> GetTablesByActiveOrderIdAsync(long orderId, CancellationToken ct = default);
+    Task<IReadOnlyList<PosTable>> GetMergedTablesAsync(long primaryTableId, CancellationToken ct = default);
     Task AddTableAsync(PosTable table, CancellationToken ct = default);
     Task UpdateTableAsync(PosTable table, CancellationToken ct = default);
     Task DeleteTableAsync(PosTable table, CancellationToken ct = default);

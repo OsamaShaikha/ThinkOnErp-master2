@@ -168,7 +168,8 @@ public class PosOrdersController : ControllerBase
         CancellationToken ct)
     {
         var username = User.FindFirstValue(ClaimTypes.Name) ?? "SYSTEM";
-        var result = await _orderService.UpdateOrderStatusAsync(orderId, dto.Status, username, ct);
+        var newStatus = Enum.IsDefined(typeof(PosOrderStatus), dto.Status) ? (PosOrderStatus)dto.Status : PosOrderStatus.Draft;
+        var result = await _orderService.UpdateOrderStatusAsync(orderId, newStatus, username, ct);
         return result.Success 
             ? Ok(result) 
             : (result.StatusCode == 404 ? NotFound(result) : BadRequest(result));
@@ -205,6 +206,47 @@ public class PosOrdersController : ControllerBase
     }
 
     /// <summary>
+    /// Appends new supplementary items (Round 2 / Add-ons) to an open or active order.
+    /// Only new items are dispatched to kitchen display stations (KDS) without duplicating previously sent items.
+    /// </summary>
+    [HttpPost("{orderId:long}/lines")]
+    [ProducesResponseType(typeof(ApiResponse<PosOrderSummaryDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<PosOrderSummaryDto>), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ApiResponse<PosOrderSummaryDto>), StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<ApiResponse<PosOrderSummaryDto>>> AddOrderLines(
+        long orderId,
+        [FromBody] AddOrderLinesDto dto,
+        CancellationToken ct)
+    {
+        var username = User.FindFirstValue(ClaimTypes.Name) ?? "SYSTEM";
+        var result = await _orderService.AddOrderLinesAsync(orderId, dto, username, ct);
+        return result.Success 
+            ? Ok(result) 
+            : (result.StatusCode == 404 ? NotFound(result) : BadRequest(result));
+    }
+
+    /// <summary>
+    /// Updates an existing order line (e.g. quantity or special preparation instructions).
+    /// Guarded: prevents modification if kitchen status is Preparing, Ready, or Served.
+    /// </summary>
+    [HttpPut("{orderId:long}/lines/{lineId:long}")]
+    [ProducesResponseType(typeof(ApiResponse<PosOrderSummaryDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<PosOrderSummaryDto>), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ApiResponse<PosOrderSummaryDto>), StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<ApiResponse<PosOrderSummaryDto>>> UpdateOrderLine(
+        long orderId,
+        long lineId,
+        [FromBody] UpdateOrderLineDto dto,
+        CancellationToken ct)
+    {
+        var username = User.FindFirstValue(ClaimTypes.Name) ?? "SYSTEM";
+        var result = await _orderService.UpdateOrderLineAsync(orderId, lineId, dto, username, ct);
+        return result.Success 
+            ? Ok(result) 
+            : (result.StatusCode == 404 ? NotFound(result) : BadRequest(result));
+    }
+
+    /// <summary>
     /// Retrieves a single POS order by its ID.
     /// </summary>
     [HttpGet("{orderId:long}")]
@@ -238,8 +280,6 @@ public class PosOrdersController : ControllerBase
     /// <param name="lang">Optional language filter (1 = Arabic, 2 = English).</param>
     /// <returns>List of order types with localized names and active state.</returns>
     [HttpGet("order-types")]
-    [HttpGet("ordertypes")]
-    [HttpGet("orderType")]
     [ProducesResponseType(typeof(ApiResponse<List<SysCodeLookupDto>>), StatusCodes.Status200OK)]
     public async Task<ActionResult<ApiResponse<List<SysCodeLookupDto>>>> GetOrderTypes([FromQuery] int? lang = null)
     {
@@ -258,9 +298,6 @@ public class PosOrdersController : ControllerBase
     /// <param name="lang">Optional language filter (1 = Arabic, 2 = English).</param>
     /// <returns>List of order statuses with localized names.</returns>
     [HttpGet("order-statuses")]
-    [HttpGet("orderstatuses")]
-    [HttpGet("orderStatus")]
-    [HttpGet("statuses")]
     [ProducesResponseType(typeof(ApiResponse<List<SysCodeLookupDto>>), StatusCodes.Status200OK)]
     public async Task<ActionResult<ApiResponse<List<SysCodeLookupDto>>>> GetOrderStatuses([FromQuery] int? lang = null)
     {
@@ -273,24 +310,6 @@ public class PosOrdersController : ControllerBase
         return Ok(ApiResponse<List<SysCodeLookupDto>>.CreateSuccess(lookupList, "Order statuses retrieved successfully"));
     }
 
-    /// <summary>
-    /// Retrieves all dynamic POS Payment Methods from SYS_CODE (CODE_MGR = 37).
-    /// </summary>
-    /// <param name="lang">Optional language filter (1 = Arabic, 2 = English).</param>
-    /// <returns>List of payment methods with localized names.</returns>
-    [HttpGet("payment-methods")]
-    [HttpGet("paymentmethods")]
-    [ProducesResponseType(typeof(ApiResponse<List<SysCodeLookupDto>>), StatusCodes.Status200OK)]
-    public async Task<ActionResult<ApiResponse<List<SysCodeLookupDto>>>> GetPaymentMethods([FromQuery] int? lang = null)
-    {
-        var rawCodes = await _sysCodeRepo.GetActiveByCodeMgrAsync(SysCodeKeys.PosPaymentMethods.Mgr);
-
-        var lookupList = rawCodes.Count > 0
-            ? SysCodeLookupHelper.MapToLookupDtos(rawCodes, lang)
-            : SysCodeLookupHelper.GetFallbackLookups(SysCodeKeys.PosPaymentMethods.Mgr, lang);
-
-        return Ok(ApiResponse<List<SysCodeLookupDto>>.CreateSuccess(lookupList, "POS payment methods retrieved successfully"));
-    }
 
     /// <summary>
     /// Retrieves all POS Stock Deduction Modes from SYS_CODE (CODE_MGR = 35).
@@ -298,7 +317,6 @@ public class PosOrdersController : ControllerBase
     /// <param name="lang">Optional language filter (1 = Arabic, 2 = English).</param>
     /// <returns>List of stock deduction modes with localized descriptions.</returns>
     [HttpGet("stock-deduction-modes")]
-    [HttpGet("stockdeductionmodes")]
     [ProducesResponseType(typeof(ApiResponse<List<SysCodeLookupDto>>), StatusCodes.Status200OK)]
     public async Task<ActionResult<ApiResponse<List<SysCodeLookupDto>>>> GetStockDeductionModes([FromQuery] int? lang = null)
     {
@@ -309,5 +327,53 @@ public class PosOrdersController : ControllerBase
             : SysCodeLookupHelper.GetFallbackLookups(SysCodeKeys.PosStockDeductionModes.Mgr, lang);
 
         return Ok(ApiResponse<List<SysCodeLookupDto>>.CreateSuccess(lookupList, "Stock deduction modes retrieved successfully"));
+    }
+
+    /// <summary>
+    /// Splits items/quantities from an active order into a separate sub-order, with optional immediate payment and fiscal invoice generation.
+    /// فصل أصناف/كميات محددة من الفاتورة الحالية إلى فاتورة فرعية جديدة مستقلة (مع إمكانية السداد الفوري للزبون الأول).
+    /// </summary>
+    /// <param name="orderId">Original Order ID (معرف الفاتورة الأصلية المراد الفصل منها).</param>
+    /// <param name="dto">Details of lines and quantities to split, and optional immediate settlement tenders.</param>
+    /// <param name="ct">Cancellation token.</param>
+    [HttpPost("{orderId:long}/split")]
+    [ProducesResponseType(typeof(ApiResponse<SplitOrderResultDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<SplitOrderResultDto>), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ApiResponse<SplitOrderResultDto>), StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<ApiResponse<SplitOrderResultDto>>> SplitOrder(
+        [FromRoute] long orderId,
+        [FromBody] SplitPosOrderDto dto,
+        CancellationToken ct)
+    {
+        var username = User.FindFirstValue(ClaimTypes.Name) ?? "SYSTEM";
+        var result = await _orderService.SplitOrderAsync(orderId, dto, username, ct);
+        if (!result.Success)
+        {
+            return result.StatusCode == 404 ? NotFound(result) : BadRequest(result);
+        }
+        return Ok(result);
+    }
+
+    /// <summary>
+    /// Performs an atomic Item Exchange: Generates a fiscal credit note/refund for returned items, creates a new sales order for replacement items, and settles the net price difference.
+    /// تنفيذ فاتورة استبدال أصناف: إصدار إشعار دائن/إرجاع للأصناف المعادة + إصدار فاتورة مبيعات جديدة للأصناف البديلة + مقاصة وتسوية فارق السعر تلقائياً.
+    /// </summary>
+    /// <param name="dto">Exchange details containing return lines, new replacement lines, and difference settlement tenders.</param>
+    /// <param name="ct">Cancellation token.</param>
+    [HttpPost("exchange")]
+    [ProducesResponseType(typeof(ApiResponse<ExchangeOrderResultDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<ExchangeOrderResultDto>), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ApiResponse<ExchangeOrderResultDto>), StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<ApiResponse<ExchangeOrderResultDto>>> ExchangeOrder(
+        [FromBody] ExchangeOrderDto dto,
+        CancellationToken ct)
+    {
+        var username = User.FindFirstValue(ClaimTypes.Name) ?? "SYSTEM";
+        var result = await _orderService.ExchangeOrderAsync(dto, username, ct);
+        if (!result.Success)
+        {
+            return result.StatusCode == 404 ? NotFound(result) : BadRequest(result);
+        }
+        return Ok(result);
     }
 }

@@ -233,9 +233,6 @@ public class SysCodesController : ControllerBase
         ["posstockdeductionmodes"] = SysCodeKeys.PosStockDeductionModes.Mgr,
         ["posStockDeductionModes"] = SysCodeKeys.PosStockDeductionModes.Mgr,
         ["stock-deduction-modes"] = SysCodeKeys.PosStockDeductionModes.Mgr,
-        ["pos-payment-methods"] = SysCodeKeys.PosPaymentMethods.Mgr,
-        ["pospaymentmethods"] = SysCodeKeys.PosPaymentMethods.Mgr,
-        ["posPaymentMethods"] = SysCodeKeys.PosPaymentMethods.Mgr,
         ["pos-kds-statuses"] = SysCodeKeys.PosKdsStatuses.Mgr,
         ["poskdsstatuses"] = SysCodeKeys.PosKdsStatuses.Mgr,
         ["posKdsStatuses"] = SysCodeKeys.PosKdsStatuses.Mgr,
@@ -303,7 +300,6 @@ public class SysCodesController : ControllerBase
     /// استرجاع كافة القوائم المنسدلة وأكواد النظام دفعة واحدة لتغذية كاش الواجهات (Consolidated Lookups)
     /// </summary>
     [HttpGet("all-lookups")]
-    [HttpGet("lookups")]
     [ProducesResponseType(typeof(ApiResponse<Dictionary<string, List<SysCodeLookupDto>>>), StatusCodes.Status200OK)]
     public async Task<ActionResult<ApiResponse<Dictionary<string, List<SysCodeLookupDto>>>>> GetAllLookups([FromQuery] int? lang = null)
     {
@@ -341,7 +337,6 @@ public class SysCodesController : ControllerBase
             ("posOrderTypes", SysCodeKeys.PosOrderTypes.Mgr),
             ("posOrderStatuses", SysCodeKeys.PosOrderStatuses.Mgr),
             ("posStockDeductionModes", SysCodeKeys.PosStockDeductionModes.Mgr),
-            ("posPaymentMethods", SysCodeKeys.PosPaymentMethods.Mgr),
             ("posKdsStatuses", SysCodeKeys.PosKdsStatuses.Mgr),
             ("posCustomerSettlementTypes", SysCodeKeys.PosCustomerSettlementTypes.Mgr)
         };
@@ -382,7 +377,6 @@ public class SysCodesController : ControllerBase
     /// استرجاع ألوان الأصناف المعرفة في النظام
     /// </summary>
     [HttpGet("colors")]
-    [HttpGet("item-colors")]
     [ProducesResponseType(typeof(ApiResponse<List<SysCodeLookupDto>>), StatusCodes.Status200OK)]
     public async Task<ActionResult<ApiResponse<List<SysCodeLookupDto>>>> GetColors([FromQuery] int? lang = null)
     {
@@ -585,7 +579,6 @@ public class SysCodesController : ControllerBase
     /// استرجاع أنواع حركات المخزون في النظام (Stock Transaction Types)
     /// </summary>
     [HttpGet("stock-transaction-types")]
-    [HttpGet("stocktransactiontypes")]
     [ProducesResponseType(typeof(ApiResponse<List<SysCodeLookupDto>>), StatusCodes.Status200OK)]
     public async Task<ActionResult<ApiResponse<List<SysCodeLookupDto>>>> GetStockTransactionTypes([FromQuery] int? lang = null)
     {
@@ -597,7 +590,6 @@ public class SysCodesController : ControllerBase
     /// استرجاع أنواع قوائم المواد وهياكل التجميع (BOM Types)
     /// </summary>
     [HttpGet("bom-types")]
-    [HttpGet("bomtypes")]
     [ProducesResponseType(typeof(ApiResponse<List<SysCodeLookupDto>>), StatusCodes.Status200OK)]
     public async Task<ActionResult<ApiResponse<List<SysCodeLookupDto>>>> GetBomTypes([FromQuery] int? lang = null)
     {
@@ -609,7 +601,6 @@ public class SysCodesController : ControllerBase
     /// استرجاع طرق احتساب تكلفة المخزون (Costing Methods: WeightedAverage, Fifo, SpecificId, Standard)
     /// </summary>
     [HttpGet("costing-methods")]
-    [HttpGet("costingmethods")]
     [ProducesResponseType(typeof(ApiResponse<List<SysCodeLookupDto>>), StatusCodes.Status200OK)]
     public async Task<ActionResult<ApiResponse<List<SysCodeLookupDto>>>> GetCostingMethods([FromQuery] int? lang = null)
     {
@@ -621,7 +612,6 @@ public class SysCodesController : ControllerBase
     /// استرجاع أنواع الأصناف في المخزون (Item Types: Stock, NonStock, Service, Kit, Assembly)
     /// </summary>
     [HttpGet("item-types")]
-    [HttpGet("itemtypes")]
     [ProducesResponseType(typeof(ApiResponse<List<SysCodeLookupDto>>), StatusCodes.Status200OK)]
     public async Task<ActionResult<ApiResponse<List<SysCodeLookupDto>>>> GetItemTypes([FromQuery] int? lang = null)
     {
@@ -633,7 +623,6 @@ public class SysCodesController : ControllerBase
     /// استرجاع أنواع الاختيار لمجموعات الإضافات في نقاط البيع (Selection Types: Single, Multiple)
     /// </summary>
     [HttpGet("selection-types")]
-    [HttpGet("selectiontypes")]
     [ProducesResponseType(typeof(ApiResponse<List<SysCodeLookupDto>>), StatusCodes.Status200OK)]
     public async Task<ActionResult<ApiResponse<List<SysCodeLookupDto>>>> GetSelectionTypes([FromQuery] int? lang = null)
     {
@@ -645,7 +634,6 @@ public class SysCodesController : ControllerBase
     /// استرجاع رسائل وأكواد أخطاء وقواعد التحقق في النظام (Validation Error Codes & Messages)
     /// </summary>
     [HttpGet("validation-errors")]
-    [HttpGet("validationerrors")]
     [ProducesResponseType(typeof(ApiResponse<List<SysCodeLookupDto>>), StatusCodes.Status200OK)]
     public async Task<ActionResult<ApiResponse<List<SysCodeLookupDto>>>> GetValidationErrors([FromQuery] int? lang = null)
     {
@@ -657,8 +645,6 @@ public class SysCodesController : ControllerBase
     /// استرجاع أنواع طلبات نقاط البيع (محلي/صالة، سفري/تيك أواي، توصيل، تطبيقات، كيوسك، باركود طاولة) (POS Order Types)
     /// </summary>
     [HttpGet("pos-order-types")]
-    [HttpGet("posordertypes")]
-    [HttpGet("order-types")]
     [ProducesResponseType(typeof(ApiResponse<List<SysCodeLookupDto>>), StatusCodes.Status200OK)]
     public async Task<ActionResult<ApiResponse<List<SysCodeLookupDto>>>> GetPosOrderTypes([FromQuery] int? lang = null)
     {
@@ -674,8 +660,6 @@ public class SysCodesController : ControllerBase
     /// استرجاع طرق خصم المخزون لنقاط البيع (خصم فوري لحظي، خصم تجميعي عند إغلاق الوردية، بدون خصم آلي) (POS Stock Deduction Modes)
     /// </summary>
     [HttpGet("pos-stock-deduction-modes")]
-    [HttpGet("posstockdeductionmodes")]
-    [HttpGet("stock-deduction-modes")]
     [ProducesResponseType(typeof(ApiResponse<List<SysCodeLookupDto>>), StatusCodes.Status200OK)]
     public async Task<ActionResult<ApiResponse<List<SysCodeLookupDto>>>> GetPosStockDeductionModes([FromQuery] int? lang = null)
     {
@@ -691,9 +675,6 @@ public class SysCodesController : ControllerBase
     /// استرجاع حالات طلبات نقاط البيع (مسودة، معلق، مرسل للمطبخ، جاهز، مكتمل، ملغي، مسترجع) (POS Order Statuses)
     /// </summary>
     [HttpGet("pos-order-statuses")]
-    [HttpGet("posorderstatuses")]
-    [HttpGet("order-statuses")]
-    [HttpGet("orderstatuses")]
     [ProducesResponseType(typeof(ApiResponse<List<SysCodeLookupDto>>), StatusCodes.Status200OK)]
     public async Task<ActionResult<ApiResponse<List<SysCodeLookupDto>>>> GetPosOrderStatuses([FromQuery] int? lang = null)
     {
@@ -705,30 +686,11 @@ public class SysCodesController : ControllerBase
         return Ok(ApiResponse<List<SysCodeLookupDto>>.CreateSuccess(list, "POS order statuses retrieved successfully", 200));
     }
 
-    /// <summary>
-    /// استرجاع طرق الدفع الخاصة بنقاط البيع (نقدي، بطاقة، مجزأ، حساب عميل، شيك، تحويل، محفظة، نقاط، بطاقة هدايا...) (POS Payment Methods)
-    /// </summary>
-    [HttpGet("pos-payment-methods")]
-    [HttpGet("pospaymentmethods")]
-    [ProducesResponseType(typeof(ApiResponse<List<SysCodeLookupDto>>), StatusCodes.Status200OK)]
-    public async Task<ActionResult<ApiResponse<List<SysCodeLookupDto>>>> GetPosPaymentMethods([FromQuery] int? lang = null)
-    {
-        var list = await GetLookupsByMgrAsync(SysCodeKeys.PosPaymentMethods.Mgr, lang);
-        if (list.Count == 0)
-        {
-            list = SysCodeLookupHelper.GetFallbackLookups(SysCodeKeys.PosPaymentMethods.Mgr, lang);
-        }
-        return Ok(ApiResponse<List<SysCodeLookupDto>>.CreateSuccess(list, "POS payment methods retrieved successfully", 200));
-    }
 
     /// <summary>
     /// استرجاع حالات بنود شاشة المطبخ (قيد الانتظار، جاري التحضير، جاهز، تم التقديم) (KDS Prep Statuses)
     /// </summary>
     [HttpGet("pos-kds-statuses")]
-    [HttpGet("poskdsstatuses")]
-    [HttpGet("kds-statuses")]
-    [HttpGet("kdsstatuses")]
-    [HttpGet("kds-line-statuses")]
     [ProducesResponseType(typeof(ApiResponse<List<SysCodeLookupDto>>), StatusCodes.Status200OK)]
     public async Task<ActionResult<ApiResponse<List<SysCodeLookupDto>>>> GetPosKdsStatuses([FromQuery] int? lang = null)
     {
@@ -744,9 +706,6 @@ public class SysCodesController : ControllerBase
     /// استرجاع أنواع سداد الذمم في نقاط البيع (دفعة على الحساب / فاتورة محددة / كامل الفواتير) (POS Customer Settlement Types)
     /// </summary>
     [HttpGet("pos-customer-settlement-types")]
-    [HttpGet("poscustomersettlementtypes")]
-    [HttpGet("settlement-types")]
-    [HttpGet("settlementtypes")]
     [ProducesResponseType(typeof(ApiResponse<List<SysCodeLookupDto>>), StatusCodes.Status200OK)]
     public async Task<ActionResult<ApiResponse<List<SysCodeLookupDto>>>> GetPosCustomerSettlementTypes([FromQuery] int? lang = null)
     {

@@ -538,7 +538,7 @@ public class InvoiceBusinessValidationServiceTests
             },
             Payments = new List<CreatePosOrderPaymentDto>
             {
-                new() { PaymentMethod = PosPaymentMethod.Cash, Amount = -10m }
+                new() { PaymentMethod = (int)PosPaymentMethod.Cash, Amount = -10m }
             }
         };
 

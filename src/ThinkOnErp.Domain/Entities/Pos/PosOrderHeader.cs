@@ -38,6 +38,86 @@ public class PosOrderHeader
     public decimal PaidAmount { get; set; }
     public decimal ChangeAmount { get; set; }
     public bool IsPaid { get; set; }
+    public decimal RemainingAmount => (Payments != null && Payments.Any(p => p.PaymentMethod == PosPaymentMethod.Hospitality))
+        ? 0m
+        : Math.Max(0m, TotalAmount - PaidAmount);
+    public bool IsCreditSale => Payments != null && Payments.Any(p => p.PaymentMethod == PosPaymentMethod.CustomerAccount);
+
+    public PosPaymentStatus PaymentStatus
+    {
+        get
+        {
+            if (Payments != null && Payments.Any(p => p.PaymentMethod == PosPaymentMethod.Hospitality))
+                return PosPaymentStatus.Hospitality;
+
+            if (PaidAmount >= TotalAmount && TotalAmount > 0)
+            {
+                decimal advanceDeducted = 0m;
+                if (Payments != null)
+                {
+                    foreach (var p in Payments.Where(x => x.PaymentMethod == PosPaymentMethod.CustomerAccount))
+                    {
+                        if (!string.IsNullOrWhiteSpace(p.TransactionReference) && p.TransactionReference.StartsWith("ADV:"))
+                        {
+                            var parts = p.TransactionReference.Split('|');
+                            if (parts.Length == 2 && parts[0].StartsWith("ADV:") && decimal.TryParse(parts[0][4..], out var adv))
+                            {
+                                advanceDeducted += adv;
+                            }
+                        }
+                    }
+                }
+
+                if (advanceDeducted >= TotalAmount)
+                    return PosPaymentStatus.PaidFromAdvance;
+
+                return PosPaymentStatus.Paid;
+            }
+
+            if (PaidAmount > 0)
+            {
+                decimal advanceDeducted = 0m;
+                decimal receivableCharged = 0m;
+                decimal cashCard = 0m;
+
+                if (Payments != null)
+                {
+                    foreach (var p in Payments)
+                    {
+                        if (p.PaymentMethod == PosPaymentMethod.CustomerAccount)
+                        {
+                            if (!string.IsNullOrWhiteSpace(p.TransactionReference) && p.TransactionReference.StartsWith("ADV:"))
+                            {
+                                var parts = p.TransactionReference.Split('|');
+                                if (parts.Length == 2 && parts[0].StartsWith("ADV:") && decimal.TryParse(parts[0][4..], out var adv))
+                                    advanceDeducted += adv;
+                                if (parts.Length == 2 && parts[1].StartsWith("REC:") && decimal.TryParse(parts[1][4..], out var rec))
+                                    receivableCharged += rec;
+                            }
+                            else
+                            {
+                                receivableCharged += p.Amount;
+                            }
+                        }
+                        else if (p.PaymentMethod != PosPaymentMethod.Hospitality)
+                        {
+                            cashCard += p.Amount;
+                        }
+                    }
+                }
+
+                if (advanceDeducted > 0 && receivableCharged > 0 && cashCard == 0)
+                    return PosPaymentStatus.PartiallyPaidFromAdvance;
+
+                return PosPaymentStatus.PartiallyPaid;
+            }
+
+            if (Payments != null && Payments.Any(p => p.PaymentMethod == PosPaymentMethod.CustomerAccount))
+                return PosPaymentStatus.CustomerAccount;
+
+            return PosPaymentStatus.Unpaid;
+        }
+    }
 
     // Returns & Refunds
     public bool IsRefund { get; set; }
@@ -69,6 +149,7 @@ public class PosOrderHeader
     public Customer? Customer { get; set; }
     public PosTable? Table { get; set; }
     public GlVoucherHeader? GlVoucher { get; set; }
+    public PosOrderHeader? OriginalOrder { get; set; }
     public ICollection<PosOrderLine> Lines { get; set; } = new List<PosOrderLine>();
     public ICollection<PosOrderPayment> Payments { get; set; } = new List<PosOrderPayment>();
     public ICollection<PosOrderTax> Taxes { get; set; } = new List<PosOrderTax>();

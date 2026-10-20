@@ -23,6 +23,7 @@ public class PosOrderRepository : IPosOrderRepository
     public async Task<PosOrderHeader?> GetOrderByIdAsync(long orderId, CancellationToken ct = default)
     {
         return await _context.PosOrderHeaders
+            .Include(o => o.OriginalOrder)
             .Include(o => o.Lines)
                 .ThenInclude(l => l.Modifiers)
             .Include(o => o.Payments)
@@ -36,10 +37,58 @@ public class PosOrderRepository : IPosOrderRepository
     public async Task<PosOrderHeader?> GetOrderByClientUuidAsync(long branchId, string clientUuid, CancellationToken ct = default)
     {
         return await _context.PosOrderHeaders
+            .Include(o => o.OriginalOrder)
             .Include(o => o.Lines)
                 .ThenInclude(l => l.Modifiers)
             .Include(o => o.Payments)
             .FirstOrDefaultAsync(o => o.BranchId == branchId && o.ClientUuid == clientUuid, ct);
+    }
+
+    public async Task<PosOrderHeader?> GetOrderByInvoiceNumberAsync(string invoiceNumber, CancellationToken ct = default)
+    {
+        return await _context.PosOrderHeaders
+            .Include(o => o.OriginalOrder)
+            .Include(o => o.Lines)
+                .ThenInclude(l => l.Modifiers)
+            .Include(o => o.Payments)
+            .Include(o => o.Taxes)
+            .Include(o => o.Customer)
+            .Include(o => o.Table)
+            .Include(o => o.Shift)
+            .FirstOrDefaultAsync(o => o.InvoiceNumber == invoiceNumber, ct);
+    }
+
+    public async Task<PosOrderHeader?> GetOrderByOrderNumberAsync(long? branchId, string orderNumber, CancellationToken ct = default)
+    {
+        var query = _context.PosOrderHeaders
+            .Include(o => o.OriginalOrder)
+            .Include(o => o.Lines)
+                .ThenInclude(l => l.Modifiers)
+            .Include(o => o.Payments)
+            .Include(o => o.Taxes)
+            .Include(o => o.Customer)
+            .Include(o => o.Table)
+            .Include(o => o.Shift)
+            .Where(o => o.OrderNumber == orderNumber);
+
+        if (branchId.HasValue && branchId.Value > 0)
+        {
+            query = query.Where(o => o.BranchId == branchId.Value);
+        }
+
+        return await query.OrderByDescending(o => o.Id).FirstOrDefaultAsync(ct);
+    }
+
+    public async Task<IReadOnlyList<PosOrderHeader>> GetRefundOrdersByOriginalOrderIdAsync(long originalOrderId, CancellationToken ct = default)
+    {
+        return await _context.PosOrderHeaders
+            .AsNoTracking()
+            .Include(o => o.Lines)
+                .ThenInclude(l => l.Modifiers)
+            .Include(o => o.Payments)
+            .Where(o => o.OriginalOrderId == originalOrderId && o.IsRefund && o.Status != PosOrderStatus.Voided)
+            .OrderBy(o => o.Id)
+            .ToListAsync(ct);
     }
 
     public async Task<IReadOnlyList<PosOrderHeader>> GetActiveOrdersAsync(long branchId, PosOrderStatus? status = null, CancellationToken ct = default)
@@ -61,6 +110,24 @@ public class PosOrderRepository : IPosOrderRepository
         }
 
         return await query.OrderByDescending(o => o.CreationDate).ToListAsync(ct);
+    }
+
+    public async Task<IReadOnlyList<PosOrderHeader>> GetOrdersForZReportAsync(long branchId, long? shiftId, CancellationToken ct = default)
+    {
+        var query = _context.PosOrderHeaders
+            .AsNoTracking()
+            .Include(o => o.Lines)
+                .ThenInclude(l => l.Modifiers)
+            .Include(o => o.Payments)
+            .Include(o => o.Taxes)
+            .Where(o => o.BranchId == branchId && o.Status != PosOrderStatus.Voided);
+
+        if (shiftId.HasValue)
+        {
+            query = query.Where(o => o.ShiftId == shiftId.Value);
+        }
+
+        return await query.OrderBy(o => o.CreationDate).ToListAsync(ct);
     }
 
     public async Task<(IReadOnlyList<PosOrderHeader> Items, long TotalCount)> GetOrdersPagedAsync(

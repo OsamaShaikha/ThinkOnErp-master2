@@ -25,6 +25,8 @@ public sealed class PosShiftConfiguration : IEntityTypeConfiguration<PosShift>
         builder.Property(s => s.OpeningFloat).HasColumnName("OPENING_FLOAT").HasColumnType("NUMBER(18,4)").HasDefaultValue(0m);
         builder.Property(s => s.TotalCashSales).HasColumnName("TOTAL_CASH_SALES").HasColumnType("NUMBER(18,4)").HasDefaultValue(0m);
         builder.Property(s => s.TotalCardSales).HasColumnName("TOTAL_CARD_SALES").HasColumnType("NUMBER(18,4)").HasDefaultValue(0m);
+        builder.Property(s => s.TotalCustomerAccountSales).HasColumnName("TOTAL_CUSTOMER_ACCOUNT_SALES").HasColumnType("NUMBER(18,4)").HasDefaultValue(0m);
+        builder.Property(s => s.TotalHospitalitySales).HasColumnName("TOTAL_HOSPITALITY_SALES").HasColumnType("NUMBER(18,4)").HasDefaultValue(0m);
         builder.Property(s => s.TotalOtherSales).HasColumnName("TOTAL_OTHER_SALES").HasColumnType("NUMBER(18,4)").HasDefaultValue(0m);
         builder.Property(s => s.TotalCashRefunds).HasColumnName("TOTAL_CASH_REFUNDS").HasColumnType("NUMBER(18,4)").HasDefaultValue(0m);
         builder.Property(s => s.TotalCardRefunds).HasColumnName("TOTAL_CARD_REFUNDS").HasColumnType("NUMBER(18,4)").HasDefaultValue(0m);
@@ -36,6 +38,10 @@ public sealed class PosShiftConfiguration : IEntityTypeConfiguration<PosShift>
         builder.Property(s => s.ExpectedCashInDrawer).HasColumnName("EXPECTED_CASH_IN_DRAWER").HasColumnType("NUMBER(18,4)").HasDefaultValue(0m);
         builder.Property(s => s.CountedCashAmount).HasColumnName("COUNTED_CASH_AMOUNT").HasColumnType("NUMBER(18,4)");
         builder.Property(s => s.VarianceAmount).HasColumnName("VARIANCE_AMOUNT").HasColumnType("NUMBER(18,4)");
+
+        builder.Property(s => s.ExpectedCardAmount).HasColumnName("EXPECTED_CARD_AMOUNT").HasColumnType("NUMBER(18,4)").HasDefaultValue(0m);
+        builder.Property(s => s.CountedCardAmount).HasColumnName("COUNTED_CARD_AMOUNT").HasColumnType("NUMBER(18,4)");
+        builder.Property(s => s.CardVarianceAmount).HasColumnName("CARD_VARIANCE_AMOUNT").HasColumnType("NUMBER(18,4)");
 
         builder.Property(s => s.IsAudited).HasColumnName("IS_AUDITED").HasColumnType("NUMBER(1)").HasDefaultValue(false);
         builder.Property(s => s.AuditedBy).HasColumnName("AUDITED_BY").HasMaxLength(100);

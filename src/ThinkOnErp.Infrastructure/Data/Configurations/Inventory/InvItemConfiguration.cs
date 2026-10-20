@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using ThinkOnErp.Domain.Entities.Inventory;
+using ThinkOnErp.Domain.Entities.Inventory.Enums;
 
 namespace ThinkOnErp.Infrastructure.Data.Configurations.Inventory;
 
@@ -10,6 +11,14 @@ public sealed class InvItemConfiguration : IEntityTypeConfiguration<InvItem>
     {
         builder.ToTable("INV_ITEM");
         builder.HasKey(i => i.Id);
+
+        var itemTypeConverter = new Microsoft.EntityFrameworkCore.Storage.ValueConversion.ValueConverter<ItemType, string>(
+            v => v.ToString(),
+            v => ParseItemType(v));
+
+        var costingMethodConverter = new Microsoft.EntityFrameworkCore.Storage.ValueConversion.ValueConverter<CostingMethod, string>(
+            v => v.ToString(),
+            v => ParseCostingMethod(v));
 
         builder.Property(i => i.Id).HasColumnName("ID").ValueGeneratedOnAdd();
         builder.Property(i => i.BranchId).HasColumnName("BRANCH_ID").IsRequired();
@@ -26,9 +35,9 @@ public sealed class InvItemConfiguration : IEntityTypeConfiguration<InvItem>
         builder.Ignore(i => i.SubCategory);
         builder.Ignore(i => i.MainGroup);
         builder.Ignore(i => i.SubGroup);
-        builder.Property(i => i.ItemType).HasColumnName("ITEM_TYPE").HasConversion<string>().HasMaxLength(20).IsRequired();
+        builder.Property(i => i.ItemType).HasColumnName("ITEM_TYPE").HasConversion(itemTypeConverter).HasMaxLength(20).IsRequired();
         builder.Property(i => i.UomBase).HasColumnName("UOM_BASE").HasColumnType("NUMBER(6)").IsRequired();
-        builder.Property(i => i.CostingMethod).HasColumnName("COSTING_METHOD").HasConversion<string>().HasMaxLength(20).HasDefaultValue(Domain.Entities.Inventory.Enums.CostingMethod.WeightedAverage);
+        builder.Property(i => i.CostingMethod).HasColumnName("COSTING_METHOD").HasConversion(costingMethodConverter).HasMaxLength(20).HasDefaultValue(CostingMethod.WeightedAverage);
         builder.Property(i => i.StandardCost).HasColumnName("STANDARD_COST").HasColumnType("NUMBER(18,4)");
         builder.Property(i => i.DefaultSellingPrice).HasColumnName("DEFAULT_SELLING_PRICE").HasColumnType("NUMBER(18,4)").HasDefaultValue(0m);
         builder.Property(i => i.ShowInPos).HasColumnName("SHOW_IN_POS").HasColumnType("NUMBER(1)").HasDefaultValue(true);
@@ -85,5 +94,30 @@ public sealed class InvItemConfiguration : IEntityTypeConfiguration<InvItem>
         builder.HasMany(i => i.Lots).WithOne(l => l.Item).HasForeignKey(l => l.ItemId).OnDelete(DeleteBehavior.Restrict);
         builder.HasMany(i => i.Serials).WithOne(s => s.Item).HasForeignKey(s => s.ItemId).OnDelete(DeleteBehavior.Restrict);
         builder.HasMany(i => i.Variants).WithOne(v => v.Item).HasForeignKey(v => v.ItemId).OnDelete(DeleteBehavior.Cascade);
+    }
+
+    private static ItemType ParseItemType(string? v)
+    {
+        return v?.ToUpperInvariant() switch
+        {
+            "STOCK" => ItemType.Stock,
+            "NON_STOCK" or "NONSTOCK" => ItemType.NonStock,
+            "SERVICE" => ItemType.Service,
+            "KIT" => ItemType.Kit,
+            "ASSEMBLY" => ItemType.Assembly,
+            _ => Enum.Parse<ItemType>(v ?? "Stock", true)
+        };
+    }
+
+    private static CostingMethod ParseCostingMethod(string? v)
+    {
+        return v?.ToUpperInvariant() switch
+        {
+            "WEIGHTED_AVG" or "WEIGHTEDAVERAGE" => CostingMethod.WeightedAverage,
+            "FIFO" => CostingMethod.Fifo,
+            "SPECIFIC_ID" or "SPECIFICID" => CostingMethod.SpecificId,
+            "STANDARD" => CostingMethod.Standard,
+            _ => Enum.Parse<CostingMethod>(v ?? "WeightedAverage", true)
+        };
     }
 }

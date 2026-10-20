@@ -16,6 +16,12 @@ public enum PosCashMovementType
     TipPayout = 4       // Staff tips payout
 }
 
+public enum PosVoucherType
+{
+    Receipt = 1,        // سند قبض
+    Payment = 2         // سند صرف
+}
+
 public enum PosOrderType
 {
     DineIn = 1,
@@ -42,13 +48,25 @@ public enum PosPaymentMethod
     Cash = 1,
     Card = 2,
     Split = 3,
-    CustomerAccount = 4,
+    CustomerAccount = 99,
     Cheque = 5,
     BankTransfer = 6,
     DigitalWallet = 7,
     LoyaltyPoints = 8,
     GiftCard = 9,
-    AggregatorPaid = 10
+    AggregatorPaid = 10,
+    Hospitality = 98
+}
+
+public enum PosPaymentStatus
+{
+    Unpaid = 1,                    // غير مدفوع
+    PartiallyPaid = 2,             // مدفوع جزئياً
+    Paid = 3,                      // مدفوع بالكامل نقداً/بطاقة
+    CustomerAccount = 4,           // ذمم (بيع آجل بالكامل)
+    PaidFromAdvance = 5,           // مدفوع بالكامل من رصيد مقدم (أمانات)
+    PartiallyPaidFromAdvance = 6,  // مدفوع جزئياً من رصيد مقدم (والباقي ذمم)
+    Hospitality = 7                // ضيافة
 }
 
 public enum PosPromotionType

@@ -82,9 +82,7 @@ public class PosKdsController : ControllerBase
     /// </summary>
     /// <param name="lang">Optional language filter (1 = Arabic, 2 = English).</param>
     /// <returns>List of KDS prep statuses with localized names.</returns>
-    [HttpGet("statuses")]
     [HttpGet("line-statuses")]
-    [HttpGet("line-status")]
     [ProducesResponseType(typeof(ApiResponse<List<SysCodeLookupDto>>), StatusCodes.Status200OK)]
     public async Task<ActionResult<ApiResponse<List<SysCodeLookupDto>>>> GetKdsStatuses([FromQuery] int? lang = null)
     {

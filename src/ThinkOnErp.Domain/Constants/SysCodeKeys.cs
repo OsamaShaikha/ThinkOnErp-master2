@@ -277,13 +277,14 @@ public static class SysCodeKeys
         public const int Cash = 1;
         public const int Card = 2;
         public const int Split = 3;
-        public const int CustomerAccount = 4;
+        public const int CustomerAccount = 99;
         public const int Cheque = 5;
         public const int BankTransfer = 6;
         public const int DigitalWallet = 7;
         public const int LoyaltyPoints = 8;
         public const int GiftCard = 9;
         public const int AggregatorPaid = 10;
+        public const int Hospitality = 98;
     }
 
     public static class PosKdsStatuses
@@ -301,5 +302,12 @@ public static class SysCodeKeys
         public const int OnAccount = 1;
         public const int SpecificInvoice = 2;
         public const int AllInvoices = 3;
+    }
+
+    public static class PosShiftClosingModes
+    {
+        public const int Mgr = 40;
+        public const int EnforceBlindClose = 1;
+        public const int StandardOpenClose = 2;
     }
 }

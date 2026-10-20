@@ -158,7 +158,7 @@ public class PosStockDeductionTests
             },
             Payments = new List<CreatePosOrderPaymentDto>
             {
-                new() { PaymentMethod = PosPaymentMethod.Cash, Amount = 50m, TenderedAmount = 50m }
+                new() { PaymentMethod = (int)PosPaymentMethod.Cash, Amount = 50m, TenderedAmount = 50m }
             }
         };
 
@@ -216,7 +216,7 @@ public class PosStockDeductionTests
             },
             Payments = new List<CreatePosOrderPaymentDto>
             {
-                new() { PaymentMethod = PosPaymentMethod.Cash, Amount = 30m, TenderedAmount = 30m }
+                new() { PaymentMethod = (int)PosPaymentMethod.Cash, Amount = 30m, TenderedAmount = 30m }
             }
         };
 
@@ -419,7 +419,7 @@ public class PosStockDeductionTests
             },
             Payments = new List<CreatePosOrderPaymentDto>
             {
-                new() { PaymentMethod = PosPaymentMethod.Cash, Amount = 50m, TenderedAmount = 50m }
+                new() { PaymentMethod = (int)PosPaymentMethod.Cash, Amount = 50m, TenderedAmount = 50m }
             }
         };
 

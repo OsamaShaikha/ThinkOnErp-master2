@@ -51,24 +51,12 @@ public sealed class PosCustomerSettlementRequestDto
     public long? ShiftId { get; set; }
 
     /// <summary>
-    /// نوع السداد: يمكن تمريره كرقم كود من جدول SYS_CODE (CODE_MGR = 39) أو كنص (1: OnAccount, 2: SpecificInvoice, 3: AllInvoices)
+    /// كود نوع السداد الرقمي من جدول SYS_CODE (CODE_MGR = 39):
+    /// 1 = OnAccount (دفعة عامة على الحساب)
+    /// 2 = SpecificInvoice (سداد فاتورة محددة)
+    /// 3 = AllInvoices (سداد كامل الفواتير المفتوحة)
     /// </summary>
-    public PosCustomerSettlementType SettlementType { get; set; } = PosCustomerSettlementType.OnAccount;
-
-    /// <summary>
-    /// كود نوع السداد الرقمي من جدول SYS_CODE (CODE_MGR = 39): 1 = OnAccount, 2 = SpecificInvoice, 3 = AllInvoices
-    /// </summary>
-    public int? SettlementTypeCode
-    {
-        get => (int)SettlementType;
-        set
-        {
-            if (value.HasValue && Enum.IsDefined(typeof(PosCustomerSettlementType), value.Value))
-            {
-                SettlementType = (PosCustomerSettlementType)value.Value;
-            }
-        }
-    }
+    public int SettlementType { get; set; } = 1;
 
     /// <summary>
     /// المبلغ المدفوع. في حال اختيار AllInvoices أو SpecificInvoice يمكن تركه فارغاً أو 0 لسداد كامل القيمة المتبقية تلقائياً.
@@ -76,9 +64,15 @@ public sealed class PosCustomerSettlementRequestDto
     public decimal Amount { get; set; }
 
     /// <summary>
-    /// طريقة الدفع: Cash (1), Card (2), Cheque (5), BankTransfer (6)
+    /// كود طريقة الدفع الرقمي من جدول SYS_CODE (CODE_MGR = 37):
+    /// 1 = Cash (نقدي)
+    /// 2 = Card (شبكة / مدى / بطاقة)
+    /// 3 = Split (مجزأ)
+    /// 4 = CustomerAccount (حساب العميل)
+    /// 5 = Cheque (شيك)
+    /// 6 = BankTransfer (تحويل بنكي)
     /// </summary>
-    public PosPaymentMethod PaymentMethod { get; set; } = PosPaymentMethod.Cash;
+    public int PaymentMethod { get; set; } = 1;
 
     /// <summary>
     /// رقم العملية المرجعي للبطاقة أو الشيك (اختياري)
@@ -129,6 +123,16 @@ public sealed class PosCustomerSettlementResultDto
     };
     public PosPaymentMethod PaymentMethod { get; set; }
     public int PaymentMethodCode => (int)PaymentMethod;
+    public string PaymentMethodName => PaymentMethod switch
+    {
+        PosPaymentMethod.Cash => "نقداً (كاش)",
+        PosPaymentMethod.Card => "بطاقة دفع / مدى",
+        PosPaymentMethod.Cheque => "شيك",
+        PosPaymentMethod.BankTransfer => "تحويل بنكي",
+        PosPaymentMethod.DigitalWallet => "محفظة رقمية",
+        PosPaymentMethod.Hospitality => "ضيافة",
+        _ => PaymentMethod.ToString()
+    };
     public decimal AmountPaid { get; set; }
     public decimal PreviousBalance { get; set; }
     public decimal RemainingBalance { get; set; }
@@ -146,3 +150,40 @@ public sealed class PosSettledInvoiceDetailDto
     public decimal RemainingInvoiceAmount { get; set; }
     public bool IsFullyPaid { get; set; }
 }
+
+/// <summary>
+/// كشف حساب عميل تفصيلي لنقاط البيع (POS Customer Account Statement)
+/// </summary>
+public sealed class PosCustomerStatementDto
+{
+    public long CustomerId { get; set; }
+    public string CustomerCode { get; set; } = string.Empty;
+    public string CustomerName { get; set; } = string.Empty;
+    public string? Phone { get; set; }
+    public string? TaxNumber { get; set; }
+    public long? BranchId { get; set; }
+    public DateTime? FromDate { get; set; }
+    public DateTime? ToDate { get; set; }
+    public DateTime GeneratedAt { get; set; } = DateTime.UtcNow;
+
+    public decimal OpeningBalance { get; set; }
+    public decimal TotalDebit { get; set; }
+    public decimal TotalCredit { get; set; }
+    public decimal ClosingBalance { get; set; }
+
+    public List<PosCustomerStatementLineDto> Lines { get; set; } = new();
+}
+
+public sealed class PosCustomerStatementLineDto
+{
+    public long TransactionId { get; set; }
+    public DateTime TransactionDate { get; set; }
+    public string TransactionType { get; set; } = string.Empty;
+    public string TransactionTypeName { get; set; } = string.Empty;
+    public string? ReferenceNo { get; set; }
+    public string? Description { get; set; }
+    public decimal Debit { get; set; }
+    public decimal Credit { get; set; }
+    public decimal RunningBalance { get; set; }
+}
+

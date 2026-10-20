@@ -30,6 +30,8 @@ public interface IPosTableService
     Task<ApiResponse<bool>> UpdateTablePositionAsync(UpdateTablePositionDto dto, CancellationToken ct = default);
     Task<ApiResponse<bool>> ChangeTableStatusAsync(long tableId, PosTableStatus status, long? activeOrderId, CancellationToken ct = default);
     Task<ApiResponse<bool>> TransferTableAsync(TransferTableDto dto, string username, CancellationToken ct = default);
+    Task<ApiResponse<MergeTablesResultDto>> MergeTablesAsync(MergeTablesDto dto, string username, CancellationToken ct = default);
+    Task<ApiResponse<TableDto>> UnmergeTableAsync(long tableId, string username, CancellationToken ct = default);
 }
 
 public class PosTableService : IPosTableService
@@ -64,7 +66,9 @@ public class PosTableService : IPosTableService
                 Width = t.Width,
                 Height = t.Height,
                 Shape = t.Shape,
-                ActiveOrderId = t.ActiveOrderId
+                ActiveOrderId = t.ActiveOrderId,
+                ParentTableId = t.ParentTableId,
+                MergedTableIds = t.MergedTables?.Where(m => m.IsActive).Select(m => m.Id).ToList() ?? new List<long>()
             }).ToList()
         }).ToList();
 
@@ -327,6 +331,201 @@ public class PosTableService : IPosTableService
         return ApiResponse<bool>.CreateSuccess(true, "Table transferred successfully");
     }
 
+    public async Task<ApiResponse<MergeTablesResultDto>> MergeTablesAsync(MergeTablesDto dto, string username, CancellationToken ct = default)
+    {
+        if (dto == null)
+            return ApiResponse<MergeTablesResultDto>.CreateFailure("بيانات دمج الطاولات غير صالحة.", null, 400);
+
+        if (dto.PrimaryTableId <= 0)
+            return ApiResponse<MergeTablesResultDto>.CreateFailure("يجب تحديد الطاولة الرئيسية لعملية الدمج.", null, 400);
+
+        if (dto.SecondaryTableIds == null || !dto.SecondaryTableIds.Any())
+            return ApiResponse<MergeTablesResultDto>.CreateFailure("يجب تحديد طاولة فرعية واحدة على الأقل لدمجها مع الطاولة الرئيسية.", null, 400);
+
+        var secondaryIds = dto.SecondaryTableIds.Distinct().Where(id => id != dto.PrimaryTableId).ToList();
+        if (!secondaryIds.Any())
+            return ApiResponse<MergeTablesResultDto>.CreateFailure("لا يمكن دمج الطاولة مع نفسها.", null, 400);
+
+        var primaryTable = await _tableRepository.GetTableByIdAsync(dto.PrimaryTableId, ct);
+        if (primaryTable == null || !primaryTable.IsActive)
+            return ApiResponse<MergeTablesResultDto>.CreateFailure("الطاولة الرئيسية غير موجودة أو غير نشطة.", null, 404);
+
+        if (primaryTable.ParentTableId.HasValue)
+            return ApiResponse<MergeTablesResultDto>.CreateFailure($"الطاولة الرئيسية ({primaryTable.TableNumber}) هي بالفعل طاولة فرعية مدمجة مع طاولة أخرى؛ لا يمكن استخدامها كطاولة رئيسية.", null, 400);
+
+        // Fetch secondary tables
+        var secondaryTables = new List<PosTable>();
+        foreach (var secId in secondaryIds)
+        {
+            var secTable = await _tableRepository.GetTableByIdAsync(secId, ct);
+            if (secTable == null || !secTable.IsActive)
+                return ApiResponse<MergeTablesResultDto>.CreateFailure($"الطاولة الفرعية رقم ({secId}) غير موجودة.", null, 404);
+
+            if (secTable.ParentTableId.HasValue && secTable.ParentTableId.Value != primaryTable.Id)
+                return ApiResponse<MergeTablesResultDto>.CreateFailure($"الطاولة ({secTable.TableNumber}) مدمجة مسبقاً مع طاولة أخرى.", null, 400);
+
+            secondaryTables.Add(secTable);
+        }
+
+        // Active order on primary table
+        PosOrderHeader? primaryOrder = null;
+        if (primaryTable.ActiveOrderId.HasValue)
+        {
+            primaryOrder = await _orderRepository.GetOrderByIdAsync(primaryTable.ActiveOrderId.Value, ct);
+        }
+
+        // Merge orders if any secondary table has an active order
+        foreach (var secTable in secondaryTables)
+        {
+            if (secTable.ActiveOrderId.HasValue && secTable.ActiveOrderId.Value != primaryTable.ActiveOrderId)
+            {
+                var secOrder = await _orderRepository.GetOrderByIdAsync(secTable.ActiveOrderId.Value, ct);
+                if (secOrder != null && !secOrder.IsPaid && secOrder.Status != PosOrderStatus.Voided && secOrder.Status != PosOrderStatus.Refunded)
+                {
+                    if (primaryOrder != null)
+                    {
+                        // Transfer lines from secondary order to primary order
+                        int maxLineNo = primaryOrder.Lines.Any() ? primaryOrder.Lines.Max(l => l.LineNumber) : 0;
+                        foreach (var line in secOrder.Lines.Where(l => !l.IsVoided))
+                        {
+                            line.OrderId = primaryOrder.Id;
+                            line.LineNumber = ++maxLineNo;
+                            primaryOrder.Lines.Add(line);
+                        }
+
+                        // Recalculate primary totals
+                        primaryOrder.SubtotalAmount += secOrder.SubtotalAmount;
+                        primaryOrder.TaxAmount += secOrder.TaxAmount;
+                        primaryOrder.DiscountAmount += secOrder.DiscountAmount;
+                        primaryOrder.TotalAmount += secOrder.TotalAmount;
+                        primaryOrder.Covers += secOrder.Covers;
+                        primaryOrder.Notes = (primaryOrder.Notes ?? "") + $" [تم دمج أصناف من طلب #{secOrder.OrderNumber} طاولة {secTable.TableNumber}]";
+
+                        // Void/Close secondary order
+                        secOrder.IsActive = false;
+                        secOrder.Status = PosOrderStatus.Voided;
+                        secOrder.Notes = (secOrder.Notes ?? "") + $" [تم دمج هذا الطلب بالكامل في طلب #{primaryOrder.OrderNumber} على طاولة {primaryTable.TableNumber}]";
+                        secOrder.UpdateUser = username;
+                        secOrder.UpdateDate = DateTime.UtcNow;
+
+                        await _orderRepository.UpdateOrderAsync(secOrder, ct);
+                    }
+                    else
+                    {
+                        // Make this order the primary order
+                        secOrder.TableId = primaryTable.Id;
+                        secOrder.Notes = (secOrder.Notes ?? "") + $" [تم تحويل الطلب ليصبح على الطاولة الرئيسية {primaryTable.TableNumber}]";
+                        primaryOrder = secOrder;
+                    }
+                }
+            }
+        }
+
+        // Update primary table status
+        if (primaryOrder != null)
+        {
+            primaryTable.ActiveOrderId = primaryOrder.Id;
+            primaryTable.Status = PosTableStatus.Occupied;
+            primaryTable.StatusChangedAt = DateTime.UtcNow;
+
+            var tableNumbers = string.Join(" + ", new[] { primaryTable.TableNumber }.Concat(secondaryTables.Select(s => s.TableNumber)));
+            primaryOrder.Notes = (primaryOrder.Notes ?? "") + $" [طاولات مدمجة: {tableNumbers}]";
+            await _orderRepository.UpdateOrderAsync(primaryOrder, ct);
+        }
+        else if (primaryTable.Status == PosTableStatus.Available)
+        {
+            // If primary was available and had no orders, mark occupied/reserved for party
+            primaryTable.Status = PosTableStatus.Occupied;
+            primaryTable.StatusChangedAt = DateTime.UtcNow;
+        }
+
+        // Link secondary tables
+        foreach (var secTable in secondaryTables)
+        {
+            secTable.ParentTableId = primaryTable.Id;
+            secTable.ActiveOrderId = primaryTable.ActiveOrderId;
+            secTable.Status = PosTableStatus.Occupied;
+            secTable.StatusChangedAt = DateTime.UtcNow;
+            await _tableRepository.UpdateTableAsync(secTable, ct);
+        }
+
+        await _tableRepository.UpdateTableAsync(primaryTable, ct);
+        await _tableRepository.SaveChangesAsync(ct);
+        await _orderRepository.SaveChangesAsync(ct);
+
+        // Fetch refreshed entities for result
+        var refreshedPrimary = await _tableRepository.GetTableByIdAsync(primaryTable.Id, ct);
+        var refreshedSecondaries = new List<TableDto>();
+        foreach (var secId in secondaryIds)
+        {
+            var t = await _tableRepository.GetTableByIdAsync(secId, ct);
+            if (t != null) refreshedSecondaries.Add(MapToTableDto(t));
+        }
+
+        PosOrderSummaryDto? orderSummary = null;
+        if (refreshedPrimary?.ActiveOrderId.HasValue == true)
+        {
+            var ord = await _orderRepository.GetOrderByIdAsync(refreshedPrimary.ActiveOrderId.Value, ct);
+            if (ord != null)
+            {
+                orderSummary = new PosOrderSummaryDto
+                {
+                    Id = ord.Id,
+                    BranchId = ord.BranchId,
+                    ShiftId = ord.ShiftId,
+                    TillId = ord.TillId,
+                    OrderNumber = ord.OrderNumber,
+                    InvoiceNumber = ord.InvoiceNumber,
+                    Status = ord.Status,
+                    TableId = ord.TableId,
+                    TableNumber = primaryTable.TableNumber,
+                    SubtotalAmount = ord.SubtotalAmount,
+                    DiscountAmount = ord.DiscountAmount,
+                    TaxAmount = ord.TaxAmount,
+                    TotalAmount = ord.TotalAmount,
+                    PaidAmount = ord.PaidAmount,
+                    RemainingAmount = ord.RemainingAmount,
+                    IsPaid = ord.IsPaid,
+                    PaymentStatus = ord.PaymentStatus.ToString(),
+                    PaymentStatusCode = (int)ord.PaymentStatus
+                };
+            }
+        }
+
+        var result = new MergeTablesResultDto
+        {
+            PrimaryTable = MapToTableDto(refreshedPrimary!),
+            SecondaryTables = refreshedSecondaries,
+            TotalCombinedCapacity = refreshedPrimary!.Capacity + refreshedSecondaries.Sum(s => s.Capacity),
+            ActiveOrder = orderSummary
+        };
+
+        return ApiResponse<MergeTablesResultDto>.CreateSuccess(result, $"تم دمج الطاولات بنجاح. السعة الإجمالية: {result.TotalCombinedCapacity} كرسي.");
+    }
+
+    public async Task<ApiResponse<TableDto>> UnmergeTableAsync(long tableId, string username, CancellationToken ct = default)
+    {
+        var table = await _tableRepository.GetTableByIdAsync(tableId, ct);
+        if (table == null || !table.IsActive)
+            return ApiResponse<TableDto>.CreateFailure("الطاولة غير موجودة.", null, 404);
+
+        if (!table.ParentTableId.HasValue)
+            return ApiResponse<TableDto>.CreateFailure($"الطاولة ({table.TableNumber}) ليست مدمجة كطاولة فرعية.", null, 400);
+
+        var parentTable = await _tableRepository.GetTableByIdAsync(table.ParentTableId.Value, ct);
+
+        table.ParentTableId = null;
+        table.ActiveOrderId = null;
+        table.Status = PosTableStatus.Available;
+        table.StatusChangedAt = DateTime.UtcNow;
+
+        await _tableRepository.UpdateTableAsync(table, ct);
+        await _tableRepository.SaveChangesAsync(ct);
+
+        var refreshed = await _tableRepository.GetTableByIdAsync(table.Id, ct);
+        return ApiResponse<TableDto>.CreateSuccess(MapToTableDto(refreshed!), $"تم فك دمج الطاولة ({table.TableNumber}) وإرجاعها لحالة متاحة.");
+    }
+
     private static TableDto MapToTableDto(PosTable t)
     {
         return new TableDto
@@ -343,6 +542,8 @@ public class PosTableService : IPosTableService
             Height = t.Height,
             Shape = t.Shape,
             ActiveOrderId = t.ActiveOrderId,
+            ParentTableId = t.ParentTableId,
+            MergedTableIds = t.MergedTables?.Where(m => m.IsActive).Select(m => m.Id).ToList() ?? new List<long>(),
             IsActive = t.IsActive
         };
     }

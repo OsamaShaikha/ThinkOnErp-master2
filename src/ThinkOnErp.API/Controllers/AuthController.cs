@@ -135,12 +135,30 @@ public class AuthController : ControllerBase
                         "Invalid credentials. Please verify your username, password, and company code",
                         statusCode: 401));
             }
+            catch (OracleException ex) when (ex.Number == 12570 || ex.Number == 12170 || ex.Number == 12541 || ex.Number == 3113 || ex.Number == 3114 || ex.InnerException is System.Net.Sockets.SocketException)
+            {
+                _logger.LogWarning(ex, "Transient connection failure to tenant schema {Schema}. Clearing pools and retrying once...", company.CompanySchema);
+                try
+                {
+                    OracleConnection.ClearAllPools();
+                    user = await _oracleSchemaService.GetUserByUserNameAsync(company.CompanySchema!, company.CompanySchema!, command.UserName);
+                }
+                catch (Exception retryEx)
+                {
+                    _logger.LogError(retryEx, "Retry connection to tenant schema {Schema} failed", company.CompanySchema);
+                    return StatusCode(StatusCodes.Status503ServiceUnavailable, ApiResponse<TokenDto>.CreateFailure(
+                        "تعذر الاتصال بقاعدة البيانات بسبب انقطاع مؤقت في الشبكة. يرجى إعادة المحاولة.",
+                        new List<string> { "DATABASE_CONNECTION_ERROR" },
+                        statusCode: 503));
+                }
+            }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Failed to connect to tenant schema {Schema} for user {UserName}", company.CompanySchema, command.UserName);
-                return Unauthorized(ApiResponse<TokenDto>.CreateFailure(
-                    "Invalid credentials. Please verify your username, password, and company code",
-                    statusCode: 401));
+                return StatusCode(StatusCodes.Status503ServiceUnavailable, ApiResponse<TokenDto>.CreateFailure(
+                    "تعذر الاتصال بقاعدة البيانات. يرجى المحاولة مرة أخرى لاحقاً.",
+                    new List<string> { "DATABASE_CONNECTION_ERROR" },
+                    statusCode: 503));
             }
 
             if (user == null || !_passwordHashingService.VerifyPassword(command.Password, user.Password))

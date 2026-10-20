@@ -274,6 +274,114 @@ public class PosCustomersController : ControllerBase
     }
 
     /// <summary>
+    /// Retrieves a complete, running-balance customer account statement (كشف حساب عميل تفصيلي) for POS.
+    /// Can be displayed on screen or printed directly on thermal/A4 receipt printers.
+    /// </summary>
+    [HttpGet("{codeOrId}/statement")]
+    [ProducesResponseType(typeof(ApiResponse<PosCustomerStatementDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<PosCustomerStatementDto>), StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<ApiResponse<PosCustomerStatementDto>>> GetCustomerStatement(
+        string codeOrId,
+        [FromQuery] DateTime? fromDate,
+        [FromQuery] DateTime? toDate,
+        CancellationToken cancellationToken = default)
+    {
+        Customer? customer = await _customerRepository.GetByCodeAsync(codeOrId, cancellationToken);
+        if (customer == null && long.TryParse(codeOrId, out var id))
+        {
+            customer = await _customerRepository.GetByIdAsync(id, cancellationToken);
+        }
+
+        if (customer == null || !customer.IsActive)
+        {
+            return NotFound(ApiResponse<PosCustomerStatementDto>.CreateFailure("Customer not found or inactive for POS.", null, 404));
+        }
+
+        // Adjust toDate to include the entire day if no specific time was provided
+        var effectiveToDate = toDate.HasValue
+            ? (toDate.Value.TimeOfDay == TimeSpan.Zero ? toDate.Value.Date.AddDays(1).AddTicks(-1) : toDate.Value)
+            : (DateTime?)null;
+
+        // Get all transactions for this customer up to effectiveToDate
+        var allTx = await _arSubledgerRepository.GetTransactionsAsync(customer.CustomerCode, null, effectiveToDate, false, cancellationToken);
+
+        decimal openingBalance = 0m;
+        var periodTx = new List<ArSubledgerTransaction>();
+
+        foreach (var tx in allTx)
+        {
+            if (fromDate.HasValue && tx.TransactionDate < fromDate.Value)
+            {
+                openingBalance += tx.LocalAmount;
+            }
+            else
+            {
+                periodTx.Add(tx);
+            }
+        }
+
+        decimal runningBalance = openingBalance;
+        decimal totalDebit = 0m;
+        decimal totalCredit = 0m;
+        var lines = new List<PosCustomerStatementLineDto>();
+
+        foreach (var tx in periodTx.OrderBy(t => t.TransactionDate).ThenBy(t => t.Id))
+        {
+            decimal debit = tx.LocalAmount > 0 ? tx.LocalAmount : 0m;
+            decimal credit = tx.LocalAmount < 0 ? Math.Abs(tx.LocalAmount) : 0m;
+
+            totalDebit += debit;
+            totalCredit += credit;
+            runningBalance += tx.LocalAmount;
+
+            var typeName = tx.TransactionType switch
+            {
+                "INVOICE" => "فاتورة بيع آجل",
+                "RECEIPT" => "سند قبض / سداد ذمة",
+                "CREDIT_MEMO" => "إشعار دائن",
+                "DEBIT_MEMO" => "إشعار مدين",
+                _ => tx.TransactionType
+            };
+
+            lines.Add(new PosCustomerStatementLineDto
+            {
+                TransactionId = tx.Id,
+                TransactionDate = tx.TransactionDate,
+                TransactionType = tx.TransactionType,
+                TransactionTypeName = typeName,
+                ReferenceNo = tx.ReferenceNo ?? tx.Voucher?.VoucherNo.ToString() ?? tx.Id.ToString(),
+                Description = tx.Description,
+                Debit = debit,
+                Credit = credit,
+                RunningBalance = runningBalance
+            });
+        }
+
+        var statementDto = new PosCustomerStatementDto
+        {
+            CustomerId = customer.Id,
+            CustomerCode = customer.CustomerCode,
+            CustomerName = !string.IsNullOrWhiteSpace(customer.NameLocal) ? customer.NameLocal : customer.NameEn,
+            Phone = customer.Phone,
+            TaxNumber = customer.TaxNumber,
+            BranchId = customer.BranchId,
+            FromDate = fromDate,
+            ToDate = toDate,
+            GeneratedAt = DateTime.UtcNow,
+            OpeningBalance = openingBalance,
+            TotalDebit = totalDebit,
+            TotalCredit = totalCredit,
+            ClosingBalance = runningBalance,
+            Lines = lines
+        };
+
+        return Ok(ApiResponse<PosCustomerStatementDto>.CreateSuccess(
+            statementDto,
+            ResponseCodes.DataRetrieved,
+            200));
+    }
+
+    /// <summary>
     /// Settles customer debt from POS register for:
     /// 1. A single specific invoice (SpecificInvoice)
     /// 2. All open invoices (AllInvoices)
@@ -307,13 +415,28 @@ public class PosCustomersController : ControllerBase
         var invoicesToSettle = new List<ReceiptInvoiceSettlementItemDto>();
         decimal totalPaymentAmount = request.Amount;
 
-        switch (request.SettlementType)
+        var settlementType = Enum.IsDefined(typeof(PosCustomerSettlementType), request.SettlementType)
+            ? (PosCustomerSettlementType)request.SettlementType
+            : PosCustomerSettlementType.OnAccount;
+
+        var paymentMethod = Enum.IsDefined(typeof(PosPaymentMethod), request.PaymentMethod)
+            ? (PosPaymentMethod)request.PaymentMethod
+            : PosPaymentMethod.Cash;
+
+        switch (settlementType)
         {
             case PosCustomerSettlementType.AllInvoices:
             {
                 var totalOpen = openInvoices.Sum(i => i.OpenAmount);
                 if (totalOpen <= 0)
                 {
+                    if (totalPaymentAmount > 0)
+                    {
+                        // The customer has no open invoices, but a payment amount was provided.
+                        // Automatically treat it as an on-account advance deposit so cashier is not blocked.
+                        break;
+                    }
+
                     return BadRequest(ApiResponse<PosCustomerSettlementResultDto>.CreateFailure("لا توجد أي فواتير مفتوحة غير مسددة للعميل.", null, 400));
                 }
 
@@ -408,16 +531,36 @@ public class PosCustomersController : ControllerBase
         var currentPeriod = await _fiscalPeriodRepository.GetPeriodByDateOnlyAsync(DateTime.UtcNow, cancellationToken);
         var fiscalYearId = currentPeriod?.FiscalYearId ?? 1;
 
-        var isCard = request.PaymentMethod == PosPaymentMethod.Card;
-        var paymentMethodStr = isCard ? "CARD" : "CASH";
-        var cashAccount = isCard ? "111201" : "111101";
+        string paymentMethodStr;
+        string cashAccount;
+
+        switch (paymentMethod)
+        {
+            case PosPaymentMethod.Card:
+                paymentMethodStr = "CARD";
+                cashAccount = "111201";
+                break;
+            case PosPaymentMethod.BankTransfer:
+                paymentMethodStr = "BANK";
+                cashAccount = "111201";
+                break;
+            case PosPaymentMethod.Cheque:
+                paymentMethodStr = "CHEQUE";
+                cashAccount = "111301";
+                break;
+            case PosPaymentMethod.Cash:
+            default:
+                paymentMethodStr = "CASH";
+                cashAccount = "111101";
+                break;
+        }
 
         var receiptDto = new CreateReceiptVoucherDto
         {
             BranchId = customer.BranchId ?? 1,
             FiscalYearId = fiscalYearId,
             VoucherDate = DateTime.UtcNow,
-            Description = request.Notes ?? $"سداد ذمة من نقطة البيع - عميل {customer.CustomerCode} ({request.SettlementType})",
+            Description = request.Notes ?? $"سداد ذمة من نقطة البيع - عميل {customer.CustomerCode} ({settlementType})",
             PaymentMethod = paymentMethodStr,
             CashOrBankAccountCode = cashAccount,
             TotalAmount = totalPaymentAmount,
@@ -429,7 +572,7 @@ public class PosCustomersController : ControllerBase
 
         var receiptResult = await _receiptVoucherService.CreateReceiptVoucherAsync(receiptDto, username, cancellationToken);
 
-        if (request.ShiftId.HasValue && request.ShiftId.Value > 0 && request.PaymentMethod == PosPaymentMethod.Cash)
+        if (request.ShiftId.HasValue && request.ShiftId.Value > 0 && paymentMethod == PosPaymentMethod.Cash)
         {
             var cashMovementDto = new CashMovementDto
             {
@@ -469,8 +612,8 @@ public class PosCustomersController : ControllerBase
             CustomerId = customer.Id,
             CustomerCode = customer.CustomerCode,
             CustomerName = !string.IsNullOrWhiteSpace(customer.NameLocal) ? customer.NameLocal : customer.NameEn,
-            SettlementType = request.SettlementType,
-            PaymentMethod = request.PaymentMethod,
+            SettlementType = settlementType,
+            PaymentMethod = paymentMethod,
             AmountPaid = totalPaymentAmount,
             PreviousBalance = previousBalance,
             RemainingBalance = remainingBalance,

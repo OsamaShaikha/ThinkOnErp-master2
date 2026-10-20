@@ -12,6 +12,7 @@ public interface IPosOrderRepository
     Task<PosOrderHeader?> GetOrderByIdAsync(long orderId, CancellationToken ct = default);
     Task<PosOrderHeader?> GetOrderByClientUuidAsync(long branchId, string clientUuid, CancellationToken ct = default);
     Task<IReadOnlyList<PosOrderHeader>> GetActiveOrdersAsync(long branchId, PosOrderStatus? status = null, CancellationToken ct = default);
+    Task<IReadOnlyList<PosOrderHeader>> GetOrdersForZReportAsync(long branchId, long? shiftId, CancellationToken ct = default);
     Task<(IReadOnlyList<PosOrderHeader> Items, long TotalCount)> GetOrdersPagedAsync(
         long branchId,
         long? shiftId = null,
@@ -22,6 +23,9 @@ public interface IPosOrderRepository
         int pageIndex = 1,
         int pageSize = 20,
         CancellationToken ct = default);
+    Task<PosOrderHeader?> GetOrderByInvoiceNumberAsync(string invoiceNumber, CancellationToken ct = default);
+    Task<PosOrderHeader?> GetOrderByOrderNumberAsync(long? branchId, string orderNumber, CancellationToken ct = default);
+    Task<IReadOnlyList<PosOrderHeader>> GetRefundOrdersByOriginalOrderIdAsync(long originalOrderId, CancellationToken ct = default);
     Task<int> GetOrderCountTodayAsync(long branchId, CancellationToken ct = default);
     Task<string> GenerateNextShiftOrderNumberAsync(long shiftId, bool isRefund, CancellationToken ct = default);
     Task<string> GenerateNextInvoiceNumberAsync(long branchId, int year, bool isRefund, CancellationToken ct = default);

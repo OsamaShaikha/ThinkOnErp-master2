@@ -1,3 +1,5 @@
+using System;
+using System.Linq;
 using Microsoft.EntityFrameworkCore;
 using ThinkOnErp.Domain.Entities.Accounting;
 using ThinkOnErp.Domain.Interfaces.Accounting;
@@ -178,35 +180,64 @@ public sealed class GlVoucherRepository : IGlVoucherRepository
         string resetPolicy,
         CancellationToken cancellationToken = default)
     {
-        var targetMonth = resetPolicy.Equals("YEARLY", StringComparison.OrdinalIgnoreCase) ? 0 : month;
+        var isYearly = resetPolicy.Equals("YEARLY", StringComparison.OrdinalIgnoreCase);
+        var targetMonth = isYearly ? 0 : month;
 
-        var serialRecord = await _context.GlVoucherSerials
-            .FirstOrDefaultAsync(
-                s => s.BranchId == branchId &&
-                     s.SerialYear == year &&
-                     s.SerialMonth == targetMonth &&
-                     s.VoucherType == typeCode,
-                cancellationToken);
+        // 1. Query the maximum existing voucher number in the database for this branch/year/month/type
+        var dbMax = await _context.GlVoucherHeaders
+            .Where(h => h.BranchId == branchId &&
+                        h.VoucherYear == year &&
+                        (isYearly || h.VoucherMonth == month) &&
+                        h.VoucherType == typeCode)
+            .MaxAsync(h => (long?)h.VoucherNo, cancellationToken) ?? 0;
 
+        // 2. Also check any vouchers currently tracked locally in the EF Change Tracker
+        var localMax = _context.GlVoucherHeaders.Local
+            .Where(h => h.BranchId == branchId &&
+                        h.VoucherYear == year &&
+                        (isYearly || h.VoucherMonth == month) &&
+                        h.VoucherType == typeCode)
+            .Select(h => (long?)h.VoucherNo)
+            .Max() ?? 0;
+
+        var maxExisting = Math.Max(dbMax, localMax);
+
+        // 3. Find existing serial tracker record (checking Local tracker first to prevent duplicate tracking)
+        var serialRecord = _context.GlVoucherSerials.Local
+            .FirstOrDefault(s => s.BranchId == branchId &&
+                                 s.SerialYear == year &&
+                                 s.SerialMonth == targetMonth &&
+                                 s.VoucherType == typeCode)
+            ?? await _context.GlVoucherSerials
+                .FirstOrDefaultAsync(
+                    s => s.BranchId == branchId &&
+                         s.SerialYear == year &&
+                         s.SerialMonth == targetMonth &&
+                         s.VoucherType == typeCode,
+                    cancellationToken);
+
+        long nextSerial;
         if (serialRecord == null)
         {
+            nextSerial = Math.Max(maxExisting, 0) + 1;
             serialRecord = new GlVoucherSerial
             {
                 BranchId = branchId,
                 SerialYear = year,
                 SerialMonth = targetMonth,
                 VoucherType = typeCode,
-                LastSerialNo = 1
+                LastSerialNo = nextSerial
             };
             _context.GlVoucherSerials.Add(serialRecord);
         }
         else
         {
-            serialRecord.LastSerialNo += 1;
+            nextSerial = Math.Max(serialRecord.LastSerialNo, maxExisting) + 1;
+            serialRecord.LastSerialNo = nextSerial;
             _context.GlVoucherSerials.Update(serialRecord);
         }
 
-        return serialRecord.LastSerialNo;
+        return nextSerial;
     }
 
     public Task AddVoucherAsync(GlVoucherHeader voucher, CancellationToken cancellationToken = default)

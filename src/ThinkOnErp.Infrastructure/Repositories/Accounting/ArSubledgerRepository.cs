@@ -63,7 +63,6 @@ public sealed class ArSubledgerRepository : IArSubledgerRepository
     {
         return await _context.ArSubledgerTransactions
             .Include(t => t.Currency)
-            .Include(t => t.Voucher)
             .Where(t => t.CustomerCode == customerCode && t.OpenAmount > 0)
             .OrderBy(t => t.TransactionDate)
             .ThenBy(t => t.Id)
@@ -74,7 +73,6 @@ public sealed class ArSubledgerRepository : IArSubledgerRepository
     {
         return await _context.ArSubledgerTransactions
             .Include(t => t.Currency)
-            .Include(t => t.Voucher)
             .Where(t => t.CustomerCode == customerCode && t.OpenAmount < 0)
             .OrderBy(t => t.TransactionDate)
             .ThenBy(t => t.Id)
