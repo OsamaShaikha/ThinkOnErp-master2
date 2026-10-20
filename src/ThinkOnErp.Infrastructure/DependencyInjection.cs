@@ -38,6 +38,7 @@ public static class DependencyInjection
     /// </summary>
     public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration configuration)
     {
+        services.AddScoped<ThinkOnErp.Application.Services.Inventory.IInventoryExcelService, ThinkOnErp.Infrastructure.Services.Inventory.InventoryExcelService>();
         // Register all configuration options with data annotation validation
         services.AddTraceabilityConfigurationValidation(configuration);
 
