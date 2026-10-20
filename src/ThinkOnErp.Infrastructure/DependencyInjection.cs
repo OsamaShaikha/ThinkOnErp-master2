@@ -19,6 +19,8 @@ using ThinkOnErp.Domain.Interfaces.Inventory;
 using ThinkOnErp.Infrastructure.Repositories.Inventory;
 using ThinkOnErp.Domain.Interfaces.Pos;
 using ThinkOnErp.Infrastructure.Repositories.Pos;
+using ThinkOnErp.Application.Services.Pos;
+using ThinkOnErp.Infrastructure.Services.Pos;
 using ThinkOnErp.Domain.Interfaces.Hr;
 using ThinkOnErp.Infrastructure.Repositories.Hr;
 
@@ -226,6 +228,7 @@ public static class DependencyInjection
         services.AddScoped<IPosStaffAttendanceRepository, PosStaffAttendanceRepository>();
         services.AddScoped<IPosModifierRepository, InvModifierRepository>();
         services.AddScoped<IPosBranchSettingRepository, PosBranchSettingRepository>();
+        services.AddScoped<IPosReportService, PosReportService>();
 
         // Register HR & Payroll repositories
         services.AddScoped<IWorkCalendarRepository, WorkCalendarRepository>();
