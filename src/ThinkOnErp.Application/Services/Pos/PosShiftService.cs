@@ -423,10 +423,8 @@ public class PosShiftService : IPosShiftService
                 VoucherType = (int)m.VoucherType,
                 VoucherTypeName = m.VoucherType == PosVoucherType.Receipt ? "سند قبض" : "سند صرف",
                 VoucherNumber = m.VoucherNumber,
-                GlAccountCode = m.GlAccountCode,
                 BeneficiaryName = m.BeneficiaryName,
                 TaxInvoiceNumber = m.TaxInvoiceNumber,
-                GlVoucherId = m.GlVoucherId,
                 Amount = m.Amount,
                 Reason = m.Reason,
                 ApprovedBy = m.ApprovedBy,
@@ -486,8 +484,8 @@ public class PosShiftService : IPosShiftService
 
         RecalculateExpectedTotals(shift);
 
-        // Resolve Target GL Account (Expense or Receipt)
-        string? targetGlAccount = dto.GlAccountCode;
+        // Resolve Target GL Account (Expense or Receipt) automatically on backend
+        string? targetGlAccount = null;
 
         // 1. Check branch-specific setting first
         if (string.IsNullOrWhiteSpace(targetGlAccount) && _branchSettingRepository != null && shift.BranchId > 0)
@@ -682,12 +680,10 @@ public class PosShiftService : IPosShiftService
             PaymentMethod = (int)movement.PaymentMethod,
             PaymentMethodName = GetPaymentMethodName(movement.PaymentMethod),
             Amount = movement.Amount,
-            GlAccountCode = movement.GlAccountCode,
             BeneficiaryName = movement.BeneficiaryName,
             TaxInvoiceNumber = movement.TaxInvoiceNumber,
             Reason = movement.Reason,
             ApprovedBy = movement.ApprovedBy,
-            GlVoucherId = movement.GlVoucherId,
             CreationDate = movement.CreationDate,
             CreationUser = movement.CreationUser
         };
@@ -717,12 +713,10 @@ public class PosShiftService : IPosShiftService
             PaymentMethod = (int)m.PaymentMethod,
             PaymentMethodName = GetPaymentMethodName(m.PaymentMethod),
             Amount = m.Amount,
-            GlAccountCode = m.GlAccountCode,
             BeneficiaryName = m.BeneficiaryName,
             TaxInvoiceNumber = m.TaxInvoiceNumber,
             Reason = m.Reason,
             ApprovedBy = m.ApprovedBy,
-            GlVoucherId = m.GlVoucherId,
             CreationDate = m.CreationDate,
             CreationUser = m.CreationUser
         }).ToList();
@@ -738,7 +732,6 @@ public class PosShiftService : IPosShiftService
             VoucherType = (int)PosVoucherType.Receipt,
             PaymentMethod = dto.PaymentMethod,
             Amount = dto.Amount,
-            GlAccountCode = dto.GlAccountCode, // If specified, uses it; otherwise null and relies automatically on configured default receipt account
             CustomerCode = dto.CustomerCode,
             BeneficiaryName = !string.IsNullOrWhiteSpace(dto.PayerName) ? dto.PayerName : dto.BeneficiaryName,
             TaxInvoiceNumber = dto.ReferenceNumber,
@@ -758,7 +751,6 @@ public class PosShiftService : IPosShiftService
             VoucherType = (int)PosVoucherType.Payment,
             PaymentMethod = dto.PaymentMethod,
             Amount = dto.Amount,
-            GlAccountCode = dto.GlAccountCode, // If specified, uses it; otherwise null and relies automatically on configured default expense account
             VendorCode = dto.VendorCode,
             BeneficiaryName = dto.BeneficiaryName,
             TaxInvoiceNumber = dto.TaxInvoiceNumber,
@@ -779,252 +771,6 @@ public class PosShiftService : IPosShiftService
     {
         return await GetShiftVouchersAsync(shiftId, (int)PosVoucherType.Payment, paymentMethod, ct);
     }
-
-    public Task<ApiResponse<IReadOnlyList<PosExpenseAccountLookupDto>>> GetReceiptAccountsLookupAsync(CancellationToken ct = default)
-    {
-        var accounts = new List<PosExpenseAccountLookupDto>
-        {
-            new() { AccountCode = "421101", AccountNameAr = "إيرادات أخرى متنوعة", AccountNameEn = "Miscellaneous Revenue", Category = "Revenues" },
-            new() { AccountCode = "112101", AccountNameAr = "سداد ذمم عملاء", AccountNameEn = "Customer Account Settlement", Category = "Receivables" },
-            new() { AccountCode = "212101", AccountNameAr = "تأمينات مستلمة من العملاء", AccountNameEn = "Customer Deposits Received", Category = "Liabilities" },
-            new() { AccountCode = "422101", AccountNameAr = "إيرادات خدمات وتوصيل", AccountNameEn = "Delivery & Service Fees", Category = "Revenues" },
-            new() { AccountCode = "111101", AccountNameAr = "عهدة نقدية واردة للصندوق", AccountNameEn = "Float / Cash In", Category = "Assets" }
-        };
-
-        return Task.FromResult(ApiResponse<IReadOnlyList<PosExpenseAccountLookupDto>>.CreateSuccess(accounts));
-    }
-
-    public Task<ApiResponse<IReadOnlyList<PosExpenseAccountLookupDto>>> GetExpenseAccountsLookupAsync(CancellationToken ct = default)
-    {
-        var accounts = new List<PosExpenseAccountLookupDto>
-        {
-            new() { AccountCode = "523101", AccountNameAr = "مصاريف صيانة ونظافة", AccountNameEn = "Maintenance & Cleaning", Category = "Expenses" },
-            new() { AccountCode = "524101", AccountNameAr = "مهمات ومستلزمات تشغيلية", AccountNameEn = "Operating Supplies", Category = "Expenses" },
-            new() { AccountCode = "632102", AccountNameAr = "مصاريف ضيافة وبوفيه", AccountNameEn = "Hospitality & Buffet", Category = "Expenses" },
-            new() { AccountCode = "525101", AccountNameAr = "مشتريات نثرية ومطبخ", AccountNameEn = "Petty Cash Purchases", Category = "Expenses" },
-            new() { AccountCode = "526101", AccountNameAr = "مصاريف وقود ومواصلات", AccountNameEn = "Fuel & Transportation", Category = "Expenses" },
-            new() { AccountCode = "211101", AccountNameAr = "دفعات موردين", AccountNameEn = "Vendor Payments", Category = "Payables" },
-            new() { AccountCode = "212101", AccountNameAr = "تأمينات مستردة للعملاء", AccountNameEn = "Customer Deposits", Category = "Liabilities" },
-            new() { AccountCode = "421101", AccountNameAr = "إيرادات أخرى متنوعة", AccountNameEn = "Miscellaneous Revenue", Category = "Revenues" }
-        };
-
-        return Task.FromResult(ApiResponse<IReadOnlyList<PosExpenseAccountLookupDto>>.CreateSuccess(accounts));
-    }
-
-    public async Task<ApiResponse<PosDefaultAccountsDto>> GetDefaultAccountsAsync(long? branchId = null, CancellationToken ct = default)
-    {
-        var result = new PosDefaultAccountsDto
-        {
-            BranchId = branchId,
-            DefaultCashAccount = "111102",
-            DefaultCashAccountNameAr = "صندوق نقطة البيع (كاشير)",
-            DefaultExpenseAccount = "525101",
-            DefaultExpenseAccountNameAr = "مشتريات ومصروفات نثرية",
-            DefaultReceiptAccount = "421101",
-            DefaultReceiptAccountNameAr = "إيرادات أخرى متنوعة"
-        };
-
-        // 1. First load global settings as baseline
-        if (_settingRepo != null)
-        {
-            var cashSetting = await _settingRepo.GetByCodeAsync(SysSettingKeys.PosDefaultCashAccount);
-            if (cashSetting != null && !string.IsNullOrWhiteSpace(cashSetting.SettingValue))
-            {
-                result.DefaultCashAccount = cashSetting.SettingValue.Trim();
-            }
-
-            var expSetting = await _settingRepo.GetByCodeAsync(SysSettingKeys.PosDefaultExpenseAccount);
-            if (expSetting != null && !string.IsNullOrWhiteSpace(expSetting.SettingValue))
-            {
-                result.DefaultExpenseAccount = expSetting.SettingValue.Trim();
-            }
-
-            var recSetting = await _settingRepo.GetByCodeAsync(SysSettingKeys.PosDefaultReceiptAccount);
-            if (recSetting != null && !string.IsNullOrWhiteSpace(recSetting.SettingValue))
-            {
-                result.DefaultReceiptAccount = recSetting.SettingValue.Trim();
-            }
-        }
-
-        // 2. If branchId is specified, overlay branch-specific settings
-        if (branchId.HasValue && branchId.Value > 0 && _branchSettingRepository != null)
-        {
-            var branchSetting = await _branchSettingRepository.GetByBranchIdAsync(branchId.Value, ct);
-            if (branchSetting != null)
-            {
-                result.BranchId = branchSetting.BranchId;
-                result.BranchName = branchSetting.Branch?.BranchNameLocal;
-                if (!string.IsNullOrWhiteSpace(branchSetting.DefaultCashAccount))
-                    result.DefaultCashAccount = branchSetting.DefaultCashAccount.Trim();
-                if (!string.IsNullOrWhiteSpace(branchSetting.DefaultExpenseAccount))
-                    result.DefaultExpenseAccount = branchSetting.DefaultExpenseAccount.Trim();
-                if (!string.IsNullOrWhiteSpace(branchSetting.DefaultReceiptAccount))
-                    result.DefaultReceiptAccount = branchSetting.DefaultReceiptAccount.Trim();
-                result.DefaultWarehouseId = branchSetting.DefaultWarehouseId;
-            }
-        }
-
-        result.DefaultCashAccountNameAr = ResolveAccountNameAr(result.DefaultCashAccount);
-        result.DefaultExpenseAccountNameAr = ResolveAccountNameAr(result.DefaultExpenseAccount);
-        result.DefaultReceiptAccountNameAr = ResolveAccountNameAr(result.DefaultReceiptAccount);
-
-        var msg = branchId.HasValue && branchId.Value > 0
-            ? $"تم جلب الحسابات الافتراضية لنقاط البيع للفرع {branchId.Value} بنجاح."
-            : "تم جلب الحسابات الافتراضية لنقاط البيع بنجاح.";
-
-        return ApiResponse<PosDefaultAccountsDto>.CreateSuccess(result, msg);
-    }
-
-    public async Task<ApiResponse<IReadOnlyList<PosDefaultAccountsDto>>> GetAllBranchDefaultAccountsAsync(CancellationToken ct = default)
-    {
-        if (_branchSettingRepository == null)
-            return ApiResponse<IReadOnlyList<PosDefaultAccountsDto>>.CreateSuccess(Array.Empty<PosDefaultAccountsDto>());
-
-        var branchSettings = await _branchSettingRepository.GetAllAsync(ct);
-        var list = new List<PosDefaultAccountsDto>();
-
-        foreach (var s in branchSettings)
-        {
-            list.Add(new PosDefaultAccountsDto
-            {
-                BranchId = s.BranchId,
-                BranchName = s.Branch?.BranchNameLocal,
-                DefaultCashAccount = s.DefaultCashAccount ?? "111102",
-                DefaultCashAccountNameAr = ResolveAccountNameAr(s.DefaultCashAccount ?? "111102"),
-                DefaultExpenseAccount = s.DefaultExpenseAccount ?? "525101",
-                DefaultExpenseAccountNameAr = ResolveAccountNameAr(s.DefaultExpenseAccount ?? "525101"),
-                DefaultReceiptAccount = s.DefaultReceiptAccount ?? "421101",
-                DefaultReceiptAccountNameAr = ResolveAccountNameAr(s.DefaultReceiptAccount ?? "421101"),
-                DefaultWarehouseId = s.DefaultWarehouseId
-            });
-        }
-
-        return ApiResponse<IReadOnlyList<PosDefaultAccountsDto>>.CreateSuccess(list, "تم جلب إعدادات الحسابات الافتراضية لجميع الفروع بنجاح.");
-    }
-
-    public async Task<ApiResponse<PosDefaultAccountsDto>> UpdateDefaultAccountsAsync(UpdatePosDefaultAccountsDto dto, string username, CancellationToken ct = default)
-    {
-        if (dto == null)
-            return ApiResponse<PosDefaultAccountsDto>.CreateFailure("Request body cannot be null", null, 400);
-
-        // Branch-specific update
-        if (dto.BranchId.HasValue && dto.BranchId.Value > 0)
-        {
-            if (_branchSettingRepository == null)
-                return ApiResponse<PosDefaultAccountsDto>.CreateFailure("Branch settings repository unavailable", null, 500);
-
-            var branchSetting = await _branchSettingRepository.GetByBranchIdAsync(dto.BranchId.Value, ct);
-            if (branchSetting == null)
-            {
-                branchSetting = new PosBranchSetting
-                {
-                    BranchId = dto.BranchId.Value,
-                    DefaultCashAccount = dto.DefaultCashAccount?.Trim(),
-                    DefaultExpenseAccount = dto.DefaultExpenseAccount?.Trim(),
-                    DefaultReceiptAccount = dto.DefaultReceiptAccount?.Trim(),
-                    DefaultWarehouseId = dto.DefaultWarehouseId,
-                    IsActive = true,
-                    CreationUser = username,
-                    CreationDate = DateTime.UtcNow
-                };
-                await _branchSettingRepository.AddAsync(branchSetting, ct);
-            }
-            else
-            {
-                if (!string.IsNullOrWhiteSpace(dto.DefaultCashAccount))
-                    branchSetting.DefaultCashAccount = dto.DefaultCashAccount.Trim();
-                if (!string.IsNullOrWhiteSpace(dto.DefaultExpenseAccount))
-                    branchSetting.DefaultExpenseAccount = dto.DefaultExpenseAccount.Trim();
-                if (!string.IsNullOrWhiteSpace(dto.DefaultReceiptAccount))
-                    branchSetting.DefaultReceiptAccount = dto.DefaultReceiptAccount.Trim();
-                if (dto.DefaultWarehouseId.HasValue)
-                    branchSetting.DefaultWarehouseId = dto.DefaultWarehouseId;
-
-                branchSetting.UpdateUser = username;
-                branchSetting.UpdateDate = DateTime.UtcNow;
-                await _branchSettingRepository.UpdateAsync(branchSetting, ct);
-            }
-
-            await _branchSettingRepository.SaveChangesAsync(ct);
-            return await GetDefaultAccountsAsync(dto.BranchId.Value, ct);
-        }
-
-        // Global settings update
-        if (_settingRepo == null)
-            return ApiResponse<PosDefaultAccountsDto>.CreateFailure("Settings repository unavailable", null, 500);
-
-        if (!string.IsNullOrWhiteSpace(dto.DefaultCashAccount))
-        {
-            var cash = await _settingRepo.GetByCodeAsync(SysSettingKeys.PosDefaultCashAccount);
-            if (cash == null)
-            {
-                await _settingRepo.AddAsync(new SysSetting
-                {
-                    SettingCode = SysSettingKeys.PosDefaultCashAccount,
-                    SettingDesc = "POS Default Cash/Till Account",
-                    SettingValue = dto.DefaultCashAccount.Trim()
-                });
-            }
-            else
-            {
-                cash.SettingValue = dto.DefaultCashAccount.Trim();
-                await _settingRepo.UpdateAsync(cash);
-            }
-        }
-
-        if (!string.IsNullOrWhiteSpace(dto.DefaultExpenseAccount))
-        {
-            var exp = await _settingRepo.GetByCodeAsync(SysSettingKeys.PosDefaultExpenseAccount);
-            if (exp == null)
-            {
-                await _settingRepo.AddAsync(new SysSetting
-                {
-                    SettingCode = SysSettingKeys.PosDefaultExpenseAccount,
-                    SettingDesc = "POS Default Expense Account (Pay-Outs)",
-                    SettingValue = dto.DefaultExpenseAccount.Trim()
-                });
-            }
-            else
-            {
-                exp.SettingValue = dto.DefaultExpenseAccount.Trim();
-                await _settingRepo.UpdateAsync(exp);
-            }
-        }
-
-        if (!string.IsNullOrWhiteSpace(dto.DefaultReceiptAccount))
-        {
-            var rec = await _settingRepo.GetByCodeAsync(SysSettingKeys.PosDefaultReceiptAccount);
-            if (rec == null)
-            {
-                await _settingRepo.AddAsync(new SysSetting
-                {
-                    SettingCode = SysSettingKeys.PosDefaultReceiptAccount,
-                    SettingDesc = "POS Default Receipt Account (Float-In)",
-                    SettingValue = dto.DefaultReceiptAccount.Trim()
-                });
-            }
-            else
-            {
-                rec.SettingValue = dto.DefaultReceiptAccount.Trim();
-                await _settingRepo.UpdateAsync(rec);
-            }
-        }
-
-        return await GetDefaultAccountsAsync(null, ct);
-    }
-
-    private static string ResolveAccountNameAr(string accountCode) => accountCode switch
-    {
-        "111101" => "الصندوق الرئيسي",
-        "111102" => "صندوق نقطة البيع (كاشير)",
-        "111201" => "البنك / نقاط البيع الإلكترونية",
-        "111301" => "شيكات تحت التحصيل",
-        "421101" => "إيرادات أخرى متنوعة",
-        "112101" => "سداد ذمم عملاء",
-        "525101" => "مشتريات ومصروفات نثرية",
-        "632102" => "مصاريف ضيافة وبوفيه",
-        _ => accountCode
-    };
 
     private static string GetPaymentMethodName(PosPaymentMethod method) => method switch
     {

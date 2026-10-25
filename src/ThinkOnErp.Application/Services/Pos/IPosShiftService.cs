@@ -31,9 +31,4 @@ public interface IPosShiftService
     Task<ApiResponse<IReadOnlyList<PosVoucherSummaryDto>>> GetShiftVouchersAsync(long shiftId, int? voucherType = null, int? paymentMethod = null, CancellationToken ct = default);
     Task<ApiResponse<IReadOnlyList<PosVoucherSummaryDto>>> GetShiftReceiptsAsync(long shiftId, int? paymentMethod = null, CancellationToken ct = default);
     Task<ApiResponse<IReadOnlyList<PosVoucherSummaryDto>>> GetShiftPaymentsAsync(long shiftId, int? paymentMethod = null, CancellationToken ct = default);
-    Task<ApiResponse<IReadOnlyList<PosExpenseAccountLookupDto>>> GetExpenseAccountsLookupAsync(CancellationToken ct = default);
-    Task<ApiResponse<IReadOnlyList<PosExpenseAccountLookupDto>>> GetReceiptAccountsLookupAsync(CancellationToken ct = default);
-    Task<ApiResponse<PosDefaultAccountsDto>> GetDefaultAccountsAsync(long? branchId = null, CancellationToken ct = default);
-    Task<ApiResponse<IReadOnlyList<PosDefaultAccountsDto>>> GetAllBranchDefaultAccountsAsync(CancellationToken ct = default);
-    Task<ApiResponse<PosDefaultAccountsDto>> UpdateDefaultAccountsAsync(UpdatePosDefaultAccountsDto dto, string username, CancellationToken ct = default);
 }

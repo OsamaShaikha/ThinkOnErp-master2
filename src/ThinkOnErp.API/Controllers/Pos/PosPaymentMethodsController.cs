@@ -76,7 +76,6 @@ public class PosPaymentMethodsController : ControllerBase
                 Type = isCustAccount ? "ACCOUNT" : (isHospitality ? "HOSPITALITY" : m.MethodType),
                 RequiresReference = m.RequiresReference,
                 RequiresDueDate = m.RequiresDueDate,
-                GlAccountCode = isHospitality ? "632102" : (isCustAccount ? "112101" : m.GlAccountCode),
                 CommissionPercent = m.CommissionPercent,
                 DisplayOrder = displayOrder,
                 IsActive = m.IsActive
@@ -95,7 +94,6 @@ public class PosPaymentMethodsController : ControllerBase
                 Type = "ACCOUNT",
                 RequiresReference = false,
                 RequiresDueDate = false,
-                GlAccountCode = "112101",
                 CommissionPercent = 0,
                 DisplayOrder = 99,
                 IsActive = true
@@ -113,7 +111,6 @@ public class PosPaymentMethodsController : ControllerBase
                 Type = "HOSPITALITY",
                 RequiresReference = false,
                 RequiresDueDate = false,
-                GlAccountCode = "632102",
                 CommissionPercent = 0,
                 DisplayOrder = 98,
                 IsActive = true

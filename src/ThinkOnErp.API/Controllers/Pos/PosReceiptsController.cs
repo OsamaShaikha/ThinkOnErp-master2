@@ -67,18 +67,4 @@ public class PosReceiptsController : ControllerBase
         var result = await _shiftService.GetShiftReceiptsAsync(shiftId, paymentMethod, ct);
         return Ok(result);
     }
-
-    /// <summary>
-    /// Retrieves a lookup list of GL revenue, debtor, deposit, and asset accounts commonly used for POS receipt vouchers.
-    /// </summary>
-    /// <param name="ct">Cancellation token.</param>
-    /// <returns>List of account codes and their Arabic/English names categorized for POS receipt vouchers.</returns>
-    [HttpGet("accounts")]
-    [ProducesResponseType(typeof(ApiResponse<IReadOnlyList<PosExpenseAccountLookupDto>>), StatusCodes.Status200OK)]
-    public async Task<ActionResult<ApiResponse<IReadOnlyList<PosExpenseAccountLookupDto>>>> GetReceiptAccountsLookup(
-        CancellationToken ct = default)
-    {
-        var result = await _shiftService.GetReceiptAccountsLookupAsync(ct);
-        return Ok(result);
-    }
 }

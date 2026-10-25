@@ -67,18 +67,4 @@ public class PosPaymentsController : ControllerBase
         var result = await _shiftService.GetShiftPaymentsAsync(shiftId, paymentMethod, ct);
         return Ok(result);
     }
-
-    /// <summary>
-    /// Retrieves a lookup list of common GL expense and payable accounts commonly used for POS payment / petty cash vouchers.
-    /// </summary>
-    /// <param name="ct">Cancellation token.</param>
-    /// <returns>List of account codes and their Arabic/English names categorized for POS payment vouchers.</returns>
-    [HttpGet("accounts")]
-    [ProducesResponseType(typeof(ApiResponse<IReadOnlyList<PosExpenseAccountLookupDto>>), StatusCodes.Status200OK)]
-    public async Task<ActionResult<ApiResponse<IReadOnlyList<PosExpenseAccountLookupDto>>>> GetPaymentAccountsLookup(
-        CancellationToken ct = default)
-    {
-        var result = await _shiftService.GetExpenseAccountsLookupAsync(ct);
-        return Ok(result);
-    }
 }

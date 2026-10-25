@@ -41,11 +41,6 @@ public sealed class PosPaymentMethodDto
     public bool RequiresDueDate { get; set; }
 
     /// <summary>
-    /// حساب الأستاذ العام المرتبط في شجرة الحسابات (مثل 111101 للصندوق أو 632102 للضيافة)
-    /// </summary>
-    public string? GlAccountCode { get; set; }
-
-    /// <summary>
     /// نسبة عمولة الشبكة أو البنك إن وجدت
     /// </summary>
     public decimal CommissionPercent { get; set; }

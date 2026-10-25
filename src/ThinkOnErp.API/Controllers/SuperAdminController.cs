@@ -629,7 +629,7 @@ public class SuperAdminController : ControllerBase
         [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status404NotFound)]
         [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status500InternalServerError)]
-        public async Task<IActionResult> SyncCompanyTenantSchema(long companyId)
+        public async Task<IActionResult> SyncCompanyTenantSchema(long companyId, [FromQuery] bool runInBackground = false)
         {
             try
             {
@@ -647,18 +647,36 @@ public class SuperAdminController : ControllerBase
                     return BadRequest(ApiResponse<object>.CreateFailure("Company has no configured Oracle schema", statusCode: 400));
                 }
 
-                _ = Task.Run(async () =>
+                if (runInBackground)
                 {
-                    try
+                    _ = Task.Run(async () =>
                     {
-                        await _oracleSchemaService.SyncTenantSchemaAsync(company.CompanySchema, company.CompanySchema);
-                        _logger.LogInformation("Successfully completed background sync of schema {Schema}", company.CompanySchema);
-                    }
-                    catch (Exception ex)
-                    {
-                        _logger.LogError(ex, "Background error syncing tenant schema for {Schema}", company.CompanySchema);
-                    }
-                });
+                        try
+                        {
+                            await _oracleSchemaService.SyncTenantSchemaAsync(company.CompanySchema, company.CompanySchema);
+                            _logger.LogInformation("Successfully completed background sync of schema {Schema}", company.CompanySchema);
+                        }
+                        catch (Exception ex)
+                        {
+                            _logger.LogError(ex, "Background error syncing tenant schema for {Schema}", company.CompanySchema);
+                        }
+                    });
+
+                    return Ok(ApiResponse<object>.CreateSuccess(
+                        new
+                        {
+                            CompanyId = company.Id,
+                            CompanyCode = company.CompanyCode,
+                            CompanySchema = company.CompanySchema,
+                            Status = "Initiated",
+                            SyncedFromSchema = "DEV_TEMPLATE",
+                            InitiatedAtUtc = DateTime.UtcNow
+                        },
+                        $"Tenant schema sync for company '{company.CompanyNameEn}' initiated in background successfully with DEV_TEMPLATE",
+                        200));
+                }
+
+                await _oracleSchemaService.SyncTenantSchemaAsync(company.CompanySchema, company.CompanySchema);
 
                 return Ok(ApiResponse<object>.CreateSuccess(
                     new
@@ -666,11 +684,11 @@ public class SuperAdminController : ControllerBase
                         CompanyId = company.Id,
                         CompanyCode = company.CompanyCode,
                         CompanySchema = company.CompanySchema,
-                        Status = "Initiated",
+                        Status = "Completed",
                         SyncedFromSchema = "DEV_TEMPLATE",
-                        InitiatedAtUtc = DateTime.UtcNow
+                        CompletedAtUtc = DateTime.UtcNow
                     },
-                    $"Tenant schema sync for company '{company.CompanyNameEn}' initiated successfully with DEV_TEMPLATE",
+                    $"Tenant schema sync for company '{company.CompanyNameEn}' completed successfully with DEV_TEMPLATE",
                     200));
             }
             catch (Exception ex)

@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using ThinkOnErp.Domain.Entities;
 using ThinkOnErp.Domain.Interfaces;
 using ThinkOnErp.Infrastructure.Data;
@@ -9,11 +10,16 @@ public class CompanyRepository : ICompanyRepository
 {
     private readonly OracleDbContext _context;
     private readonly IOracleSchemaService _oracleSchemaService;
+    private readonly ILogger<CompanyRepository> _logger;
 
-    public CompanyRepository(OracleDbContext context, IOracleSchemaService oracleSchemaService)
+    public CompanyRepository(
+        OracleDbContext context,
+        IOracleSchemaService oracleSchemaService,
+        ILogger<CompanyRepository> logger)
     {
         _context = context;
         _oracleSchemaService = oracleSchemaService;
+        _logger = logger;
     }
 
     public async Task<SysCompany?> GetBySchemaAsync(string companySchema)
@@ -129,34 +135,51 @@ public class CompanyRepository : ICompanyRepository
         _context.SysCompanies.Add(company);
         await _context.SaveChangesAsync();
 
-        // 2. Create the Oracle schema and clone objects from DEV_TEMPLATE
-        await _oracleSchemaService.CreateCompanySchemaAsync(companySchema, companySchema);
+        try
+        {
+            // 2. Create the Oracle schema and clone objects from DEV_TEMPLATE
+            await _oracleSchemaService.CreateCompanySchemaAsync(companySchema, companySchema);
 
-        // 3. Provision the default branch and default fiscal year inside the tenant schema
-        var (branchId, fiscalYearId) = await _oracleSchemaService.ProvisionTenantBranchAndFiscalYearAsync(
-            schemaName: companySchema,
-            schemaPassword: companySchema,
-            companyId: company.Id,
-            branchNameLocal: branchNameLocal,
-            branchNameEn: branchNameEn,
-            branchPhone: branchPhone,
-            branchMobile: branchMobile,
-            branchFax: branchFax,
-            branchEmail: branchEmail,
-            taxNumber: taxNumber,
-            defaultLang: defaultLang ?? 1,
-            baseCurrencyId: baseCurrencyId,
-            roundingRules: roundingRules ?? 1,
-            branchLogoPath: branchLogoPath,
-            creationUser: creationUser);
+            // 3. Provision the default branch and default fiscal year inside the tenant schema
+            var (branchId, fiscalYearId) = await _oracleSchemaService.ProvisionTenantBranchAndFiscalYearAsync(
+                schemaName: companySchema,
+                schemaPassword: companySchema,
+                companyId: company.Id,
+                branchNameLocal: branchNameLocal,
+                branchNameEn: branchNameEn,
+                branchPhone: branchPhone,
+                branchMobile: branchMobile,
+                branchFax: branchFax,
+                branchEmail: branchEmail,
+                taxNumber: taxNumber,
+                defaultLang: defaultLang ?? 1,
+                baseCurrencyId: baseCurrencyId,
+                roundingRules: roundingRules ?? 1,
+                branchLogoPath: branchLogoPath,
+                creationUser: creationUser);
 
-        // 4. Update default branch ID on the company in the master schema
-        company.DefaultBranchId = branchId;
-        company.UpdateUser = creationUser;
-        company.UpdateDate = DateTime.Now;
-        await _context.SaveChangesAsync();
+            // 4. Update default branch ID on the company in the master schema
+            company.DefaultBranchId = branchId;
+            company.UpdateUser = creationUser;
+            company.UpdateDate = DateTime.Now;
+            await _context.SaveChangesAsync();
 
-        return (company.Id, branchId, fiscalYearId);
+            return (company.Id, branchId, fiscalYearId);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to provision schema or branch for company {CompanyCode}. Cleaning up company record.", companyCode);
+            try
+            {
+                _context.SysCompanies.Remove(company);
+                await _context.SaveChangesAsync();
+            }
+            catch (Exception cleanupEx)
+            {
+                _logger.LogWarning(cleanupEx, "Failed to remove orphaned company record {CompanyCode} during rollback.", companyCode);
+            }
+            throw;
+        }
     }
 
     public async Task<long> SetDefaultBranchAsync(long companyId, long branchId, string userName)

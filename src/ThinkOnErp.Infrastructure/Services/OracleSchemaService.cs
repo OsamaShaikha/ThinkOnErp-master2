@@ -1,3 +1,4 @@
+﻿using System.Text.RegularExpressions;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -84,7 +85,15 @@ public class OracleSchemaService : IOracleSchemaService
         await masterConn.OpenAsync();
 
         // Enable Oracle 12c+ script mode to allow regular usernames in CDB
-        await ExecuteRawAsync(masterConn, "ALTER SESSION SET \"_ORACLE_SCRIPT\" = TRUE");
+        // Enable Oracle 12c+ script mode to allow regular usernames when in CDB$ROOT (skipped if in PDB or if privilege not granted)
+        try
+        {
+            await ExecuteRawAsync(masterConn, "ALTER SESSION SET \"_ORACLE_SCRIPT\" = TRUE");
+        }
+        catch (OracleException ex) when (ex.Number == 2097 || ex.Number == 1031)
+        {
+            _logger.LogDebug("Skipping _ORACLE_SCRIPT setting (running in PDB container where it is not required)");
+        }
 
         // 1. Create the Oracle user (schema)
         try
@@ -603,10 +612,164 @@ public class OracleSchemaService : IOracleSchemaService
             await SeedVoucherTypesAsync(connection, schemaName);
             await SeedCostCentersAsync(connection, schemaName);
             await SeedTaxDefaultsAsync(connection, schemaName);
+            await SeedChartOfAccountsAsync(connection, schemaName);
+            await EnsurePaymentMethodsForBranchesAsync(connection, schemaName);
         }
         catch (Exception ex)
         {
             _logger.LogWarning(ex, "Reference seeding warning for schema {SchemaName}", schemaName);
+        }
+    }
+
+    private async Task SeedChartOfAccountsAsync(OracleConnection connection, string schemaName)
+    {
+        try
+        {
+            var copyCoaSql = $@"
+                INSERT INTO ""{schemaName}"".""GL_ACCOUNT""
+                SELECT * FROM ""{_devSchemaName}"".""GL_ACCOUNT""
+                WHERE ""ACCOUNT_CODE"" NOT IN (SELECT ""ACCOUNT_CODE"" FROM ""{schemaName}"".""GL_ACCOUNT"")";
+
+            await using var cmd = connection.CreateCommand();
+            cmd.CommandText = copyCoaSql;
+            var rows = await cmd.ExecuteNonQueryAsync();
+            if (rows > 0)
+            {
+                _logger.LogInformation("Seeded {Rows} accounts from {DevSchema} to {TargetSchema}.GL_ACCOUNT", rows, _devSchemaName, schemaName);
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Failed to seed chart of accounts from {DevSchema} into {TargetSchema}", _devSchemaName, schemaName);
+        }
+    }
+
+    private async Task EnsurePaymentMethodsForBranchesAsync(OracleConnection connection, string schemaName)
+    {
+        try
+        {
+            var branchIds = new List<long>();
+            await using (var cmd = connection.CreateCommand())
+            {
+                cmd.CommandText = $"SELECT \"Id\" FROM \"{schemaName}\".\"SYS_BRANCH\" WHERE \"IS_ACTIVE\" = 1";
+                await using var reader = await cmd.ExecuteReaderAsync();
+                while (await reader.ReadAsync())
+                    branchIds.Add(reader.GetInt64(0));
+            }
+
+            foreach (var bId in branchIds)
+            {
+                await SeedDefaultPaymentMethodsForBranchAsync(connection, schemaName, bId);
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Failed to ensure payment methods for branches in {Schema}", schemaName);
+        }
+    }
+
+    private async Task SeedDefaultPaymentMethodsForBranchAsync(OracleConnection connection, string schemaName, long branchId)
+    {
+        var seedPmSql = $@"
+            DECLARE
+                v_bid NUMBER := :branchId;
+            BEGIN
+                -- 1. CASH
+                MERGE INTO ""{schemaName}"".""PAYMENT_METHOD"" t
+                USING (SELECT v_bid AS b, 'CASH' AS c FROM dual) s
+                ON (t.""BRANCH_ID"" = s.b AND t.""CODE"" = s.c)
+                WHEN NOT MATCHED THEN
+                    INSERT (""BRANCH_ID"", ""CODE"", ""NAME_LOCAL"", ""NAME_EN"", ""METHOD_TYPE"", ""GL_ACCOUNT_CODE"",
+                            ""COMMISSION_PERCENT"", ""COMMISSION_FIXED_AMOUNT"", ""REQUIRES_REFERENCE"", ""REQUIRES_DUE_DATE"",
+                            ""AUTO_POST_GL"", ""SHOW_IN_POS"", ""SHOW_IN_INVOICES"", ""SHOW_IN_VOUCHERS"", ""IS_ACTIVE"", ""DISPLAY_ORDER"",
+                            ""CREATION_USER"", ""CREATION_DATE"")
+                    VALUES (v_bid, 'CASH', N'نقدي - الصندوق الرئيسي', 'Cash - Main Register', 'CASH', '111101',
+                            0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 'SYSTEM', SYSTIMESTAMP);
+
+                -- 2. MADA
+                MERGE INTO ""{schemaName}"".""PAYMENT_METHOD"" t
+                USING (SELECT v_bid AS b, 'MADA' AS c FROM dual) s
+                ON (t.""BRANCH_ID"" = s.b AND t.""CODE"" = s.c)
+                WHEN NOT MATCHED THEN
+                    INSERT (""BRANCH_ID"", ""CODE"", ""NAME_LOCAL"", ""NAME_EN"", ""METHOD_TYPE"", ""GL_ACCOUNT_CODE"",
+                            ""COMMISSION_PERCENT"", ""COMMISSION_FIXED_AMOUNT"", ""REQUIRES_REFERENCE"", ""REQUIRES_DUE_DATE"",
+                            ""AUTO_POST_GL"", ""SHOW_IN_POS"", ""SHOW_IN_INVOICES"", ""SHOW_IN_VOUCHERS"", ""IS_ACTIVE"", ""DISPLAY_ORDER"",
+                            ""CREATION_USER"", ""CREATION_DATE"")
+                    VALUES (v_bid, 'MADA', N'مدى - شبكة نقاط البيع', 'Mada - POS Terminal', 'CARD', '111201',
+                            0.8, 0, 1, 0, 1, 1, 1, 1, 1, 2, 'SYSTEM', SYSTIMESTAMP);
+
+                -- 3. VISA
+                MERGE INTO ""{schemaName}"".""PAYMENT_METHOD"" t
+                USING (SELECT v_bid AS b, 'VISA' AS c FROM dual) s
+                ON (t.""BRANCH_ID"" = s.b AND t.""CODE"" = s.c)
+                WHEN NOT MATCHED THEN
+                    INSERT (""BRANCH_ID"", ""CODE"", ""NAME_LOCAL"", ""NAME_EN"", ""METHOD_TYPE"", ""GL_ACCOUNT_CODE"",
+                            ""COMMISSION_PERCENT"", ""COMMISSION_FIXED_AMOUNT"", ""REQUIRES_REFERENCE"", ""REQUIRES_DUE_DATE"",
+                            ""AUTO_POST_GL"", ""SHOW_IN_POS"", ""SHOW_IN_INVOICES"", ""SHOW_IN_VOUCHERS"", ""IS_ACTIVE"", ""DISPLAY_ORDER"",
+                            ""CREATION_USER"", ""CREATION_DATE"")
+                    VALUES (v_bid, 'VISA', N'فيزا / ماستركارد', 'Visa / MasterCard', 'CARD', '111201',
+                            1.5, 0, 1, 0, 1, 1, 1, 1, 1, 3, 'SYSTEM', SYSTIMESTAMP);
+
+                -- 4. BANK_TRANSFER
+                MERGE INTO ""{schemaName}"".""PAYMENT_METHOD"" t
+                USING (SELECT v_bid AS b, 'BANK_TRANSFER' AS c FROM dual) s
+                ON (t.""BRANCH_ID"" = s.b AND t.""CODE"" = s.c)
+                WHEN NOT MATCHED THEN
+                    INSERT (""BRANCH_ID"", ""CODE"", ""NAME_LOCAL"", ""NAME_EN"", ""METHOD_TYPE"", ""GL_ACCOUNT_CODE"",
+                            ""COMMISSION_PERCENT"", ""COMMISSION_FIXED_AMOUNT"", ""REQUIRES_REFERENCE"", ""REQUIRES_DUE_DATE"",
+                            ""AUTO_POST_GL"", ""SHOW_IN_POS"", ""SHOW_IN_INVOICES"", ""SHOW_IN_VOUCHERS"", ""IS_ACTIVE"", ""DISPLAY_ORDER"",
+                            ""CREATION_USER"", ""CREATION_DATE"")
+                    VALUES (v_bid, 'BANK_TRANSFER', N'تحويل بنكي', 'Bank Transfer', 'BANK', '111201',
+                            0, 0, 1, 0, 1, 1, 1, 1, 1, 4, 'SYSTEM', SYSTIMESTAMP);
+
+                -- 5. CHEQUE
+                MERGE INTO ""{schemaName}"".""PAYMENT_METHOD"" t
+                USING (SELECT v_bid AS b, 'CHEQUE' AS c FROM dual) s
+                ON (t.""BRANCH_ID"" = s.b AND t.""CODE"" = s.c)
+                WHEN NOT MATCHED THEN
+                    INSERT (""BRANCH_ID"", ""CODE"", ""NAME_LOCAL"", ""NAME_EN"", ""METHOD_TYPE"", ""GL_ACCOUNT_CODE"",
+                            ""COMMISSION_PERCENT"", ""COMMISSION_FIXED_AMOUNT"", ""REQUIRES_REFERENCE"", ""REQUIRES_DUE_DATE"",
+                            ""AUTO_POST_GL"", ""SHOW_IN_POS"", ""SHOW_IN_INVOICES"", ""SHOW_IN_VOUCHERS"", ""IS_ACTIVE"", ""DISPLAY_ORDER"",
+                            ""CREATION_USER"", ""CREATION_DATE"")
+                    VALUES (v_bid, 'CHEQUE', N'شيكات برسم التحصيل', 'Cheques Under Collection', 'CHEQUE', '111301',
+                            0, 0, 1, 1, 1, 0, 1, 1, 1, 5, 'SYSTEM', SYSTIMESTAMP);
+
+                -- 6. HOSPITALITY (Fixed ID 98)
+                MERGE INTO ""{schemaName}"".""PAYMENT_METHOD"" t
+                USING (SELECT v_bid AS b, 'HOSPITALITY' AS c FROM dual) s
+                ON (t.""BRANCH_ID"" = s.b AND t.""CODE"" = s.c)
+                WHEN NOT MATCHED THEN
+                    INSERT (""ID"", ""BRANCH_ID"", ""CODE"", ""NAME_LOCAL"", ""NAME_EN"", ""METHOD_TYPE"", ""GL_ACCOUNT_CODE"",
+                            ""COMMISSION_PERCENT"", ""COMMISSION_FIXED_AMOUNT"", ""REQUIRES_REFERENCE"", ""REQUIRES_DUE_DATE"",
+                            ""AUTO_POST_GL"", ""SHOW_IN_POS"", ""SHOW_IN_INVOICES"", ""SHOW_IN_VOUCHERS"", ""IS_ACTIVE"", ""DISPLAY_ORDER"",
+                            ""CREATION_USER"", ""CREATION_DATE"")
+                    VALUES (98, v_bid, 'HOSPITALITY', N'ضيافة', 'Hospitality', 'HOSPITALITY', '632102',
+                            0, 0, 0, 0, 1, 1, 1, 1, 1, 98, 'SYSTEM', SYSTIMESTAMP);
+
+                -- 7. CUSTOMER_ACCOUNT (Fixed ID 99)
+                MERGE INTO ""{schemaName}"".""PAYMENT_METHOD"" t
+                USING (SELECT v_bid AS b, 'CUSTOMER_ACCOUNT' AS c FROM dual) s
+                ON (t.""BRANCH_ID"" = s.b AND t.""CODE"" = s.c)
+                WHEN NOT MATCHED THEN
+                    INSERT (""ID"", ""BRANCH_ID"", ""CODE"", ""NAME_LOCAL"", ""NAME_EN"", ""METHOD_TYPE"", ""GL_ACCOUNT_CODE"",
+                            ""COMMISSION_PERCENT"", ""COMMISSION_FIXED_AMOUNT"", ""REQUIRES_REFERENCE"", ""REQUIRES_DUE_DATE"",
+                            ""AUTO_POST_GL"", ""SHOW_IN_POS"", ""SHOW_IN_INVOICES"", ""SHOW_IN_VOUCHERS"", ""IS_ACTIVE"", ""DISPLAY_ORDER"",
+                            ""CREATION_USER"", ""CREATION_DATE"")
+                    VALUES (99, v_bid, 'CUSTOMER_ACCOUNT', N'حساب العميل (آجل / ذمم)', 'Customer Account (Credit)', 'ACCOUNT', '112101',
+                            0, 0, 0, 0, 1, 1, 1, 1, 1, 99, 'SYSTEM', SYSTIMESTAMP);
+            END;";
+
+        try
+        {
+            await using var cmd = connection.CreateCommand();
+            cmd.CommandText = seedPmSql;
+            cmd.Parameters.Add(new OracleParameter("branchId", branchId));
+            await cmd.ExecuteNonQueryAsync();
+            _logger.LogInformation("Seeded default payment methods for {Schema} Branch {BranchId}", schemaName, branchId);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Failed to seed default payment methods for {Schema} Branch {BranchId}", schemaName, branchId);
         }
     }
 
@@ -1117,6 +1280,8 @@ public class OracleSchemaService : IOracleSchemaService
         _logger.LogInformation("Syncing tenant schema {SchemaName} with template {SourceSchema}", schemaName, _devSchemaName);
         
         await using var masterConn = await OpenMasterConnectionAsync();
+        // Ensure developer template has all tables declared in EF Core model first
+        await BootstrapTablesFromEfModelAsync(masterConn, _devSchemaName);
         await CloneFromDeveloperSchemaAsync(masterConn, schemaName);
         await SyncTableColumnsSchemaDiffAsync(masterConn, schemaName);
         await EnsureAccountingSchemaAsync(masterConn, schemaName);
@@ -1141,7 +1306,8 @@ public class OracleSchemaService : IOracleSchemaService
             var count = Convert.ToInt64(countObj);
             if (count > 0)
             {
-                _logger.LogInformation("Developer template schema {SchemaName} already provisioned ({Count} accounts found). Skipping startup auto-provisioning.", _devSchemaName, count);
+                _logger.LogInformation("Developer template schema {SchemaName} already provisioned ({Count} accounts found). Checking for any new model tables...", _devSchemaName, count);
+                await BootstrapTablesFromEfModelAsync(masterConn, _devSchemaName);
                 return;
             }
         }
@@ -1151,7 +1317,15 @@ public class OracleSchemaService : IOracleSchemaService
         }
 
         // Enable Oracle 12c+ script mode
-        await ExecuteRawAsync(masterConn, "ALTER SESSION SET \"_ORACLE_SCRIPT\" = TRUE");
+        // Enable Oracle 12c+ script mode to allow regular usernames when in CDB$ROOT (skipped if in PDB or if privilege not granted)
+        try
+        {
+            await ExecuteRawAsync(masterConn, "ALTER SESSION SET \"_ORACLE_SCRIPT\" = TRUE");
+        }
+        catch (OracleException ex) when (ex.Number == 2097 || ex.Number == 1031)
+        {
+            _logger.LogDebug("Skipping _ORACLE_SCRIPT setting (running in PDB container where it is not required)");
+        }
 
         // 1. Create the Oracle user for developer template if not exists
         try
@@ -1344,12 +1518,27 @@ public class OracleSchemaService : IOracleSchemaService
                 cmd.CommandText = "BEGIN DBMS_METADATA.SET_TRANSFORM_PARAM(DBMS_METADATA.SESSION_TRANSFORM, 'STORAGE', FALSE); END;";
                 await cmd.ExecuteNonQueryAsync();
             }
+            await using (var cmd = connection.CreateCommand())
+            {
+                cmd.CommandText = "BEGIN DBMS_METADATA.SET_TRANSFORM_PARAM(DBMS_METADATA.SESSION_TRANSFORM, 'REF_CONSTRAINTS', FALSE); END;";
+                await cmd.ExecuteNonQueryAsync();
+            }
         }
         catch (Exception ex)
         {
             _logger.LogWarning(ex, "Failed to set DBMS_METADATA session transform parameters. Output DDL may contain storage clauses.");
         }
 
+
+        // Set CURRENT_SCHEMA so any unqualified references resolve in the target schema
+        try
+        {
+            await ExecuteRawAsync(connection, $"ALTER SESSION SET CURRENT_SCHEMA = \"{targetSchema}\"");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Failed to set CURRENT_SCHEMA to {TargetSchema}", targetSchema);
+        }
         var pendingObjects = objects.Where(o => !GlobalTables.Contains(o.Name)).ToList();
         for (int pass = 1; pass <= 4 && pendingObjects.Count > 0; pass++)
         {
@@ -1398,12 +1587,27 @@ public class OracleSchemaService : IOracleSchemaService
                     }
                 }
 
-                _logger.LogDebug("Executing DDL for {Type} {TargetSchema}.{Name}", obj.Type, targetSchema, obj.Name);
+                var stmts = (obj.Type == "TABLE") ? SplitDdlStatements(ddl) : new List<string> { ddl };
+                _logger.LogDebug("Executing DDL for {Type} {TargetSchema}.{Name} ({Count} statement(s))", obj.Type, targetSchema, obj.Name, stmts.Count);
                 try
                 {
-                    await using var cmd = connection.CreateCommand();
-                    cmd.CommandText = ddl;
-                    await cmd.ExecuteNonQueryAsync();
+                    foreach (var stmt in stmts)
+                    {
+                        var trimmedStmt = stmt.Trim();
+                        if (string.IsNullOrWhiteSpace(trimmedStmt)) continue;
+                        if (trimmedStmt.EndsWith(";")) trimmedStmt = trimmedStmt.Substring(0, trimmedStmt.Length - 1).Trim();
+
+                        try
+                        {
+                            await using var cmd = connection.CreateCommand();
+                            cmd.CommandText = trimmedStmt;
+                            await cmd.ExecuteNonQueryAsync();
+                        }
+                        catch (OracleException ex) when (ex.Number == 955 || ex.Number == 2261 || ex.Number == 2264 || ex.Number == 1917 || ex.Number == 1408 || ex.Number == 2275)
+                        {
+                            _logger.LogDebug("Object/constraint already exists or is redundant ({Number}): {Msg}", ex.Number, ex.Message);
+                        }
+                    }
                 }
                 catch (OracleException ex) when (ex.Number == 955 || ex.Number == 2261 || ex.Number == 2264 || ex.Number == 1917)
                 {
@@ -1424,6 +1628,90 @@ public class OracleSchemaService : IOracleSchemaService
             }
             pendingObjects = failedObjects;
         }
+        // Step: Apply referential constraints (Foreign Keys) in a separate pass after all tables exist
+        var tablesToLink = objects.Where(o => o.Type == "TABLE" && !GlobalTables.Contains(o.Name)).ToList();
+        foreach (var tbl in tablesToLink)
+        {
+            try
+            {
+                string refDdl = "";
+                await using (var cmd = connection.CreateCommand())
+                {
+                    cmd.CommandText = "SELECT DBMS_METADATA.GET_DEPENDENT_DDL('REF_CONSTRAINT', :objName, :sourceSchema) FROM DUAL";
+                    cmd.Parameters.Add(new OracleParameter("objName", tbl.Name));
+                    cmd.Parameters.Add(new OracleParameter("sourceSchema", _devSchemaName));
+                    var result = await cmd.ExecuteScalarAsync();
+                    refDdl = result?.ToString() ?? "";
+                }
+
+                if (string.IsNullOrWhiteSpace(refDdl))
+                    continue;
+
+                refDdl = refDdl.Replace($"\"{_devSchemaName}\".", $"\"{targetSchema}\".", StringComparison.OrdinalIgnoreCase);
+                refDdl = refDdl.Replace($"\"{_devSchemaName}\"", $"\"{targetSchema}\"", StringComparison.OrdinalIgnoreCase);
+
+                var stmts = refDdl.Split(new[] { "\n  ALTER TABLE", "\r\n  ALTER TABLE", "\nALTER TABLE", "\r\nALTER TABLE" }, StringSplitOptions.RemoveEmptyEntries);
+                foreach (var s in stmts)
+                {
+                    var stmt = s.Trim();
+                    if (!stmt.StartsWith("ALTER TABLE", StringComparison.OrdinalIgnoreCase))
+                        stmt = "ALTER TABLE " + stmt;
+                    if (stmt.EndsWith(";"))
+                        stmt = stmt.Substring(0, stmt.Length - 1).Trim();
+
+                    try
+                    {
+                        await using var cmd = connection.CreateCommand();
+                        cmd.CommandText = stmt;
+                        await cmd.ExecuteNonQueryAsync();
+                    }
+                    catch (OracleException ex) when (ex.Number == 2275 || ex.Number == 2261 || ex.Number == 2264)
+                    {
+                        // Constraint already exists
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogWarning(ex, "Failed applying foreign key on {TargetSchema}.{TableName}: {Stmt}", targetSchema, tbl.Name, stmt);
+                    }
+                }
+            }
+            catch (OracleException ex) when (ex.Number == 31608) // ORA-31608: no REF_CONSTRAINT found
+            {
+                // Normal when table has no foreign keys
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Failed retrieving foreign keys for {TableName}", tbl.Name);
+            }
+        }
+
+        // Reset CURRENT_SCHEMA back to master user
+        try
+        {
+            await ExecuteRawAsync(connection, "ALTER SESSION SET CURRENT_SCHEMA = \"THINKON_ERP\"");
+        }
+        catch { }
+
+
+    }
+    private static List<string> SplitDdlStatements(string ddl)
+    {
+        var list = new List<string>();
+        var regex = new Regex(
+            @"(?=(?:^|\r?\n)\s*(?:CREATE\s+(?:UNIQUE\s+|BITMAP\s+)?INDEX|ALTER\s+TABLE|COMMENT\s+ON)\b)",
+            RegexOptions.IgnoreCase);
+        var parts = regex.Split(ddl);
+        foreach (var p in parts)
+        {
+            var trimmed = p.Trim();
+            if (!string.IsNullOrWhiteSpace(trimmed))
+            {
+                if (trimmed.EndsWith(";"))
+                    trimmed = trimmed.Substring(0, trimmed.Length - 1).Trim();
+                list.Add(trimmed);
+            }
+        }
+        return list;
     }
 
     private async Task SyncTableColumnsSchemaDiffAsync(OracleConnection connection, string targetSchema)
@@ -1610,6 +1898,10 @@ public class OracleSchemaService : IOracleSchemaService
 
         var fiscalYearId = Convert.ToInt64(fyIdParam.Value.ToString());
         _logger.LogInformation("Successfully created fiscal year with ID {FiscalYearId} in schema {SchemaName}", fiscalYearId, schemaName);
+
+        // 3. Ensure GL Accounts exist and seed default payment methods for this branch
+        await SeedChartOfAccountsAsync(tenantConn, schemaName);
+        await SeedDefaultPaymentMethodsForBranchAsync(tenantConn, schemaName, branchId);
 
         return (branchId, fiscalYearId);
     }
