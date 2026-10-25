@@ -39,6 +39,7 @@ public static class DependencyInjection
     public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration configuration)
     {
         services.AddScoped<ThinkOnErp.Application.Services.Inventory.IInventoryExcelService, ThinkOnErp.Infrastructure.Services.Inventory.InventoryExcelService>();
+        services.AddScoped<ThinkOnErp.Application.Services.Inventory.IOpeningBalanceExcelService, ThinkOnErp.Infrastructure.Services.Inventory.OpeningBalanceExcelService>();
         // Register all configuration options with data annotation validation
         services.AddTraceabilityConfigurationValidation(configuration);
 
@@ -171,6 +172,10 @@ public static class DependencyInjection
         services.AddScoped<PasswordHashingService>();
         services.AddScoped<JwtTokenService>();
         services.AddScoped<ITicketNotificationService, TicketNotificationService>();
+        services.AddScoped<ITicketSupportDirectory, TicketSupportDirectory>();
+        services.AddSingleton<TicketEmailQueue>();
+        services.AddSingleton<ITicketEmailQueue>(sp => sp.GetRequiredService<TicketEmailQueue>());
+        services.AddHostedService(sp => sp.GetRequiredService<TicketEmailQueue>());
         services.AddScoped<IAttachmentService, AttachmentService>();
         services.AddScoped<IOracleSchemaService, OracleSchemaService>();
         services.AddScoped<ISlaCalculationService, SlaCalculationService>();

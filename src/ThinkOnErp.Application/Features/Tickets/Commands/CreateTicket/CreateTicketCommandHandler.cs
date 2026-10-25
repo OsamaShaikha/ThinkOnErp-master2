@@ -18,6 +18,7 @@ public class CreateTicketCommandHandler : IRequestHandler<CreateTicketCommand, I
     private readonly ITicketNotificationService _notificationService;
     private readonly IAttachmentService _attachmentService;
     private readonly ILogger<CreateTicketCommandHandler> _logger;
+    private readonly ITicketStatusRepository _statuses;
 
     public CreateTicketCommandHandler(
         ITicketRepository ticketRepository,
@@ -26,7 +27,8 @@ public class CreateTicketCommandHandler : IRequestHandler<CreateTicketCommand, I
         ITicketAttachmentRepository attachmentRepository,
         ITicketNotificationService notificationService,
         IAttachmentService attachmentService,
-        ILogger<CreateTicketCommandHandler> logger)
+        ILogger<CreateTicketCommandHandler> logger,
+        ITicketStatusRepository statuses)
     {
         _ticketRepository = ticketRepository;
         _ticketTypeRepository = ticketTypeRepository;
@@ -35,6 +37,7 @@ public class CreateTicketCommandHandler : IRequestHandler<CreateTicketCommand, I
         _notificationService = notificationService;
         _attachmentService = attachmentService;
         _logger = logger;
+        _statuses = statuses;
     }
 
     public async Task<Int64> Handle(CreateTicketCommand request, CancellationToken cancellationToken)
@@ -48,18 +51,19 @@ public class CreateTicketCommandHandler : IRequestHandler<CreateTicketCommand, I
             var ticketType = await _ticketTypeRepository.GetByIdAsync(request.TicketTypeId);
             var ticketPriority = await _ticketPriorityRepository.GetByIdAsync(request.TicketPriorityId);
 
-            if (ticketType == null)
+            if (ticketType == null || !ticketType.IsActive)
             {
                 throw new ArgumentException($"Ticket type with ID {request.TicketTypeId} not found.");
             }
 
-            if (ticketPriority == null)
+            if (ticketPriority == null || !ticketPriority.IsActive)
             {
                 throw new ArgumentException($"Ticket priority with ID {request.TicketPriorityId} not found.");
             }
 
             // Calculate expected resolution date based on SLA
-            var expectedResolutionDate = CalculateExpectedResolutionDate(ticketPriority.SlaTargetHours);
+            var createdUtc = DateTime.UtcNow;
+            var expectedResolutionDate = createdUtc.AddHours((double)ticketPriority.SlaTargetHours);
 
             // Get the "Open" status ID (assuming it's the first status)
             var openStatusId = await GetOpenStatusIdAsync();
@@ -82,9 +86,12 @@ public class CreateTicketCommandHandler : IRequestHandler<CreateTicketCommand, I
                 ActualResolutionDate = null,
                 IsActive = true,
                 CreationUser = request.CreationUser,
-                CreationDate = DateTime.UtcNow
+                CreationDate = createdUtc
             };
 
+            // Validate every attachment before persisting anything. EF saves the
+            // ticket and its attachment graph in one atomic SaveChanges call.
+            ticket.Attachments = await PrepareAttachmentsAsync(request.Attachments, request.CreationUser);
             // Create the ticket
             var ticketId = await _ticketRepository.CreateAsync(ticket);
 
@@ -92,12 +99,6 @@ public class CreateTicketCommandHandler : IRequestHandler<CreateTicketCommand, I
 
             // Get the created ticket with navigation properties for notifications
             var createdTicket = await _ticketRepository.GetByIdAsync(ticketId);
-
-            // Process attachments if provided
-            if (request.Attachments != null && request.Attachments.Any())
-            {
-                await ProcessAttachmentsAsync(ticketId, request.Attachments, request.CreationUser, createdTicket);
-            }
 
             // Send notification for ticket creation
             if (createdTicket != null)
@@ -126,37 +127,24 @@ public class CreateTicketCommandHandler : IRequestHandler<CreateTicketCommand, I
     }
 
     /// <summary>
-    /// Calculates the expected resolution date based on SLA target hours.
-    /// Excludes weekends for business hours calculation.
-    /// </summary>
-    private DateTime CalculateExpectedResolutionDate(decimal slaTargetHours)
-    {
-        var creationDate = DateTime.UtcNow;
-        var hoursToAdd = (double)slaTargetHours;
-        
-        // Simple calculation - add hours to creation date
-        // In a real implementation, you might want to exclude weekends and holidays
-        return creationDate.AddHours(hoursToAdd);
-    }
-
-    /// <summary>
     /// Gets the "Open" status ID from the database.
     /// </summary>
     private async Task<Int64> GetOpenStatusIdAsync()
     {
-        // This is a simplified implementation
-        // In a real scenario, you might want to cache this or have it as a constant
-        // For now, we'll assume status ID 1 is "Open"
-        return 1;
+        var status = await _statuses.GetByCodeAsync(SysTicketStatus.StatusCodes.Open);
+        if (status == null || TicketWorkflow.IsFinal(status))
+            throw new InvalidOperationException("An active non-final OPEN status must be configured.");
+        return status.Id;
     }
 
     /// <summary>
     /// Processes and saves file attachments for the ticket.
     /// </summary>
-    private async Task ProcessAttachmentsAsync(Int64 ticketId, List<ThinkOnErp.Application.DTOs.Ticket.CreateAttachmentDto> attachments, string creationUser, SysRequestTicket? ticket)
+    private async Task<List<SysTicketAttachment>> PrepareAttachmentsAsync(List<ThinkOnErp.Application.DTOs.Ticket.CreateAttachmentDto>? attachments, string creationUser)
     {
-        _logger.LogInformation("Processing {AttachmentCount} attachments for ticket {TicketId}", 
-            attachments.Count, ticketId);
+        var prepared = new List<SysTicketAttachment>();
+        if (attachments == null) return prepared;
+        if (attachments.Count > 5) throw new ArgumentException("Maximum 5 attachments allowed per ticket.");
 
         foreach (var attachmentDto in attachments)
         {
@@ -188,7 +176,6 @@ public class CreateTicketCommandHandler : IRequestHandler<CreateTicketCommand, I
                 
                 var attachment = new SysTicketAttachment
                 {
-                    TicketId = ticketId,
                     FileName = attachmentDto.FileName,
                     FileSize = fileBytes.Length,
                     MimeType = attachmentDto.MimeType,
@@ -197,31 +184,14 @@ public class CreateTicketCommandHandler : IRequestHandler<CreateTicketCommand, I
                     CreationDate = DateTime.UtcNow
                 };
 
-                var attachmentId = await _attachmentRepository.CreateAsync(attachment);
-                
-                _logger.LogInformation("Attachment {FileName} saved with ID {AttachmentId} for ticket {TicketId}", 
-                    attachmentDto.FileName, attachmentId, ticketId);
-
-                // Send notification for attachment
-                if (ticket != null)
-                {
-                    try
-                    {
-                        await _notificationService.SendAttachmentAddedNotificationAsync(ticket, attachment);
-                    }
-                    catch (Exception ex)
-                    {
-                        _logger.LogWarning(ex, "Failed to send attachment notification for {FileName} on ticket {TicketId}", 
-                            attachmentDto.FileName, ticketId);
-                    }
-                }
+                prepared.Add(attachment);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error processing attachment {FileName} for ticket {TicketId}", 
-                    attachmentDto.FileName, ticketId);
+                _logger.LogError(ex, "Error validating attachment {FileName}", attachmentDto.FileName);
                 throw;
             }
         }
+        return prepared;
     }
 }

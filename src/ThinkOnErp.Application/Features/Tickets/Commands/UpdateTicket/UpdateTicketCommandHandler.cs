@@ -1,3 +1,4 @@
+using ThinkOnErp.Domain.Entities;
 using MediatR;
 using Microsoft.Extensions.Logging;
 using ThinkOnErp.Domain.Interfaces;
@@ -50,16 +51,17 @@ public class UpdateTicketCommandHandler : IRequestHandler<UpdateTicketCommand, I
             var ticketType = await _ticketTypeRepository.GetByIdAsync(request.TicketTypeId);
             var ticketPriority = await _ticketPriorityRepository.GetByIdAsync(request.TicketPriorityId);
 
-            if (ticketType == null)
+            if (ticketType == null || !ticketType.IsActive)
             {
                 throw new ArgumentException($"Ticket type with ID {request.TicketTypeId} not found.");
             }
 
-            if (ticketPriority == null)
+            if (ticketPriority == null || !ticketPriority.IsActive)
             {
                 throw new ArgumentException($"Ticket priority with ID {request.TicketPriorityId} not found.");
             }
 
+            var previousPriorityId = existingTicket.TicketPriorityId;
             // Update the ticket properties
             existingTicket.TitleAr = request.TitleAr;
             existingTicket.TitleEn = request.TitleEn;
@@ -71,7 +73,7 @@ public class UpdateTicketCommandHandler : IRequestHandler<UpdateTicketCommand, I
             existingTicket.UpdateDate = DateTime.UtcNow;
 
             // Recalculate SLA if priority changed
-            if (existingTicket.TicketPriorityId != request.TicketPriorityId)
+            if (previousPriorityId != request.TicketPriorityId)
             {
                 existingTicket.ExpectedResolutionDate = CalculateExpectedResolutionDate(
                     existingTicket.CreationDate ?? DateTime.UtcNow, 
@@ -97,12 +99,7 @@ public class UpdateTicketCommandHandler : IRequestHandler<UpdateTicketCommand, I
     /// </summary>
     private async Task<bool> CanUpdateTicketAsync(Domain.Entities.SysRequestTicket ticket)
     {
-        // In a real implementation, you would check the status against final statuses
-        // For now, we'll assume tickets can be updated unless they're in specific statuses
-        // Status IDs: 1=Open, 2=In Progress, 3=Pending Customer, 4=Resolved, 5=Closed, 6=Cancelled
-        var finalStatuses = new[] { 5L, 6L }; // Closed, Cancelled
-        
-        return !finalStatuses.Contains(ticket.TicketStatusId);
+        return !TicketWorkflow.IsFinal(ticket.TicketStatus);
     }
 
     /// <summary>

@@ -21,6 +21,8 @@ using ThinkOnErp.Application.Features.Tickets.Queries.GetTicketVolumeReport;
 using ThinkOnErp.Application.Features.Tickets.Queries.GetWorkloadReport;
 using ThinkOnErp.Domain.Constants;
 using ThinkOnErp.Domain.Exceptions;
+using TenantRequestContext = ThinkOnErp.Domain.Models.TenantRequestContext;
+using ThinkOnErp.Application.Features.Tickets.Commands.DeleteTicket;
 
 namespace ThinkOnErp.API.Controllers;
 
@@ -32,6 +34,7 @@ namespace ThinkOnErp.API.Controllers;
 [Route("api/tickets")]
 [TenantScoped]
 [Authorize]
+[TypeFilter(typeof(TicketAccessFilter))]
 public class TicketsController : ControllerBase
 {
     private readonly IMediator _mediator;
@@ -54,15 +57,15 @@ public class TicketsController : ControllerBase
     {
         try
         {
-            var isSuperAdmin = string.Equals(User.FindFirst("isSuperAdmin")?.Value, "true", StringComparison.OrdinalIgnoreCase);
-            if (!isSuperAdmin)
+            if (HttpContext.Items[TenantRequestContext.HttpContextItemKey] is not TenantRequestContext tenant)
+                return Forbid();
+            if (query.CompanyId.HasValue && query.CompanyId != tenant.CompanyId) return Forbid();
+            query.CompanyId = tenant.CompanyId;
+            if (HttpContext.Items["Ticket.IsAdmin"] is not true)
             {
-                var companyIdClaim = User.FindFirst("companyId")?.Value;
-                if (query.CompanyId == null && long.TryParse(companyIdClaim, out var cId))
-                {
-                    query.CompanyId = cId;
-                }
+                query.RequesterId = long.Parse(User.FindFirst("userId")!.Value);
             }
+            if (query.IncludeInactive) return BadRequest("Deleted tickets are not available through this endpoint.");
 
             _logger.LogInformation("Retrieving tickets with filters - Page: {Page}, PageSize: {PageSize}", 
                 query.Page, query.PageSize);
@@ -73,6 +76,10 @@ public class TicketsController : ControllerBase
                 result,
                 ResponseCodes.DataRetrieved,
                 200));
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(ApiResponse<PagedResult<TicketDto>>.CreateFailure(ex.Message, statusCode: 400));
         }
         catch (Exception ex)
         {
@@ -96,7 +103,7 @@ public class TicketsController : ControllerBase
         {
             _logger.LogInformation("Retrieving ticket with ID: {TicketId}", id);
 
-            var query = new GetTicketByIdQuery(id);
+            var query = new GetTicketByIdQuery(id) { IncludeInternalComments = HttpContext.Items["Ticket.IsAdmin"] is true };
             var ticket = await _mediator.Send(query);
 
             if (ticket == null)
@@ -132,6 +139,14 @@ public class TicketsController : ControllerBase
         try
         {
             _logger.LogInformation("Creating new ticket: {TitleEn}", command.TitleEn);
+            // Company users submit requests. Super-admin IDs belong to a different
+            // identity table and must never be used as a tenant requester foreign key.
+            if (User.FindFirst("isSuperAdmin")?.Value == "true") return Forbid();
+            if (HttpContext.Items[TenantRequestContext.HttpContextItemKey] is not TenantRequestContext tenant)
+                return Forbid();
+            command.CompanyId = tenant.CompanyId;
+            command.BranchId = 0;
+            command.RequesterId = 0;
 
             // Auto-populate context from authenticated claims if not explicitly passed
             var companyIdClaim = User.FindFirst("companyId")?.Value;
@@ -154,6 +169,8 @@ public class TicketsController : ControllerBase
             }
 
             // Set creation user from authenticated user
+            if (HttpContext.Items["Ticket.BranchId"] is long actualBranch) command.BranchId = actualBranch;
+            if (HttpContext.Items["Ticket.UserId"] is long actualUser) command.RequesterId = actualUser;
             command.CreationUser = User.Identity?.Name ?? User.FindFirst("userName")?.Value ?? "system";
 
             var ticketId = await _mediator.Send(command);
@@ -251,11 +268,7 @@ public class TicketsController : ControllerBase
         {
             _logger.LogInformation("Deleting ticket with ID: {TicketId}", id);
 
-            var command = new UpdateTicketCommand
-            {
-                TicketId = id,
-                UpdateUser = User.Identity?.Name ?? User.FindFirst("userName")?.Value ?? "system"
-            };
+            var command = new DeleteTicketCommand(id, User.Identity?.Name ?? User.FindFirst("userName")?.Value ?? "system");
 
             var rowsAffected = await _mediator.Send(command);
 
@@ -446,7 +459,7 @@ public class TicketsController : ControllerBase
         {
             _logger.LogInformation("Retrieving comments for ticket {TicketId}", id);
 
-            var query = new GetTicketCommentsQuery(id);
+            var query = new GetTicketCommentsQuery(id) { IncludeInternalComments = HttpContext.Items["Ticket.IsAdmin"] is true };
             var comments = await _mediator.Send(query);
 
             return Ok(ApiResponse<List<TicketCommentDto>>.CreateSuccess(

@@ -157,24 +157,23 @@ public class SysRequestTicket
     /// <summary>
     /// Indicates if the ticket is overdue based on SLA targets
     /// </summary>
-    public bool IsOverdue => ExpectedResolutionDate.HasValue && 
-                            DateTime.Now > ExpectedResolutionDate.Value && 
+    public bool IsOverdue => TicketWorkflow.IsActiveWork(TicketStatus) && ExpectedResolutionDate.HasValue &&
+                            DateTime.UtcNow > ExpectedResolutionDate.Value &&
                             ActualResolutionDate == null;
 
     /// <summary>
     /// Indicates if the ticket is resolved (has actual resolution date)
     /// </summary>
-    public bool IsResolved => ActualResolutionDate.HasValue;
+    public bool IsResolved => TicketWorkflow.IsResolved(TicketStatus);
 
     /// <summary>
     /// Calculates the age of the ticket in hours from creation
     /// </summary>
-    public double AgeInHours => CreationDate.HasValue ? 
-                               (DateTime.Now - CreationDate.Value).TotalHours : 0;
+    public double AgeInHours => CreationDate.HasValue ?
+                               (DateTime.UtcNow - CreationDate.Value).TotalHours : 0;
 
     /// <summary>
     /// Indicates if the ticket is within SLA compliance
     /// </summary>
-    public bool IsWithinSla => !IsOverdue && (IsResolved ? 
-                              (ActualResolutionDate <= ExpectedResolutionDate) : true);
+    public bool IsWithinSla => TicketWorkflow.SlaStatus(TicketStatus, ExpectedResolutionDate, ActualResolutionDate, DateTime.UtcNow) == "OnTime";
 }

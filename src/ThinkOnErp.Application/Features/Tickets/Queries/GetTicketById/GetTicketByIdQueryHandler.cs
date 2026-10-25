@@ -1,4 +1,5 @@
-﻿using MediatR;
+using ThinkOnErp.Domain.Entities;
+using MediatR;
 using Microsoft.Extensions.Logging;
 using ThinkOnErp.Application.DTOs.Ticket;
 using ThinkOnErp.Application.Services.Localization;
@@ -94,7 +95,7 @@ public class GetTicketByIdQueryHandler : IRequestHandler<GetTicketByIdQuery, Tic
                 CreationDate = ticket.CreationDate,
                 UpdateUser = ticket.UpdateUser,
                 UpdateDate = ticket.UpdateDate,
-                SlaStatus = CalculateSlaStatus(ticket.ExpectedResolutionDate, ticket.ActualResolutionDate, ticket.TicketStatusId)
+                SlaStatus = TicketWorkflow.SlaStatus(ticket.TicketStatus, ticket.ExpectedResolutionDate, ticket.ActualResolutionDate, DateTime.UtcNow)
             };
 
             // Load comments if requested
@@ -149,35 +150,5 @@ public class GetTicketByIdQueryHandler : IRequestHandler<GetTicketByIdQuery, Tic
             _logger.LogError(ex, "Error retrieving ticket {TicketId}", request.TicketId);
             throw;
         }
-    }
-
-    /// <summary>
-    /// Calculates the SLA status based on expected resolution date and current status.
-    /// </summary>
-    private string CalculateSlaStatus(DateTime? expectedResolutionDate, DateTime? actualResolutionDate, Int64 statusId)
-    {
-        if (expectedResolutionDate == null)
-            return "Unknown";
-
-        // If ticket is resolved or closed, check if it was on time
-        if (statusId == 4 || statusId == 5) // Resolved or Closed
-        {
-            if (actualResolutionDate == null)
-                return "OnTime"; // Assume on time if no actual resolution date
-
-            return actualResolutionDate <= expectedResolutionDate ? "OnTime" : "Overdue";
-        }
-
-        // For open tickets, check against current time
-        var now = DateTime.UtcNow;
-        var timeToDeadline = expectedResolutionDate.Value - now;
-
-        if (timeToDeadline.TotalHours < 0)
-            return "Overdue";
-        
-        if (timeToDeadline.TotalHours <= 2) // At risk if less than 2 hours remaining
-            return "AtRisk";
-        
-        return "OnTime";
     }
 }

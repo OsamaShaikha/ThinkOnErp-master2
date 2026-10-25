@@ -91,10 +91,6 @@ public class AddTicketCommentCommandHandler : IRequestHandler<AddTicketCommentCo
     /// </summary>
     private async Task<bool> CanAddCommentToTicketAsync(SysRequestTicket ticket)
     {
-        // Comments cannot be added to tickets in final statuses
-        // Status IDs: 1=Open, 2=In Progress, 3=Pending Customer, 4=Resolved, 5=Closed, 6=Cancelled
-        var finalStatuses = new[] { 5L, 6L }; // Closed, Cancelled
-        
-        return !finalStatuses.Contains(ticket.TicketStatusId);
+        return !TicketWorkflow.IsFinal(ticket.TicketStatus);
     }
 }

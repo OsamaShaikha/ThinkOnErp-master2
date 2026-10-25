@@ -456,10 +456,13 @@ Example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...'
     {
         try
         {
-            var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
-            logger.LogInformation("Auto-provisioning developer template schema on startup");
-            var schemaService = scope.ServiceProvider.GetRequiredService<IOracleSchemaService>();
-            await schemaService.ProvisionDeveloperSchemaAsync();
+            if (builder.Configuration.GetValue<bool>("Startup:ProvisionDeveloperSchema", true))
+            {
+                var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
+                logger.LogInformation("Auto-provisioning developer template schema on startup");
+                var schemaService = scope.ServiceProvider.GetRequiredService<IOracleSchemaService>();
+                await schemaService.ProvisionDeveloperSchemaAsync();
+            }
         }
         catch (Exception ex)
         {
@@ -469,9 +472,12 @@ Example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...'
         // Auto-sync discovered API Endpoints to Oracle DB SYS_API_ENDPOINTS table
         try
         {
-            var apiExplorer = scope.ServiceProvider.GetRequiredService<Microsoft.AspNetCore.Mvc.ApiExplorer.IApiDescriptionGroupCollectionProvider>();
-            var swaggerLoader = scope.ServiceProvider.GetRequiredService<ThinkOnErp.API.Swagger.SwaggerCategoryLoader>();
-            await swaggerLoader.SyncDiscoveredEndpointsAsync(apiExplorer);
+            if (builder.Configuration.GetValue<bool>("Startup:SyncApiEndpoints", true))
+            {
+                var apiExplorer = scope.ServiceProvider.GetRequiredService<Microsoft.AspNetCore.Mvc.ApiExplorer.IApiDescriptionGroupCollectionProvider>();
+                var swaggerLoader = scope.ServiceProvider.GetRequiredService<ThinkOnErp.API.Swagger.SwaggerCategoryLoader>();
+                await swaggerLoader.SyncDiscoveredEndpointsAsync(apiExplorer);
+            }
         }
         catch (Exception ex)
         {

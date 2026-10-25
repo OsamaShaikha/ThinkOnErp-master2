@@ -15,6 +15,10 @@ namespace ThinkOnErp.Infrastructure.Data;
 
 public class OracleDbContext : DbContext
 {
+    public bool TicketScopeEnabled { get; set; }
+    public long TicketScopeCompanyId { get; set; }
+    public long TicketScopeUserId { get; set; }
+    public bool TicketScopeAdmin { get; set; }
     // Set by the HR access filter from authoritative tenant/account data per request.
     public bool HrScopeEnabled { get; set; }
     public long HrScopeCompanyId { get; set; }
@@ -245,6 +249,15 @@ public class OracleDbContext : DbContext
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
+        modelBuilder.Entity<SysRequestTicket>().HasQueryFilter(t => t.IsActive &&
+            (!TicketScopeEnabled || (t.CompanyId == TicketScopeCompanyId && (TicketScopeAdmin || t.RequesterId == TicketScopeUserId))));
+        modelBuilder.Entity<SysTicketComment>().HasQueryFilter(c =>
+            c.Ticket != null && c.Ticket.IsActive && (!TicketScopeEnabled ||
+            (c.Ticket.CompanyId == TicketScopeCompanyId && (TicketScopeAdmin ||
+            (c.Ticket.RequesterId == TicketScopeUserId && !c.IsInternal)))));
+        modelBuilder.Entity<SysTicketAttachment>().HasQueryFilter(a =>
+            a.Ticket != null && a.Ticket.IsActive && (!TicketScopeEnabled ||
+            (a.Ticket.CompanyId == TicketScopeCompanyId && (TicketScopeAdmin || a.Ticket.RequesterId == TicketScopeUserId))));
 
         // Apply all entity configurations in Infrastructure assembly automatically
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(OracleDbContext).Assembly);

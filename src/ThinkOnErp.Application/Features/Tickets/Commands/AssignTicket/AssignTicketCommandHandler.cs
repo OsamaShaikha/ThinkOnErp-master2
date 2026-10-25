@@ -1,3 +1,4 @@
+using ThinkOnErp.Domain.Entities;
 using MediatR;
 using Microsoft.Extensions.Logging;
 using ThinkOnErp.Domain.Interfaces;
@@ -14,17 +15,20 @@ public class AssignTicketCommandHandler : IRequestHandler<AssignTicketCommand, I
     private readonly IUserRepository _userRepository;
     private readonly ITicketNotificationService _notificationService;
     private readonly ILogger<AssignTicketCommandHandler> _logger;
+    private readonly ITicketStatusRepository _statuses;
 
     public AssignTicketCommandHandler(
         ITicketRepository ticketRepository,
         IUserRepository userRepository,
         ITicketNotificationService notificationService,
-        ILogger<AssignTicketCommandHandler> logger)
+        ILogger<AssignTicketCommandHandler> logger,
+        ITicketStatusRepository statuses)
     {
         _ticketRepository = ticketRepository;
         _userRepository = userRepository;
         _notificationService = notificationService;
         _logger = logger;
+        _statuses = statuses;
     }
 
     public async Task<Int64> Handle(AssignTicketCommand request, CancellationToken cancellationToken)
@@ -56,7 +60,7 @@ public class AssignTicketCommandHandler : IRequestHandler<AssignTicketCommand, I
                     throw new ArgumentException($"User with ID {request.AssigneeId} not found.");
                 }
 
-                if (!assignee.IsAdmin)
+                if (!assignee.IsAdmin || assignee.CompanyId != existingTicket.CompanyId)
                 {
                     throw new ArgumentException("Only admin users can be assigned to tickets.");
                 }
@@ -74,9 +78,12 @@ public class AssignTicketCommandHandler : IRequestHandler<AssignTicketCommand, I
             existingTicket.UpdateDate = DateTime.UtcNow;
 
             // If assigning for the first time and ticket is in Open status, move to In Progress
-            if (request.AssigneeId.HasValue && previousAssigneeId == null && existingTicket.TicketStatusId == 1)
+            if (request.AssigneeId.HasValue && previousAssigneeId == null && TicketWorkflow.Code(existingTicket.TicketStatus) == "OPEN")
             {
-                existingTicket.TicketStatusId = 2; // In Progress
+                var inProgress = await _statuses.GetByCodeAsync(SysTicketStatus.StatusCodes.InProgress);
+                if (!TicketWorkflow.CanTransition(existingTicket.TicketStatus, inProgress))
+                    throw new InvalidOperationException("An active IN_PROGRESS status must be configured.");
+                existingTicket.TicketStatusId = inProgress!.Id;
             }
 
             // Update the ticket
@@ -120,10 +127,6 @@ public class AssignTicketCommandHandler : IRequestHandler<AssignTicketCommand, I
     /// </summary>
     private async Task<bool> CanAssignTicketAsync(Domain.Entities.SysRequestTicket ticket)
     {
-        // Tickets in final statuses cannot be reassigned
-        // Status IDs: 1=Open, 2=In Progress, 3=Pending Customer, 4=Resolved, 5=Closed, 6=Cancelled
-        var finalStatuses = new[] { 5L, 6L }; // Closed, Cancelled
-        
-        return !finalStatuses.Contains(ticket.TicketStatusId);
+        return !TicketWorkflow.IsFinal(ticket.TicketStatus);
     }
 }

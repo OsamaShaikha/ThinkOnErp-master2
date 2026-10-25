@@ -1,4 +1,4 @@
-﻿using MediatR;
+using MediatR;
 using Microsoft.Extensions.Logging;
 using System.Diagnostics;
 using System.Text.Json;
@@ -37,8 +37,8 @@ public class GetTicketsQueryHandler : IRequestHandler<GetTicketsQuery, PagedResu
     public async Task<PagedResult<TicketDto>> Handle(GetTicketsQuery request, CancellationToken cancellationToken)
     {
         var stopwatch = Stopwatch.StartNew();
-        
-        _logger.LogInformation("Retrieving tickets with filters - Page: {Page}, PageSize: {PageSize}, SearchTerm: {SearchTerm}, UseAdvancedSearch: {UseAdvancedSearch}", 
+
+        _logger.LogInformation("Retrieving tickets with filters - Page: {Page}, PageSize: {PageSize}, SearchTerm: {SearchTerm}, UseAdvancedSearch: {UseAdvancedSearch}",
             request.Page, request.PageSize, request.SearchTerm, request.UseAdvancedSearch);
 
         try
@@ -51,7 +51,7 @@ public class GetTicketsQueryHandler : IRequestHandler<GetTicketsQuery, PagedResu
             int totalCount;
 
             // Use advanced search if requested or if multi-criteria filtering is needed
-            if (request.UseAdvancedSearch || !string.IsNullOrEmpty(request.StatusIds) || 
+            if (request.RequesterId.HasValue || request.CategoryId.HasValue || request.DueFrom.HasValue || request.DueTo.HasValue || !string.IsNullOrEmpty(request.SlaStatus) || request.UseAdvancedSearch || !string.IsNullOrEmpty(request.StatusIds) ||
                 !string.IsNullOrEmpty(request.PriorityIds) || !string.IsNullOrEmpty(request.TypeIds) ||
                 !string.IsNullOrEmpty(request.CategoryIds) || request.FilterLogic == "OR")
             {
@@ -111,35 +111,35 @@ public class GetTicketsQueryHandler : IRequestHandler<GetTicketsQuery, PagedResu
                 TitleEn = ticket.TitleEn,
                 Description = ticket.Description,
                 CompanyId = ticket.CompanyId,
-                CompanyName = isArabic 
+                CompanyName = isArabic
                     ? (!string.IsNullOrWhiteSpace(ticket.Company?.CompanyNameLocal) ? ticket.Company.CompanyNameLocal : ticket.Company?.CompanyNameEn)
                     : (!string.IsNullOrWhiteSpace(ticket.Company?.CompanyNameEn) ? ticket.Company.CompanyNameEn : ticket.Company?.CompanyNameLocal),
                 BranchId = ticket.BranchId,
-                BranchName = isArabic 
+                BranchName = isArabic
                     ? (!string.IsNullOrWhiteSpace(ticket.Branch?.BranchNameLocal) ? ticket.Branch.BranchNameLocal : ticket.Branch?.BranchNameEn)
                     : (!string.IsNullOrWhiteSpace(ticket.Branch?.BranchNameEn) ? ticket.Branch.BranchNameEn : ticket.Branch?.BranchNameLocal),
                 RequesterId = ticket.RequesterId,
-                RequesterName = isArabic 
+                RequesterName = isArabic
                     ? (!string.IsNullOrWhiteSpace(ticket.Requester?.FullNameLocal) ? ticket.Requester.FullNameLocal : ticket.Requester?.FullNameEn ?? ticket.CreationUser)
                     : (!string.IsNullOrWhiteSpace(ticket.Requester?.FullNameEn) ? ticket.Requester.FullNameEn : ticket.Requester?.FullNameLocal ?? ticket.CreationUser),
                 AssigneeId = ticket.AssigneeId,
-                AssigneeName = isArabic 
+                AssigneeName = isArabic
                     ? (!string.IsNullOrWhiteSpace(ticket.Assignee?.FullNameLocal) ? ticket.Assignee.FullNameLocal : ticket.Assignee?.FullNameEn)
                     : (!string.IsNullOrWhiteSpace(ticket.Assignee?.FullNameEn) ? ticket.Assignee.FullNameEn : ticket.Assignee?.FullNameLocal),
                 TicketTypeId = ticket.TicketTypeId,
-                TicketTypeName = isArabic 
+                TicketTypeName = isArabic
                     ? (!string.IsNullOrWhiteSpace(ticket.TicketType?.TypeNameLocal) ? ticket.TicketType.TypeNameLocal : ticket.TicketType?.TypeNameEn)
                     : (!string.IsNullOrWhiteSpace(ticket.TicketType?.TypeNameEn) ? ticket.TicketType.TypeNameEn : ticket.TicketType?.TypeNameLocal),
                 TicketStatusId = ticket.TicketStatusId,
-                TicketStatusName = isArabic 
+                TicketStatusName = isArabic
                     ? (!string.IsNullOrWhiteSpace(ticket.TicketStatus?.StatusNameLocal) ? ticket.TicketStatus.StatusNameLocal : ticket.TicketStatus?.StatusNameEn)
                     : (!string.IsNullOrWhiteSpace(ticket.TicketStatus?.StatusNameEn) ? ticket.TicketStatus.StatusNameEn : ticket.TicketStatus?.StatusNameLocal),
                 TicketPriorityId = ticket.TicketPriorityId,
-                TicketPriorityName = isArabic 
+                TicketPriorityName = isArabic
                     ? (!string.IsNullOrWhiteSpace(ticket.TicketPriority?.PriorityNameLocal) ? ticket.TicketPriority.PriorityNameLocal : ticket.TicketPriority?.PriorityNameEn)
                     : (!string.IsNullOrWhiteSpace(ticket.TicketPriority?.PriorityNameEn) ? ticket.TicketPriority.PriorityNameEn : ticket.TicketPriority?.PriorityNameLocal),
                 TicketCategoryId = ticket.TicketCategoryId,
-                TicketCategoryName = isArabic 
+                TicketCategoryName = isArabic
                     ? (!string.IsNullOrWhiteSpace(ticket.TicketCategory?.CategoryNameLocal) ? ticket.TicketCategory.CategoryNameLocal : ticket.TicketCategory?.CategoryNameEn)
                     : (!string.IsNullOrWhiteSpace(ticket.TicketCategory?.CategoryNameEn) ? ticket.TicketCategory.CategoryNameEn : ticket.TicketCategory?.CategoryNameLocal),
                 ExpectedResolutionDate = ticket.ExpectedResolutionDate,
@@ -151,7 +151,7 @@ public class GetTicketsQueryHandler : IRequestHandler<GetTicketsQuery, PagedResu
                 UpdateDate = ticket.UpdateDate,
                 CommentCount = ticket.Comments?.Count ?? 0,
                 AttachmentCount = ticket.Attachments?.Count ?? 0,
-                SlaStatus = CalculateSlaStatus(ticket.ExpectedResolutionDate, ticket.ActualResolutionDate, ticket.TicketStatusId),
+                SlaStatus = TicketWorkflow.SlaStatus(ticket.TicketStatus, ticket.ExpectedResolutionDate, ticket.ActualResolutionDate, DateTime.UtcNow),
                 RelevanceScore = request.UseAdvancedSearch ? 0 : null // Will be populated from stored procedure in future enhancement
             }).ToList();
 
@@ -208,7 +208,7 @@ public class GetTicketsQueryHandler : IRequestHandler<GetTicketsQuery, PagedResu
                 _logger.LogWarning(ex, "Failed to log search analytics (non-critical)");
             }
 
-            _logger.LogInformation("Retrieved {Count} tickets out of {TotalCount} total tickets in {ElapsedMs}ms", 
+            _logger.LogInformation("Retrieved {Count} tickets out of {TotalCount} total tickets in {ElapsedMs}ms",
                 ticketDtos.Count, totalCount, stopwatch.ElapsedMilliseconds);
 
             return result;
@@ -218,35 +218,5 @@ public class GetTicketsQueryHandler : IRequestHandler<GetTicketsQuery, PagedResu
             _logger.LogError(ex, "Error retrieving tickets");
             throw;
         }
-    }
-
-    /// <summary>
-    /// Calculates the SLA status based on expected resolution date and current status.
-    /// </summary>
-    private string CalculateSlaStatus(DateTime? expectedResolutionDate, DateTime? actualResolutionDate, Int64 statusId)
-    {
-        if (expectedResolutionDate == null)
-            return "Unknown";
-
-        // If ticket is resolved or closed, check if it was on time
-        if (statusId == 4 || statusId == 5) // Resolved or Closed
-        {
-            if (actualResolutionDate == null)
-                return "OnTime"; // Assume on time if no actual resolution date
-
-            return actualResolutionDate <= expectedResolutionDate ? "OnTime" : "Overdue";
-        }
-
-        // For open tickets, check against current time
-        var now = DateTime.UtcNow;
-        var timeToDeadline = expectedResolutionDate.Value - now;
-
-        if (timeToDeadline.TotalHours < 0)
-            return "Overdue";
-        
-        if (timeToDeadline.TotalHours <= 2) // At risk if less than 2 hours remaining
-            return "AtRisk";
-        
-        return "OnTime";
     }
 }

@@ -129,10 +129,6 @@ public class UploadAttachmentCommandHandler : IRequestHandler<UploadAttachmentCo
     /// </summary>
     private async Task<bool> CanAddAttachmentToTicketAsync(SysRequestTicket ticket)
     {
-        // Attachments cannot be added to tickets in final statuses
-        // Status IDs: 1=Open, 2=In Progress, 3=Pending Customer, 4=Resolved, 5=Closed, 6=Cancelled
-        var finalStatuses = new[] { 5L, 6L }; // Closed, Cancelled
-        
-        return !finalStatuses.Contains(ticket.TicketStatusId);
+        return !TicketWorkflow.IsFinal(ticket.TicketStatus);
     }
 }

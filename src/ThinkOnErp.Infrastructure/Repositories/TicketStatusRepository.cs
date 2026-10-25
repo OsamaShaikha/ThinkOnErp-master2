@@ -23,8 +23,7 @@ public class TicketStatusRepository : ITicketStatusRepository
     {
         var fromStatus = await _context.SysTicketStatuses.FindAsync(fromStatusId);
         var toStatus = await _context.SysTicketStatuses.FindAsync(toStatusId);
-        if (fromStatus == null || toStatus == null) return false;
-        return !fromStatus.IsFinalStatus;
+        return TicketWorkflow.CanTransition(fromStatus, toStatus);
     }
 
     public async Task<SysTicketStatus?> GetDefaultInitialStatusAsync() =>

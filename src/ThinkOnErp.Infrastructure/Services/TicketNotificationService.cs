@@ -17,6 +17,9 @@ public class TicketNotificationService : ITicketNotificationService
     private readonly IConfiguration _configuration;
     private readonly IUserRepository _userRepository;
     private readonly ITicketTypeRepository _ticketTypeRepository;
+    private readonly ISuperAdminRepository? _superAdmins;
+    private readonly ITicketEmailQueue? _emailQueue;
+    private readonly ITicketSupportDirectory? _supportDirectory;
 
     // Notification configuration keys
     private const string NotificationEnabledKey = "Notifications:Enabled";
@@ -31,12 +34,18 @@ public class TicketNotificationService : ITicketNotificationService
         ILogger<TicketNotificationService> logger,
         IConfiguration configuration,
         IUserRepository userRepository,
-        ITicketTypeRepository ticketTypeRepository)
+        ITicketTypeRepository ticketTypeRepository,
+        ISuperAdminRepository? superAdmins = null,
+        ITicketEmailQueue? emailQueue = null,
+        ITicketSupportDirectory? supportDirectory = null)
     {
         _logger = logger;
         _configuration = configuration;
         _userRepository = userRepository;
         _ticketTypeRepository = ticketTypeRepository;
+        _superAdmins = superAdmins;
+        _emailQueue = emailQueue;
+        _supportDirectory = supportDirectory;
     }
 
     public async Task SendTicketCreatedNotificationAsync(SysRequestTicket ticket)
@@ -71,7 +80,7 @@ public class TicketNotificationService : ITicketNotificationService
                 await SendEmailAsync(recipient.Email, "New Ticket Created", emailContent);
             }
 
-            _logger.LogInformation("Ticket created notification sent successfully for ticket {TicketId}", ticket.Id);
+            _logger.LogInformation("Ticket created notification queued or delivered for ticket {TicketId}", ticket.Id);
         }
         catch (Exception ex)
         {
@@ -90,7 +99,7 @@ public class TicketNotificationService : ITicketNotificationService
 
         try
         {
-            _logger.LogInformation("Sending ticket assigned notification for ticket {TicketId} to assignee {AssigneeId}", 
+            _logger.LogInformation("Sending ticket assigned notification for ticket {TicketId} to assignee {AssigneeId}",
                 ticket.Id, ticket.AssigneeId);
 
             if (ticket.AssigneeId == null)
@@ -121,7 +130,7 @@ public class TicketNotificationService : ITicketNotificationService
 
             await SendEmailAsync(assignee.Email, "Ticket Assigned to You", emailContent);
 
-            _logger.LogInformation("Ticket assigned notification sent successfully for ticket {TicketId}", ticket.Id);
+            _logger.LogInformation("Ticket assigned notification queued or delivered for ticket {TicketId}", ticket.Id);
         }
         catch (Exception ex)
         {
@@ -139,7 +148,7 @@ public class TicketNotificationService : ITicketNotificationService
 
         try
         {
-            _logger.LogInformation("Sending status change notification for ticket {TicketId} from status {PreviousStatus} to {NewStatus}", 
+            _logger.LogInformation("Sending status change notification for ticket {TicketId} from status {PreviousStatus} to {NewStatus}",
                 ticket.Id, previousStatusId, ticket.TicketStatusId);
 
             var recipients = await GetTicketNotificationRecipientsAsync(ticket);
@@ -161,7 +170,7 @@ public class TicketNotificationService : ITicketNotificationService
                 await SendEmailAsync(recipient.Email, "Ticket Status Updated", emailContent);
             }
 
-            _logger.LogInformation("Status change notification sent successfully for ticket {TicketId}", ticket.Id);
+            _logger.LogInformation("Status change notification queued or delivered for ticket {TicketId}", ticket.Id);
         }
         catch (Exception ex)
         {
@@ -171,6 +180,7 @@ public class TicketNotificationService : ITicketNotificationService
 
     public async Task SendCommentAddedNotificationAsync(SysRequestTicket ticket, SysTicketComment comment)
     {
+        if (comment.IsInternal) return;
         if (!IsNotificationEnabled())
         {
             _logger.LogDebug("Notifications are disabled, skipping comment notification for ticket {TicketId}", ticket.Id);
@@ -204,7 +214,7 @@ public class TicketNotificationService : ITicketNotificationService
                 await SendEmailAsync(recipient.Email, "New Comment on Ticket", emailContent);
             }
 
-            _logger.LogInformation("Comment added notification sent successfully for ticket {TicketId}", ticket.Id);
+            _logger.LogInformation("Comment added notification queued or delivered for ticket {TicketId}", ticket.Id);
         }
         catch (Exception ex)
         {
@@ -225,7 +235,7 @@ public class TicketNotificationService : ITicketNotificationService
             _logger.LogInformation("Sending SLA escalation alert for ticket {TicketId}", ticket.Id);
 
             // Get admin users for escalation alerts
-            var adminUsers = await GetAdminUsersAsync();
+            var adminUsers = await GetSupportStaffAsync(ticket.CompanyId);
             var template = GetSlaEscalationTemplate();
 
             foreach (var admin in adminUsers)
@@ -245,10 +255,11 @@ public class TicketNotificationService : ITicketNotificationService
                     TicketUrl = GenerateTicketUrl(ticket.Id)
                 });
 
-                await SendEmailAsync(admin.Email, "SLA Escalation Alert", emailContent);
+                var subject = ticket.ExpectedResolutionDate < DateTime.UtcNow ? "SLA Overdue Alert" : "SLA Deadline Approaching";
+                await SendEmailAsync(admin.Email, subject, emailContent);
             }
 
-            _logger.LogInformation("SLA escalation alert sent successfully for ticket {TicketId}", ticket.Id);
+            _logger.LogInformation("SLA escalation alert queued or delivered for ticket {TicketId}", ticket.Id);
         }
         catch (Exception ex)
         {
@@ -292,7 +303,7 @@ public class TicketNotificationService : ITicketNotificationService
                 await SendEmailAsync(recipient.Email, "New Attachment Added", emailContent);
             }
 
-            _logger.LogInformation("Attachment added notification sent successfully for ticket {TicketId}", ticket.Id);
+            _logger.LogInformation("Attachment added notification queued or delivered for ticket {TicketId}", ticket.Id);
         }
         catch (Exception ex)
         {
@@ -304,10 +315,7 @@ public class TicketNotificationService : ITicketNotificationService
 
     private bool IsNotificationEnabled()
     {
-        var enabled = _configuration.GetValue<bool>(NotificationEnabledKey, false);
-        if (!enabled) return false;
-        var smtpServer = _configuration.GetValue<string>(SmtpServerKey);
-        return !string.IsNullOrEmpty(smtpServer);
+        return _configuration.GetValue<bool>(NotificationEnabledKey, true);
     }
 
     private async Task<List<SysUser>> GetTicketNotificationRecipientsAsync(SysRequestTicket ticket)
@@ -326,7 +334,25 @@ public class TicketNotificationService : ITicketNotificationService
             recipients.Add(ticket.Assignee);
         }
 
-        return recipients.Where(r => !string.IsNullOrEmpty(r.Email)).ToList();
+        recipients.AddRange(await GetSupportStaffAsync(ticket.CompanyId));
+        return recipients.Where(r => !string.IsNullOrWhiteSpace(r.Email) && MailboxAddress.TryParse(r.Email, out _))
+            .DistinctBy(r => r.Email!.Trim(), StringComparer.OrdinalIgnoreCase).ToList();
+    }
+
+    private async Task<List<SysUser>> GetSupportStaffAsync(long companyId)
+    {
+        var admins = (_supportDirectory == null ? await GetAdminUsersAsync() : await _supportDirectory.GetCompanyAdminsAsync(companyId))
+            .Where(u => u.IsActive && u.IsAdmin && u.CompanyId == companyId).ToList();
+        if (_superAdmins != null)
+        {
+            try {
+                admins.AddRange((await _superAdmins.GetAllAsync()).Where(u => u.IsActive && !string.IsNullOrWhiteSpace(u.Email))
+                    .Select(u => new SysUser { UserName = u.UserName, Email = u.Email, FullNameEn = u.NameEn, FullNameLocal = u.NameLocal, IsAdmin = true, IsActive = true }));
+            } catch (Exception ex) { _logger.LogError(ex, "Could not resolve super-admin recipients for ticket notifications"); }
+        }
+        admins = admins.Where(u => MailboxAddress.TryParse(u.Email, out _)).ToList();
+        if (admins.Count == 0) _logger.LogWarning("No active support recipients with valid email for company {CompanyId}", companyId);
+        return admins.DistinctBy(u => u.Email, StringComparer.OrdinalIgnoreCase).ToList();
     }
 
     private async Task<List<SysUser>> GetAdminUsersAsync()
@@ -346,6 +372,12 @@ public class TicketNotificationService : ITicketNotificationService
 
     private async Task SendEmailAsync(string toEmail, string subject, string body)
     {
+        if (_emailQueue != null)
+        {
+            await _emailQueue.EnqueueAsync(toEmail, subject, body);
+            _logger.LogInformation("Ticket email queued for {Email}; delivery is pending", toEmail);
+            return;
+        }
         try
         {
             var smtpServer = _configuration.GetValue<string>(SmtpServerKey);
@@ -360,7 +392,7 @@ public class TicketNotificationService : ITicketNotificationService
             {
                 _logger.LogInformation("SMTP not configured. Email would be sent to {Email} with subject '{Subject}'", toEmail, subject);
                 _logger.LogDebug("Email body: {Body}", body);
-                return;
+                throw new InvalidOperationException("Ticket SMTP is not configured.");
             }
 
             var message = new MimeMessage();
@@ -375,16 +407,16 @@ public class TicketNotificationService : ITicketNotificationService
             message.Body = bodyBuilder.ToMessageBody();
 
             using var client = new SmtpClient();
-            
+
             // Configure SSL/TLS
             await client.ConnectAsync(smtpServer, smtpPort, MailKit.Security.SecureSocketOptions.StartTls);
-            
+
             // Authenticate if credentials are provided
             if (!string.IsNullOrEmpty(smtpUsername) && !string.IsNullOrEmpty(smtpPassword))
             {
                 await client.AuthenticateAsync(smtpUsername, smtpPassword);
             }
-            
+
             await client.SendAsync(message);
             await client.DisconnectAsync(true);
 
@@ -393,7 +425,7 @@ public class TicketNotificationService : ITicketNotificationService
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to send email to {Email} with subject '{Subject}'", toEmail, subject);
-            // Don't throw - notification failures shouldn't break the main flow
+            throw;
         }
     }
 

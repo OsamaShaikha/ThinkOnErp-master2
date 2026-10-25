@@ -1,6 +1,7 @@
 using MediatR;
 using Microsoft.Extensions.Logging;
 using ThinkOnErp.Domain.Interfaces;
+using ThinkOnErp.Domain.Entities;
 
 namespace ThinkOnErp.Application.Features.Tickets.Commands.UpdateTicketStatus;
 
@@ -43,13 +44,14 @@ public class UpdateTicketStatusCommandHandler : IRequestHandler<UpdateTicketStat
 
             // Get the new status
             var newStatus = await _ticketStatusRepository.GetByIdAsync(request.NewStatusId);
-            if (newStatus == null)
+            if (newStatus == null || !newStatus.IsActive)
             {
                 throw new ArgumentException($"Status with ID {request.NewStatusId} not found.");
             }
 
             // Validate status transition
-            if (!await IsValidStatusTransitionAsync(existingTicket.TicketStatusId, request.NewStatusId))
+            var previousStatus = await _ticketStatusRepository.GetByIdAsync(existingTicket.TicketStatusId);
+            if (!TicketWorkflow.CanTransition(previousStatus, newStatus))
             {
                 throw new InvalidOperationException($"Invalid status transition from {existingTicket.TicketStatusId} to {request.NewStatusId}.");
             }
@@ -63,13 +65,13 @@ public class UpdateTicketStatusCommandHandler : IRequestHandler<UpdateTicketStat
             existingTicket.UpdateDate = DateTime.UtcNow;
 
             // Set resolution date if moving to Resolved status
-            if (request.NewStatusId == 4 && existingTicket.ActualResolutionDate == null) // Resolved
+            if (TicketWorkflow.Code(newStatus) == "RESOLVED" && existingTicket.ActualResolutionDate == null)
             {
                 existingTicket.ActualResolutionDate = DateTime.UtcNow;
             }
 
             // Clear resolution date if moving away from Resolved status
-            if (previousStatusId == 4 && request.NewStatusId != 4 && request.NewStatusId != 5) // Not Resolved and not Closed
+            if (TicketWorkflow.Code(previousStatus) == "RESOLVED" && TicketWorkflow.Code(newStatus) != "RESOLVED" && TicketWorkflow.Code(newStatus) != "CLOSED")
             {
                 existingTicket.ActualResolutionDate = null;
             }
@@ -107,36 +109,4 @@ public class UpdateTicketStatusCommandHandler : IRequestHandler<UpdateTicketStat
         }
     }
 
-    /// <summary>
-    /// Validates if the status transition is allowed based on workflow rules.
-    /// </summary>
-    private async Task<bool> IsValidStatusTransitionAsync(Int64 currentStatusId, Int64 newStatusId)
-    {
-        // Define valid status transitions
-        // Status IDs: 1=Open, 2=In Progress, 3=Pending Customer, 4=Resolved, 5=Closed, 6=Cancelled
-        
-        var validTransitions = new Dictionary<Int64, Int64[]>
-        {
-            { 1, new[] { 2L, 3L, 6L } },           // Open -> In Progress, Pending Customer, Cancelled
-            { 2, new[] { 1L, 3L, 4L, 6L } },       // In Progress -> Open, Pending Customer, Resolved, Cancelled
-            { 3, new[] { 2L, 4L, 6L } },           // Pending Customer -> In Progress, Resolved, Cancelled
-            { 4, new[] { 5L, 2L } },               // Resolved -> Closed, In Progress (reopen)
-            { 5, new Int64[] { } },                // Closed -> No transitions allowed
-            { 6, new Int64[] { } }                 // Cancelled -> No transitions allowed
-        };
-
-        // Allow staying in the same status (no-op)
-        if (currentStatusId == newStatusId)
-        {
-            return true;
-        }
-
-        // Check if transition is valid
-        if (validTransitions.TryGetValue(currentStatusId, out var allowedTransitions))
-        {
-            return allowedTransitions.Contains(newStatusId);
-        }
-
-        return false;
-    }
 }

@@ -11,22 +11,25 @@ namespace ThinkOnErp.Infrastructure.Services.Inventory;
 public sealed class InventoryExcelService(OracleDbContext db) : IInventoryExcelService
 {
     private static string Label(InvItemCategory category) => $"{category.CategoryCode} - {category.CategoryNameLocal}";
+    private static string Label(InvWarehouse warehouse) => $"{warehouse.WarehouseCode} - {warehouse.WarehouseNameLocal}";
 
     public async Task<byte[]> ExportAsync(long branchId, bool items, bool template, CancellationToken ct)
     {
         var categories = await db.InvItemCategories.AsNoTracking().Where(c => c.BranchId == branchId && c.IsActive).OrderBy(c => c.CategoryCode).ToListAsync(ct);
+        var warehouses = items ? await db.InvWarehouses.AsNoTracking().Where(w => w.BranchId == branchId && w.IsActive).OrderBy(w => w.WarehouseCode).ToListAsync(ct) : new List<InvWarehouse>();
         IEnumerable<object?[]> rows;
         if (items)
         {
-            var records = template ? new List<InvItem>() : await db.InvItems.AsNoTracking().Include(i => i.Category).Where(i => i.BranchId == branchId && i.IsActive).OrderBy(i => i.ItemCode).ToListAsync(ct);
-            rows = records.Select(i => new object?[] { i.ItemCode, i.Sku, i.ItemNameLocal, i.ItemNameEn, i.Category == null ? "" : Label(i.Category), i.UomBase, i.ItemType, i.CostingMethod, i.StandardCost, i.DefaultSellingPrice, i.ShowInPos });
+            var records = template ? new List<InvItem>() : await db.InvItems.AsNoTracking().Include(i => i.Category).Include(i => i.StockBalances).ThenInclude(b => b.Warehouse).Where(i => i.BranchId == branchId && i.IsActive).OrderBy(i => i.ItemCode).ToListAsync(ct);
+            rows = records.SelectMany(i => i.StockBalances.Where(b => b.Warehouse?.BranchId == branchId).OrderBy(b => b.WarehouseId).ThenBy(b => b.BinId).DefaultIfEmpty(),
+                (i, balance) => new object?[] { i.ItemCode, i.Sku, i.ItemNameLocal, i.ItemNameEn, i.Category == null ? "" : Label(i.Category), i.UomBase, i.ItemType, i.CostingMethod, i.StandardCost, i.DefaultSellingPrice, i.ShowInPos, balance?.Warehouse == null ? "" : Label(balance.Warehouse), balance?.OnHandQty ?? 0m, balance?.AvgCost ?? i.StandardCost, i.Notes });
         }
         else
         {
             var parents = await db.InvItemCategories.AsNoTracking().ToDictionaryAsync(c => c.Id, c => c.CategoryCode, ct);
             rows = template ? Enumerable.Empty<object?[]>() : categories.Select(c => new object?[] { c.CategoryCode, c.CategoryNameLocal, c.CategoryNameEn, c.ParentCategoryId.HasValue ? parents.GetValueOrDefault(c.ParentCategoryId.Value) : null, c.ShowInPos });
         }
-        return InventoryWorkbook.Write(items, rows, categories.Select(Label).ToList());
+        return InventoryWorkbook.Write(items, rows, categories.Select(Label).ToList(), warehouses.Select(Label).ToList());
     }
 
     public async Task<InventoryExcelResult> ImportAsync(Stream workbook, long branchId, bool items, string username, CancellationToken ct)
@@ -44,8 +47,12 @@ public sealed class InventoryExcelService(OracleDbContext db) : IInventoryExcelS
         var categories = await db.InvItemCategories.AsNoTracking().ToListAsync(ct);
         var branchCategories = categories.Where(c => c.BranchId == branchId && c.IsActive).ToList();
         var labels = branchCategories.ToDictionary(Label, StringComparer.OrdinalIgnoreCase);
+        var warehouseLabels = items
+            ? (await db.InvWarehouses.AsNoTracking().Where(w => w.BranchId == branchId && w.IsActive).ToListAsync(ct)).ToDictionary(Label, StringComparer.OrdinalIgnoreCase)
+            : new Dictionary<string, InvWarehouse>(StringComparer.OrdinalIgnoreCase);
         var codes = new HashSet<string>(items ? await db.InvItems.Select(i => i.ItemCode).ToListAsync(ct) : categories.Select(c => c.CategoryCode.ToString(CultureInfo.InvariantCulture)), StringComparer.OrdinalIgnoreCase);
         var newItems = new List<InvItem>();
+        var openingBalances = new List<(InvItem Item, long WarehouseId, decimal Quantity, decimal UnitCost)>();
         var newCategories = new Dictionary<long, (InvItemCategory Entity, long? Parent, int Row)>();
         foreach (var (number, cells) in rows)
         {
@@ -74,9 +81,9 @@ public sealed class InventoryExcelService(OracleDbContext db) : IInventoryExcelS
                 if (Get(key) is "1" or "0") return Get(key) == "1";
                 Error(key, "Select Yes or No (true/false and 1/0 are also accepted)."); return false;
             }
-            decimal Money(string key)
+            decimal Money(string key, bool required = false)
             {
-                if (Get(key) == "") return 0;
+                if (Get(key) == "") { if (required) Error(key, "Value is required."); return 0; }
                 if (!decimal.TryParse(Get(key), NumberStyles.AllowDecimalPoint | NumberStyles.AllowLeadingSign, CultureInfo.InvariantCulture, out var value) || value < 0 || value > 99999999999999.9999m || decimal.Round(value, 4) != value)
                 { Error(key, "Use a non-negative decimal with at most 4 decimal places."); return 0; }
                 return value;
@@ -96,6 +103,15 @@ public sealed class InventoryExcelService(OracleDbContext db) : IInventoryExcelS
                 var uom = Integer("UomBase");
                 if (uom > 999999) Error("UomBase", "Maximum unit code is 999999.");
                 newItems.Add(new InvItem { BranchId = branchId, ItemCode = code, Sku = Text("Sku", 100), ItemNameLocal = Text("ItemNameLocal", 200, true), ItemNameEn = Text("ItemNameEn", 200), CategoryId = category?.Id ?? 0, UomBase = uom <= int.MaxValue ? (int)uom : 0, ItemType = Choice("ItemType", ItemType.Stock), CostingMethod = Choice("CostingMethod", CostingMethod.WeightedAverage), StandardCost = Money("StandardCost"), DefaultSellingPrice = Money("DefaultSellingPrice"), ShowInPos = Boolean("ShowInPos"), CreationUser = username });
+                warehouseLabels.TryGetValue(Get("Warehouse"), out var warehouse);
+                if (warehouse == null) Error("Warehouse", "Select an active warehouse belonging to this branch from the dropdown.");
+                var quantity = Money("Quantity", required: true);
+                if (quantity > 9999999999.9999m) Error("Quantity", "Maximum quantity is 9999999999.9999.");
+                var unitCost = Money("UnitCost", required: true);
+                // Both operands are bounded above, so the product fits decimal before checking Oracle precision.
+                if (decimal.Round(quantity * unitCost, 4) > 99999999999999.9999m) Error("UnitCost", "Quantity multiplied by unit cost exceeds the maximum stock value.");
+                newItems[^1].Notes = Text("Notes", 2000);
+                openingBalances.Add((newItems[^1], warehouse?.Id ?? 0, quantity, unitCost));
             }
             else
             {
@@ -133,13 +149,38 @@ public sealed class InventoryExcelService(OracleDbContext db) : IInventoryExcelS
         }
         foreach (var code in newCategories.Keys) Resolve(code, new HashSet<long>());
         if (!result.IsValid) return result;
-        if (items) db.InvItems.AddRange(newItems);
+        var stagedEntities = new List<object>();
+        if (items)
+        {
+            stagedEntities.AddRange(newItems);
+            foreach (var opening in openingBalances)
+            {
+                var now = DateTime.UtcNow;
+                // These are new items: their initial average cost is exactly the supplied unit cost,
+                // including a valid zero cost. Stage all stock records before the single atomic save.
+                stagedEntities.Add(new InvStockBalance { Item = opening.Item, WarehouseId = opening.WarehouseId, OnHandQty = opening.Quantity, AvgCost = opening.UnitCost, LastReceiptDate = opening.Quantity > 0 ? now : null, UpdatedAt = now });
+                if (opening.Quantity == 0) continue;
+                stagedEntities.Add(new InvStockLedgerEntry
+                {
+                    Item = opening.Item, BranchId = branchId, WarehouseId = opening.WarehouseId,
+                    TransactionDate = now, TransactionType = TransactionType.OpeningBalance, Direction = TransactionDirection.In,
+                    Quantity = opening.Quantity, UomCode = opening.Item.UomBase, UnitCost = opening.UnitCost,
+                    RunningBalanceQty = opening.Quantity, RunningBalanceValue = decimal.Round(opening.Quantity * opening.UnitCost, 4),
+                    SourceModule = "INVENTORY", SourceDocType = "ITEM_INIT", SourceDocId = opening.Item.ItemCode,
+                    Notes = string.IsNullOrWhiteSpace(opening.Item.Notes) ? $"Opening balance for item {opening.Item.ItemCode}" : opening.Item.Notes,
+                    CreationUser = username, CreationDate = now
+                });
+                if (opening.Item.CostingMethod == CostingMethod.Fifo)
+                    stagedEntities.Add(new InvCostLayer { Item = opening.Item, WarehouseId = opening.WarehouseId, ReceivedQty = opening.Quantity, RemainingQty = opening.Quantity, UnitCost = opening.UnitCost, ReceivedDate = now, CreationDate = now });
+            }
+            db.AddRange(stagedEntities);
+        }
         else db.InvItemCategories.AddRange(newCategories.Values.Select(c => c.Entity));
         // EF wraps this single SaveChanges in a transaction, including parent/child inserts.
         try { await db.SaveChangesAsync(ct); result.Imported = rows.Count; }
         catch (DbUpdateException)
         {
-            foreach (var entity in newItems.Cast<object>().Concat(newCategories.Values.Select(c => (object)c.Entity))) db.Entry(entity).State = EntityState.Detached;
+            foreach (var entity in stagedEntities.Concat(newCategories.Values.Select(c => (object)c.Entity))) db.Entry(entity).State = EntityState.Detached;
             result.Errors.Add(new(0, "Workbook", "Database rejected the import. No rows were saved. Check duplicate codes and referenced unit codes."));
         }
         return result;
