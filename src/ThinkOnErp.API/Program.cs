@@ -40,6 +40,10 @@ try
 
     var builder = WebApplication.CreateBuilder(args);
 
+    // Select the QuestPDF license appropriate for this deployment.
+    QuestPDF.Settings.License = Enum.Parse<QuestPDF.Infrastructure.LicenseType>(
+        builder.Configuration["PdfReports:License"] ?? "Community", ignoreCase: true);
+
     // Replace default logging with Serilog
     builder.Host.UseSerilog();
 
@@ -407,6 +411,7 @@ Example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...'
     });
 
     var app = builder.Build();
+    app.UseStaticFiles();
 
     // Add global exception handling middleware early so it wraps the request pipeline.
     app.UseMiddleware<ThinkOnErp.API.Middleware.ExceptionHandlingMiddleware>();

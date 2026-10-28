@@ -31,6 +31,47 @@ public class PosReportsController : ControllerBase
         _reportService = reportService;
     }
 
+    /// <summary>Available branches and cashiers before PDF export. Omit BranchId or CashierUsername to select all.</summary>
+    [HttpGet("sales-summary/options")]
+    [ProducesResponseType(typeof(ApiResponse<PosSalesReportOptionsDto>), StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetSalesReportOptions([FromQuery] PosSalesPdfFilterDto filter,
+        [FromServices] IPosSalesReportExportService export, CancellationToken ct)
+    {
+        var result = await export.GetOptionsAsync(filter, ct);
+        Response.Headers.CacheControl = "no-store";
+        if (result.Success && result.Data != null) Response.Headers.ContentLanguage = result.Data.Language;
+        return StatusCode(result.StatusCode, result);
+    }
+
+    /// <summary>Printable sales snapshot: finalized invoices, net of returns; UTC calendar dates.</summary>
+    [HttpGet("sales-summary/print-data")]
+    [ProducesResponseType(typeof(ApiResponse<PosSalesPrintDataDto>), StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetSalesPrintData([FromQuery] PosSalesPdfFilterDto filter,
+        [FromServices] IPosSalesReportExportService export, CancellationToken ct)
+    {
+        var result = await export.GetDataAsync(filter, ct);
+        Response.Headers.CacheControl = "no-store";
+        if (result.Success && result.Data != null) Response.Headers.ContentLanguage = result.Data.Language;
+        return StatusCode(result.StatusCode, result);
+    }
+
+    /// <summary>Download the branded A4 sales PDF. Omit BranchId for all accessible branches.</summary>
+    [HttpGet("sales-summary/pdf")]
+    [Produces("application/pdf", "application/json")]
+    [ProducesResponseType(typeof(byte[]), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<PosSalesPrintDataDto>), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    public async Task<IActionResult> GetSalesPdf([FromQuery] PosSalesPdfFilterDto filter,
+        [FromServices] IPosSalesReportExportService export, CancellationToken ct)
+    {
+        Response.Headers.CacheControl = "no-store";
+        var result = await export.GetDataAsync(filter, ct);
+        if (!result.Success || result.Data == null) return StatusCode(result.StatusCode, result);
+        var pdf = await export.RenderAsync(result.Data, ct);
+        Response.Headers.ContentLanguage = result.Data.Language;
+        return File(pdf, "application/pdf", $"sales-report-{result.Data.StartDate:yyyyMMdd}-{result.Data.EndDate:yyyyMMdd}-{result.Data.Language}.pdf");
+    }
+
     /// <summary>
     /// 1. تقرير المبيعات العام الشامل (Sales Summary / Overview)
     /// </summary>
