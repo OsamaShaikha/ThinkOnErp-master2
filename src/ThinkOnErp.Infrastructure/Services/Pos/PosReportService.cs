@@ -1329,6 +1329,9 @@ public class PosReportService : IPosReportService
             if (filter.TillId.HasValue)
                 query = query.Where(l => l.Order!.TillId == filter.TillId.Value);
 
+            if (!string.IsNullOrWhiteSpace(filter.CashierUsername))
+                query = query.Where(l => l.Order!.CreationUser == filter.CashierUsername);
+
             var lines = await query.ToListAsync(ct);
 
             var lineStats = lines.Select(l => new

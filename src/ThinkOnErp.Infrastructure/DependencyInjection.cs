@@ -235,6 +235,9 @@ public static class DependencyInjection
         services.AddScoped<IPosModifierRepository, InvModifierRepository>();
         services.AddScoped<IPosBranchSettingRepository, PosBranchSettingRepository>();
         services.AddScoped<IPosReportService, PosReportService>();
+        services.AddScoped<PosSalesReportExportService>();
+        services.AddScoped<IPosSalesReportExportService>(sp => sp.GetRequiredService<PosSalesReportExportService>());
+        services.AddScoped<IPosReportPdfService, PosReportPdfService>();
 
         // Register HR & Payroll repositories
         services.AddScoped<IWorkCalendarRepository, WorkCalendarRepository>();

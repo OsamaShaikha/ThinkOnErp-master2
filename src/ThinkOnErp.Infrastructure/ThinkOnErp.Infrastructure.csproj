@@ -7,6 +7,11 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <EmbeddedResource Include="Reports\Fonts\NotoSans*.ttf" LogicalName="ThinkOnErp.Reports.Fonts.%(Filename)%(Extension)" />
+    <None Update="Reports\Fonts\OFL.txt" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\ThinkOnErp.Domain\ThinkOnErp.Domain.csproj" />
     <ProjectReference Include="..\ThinkOnErp.Application\ThinkOnErp.Application.csproj" />
   </ItemGroup>
