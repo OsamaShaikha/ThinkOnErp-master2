@@ -58,7 +58,9 @@ public class InventoryLookupsController : ControllerBase
             ["stockTransactionTypes"] = await GetStockTransactionTypesInternal(lang),
             ["bomTypes"] = await GetLookupsByMgrAsync(SysCodeKeys.BomTypes.Mgr, lang),
             ["costingMethods"] = await GetLookupsByMgrAsync(SysCodeKeys.CostingMethods.Mgr, lang),
-            ["itemTypes"] = await GetLookupsByMgrAsync(SysCodeKeys.ItemTypes.Mgr, lang)
+            ["itemTypes"] = await GetLookupsByMgrAsync(SysCodeKeys.ItemTypes.Mgr, lang),
+            ["warehouseTypes"] = await GetLookupsByMgrAsync(SysCodeKeys.WarehouseTypes.Mgr, lang),
+            ["zoneTypes"] = await GetLookupsByMgrAsync(SysCodeKeys.ZoneTypes.Mgr, lang)
         };
 
         return Ok(ApiResponse<Dictionary<string, List<SysCodeLookupDto>>>.CreateSuccess(result, "Inventory lookups retrieved successfully", 200));
@@ -141,5 +143,27 @@ public class InventoryLookupsController : ControllerBase
     {
         var list = await GetLookupsByMgrAsync(SysCodeKeys.ItemTypes.Mgr, lang);
         return Ok(ApiResponse<List<SysCodeLookupDto>>.CreateSuccess(list, "Item types retrieved successfully", 200));
+    }
+
+    /// <summary>
+    /// استرجاع أنواع المستودعات (Warehouse Types: Main=1, Branch=2, Transit=3, Virtual=4)
+    /// </summary>
+    [HttpGet("warehouse-types")]
+    [ProducesResponseType(typeof(ApiResponse<List<SysCodeLookupDto>>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<ApiResponse<List<SysCodeLookupDto>>>> GetWarehouseTypes([FromQuery] int? lang = null)
+    {
+        var list = await GetLookupsByMgrAsync(SysCodeKeys.WarehouseTypes.Mgr, lang);
+        return Ok(ApiResponse<List<SysCodeLookupDto>>.CreateSuccess(list, "Warehouse types retrieved successfully", 200));
+    }
+
+    /// <summary>
+    /// استرجاع أنواع مناطق المستودعات (Zone Types: Storage=1, Receiving=2, Staging=3, Quarantine=4, Damaged=5, Returns=6)
+    /// </summary>
+    [HttpGet("zone-types")]
+    [ProducesResponseType(typeof(ApiResponse<List<SysCodeLookupDto>>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<ApiResponse<List<SysCodeLookupDto>>>> GetZoneTypes([FromQuery] int? lang = null)
+    {
+        var list = await GetLookupsByMgrAsync(SysCodeKeys.ZoneTypes.Mgr, lang);
+        return Ok(ApiResponse<List<SysCodeLookupDto>>.CreateSuccess(list, "Zone types retrieved successfully", 200));
     }
 }

@@ -125,6 +125,22 @@ public static class SysCodeLookupHelper
                 new() { Code = 2, Value = "SpecificInvoice", NameAr = "سداد فاتورة محددة", NameEn = "Specific Invoice", Name = isEnglish ? "Specific Invoice" : "سداد فاتورة محددة", IsActive = 1 },
                 new() { Code = 3, Value = "AllInvoices", NameAr = "سداد كامل الفواتير المفتوحة", NameEn = "All Open Invoices", Name = isEnglish ? "All Open Invoices" : "سداد كامل الفواتير المفتوحة", IsActive = 1 },
             },
+            SysCodeKeys.WarehouseTypes.Mgr => new List<SysCodeLookupDto>
+            {
+                new() { Code = 1, Value = "MAIN", NameAr = "مستودع رئيسي", NameEn = "Main Warehouse", Name = isEnglish ? "Main Warehouse" : "مستودع رئيسي", IsActive = 1 },
+                new() { Code = 2, Value = "BRANCH", NameAr = "مستودع فرعي", NameEn = "Branch Warehouse", Name = isEnglish ? "Branch Warehouse" : "مستودع فرعي", IsActive = 1 },
+                new() { Code = 3, Value = "TRANSIT", NameAr = "مستودع ترانزيت / عبور", NameEn = "Transit Warehouse", Name = isEnglish ? "Transit Warehouse" : "مستودع ترانزيت / عبور", IsActive = 1 },
+                new() { Code = 4, Value = "VIRTUAL", NameAr = "مستودع افتراضي", NameEn = "Virtual Warehouse", Name = isEnglish ? "Virtual Warehouse" : "مستودع افتراضي", IsActive = 1 },
+            },
+            SysCodeKeys.ZoneTypes.Mgr => new List<SysCodeLookupDto>
+            {
+                new() { Code = 1, Value = "STORAGE", NameAr = "منطقة تخزين", NameEn = "Storage Zone", Name = isEnglish ? "Storage Zone" : "منطقة تخزين", IsActive = 1 },
+                new() { Code = 2, Value = "RECEIVING", NameAr = "منطقة استلام", NameEn = "Receiving Zone", Name = isEnglish ? "Receiving Zone" : "منطقة استلام", IsActive = 1 },
+                new() { Code = 3, Value = "STAGING", NameAr = "منطقة تجهيز / شحن", NameEn = "Staging Zone", Name = isEnglish ? "Staging Zone" : "منطقة تجهيز / شحن", IsActive = 1 },
+                new() { Code = 4, Value = "QUARANTINE", NameAr = "منطقة حجر صحي / فحص", NameEn = "Quarantine Zone", Name = isEnglish ? "Quarantine Zone" : "منطقة حجر صحي / فحص", IsActive = 1 },
+                new() { Code = 5, Value = "DAMAGED", NameAr = "منطقة بضاعة تالفة", NameEn = "Damaged Goods Zone", Name = isEnglish ? "Damaged Goods Zone" : "منطقة بضاعة تالفة", IsActive = 1 },
+                new() { Code = 6, Value = "RETURNS", NameAr = "منطقة مرتجعات", NameEn = "Returns Zone", Name = isEnglish ? "Returns Zone" : "منطقة مرتجعات", IsActive = 1 },
+            },
             _ => new List<SysCodeLookupDto>()
         };
     }

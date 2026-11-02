@@ -231,7 +231,7 @@ public class CompanyPermissionsController : ControllerBase
         var revokedFeatures = await _branchFeatureRepo.GetRevokedScreenFeaturesAsync(branchId);
 
         var allowedScreens = await _context.Set<SysScreen>()
-            .Where(s => systemIds.Contains(s.SystemId) && s.IsActive)
+            .Where(s => ((s.SystemId.HasValue && systemIds.Contains(s.SystemId.Value)) || s.SystemScreens.Any(ss => systemIds.Contains(ss.SystemId) && ss.IsActive)) && s.IsActive)
             .ToDictionaryAsync(s => s.Id);
 
         foreach (var dto in dtos)

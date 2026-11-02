@@ -14,7 +14,7 @@ public static class HrPermissionRules
     // null means no administrative grant; false means an explicit/system-level denial.
     public static async Task<bool?> BranchDecisionAsync(OracleDbContext db, SysUser user, SysScreen screen, long featureId, long branchId, CancellationToken cancellation = default)
     {
-        if (!await db.Set<SysBranchSystem>().AnyAsync(b => b.BranchId == branchId && b.SystemId == screen.SystemId && b.RevokedDate == null, cancellation) ||
+        if (!await db.Set<SysBranchSystem>().AnyAsync(b => b.BranchId == branchId && b.RevokedDate == null && ((screen.SystemId.HasValue && b.SystemId == screen.SystemId.Value) || db.Set<SysSystemScreen>().Any(ss => ss.ScreenId == screen.Id && ss.SystemId == b.SystemId && ss.IsActive)), cancellation) ||
             await db.Set<SysBranchScreen>().AnyAsync(b => b.BranchId == branchId && b.ScreenId == screen.Id, cancellation) ||
             await db.Set<SysBranchFeature>().AnyAsync(b => b.BranchId == branchId && b.ScreenId == screen.Id && b.FeatureId == featureId, cancellation)) return false;
         var roles = await db.SysUserRoles.Where(r => r.UserId == user.Id).Select(r => r.RoleId).ToListAsync(cancellation);

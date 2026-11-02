@@ -1,4 +1,4 @@
-﻿using System.Text.RegularExpressions;
+using System.Text.RegularExpressions;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -48,6 +48,12 @@ public class OracleSchemaService : IOracleSchemaService
     {
         "SYS_REQUEST_TICKET", "SYS_TICKET_TYPE", "SYS_TICKET_PRIORITY", "SYS_TICKET_STATUS",
         "SYS_TICKET_CATEGORY", "SYS_TICKET_COMMENT", "SYS_TICKET_ATTACHMENT", "SYS_TICKET_CONFIG"
+    };
+
+    private static readonly HashSet<string> DeprecatedTables = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "POS_BRANCH_SETTINGS",
+        "POS_BRANCH_SETTING"
     };
 
     private static readonly HashSet<string> SupportSequences = new(StringComparer.OrdinalIgnoreCase)
@@ -422,7 +428,7 @@ public class OracleSchemaService : IOracleSchemaService
         foreach (var entityType in model.GetEntityTypes())
         {
             var tableName = entityType.GetTableName();
-            if (string.IsNullOrEmpty(tableName) || GlobalTables.Contains(tableName))
+            if (string.IsNullOrEmpty(tableName) || GlobalTables.Contains(tableName) || DeprecatedTables.Contains(tableName))
                 continue;
 
             var createSql = GenerateCreateTableSql(entityType, schemaName, tableName);
@@ -1539,7 +1545,7 @@ public class OracleSchemaService : IOracleSchemaService
         {
             _logger.LogWarning(ex, "Failed to set CURRENT_SCHEMA to {TargetSchema}", targetSchema);
         }
-        var pendingObjects = objects.Where(o => !GlobalTables.Contains(o.Name)).ToList();
+        var pendingObjects = objects.Where(o => !GlobalTables.Contains(o.Name) && !DeprecatedTables.Contains(o.Name)).ToList();
         for (int pass = 1; pass <= 4 && pendingObjects.Count > 0; pass++)
         {
             var failedObjects = new List<(string Name, string Type)>();
@@ -1629,7 +1635,7 @@ public class OracleSchemaService : IOracleSchemaService
             pendingObjects = failedObjects;
         }
         // Step: Apply referential constraints (Foreign Keys) in a separate pass after all tables exist
-        var tablesToLink = objects.Where(o => o.Type == "TABLE" && !GlobalTables.Contains(o.Name)).ToList();
+        var tablesToLink = objects.Where(o => o.Type == "TABLE" && !GlobalTables.Contains(o.Name) && !DeprecatedTables.Contains(o.Name)).ToList();
         foreach (var tbl in tablesToLink)
         {
             try

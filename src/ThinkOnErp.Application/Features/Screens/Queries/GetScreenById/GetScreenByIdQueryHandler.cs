@@ -22,11 +22,15 @@ public class GetScreenByIdQueryHandler : IRequestHandler<GetScreenByIdQuery, Scr
             return null;
 
         var basePath = await GetIconBasePathAsync();
+        var sysIds = screen.SystemScreens != null && screen.SystemScreens.Count > 0
+            ? screen.SystemScreens.Where(ss => ss.IsActive).Select(ss => ss.SystemId).ToList()
+            : (screen.SystemId.HasValue ? new List<long> { screen.SystemId.Value } : new List<long>());
 
         return new ScreenDto
         {
             Id = screen.Id,
-            SystemId = screen.SystemId,
+            SystemId = screen.SystemId ?? (sysIds.FirstOrDefault()),
+            SystemIds = sysIds,
             ParentScreenId = screen.ParentScreenId,
             ScreenCode = screen.ScreenCode,
             ScreenName = screen.ScreenName,
@@ -60,6 +64,16 @@ public class GetScreenByIdQueryHandler : IRequestHandler<GetScreenByIdQuery, Scr
             return null;
 
         var bytes = await File.ReadAllBytesAsync(fullPath);
-        return Convert.ToBase64String(bytes);
+        var ext = Path.GetExtension(iconPath).TrimStart('.').ToLowerInvariant();
+        var mimeType = ext switch
+        {
+            "png" => "image/png",
+            "jpg" or "jpeg" => "image/jpeg",
+            "svg" => "image/svg+xml",
+            "gif" => "image/gif",
+            "webp" => "image/webp",
+            _ => "application/octet-stream"
+        };
+        return $"data:{mimeType};base64,{Convert.ToBase64String(bytes)}";
     }
 }

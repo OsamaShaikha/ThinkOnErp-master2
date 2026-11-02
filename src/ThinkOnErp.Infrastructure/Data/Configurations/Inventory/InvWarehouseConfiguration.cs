@@ -1,6 +1,7 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using ThinkOnErp.Domain.Entities.Inventory;
+using ThinkOnErp.Domain.Entities.Inventory.Enums;
 
 namespace ThinkOnErp.Infrastructure.Data.Configurations.Inventory;
 
@@ -36,7 +37,9 @@ public sealed class InvWarehouseConfiguration : IEntityTypeConfiguration<InvWare
 
         builder.Property(e => e.WarehouseType)
             .HasColumnName("WAREHOUSE_TYPE")
-            .HasConversion<string>()
+            .HasConversion(
+                v => FormatWarehouseType(v),
+                v => ParseWarehouseType(v))
             .HasMaxLength(50)
             .IsRequired();
 
@@ -71,6 +74,23 @@ public sealed class InvWarehouseConfiguration : IEntityTypeConfiguration<InvWare
 
         builder.Property(e => e.UpdateDate)
             .HasColumnName("UPDATE_DATE");
-
     }
+
+    private static string FormatWarehouseType(WarehouseType v) => v switch
+    {
+        WarehouseType.Main => "MAIN",
+        WarehouseType.Branch => "BRANCH",
+        WarehouseType.Transit => "TRANSIT",
+        WarehouseType.Virtual => "VIRTUAL",
+        _ => "MAIN"
+    };
+
+    private static WarehouseType ParseWarehouseType(string? v) => v?.ToUpperInvariant() switch
+    {
+        "MAIN" or "1" => WarehouseType.Main,
+        "BRANCH" or "2" => WarehouseType.Branch,
+        "TRANSIT" or "3" => WarehouseType.Transit,
+        "VIRTUAL" or "4" => WarehouseType.Virtual,
+        _ => Enum.TryParse<WarehouseType>(v, true, out var res) ? res : WarehouseType.Main
+    };
 }

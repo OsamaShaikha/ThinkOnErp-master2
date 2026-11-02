@@ -114,7 +114,7 @@ public class BranchAccessController : ControllerBase
                 Screens = screens.Select(s => new ScreenDto
                 {
                     Id = s.Id,
-                    SystemId = s.SystemId,
+                    SystemId = s.SystemId ?? (s.SystemScreens.FirstOrDefault()?.SystemId ?? 0), SystemIds = s.SystemScreens.Select(ss => ss.SystemId).ToList(),
                     ParentScreenId = s.ParentScreenId,
                     ScreenCode = s.ScreenCode,
                     ScreenName = s.ScreenName,
@@ -227,7 +227,7 @@ public class BranchAccessController : ControllerBase
             var dtos = screens.Select(s => new ScreenDto
             {
                 Id = s.Id,
-                SystemId = s.SystemId,
+                SystemId = s.SystemId ?? (s.SystemScreens.FirstOrDefault()?.SystemId ?? 0), SystemIds = s.SystemScreens.Select(ss => ss.SystemId).ToList(),
                 ParentScreenId = s.ParentScreenId,
                 ScreenCode = s.ScreenCode,
                 ScreenName = s.ScreenName,

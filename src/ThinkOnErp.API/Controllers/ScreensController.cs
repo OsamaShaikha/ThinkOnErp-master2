@@ -16,6 +16,11 @@ using ThinkOnErp.Application.Features.Screens.Queries.GetScreenById;
 using ThinkOnErp.Application.Features.Screens.Queries.GetScreensBySystemId;
 using ThinkOnErp.Domain.Constants;
 
+using ThinkOnErp.Application.Features.ScreenFeatures.Commands.AssignFeaturesToSystemScreen;
+using ThinkOnErp.Application.Features.ScreenFeatures.Commands.RemoveFeatureFromSystemScreen;
+using ThinkOnErp.Application.Features.ScreenFeatures.Queries.GetFeaturesBySystemAndScreen;
+using ThinkOnErp.Application.Features.ScreenFeatures.Queries.GetSystemLevelFeatures;
+
 namespace ThinkOnErp.API.Controllers;
 
 [ApiController]
@@ -260,6 +265,165 @@ public class ScreensController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error deleting screen with ID: {ScreenId}", id);
+            throw;
+        }
+    }
+
+    /// <summary>
+    /// Gets features assigned to a specific screen within a system context.
+    /// </summary>
+    [HttpGet("bysystem/{systemId}/{screenId}/features")]
+    [HttpGet("/api/systems/{systemId}/screens/{screenId}/features")]
+    [ProducesResponseType(typeof(ApiResponse<List<FeatureDto>>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<ApiResponse<List<FeatureDto>>>> GetFeaturesBySystemAndScreen(long systemId, long screenId)
+    {
+        try
+        {
+            _logger.LogInformation("Retrieving features for system ID: {SystemId}, screen ID: {ScreenId}", systemId, screenId);
+            var features = await _mediator.Send(new GetFeaturesBySystemAndScreenQuery(systemId, screenId));
+            return Ok(ApiResponse<List<FeatureDto>>.CreateSuccess(features, ResponseCodes.DataRetrieved, 200));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error retrieving features for system ID: {SystemId}, screen ID: {ScreenId}", systemId, screenId);
+            throw;
+        }
+    }
+
+    /// <summary>
+    /// Assigns features to a specific screen within a system context.
+    /// </summary>
+    [HttpPost("bysystem/{systemId}/{screenId}/features")]
+    [HttpPost("/api/systems/{systemId}/screens/{screenId}/features")]
+    [ProducesResponseType(typeof(ApiResponse<bool>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<bool>), StatusCodes.Status400BadRequest)]
+    public async Task<ActionResult<ApiResponse<bool>>> AssignFeaturesToSystemScreen(
+        long systemId,
+        long screenId,
+        [FromBody] AssignFeaturesToScreenDto dto)
+    {
+        try
+        {
+            var command = new AssignFeaturesToSystemScreenCommand
+            {
+                SystemId = systemId,
+                ScreenId = screenId,
+                FeatureIds = dto.FeatureIds,
+                Username = User.Identity?.Name ?? "system"
+            };
+            _logger.LogInformation("Assigning features to system ID: {SystemId}, screen ID: {ScreenId}", systemId, screenId);
+            await _mediator.Send(command);
+            return Ok(ApiResponse<bool>.CreateSuccess(true, ResponseCodes.RecordUpdated, 200));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error assigning features to system ID: {SystemId}, screen ID: {ScreenId}", systemId, screenId);
+            throw;
+        }
+    }
+
+    /// <summary>
+    /// Removes a feature from a specific screen within a system context.
+    /// </summary>
+    [HttpDelete("bysystem/{systemId}/{screenId}/features/{featureId}")]
+    [HttpDelete("/api/systems/{systemId}/screens/{screenId}/features/{featureId}")]
+    [ProducesResponseType(typeof(ApiResponse<bool>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<ApiResponse<bool>>> RemoveFeatureFromSystemScreen(long systemId, long screenId, long featureId)
+    {
+        try
+        {
+            var command = new RemoveFeatureFromSystemScreenCommand
+            {
+                SystemId = systemId,
+                ScreenId = screenId,
+                FeatureId = featureId
+            };
+            _logger.LogInformation("Removing feature {FeatureId} from system ID: {SystemId}, screen ID: {ScreenId}", featureId, systemId, screenId);
+            await _mediator.Send(command);
+            return Ok(ApiResponse<bool>.CreateSuccess(true, ResponseCodes.RecordUpdated, 200));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error removing feature {FeatureId} from system ID: {SystemId}, screen ID: {ScreenId}", featureId, systemId, screenId);
+            throw;
+        }
+    }
+
+    /// <summary>
+    /// Gets system-wide features (where screenId is null).
+    /// </summary>
+    [HttpGet("bysystem/{systemId}/features")]
+    [HttpGet("/api/systems/{systemId}/features")]
+    [ProducesResponseType(typeof(ApiResponse<List<FeatureDto>>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<ApiResponse<List<FeatureDto>>>> GetSystemLevelFeatures(long systemId)
+    {
+        try
+        {
+            _logger.LogInformation("Retrieving system-level features for system ID: {SystemId}", systemId);
+            var features = await _mediator.Send(new GetSystemLevelFeaturesQuery(systemId));
+            return Ok(ApiResponse<List<FeatureDto>>.CreateSuccess(features, ResponseCodes.DataRetrieved, 200));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error retrieving system-level features for system ID: {SystemId}", systemId);
+            throw;
+        }
+    }
+
+    /// <summary>
+    /// Assigns system-wide features (where screenId is null).
+    /// </summary>
+    [HttpPost("bysystem/{systemId}/features")]
+    [HttpPost("/api/systems/{systemId}/features")]
+    [ProducesResponseType(typeof(ApiResponse<bool>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<bool>), StatusCodes.Status400BadRequest)]
+    public async Task<ActionResult<ApiResponse<bool>>> AssignSystemLevelFeatures(
+        long systemId,
+        [FromBody] AssignFeaturesToScreenDto dto)
+    {
+        try
+        {
+            var command = new AssignFeaturesToSystemScreenCommand
+            {
+                SystemId = systemId,
+                ScreenId = null,
+                FeatureIds = dto.FeatureIds,
+                Username = User.Identity?.Name ?? "system"
+            };
+            _logger.LogInformation("Assigning system-level features to system ID: {SystemId}", systemId);
+            await _mediator.Send(command);
+            return Ok(ApiResponse<bool>.CreateSuccess(true, ResponseCodes.RecordUpdated, 200));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error assigning system-level features to system ID: {SystemId}", systemId);
+            throw;
+        }
+    }
+
+    /// <summary>
+    /// Removes a system-wide feature (where screenId is null).
+    /// </summary>
+    [HttpDelete("bysystem/{systemId}/features/{featureId}")]
+    [HttpDelete("/api/systems/{systemId}/features/{featureId}")]
+    [ProducesResponseType(typeof(ApiResponse<bool>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<ApiResponse<bool>>> RemoveSystemLevelFeature(long systemId, long featureId)
+    {
+        try
+        {
+            var command = new RemoveFeatureFromSystemScreenCommand
+            {
+                SystemId = systemId,
+                ScreenId = null,
+                FeatureId = featureId
+            };
+            _logger.LogInformation("Removing system-level feature {FeatureId} from system ID: {SystemId}", featureId, systemId);
+            await _mediator.Send(command);
+            return Ok(ApiResponse<bool>.CreateSuccess(true, ResponseCodes.RecordUpdated, 200));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error removing system-level feature {FeatureId} from system ID: {SystemId}", featureId, systemId);
             throw;
         }
     }

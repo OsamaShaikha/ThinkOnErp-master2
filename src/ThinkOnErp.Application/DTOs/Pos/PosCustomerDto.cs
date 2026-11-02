@@ -22,3 +22,21 @@ public sealed class PosCustomerDto
     public long? BranchId { get; set; }
     public bool IsActive { get; set; } = true;
 }
+
+/// <summary>
+/// نموذج إنشاء عميل سريع لشاشة نقطة البيع (POS Quick Customer Creation) - بدون أي حقول محاسبية
+/// </summary>
+public sealed class CreatePosCustomerDto
+{
+    public string CustomerCode { get; set; } = string.Empty;
+    public string NameLocal { get; set; } = string.Empty;
+    public string? NameEn { get; set; }
+    public long? DefaultCurrencyId { get; set; }
+    public decimal? CreditLimit { get; set; }
+    public int PaymentTermsDays { get; set; } = 30;
+    public long? BranchId { get; set; }
+    public string? TaxNumber { get; set; }
+    public string? Phone { get; set; }
+    public string? Email { get; set; }
+    public string? Address { get; set; }
+}

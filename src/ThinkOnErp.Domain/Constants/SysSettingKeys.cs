@@ -41,4 +41,38 @@ public static class SysSettingKeys
     /// POS Default Receipt Account for Float-In / Misc Receipts (References GL_ACCOUNT.ACCOUNT_CODE, e.g., 421101 - إيرادات أخرى متنوعة)
     /// </summary>
     public const int PosDefaultReceiptAccount = 55;
+
+    /// <summary>
+    /// POS Allow Negative Stock Selling (1 = True, 0 = False)
+    /// </summary>
+    public const int PosAllowNegativeStock = 56;
+
+    /// <summary>
+    /// POS Default Price List ID
+    /// </summary>
+    public const int PosDefaultPriceListId = 57;
+
+    /// <summary>
+    /// POS Automatically Print Receipt Upon Invoice Completion (1 = True, 0 = False)
+    /// </summary>
+    public const int PosPrintReceiptAutomatically = 58;
+
+    /// <summary>
+    /// Branch / POS Tax Application Mode:
+    /// 1 = ItemLevel (الضريبة على مستوى الصنف - كل صنف يحسب ضريبته الخاصة)
+    /// 2 = InvoiceLevel (الضريبة على مستوى الفاتورة - تطبق نسبة موحدة على كامل الفاتورة)
+    /// </summary>
+    public const int PosTaxApplicationMode = 59;
+
+    /// <summary>
+    /// Branch default tax percentage when InvoiceLevel tax mode is enabled (e.g., 15.00)
+    /// </summary>
+    public const int PosBranchTaxPercent = 60;
+
+    /// <summary>
+    /// POS Prices Include Tax by default:
+    /// 1 = True (الأسعار المعروضة في شاشات ونقاط البيع شاملة لضريبة القيمة المضافة)
+    /// 0 = False (الأسعار غير شاملة وتضاف الضريبة فوق السعر)
+    /// </summary>
+    public const int PosPricesIncludeTax = 61;
 }

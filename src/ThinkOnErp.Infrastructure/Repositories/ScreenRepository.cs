@@ -11,26 +11,114 @@ public class ScreenRepository : IScreenRepository
     public ScreenRepository(OracleDbContext context) => _context = context;
 
     public async Task<List<SysScreen>> GetAllScreensAsync() =>
-        await _context.SysScreens.ToListAsync();
+        await _context.SysScreens
+            .Include(s => s.SystemScreens)
+            .ToListAsync();
 
     public async Task<List<SysScreen>> GetScreensBySystemIdAsync(long systemId) =>
-        await _context.SysScreens.Where(s => s.SystemId == systemId).ToListAsync();
+        await _context.SysScreens
+            .Where(s => (s.SystemId == systemId || s.SystemScreens.Any(ss => ss.SystemId == systemId && ss.IsActive)) && s.IsActive)
+            .OrderBy(s => s.DisplayOrder)
+            .ToListAsync();
 
     public async Task<SysScreen?> GetScreenByIdAsync(long screenId) =>
-        await _context.SysScreens.FindAsync(screenId);
+        await _context.SysScreens
+            .Include(s => s.SystemScreens)
+            .FirstOrDefaultAsync(s => s.Id == screenId);
 
-    public async Task<long> CreateScreenAsync(SysScreen screen)
+    public async Task<List<long>> GetSystemIdsByScreenIdAsync(long screenId)
     {
+        var systemsFromJoin = await _context.SysSystemScreens
+            .Where(ss => ss.ScreenId == screenId && ss.IsActive)
+            .Select(ss => ss.SystemId)
+            .ToListAsync();
+
+        if (systemsFromJoin.Count == 0)
+        {
+            var fallback = await _context.SysScreens
+                .Where(s => s.Id == screenId && s.SystemId.HasValue)
+                .Select(s => s.SystemId!.Value)
+                .FirstOrDefaultAsync();
+
+            if (fallback > 0)
+                return new List<long> { fallback };
+        }
+
+        return systemsFromJoin;
+    }
+
+    public async Task SyncScreenSystemsAsync(long screenId, IEnumerable<long> systemIds, string username)
+    {
+        var targetSystemIds = systemIds?.Distinct().ToList() ?? new List<long>();
+        var existingLinks = await _context.SysSystemScreens
+            .Where(ss => ss.ScreenId == screenId)
+            .ToListAsync();
+
+        var existingSystemIds = existingLinks.Select(ss => ss.SystemId).ToHashSet();
+
+        // Remove links that are not in target
+        foreach (var link in existingLinks.Where(l => !targetSystemIds.Contains(l.SystemId)))
+        {
+            _context.SysSystemScreens.Remove(link);
+        }
+
+        // Add new links
+        foreach (var sysId in targetSystemIds.Where(id => !existingSystemIds.Contains(id)))
+        {
+            _context.SysSystemScreens.Add(new SysSystemScreen
+            {
+                ScreenId = screenId,
+                SystemId = sysId,
+                IsActive = true,
+                CreationUser = username,
+                CreationDate = DateTime.UtcNow
+            });
+        }
+
+        await _context.SaveChangesAsync();
+    }
+
+    public async Task<long> CreateScreenAsync(SysScreen screen) =>
+        await CreateScreenAsync(screen, null);
+
+    public async Task<long> CreateScreenAsync(SysScreen screen, IEnumerable<long>? systemIds)
+    {
+        var list = systemIds?.Distinct().ToList() ?? new List<long>();
+        if (list.Count > 0 && !screen.SystemId.HasValue)
+        {
+            screen.SystemId = list[0];
+        }
+
         _context.SysScreens.Add(screen);
         await _context.SaveChangesAsync();
+
+        if (list.Count > 0)
+        {
+            await SyncScreenSystemsAsync(screen.Id, list, screen.CreationUser);
+        }
+
         return screen.Id;
     }
 
-    public async Task UpdateScreenAsync(SysScreen screen)
+    public async Task UpdateScreenAsync(SysScreen screen) =>
+        await UpdateScreenAsync(screen, null);
+
+    public async Task UpdateScreenAsync(SysScreen screen, IEnumerable<long>? systemIds)
     {
         screen.UpdateDate = DateTime.Now;
+        var list = systemIds?.Distinct().ToList();
+        if (list != null && list.Count > 0 && !screen.SystemId.HasValue)
+        {
+            screen.SystemId = list[0];
+        }
+
         _context.SysScreens.Update(screen);
         await _context.SaveChangesAsync();
+
+        if (list != null)
+        {
+            await SyncScreenSystemsAsync(screen.Id, list, screen.UpdateUser ?? "system");
+        }
     }
 
     public async Task DeleteScreenAsync(long screenId, string updateUser)

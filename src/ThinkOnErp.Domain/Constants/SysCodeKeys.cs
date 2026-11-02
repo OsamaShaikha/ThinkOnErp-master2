@@ -310,4 +310,24 @@ public static class SysCodeKeys
         public const int EnforceBlindClose = 1;
         public const int StandardOpenClose = 2;
     }
+
+    public static class WarehouseTypes
+    {
+        public const int Mgr = 22;
+        public const int Main = 1;
+        public const int Branch = 2;
+        public const int Transit = 3;
+        public const int Virtual = 4;
+    }
+
+    public static class ZoneTypes
+    {
+        public const int Mgr = 23;
+        public const int Storage = 1;
+        public const int Receiving = 2;
+        public const int Staging = 3;
+        public const int Quarantine = 4;
+        public const int Damaged = 5;
+        public const int Returns = 6;
+    }
 }

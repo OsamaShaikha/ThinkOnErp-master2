@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using ThinkOnErp.Domain.Entities.Inventory;
+using ThinkOnErp.Domain.Entities.Inventory.Enums;
 
 namespace ThinkOnErp.Infrastructure.Data.Configurations.Inventory;
 
@@ -31,9 +32,32 @@ public sealed class InvZoneConfiguration : IEntityTypeConfiguration<InvZone>
 
         builder.Property(e => e.ZoneType)
             .HasColumnName("ZONE_TYPE")
-            .HasConversion<string>()
+            .HasConversion(
+                v => FormatZoneType(v),
+                v => ParseZoneType(v))
             .HasMaxLength(50)
             .IsRequired();
-
     }
+
+    private static string FormatZoneType(ZoneType v) => v switch
+    {
+        ZoneType.Storage => "STORAGE",
+        ZoneType.Receiving => "RECEIVING",
+        ZoneType.Staging => "STAGING",
+        ZoneType.Quarantine => "QUARANTINE",
+        ZoneType.Damaged => "DAMAGED",
+        ZoneType.Returns => "RETURNS",
+        _ => "STORAGE"
+    };
+
+    private static ZoneType ParseZoneType(string? v) => v?.ToUpperInvariant() switch
+    {
+        "STORAGE" or "1" => ZoneType.Storage,
+        "RECEIVING" or "2" => ZoneType.Receiving,
+        "STAGING" or "3" => ZoneType.Staging,
+        "QUARANTINE" or "4" => ZoneType.Quarantine,
+        "DAMAGED" or "5" => ZoneType.Damaged,
+        "RETURNS" or "6" => ZoneType.Returns,
+        _ => Enum.TryParse<ZoneType>(v, true, out var res) ? res : ZoneType.Storage
+    };
 }

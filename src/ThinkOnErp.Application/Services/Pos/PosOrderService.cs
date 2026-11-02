@@ -166,8 +166,10 @@ public class PosOrderService : IPosOrderService
             }
         }
 
-        // 3. Compute Totals using Calculation Engine (Dynamic Tax Resolution)
-        var calcResult = await _calculationEngine.CalculateOrderTotalsAsync(dto.BranchId, dto, null, ct);
+        // 3. Compute Totals using Calculation Engine (Dynamic Tax Resolution & Tax Inclusion)
+        var taxOverride = await ResolveBranchTaxOverrideAsync(dto.BranchId, ct);
+        var isInclusive = await ResolveBranchTaxInclusiveAsync(dto.BranchId, dto.IsTaxInclusive, ct);
+        var calcResult = await _calculationEngine.CalculateOrderTotalsAsync(dto.BranchId, dto, taxOverride, isInclusive, ct);
 
         // 4. Generate Shift-scoped Order Number (0001, 0002, ...) and Fiscal Invoice Number (INV-2026-000008)
         var orderNumber = await _orderRepository.GenerateNextShiftOrderNumberAsync(dto.ShiftId, isRefund: false, ct);
@@ -200,7 +202,11 @@ public class PosOrderService : IPosOrderService
             TipAmount = calcResult.TipAmount,
             TotalAmount = calcResult.TotalAmount,
 
-            Notes = dto.Notes,
+            Notes = string.IsNullOrWhiteSpace(dto.TaxExemptionReason)
+                ? dto.Notes
+                : (string.IsNullOrWhiteSpace(dto.Notes)
+                    ? $"[إعفاء ضريبي: {dto.TaxExemptionReason.Trim()}]"
+                    : $"{dto.Notes} | [إعفاء ضريبي: {dto.TaxExemptionReason.Trim()}]"),
             IsActive = true,
             CreationUser = username,
             CreationDate = DateTime.UtcNow
@@ -259,14 +265,33 @@ public class PosOrderService : IPosOrderService
             var taxableAmt = tg.Sum(l => l.LineNetBeforeTax);
             var taxAmt = tg.Sum(l => l.TaxAmount);
 
+            string taxCode;
+            long taxRateId;
+
+            if (dto.IsTaxExempt == true)
+            {
+                taxCode = "VAT_EXEMPT";
+                taxRateId = 4;
+            }
+            else if (tg.Key == 0)
+            {
+                taxCode = taxRateEntity?.TaxRateCode ?? "VAT_0";
+                taxRateId = taxRateEntity?.Id ?? 3;
+            }
+            else
+            {
+                taxCode = taxRateEntity?.TaxRateCode ?? $"VAT_{tg.Key:0.#}";
+                taxRateId = taxRateEntity?.Id ?? 1;
+            }
+
             order.Taxes.Add(new PosOrderTax
             {
-                TaxRateId = taxRateEntity?.Id ?? 1,
-                TaxRateCode = taxRateEntity?.TaxRateCode ?? $"VAT_{tg.Key:0.#}",
+                TaxRateId = taxRateId,
+                TaxRateCode = taxCode,
                 TaxPercent = tg.Key,
                 TaxableAmount = taxableAmt,
                 TaxAmount = taxAmt,
-                IsInclusive = false
+                IsInclusive = calcResult.IsTaxInclusive
             });
         }
 
@@ -375,6 +400,14 @@ public class PosOrderService : IPosOrderService
             {
                 order.Status = PosOrderStatus.Completed;
             }
+            else
+            {
+                order.IsPaid = false;
+                if (order.Status == PosOrderStatus.Completed)
+                {
+                    order.Status = totalPaid > 0 ? PosOrderStatus.Parked : PosOrderStatus.Draft;
+                }
+            }
         }
         else if (order.TotalAmount == 0)
         {
@@ -382,6 +415,17 @@ public class PosOrderService : IPosOrderService
             order.ChangeAmount = 0m;
             order.IsPaid = true;
             order.Status = PosOrderStatus.Completed;
+        }
+        else
+        {
+            // No payments provided for order with TotalAmount > 0
+            order.PaidAmount = 0m;
+            order.ChangeAmount = 0m;
+            order.IsPaid = false;
+            if (order.Status == PosOrderStatus.Completed)
+            {
+                order.Status = PosOrderStatus.Draft;
+            }
         }
 
         await _orderRepository.AddOrderAsync(order, ct);
@@ -1585,7 +1629,9 @@ public class PosOrderService : IPosOrderService
         }
 
         // Run calculation engine
-        var calcResult = await _calculationEngine.CalculateOrderTotalsAsync(order.BranchId, combinedCalcDto, null, ct);
+        var taxOverride = await ResolveBranchTaxOverrideAsync(order.BranchId, ct);
+        var isInclusive = await ResolveBranchTaxInclusiveAsync(order.BranchId, null, ct);
+        var calcResult = await _calculationEngine.CalculateOrderTotalsAsync(order.BranchId, combinedCalcDto, taxOverride, isInclusive, ct);
 
         // Append new lines with proper tax & discount
         foreach (var reqLine in dto.Lines)
@@ -1650,15 +1696,29 @@ public class PosOrderService : IPosOrderService
             var taxableAmt = tg.Sum(l => l.LineNetBeforeTax);
             var taxAmt = tg.Sum(l => l.TaxAmount);
 
+            string taxCode;
+            long taxRateId;
+
+            if (tg.Key == 0)
+            {
+                taxCode = taxRateEntity?.TaxRateCode ?? "VAT_0";
+                taxRateId = taxRateEntity?.Id ?? 3;
+            }
+            else
+            {
+                taxCode = taxRateEntity?.TaxRateCode ?? $"VAT_{tg.Key:0.#}";
+                taxRateId = taxRateEntity?.Id ?? 1;
+            }
+
             order.Taxes.Add(new PosOrderTax
             {
                 OrderId = order.Id,
-                TaxRateId = taxRateEntity?.Id ?? 1,
-                TaxRateCode = taxRateEntity?.TaxRateCode ?? $"VAT_{tg.Key:0.#}",
+                TaxRateId = taxRateId,
+                TaxRateCode = taxCode,
                 TaxPercent = tg.Key,
                 TaxableAmount = taxableAmt,
                 TaxAmount = taxAmt,
-                IsInclusive = false
+                IsInclusive = calcResult.IsTaxInclusive
             });
         }
 
@@ -1856,7 +1916,9 @@ public class PosOrderService : IPosOrderService
         }
 
         // Run calculation engine for child order
-        var childCalcResult = await _calculationEngine.CalculateOrderTotalsAsync(parentOrder.BranchId, childCalcDto, null, ct);
+        var taxOverride = await ResolveBranchTaxOverrideAsync(parentOrder.BranchId, ct);
+        var isInclusive = await ResolveBranchTaxInclusiveAsync(parentOrder.BranchId, null, ct);
+        var childCalcResult = await _calculationEngine.CalculateOrderTotalsAsync(parentOrder.BranchId, childCalcDto, taxOverride, isInclusive, ct);
 
         // Generate numbers for Child Order
         var childOrderNumber = await _orderRepository.GenerateNextShiftOrderNumberAsync(parentOrder.ShiftId, isRefund: false, ct);
@@ -1947,14 +2009,28 @@ public class PosOrderService : IPosOrderService
             var taxableAmt = tg.Sum(l => l.LineNetBeforeTax);
             var taxAmt = tg.Sum(l => l.TaxAmount);
 
+            string taxCode;
+            long taxRateId;
+
+            if (tg.Key == 0)
+            {
+                taxCode = taxRateEntity?.TaxRateCode ?? "VAT_0";
+                taxRateId = taxRateEntity?.Id ?? 3;
+            }
+            else
+            {
+                taxCode = taxRateEntity?.TaxRateCode ?? $"VAT_{tg.Key:0.#}";
+                taxRateId = taxRateEntity?.Id ?? 1;
+            }
+
             childOrder.Taxes.Add(new PosOrderTax
             {
-                TaxRateId = taxRateEntity?.Id ?? 1,
-                TaxRateCode = taxRateEntity?.TaxRateCode ?? $"VAT_{tg.Key:0.#}",
+                TaxRateId = taxRateId,
+                TaxRateCode = taxCode,
                 TaxPercent = tg.Key,
                 TaxableAmount = taxableAmt,
                 TaxAmount = taxAmt,
-                IsInclusive = false
+                IsInclusive = childCalcResult.IsTaxInclusive
             });
         }
 
@@ -2257,7 +2333,9 @@ public class PosOrderService : IPosOrderService
             Lines = dto.NewLines
         };
 
-        var newCalcResult = await _calculationEngine.CalculateOrderTotalsAsync(originalOrder.BranchId, createNewOrderDto, null, ct);
+        var taxOverride = await ResolveBranchTaxOverrideAsync(originalOrder.BranchId, ct);
+        var isInclusive = await ResolveBranchTaxInclusiveAsync(originalOrder.BranchId, null, ct);
+        var newCalcResult = await _calculationEngine.CalculateOrderTotalsAsync(originalOrder.BranchId, createNewOrderDto, taxOverride, isInclusive, ct);
 
         var newSalesOrderNumber = await _orderRepository.GenerateNextShiftOrderNumberAsync(originalOrder.ShiftId, isRefund: false, ct);
         var newSalesInvoiceNumber = await _orderRepository.GenerateNextInvoiceNumberAsync(originalOrder.BranchId, currentYear, isRefund: false, ct);
@@ -2346,14 +2424,28 @@ public class PosOrderService : IPosOrderService
             var taxableAmt = tg.Sum(l => l.LineNetBeforeTax);
             var taxAmt = tg.Sum(l => l.TaxAmount);
 
+            string taxCode;
+            long taxRateId;
+
+            if (tg.Key == 0)
+            {
+                taxCode = taxRateEntity?.TaxRateCode ?? "VAT_0";
+                taxRateId = taxRateEntity?.Id ?? 3;
+            }
+            else
+            {
+                taxCode = taxRateEntity?.TaxRateCode ?? $"VAT_{tg.Key:0.#}";
+                taxRateId = taxRateEntity?.Id ?? 1;
+            }
+
             newSalesOrder.Taxes.Add(new PosOrderTax
             {
-                TaxRateId = taxRateEntity?.Id ?? 1,
-                TaxRateCode = taxRateEntity?.TaxRateCode ?? $"VAT_{tg.Key:0.#}",
+                TaxRateId = taxRateId,
+                TaxRateCode = taxCode,
                 TaxPercent = tg.Key,
                 TaxableAmount = taxableAmt,
                 TaxAmount = taxAmt,
-                IsInclusive = false
+                IsInclusive = newCalcResult.IsTaxInclusive
             });
         }
 
@@ -2885,6 +2977,28 @@ public class PosOrderService : IPosOrderService
         {
             _logger.LogError(ex, "Failed to record customer account refund credit for Refund #{RefundId}, Original Order: {OrderId}", refundOrder.Id, originalOrder.Id);
         }
+    }
+
+    private async Task<decimal?> ResolveBranchTaxOverrideAsync(long branchId, CancellationToken ct)
+    {
+        var modeStr = await _settingRepo.GetEffectiveValueAsync(SysSettingKeys.PosTaxApplicationMode, branchId, ct);
+        if (int.TryParse(modeStr, out var mode) && mode == 2)
+        {
+            var pctStr = await _settingRepo.GetEffectiveValueAsync(SysSettingKeys.PosBranchTaxPercent, branchId, ct);
+            if (decimal.TryParse(pctStr, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out var pct))
+                return pct;
+            return 15m;
+        }
+        return null;
+    }
+
+    private async Task<bool> ResolveBranchTaxInclusiveAsync(long branchId, bool? requestedInclusive, CancellationToken ct)
+    {
+        if (requestedInclusive.HasValue)
+            return requestedInclusive.Value;
+
+        var incStr = await _settingRepo.GetEffectiveValueAsync(SysSettingKeys.PosPricesIncludeTax, branchId, ct);
+        return incStr == "1" || incStr?.Equals("true", StringComparison.OrdinalIgnoreCase) == true;
     }
 }
 

@@ -234,7 +234,7 @@ public class SysScreenConfiguration : IEntityTypeConfiguration<SysScreen>
         builder.ToTable("SYS_SCREEN");
         builder.HasKey(e => e.Id);
         builder.Property(e => e.Id).ValueGeneratedOnAdd();
-        builder.Property(e => e.SystemId).HasColumnName("SYSTEM_ID").IsRequired();
+        builder.Property(e => e.SystemId).HasColumnName("SYSTEM_ID").IsRequired(false);
         builder.Property(e => e.ParentScreenId).HasColumnName("PARENT_SCREEN_ID");
         builder.Property(e => e.ScreenCode).HasColumnName("SCREEN_CODE").HasMaxLength(100).IsRequired();
         builder.HasIndex(e => e.ScreenCode).IsUnique();
@@ -251,7 +251,7 @@ public class SysScreenConfiguration : IEntityTypeConfiguration<SysScreen>
         builder.Property(e => e.UpdateUser).HasColumnName("UPDATE_USER").HasMaxLength(100);
         builder.Property(e => e.UpdateDate).HasColumnName("UPDATE_DATE");
 
-        builder.HasOne(e => e.System).WithMany(e => e.Screens).HasForeignKey(e => e.SystemId).OnDelete(DeleteBehavior.Restrict);
+        builder.HasOne(e => e.System).WithMany(e => e.Screens).HasForeignKey(e => e.SystemId).IsRequired(false).OnDelete(DeleteBehavior.Restrict);
         builder.HasOne(e => e.ParentScreen).WithMany().HasForeignKey(e => e.ParentScreenId).OnDelete(DeleteBehavior.SetNull);
     }
 }
@@ -299,7 +299,16 @@ public class SysSettingConfiguration : IEntityTypeConfiguration<SysSetting>
     public void Configure(EntityTypeBuilder<SysSetting> builder)
     {
         builder.ToTable("SYS_SETTINGS");
-        builder.HasKey(e => e.SettingCode);
+        builder.HasKey(e => new { e.BranchId, e.SettingCode });
+        builder.Property(e => e.BranchId).HasColumnName("BRANCH_ID").HasDefaultValue(0L);
+        builder.Property(e => e.SettingKey).HasColumnName("SETTING_KEY").HasMaxLength(100);
+        builder.Property(e => e.Module).HasColumnName("MODULE").HasMaxLength(50).HasDefaultValue("GENERAL");
+        builder.Property(e => e.DataType).HasColumnName("DATA_TYPE").HasMaxLength(20).HasDefaultValue("STRING");
+        builder.Property(e => e.IsActive).HasColumnName("IS_ACTIVE").HasColumnType("NUMBER(1)").HasDefaultValue(true);
+        builder.Property(e => e.CreationUser).HasColumnName("CREATION_USER").HasMaxLength(100);
+        builder.Property(e => e.CreationDate).HasColumnName("CREATION_DATE").HasColumnType("TIMESTAMP");
+        builder.Property(e => e.UpdateUser).HasColumnName("UPDATE_USER").HasMaxLength(100);
+        builder.Property(e => e.UpdateDate).HasColumnName("UPDATE_DATE").HasColumnType("TIMESTAMP");
         builder.Property(e => e.SettingCode).HasColumnName("SETTING_CODE").ValueGeneratedNever();
         builder.Property(e => e.SettingDesc).HasColumnName("SETTING_DESC").HasMaxLength(500).IsRequired();
         builder.Property(e => e.SettingValue).HasColumnName("SETTING_VALUE").HasMaxLength(2000).IsRequired();

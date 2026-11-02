@@ -56,7 +56,7 @@ public sealed class HrAccessFilter(OracleDbContext db) : IAsyncActionFilter, IOr
             var screen = await db.Set<SysScreen>().SingleOrDefaultAsync(s => s.ScreenCode == permission.Screen && s.IsActive, cancellation);
             var feature = await db.Set<SysFeature>().SingleOrDefaultAsync(f => f.FeatureCode == permission.Feature && f.IsActive, cancellation);
             var operationRegistered = screen != null && feature != null &&
-                await db.Set<SysSystem>().AnyAsync(s => s.Id == screen.SystemId && s.IsActive, cancellation) &&
+                await db.Set<SysSystem>().AnyAsync(s => ((screen.SystemId.HasValue && s.Id == screen.SystemId.Value) || db.Set<SysSystemScreen>().Any(ss => ss.ScreenId == screen.Id && ss.SystemId == s.Id && ss.IsActive)) && s.IsActive, cancellation) &&
                 await db.Set<SysScreenFeature>().AnyAsync(sf => sf.ScreenId == screen.Id && sf.FeatureId == feature.Id, cancellation);
             if (operationRegistered)
             {

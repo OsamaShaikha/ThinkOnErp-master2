@@ -1,7 +1,7 @@
 namespace ThinkOnErp.Domain.Entities;
 
 /// <summary>
-/// Represents a screen/page within a system
+/// Represents a screen/page within the ERP system
 /// </summary>
 public class SysScreen
 {
@@ -11,9 +11,9 @@ public class SysScreen
     public Int64 Id { get; set; }
 
     /// <summary>
-    /// Foreign key to SYS_SYSTEM table
+    /// Foreign key to SYS_SYSTEM table (nullable for backward compatibility / transition)
     /// </summary>
-    public Int64 SystemId { get; set; }
+    public Int64? SystemId { get; set; }
 
     /// <summary>
     /// Parent screen ID for hierarchical screens (nullable)
@@ -89,4 +89,14 @@ public class SysScreen
     public SysSystem? System { get; set; }
     public SysScreen? ParentScreen { get; set; }
     public ICollection<SysScreenFeature>? ScreenFeatures { get; set; }
+
+    /// <summary>
+    /// Systems associated with this screen
+    /// </summary>
+    public ICollection<SysSystemScreen> SystemScreens { get; set; } = new List<SysSystemScreen>();
+
+    /// <summary>
+    /// Features associated with this screen across systems
+    /// </summary>
+    public ICollection<SysSystemScreenFeature> SystemScreenFeatures { get; set; } = new List<SysSystemScreenFeature>();
 }

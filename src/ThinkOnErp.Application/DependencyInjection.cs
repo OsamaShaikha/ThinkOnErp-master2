@@ -101,6 +101,9 @@ public static class DependencyInjection
         services.AddScoped<ThinkOnErp.Application.Services.Pos.IPosAuditService, ThinkOnErp.Application.Services.Pos.PosAuditService>();
         services.AddScoped<ThinkOnErp.Application.Services.Pos.IPosModifierService, ThinkOnErp.Application.Services.Pos.PosModifierService>();
 
+        // Unified Company & Branch Settings Service
+        services.AddScoped<ThinkOnErp.Application.Services.Settings.ISettingsService, ThinkOnErp.Application.Services.Settings.SettingsService>();
+
         // HR & Dynamic Payroll Engine Services
         services.AddScoped<ThinkOnErp.Application.Services.Hr.IWorkCalendarService, ThinkOnErp.Application.Services.Hr.WorkCalendarService>();
         services.AddScoped<ThinkOnErp.Application.Services.Hr.IAttendanceCalculationEngine, ThinkOnErp.Application.Services.Hr.AttendanceCalculationEngine>();

@@ -55,7 +55,9 @@ public class OracleDbContext : DbContext
     public DbSet<SysSuperAdmin> SysSuperAdmins => Set<SysSuperAdmin>();
     public DbSet<SysSystem> SysSystems => Set<SysSystem>();
     public DbSet<SysScreen> SysScreens => Set<SysScreen>();
+    public DbSet<SysSystemScreen> SysSystemScreens => Set<SysSystemScreen>();
     public DbSet<SysFeature> SysFeatures => Set<SysFeature>();
+    public DbSet<SysSystemScreenFeature> SysSystemScreenFeatures => Set<SysSystemScreenFeature>();
     public DbSet<SysUserRole> SysUserRoles => Set<SysUserRole>();
     public DbSet<SysUserBranch> SysUserBranches => Set<SysUserBranch>();
 

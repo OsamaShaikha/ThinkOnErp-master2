@@ -128,17 +128,22 @@ public class PaymentMethodsController : ControllerBase
     }
 
     /// <summary>
-    /// تعطيل (Soft Delete) وسيلة دفع
+    /// تعطيل (Soft Delete) أو حذف نهائي (Hard Delete) لوسيلة دفع مع حماية وسائل الدفع الأساسية
     /// </summary>
     [HttpDelete("{id:long}")]
     [Authorize(Policy = "AdminOnly")]
     [ProducesResponseType(typeof(ApiResponse<bool>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<ApiResponse<bool>>> Delete(
         long id,
-        CancellationToken cancellationToken)
+        [FromQuery] bool hardDelete = false,
+        CancellationToken cancellationToken = default)
     {
-        var response = await _service.DeleteAsync(id, cancellationToken);
+        var response = hardDelete
+            ? await _service.HardDeleteAsync(id, cancellationToken)
+            : await _service.DeleteAsync(id, cancellationToken);
+
         if (!response.Success)
             return StatusCode(response.StatusCode, response);
 

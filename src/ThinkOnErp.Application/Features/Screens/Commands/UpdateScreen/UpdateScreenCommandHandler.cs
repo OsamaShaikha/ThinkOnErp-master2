@@ -20,7 +20,16 @@ public class UpdateScreenCommandHandler : IRequestHandler<UpdateScreenCommand, l
         if (screen == null)
             return 0;
 
-        screen.SystemId = request.SystemId;
+        var systemIds = request.SystemIds ?? (request.SystemId > 0 ? new List<long> { request.SystemId } : null);
+        if (systemIds != null && systemIds.Count > 0)
+        {
+            screen.SystemId = systemIds[0];
+        }
+        else if (request.SystemId > 0)
+        {
+            screen.SystemId = request.SystemId;
+        }
+
         screen.ParentScreenId = request.ParentScreenId;
         screen.ScreenCode = request.ScreenCode;
         screen.ScreenName = request.ScreenName;
@@ -37,7 +46,7 @@ public class UpdateScreenCommandHandler : IRequestHandler<UpdateScreenCommand, l
             screen.Icon = await SaveIconAsync(request.IconFile, request.IconFileName);
         }
 
-        await _screenRepository.UpdateScreenAsync(screen);
+        await _screenRepository.UpdateScreenAsync(screen, systemIds);
         return 1;
     }
 

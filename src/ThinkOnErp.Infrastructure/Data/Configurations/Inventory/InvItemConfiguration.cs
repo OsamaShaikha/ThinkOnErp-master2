@@ -13,11 +13,11 @@ public sealed class InvItemConfiguration : IEntityTypeConfiguration<InvItem>
         builder.HasKey(i => i.Id);
 
         var itemTypeConverter = new Microsoft.EntityFrameworkCore.Storage.ValueConversion.ValueConverter<ItemType, string>(
-            v => v.ToString(),
+            v => FormatItemType(v),
             v => ParseItemType(v));
 
         var costingMethodConverter = new Microsoft.EntityFrameworkCore.Storage.ValueConversion.ValueConverter<CostingMethod, string>(
-            v => v.ToString(),
+            v => FormatCostingMethod(v),
             v => ParseCostingMethod(v));
 
         builder.Property(i => i.Id).HasColumnName("ID").ValueGeneratedOnAdd();
@@ -95,6 +95,19 @@ public sealed class InvItemConfiguration : IEntityTypeConfiguration<InvItem>
         builder.HasMany(i => i.Serials).WithOne(s => s.Item).HasForeignKey(s => s.ItemId).OnDelete(DeleteBehavior.Restrict);
         builder.HasMany(i => i.Variants).WithOne(v => v.Item).HasForeignKey(v => v.ItemId).OnDelete(DeleteBehavior.Cascade);
     }
+
+    private static string FormatItemType(ItemType v) => v switch
+    {
+        ItemType.NonStock => "NON_STOCK",
+        _ => v.ToString().ToUpperInvariant()
+    };
+
+    private static string FormatCostingMethod(CostingMethod v) => v switch
+    {
+        CostingMethod.WeightedAverage => "WEIGHTED_AVG",
+        CostingMethod.SpecificId => "SPECIFIC_ID",
+        _ => v.ToString().ToUpperInvariant()
+    };
 
     private static ItemType ParseItemType(string? v)
     {

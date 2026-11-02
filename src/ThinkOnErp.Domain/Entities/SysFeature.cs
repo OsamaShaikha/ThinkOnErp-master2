@@ -16,4 +16,5 @@ public class SysFeature
     public string? UpdateUser { get; set; }
     public DateTime? UpdateDate { get; set; }
     public ICollection<SysScreenFeature>? ScreenFeatures { get; set; }
+    public ICollection<SysSystemScreenFeature> SystemScreenFeatures { get; set; } = new List<SysSystemScreenFeature>();
 }

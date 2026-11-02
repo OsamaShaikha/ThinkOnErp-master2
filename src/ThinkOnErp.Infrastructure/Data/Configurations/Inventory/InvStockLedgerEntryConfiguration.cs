@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using ThinkOnErp.Domain.Entities.Inventory;
+using ThinkOnErp.Domain.Entities.Inventory.Enums;
 
 namespace ThinkOnErp.Infrastructure.Data.Configurations.Inventory;
 
@@ -41,7 +42,9 @@ public sealed class InvStockLedgerEntryConfiguration : IEntityTypeConfiguration<
 
         builder.Property(e => e.Direction)
             .HasColumnName("DIRECTION")
-            .HasConversion<string>()
+            .HasConversion(
+                v => v.ToString().ToUpperInvariant(),
+                v => Enum.Parse<TransactionDirection>(v, true))
             .HasMaxLength(10)
             .IsRequired();
 

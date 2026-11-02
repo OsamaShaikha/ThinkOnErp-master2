@@ -133,7 +133,7 @@ public class PermissionsController : ControllerBase
         var systemIds = systems.Select(s => s.Id).ToList();
 
         var allScreens = await _context.Set<SysScreen>()
-            .Where(s => systemIds.Contains(s.SystemId) && s.IsActive)
+            .Include(s => s.SystemScreens).Where(s => ((s.SystemId.HasValue && systemIds.Contains(s.SystemId.Value)) || s.SystemScreens.Any(ss => systemIds.Contains(ss.SystemId) && ss.IsActive)) && s.IsActive)
             .OrderBy(s => s.DisplayOrder)
             .ToListAsync();
 
@@ -152,14 +152,45 @@ public class PermissionsController : ControllerBase
             if (revokedScreenIds.Contains(screen.Id))
                 continue;
 
-            var system = systems.FirstOrDefault(s => s.Id == screen.SystemId);
-            var features = await _context.Set<SysScreenFeature>()
-                .Where(sf => sf.ScreenId == screen.Id)
-                .Include(sf => sf.Feature)
-                .Where(sf => sf.Feature!.IsActive)
-                .Select(sf => sf.Feature!)
-                .OrderBy(f => f.DisplayOrder)
-                .ToListAsync();
+            var matchingSystems = systems.Where(sys => (screen.SystemId.HasValue && screen.SystemId.Value == sys.Id) || screen.SystemScreens.Any(ss => ss.SystemId == sys.Id && ss.IsActive)).ToList(); if (matchingSystems.Count == 0 && screen.SystemId.HasValue) { var fb = systems.FirstOrDefault(s => s.Id == screen.SystemId.Value); if (fb != null) matchingSystems.Add(fb); } if (matchingSystems.Count == 0 && systems.Count > 0) matchingSystems.Add(systems[0]);
+            var currentSystemId = matchingSystems.FirstOrDefault()?.Id;
+
+            List<SysFeature> features;
+            if (currentSystemId.HasValue)
+            {
+                var sysFeatures = await _context.SysSystemScreenFeatures
+                    .Where(ssf => ssf.SystemId == currentSystemId.Value && ssf.ScreenId == screen.Id && ssf.IsActive)
+                    .Include(ssf => ssf.Feature)
+                    .Where(ssf => ssf.Feature != null && ssf.Feature.IsActive)
+                    .Select(ssf => ssf.Feature!)
+                    .OrderBy(f => f.DisplayOrder)
+                    .ToListAsync();
+
+                if (sysFeatures.Count > 0 || await _context.SysSystemScreenFeatures.AnyAsync(ssf => ssf.SystemId == currentSystemId.Value && ssf.ScreenId == screen.Id))
+                {
+                    features = sysFeatures;
+                }
+                else
+                {
+                    features = await _context.Set<SysScreenFeature>()
+                        .Where(sf => sf.ScreenId == screen.Id)
+                        .Include(sf => sf.Feature)
+                        .Where(sf => sf.Feature!.IsActive)
+                        .Select(sf => sf.Feature!)
+                        .OrderBy(f => f.DisplayOrder)
+                        .ToListAsync();
+                }
+            }
+            else
+            {
+                features = await _context.Set<SysScreenFeature>()
+                    .Where(sf => sf.ScreenId == screen.Id)
+                    .Include(sf => sf.Feature)
+                    .Where(sf => sf.Feature!.IsActive)
+                    .Select(sf => sf.Feature!)
+                    .OrderBy(f => f.DisplayOrder)
+                    .ToListAsync();
+            }
 
             var allowedFeatures = new List<object>();
 
@@ -206,8 +237,8 @@ public class PermissionsController : ControllerBase
                     screen.ScreenNameE,
                     screen.Route,
                     screen.Icon,
-                    systemId = system?.Id,
-                    systemName = system?.SystemName,
+                    systemId = matchingSystems.FirstOrDefault()?.Id,
+                    systemName = matchingSystems.FirstOrDefault()?.SystemName,
                     features = allowedFeatures
                 });
             }

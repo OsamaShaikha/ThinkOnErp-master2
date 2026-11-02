@@ -51,8 +51,13 @@ public class PermissionService : IPermissionService
             if (user.IsAdmin) return true;
             if (hrScreen.ScreenCode == "hr-payroll-posting" ||
                 (hrScreen.ScreenCode == "hr-employees" && (await _context.Set<SysFeature>().FindAsync(featureId))?.FeatureCode == "link-user")) return false;
-            if (!hrScreen.IsActive || !await _context.Set<SysSystem>().AnyAsync(s => s.Id == hrScreen.SystemId && s.IsActive) ||
-                !await _context.Set<SysScreenFeature>().AnyAsync(sf => sf.ScreenId == screenId && sf.FeatureId == featureId && sf.Feature!.IsActive)) return false;
+            
+            var isSysActive = await _context.Set<SysSystem>().AnyAsync(s => (s.Id == hrScreen.SystemId || hrScreen.SystemScreens.Any(ss => ss.SystemId == s.Id && ss.IsActive)) && s.IsActive);
+            var isFeatureActive = await _context.SysSystemScreenFeatures.AnyAsync(ssf => ssf.ScreenId == screenId && ssf.FeatureId == featureId && ssf.IsActive && ssf.Feature!.IsActive)
+                                  || await _context.Set<SysScreenFeature>().AnyAsync(sf => sf.ScreenId == screenId && sf.FeatureId == featureId && sf.Feature!.IsActive);
+
+            if (!hrScreen.IsActive || !isSysActive || !isFeatureActive) return false;
+
             var branches = await _context.SysUserBranches.Where(b => b.UserId == userId)
                 .Join(_context.SysBranches.Where(b => b.IsActive && b.CompanyId == user.CompanyId), a => a.BranchId, b => b.Id, (a,b) => b.Id).Distinct().ToListAsync();
             foreach (var branch in branches)
@@ -72,7 +77,20 @@ public class PermissionService : IPermissionService
             return false;
 
         // 1. Branch level: is the screen's system assigned to user's branch?
-        var hasSystem = await _branchSystemRepo.HasSystemAsync(branchId, screen.SystemId);
+        var screenSystemIds = await _screenRepo.GetSystemIdsByScreenIdAsync(screenId);
+        var hasSystem = false;
+        foreach (var sysId in screenSystemIds)
+        {
+            if (await _branchSystemRepo.HasSystemAsync(branchId, sysId))
+            {
+                hasSystem = true;
+                break;
+            }
+        }
+        if (!hasSystem && screen.SystemId.HasValue)
+        {
+            hasSystem = await _branchSystemRepo.HasSystemAsync(branchId, screen.SystemId.Value);
+        }
         if (!hasSystem)
             return false;
 
@@ -128,5 +146,50 @@ public class PermissionService : IPermissionService
             return false;
 
         return await CanAccessAsync(userId, screen.Id, feature.Id);
+    }
+
+    public async Task<bool> CanAccessSystemFeatureAsync(long userId, long systemId, long featureId)
+    {
+        var user = await _userRepo.GetByIdAsync(userId);
+        if (user == null || !user.IsActive)
+            return false;
+
+        if (user.IsAdmin)
+            return true;
+
+        if (user.BranchId == null)
+            return false;
+
+        var branchId = user.BranchId.Value;
+
+        // Check if system is assigned to branch
+        var hasSystem = await _branchSystemRepo.HasSystemAsync(branchId, systemId);
+        if (!hasSystem)
+            return false;
+
+        // Check if feature is configured for this system at system-level (ScreenId is null)
+        var isConfigured = await _context.SysSystemScreenFeatures
+            .AnyAsync(ssf => ssf.SystemId == systemId && ssf.ScreenId == null && ssf.FeatureId == featureId && ssf.IsActive);
+
+        if (!isConfigured)
+            return false;
+
+        // Check branch feature revocation (where ScreenId is 0 / null)
+        var revokedFeatures = await _branchFeatureRepo.GetRevokedScreenFeaturesAsync(branchId);
+        if (revokedFeatures.Any(r => r.ScreenId == 0 && r.FeatureId == featureId))
+            return false;
+
+        return true;
+    }
+
+    public async Task<bool> CanAccessSystemFeatureByCodeAsync(long userId, string systemCode, string featureCode)
+    {
+        var system = await _context.Set<SysSystem>().FirstOrDefaultAsync(s => s.SystemCode == systemCode && s.IsActive);
+        if (system == null) return false;
+
+        var feature = await _context.Set<SysFeature>().FirstOrDefaultAsync(f => f.FeatureCode == featureCode && f.IsActive);
+        if (feature == null) return false;
+
+        return await CanAccessSystemFeatureAsync(userId, system.Id, feature.Id);
     }
 }

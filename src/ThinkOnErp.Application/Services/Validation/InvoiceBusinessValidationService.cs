@@ -68,9 +68,17 @@ public class InvoiceBusinessValidationService : IInvoiceBusinessValidationServic
                 return directRate;
         }
 
-        // 2. Active Tax Rates from master tax repository
-        var activeRates = await _taxRepository.GetTaxRatesAsync(false, ct);
-        return activeRates.FirstOrDefault(r => r.IsActive);
+        // 2. Tax Group assigned to item
+        if (item.TaxGroupId.HasValue)
+        {
+            var group = await _taxRepository.GetTaxGroupByIdAsync(item.TaxGroupId.Value, ct);
+            var groupRate = group?.Items?.FirstOrDefault()?.TaxRate;
+            if (groupRate != null && groupRate.IsActive)
+                return groupRate;
+        }
+
+        // If no explicit tax rate or group is assigned to the item, it is non-taxable (0% tax)
+        return null;
     }
 
     public async Task<decimal> GetEffectiveTaxRatePercentAsync(long itemId, long branchId, CancellationToken ct = default)

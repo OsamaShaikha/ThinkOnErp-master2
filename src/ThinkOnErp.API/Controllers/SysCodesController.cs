@@ -717,6 +717,36 @@ public class SysCodesController : ControllerBase
         return Ok(ApiResponse<List<SysCodeLookupDto>>.CreateSuccess(list, "POS customer settlement types retrieved successfully", 200));
     }
 
+    /// <summary>
+    /// استرجاع أنواع المستودعات (Warehouse Types: Main=1, Branch=2, Transit=3, Virtual=4)
+    /// </summary>
+    [HttpGet("warehouse-types")]
+    [ProducesResponseType(typeof(ApiResponse<List<SysCodeLookupDto>>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<ApiResponse<List<SysCodeLookupDto>>>> GetWarehouseTypes([FromQuery] int? lang = null)
+    {
+        var list = await GetLookupsByMgrAsync(SysCodeKeys.WarehouseTypes.Mgr, lang);
+        if (list.Count == 0)
+        {
+            list = SysCodeLookupHelper.GetFallbackLookups(SysCodeKeys.WarehouseTypes.Mgr, lang);
+        }
+        return Ok(ApiResponse<List<SysCodeLookupDto>>.CreateSuccess(list, "Warehouse types retrieved successfully", 200));
+    }
+
+    /// <summary>
+    /// استرجاع أنواع مناطق المستودعات (Zone Types: Storage=1, Receiving=2, Staging=3, Quarantine=4, Damaged=5, Returns=6)
+    /// </summary>
+    [HttpGet("zone-types")]
+    [ProducesResponseType(typeof(ApiResponse<List<SysCodeLookupDto>>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<ApiResponse<List<SysCodeLookupDto>>>> GetZoneTypes([FromQuery] int? lang = null)
+    {
+        var list = await GetLookupsByMgrAsync(SysCodeKeys.ZoneTypes.Mgr, lang);
+        if (list.Count == 0)
+        {
+            list = SysCodeLookupHelper.GetFallbackLookups(SysCodeKeys.ZoneTypes.Mgr, lang);
+        }
+        return Ok(ApiResponse<List<SysCodeLookupDto>>.CreateSuccess(list, "Zone types retrieved successfully", 200));
+    }
+
     #endregion
 
 

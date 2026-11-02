@@ -14,5 +14,6 @@ public interface IPaymentMethodService
     Task<ApiResponse<PaymentMethodDto>> CreateAsync(CreatePaymentMethodDto dto, string username, CancellationToken ct = default);
     Task<ApiResponse<PaymentMethodDto>> UpdateAsync(long id, UpdatePaymentMethodDto dto, string username, CancellationToken ct = default);
     Task<ApiResponse<bool>> DeleteAsync(long id, CancellationToken ct = default);
+    Task<ApiResponse<bool>> HardDeleteAsync(long id, CancellationToken ct = default);
     Task<ApiResponse<int>> SeedDefaultPaymentMethodsAsync(long branchId, string username, CancellationToken ct = default);
 }

@@ -39,6 +39,26 @@ public class CreatePosOrderDto
     public decimal TipAmount { get; set; }
     public string? Notes { get; set; }
 
+    /// <summary>
+    /// هل أسعار الأصناف شاملة للضريبة (Tax Inclusive). إذا تُرك فارغاً (null)، يُعتمد إعداد الفرع الافتراضي.
+    /// </summary>
+    public bool? IsTaxInclusive { get; set; }
+
+    /// <summary>
+    /// هل الفاتورة معفاة من الضريبة بالكامل (مثل السفارات، الهيئات الدبلوماسية، أو الجمعيات المعفاة بموجب كتاب رسمي).
+    /// </summary>
+    public bool? IsTaxExempt { get; set; }
+
+    /// <summary>
+    /// سبب الإعفاء الضريبي أو رقم كتاب/شهادة الإعفاء لتوثيقها في الفاتورة الإلكترونية والملاحظات.
+    /// </summary>
+    public string? TaxExemptionReason { get; set; }
+
+    /// <summary>
+    /// نسبة ضريبية استثنائية لكامل الفاتورة (مثلاً 0 للفواتير الصفرية التصديرية، حتى لو كانت الأصناف خاضعة لـ 16%).
+    /// </summary>
+    public decimal? TaxRateOverride { get; set; }
+
     public List<CreatePosOrderLineDto> Lines { get; set; } = new();
     public List<CreatePosOrderPaymentDto> Payments { get; set; } = new();
 }
@@ -60,6 +80,18 @@ public class CreatePosOrderLineDto
     public string? ScaleBarcode { get; set; }
     public long? SalesEmployeeId { get; set; }
     public string? SpecialInstructions { get; set; }
+    public bool? IsTaxInclusive { get; set; }
+
+    /// <summary>
+    /// هل هذا السطر معفى استثنائياً من الضريبة؟
+    /// </summary>
+    public bool? IsTaxExempt { get; set; }
+
+    /// <summary>
+    /// نسبة ضريبية مخصصة لهذا السطر تحديداً (تتجاوز نسبة الصنف في قاعدة البيانات).
+    /// </summary>
+    public decimal? TaxPercentOverride { get; set; }
+
     public List<CreatePosOrderLineModifierDto> Modifiers { get; set; } = new();
 }
 

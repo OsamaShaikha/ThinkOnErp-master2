@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using ThinkOnErp.Application.Common;
 using ThinkOnErp.Application.DTOs.Accounting.PaymentMethods;
+using ThinkOnErp.Domain.Constants;
 using ThinkOnErp.Domain.Entities.Accounting;
 using ThinkOnErp.Domain.Interfaces.Accounting;
 
@@ -211,13 +212,54 @@ public sealed class PaymentMethodService : IPaymentMethodService
         if (entity == null)
             return ApiResponse<bool>.CreateFailure("وسيلة الدفع المحددة غير موجودة", statusCode: 404);
 
+        if (PaymentMethodConstants.IsProtected(entity.Id, entity.Code))
+        {
+            return ApiResponse<bool>.CreateFailure(
+                "لا يمكن حذف وسائل الدفع الأساسية المثبتة في قالب النظام الافتراضي (CASH, MADA, VISA, BANK_TRANSFER, CHEQUE, HOSPITALITY, CUSTOMER_ACCOUNT)",
+                errors: new List<string> { "CANNOT_DELETE_SYSTEM_PAYMENT_METHOD" },
+                statusCode: 400);
+        }
+
         // Soft-delete by setting IsActive = false
         entity.IsActive = false;
         entity.UpdateDate = DateTime.UtcNow;
         await _repository.UpdateAsync(entity, ct);
 
-        _logger.LogInformation("Payment method '{Id}' deactivated", id);
+        _logger.LogInformation("Payment method '{Id}' ({Code}) deactivated", id, entity.Code);
         return ApiResponse<bool>.CreateSuccess(true, "تم تعطيل وسيلة الدفع بنجاح", 200);
+    }
+
+    public async Task<ApiResponse<bool>> HardDeleteAsync(long id, CancellationToken ct = default)
+    {
+        var entity = await _repository.GetByIdAsync(id, ct);
+        if (entity == null)
+            return ApiResponse<bool>.CreateFailure("وسيلة الدفع المحددة غير موجودة", statusCode: 404);
+
+        if (PaymentMethodConstants.IsProtected(entity.Id, entity.Code))
+        {
+            return ApiResponse<bool>.CreateFailure(
+                "لا يمكن حذف وسائل الدفع الأساسية المثبتة في قالب النظام نهائياً (CASH, MADA, VISA, BANK_TRANSFER, CHEQUE, HOSPITALITY, CUSTOMER_ACCOUNT)",
+                errors: new List<string> { "CANNOT_DELETE_SYSTEM_PAYMENT_METHOD" },
+                statusCode: 400);
+        }
+
+        try
+        {
+            await _repository.DeleteAsync(entity, ct);
+            _logger.LogInformation("Payment method '{Id}' ({Code}) permanently deleted", id, entity.Code);
+            return ApiResponse<bool>.CreateSuccess(true, "تم حذف وسيلة الدفع نهائياً بنجاح", 200);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Failed to permanently delete payment method '{Id}' due to related foreign key constraints, fallback to deactivation", id);
+            entity.IsActive = false;
+            entity.UpdateDate = DateTime.UtcNow;
+            await _repository.UpdateAsync(entity, ct);
+            return ApiResponse<bool>.CreateFailure(
+                "تعذر حذف وسيلة الدفع نهائياً لوجود حركات مالية سابقة مرتبطة بها، تم تعطيلها بدلاً من ذلك",
+                errors: new List<string> { "PAYMENT_METHOD_HAS_TRANSACTIONS" },
+                statusCode: 400);
+        }
     }
 
     public async Task<ApiResponse<int>> SeedDefaultPaymentMethodsAsync(long branchId, string username, CancellationToken ct = default)
@@ -293,6 +335,7 @@ public sealed class PaymentMethodService : IPaymentMethodService
             ShowInVouchers = m.ShowInVouchers,
             IsActive = m.IsActive,
             DisplayOrder = m.DisplayOrder,
+            IsSystem = PaymentMethodConstants.IsProtected(m.Id, m.Code),
             CreationUser = m.CreationUser,
             CreationDate = m.CreationDate,
             UpdateUser = m.UpdateUser,

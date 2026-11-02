@@ -23,10 +23,15 @@ public class GetAllScreensQueryHandler : IRequestHandler<GetAllScreensQuery, Lis
 
         foreach (var s in screens)
         {
+            var sysIds = s.SystemScreens != null && s.SystemScreens.Count > 0
+                ? s.SystemScreens.Where(ss => ss.IsActive).Select(ss => ss.SystemId).ToList()
+                : (s.SystemId.HasValue ? new List<long> { s.SystemId.Value } : new List<long>());
+
             dtos.Add(new ScreenDto
             {
                 Id = s.Id,
-                SystemId = s.SystemId,
+                SystemId = s.SystemId ?? (sysIds.FirstOrDefault()),
+                SystemIds = sysIds,
                 ParentScreenId = s.ParentScreenId,
                 ScreenCode = s.ScreenCode,
                 ScreenName = s.ScreenName,
@@ -63,6 +68,16 @@ public class GetAllScreensQueryHandler : IRequestHandler<GetAllScreensQuery, Lis
             return null;
 
         var bytes = await File.ReadAllBytesAsync(fullPath);
-        return Convert.ToBase64String(bytes);
+        var ext = Path.GetExtension(iconPath).TrimStart('.').ToLowerInvariant();
+        var mimeType = ext switch
+        {
+            "png" => "image/png",
+            "jpg" or "jpeg" => "image/jpeg",
+            "svg" => "image/svg+xml",
+            "gif" => "image/gif",
+            "webp" => "image/webp",
+            _ => "application/octet-stream"
+        };
+        return $"data:{mimeType};base64,{Convert.ToBase64String(bytes)}";
     }
 }

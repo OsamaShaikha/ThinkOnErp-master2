@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 
 namespace ThinkOnErp.Application.DTOs.Inventory.Warehouses;
 
@@ -8,7 +8,8 @@ public class InvWarehouseDto
     public long WarehouseCode { get; set; }
     public string WarehouseNameLocal { get; set; } = string.Empty;
     public string WarehouseNameEn { get; set; } = string.Empty;
-    public string WarehouseType { get; set; } = string.Empty;
+    public int WarehouseType { get; set; } = 1;
+    public string WarehouseTypeName { get; set; } = string.Empty;
     public string? Address { get; set; }
     public bool EnableBinTracking { get; set; }
     public bool IsActive { get; set; }
@@ -21,7 +22,8 @@ public class InvZoneDto
     public long Id { get; set; }
     public int ZoneCode { get; set; }
     public string ZoneName { get; set; } = string.Empty;
-    public string ZoneType { get; set; } = string.Empty;
+    public int ZoneType { get; set; } = 1;
+    public string ZoneTypeName { get; set; } = string.Empty;
     public List<InvBinDto> Bins { get; set; } = new();
 }
 

@@ -41,7 +41,9 @@ public sealed class InvWarehouseService : IInvWarehouseService
         if (existing != null)
             return ApiResponse<InvWarehouseDto>.CreateFailure("Warehouse code already exists", null, 400);
 
-        Enum.TryParse<WarehouseType>(request.WarehouseType, true, out var whType);
+        var whType = Enum.IsDefined(typeof(WarehouseType), request.WarehouseType)
+            ? (WarehouseType)request.WarehouseType
+            : WarehouseType.Main;
 
         var warehouse = new InvWarehouse
         {
@@ -72,7 +74,8 @@ public sealed class InvWarehouseService : IInvWarehouseService
 
         if (!string.IsNullOrWhiteSpace(request.WarehouseNameLocal)) warehouse.WarehouseNameLocal = request.WarehouseNameLocal.Trim();
         if (!string.IsNullOrWhiteSpace(request.WarehouseNameEn)) warehouse.WarehouseNameEn = request.WarehouseNameEn.Trim();
-        if (!string.IsNullOrWhiteSpace(request.WarehouseType) && Enum.TryParse<WarehouseType>(request.WarehouseType, true, out var wt)) warehouse.WarehouseType = wt;
+        if (request.WarehouseType.HasValue && Enum.IsDefined(typeof(WarehouseType), request.WarehouseType.Value))
+            warehouse.WarehouseType = (WarehouseType)request.WarehouseType.Value;
         if (request.Address != null) warehouse.Address = request.Address.Trim();
         if (request.EnableBinTracking.HasValue) warehouse.EnableBinTracking = request.EnableBinTracking.Value;
 
@@ -113,7 +116,9 @@ public sealed class InvWarehouseService : IInvWarehouseService
         if (warehouse == null)
             return ApiResponse<bool>.CreateFailure("Warehouse not found", null, 404);
 
-        Enum.TryParse<ZoneType>(request.ZoneType, true, out var zoneType);
+        var zoneType = Enum.IsDefined(typeof(ZoneType), request.ZoneType)
+            ? (ZoneType)request.ZoneType
+            : ZoneType.Storage;
 
         var zone = new InvZone
         {
@@ -135,7 +140,8 @@ public sealed class InvWarehouseService : IInvWarehouseService
             return ApiResponse<bool>.CreateFailure("Zone not found", null, 404);
 
         if (!string.IsNullOrWhiteSpace(request.ZoneName)) zone.ZoneName = request.ZoneName.Trim();
-        if (!string.IsNullOrWhiteSpace(request.ZoneType) && Enum.TryParse<ZoneType>(request.ZoneType, true, out var zt)) zone.ZoneType = zt;
+        if (request.ZoneType.HasValue && Enum.IsDefined(typeof(ZoneType), request.ZoneType.Value))
+            zone.ZoneType = (ZoneType)request.ZoneType.Value;
 
         await _warehouseRepository.UpdateZoneAsync(zone, cancellationToken);
         return ApiResponse<bool>.CreateSuccess(true, "Zone updated successfully");

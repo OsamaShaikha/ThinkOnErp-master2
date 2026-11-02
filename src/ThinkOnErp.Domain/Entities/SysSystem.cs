@@ -71,7 +71,17 @@ public class SysSystem
     public DateTime? UpdateDate { get; set; }
 
     /// <summary>
+    /// Screens belonging to this system (via SysSystemScreen association)
+    /// </summary>
+    public ICollection<SysSystemScreen> SystemScreens { get; set; } = new List<SysSystemScreen>();
+
+    /// <summary>
     /// Screens belonging to this system
     /// </summary>
     public ICollection<SysScreen> Screens { get; set; } = new List<SysScreen>();
+
+    /// <summary>
+    /// Features associated with this system (system-wide and screen-level)
+    /// </summary>
+    public ICollection<SysSystemScreenFeature> SystemScreenFeatures { get; set; } = new List<SysSystemScreenFeature>();
 }

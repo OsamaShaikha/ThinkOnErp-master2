@@ -15,7 +15,8 @@ var report = new List<string>();
 try
 {
     await using var connection = new OracleConnection(builder.ConnectionString);
-    await connection.OpenAsync();
+        await connection.OpenAsync();
+
     async Task<List<string[]>> Query(string sql)
     {
         await using var command = connection.CreateCommand();
@@ -51,7 +52,7 @@ try
     }
     if (args.Contains("--inventory"))
     {
-        foreach (var row in await Query("SELECT TABLE_NAME,COLUMN_NAME,DATA_TYPE,DATA_DEFAULT FROM ALL_TAB_COLUMNS WHERE OWNER='DEV_TEMPLATE' AND (TABLE_NAME IN ('HR_EMP_SALARY_STRUCTURE','HR_EMP_SALARY_STRUCT_LINE','HR_EMP_SHIFT_ASSIGNMENT','HR_SALARY_STRUCTURE','HR_SALARY_STRUCTURE_LINE','HR_EMPLOYEE_SHIFT_ASSIGNMENT','SYS_SCREEN','SYS_FEATURE','SYS_SYSTEM','SYS_SCREEN_FEATURE','SYS_FISCAL_YEAR','SYS_SETTING')) ORDER BY TABLE_NAME,COLUMN_ID"))
+        foreach (var row in await Query("SELECT TABLE_NAME,COLUMN_NAME,DATA_TYPE,DATA_DEFAULT FROM ALL_TAB_COLUMNS WHERE OWNER='DEV_TEMPLATE' AND (TABLE_NAME IN ('HR_EMP_SALARY_STRUCTURE','HR_EMP_SALARY_STRUCT_LINE','HR_EMP_SHIFT_ASSIGNMENT','HR_SALARY_STRUCTURE','HR_SALARY_STRUCTURE_LINE','HR_EMPLOYEE_SHIFT_ASSIGNMENT','SYS_SCREEN','SYS_FEATURE','SYS_USERS','SYS_SYSTEM','SYS_SCREEN_FEATURE','SYS_FISCAL_YEAR','SYS_SETTING')) ORDER BY TABLE_NAME,COLUMN_ID"))
             report.Add("Inventory: " + string.Join(" | ", row));
         foreach (var row in await Query("SELECT SCREEN_CODE,SCREEN_NAME_E FROM DEV_TEMPLATE.SYS_SCREEN WHERE LOWER(SCREEN_CODE) LIKE '%hr%'"))
             report.Add("HR screen: " + string.Join(" | ", row));

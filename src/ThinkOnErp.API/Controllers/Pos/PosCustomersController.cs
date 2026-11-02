@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -200,11 +200,26 @@ public class PosCustomersController : ControllerBase
     [ProducesResponseType(typeof(ApiResponse<PosCustomerDto>), StatusCodes.Status201Created)]
     [ProducesResponseType(typeof(ApiResponse<PosCustomerDto>), StatusCodes.Status400BadRequest)]
     public async Task<ActionResult<ApiResponse<PosCustomerDto>>> CreateCustomer(
-        [FromBody] CreateCustomerDto dto,
+        [FromBody] CreatePosCustomerDto dto,
         CancellationToken cancellationToken = default)
     {
         var username = User.Identity?.Name ?? "system";
-        var created = await _customerService.CreateAsync(dto, username, cancellationToken);
+        var createCustomerDto = new CreateCustomerDto
+        {
+            CustomerCode = dto.CustomerCode,
+            NameLocal = dto.NameLocal,
+            NameEn = !string.IsNullOrWhiteSpace(dto.NameEn) ? dto.NameEn : dto.NameLocal,
+            ArControlAccountCode = "112101",
+            DefaultCurrencyId = dto.DefaultCurrencyId,
+            CreditLimit = dto.CreditLimit,
+            PaymentTermsDays = dto.PaymentTermsDays > 0 ? dto.PaymentTermsDays : 30,
+            BranchId = dto.BranchId,
+            TaxNumber = dto.TaxNumber,
+            Phone = dto.Phone,
+            Email = dto.Email,
+            Address = dto.Address
+        };
+        var created = await _customerService.CreateAsync(createCustomerDto, username, cancellationToken);
 
         var posCustomer = new PosCustomerDto
         {

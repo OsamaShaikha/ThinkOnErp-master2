@@ -42,6 +42,7 @@ public sealed class PaymentMethodDto
     public bool ShowInVouchers { get; set; }
     public bool IsActive { get; set; }
     public int DisplayOrder { get; set; }
+    public bool IsSystem { get; set; }
 
     // بيانات التدقيق
     public string CreationUser { get; set; } = string.Empty;

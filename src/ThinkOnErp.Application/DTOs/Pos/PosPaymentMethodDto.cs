@@ -54,4 +54,9 @@ public sealed class PosPaymentMethodDto
     /// حالة التفعيل
     /// </summary>
     public bool IsActive { get; set; } = true;
+
+    /// <summary>
+    /// هل وسيلة الدفع مثبتة من قالب النظام الافتراضي (DEV_TEMPLATE) ولا يمكن حذفها نهائياً
+    /// </summary>
+    public bool IsSystem { get; set; }
 }

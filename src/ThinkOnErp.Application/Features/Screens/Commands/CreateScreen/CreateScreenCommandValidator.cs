@@ -9,11 +9,19 @@ public class CreateScreenCommandValidator : AbstractValidator<CreateScreenComman
         ISystemRepository systemRepository,
         IScreenRepository screenRepository)
     {
-        RuleFor(x => x.SystemId)
-            .GreaterThan(0)
-            .MustAsync(async (systemId, _) =>
-                await systemRepository.GetSystemByIdAsync(systemId) != null)
-            .WithMessage("The specified system does not exist.");
+        RuleFor(x => x)
+            .MustAsync(async (cmd, _) =>
+            {
+                var sysIds = cmd.SystemIds ?? (cmd.SystemId > 0 ? new List<long> { cmd.SystemId } : new List<long>());
+                if (sysIds.Count == 0) return false;
+                foreach (var id in sysIds)
+                {
+                    if (await systemRepository.GetSystemByIdAsync(id) == null)
+                        return false;
+                }
+                return true;
+            })
+            .WithMessage("At least one valid system must be specified.");
 
         RuleFor(x => x.ParentScreenId)
             .MustAsync(async (parentScreenId, _) =>

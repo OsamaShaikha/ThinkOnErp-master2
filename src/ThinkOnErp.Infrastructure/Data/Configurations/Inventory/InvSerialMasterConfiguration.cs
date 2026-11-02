@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using ThinkOnErp.Domain.Entities.Inventory;
+using ThinkOnErp.Domain.Entities.Inventory.Enums;
 
 namespace ThinkOnErp.Infrastructure.Data.Configurations.Inventory;
 
@@ -29,7 +30,9 @@ public sealed class InvSerialMasterConfiguration : IEntityTypeConfiguration<InvS
 
         builder.Property(e => e.Status)
             .HasColumnName("STATUS")
-            .HasConversion<string>()
+            .HasConversion(
+                v => v.ToString().ToUpperInvariant(),
+                v => Enum.Parse<SerialStatus>(v, true))
             .HasMaxLength(50)
             .IsRequired();
 

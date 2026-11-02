@@ -23,7 +23,7 @@ public class BranchScreenRepository : IBranchScreenRepository
             .ToListAsync();
 
         return await _context.SysScreens
-            .Where(s => assignedSystemIds.Contains(s.SystemId)
+            .Where(s => ((s.SystemId.HasValue && assignedSystemIds.Contains(s.SystemId.Value)) || s.SystemScreens.Any(ss => assignedSystemIds.Contains(ss.SystemId) && ss.IsActive))
                 && s.IsActive
                 && !revokedScreenIds.Contains(s.Id))
             .OrderBy(s => s.DisplayOrder)
