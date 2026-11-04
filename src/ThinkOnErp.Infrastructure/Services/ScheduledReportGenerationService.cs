@@ -301,6 +301,7 @@ public class ScheduledReportGenerationService : BackgroundService
             schedule.Id);
 
         var complianceReporter = serviceProvider.GetRequiredService<IComplianceReporter>();
+        var reportExporter = serviceProvider.GetRequiredService<IComplianceReportExporter>();
         var emailService = serviceProvider.GetRequiredService<IEmailNotificationChannel>();
 
         // Parse parameters
@@ -311,7 +312,7 @@ public class ScheduledReportGenerationService : BackgroundService
 
         // Generate the report based on type
         IReport report = await GenerateReportByTypeAsync(
-            complianceReporter,
+            reportExporter,
             schedule.ReportType,
             startDate,
             endDate,
@@ -344,7 +345,7 @@ public class ScheduledReportGenerationService : BackgroundService
     /// Routes to the appropriate compliance reporter method based on report type.
     /// </summary>
     private async Task<IReport> GenerateReportByTypeAsync(
-        IComplianceReporter complianceReporter,
+        IComplianceReportExporter reportExporter,
         string reportType,
         DateTime startDate,
         DateTime endDate,
@@ -500,10 +501,10 @@ public class ScheduledReportGenerationService : BackgroundService
     {
         return format switch
         {
-            ReportExportFormat.PDF => await complianceReporter.ExportToPdfAsync(report, cancellationToken),
-            ReportExportFormat.CSV => await complianceReporter.ExportToCsvAsync(report, cancellationToken),
+            ReportExportFormat.PDF => await reportExporter.ExportToPdfAsync(report, cancellationToken),
+            ReportExportFormat.CSV => await reportExporter.ExportToCsvAsync(report, cancellationToken),
             ReportExportFormat.JSON => System.Text.Encoding.UTF8.GetBytes(
-                await complianceReporter.ExportToJsonAsync(report, cancellationToken)),
+                await reportExporter.ExportToJsonAsync(report, cancellationToken)),
             _ => throw new NotSupportedException($"Export format '{format}' is not supported")
         };
     }

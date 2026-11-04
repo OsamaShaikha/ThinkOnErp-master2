@@ -20,6 +20,7 @@ namespace ThinkOnErp.API.Controllers;
 public class ComplianceController : ControllerBase
 {
     private readonly IComplianceReporter _complianceReporter;
+    private readonly IComplianceReportExporter _reportExporter;
     private readonly ILogger<ComplianceController> _logger;
 
     /// <summary>
@@ -29,9 +30,11 @@ public class ComplianceController : ControllerBase
     /// <param name="logger">Logger for controller operations</param>
     public ComplianceController(
         IComplianceReporter complianceReporter,
+        IComplianceReportExporter reportExporter,
         ILogger<ComplianceController> logger)
     {
         _complianceReporter = complianceReporter ?? throw new ArgumentNullException(nameof(complianceReporter));
+        _reportExporter = reportExporter ?? throw new ArgumentNullException(nameof(reportExporter));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
@@ -380,12 +383,12 @@ public class ComplianceController : ControllerBase
             switch (format)
             {
                 case "csv":
-                    var csvBytes = await _complianceReporter.ExportToCsvAsync(report, HttpContext.RequestAborted);
+                    var csvBytes = await _reportExporter.ExportToCsvAsync(report, HttpContext.RequestAborted);
                     var csvFileName = $"{report.ReportType}_{report.ReportId}_{DateTime.UtcNow:yyyyMMdd_HHmmss}.csv";
                     return File(csvBytes, "text/csv", csvFileName);
 
                 case "pdf":
-                    var pdfBytes = await _complianceReporter.ExportToPdfAsync(report, HttpContext.RequestAborted);
+                    var pdfBytes = await _reportExporter.ExportToPdfAsync(report, HttpContext.RequestAborted);
                     
                     if (pdfBytes == null || pdfBytes.Length == 0)
                     {

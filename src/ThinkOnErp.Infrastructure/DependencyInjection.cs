@@ -261,6 +261,7 @@ public static class DependencyInjection
         
         // Register compliance reporting services
         services.AddScoped<IComplianceReporter, ComplianceReporter>();
+        services.AddScoped<IComplianceReportExporter, ComplianceReportExporter>();
 
         // Register performance monitoring services
         services.AddScoped<ISlowQueryRepository, SlowQueryRepository>();

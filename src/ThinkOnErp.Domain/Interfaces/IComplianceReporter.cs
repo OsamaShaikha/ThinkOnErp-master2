@@ -4,8 +4,7 @@ namespace ThinkOnErp.Domain.Interfaces;
 
 /// <summary>
 /// Interface for the compliance reporter service that generates compliance reports for regulatory requirements.
-/// Supports GDPR, SOX, and ISO 27001 compliance reporting with multiple export formats.
-/// Provides scheduled report generation and email delivery capabilities.
+/// Generates GDPR, SOX, and ISO 27001 report data. Export and scheduling have separate owners.
 /// </summary>
 public interface IComplianceReporter
 {
@@ -105,51 +104,4 @@ public interface IComplianceReporter
         long entityId, 
         CancellationToken cancellationToken = default);
 
-    /// <summary>
-    /// Export a compliance report to PDF format.
-    /// Generates a professionally formatted PDF document using QuestPDF library.
-    /// Includes report metadata, summary statistics, and detailed data tables.
-    /// </summary>
-    /// <param name="report">The compliance report to export</param>
-    /// <param name="cancellationToken">Cancellation token for async operation</param>
-    /// <returns>Byte array containing the PDF file content</returns>
-    Task<byte[]> ExportToPdfAsync(
-        IReport report, 
-        CancellationToken cancellationToken = default);
-
-    /// <summary>
-    /// Export a compliance report to CSV format.
-    /// Generates a CSV file with all report data for offline analysis and spreadsheet import.
-    /// Includes column headers and properly escaped data values.
-    /// </summary>
-    /// <param name="report">The compliance report to export</param>
-    /// <param name="cancellationToken">Cancellation token for async operation</param>
-    /// <returns>Byte array containing the CSV file content</returns>
-    Task<byte[]> ExportToCsvAsync(
-        IReport report, 
-        CancellationToken cancellationToken = default);
-
-    /// <summary>
-    /// Export a compliance report to JSON format.
-    /// Generates a JSON document with all report data for programmatic processing and API integrations.
-    /// Includes report metadata and structured data in JSON format.
-    /// </summary>
-    /// <param name="report">The compliance report to export</param>
-    /// <param name="cancellationToken">Cancellation token for async operation</param>
-    /// <returns>JSON string containing the report data</returns>
-    Task<string> ExportToJsonAsync(
-        IReport report, 
-        CancellationToken cancellationToken = default);
-
-    /// <summary>
-    /// Schedule a compliance report for automatic generation and delivery.
-    /// Creates a scheduled job that generates and emails the report on a recurring basis.
-    /// Supports daily, weekly, and monthly schedules with configurable recipients.
-    /// </summary>
-    /// <param name="schedule">The report schedule configuration</param>
-    /// <param name="cancellationToken">Cancellation token for async operation</param>
-    /// <returns>Task representing the async operation</returns>
-    Task ScheduleReportAsync(
-        ReportSchedule schedule, 
-        CancellationToken cancellationToken = default);
 }

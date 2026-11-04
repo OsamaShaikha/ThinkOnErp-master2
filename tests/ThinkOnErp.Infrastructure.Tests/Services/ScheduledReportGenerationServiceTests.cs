@@ -26,6 +26,7 @@ public class ScheduledReportGenerationServiceTests : IDisposable
     private readonly Mock<ILogger<ScheduledReportGenerationService>> _mockLogger;
     private readonly Mock<IConfiguration> _mockConfiguration;
     private readonly Mock<IComplianceReporter> _mockComplianceReporter;
+    private readonly Mock<IComplianceReportExporter> _mockReportExporter;
     private readonly Mock<IEmailNotificationChannel> _mockEmailService;
     private readonly ScheduledReportGenerationService _service;
 
@@ -37,6 +38,7 @@ public class ScheduledReportGenerationServiceTests : IDisposable
         _mockLogger = new Mock<ILogger<ScheduledReportGenerationService>>();
         _mockConfiguration = new Mock<IConfiguration>();
         _mockComplianceReporter = new Mock<IComplianceReporter>();
+        _mockReportExporter = new Mock<IComplianceReportExporter>();
         _mockEmailService = new Mock<IEmailNotificationChannel>();
 
         // Setup configuration
@@ -49,6 +51,8 @@ public class ScheduledReportGenerationServiceTests : IDisposable
             .Returns(_mockServiceScopeFactory.Object);
         _mockServiceProvider.Setup(p => p.GetService(typeof(IComplianceReporter)))
             .Returns(_mockComplianceReporter.Object);
+        _mockServiceProvider.Setup(p => p.GetService(typeof(IComplianceReportExporter)))
+            .Returns(_mockReportExporter.Object);
         _mockServiceProvider.Setup(p => p.GetService(typeof(IEmailNotificationChannel)))
             .Returns(_mockEmailService.Object);
 
@@ -153,7 +157,7 @@ public class ScheduledReportGenerationServiceTests : IDisposable
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(report);
 
-        _mockComplianceReporter
+        _mockReportExporter
             .Setup(r => r.ExportToCsvAsync(It.IsAny<IReport>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new byte[] { 1, 2, 3, 4, 5 });
 
@@ -274,12 +278,12 @@ public class ScheduledReportGenerationServiceTests : IDisposable
 
         var expectedBytes = new byte[] { 0x25, 0x50, 0x44, 0x46 }; // PDF header
 
-        _mockComplianceReporter
+        _mockReportExporter
             .Setup(r => r.ExportToPdfAsync(It.IsAny<IReport>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(expectedBytes);
 
         // Act
-        var result = await _mockComplianceReporter.Object.ExportToPdfAsync(report, CancellationToken.None);
+        var result = await _mockReportExporter.Object.ExportToPdfAsync(report, CancellationToken.None);
 
         // Assert
         Assert.NotNull(result);
@@ -299,12 +303,12 @@ public class ScheduledReportGenerationServiceTests : IDisposable
 
         var csvData = System.Text.Encoding.UTF8.GetBytes("Column1,Column2\nValue1,Value2");
 
-        _mockComplianceReporter
+        _mockReportExporter
             .Setup(r => r.ExportToCsvAsync(It.IsAny<IReport>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(csvData);
 
         // Act
-        var result = await _mockComplianceReporter.Object.ExportToCsvAsync(report, CancellationToken.None);
+        var result = await _mockReportExporter.Object.ExportToCsvAsync(report, CancellationToken.None);
 
         // Assert
         Assert.NotNull(result);
@@ -324,12 +328,12 @@ public class ScheduledReportGenerationServiceTests : IDisposable
 
         var jsonData = "{\"reportId\":\"123\",\"reportType\":\"SOX_Financial\"}";
 
-        _mockComplianceReporter
+        _mockReportExporter
             .Setup(r => r.ExportToJsonAsync(It.IsAny<IReport>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(jsonData);
 
         // Act
-        var result = await _mockComplianceReporter.Object.ExportToJsonAsync(report, CancellationToken.None);
+        var result = await _mockReportExporter.Object.ExportToJsonAsync(report, CancellationToken.None);
 
         // Assert
         Assert.NotNull(result);
