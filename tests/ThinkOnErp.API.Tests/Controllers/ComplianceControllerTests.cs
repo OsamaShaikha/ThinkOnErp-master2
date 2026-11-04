@@ -17,16 +17,14 @@ namespace ThinkOnErp.API.Tests.Controllers;
 public class ComplianceControllerTests
 {
     private readonly Mock<IComplianceReporter> _mockComplianceReporter;
-    private readonly Mock<IComplianceReportExporter> _mockReportExporter;
     private readonly Mock<ILogger<ComplianceController>> _mockLogger;
     private readonly ComplianceController _controller;
 
     public ComplianceControllerTests()
     {
         _mockComplianceReporter = new Mock<IComplianceReporter>();
-        _mockReportExporter = new Mock<IComplianceReportExporter>();
         _mockLogger = new Mock<ILogger<ComplianceController>>();
-        _controller = new ComplianceController(_mockComplianceReporter.Object, _mockReportExporter.Object, _mockLogger.Object);
+        _controller = new ComplianceController(_mockComplianceReporter.Object, _mockLogger.Object);
         
         // Setup HttpContext for the controller
         _controller.ControllerContext = new ControllerContext
@@ -374,7 +372,7 @@ public class ComplianceControllerTests
             .Setup(x => x.GenerateGdprAccessReportAsync(dataSubjectId, startDate, endDate, It.IsAny<CancellationToken>()))
             .ReturnsAsync(expectedReport);
 
-        _mockReportExporter
+        _mockComplianceReporter
             .Setup(x => x.ExportToCsvAsync(It.IsAny<IReport>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(csvBytes);
 
@@ -408,7 +406,7 @@ public class ComplianceControllerTests
             .ReturnsAsync(expectedReport);
 
         // PDF export returns empty array when not implemented
-        _mockReportExporter
+        _mockComplianceReporter
             .Setup(x => x.ExportToPdfAsync(It.IsAny<IReport>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Array.Empty<byte>());
 

@@ -24,7 +24,6 @@ public class ComplianceReporterTests
     private readonly Mock<ILogger<ComplianceReporter>> _mockLogger;
     private readonly OracleDbContext _dbContext;
     private readonly ComplianceReporter _service;
-    private readonly ComplianceReportExporter _exporter = new(Microsoft.Extensions.Logging.Abstractions.NullLogger<ComplianceReportExporter>.Instance);
 
     public ComplianceReporterTests()
     {
@@ -709,7 +708,7 @@ public class ComplianceReporterTests
         };
 
         // Act
-        var result = await _exporter.ExportToJsonAsync(report);
+        var result = await _service.ExportToJsonAsync(report);
 
         // Assert
         Assert.NotNull(result);
@@ -737,7 +736,7 @@ public class ComplianceReporterTests
         };
 
         // Act
-        var result = await _exporter.ExportToJsonAsync(report);
+        var result = await _service.ExportToJsonAsync(report);
 
         // Assert
         Assert.Contains("\n", result); // Should have newlines for indentation
@@ -757,7 +756,7 @@ public class ComplianceReporterTests
         };
 
         // Act
-        var result = await _exporter.ExportToJsonAsync(report);
+        var result = await _service.ExportToJsonAsync(report);
 
         // Assert
         // Verify camelCase by checking that PascalCase versions don't exist
@@ -794,7 +793,7 @@ public class ComplianceReporterTests
         };
 
         // Act
-        var result = await _exporter.ExportToJsonAsync(report);
+        var result = await _service.ExportToJsonAsync(report);
 
         // Assert
         Assert.NotNull(result);
@@ -845,7 +844,7 @@ public class ComplianceReporterTests
         };
 
         // Act
-        var result = await _exporter.ExportToJsonAsync(report);
+        var result = await _service.ExportToJsonAsync(report);
 
         // Assert
         Assert.NotNull(result);
@@ -888,7 +887,7 @@ public class ComplianceReporterTests
         };
 
         // Act
-        var result = await _exporter.ExportToJsonAsync(report);
+        var result = await _service.ExportToJsonAsync(report);
 
         // Assert
         Assert.NotNull(result);
@@ -939,7 +938,7 @@ public class ComplianceReporterTests
         };
 
         // Act
-        var result = await _exporter.ExportToJsonAsync(report);
+        var result = await _service.ExportToJsonAsync(report);
 
         // Assert
         Assert.NotNull(result);
@@ -988,7 +987,7 @@ public class ComplianceReporterTests
         };
 
         // Act
-        var result = await _exporter.ExportToJsonAsync(report);
+        var result = await _service.ExportToJsonAsync(report);
 
         // Assert
         Assert.NotNull(result);
@@ -1045,7 +1044,7 @@ public class ComplianceReporterTests
         };
 
         // Act
-        var result = await _exporter.ExportToJsonAsync(report);
+        var result = await _service.ExportToJsonAsync(report);
 
         // Assert
         Assert.NotNull(result);
@@ -1097,7 +1096,7 @@ public class ComplianceReporterTests
         };
 
         // Act
-        var result = await _exporter.ExportToJsonAsync(report);
+        var result = await _service.ExportToJsonAsync(report);
 
         // Assert
         Assert.NotNull(result);
@@ -1146,7 +1145,7 @@ public class ComplianceReporterTests
         };
 
         // Act
-        var result = await _exporter.ExportToJsonAsync(report);
+        var result = await _service.ExportToJsonAsync(report);
 
         // Assert
         Assert.NotNull(result);
@@ -1182,7 +1181,7 @@ public class ComplianceReporterTests
         };
 
         // Act
-        var json = await _exporter.ExportToJsonAsync(originalReport);
+        var json = await _service.ExportToJsonAsync(originalReport);
         var deserializedReport = System.Text.Json.JsonSerializer.Deserialize<GdprAccessReport>(json, new System.Text.Json.JsonSerializerOptions
         {
             PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase
@@ -1209,7 +1208,7 @@ public class ComplianceReporterTests
         };
 
         // Act
-        var result = await _exporter.ExportToPdfAsync(report);
+        var result = await _service.ExportToPdfAsync(report);
 
         // Assert
         Assert.NotNull(result);
@@ -1263,7 +1262,7 @@ public class ComplianceReporterTests
         };
 
         // Act
-        var result = await _exporter.ExportToCsvAsync(report);
+        var result = await _service.ExportToCsvAsync(report);
 
         // Assert
         Assert.NotNull(result);
@@ -1342,7 +1341,7 @@ public class ComplianceReporterTests
         };
 
         // Act
-        var result = await _exporter.ExportToCsvAsync(report);
+        var result = await _service.ExportToCsvAsync(report);
 
         // Assert
         Assert.NotNull(result);
@@ -1406,7 +1405,7 @@ public class ComplianceReporterTests
         };
 
         // Act
-        var result = await _exporter.ExportToCsvAsync(report);
+        var result = await _service.ExportToCsvAsync(report);
 
         // Assert
         Assert.NotNull(result);
@@ -1459,7 +1458,7 @@ public class ComplianceReporterTests
         };
 
         // Act
-        var result = await _exporter.ExportToCsvAsync(report);
+        var result = await _service.ExportToCsvAsync(report);
 
         // Assert
         Assert.NotNull(result);
@@ -1486,8 +1485,29 @@ public class ComplianceReporterTests
         // Act & Assert
         await Assert.ThrowsAsync<NotSupportedException>(async () =>
         {
-            await _exporter.ExportToCsvAsync(unsupportedReport.Object);
+            await _service.ExportToCsvAsync(unsupportedReport.Object);
         });
+    }
+
+    [Fact]
+    public async Task ScheduleReportAsync_ShouldCompleteWithoutError()
+    {
+        // Arrange
+        var schedule = new ReportSchedule
+        {
+            ReportType = "GDPR_Access",
+            Frequency = ReportFrequency.Daily,
+            TimeOfDay = "02:00",
+            Recipients = "admin@example.com",
+            ExportFormat = ReportExportFormat.PDF,
+            IsActive = true,
+            CreatedByUserId = 1L,
+            CreatedAt = DateTime.UtcNow
+        };
+
+        // Act & Assert
+        await _service.ScheduleReportAsync(schedule);
+        // Should complete without throwing an exception
     }
 
     [Fact]
@@ -1820,7 +1840,7 @@ public class ComplianceReporterTests
         };
 
         // Act
-        var result = await _exporter.ExportToCsvAsync(report);
+        var result = await _service.ExportToCsvAsync(report);
 
         // Assert
         Assert.NotNull(result);
@@ -1881,7 +1901,7 @@ public class ComplianceReporterTests
         };
 
         // Act
-        var result = await _exporter.ExportToCsvAsync(report);
+        var result = await _service.ExportToCsvAsync(report);
 
         // Assert
         Assert.NotNull(result);
@@ -1936,7 +1956,7 @@ public class ComplianceReporterTests
         };
 
         // Act
-        var result = await _exporter.ExportToCsvAsync(report);
+        var result = await _service.ExportToCsvAsync(report);
 
         // Assert
         Assert.NotNull(result);
@@ -1978,7 +1998,7 @@ public class ComplianceReporterTests
         };
 
         // Act
-        var result = await _exporter.ExportToCsvAsync(report);
+        var result = await _service.ExportToCsvAsync(report);
 
         // Assert
         Assert.NotNull(result);
@@ -2006,7 +2026,7 @@ public class ComplianceReporterTests
         };
 
         // Act
-        var result = await _exporter.ExportToCsvAsync(report);
+        var result = await _service.ExportToCsvAsync(report);
 
         // Assert
         Assert.NotNull(result);
@@ -2126,7 +2146,7 @@ public class ComplianceReporterTests
         };
 
         // Act
-        var result = await _exporter.ExportToJsonAsync(report);
+        var result = await _service.ExportToJsonAsync(report);
 
         // Assert
         Assert.NotNull(result);
