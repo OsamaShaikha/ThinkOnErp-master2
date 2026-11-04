@@ -43,7 +43,7 @@ public sealed class BranchSettingsDto
     /// <summary>
     /// 1 = ItemLevel (حساب الضريبة لكل صنف على حدة)، 2 = InvoiceLevel (تطبيق نسبة موحدة على إجمالي الفاتورة)
     /// </summary>
-    public int TaxApplicationMode { get; set; } = 1;
+    public int TaxApplicationMode { get; set; } = 0;
     public string TaxApplicationModeName { get; set; } = "ItemLevel";
     public decimal? BranchTaxPercent { get; set; }
 
@@ -114,7 +114,7 @@ public sealed class CompanySettingsDto
     public bool DefaultAllowNegativeStock { get; set; }
     public bool DefaultPrintReceiptAutomatically { get; set; } = true;
 
-    public int DefaultTaxApplicationMode { get; set; } = 1;
+    public int DefaultTaxApplicationMode { get; set; } = 0;
     public string DefaultTaxApplicationModeName { get; set; } = "ItemLevel";
     public decimal? DefaultTaxPercent { get; set; }
 

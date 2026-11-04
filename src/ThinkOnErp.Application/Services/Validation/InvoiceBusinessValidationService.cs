@@ -337,6 +337,26 @@ public class InvoiceBusinessValidationService : IInvoiceBusinessValidationServic
                 result.AddError($"Lines[{lineIdx}].Quantity", $"كمية الصنف '{item.ItemNameLocal}' يجب أن تكون أكبر من الصفر.", ErrorCodes.PositiveNumberRequired);
             }
 
+            if (line.UnitPrice < 0)
+            {
+                result.AddError($"Lines[{lineIdx}].UnitPrice", $"سعر الوحدة للصنف '{item.ItemNameLocal}' لا يمكن أن يكون سالباً.", ErrorCodes.OutOfRange);
+            }
+
+            if (line.DiscountAmount < 0)
+            {
+                result.AddError($"Lines[{lineIdx}].DiscountAmount", $"مبلغ خصم الصنف '{item.ItemNameLocal}' لا يمكن أن يكون سالباً.", ErrorCodes.OutOfRange);
+            }
+
+            if (line.DiscountPercent < 0 || line.DiscountPercent > 100)
+            {
+                result.AddError($"Lines[{lineIdx}].DiscountPercent", $"نسبة خصم الصنف '{item.ItemNameLocal}' يجب أن تكون بين 0 و 100%.", ErrorCodes.OutOfRange);
+            }
+
+            if (line.DiscountAmount > (line.Quantity * line.UnitPrice))
+            {
+                result.AddError($"Lines[{lineIdx}].DiscountAmount", $"مبلغ خصم الصنف '{item.ItemNameLocal}' لا يمكن أن يتجاوز قيمة الصنف الإجمالية.", ErrorCodes.OutOfRange);
+            }
+
             // Dynamic Negative Stock Check in POS
             if (!item.AllowNegativeStock)
             {
@@ -371,15 +391,69 @@ public class InvoiceBusinessValidationService : IInvoiceBusinessValidationServic
         {
             result.AddError("ManualDiscountPercent", "نسبة الخصم يجب أن تكون بين 0 و 100%.", ErrorCodes.OutOfRange);
         }
+        if (dto.ManualDiscountAmount < 0)
+        {
+            result.AddError("ManualDiscountAmount", "مبلغ الخصم اليدوي لا يمكن أن يكون سالباً.", ErrorCodes.OutOfRange);
+        }
 
-        // 4. Payment Settlement Check
+        // 4. Tax Exemption & Customer Tax Number Validation (ZATCA & General Tax Regulations)
+        bool isOrderOrLineExempt = (dto.IsTaxExempt == true) || (dto.Lines != null && dto.Lines.Any(l => l.IsTaxExempt == true));
+        if (isOrderOrLineExempt)
+        {
+            if (!dto.CustomerId.HasValue || dto.CustomerId.Value <= 0)
+            {
+                result.AddError("CustomerId", "لا يمكن إصدار فاتورة معفاة من الضريبة (كلياً أو جزئياً) دون تحديد عميل مسجل برقم ضريبي.", ErrorCodes.FieldRequired);
+            }
+            else
+            {
+                var customer = await _customerRepository.GetByIdAsync(dto.CustomerId.Value, ct);
+                if (customer == null)
+                {
+                    result.AddError("CustomerId", $"العميل المحدد برقم ({dto.CustomerId.Value}) غير موجود في النظام.", ErrorCodes.CustomerNotFound);
+                }
+                else if (!customer.IsActive)
+                {
+                    result.AddError("CustomerId", $"حساب العميل '{customer.NameLocal}' مجمّد أو غير نشط في النظام.", ErrorCodes.UnauthorizedAction);
+                }
+                else if (string.IsNullOrWhiteSpace(customer.TaxNumber))
+                {
+                    result.AddError("Customer.TaxNumber", $"العميل '{customer.NameLocal}' ليس لديه رقم ضريبي مسجل. يشترط وجود رقم ضريبي قانوني للعميل لإصدار فواتير معفاة من الضريبة.", ErrorCodes.FieldRequired);
+                }
+            }
+        }
+        else if (dto.CustomerId.HasValue && dto.CustomerId.Value > 0)
+        {
+            var customer = await _customerRepository.GetByIdAsync(dto.CustomerId.Value, ct);
+            if (customer == null)
+            {
+                result.AddError("CustomerId", $"العميل المحدد برقم ({dto.CustomerId.Value}) غير موجود في النظام.", ErrorCodes.CustomerNotFound);
+            }
+            else if (!customer.IsActive)
+            {
+                result.AddError("CustomerId", $"حساب العميل '{customer.NameLocal}' مجمّد أو غير نشط في النظام.", ErrorCodes.UnauthorizedAction);
+            }
+        }
+
+        // 5. Payment Settlement Check
         if (dto.Payments != null && dto.Payments.Count > 0)
         {
-            foreach (var p in dto.Payments)
+            for (int pIdx = 0; pIdx < dto.Payments.Count; pIdx++)
             {
+                var p = dto.Payments[pIdx];
                 if (p.Amount <= 0)
                 {
-                    result.AddError("Payments", "مبلغ الدفعة يجب أن يكون أكبر من الصفر.", ErrorCodes.PositiveNumberRequired);
+                    result.AddError($"Payments[{pIdx}].Amount", "مبلغ الدفعة يجب أن يكون أكبر من الصفر.", ErrorCodes.PositiveNumberRequired);
+                }
+                if (p.TenderedAmount < p.Amount)
+                {
+                    result.AddError($"Payments[{pIdx}].TenderedAmount", "المبلغ المقبوض لا يمكن أن يكون أقل من مبلغ الدفعة.", ErrorCodes.OutOfRange);
+                }
+                if (p.PaymentMethod == (int)PosPaymentMethod.CustomerAccount || p.PaymentMethod == 4)
+                {
+                    if (!dto.CustomerId.HasValue || dto.CustomerId.Value <= 0)
+                    {
+                        result.AddError($"Payments[{pIdx}].PaymentMethod", "يجب تحديد واختيار العميل عند الدفع على الحساب (ذمة عميل).", ErrorCodes.FieldRequired);
+                    }
                 }
                 if (p.PaymentMethod == (int)PosPaymentMethod.Card && string.IsNullOrWhiteSpace(p.TransactionReference) && string.IsNullOrWhiteSpace(p.AuthCode))
                 {

@@ -19,7 +19,7 @@ public class SysFeatureConfiguration : IEntityTypeConfiguration<SysFeature>
         builder.Property(e => e.DescriptionE).HasColumnName("DESCRIPTION_E").HasMaxLength(500);
         builder.Property(e => e.Icon).HasColumnName("ICON").HasMaxLength(100);
         builder.Property(e => e.DisplayOrder).HasColumnName("DISPLAY_ORDER");
-        builder.Property(e => e.IsActive).HasColumnName("IS_ACTIVE").HasMaxLength(1);
+        builder.Property(e => e.IsActive).HasColumnName("IS_ACTIVE").HasColumnType("NUMBER(1)");
         builder.Property(e => e.CreationUser).HasColumnName("CREATION_USER").HasMaxLength(100).IsRequired();
         builder.Property(e => e.CreationDate).HasColumnName("CREATION_DATE");
         builder.Property(e => e.UpdateUser).HasColumnName("UPDATE_USER").HasMaxLength(100);

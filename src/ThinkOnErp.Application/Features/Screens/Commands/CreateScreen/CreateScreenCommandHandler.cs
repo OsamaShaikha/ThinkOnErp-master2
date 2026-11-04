@@ -19,8 +19,12 @@ public class CreateScreenCommandHandler : IRequestHandler<CreateScreenCommand, l
     {
         var iconPath = await SaveIconAsync(request.IconFile, request.IconFileName);
 
-        var systemIds = request.SystemIds ?? (request.SystemId > 0 ? new List<long> { request.SystemId } : new List<long>());
-        var primarySystemId = systemIds.Count > 0 ? systemIds[0] : (request.SystemId > 0 ? request.SystemId : (long?)null);
+        var systemIds = request.SystemIds?.Distinct().ToList() ?? (request.SystemId > 0 ? new List<long> { request.SystemId } : new List<long>());
+        if (request.SystemId > 0 && !systemIds.Contains(request.SystemId))
+        {
+            systemIds.Insert(0, request.SystemId);
+        }
+        var primarySystemId = request.SystemId > 0 ? request.SystemId : (systemIds.Count > 0 ? systemIds[0] : (long?)null);
 
         var screen = new SysScreen
         {

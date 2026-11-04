@@ -99,20 +99,40 @@ public class CompanyPermissionsController : ControllerBase
     // ─────────────── Role permissions ───────────────
 
     [HttpGet("roles/{roleId:long}")]
-    public async Task<ActionResult<ApiResponse<List<object>>>> GetRolePermissions(long branchId, long roleId)
+    [ProducesResponseType(typeof(ApiResponse<List<PermissionGrantDto>>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<ApiResponse<List<PermissionGrantDto>>>> GetRolePermissions(long branchId, long roleId)
     {
         var branchError = await EnsureCanAccessBranchAsync(branchId);
         if (branchError != null)
             return branchError;
 
+        var systems = await _branchSystemRepo.GetSystemsByBranchIdAsync(branchId);
+        var systemIds = systems.Select(s => s.Id).ToList();
+
         var perms = await _rolePermRepo.GetByBranchAndRoleAsync(branchId, roleId);
-        var result = perms.Select(p => new
-        {
-            p.ScreenId,
-            p.FeatureId,
-            p.IsGranted
-        }).ToList<object>();
-        return Ok(ApiResponse<List<object>>.CreateSuccess(result, ResponseCodes.DataRetrieved, 200));
+
+        var allowedScreenIds = await _context.SysScreens
+            .Where(s => ((s.SystemId.HasValue && systemIds.Contains(s.SystemId.Value)) || s.SystemScreens.Any(ss => systemIds.Contains(ss.SystemId) && ss.IsActive)) && s.IsActive)
+            .Select(s => s.Id)
+            .ToListAsync();
+
+        var allowedScreenFeaturePairs = await _context.SysSystemScreenFeatures
+            .Where(ssf => systemIds.Contains(ssf.SystemId) && ssf.ScreenId.HasValue && ssf.IsActive)
+            .Select(ssf => new { ScreenId = ssf.ScreenId!.Value, ssf.FeatureId })
+            .ToListAsync();
+
+        var allowedFeatureSet = allowedScreenFeaturePairs.Select(p => (p.ScreenId, p.FeatureId)).ToHashSet();
+
+        var result = perms
+            .Where(p => allowedScreenIds.Contains(p.ScreenId) && (p.FeatureId == 0 || allowedFeatureSet.Contains((p.ScreenId, p.FeatureId))))
+            .Select(p => new PermissionGrantDto
+            {
+                ScreenId = p.ScreenId,
+                FeatureId = p.FeatureId,
+                IsGranted = p.IsGranted
+            }).ToList();
+
+        return Ok(ApiResponse<List<PermissionGrantDto>>.CreateSuccess(result, ResponseCodes.DataRetrieved, 200));
     }
 
     [HttpPut("roles/{roleId:long}")]
@@ -162,20 +182,40 @@ public class CompanyPermissionsController : ControllerBase
     // ─────────────── User permission overrides ───────────────
 
     [HttpGet("users/{userId:long}")]
-    public async Task<ActionResult<ApiResponse<List<object>>>> GetUserPermissions(long branchId, long userId)
+    [ProducesResponseType(typeof(ApiResponse<List<PermissionGrantDto>>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<ApiResponse<List<PermissionGrantDto>>>> GetUserPermissions(long branchId, long userId)
     {
         var branchError = await EnsureCanAccessBranchAsync(branchId);
         if (branchError != null)
             return branchError;
 
+        var systems = await _branchSystemRepo.GetSystemsByBranchIdAsync(branchId);
+        var systemIds = systems.Select(s => s.Id).ToList();
+
         var perms = await _userPermRepo.GetByBranchAndUserAsync(branchId, userId);
-        var result = perms.Select(p => new
-        {
-            p.ScreenId,
-            p.FeatureId,
-            p.IsGranted
-        }).ToList<object>();
-        return Ok(ApiResponse<List<object>>.CreateSuccess(result, ResponseCodes.DataRetrieved, 200));
+
+        var allowedScreenIds = await _context.SysScreens
+            .Where(s => ((s.SystemId.HasValue && systemIds.Contains(s.SystemId.Value)) || s.SystemScreens.Any(ss => systemIds.Contains(ss.SystemId) && ss.IsActive)) && s.IsActive)
+            .Select(s => s.Id)
+            .ToListAsync();
+
+        var allowedScreenFeaturePairs = await _context.SysSystemScreenFeatures
+            .Where(ssf => systemIds.Contains(ssf.SystemId) && ssf.ScreenId.HasValue && ssf.IsActive)
+            .Select(ssf => new { ScreenId = ssf.ScreenId!.Value, ssf.FeatureId })
+            .ToListAsync();
+
+        var allowedFeatureSet = allowedScreenFeaturePairs.Select(p => (p.ScreenId, p.FeatureId)).ToHashSet();
+
+        var result = perms
+            .Where(p => allowedScreenIds.Contains(p.ScreenId) && (p.FeatureId == 0 || allowedFeatureSet.Contains((p.ScreenId, p.FeatureId))))
+            .Select(p => new PermissionGrantDto
+            {
+                ScreenId = p.ScreenId,
+                FeatureId = p.FeatureId,
+                IsGranted = p.IsGranted
+            }).ToList();
+
+        return Ok(ApiResponse<List<PermissionGrantDto>>.CreateSuccess(result, ResponseCodes.DataRetrieved, 200));
     }
 
     [HttpPut("users/{userId:long}")]
@@ -261,6 +301,13 @@ public class CompanyPermissionsController : ControllerBase
 }
 
 public class BulkPermissionDto
+{
+    public long ScreenId { get; set; }
+    public long FeatureId { get; set; }
+    public bool IsGranted { get; set; }
+}
+
+public class PermissionGrantDto
 {
     public long ScreenId { get; set; }
     public long FeatureId { get; set; }

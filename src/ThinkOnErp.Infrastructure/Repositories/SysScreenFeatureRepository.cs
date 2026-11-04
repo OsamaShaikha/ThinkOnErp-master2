@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using ThinkOnErp.Domain.Constants;
 using ThinkOnErp.Domain.Entities;
 using ThinkOnErp.Domain.Interfaces;
 using ThinkOnErp.Infrastructure.Data;
@@ -17,6 +18,7 @@ public class SysScreenFeatureRepository : ISysScreenFeatureRepository
             .Include(sf => sf.Feature)
             .Where(sf => sf.Feature!.IsActive)
             .Select(sf => sf.Feature!)
+            .OrderBy(f => f.DisplayOrder)
             .ToListAsync();
     }
 
@@ -28,7 +30,8 @@ public class SysScreenFeatureRepository : ISysScreenFeatureRepository
 
         _context.Set<SysScreenFeature>().RemoveRange(existing);
 
-        var newAssignments = featureIds.Select(featureId => new SysScreenFeature
+        var distinctFeatureIds = featureIds?.Distinct().ToList() ?? new List<long>();
+        var newAssignments = distinctFeatureIds.Select(featureId => new SysScreenFeature
         {
             ScreenId = screenId,
             FeatureId = featureId
@@ -52,26 +55,13 @@ public class SysScreenFeatureRepository : ISysScreenFeatureRepository
 
     public async Task<List<SysFeature>> GetFeaturesBySystemAndScreenAsync(long systemId, long? screenId)
     {
-        var features = await _context.SysSystemScreenFeatures
+        return await _context.SysSystemScreenFeatures
             .Where(ssf => ssf.SystemId == systemId && ssf.ScreenId == screenId && ssf.IsActive)
             .Include(ssf => ssf.Feature)
             .Where(ssf => ssf.Feature != null && ssf.Feature.IsActive)
             .Select(ssf => ssf.Feature!)
+            .OrderBy(f => f.DisplayOrder)
             .ToListAsync();
-
-        // Fallback to legacy SYS_SCREEN_FEATURE if no specific system-screen mapping is configured yet
-        if (features.Count == 0 && screenId.HasValue)
-        {
-            var hasConfiguredMapping = await _context.SysSystemScreenFeatures
-                .AnyAsync(ssf => ssf.SystemId == systemId && ssf.ScreenId == screenId);
-
-            if (!hasConfiguredMapping)
-            {
-                return await GetFeaturesByScreenIdAsync(screenId.Value);
-            }
-        }
-
-        return features;
     }
 
     public async Task<List<SysFeature>> GetSystemLevelFeaturesAsync(long systemId)
@@ -81,24 +71,60 @@ public class SysScreenFeatureRepository : ISysScreenFeatureRepository
 
     public async Task AssignFeaturesToSystemScreenAsync(long systemId, long? screenId, List<long> featureIds, string username)
     {
-        var existing = await _context.SysSystemScreenFeatures
+        if (screenId.HasValue)
+        {
+            var screenBelongsToSystem = await _context.SysSystemScreens
+                .AnyAsync(ss => ss.SystemId == systemId && ss.ScreenId == screenId.Value && ss.IsActive)
+                || await _context.SysScreens
+                .AnyAsync(s => s.Id == screenId.Value && s.SystemId == systemId && s.IsActive);
+
+            if (!screenBelongsToSystem)
+            {
+                throw new InvalidOperationException(ErrorCodes.ScreenNotInSystem);
+            }
+        }
+
+        var distinctFeatureIds = featureIds?.Distinct().ToList() ?? new List<long>();
+
+        var existingRecords = await _context.SysSystemScreenFeatures
             .Where(ssf => ssf.SystemId == systemId && ssf.ScreenId == screenId)
             .ToListAsync();
 
-        _context.SysSystemScreenFeatures.RemoveRange(existing);
+        var existingMap = existingRecords.ToDictionary(r => r.FeatureId);
 
-        var distinctFeatureIds = featureIds.Distinct().ToList();
-        var newAssignments = distinctFeatureIds.Select(featureId => new SysSystemScreenFeature
+        foreach (var rec in existingRecords)
         {
-            SystemId = systemId,
-            ScreenId = screenId,
-            FeatureId = featureId,
-            IsActive = true,
-            CreationUser = string.IsNullOrWhiteSpace(username) ? "SYSTEM" : username,
-            CreationDate = DateTime.UtcNow
-        });
+            if (!distinctFeatureIds.Contains(rec.FeatureId))
+            {
+                _context.SysSystemScreenFeatures.Remove(rec);
+            }
+        }
 
-        _context.SysSystemScreenFeatures.AddRange(newAssignments);
+        foreach (var featureId in distinctFeatureIds)
+        {
+            if (existingMap.TryGetValue(featureId, out var existing))
+            {
+                if (!existing.IsActive)
+                {
+                    existing.IsActive = true;
+                    existing.UpdateUser = string.IsNullOrWhiteSpace(username) ? "SYSTEM" : username;
+                    existing.UpdateDate = DateTime.UtcNow;
+                }
+            }
+            else
+            {
+                _context.SysSystemScreenFeatures.Add(new SysSystemScreenFeature
+                {
+                    SystemId = systemId,
+                    ScreenId = screenId,
+                    FeatureId = featureId,
+                    IsActive = true,
+                    CreationUser = string.IsNullOrWhiteSpace(username) ? "SYSTEM" : username,
+                    CreationDate = DateTime.UtcNow
+                });
+            }
+        }
+
         await _context.SaveChangesAsync();
     }
 

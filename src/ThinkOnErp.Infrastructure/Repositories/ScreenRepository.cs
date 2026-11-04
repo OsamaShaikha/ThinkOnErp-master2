@@ -17,6 +17,7 @@ public class ScreenRepository : IScreenRepository
 
     public async Task<List<SysScreen>> GetScreensBySystemIdAsync(long systemId) =>
         await _context.SysScreens
+            .Include(s => s.SystemScreens)
             .Where(s => (s.SystemId == systemId || s.SystemScreens.Any(ss => ss.SystemId == systemId && ss.IsActive)) && s.IsActive)
             .OrderBy(s => s.DisplayOrder)
             .ToListAsync();
@@ -54,25 +55,51 @@ public class ScreenRepository : IScreenRepository
             .Where(ss => ss.ScreenId == screenId)
             .ToListAsync();
 
-        var existingSystemIds = existingLinks.Select(ss => ss.SystemId).ToHashSet();
+        var existingMap = existingLinks.ToDictionary(l => l.SystemId);
 
         // Remove links that are not in target
+        var removedSystemIds = new List<long>();
         foreach (var link in existingLinks.Where(l => !targetSystemIds.Contains(l.SystemId)))
         {
             _context.SysSystemScreens.Remove(link);
+            removedSystemIds.Add(link.SystemId);
         }
 
-        // Add new links
-        foreach (var sysId in targetSystemIds.Where(id => !existingSystemIds.Contains(id)))
+        // Cascade delete feature links for systems removed from this screen
+        if (removedSystemIds.Count > 0)
         {
-            _context.SysSystemScreens.Add(new SysSystemScreen
+            var detachedFeatureLinks = await _context.SysSystemScreenFeatures
+                .Where(ssf => ssf.ScreenId == screenId && removedSystemIds.Contains(ssf.SystemId))
+                .ToListAsync();
+            if (detachedFeatureLinks.Count > 0)
             {
-                ScreenId = screenId,
-                SystemId = sysId,
-                IsActive = true,
-                CreationUser = username,
-                CreationDate = DateTime.UtcNow
-            });
+                _context.SysSystemScreenFeatures.RemoveRange(detachedFeatureLinks);
+            }
+        }
+
+        // Add new links or reactivate inactive ones
+        foreach (var sysId in targetSystemIds)
+        {
+            if (existingMap.TryGetValue(sysId, out var existing))
+            {
+                if (!existing.IsActive)
+                {
+                    existing.IsActive = true;
+                    existing.UpdateUser = username;
+                    existing.UpdateDate = DateTime.UtcNow;
+                }
+            }
+            else
+            {
+                _context.SysSystemScreens.Add(new SysSystemScreen
+                {
+                    ScreenId = screenId,
+                    SystemId = sysId,
+                    IsActive = true,
+                    CreationUser = username,
+                    CreationDate = DateTime.UtcNow
+                });
+            }
         }
 
         await _context.SaveChangesAsync();

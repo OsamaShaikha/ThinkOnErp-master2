@@ -35,6 +35,8 @@ try
         command.CommandTimeout = 15;
         await command.ExecuteNonQueryAsync();
     }
+
+
     var columns = await Query("SELECT TABLE_NAME,COLUMN_NAME,DATA_TYPE,NULLABLE FROM ALL_TAB_COLUMNS WHERE OWNER='DEV_TEMPLATE' AND (TABLE_NAME LIKE 'HR_%' OR TABLE_NAME='SYS_USERS') ORDER BY TABLE_NAME,COLUMN_ID");
     if (!columns.Any(c => c[0] == "HR_EMPLOYEE") || !columns.Any(c => c[0] == "SYS_USERS" && c[1] == "Id"))
         throw new InvalidOperationException("Required DEV_TEMPLATE employee table or SYS_USERS Id column is missing; no DDL applied.");

@@ -103,6 +103,7 @@ public class ScreensController : ControllerBase
             var command = new CreateScreenCommand
             {
                 SystemId = dto.SystemId,
+                SystemIds = dto.SystemIds,
                 ParentScreenId = dto.ParentScreenId,
                 ScreenCode = dto.ScreenCode,
                 ScreenName = dto.ScreenName,
@@ -148,6 +149,7 @@ public class ScreensController : ControllerBase
             {
                 ScreenId = id,
                 SystemId = dto.SystemId,
+                SystemIds = dto.SystemIds,
                 ParentScreenId = dto.ParentScreenId,
                 ScreenCode = dto.ScreenCode,
                 ScreenName = dto.ScreenName,
@@ -179,6 +181,10 @@ public class ScreensController : ControllerBase
         }
     }
 
+    /// <summary>
+    /// Gets global features directly assigned to a screen (without system context) from SYS_SCREEN_FEATURE.
+    /// For system-specific features, use GET /api/screens/bysystem/{systemId}/{screenId}/features.
+    /// </summary>
     [HttpGet("{screenId}/features")]
     [ProducesResponseType(typeof(ApiResponse<List<FeatureDto>>), StatusCodes.Status200OK)]
     public async Task<ActionResult<ApiResponse<List<FeatureDto>>>> GetFeaturesByScreenId(long screenId)
@@ -315,6 +321,11 @@ public class ScreensController : ControllerBase
             await _mediator.Send(command);
             return Ok(ApiResponse<bool>.CreateSuccess(true, ResponseCodes.RecordUpdated, 200));
         }
+        catch (InvalidOperationException ex) when (ex.Message == ErrorCodes.ScreenNotInSystem)
+        {
+            _logger.LogWarning("Screen {ScreenId} does not belong to system {SystemId}", screenId, systemId);
+            return BadRequest(ApiResponse<bool>.CreateFailure(ErrorCodes.ScreenNotInSystem, statusCode: 400));
+        }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error assigning features to system ID: {SystemId}, screen ID: {ScreenId}", systemId, screenId);
@@ -393,6 +404,11 @@ public class ScreensController : ControllerBase
             _logger.LogInformation("Assigning system-level features to system ID: {SystemId}", systemId);
             await _mediator.Send(command);
             return Ok(ApiResponse<bool>.CreateSuccess(true, ResponseCodes.RecordUpdated, 200));
+        }
+        catch (InvalidOperationException ex) when (ex.Message == ErrorCodes.ScreenNotInSystem)
+        {
+            _logger.LogWarning("Validation error assigning system-level features for system {SystemId}: {Message}", systemId, ex.Message);
+            return BadRequest(ApiResponse<bool>.CreateFailure(ErrorCodes.ScreenNotInSystem, statusCode: 400));
         }
         catch (Exception ex)
         {

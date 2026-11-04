@@ -114,7 +114,8 @@ public class BranchAccessController : ControllerBase
                 Screens = screens.Select(s => new ScreenDto
                 {
                     Id = s.Id,
-                    SystemId = s.SystemId ?? (s.SystemScreens.FirstOrDefault()?.SystemId ?? 0), SystemIds = s.SystemScreens.Select(ss => ss.SystemId).ToList(),
+                    SystemId = s.SystemId ?? (s.SystemScreens != null && s.SystemScreens.Count > 0 ? s.SystemScreens.First().SystemId : 0),
+                    SystemIds = s.SystemScreens != null && s.SystemScreens.Count > 0 ? s.SystemScreens.Select(ss => ss.SystemId).ToList() : (s.SystemId.HasValue ? new List<long> { s.SystemId.Value } : new List<long>()),
                     ParentScreenId = s.ParentScreenId,
                     ScreenCode = s.ScreenCode,
                     ScreenName = s.ScreenName,
@@ -227,7 +228,8 @@ public class BranchAccessController : ControllerBase
             var dtos = screens.Select(s => new ScreenDto
             {
                 Id = s.Id,
-                SystemId = s.SystemId ?? (s.SystemScreens.FirstOrDefault()?.SystemId ?? 0), SystemIds = s.SystemScreens.Select(ss => ss.SystemId).ToList(),
+                SystemId = s.SystemId ?? (s.SystemScreens != null && s.SystemScreens.Count > 0 ? s.SystemScreens.First().SystemId : 0),
+                SystemIds = s.SystemScreens != null && s.SystemScreens.Count > 0 ? s.SystemScreens.Select(ss => ss.SystemId).ToList() : (s.SystemId.HasValue ? new List<long> { s.SystemId.Value } : new List<long>()),
                 ParentScreenId = s.ParentScreenId,
                 ScreenCode = s.ScreenCode,
                 ScreenName = s.ScreenName,

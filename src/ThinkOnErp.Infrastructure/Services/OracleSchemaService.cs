@@ -29,7 +29,7 @@ public class OracleSchemaService : IOracleSchemaService
     private static readonly HashSet<string> GlobalTables = new(StringComparer.OrdinalIgnoreCase)
     {
         "SYS_SUPER_ADMIN", "SYS_COMPANY", "SYS_SYSTEM", "SYS_SCREEN",
-        "SYS_FEATURE", "SYS_SCREEN_FEATURE", "SYS_CURRENCY",
+        "SYS_FEATURE", "SYS_SCREEN_FEATURE", "SYS_SYSTEM_SCREEN", "SYS_SYSTEM_SCREEN_FEATURE", "SYS_CURRENCY",
         "SYS_PERFORMANCE_METRICS", "SYS_SLOW_QUERIES", "SYS_SECURITY_THREATS", "SYS_FAILED_LOGINS",
         "SYS_API_CATEGORIES", "SYS_API_ENDPOINTS", "SYS_REPORT_SCHEDULE",
         "SYS_FIELD_VALIDATION_RULE",

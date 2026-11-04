@@ -26,6 +26,11 @@ public class GetScreenByIdQueryHandler : IRequestHandler<GetScreenByIdQuery, Scr
             ? screen.SystemScreens.Where(ss => ss.IsActive).Select(ss => ss.SystemId).ToList()
             : (screen.SystemId.HasValue ? new List<long> { screen.SystemId.Value } : new List<long>());
 
+        if (screen.SystemId.HasValue && !sysIds.Contains(screen.SystemId.Value))
+        {
+            sysIds.Insert(0, screen.SystemId.Value);
+        }
+
         return new ScreenDto
         {
             Id = screen.Id,

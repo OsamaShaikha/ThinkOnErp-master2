@@ -72,6 +72,7 @@ public static class ErrorCodes
     public const string FiscalPeriodAlreadyExists = "ERR_FISCAL_PERIOD_ALREADY_EXISTS";
 
     // Security & Generic Entity Errors
+    public const string ScreenNotInSystem = "SCREEN_NOT_IN_SYSTEM";
     public const string EntityNotFound = "ERR_ENTITY_NOT_FOUND";
     public const string UnauthorizedAction = "ERR_UNAUTHORIZED_ACTION";
     public const string OperationFailed = "ERR_OPERATION_FAILED";

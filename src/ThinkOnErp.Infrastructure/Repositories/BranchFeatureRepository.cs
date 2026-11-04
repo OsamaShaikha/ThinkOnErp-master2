@@ -12,16 +12,27 @@ public class BranchFeatureRepository : IBranchFeatureRepository
 
     public async Task<List<SysFeature>> GetAvailableFeaturesAsync(long branchId, long screenId)
     {
+        var assignedSystemIds = await _context.Set<SysBranchSystem>()
+            .Where(bs => bs.BranchId == branchId && bs.RevokedDate == null)
+            .Select(bs => bs.SystemId)
+            .ToListAsync();
+
+        if (assignedSystemIds.Count == 0)
+        {
+            return new List<SysFeature>();
+        }
+
         var revokedFeatureIds = await _context.Set<SysBranchFeature>()
             .Where(bf => bf.BranchId == branchId && bf.ScreenId == screenId)
             .Select(bf => bf.FeatureId)
             .ToListAsync();
 
-        return await _context.Set<SysScreenFeature>()
-            .Where(sf => sf.ScreenId == screenId)
-            .Include(sf => sf.Feature)
-            .Where(sf => sf.Feature!.IsActive && !revokedFeatureIds.Contains(sf.FeatureId))
-            .Select(sf => sf.Feature!)
+        return await _context.SysSystemScreenFeatures
+            .Where(ssf => assignedSystemIds.Contains(ssf.SystemId) && ssf.ScreenId == screenId && ssf.IsActive)
+            .Include(ssf => ssf.Feature)
+            .Where(ssf => ssf.Feature != null && ssf.Feature.IsActive && !revokedFeatureIds.Contains(ssf.FeatureId))
+            .Select(ssf => ssf.Feature!)
+            .Distinct()
             .OrderBy(f => f.DisplayOrder)
             .ToListAsync();
     }

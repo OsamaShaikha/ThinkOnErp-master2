@@ -62,7 +62,7 @@ public static class SysSettingKeys
     /// 1 = ItemLevel (الضريبة على مستوى الصنف - كل صنف يحسب ضريبته الخاصة)
     /// 2 = InvoiceLevel (الضريبة على مستوى الفاتورة - تطبق نسبة موحدة على كامل الفاتورة)
     /// </summary>
-    public const int PosTaxApplicationMode = 59;
+    public const int PosTaxApplicationMode = 59; // 0 = ItemLevel, 1 = TaxInclusive, 2 = TaxExclusive
 
     /// <summary>
     /// Branch default tax percentage when InvoiceLevel tax mode is enabled (e.g., 15.00)

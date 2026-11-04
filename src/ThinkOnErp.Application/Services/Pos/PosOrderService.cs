@@ -176,6 +176,31 @@ public class PosOrderService : IPosOrderService
         var currentYear = DateTime.UtcNow.Year;
         var invoiceNumber = await _orderRepository.GenerateNextInvoiceNumberAsync(dto.BranchId, currentYear, isRefund: false, ct);
 
+        // Retrieve customer details & tax number if specified
+        if (dto.CustomerId.HasValue && dto.CustomerId.Value > 0 && _customerRepository != null)
+        {
+            var customer = await _customerRepository.GetByIdAsync(dto.CustomerId.Value, ct);
+            if (customer != null)
+            {
+                if (string.IsNullOrWhiteSpace(dto.CustomerName))
+                {
+                    dto.CustomerName = customer.NameLocal;
+                }
+                if (!string.IsNullOrWhiteSpace(customer.TaxNumber))
+                {
+                    var taxNumNote = $"[الرقم الضريبي للعميل: {customer.TaxNumber.Trim()}]";
+                    if (string.IsNullOrWhiteSpace(dto.Notes))
+                    {
+                        dto.Notes = taxNumNote;
+                    }
+                    else if (!dto.Notes.Contains(customer.TaxNumber.Trim()))
+                    {
+                        dto.Notes = $"{dto.Notes} | {taxNumNote}";
+                    }
+                }
+            }
+        }
+
         var order = new PosOrderHeader
         {
             BranchId = dto.BranchId,
@@ -295,10 +320,50 @@ public class PosOrderService : IPosOrderService
             });
         }
 
-        // 7. Process Initial Payments if provided
+        // 7. Process Payments & Auto-Receivable Settlement
         decimal customerAccountAmount = 0m;
         decimal custAdvanceDeducted = 0m;
         decimal custReceivableCharged = 0m;
+
+        decimal totalTendered = dto.Payments.Sum(p => p.Amount);
+        bool isCompletedRequested = (dto.Status == (int)PosOrderStatus.Completed);
+
+        // إذا طُلب إتمام الفاتورة (Completed) ولم يتم دفع كامل المبلغ مع الضريبة:
+        if (isCompletedRequested && totalTendered < order.TotalAmount)
+        {
+            decimal unpaidDifference = order.TotalAmount - totalTendered;
+
+            // 1. إذا لم يُحدد عميل: ارفض الفاتورة فوراً برسالة واضحة
+            if (!dto.CustomerId.HasValue || dto.CustomerId.Value <= 0)
+            {
+                return ApiResponse<PosOrderSummaryDto>.CreateFailure(
+                    $"الدفعة غير مكتملة. إجمالي الفاتورة المطلوب هو ({order.TotalAmount:N2}) والمدفوع ({totalTendered:N2}). لا يمكن إتمام الفاتورة دون تحديد عميل لترحيل المبلغ المتبقي ({unpaidDifference:N2}) على حسابه كذمم.",
+                    null,
+                    400);
+            }
+
+            // 2. إذا وجد عميل: تحقق من السقف الائتماني للعميل للمبلغ المتبقي
+            var (validCredit, creditError, autoAdvDed, autoRecChg, _, _) =
+                await ValidateAndCalculateCustomerAccountPaymentAsync(dto.CustomerId.Value, unpaidDifference, ct);
+
+            if (!validCredit)
+            {
+                return ApiResponse<PosOrderSummaryDto>.CreateFailure(
+                    $"الدفعة غير مكتملة ولا يمكن ترحيل المتبقي على ذمة العميل: {creditError}",
+                    null,
+                    400);
+            }
+
+            // 3. أضف دفعة ذمم تلقائية على حساب العميل بالمبلغ المتبقي
+            dto.Payments.Add(new CreatePosOrderPaymentDto
+            {
+                PaymentMethod = (int)PosPaymentMethod.CustomerAccount,
+                Amount = unpaidDifference,
+                TenderedAmount = unpaidDifference,
+                ChangeAmount = 0m,
+                TransactionReference = $"ADV:{autoAdvDed:F4}|REC:{autoRecChg:F4}"
+            });
+        }
 
         if (dto.Payments.Any())
         {
@@ -403,10 +468,7 @@ public class PosOrderService : IPosOrderService
             else
             {
                 order.IsPaid = false;
-                if (order.Status == PosOrderStatus.Completed)
-                {
-                    order.Status = totalPaid > 0 ? PosOrderStatus.Parked : PosOrderStatus.Draft;
-                }
+                order.Status = totalPaid > 0 ? PosOrderStatus.Parked : PosOrderStatus.Draft;
             }
         }
         else if (order.TotalAmount == 0)
@@ -2982,12 +3044,12 @@ public class PosOrderService : IPosOrderService
     private async Task<decimal?> ResolveBranchTaxOverrideAsync(long branchId, CancellationToken ct)
     {
         var modeStr = await _settingRepo.GetEffectiveValueAsync(SysSettingKeys.PosTaxApplicationMode, branchId, ct);
-        if (int.TryParse(modeStr, out var mode) && mode == 2)
+        if (int.TryParse(modeStr, out var mode))
         {
-            var pctStr = await _settingRepo.GetEffectiveValueAsync(SysSettingKeys.PosBranchTaxPercent, branchId, ct);
-            if (decimal.TryParse(pctStr, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out var pct))
-                return pct;
-            return 15m;
+            if (mode == 0) // على مستوى الصنف بالفاتورة: كل صنف يحسب ضريبته الخاصة من قاعدة البيانات
+            {
+                return null;
+            }
         }
         return null;
     }
@@ -2996,6 +3058,15 @@ public class PosOrderService : IPosOrderService
     {
         if (requestedInclusive.HasValue)
             return requestedInclusive.Value;
+
+        // إعداد رقم 59: 1 = شامل، 2 = غير شامل، 0 = على مستوى الصنف
+        var modeStr = await _settingRepo.GetEffectiveValueAsync(SysSettingKeys.PosTaxApplicationMode, branchId, ct);
+        if (int.TryParse(modeStr, out var mode))
+        {
+            if (mode == 1) return true;  // 1: شامل الضريبة
+            if (mode == 2) return false; // 2: غير شامل الضريبة
+            // 0: على مستوى الصنف بالفاتورة (يرجع لإعداد 61 أو الافتراضي)
+        }
 
         var incStr = await _settingRepo.GetEffectiveValueAsync(SysSettingKeys.PosPricesIncludeTax, branchId, ct);
         return incStr == "1" || incStr?.Equals("true", StringComparison.OrdinalIgnoreCase) == true;

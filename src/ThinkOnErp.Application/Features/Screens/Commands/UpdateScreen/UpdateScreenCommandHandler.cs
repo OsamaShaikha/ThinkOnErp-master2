@@ -20,14 +20,18 @@ public class UpdateScreenCommandHandler : IRequestHandler<UpdateScreenCommand, l
         if (screen == null)
             return 0;
 
-        var systemIds = request.SystemIds ?? (request.SystemId > 0 ? new List<long> { request.SystemId } : null);
-        if (systemIds != null && systemIds.Count > 0)
-        {
-            screen.SystemId = systemIds[0];
-        }
-        else if (request.SystemId > 0)
+        var systemIds = request.SystemIds?.Distinct().ToList() ?? (request.SystemId > 0 ? new List<long> { request.SystemId } : new List<long>());
+        if (request.SystemId > 0)
         {
             screen.SystemId = request.SystemId;
+            if (!systemIds.Contains(request.SystemId))
+            {
+                systemIds.Insert(0, request.SystemId);
+            }
+        }
+        else if (systemIds.Count > 0)
+        {
+            screen.SystemId = systemIds[0];
         }
 
         screen.ParentScreenId = request.ParentScreenId;

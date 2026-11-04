@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -400,8 +400,9 @@ public class SettingsService : ISettingsService
 
     private static string ResolveTaxApplicationModeName(int mode) => mode switch
     {
-        1 => "ItemLevel (على مستوى الصنف)",
-        2 => "InvoiceLevel (على مستوى الفاتورة)",
-        _ => "ItemLevel (على مستوى الصنف)"
+        0 => "ItemLevel",
+        1 => "TaxInclusive",
+        2 => "TaxExclusive",
+        _ => "ItemLevel"
     };
 }

@@ -299,6 +299,7 @@ try
     // Add services to the container.
     builder.Services.AddControllers(options =>
     {
+        options.ModelBinderProviders.Insert(0, new ThinkOnErp.API.ModelBinders.FlexibleLongListModelBinderProvider());
         options.Filters.Add<ThinkOnErp.API.Filters.DynamicValidationActionFilter>();
         options.Filters.Add<ThinkOnErp.API.Authorization.HrAccessFilter>();
         options.Filters.Add<ThinkOnErp.API.Filters.LocalizedApiResponseFilter>();

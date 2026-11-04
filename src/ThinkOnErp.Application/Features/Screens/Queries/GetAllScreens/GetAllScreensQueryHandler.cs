@@ -27,6 +27,11 @@ public class GetAllScreensQueryHandler : IRequestHandler<GetAllScreensQuery, Lis
                 ? s.SystemScreens.Where(ss => ss.IsActive).Select(ss => ss.SystemId).ToList()
                 : (s.SystemId.HasValue ? new List<long> { s.SystemId.Value } : new List<long>());
 
+            if (s.SystemId.HasValue && !sysIds.Contains(s.SystemId.Value))
+            {
+                sysIds.Insert(0, s.SystemId.Value);
+            }
+
             dtos.Add(new ScreenDto
             {
                 Id = s.Id,

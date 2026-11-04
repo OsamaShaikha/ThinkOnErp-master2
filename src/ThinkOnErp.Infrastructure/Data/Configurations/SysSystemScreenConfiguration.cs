@@ -15,7 +15,7 @@ public class SysSystemScreenConfiguration : IEntityTypeConfiguration<SysSystemSc
         builder.Property(e => e.ScreenId).HasColumnName("SCREEN_ID").IsRequired();
         builder.Property(e => e.ParentScreenId).HasColumnName("PARENT_SCREEN_ID");
         builder.Property(e => e.DisplayOrder).HasColumnName("DISPLAY_ORDER").HasDefaultValue(0);
-        builder.Property(e => e.IsActive).HasColumnName("IS_ACTIVE").HasConversion<int>(v => v ? 1 : 0, v => v == 1).HasColumnType("NUMBER(1)");
+        builder.Property(e => e.IsActive).HasColumnName("IS_ACTIVE").HasColumnType("NUMBER(1)");
         builder.Property(e => e.CreationUser).HasColumnName("CREATION_USER").HasMaxLength(100).IsRequired();
         builder.Property(e => e.CreationDate).HasColumnName("CREATION_DATE");
         builder.Property(e => e.UpdateUser).HasColumnName("UPDATE_USER").HasMaxLength(100);
