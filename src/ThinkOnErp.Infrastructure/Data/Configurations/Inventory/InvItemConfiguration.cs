@@ -71,8 +71,13 @@ public sealed class InvItemConfiguration : IEntityTypeConfiguration<InvItem>
         // Tax Integration
         builder.Property(i => i.TaxRateId).HasColumnName("TAX_RATE_ID");
         builder.Property(i => i.TaxGroupId).HasColumnName("TAX_GROUP_ID");
-        builder.Property(i => i.IsTaxExempt).HasColumnName("IS_TAX_EXEMPT").HasColumnType("NUMBER(1)").HasDefaultValue(false);
-        builder.Property(i => i.TaxExemptionReasonCode).HasColumnName("TAX_EXEMPTION_REASON_CODE").HasMaxLength(50);
+        builder.Property(i => i.TaxType).HasColumnName("TAX_TYPE").HasColumnType("NUMBER(3)").HasDefaultValue(1);
+        builder.Ignore(i => i.IsTaxInclusive);
+        builder.Ignore(i => i.IsZeroRated);
+        builder.Ignore(i => i.IsTaxExempt);
+
+
+
 
         builder.Property(i => i.IsActive).HasColumnName("IS_ACTIVE").HasColumnType("NUMBER(1)").HasDefaultValue(true);
         builder.Property(i => i.CreationUser).HasColumnName("CREATION_USER").HasMaxLength(100).IsRequired();

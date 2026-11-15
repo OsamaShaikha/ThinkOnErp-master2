@@ -11,6 +11,8 @@ public interface ITrxTypeService
     // DocType CRUD
     Task<ApiResponse<TrxDocTypeDto>> CreateDocTypeAsync(CreateTrxDocTypeDto dto, string username, CancellationToken ct = default);
     Task<ApiResponse<List<TrxDocTypeDto>>> GetAllDocTypesAsync(CancellationToken ct = default);
+    Task<ApiResponse<List<TrxDocTypeDto>>> GetDocTypesByModuleAsync(string moduleCode, bool activeOnly = true, bool excludePos = false, CancellationToken ct = default);
+    Task<ApiResponse<List<TrxDocTypeDto>>> GetDocTypesAdminFilteredAsync(string? moduleCode, CancellationToken ct = default);
     Task<ApiResponse<TrxDocTypeDto>> GetDocTypeByCodeAsync(int code, CancellationToken ct = default);
     Task<ApiResponse<TrxDocTypeDto>> UpdateDocTypeAsync(int code, UpdateTrxDocTypeDto dto, string username, CancellationToken ct = default);
     Task<ApiResponse<bool>> DeleteDocTypeAsync(int code, CancellationToken ct = default);

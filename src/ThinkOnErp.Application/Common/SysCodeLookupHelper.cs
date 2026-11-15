@@ -141,6 +141,12 @@ public static class SysCodeLookupHelper
                 new() { Code = 5, Value = "DAMAGED", NameAr = "منطقة بضاعة تالفة", NameEn = "Damaged Goods Zone", Name = isEnglish ? "Damaged Goods Zone" : "منطقة بضاعة تالفة", IsActive = 1 },
                 new() { Code = 6, Value = "RETURNS", NameAr = "منطقة مرتجعات", NameEn = "Returns Zone", Name = isEnglish ? "Returns Zone" : "منطقة مرتجعات", IsActive = 1 },
             },
+            SysCodeKeys.TaxTypes.Mgr => new List<SysCodeLookupDto>
+            {
+                new() { Code = 1, Value = "Inclusive", NameAr = "شامل الضريبة", NameEn = "Tax Inclusive", Name = isEnglish ? "Tax Inclusive" : "شامل الضريبة", IsActive = 1 },
+                new() { Code = 2, Value = "Exclusive", NameAr = "غير شامل الضريبة", NameEn = "Tax Exclusive", Name = isEnglish ? "Tax Exclusive" : "غير شامل الضريبة", IsActive = 1 },
+                new() { Code = 3, Value = "ZeroRated", NameAr = "ضريبة صفرية", NameEn = "Zero Rated", Name = isEnglish ? "Zero Rated" : "ضريبة صفرية", IsActive = 1 },
+            },
             _ => new List<SysCodeLookupDto>()
         };
     }

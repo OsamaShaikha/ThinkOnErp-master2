@@ -29,6 +29,9 @@ public sealed class PosReservationConfiguration : IEntityTypeConfiguration<PosRe
         builder.Property(r => r.ResourceType).HasColumnName("RESOURCE_TYPE").HasMaxLength(50);
         builder.Property(r => r.ResourceIdentifier).HasColumnName("RESOURCE_IDENTIFIER").HasMaxLength(100);
         builder.Property(r => r.StaffEmployeeId).HasColumnName("STAFF_EMPLOYEE_ID");
+        builder.Property(r => r.AdditionalStaffIds).HasColumnName("ADDITIONAL_STAFF_IDS").HasMaxLength(200);
+        builder.Property(r => r.RecurrenceGroupId).HasColumnName("RECURRENCE_GROUP_ID").HasMaxLength(100);
+        builder.Property(r => r.IsRecurring).HasColumnName("IS_RECURRING").HasColumnType("NUMBER(1)").HasDefaultValue(false);
 
         builder.Property(r => r.Status).HasColumnName("STATUS").HasConversion<int>().IsRequired();
 

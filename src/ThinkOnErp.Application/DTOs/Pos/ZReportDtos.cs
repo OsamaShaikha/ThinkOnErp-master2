@@ -65,6 +65,38 @@ public class PosCategorySalesSummaryDto
     public decimal PercentageOfTotal { get; set; }
 }
 
+/// <summary>
+/// ملخص مبيعات مدخل الطلب / الويتر في تقارير X و Z
+/// </summary>
+public class PosOrderTakerSalesSummaryDto
+{
+    public string OrderTakerName { get; set; } = string.Empty;
+    public int OrdersCount { get; set; }
+    public decimal GrossSalesAmount { get; set; }
+    public decimal DiscountAmount { get; set; }
+    public decimal NetSalesAmount { get; set; }
+    public decimal TaxAmount { get; set; }
+    public decimal TotalSalesAmount { get; set; }
+    public decimal PercentageOfTotal { get; set; }
+}
+
+/// <summary>
+/// ملخص مبيعات موظفي المبيعات على مستوى سطور الطلبات في تقارير X و Z
+/// </summary>
+public class PosSalesEmployeeSalesSummaryDto
+{
+    public long? SalesEmployeeId { get; set; }
+    public string SalesEmployeeName { get; set; } = string.Empty;
+    public int LinesCount { get; set; }
+    public decimal TotalQuantitySold { get; set; }
+    public decimal GrossSalesAmount { get; set; }
+    public decimal DiscountAmount { get; set; }
+    public decimal NetSalesAmount { get; set; }
+    public decimal TaxAmount { get; set; }
+    public decimal TotalSalesAmount { get; set; }
+    public decimal PercentageOfTotal { get; set; }
+}
+
 public class ZReportSummaryDto
 {
     public long Id { get; set; }
@@ -107,6 +139,8 @@ public class ZReportSummaryDto
     public PosCashMovementSummaryDto CashMovementSummary { get; set; } = new();
     public PosOperationalStatsDto OperationalStats { get; set; } = new();
     public List<PosCategorySalesSummaryDto> CategorySales { get; set; } = new();
+    public List<PosOrderTakerSalesSummaryDto> OrderTakerSales { get; set; } = new();
+    public List<PosSalesEmployeeSalesSummaryDto> SalesEmployeeSales { get; set; } = new();
 
     public bool IsPostedToGl { get; set; }
     public string GeneratedBy { get; set; } = string.Empty;
@@ -156,4 +190,6 @@ public class XReportSummaryDto
     public PosCashMovementSummaryDto CashMovementSummary { get; set; } = new();
     public PosOperationalStatsDto OperationalStats { get; set; } = new();
     public List<PosCategorySalesSummaryDto> CategorySales { get; set; } = new();
+    public List<PosOrderTakerSalesSummaryDto> OrderTakerSales { get; set; } = new();
+    public List<PosSalesEmployeeSalesSummaryDto> SalesEmployeeSales { get; set; } = new();
 }

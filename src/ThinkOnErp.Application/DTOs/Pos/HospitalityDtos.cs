@@ -214,6 +214,7 @@ public class CreateReservationDto
     public string? ResourceType { get; set; }
     public string? ResourceIdentifier { get; set; }
     public long? StaffEmployeeId { get; set; }
+    public List<long>? AdditionalStaffIds { get; set; }
     public decimal DepositAmount { get; set; }
     public bool IsDepositPaid { get; set; }
     public string? SpecialRequests { get; set; }
@@ -232,6 +233,7 @@ public class UpdateReservationDto
     public string? ResourceType { get; set; }
     public string? ResourceIdentifier { get; set; }
     public long? StaffEmployeeId { get; set; }
+    public List<long>? AdditionalStaffIds { get; set; }
     public PosReservationStatus Status { get; set; }
     public decimal DepositAmount { get; set; }
     public bool IsDepositPaid { get; set; }
@@ -254,8 +256,97 @@ public class ReservationSummaryDto
     public string? ResourceType { get; set; }
     public string? ResourceIdentifier { get; set; }
     public long? StaffEmployeeId { get; set; }
+    public List<long>? AdditionalStaffIds { get; set; }
     public PosReservationStatus Status { get; set; }
     public decimal DepositAmount { get; set; }
     public bool IsDepositPaid { get; set; }
     public string? SpecialRequests { get; set; }
+    public string? RecurrenceGroupId { get; set; }
+    public bool IsRecurring { get; set; }
+}
+
+public class CreateRecurringReservationDto
+{
+    public long BranchId { get; set; }
+    public long? CustomerId { get; set; }
+    public string CustomerName { get; set; } = string.Empty;
+    public string CustomerPhone { get; set; } = string.Empty;
+    public string? CustomerEmail { get; set; }
+
+    public DateTime StartDate { get; set; }
+    public TimeSpan StartTime { get; set; }
+    public TimeSpan EndTime { get; set; }
+    public int GuestCount { get; set; } = 1;
+
+    public long? TableId { get; set; }
+    public string? ResourceType { get; set; }
+    public string? ResourceIdentifier { get; set; }
+    public long? StaffEmployeeId { get; set; }
+    public List<long>? AdditionalStaffIds { get; set; }
+
+    public decimal DepositAmountPerSession { get; set; }
+    public bool IsDepositPaid { get; set; }
+    public string? SpecialRequests { get; set; }
+
+    /// <summary>
+    /// نمط التكرار: Weekly (أسبوعي), BiWeekly (كل أسبوعين), Daily (يومي), Monthly (شهري)
+    /// </summary>
+    public string RecurrencePattern { get; set; } = "Weekly";
+
+    /// <summary>
+    /// يوم الأسبوع (مثل: Sunday = 0, Monday = 1, ...)
+    /// </summary>
+    public DayOfWeek? DayOfWeek { get; set; }
+
+    /// <summary>
+    /// عدد مرات التكرار (مثلاً 4 أسابيع، 12 أسبوعاً، بحد أقصى 52)
+    /// </summary>
+    public int Occurrences { get; set; } = 4;
+}
+
+public class RecurringReservationResultDto
+{
+    public string RecurrenceGroupId { get; set; } = string.Empty;
+    public int RequestedOccurrences { get; set; }
+    public int SuccessfulBookingsCount { get; set; }
+    public List<ReservationSummaryDto> CreatedReservations { get; set; } = new();
+    public List<string> SkippedDatesReasons { get; set; } = new();
+}
+
+public class TimeSlotDto
+{
+    public TimeSpan StartTime { get; set; }
+    public TimeSpan EndTime { get; set; }
+    public string FormattedStartTime { get; set; } = string.Empty;
+    public string FormattedEndTime { get; set; } = string.Empty;
+    public bool IsAvailable { get; set; }
+    public string? Reason { get; set; }
+    public string? ExistingReservationNumber { get; set; }
+    public string? CustomerName { get; set; }
+}
+
+public class AvailableSlotsResultDto
+{
+    public long BranchId { get; set; }
+    public DateTime Date { get; set; }
+    public int SlotDurationMinutes { get; set; }
+    public int BufferMinutes { get; set; }
+    public long? StaffEmployeeId { get; set; }
+    public long? TableId { get; set; }
+    public string? ResourceType { get; set; }
+    public int TotalSlotsCount => Slots?.Count ?? 0;
+    public int AvailableSlotsCount => Slots?.Count(s => s.IsAvailable) ?? 0;
+    public List<TimeSlotDto> Slots { get; set; } = new();
+}
+
+public class PosResourceTypeDto
+{
+    public string Code { get; set; } = string.Empty;
+    public string NameAr { get; set; } = string.Empty;
+    public string NameEn { get; set; } = string.Empty;
+    public string Category { get; set; } = string.Empty; // "Salon", "Restaurant", "Sports", "Medical"
+    public bool RequiresTable { get; set; }
+    public bool RequiresStaff { get; set; }
+    public bool IsExternal { get; set; }
+    public string Description { get; set; } = string.Empty;
 }

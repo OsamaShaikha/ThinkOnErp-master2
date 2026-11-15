@@ -17,6 +17,7 @@ namespace ThinkOnErp.API.Controllers.Inventory;
 /// <summary>
 /// Universal Trade and Movement Documents API: Manages all sales invoices, purchase bills, returns, goods receipts, goods issues, transfers, quotations, and purchase orders.
 /// </summary>
+[System.Obsolete("Use module-specific APIs: /api/sales/*, /api/purchasing/*, or /api/inventory/*")]
 [ApiController]
 [Route("api/inventory/documents")]
 [ApiExplorerSettings(GroupName = ApiCategories.Inventory)]

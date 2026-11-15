@@ -27,6 +27,7 @@ public sealed class PosOrderHeaderConfiguration : IEntityTypeConfiguration<PosOr
         builder.Property(o => o.TableId).HasColumnName("TABLE_ID");
         builder.Property(o => o.Covers).HasColumnName("COVERS").HasDefaultValue(1);
         builder.Property(o => o.PriceListId).HasColumnName("PRICE_LIST_ID");
+        builder.Property(o => o.OrderTakerName).HasColumnName("ORDER_TAKER_NAME").HasMaxLength(100);
 
         builder.Property(o => o.SubtotalAmount).HasColumnName("SUBTOTAL_AMOUNT").HasColumnType("NUMBER(18,4)").HasDefaultValue(0m);
         builder.Property(o => o.DiscountAmount).HasColumnName("DISCOUNT_AMOUNT").HasColumnType("NUMBER(18,4)").HasDefaultValue(0m);

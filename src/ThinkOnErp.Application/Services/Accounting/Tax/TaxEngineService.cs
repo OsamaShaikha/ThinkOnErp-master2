@@ -91,11 +91,33 @@ public sealed class TaxEngineService : ITaxEngineService
             decimal discount = Math.Max(0, reqLine.DiscountAmount);
             decimal netGross = Math.Max(0, grossAmount - discount);
 
-            decimal ratePercent = rate?.RatePercent ?? 0m;
+            // Determine if line is exempt, zero-rated, or has an overridden rate
+            bool isExempt = request.IsTaxExempt == true || reqLine.IsTaxExempt == true || (rate?.IsExempt ?? false) || string.Equals(reqLine.TaxRateCode, "VAT_EXEMPT", StringComparison.OrdinalIgnoreCase);
+            bool isZeroRated = !isExempt && (request.IsZeroRated == true || reqLine.IsZeroRated == true || (rate?.IsZeroRated ?? false) || string.Equals(reqLine.TaxRateCode, "VAT_0", StringComparison.OrdinalIgnoreCase));
+
+            decimal ratePercent;
+            if (isExempt || isZeroRated)
+            {
+                ratePercent = 0m;
+            }
+            else if (reqLine.TaxPercentOverride.HasValue)
+            {
+                ratePercent = reqLine.TaxPercentOverride.Value;
+            }
+            else if (request.TaxRateOverride.HasValue)
+            {
+                ratePercent = request.TaxRateOverride.Value;
+            }
+            else
+            {
+                ratePercent = rate?.RatePercent ?? 0m;
+            }
+
+            bool lineInclusive = reqLine.IsInclusive ?? request.IsInclusive;
             decimal netBaseAmount;
             decimal taxAmount;
 
-            if (request.IsInclusive && ratePercent > 0)
+            if (lineInclusive && ratePercent > 0)
             {
                 // Inclusive: Price includes tax -> NetBase = NetGross / (1 + Rate)
                 netBaseAmount = Math.Round(netGross / (1.0m + (ratePercent / 100.0m)), 3, MidpointRounding.AwayFromZero);
@@ -129,9 +151,12 @@ public sealed class TaxEngineService : ITaxEngineService
                 LocalTaxAmount = Math.Round(taxAmount * exchangeRate, 3, MidpointRounding.AwayFromZero),
                 LocalLineTotalAmount = Math.Round(lineTotal * exchangeRate, 3, MidpointRounding.AwayFromZero),
 
-                TaxRateCode = rate?.TaxRateCode ?? "VAT_15",
-                TaxRateNameLocal = rate?.NameLocal ?? "ضريبة القيمة المضافة 15%",
-                GlAccountCode = request.IsSales ? rate?.SalesTaxGlAccountCode : rate?.PurchaseTaxGlAccountCode
+                TaxRateCode = isExempt ? "VAT_EXEMPT" : (isZeroRated || ratePercent == 0m ? "VAT_0" : (rate?.TaxRateCode ?? "VAT_15")),
+                TaxRateNameLocal = isExempt ? "معفاة من الضريبة" : (isZeroRated || ratePercent == 0m ? "خاضعة لنسبة الصفر 0%" : (rate?.NameLocal ?? $"ضريبة {ratePercent}%")),
+                GlAccountCode = request.IsSales ? rate?.SalesTaxGlAccountCode : rate?.PurchaseTaxGlAccountCode,
+                IsInclusive = lineInclusive,
+                IsExempt = isExempt,
+                IsZeroRated = isZeroRated
             };
 
             result.Lines.Add(lineResult);

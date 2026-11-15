@@ -26,6 +26,9 @@ public class PosReservation
     public string? ResourceType { get; set; } // e.g., "Table", "Room", "Station"
     public string? ResourceIdentifier { get; set; }
     public long? StaffEmployeeId { get; set; } // Service provider (therapist, stylist, doctor)
+    public string? AdditionalStaffIds { get; set; } // Comma-separated list of assisting staff IDs e.g. "5,8"
+    public string? RecurrenceGroupId { get; set; } // Identifies all reservations in the same recurring series
+    public bool IsRecurring { get; set; }
 
     public PosReservationStatus Status { get; set; } = PosReservationStatus.Booked;
 

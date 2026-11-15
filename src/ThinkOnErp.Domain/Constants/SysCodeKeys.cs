@@ -330,4 +330,12 @@ public static class SysCodeKeys
         public const int Damaged = 5;
         public const int Returns = 6;
     }
+
+    public static class TaxTypes
+    {
+        public const int Mgr = 41;
+        public const int Inclusive = 1;
+        public const int Exclusive = 2;
+        public const int ZeroRated = 3;
+    }
 }

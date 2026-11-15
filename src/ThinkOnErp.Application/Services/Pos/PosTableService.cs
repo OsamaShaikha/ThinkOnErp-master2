@@ -479,6 +479,8 @@ public class PosTableService : IPosTableService
                     Status = ord.Status,
                     TableId = ord.TableId,
                     TableNumber = primaryTable.TableNumber,
+                    Covers = ord.Covers,
+                    OrderTakerName = ord.OrderTakerName,
                     SubtotalAmount = ord.SubtotalAmount,
                     DiscountAmount = ord.DiscountAmount,
                     TaxAmount = ord.TaxAmount,

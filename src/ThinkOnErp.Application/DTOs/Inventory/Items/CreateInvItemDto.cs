@@ -66,8 +66,14 @@ public sealed class CreateInvItemDto
     // Tax Integration
     public long? TaxRateId { get; set; }
     public long? TaxGroupId { get; set; }
-    public bool IsTaxExempt { get; set; }
-    public string? TaxExemptionReasonCode { get; set; }
+    /// <summary>
+    /// خيار الضريبة الموحد: 1 = شامل الضريبة، 2 = غير شامل الضريبة، 3 = ضريبة صفرية (0%)
+    /// </summary>
+    public int TaxType { get; set; } = 1;
+
+
+
+
 
     // Opening Balances per Warehouse
     public List<ItemWarehouseOpeningBalanceDto>? OpeningBalances { get; set; }

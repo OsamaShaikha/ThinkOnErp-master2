@@ -65,4 +65,9 @@ public interface IInvoiceBusinessValidationService
     /// Dynamically resolves the effective tax rate percentage for an inventory item.
     /// </summary>
     Task<decimal> GetEffectiveTaxRatePercentAsync(long itemId, long branchId, CancellationToken ct = default);
+
+    /// <summary>
+    /// Resolves whether an inventory item has explicit tax-inclusive pricing configured.
+    /// </summary>
+    Task<bool?> GetItemPriceIncludesTaxAsync(long itemId, CancellationToken ct = default);
 }

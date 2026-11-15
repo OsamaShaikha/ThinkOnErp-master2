@@ -18,7 +18,11 @@ namespace ThinkOnErp.API.Controllers;
 /// </summary>
 [ApiController]
 [Route("api/accounting/payment-methods")]
+[Route("api/accounting/paymentmethods")]
 [Route("api/payment-methods")]
+[Route("api/paymentmethods")]
+[Route("api/payment-method")]
+[Route("api/paymentmethod")]
 [ApiExplorerSettings(GroupName = ApiCategories.Accounting)]
 [TenantScoped]
 [Authorize]
@@ -34,7 +38,7 @@ public class PaymentMethodsController : ControllerBase
     }
 
     /// <summary>
-    /// استرجاع قائمة طرق ووسائل الدفع مع الفلترة حسب الفرع، النوع، ومكان الظهور (POS / فواتير / سندات)
+    /// استرجاع قائمة طرق ووسائل الدفع مع الفلترة حسب الفرع، النوع، ومكان الظهور (POS / فواتير / سندات) وحالة التفعيل
     /// </summary>
     [HttpGet]
     [ProducesResponseType(typeof(ApiResponse<IReadOnlyList<PaymentMethodDto>>), StatusCodes.Status200OK)]
@@ -43,10 +47,20 @@ public class PaymentMethodsController : ControllerBase
         [FromQuery] string? methodType,
         [FromQuery] bool? showInPos,
         [FromQuery] bool? showInInvoices,
-        [FromQuery] bool? activeOnly,
+        [FromQuery(Name = "activeOnly")] bool? activeOnly,
+        [FromQuery(Name = "active_only")] bool? active_only,
+        [FromQuery(Name = "active only")] bool? active_space_only,
+        [FromQuery(Name = "active-only")] bool? active_dash_only,
+        [FromQuery(Name = "isActive")] bool? isActive,
+        [FromQuery(Name = "is_active")] bool? is_active,
+        [FromQuery(Name = "active")] bool? active,
         CancellationToken cancellationToken)
     {
-        var list = await _service.GetAllAsync(branchId, methodType, showInPos, showInInvoices, activeOnly, cancellationToken);
+        var effectiveActiveOnly = ResolveActiveOnly(
+            activeOnly ?? active_only ?? active_space_only ?? active_dash_only ?? isActive ?? is_active ?? active,
+            Request?.Query);
+
+        var list = await _service.GetAllAsync(branchId, methodType, showInPos, showInInvoices, effectiveActiveOnly, cancellationToken);
         return Ok(ApiResponse<IReadOnlyList<PaymentMethodDto>>.CreateSuccess(list, "تم جلب وسائل الدفع بنجاح", 200));
     }
 
@@ -163,5 +177,27 @@ public class PaymentMethodsController : ControllerBase
         var username = User.Identity?.Name ?? "system";
         var response = await _service.SeedDefaultPaymentMethodsAsync(branchId, username, cancellationToken);
         return Ok(response);
+    }
+
+    internal static bool? ResolveActiveOnly(bool? explicitVal, IQueryCollection? query)
+    {
+        if (explicitVal.HasValue)
+            return explicitVal.Value;
+
+        if (query == null)
+            return null;
+
+        foreach (var kvp in query)
+        {
+            var key = kvp.Key.Replace("_", "").Replace("-", "").Replace(" ", "").Replace("+", "").Trim().ToLowerInvariant();
+            if (key is "activeonly" or "isactive" or "active")
+            {
+                var val = kvp.Value.ToString().Trim().ToLowerInvariant();
+                if (val is "true" or "1" or "yes" or "t") return true;
+                if (val is "false" or "0" or "no" or "f") return false;
+            }
+        }
+
+        return null;
     }
 }

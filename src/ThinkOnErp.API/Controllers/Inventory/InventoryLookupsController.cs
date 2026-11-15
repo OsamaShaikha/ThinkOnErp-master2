@@ -59,6 +59,7 @@ public class InventoryLookupsController : ControllerBase
             ["bomTypes"] = await GetLookupsByMgrAsync(SysCodeKeys.BomTypes.Mgr, lang),
             ["costingMethods"] = await GetLookupsByMgrAsync(SysCodeKeys.CostingMethods.Mgr, lang),
             ["itemTypes"] = await GetLookupsByMgrAsync(SysCodeKeys.ItemTypes.Mgr, lang),
+            ["taxTypes"] = await GetLookupsByMgrAsync(SysCodeKeys.TaxTypes.Mgr, lang),
             ["warehouseTypes"] = await GetLookupsByMgrAsync(SysCodeKeys.WarehouseTypes.Mgr, lang),
             ["zoneTypes"] = await GetLookupsByMgrAsync(SysCodeKeys.ZoneTypes.Mgr, lang)
         };
@@ -143,6 +144,17 @@ public class InventoryLookupsController : ControllerBase
     {
         var list = await GetLookupsByMgrAsync(SysCodeKeys.ItemTypes.Mgr, lang);
         return Ok(ApiResponse<List<SysCodeLookupDto>>.CreateSuccess(list, "Item types retrieved successfully", 200));
+    }
+
+    /// <summary>
+    /// استرجاع أنواع المعاملة الضريبية للأصناف في المخزون (Tax Types: 1=شامل الضريبة, 2=غير شامل, 3=ضريبة صفرية)
+    /// </summary>
+    [HttpGet("tax-types")]
+    [ProducesResponseType(typeof(ApiResponse<List<SysCodeLookupDto>>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<ApiResponse<List<SysCodeLookupDto>>>> GetTaxTypes([FromQuery] int? lang = null)
+    {
+        var list = await GetLookupsByMgrAsync(SysCodeKeys.TaxTypes.Mgr, lang);
+        return Ok(ApiResponse<List<SysCodeLookupDto>>.CreateSuccess(list, "Tax types retrieved successfully", 200));
     }
 
     /// <summary>

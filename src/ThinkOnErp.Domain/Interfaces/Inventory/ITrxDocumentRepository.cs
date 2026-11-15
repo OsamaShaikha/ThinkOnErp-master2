@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
@@ -8,6 +9,8 @@ namespace ThinkOnErp.Domain.Interfaces.Inventory;
 public interface ITrxDocumentRepository
 {
     Task<TrxDocumentHeader?> GetByKeyAsync(long branchId, int docYear, int trxType, long id, CancellationToken ct = default);
+    Task<TrxDocumentHeader?> GetByDocTypeAndIdAsync(long branchId, int docYear, int docType, long id, CancellationToken ct = default);
+    Task<TrxDocumentHeader?> GetByDocTypeAndIdSimpleAsync(int docType, long id, CancellationToken ct = default);
     Task<TrxDocumentHeader?> GetByDocNoAsync(long branchId, int docYear, int docType, string docNo, CancellationToken ct = default);
     Task<(List<TrxDocumentHeader> Items, int TotalCount)> GetPagedAsync(
         long branchId, int? docYear, int? docType, int? trxType, int? partyTypeCode, long? partyId, int? statusCode,

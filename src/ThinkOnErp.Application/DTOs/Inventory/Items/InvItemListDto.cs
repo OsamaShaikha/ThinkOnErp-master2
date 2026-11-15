@@ -45,7 +45,10 @@ public class InvItemListDto
     public decimal? TaxRatePercent { get; set; }
     public long? TaxGroupId { get; set; }
     public string? TaxGroupCode { get; set; }
-    public bool IsTaxExempt { get; set; }
+    public int TaxType { get; set; } = 1;
+    public string TaxTypeName => TaxType switch { 1 => "شامل الضريبة", 2 => "غير شامل الضريبة", 3 => "ضريبة صفرية", _ => "شامل الضريبة" };
+
+
 
     public List<string> Barcodes { get; set; } = new();
     public List<string> Serials { get; set; } = new();

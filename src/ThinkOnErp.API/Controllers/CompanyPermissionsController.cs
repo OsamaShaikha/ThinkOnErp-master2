@@ -13,7 +13,7 @@ namespace ThinkOnErp.API.Controllers;
 [ApiController]
 [Route("api/branches/{branchId:long}/permissions")]
 [TenantScoped]
-[Authorize(Policy = "AdminOnly")]
+[Authorize]
 public class CompanyPermissionsController : ControllerBase
 {
     private readonly IRoleScreenPermissionRepository _rolePermRepo;
@@ -136,6 +136,7 @@ public class CompanyPermissionsController : ControllerBase
     }
 
     [HttpPut("roles/{roleId:long}")]
+    [Authorize(Policy = "AdminOnly")]
     public async Task<ActionResult<ApiResponse<object>>> SetRolePermissions(
         long branchId, long roleId, [FromBody] List<BulkPermissionDto> dtos)
     {
@@ -168,6 +169,7 @@ public class CompanyPermissionsController : ControllerBase
     }
 
     [HttpDelete("roles/{roleId:long}/screens/{screenId:long}/features/{featureId:long}")]
+    [Authorize(Policy = "AdminOnly")]
     public async Task<ActionResult<ApiResponse<object>>> DeleteRolePermission(
         long branchId, long roleId, long screenId, long featureId)
     {
@@ -219,6 +221,7 @@ public class CompanyPermissionsController : ControllerBase
     }
 
     [HttpPut("users/{userId:long}")]
+    [Authorize(Policy = "AdminOnly")]
     public async Task<ActionResult<ApiResponse<object>>> SetUserPermissions(
         long branchId, long userId, [FromBody] List<BulkPermissionDto> dtos)
     {
@@ -251,6 +254,7 @@ public class CompanyPermissionsController : ControllerBase
     }
 
     [HttpDelete("users/{userId:long}/screens/{screenId:long}/features/{featureId:long}")]
+    [Authorize(Policy = "AdminOnly")]
     public async Task<ActionResult<ApiResponse<object>>> DeleteUserPermission(
         long branchId, long userId, long screenId, long featureId)
     {

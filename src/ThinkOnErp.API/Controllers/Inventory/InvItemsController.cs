@@ -269,4 +269,21 @@ public class InvItemsController : ControllerBase
 
         return Ok(ApiResponse<List<SysCodeLookupDto>>.CreateSuccess(result, ResponseCodes.DataRetrieved));
     }
+
+    /// <summary>
+    /// Retrieves tax types lookup (1=شامل الضريبة Inclusive, 2=غير شامل Exclusive, 3=ضريبة صفرية Zero-Rated) from SYS_CODE (CODE_MGR = 41).
+    /// </summary>
+    /// <param name="lang">Language filter (1 = Arabic, 2 = English).</param>
+    /// <returns>List of tax types.</returns>
+    [HttpGet("tax-types")]
+    [ProducesResponseType(typeof(ApiResponse<List<SysCodeLookupDto>>), StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetTaxTypes([FromQuery] int? lang = null)
+    {
+        var rawCodes = await _sysCodeRepo.GetActiveByCodeMgrAsync(SysCodeKeys.TaxTypes.Mgr);
+        var result = rawCodes.Count > 0
+            ? SysCodeLookupHelper.MapToLookupDtos(rawCodes, lang)
+            : SysCodeLookupHelper.GetFallbackLookups(SysCodeKeys.TaxTypes.Mgr, lang);
+
+        return Ok(ApiResponse<List<SysCodeLookupDto>>.CreateSuccess(result, ResponseCodes.DataRetrieved));
+    }
 }

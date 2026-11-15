@@ -13,6 +13,8 @@ public static class ApiCategories
     public const string Support = "support";
     public const string System = "system";
     public const string Inventory = "Inventory";
+    public const string Sales = "sales";
+    public const string Purchasing = "purchasing";
     public const string Pos = "pos";
     public const string Hr = "hr";
 }

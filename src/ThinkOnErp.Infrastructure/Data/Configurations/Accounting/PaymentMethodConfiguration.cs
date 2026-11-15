@@ -27,13 +27,13 @@ public sealed class PaymentMethodConfiguration : IEntityTypeConfiguration<Paymen
         builder.Property(e => e.CommissionFixedAmount).HasColumnName("COMMISSION_FIXED_AMOUNT").HasPrecision(18, 4).HasDefaultValue(0);
         builder.Property(e => e.CommissionGlAccountCode).HasColumnName("COMMISSION_GL_ACCOUNT_CODE").HasMaxLength(50);
 
-        builder.Property(e => e.RequiresReference).HasColumnName("REQUIRES_REFERENCE").HasDefaultValue(false);
-        builder.Property(e => e.RequiresDueDate).HasColumnName("REQUIRES_DUE_DATE").HasDefaultValue(false);
-        builder.Property(e => e.AutoPostGl).HasColumnName("AUTO_POST_GL").HasDefaultValue(true);
-        builder.Property(e => e.ShowInPos).HasColumnName("SHOW_IN_POS").HasDefaultValue(true);
-        builder.Property(e => e.ShowInInvoices).HasColumnName("SHOW_IN_INVOICES").HasDefaultValue(true);
-        builder.Property(e => e.ShowInVouchers).HasColumnName("SHOW_IN_VOUCHERS").HasDefaultValue(true);
-        builder.Property(e => e.IsActive).HasColumnName("IS_ACTIVE").HasDefaultValue(true);
+        builder.Property(e => e.RequiresReference).HasColumnName("REQUIRES_REFERENCE").HasColumnType("NUMBER(1)").HasDefaultValue(false);
+        builder.Property(e => e.RequiresDueDate).HasColumnName("REQUIRES_DUE_DATE").HasColumnType("NUMBER(1)").HasDefaultValue(false);
+        builder.Property(e => e.AutoPostGl).HasColumnName("AUTO_POST_GL").HasColumnType("NUMBER(1)").HasDefaultValue(true);
+        builder.Property(e => e.ShowInPos).HasColumnName("SHOW_IN_POS").HasColumnType("NUMBER(1)").HasDefaultValue(true);
+        builder.Property(e => e.ShowInInvoices).HasColumnName("SHOW_IN_INVOICES").HasColumnType("NUMBER(1)").HasDefaultValue(true);
+        builder.Property(e => e.ShowInVouchers).HasColumnName("SHOW_IN_VOUCHERS").HasColumnType("NUMBER(1)").HasDefaultValue(true);
+        builder.Property(e => e.IsActive).HasColumnName("IS_ACTIVE").HasColumnType("NUMBER(1)").HasDefaultValue(true);
         builder.Property(e => e.DisplayOrder).HasColumnName("DISPLAY_ORDER").HasDefaultValue(1);
 
         builder.Property(e => e.CreationUser).HasColumnName("CREATION_USER").HasMaxLength(50).IsRequired();

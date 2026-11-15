@@ -49,6 +49,52 @@ public sealed class TrxTypeService : ITrxTypeService
         return ApiResponse<List<TrxDocTypeDto>>.CreateSuccess(dtos, ResponseCodes.DocTypesRetrieved);
     }
 
+    public async Task<ApiResponse<List<TrxDocTypeDto>>> GetDocTypesByModuleAsync(string moduleCode, bool activeOnly = true, bool excludePos = false, CancellationToken ct = default)
+    {
+        var list = await _repository.GetAllDocTypesAsync(ct);
+        var query = list.AsEnumerable();
+
+        if (!string.IsNullOrWhiteSpace(moduleCode))
+        {
+            query = query.Where(d => string.Equals(d.ModuleCode, moduleCode, StringComparison.OrdinalIgnoreCase));
+        }
+
+        if (activeOnly)
+        {
+            query = query.Where(d => d.IsActive);
+        }
+
+        var dtos = query.Select(d =>
+        {
+            var dto = TrxTypeMapper.ToDto(d);
+            if (activeOnly)
+            {
+                dto.TransactionTypes = dto.TransactionTypes.Where(t => t.IsActive).ToList();
+            }
+            if (excludePos)
+            {
+                dto.TransactionTypes = dto.TransactionTypes.Where(t => t.TrxCode != 1004).ToList();
+            }
+            return dto;
+        }).ToList();
+
+        return ApiResponse<List<TrxDocTypeDto>>.CreateSuccess(dtos, ResponseCodes.DocTypesRetrieved);
+    }
+
+    public async Task<ApiResponse<List<TrxDocTypeDto>>> GetDocTypesAdminFilteredAsync(string? moduleCode, CancellationToken ct = default)
+    {
+        var list = await _repository.GetAllDocTypesAsync(ct);
+        var query = list.AsEnumerable();
+
+        if (!string.IsNullOrWhiteSpace(moduleCode))
+        {
+            query = query.Where(d => string.Equals(d.ModuleCode, moduleCode, StringComparison.OrdinalIgnoreCase));
+        }
+
+        var dtos = query.Select(TrxTypeMapper.ToDto).ToList();
+        return ApiResponse<List<TrxDocTypeDto>>.CreateSuccess(dtos, ResponseCodes.DocTypesRetrieved);
+    }
+
     public async Task<ApiResponse<TrxDocTypeDto>> GetDocTypeByCodeAsync(int code, CancellationToken ct = default)
     {
         var entity = await _repository.GetDocTypeAsync(code, ct);

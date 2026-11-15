@@ -15,7 +15,8 @@ namespace ThinkOnErp.API.Controllers;
 /// </summary>
 [ApiController]
 [Route("api/accounting/tax")]
-[ApiExplorerSettings(GroupName = ThinkOnErp.API.Swagger.ApiCategories.Accounting)]
+[Route("api/pos/tax")] 
+
 [TenantScoped]
 [Authorize]
 public sealed class TaxController : ControllerBase

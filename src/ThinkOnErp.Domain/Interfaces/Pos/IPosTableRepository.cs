@@ -33,6 +33,7 @@ public interface IPosTableRepository
 public interface IPosReservationRepository
 {
     Task<PosReservation?> GetByIdAsync(long id, CancellationToken ct = default);
+    Task<IReadOnlyList<PosReservation>> GetByRecurrenceGroupIdAsync(string recurrenceGroupId, CancellationToken ct = default);
     Task<IReadOnlyList<PosReservation>> GetReservationsForDayAsync(long branchId, DateTime date, CancellationToken ct = default);
     Task<(IReadOnlyList<PosReservation> Items, long TotalCount)> GetReservationsPagedAsync(
         long branchId,
