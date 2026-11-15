@@ -28,7 +28,10 @@ public class PosItemDto
     public long? TaxRateId { get; set; }
     public string? TaxRateCode { get; set; }
     public decimal? TaxRatePercent { get; set; }
-    public bool IsTaxExempt { get; set; }
+    public int TaxType { get; set; } = 1;
+    public string TaxTypeName => TaxType switch { 1 => "شامل الضريبة", 2 => "غير شامل الضريبة", 3 => "ضريبة صفرية", _ => "شامل الضريبة" };
+
+
 
     // Barcodes for scanner matching
     public List<string> Barcodes { get; set; } = new();

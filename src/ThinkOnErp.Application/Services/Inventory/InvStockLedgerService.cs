@@ -57,6 +57,19 @@ public sealed class InvStockLedgerService : IInvStockLedgerService
             return ApiResponse<StockMovementDto>.CreateFailure("Item not found or inactive", null, 404);
         }
 
+        // Service & Non-Stock items do not affect physical stock ledger
+        if (item.ItemType == ItemType.Service || item.ItemType == ItemType.NonStock)
+        {
+            return ApiResponse<StockMovementDto>.CreateSuccess(new StockMovementDto
+            {
+                ItemId = item.Id,
+                WarehouseId = request.WarehouseId,
+                Quantity = request.Quantity,
+                UnitCost = item.StandardCost,
+                TotalCost = request.Quantity * item.StandardCost
+            }, "Service/Non-stock item bypassed stock ledger.");
+        }
+
         var warehouse = await _warehouseRepository.GetByIdAsync(request.WarehouseId, cancellationToken);
         if (warehouse == null || !warehouse.IsActive)
         {

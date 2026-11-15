@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -24,6 +25,22 @@ public sealed class TrxDocumentRepository : ITrxDocumentRepository
             .Include(h => h.Lines)
                 .ThenInclude(l => l.Item)
             .FirstOrDefaultAsync(h => h.BranchId == branchId && h.DocYear == docYear && h.TrxType == trxType && h.Id == id, ct);
+    }
+
+    public async Task<TrxDocumentHeader?> GetByDocTypeAndIdAsync(long branchId, int docYear, int docType, long id, CancellationToken ct = default)
+    {
+        return await _context.TrxDocumentHeaders
+            .Include(h => h.Lines)
+                .ThenInclude(l => l.Item)
+            .FirstOrDefaultAsync(h => h.BranchId == branchId && h.DocYear == docYear && h.DocType == docType && h.Id == id, ct);
+    }
+
+    public async Task<TrxDocumentHeader?> GetByDocTypeAndIdSimpleAsync(int docType, long id, CancellationToken ct = default)
+    {
+        return await _context.TrxDocumentHeaders
+            .Include(h => h.Lines)
+                .ThenInclude(l => l.Item)
+            .FirstOrDefaultAsync(h => h.DocType == docType && h.Id == id, ct);
     }
 
     public async Task<TrxDocumentHeader?> GetByDocNoAsync(long branchId, int docYear, int docType, string docNo, CancellationToken ct = default)
@@ -61,29 +78,22 @@ public sealed class TrxDocumentRepository : ITrxDocumentRepository
     {
         var maxId = await _context.TrxDocumentHeaders
             .Where(h => h.BranchId == branchId && h.DocYear == docYear && h.TrxType == trxType)
-            .Select(h => (long?)h.Id)
-            .MaxAsync(ct);
+            .MaxAsync(h => (long?)h.Id, ct);
 
         return (maxId ?? 0) + 1;
     }
 
-    public async Task<long> GenerateNextSerialNoAsync(
-        long branchId,
-        int docYear,
-        int docMonth,
-        int docType,
-        string resetPolicy,
-        CancellationToken ct = default)
+    public async Task<long> GenerateNextSerialNoAsync(long branchId, int docYear, int docMonth, int docType, string resetPolicy, CancellationToken ct = default)
     {
-        var targetMonth = resetPolicy.Equals("YEARLY", System.StringComparison.OrdinalIgnoreCase) ? 0 : docMonth;
+        var query = _context.TrxDocumentSerials
+            .Where(s => s.BranchId == branchId && s.DocYear == docYear && s.DocType == docType);
 
-        var serialRecord = await _context.TrxDocumentSerials
-            .FirstOrDefaultAsync(
-                s => s.BranchId == branchId &&
-                     s.DocYear == docYear &&
-                     s.DocMonth == targetMonth &&
-                     s.DocType == docType,
-                ct);
+        if (string.Equals(resetPolicy, "MONTHLY", System.StringComparison.OrdinalIgnoreCase))
+        {
+            query = query.Where(s => s.DocMonth == docMonth);
+        }
+
+        var serialRecord = await query.FirstOrDefaultAsync(ct);
 
         if (serialRecord == null)
         {
@@ -91,7 +101,7 @@ public sealed class TrxDocumentRepository : ITrxDocumentRepository
             {
                 BranchId = branchId,
                 DocYear = docYear,
-                DocMonth = targetMonth,
+                DocMonth = string.Equals(resetPolicy, "MONTHLY", System.StringComparison.OrdinalIgnoreCase) ? docMonth : 0,
                 DocType = docType,
                 LastSerialNo = 1,
                 UpdateDate = System.DateTime.UtcNow

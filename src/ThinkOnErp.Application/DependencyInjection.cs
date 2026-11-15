@@ -70,6 +70,9 @@ public static class DependencyInjection
         services.AddScoped<ThinkOnErp.Application.Services.Inventory.IInvAtpCalculator, ThinkOnErp.Application.Services.Inventory.InvAtpCalculator>();
         services.AddScoped<ThinkOnErp.Application.Services.Inventory.IInvReconciliationService, ThinkOnErp.Application.Services.Inventory.InvReconciliationService>();
         services.AddScoped<ThinkOnErp.Application.Services.Inventory.ITrxDocumentService, ThinkOnErp.Application.Services.Inventory.TrxDocumentService>();
+        services.AddScoped<ThinkOnErp.Application.Services.Sales.ISalesDocumentService, ThinkOnErp.Application.Services.Sales.SalesDocumentService>();
+        services.AddScoped<ThinkOnErp.Application.Services.Purchasing.IPurchasingDocumentService, ThinkOnErp.Application.Services.Purchasing.PurchasingDocumentService>();
+        services.AddScoped<ThinkOnErp.Application.Services.Inventory.IInventoryMovementService, ThinkOnErp.Application.Services.Inventory.InventoryMovementService>();
         services.AddScoped<ThinkOnErp.Application.Services.Inventory.IInvItemCategoryService, ThinkOnErp.Application.Services.Inventory.InvItemCategoryService>();
         services.AddScoped<ThinkOnErp.Application.Services.Inventory.IInvBomService, ThinkOnErp.Application.Services.Inventory.InvBomService>();
         services.AddScoped<ThinkOnErp.Application.Services.Inventory.IInvOpeningBalanceService, ThinkOnErp.Application.Services.Inventory.InvOpeningBalanceService>();

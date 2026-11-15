@@ -251,6 +251,10 @@ public class SysCodesController : ControllerBase
         ["settlement-types"] = SysCodeKeys.PosCustomerSettlementTypes.Mgr,
         ["settlementtypes"] = SysCodeKeys.PosCustomerSettlementTypes.Mgr,
         ["settlementTypes"] = SysCodeKeys.PosCustomerSettlementTypes.Mgr,
+        ["tax-types"] = SysCodeKeys.TaxTypes.Mgr,
+        ["taxtypes"] = SysCodeKeys.TaxTypes.Mgr,
+        ["taxTypes"] = SysCodeKeys.TaxTypes.Mgr,
+        ["item-tax-types"] = SysCodeKeys.TaxTypes.Mgr,
     };
 
 
@@ -338,7 +342,8 @@ public class SysCodesController : ControllerBase
             ("posOrderStatuses", SysCodeKeys.PosOrderStatuses.Mgr),
             ("posStockDeductionModes", SysCodeKeys.PosStockDeductionModes.Mgr),
             ("posKdsStatuses", SysCodeKeys.PosKdsStatuses.Mgr),
-            ("posCustomerSettlementTypes", SysCodeKeys.PosCustomerSettlementTypes.Mgr)
+            ("posCustomerSettlementTypes", SysCodeKeys.PosCustomerSettlementTypes.Mgr),
+            ("taxTypes", SysCodeKeys.TaxTypes.Mgr)
         };
 
 
@@ -745,6 +750,21 @@ public class SysCodesController : ControllerBase
             list = SysCodeLookupHelper.GetFallbackLookups(SysCodeKeys.ZoneTypes.Mgr, lang);
         }
         return Ok(ApiResponse<List<SysCodeLookupDto>>.CreateSuccess(list, "Zone types retrieved successfully", 200));
+    }
+
+    /// <summary>
+    /// استرجاع أنواع المعاملة الضريبية للأصناف (Tax Types: 1=شامل الضريبة Inclusive, 2=غير شامل Exclusive, 3=ضريبة صفرية Zero-Rated)
+    /// </summary>
+    [HttpGet("tax-types")]
+    [ProducesResponseType(typeof(ApiResponse<List<SysCodeLookupDto>>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<ApiResponse<List<SysCodeLookupDto>>>> GetTaxTypes([FromQuery] int? lang = null)
+    {
+        var list = await GetLookupsByMgrAsync(SysCodeKeys.TaxTypes.Mgr, lang);
+        if (list.Count == 0)
+        {
+            list = SysCodeLookupHelper.GetFallbackLookups(SysCodeKeys.TaxTypes.Mgr, lang);
+        }
+        return Ok(ApiResponse<List<SysCodeLookupDto>>.CreateSuccess(list, "Tax types retrieved successfully", 200));
     }
 
     #endregion

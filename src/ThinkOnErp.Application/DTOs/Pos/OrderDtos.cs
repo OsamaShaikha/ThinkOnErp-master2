@@ -29,6 +29,9 @@ public class CreatePosOrderDto
     public long? TableId { get; set; }
     public int Covers { get; set; } = 1;
     public long? PriceListId { get; set; }
+    public string? OrderTakerName { get; set; }
+    public long? SalesEmployeeId { get; set; }
+    public string? SalesEmployeeName { get; set; }
 
     public decimal ManualDiscountAmount { get; set; }
     public decimal ManualDiscountPercent { get; set; }
@@ -79,6 +82,7 @@ public class CreatePosOrderLineDto
     public decimal? ScaleWeight { get; set; }
     public string? ScaleBarcode { get; set; }
     public long? SalesEmployeeId { get; set; }
+    public string? SalesEmployeeName { get; set; }
     public string? SpecialInstructions { get; set; }
     public bool? IsTaxInclusive { get; set; }
 
@@ -144,6 +148,9 @@ public class PosOrderSummaryDto
     public long? TableId { get; set; }
     public string? TableNumber { get; set; }
     public int Covers { get; set; }
+    public string? OrderTakerName { get; set; }
+    public long? SalesEmployeeId { get; set; }
+    public string? SalesEmployeeName { get; set; }
 
     public decimal SubtotalAmount { get; set; }
     public decimal DiscountAmount { get; set; }
@@ -209,6 +216,9 @@ public class PosOrderLineSummaryDto
     public decimal? ScaleWeight { get; set; }
     public bool IsVoided { get; set; }
     public string? VoidReason { get; set; }
+
+    public long? SalesEmployeeId { get; set; }
+    public string? SalesEmployeeName { get; set; }
 
     // Line Refund Tracking
     public decimal RefundedQuantity { get; set; }
@@ -308,6 +318,9 @@ public class UpdatePosOrderDto
     public string? CustomerName { get; set; }
     public long? TableId { get; set; }
     public int Covers { get; set; } = 1;
+    public string? OrderTakerName { get; set; }
+    public long? SalesEmployeeId { get; set; }
+    public string? SalesEmployeeName { get; set; }
     public decimal ManualDiscountAmount { get; set; }
     public decimal ManualDiscountPercent { get; set; }
     public string? DiscountReason { get; set; }
@@ -336,6 +349,8 @@ public class UpdateOrderLineDto
 {
     public decimal? Quantity { get; set; }
     public string? SpecialInstructions { get; set; }
+    public long? SalesEmployeeId { get; set; }
+    public string? SalesEmployeeName { get; set; }
 }
 
 public class SplitPosOrderDto

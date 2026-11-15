@@ -28,6 +28,18 @@ public class PosReservationRepository : IPosReservationRepository
             .FirstOrDefaultAsync(r => r.Id == id, ct);
     }
 
+    public async Task<IReadOnlyList<PosReservation>> GetByRecurrenceGroupIdAsync(string recurrenceGroupId, CancellationToken ct = default)
+    {
+        return await _context.PosReservations
+            .AsNoTracking()
+            .Include(r => r.Table)
+            .Include(r => r.Customer)
+            .Where(r => r.RecurrenceGroupId == recurrenceGroupId)
+            .OrderBy(r => r.ReservationDate)
+            .ThenBy(r => r.StartTime)
+            .ToListAsync(ct);
+    }
+
     public async Task<IReadOnlyList<PosReservation>> GetReservationsForDayAsync(long branchId, DateTime date, CancellationToken ct = default)
     {
         var targetDate = date.Date;

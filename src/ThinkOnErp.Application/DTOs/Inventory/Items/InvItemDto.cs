@@ -51,8 +51,11 @@ public class InvItemDto
     public long? TaxGroupId { get; set; }
     public string? TaxGroupCode { get; set; }
     public string? TaxGroupNameLocal { get; set; }
-    public bool IsTaxExempt { get; set; }
-    public string? TaxExemptionReasonCode { get; set; }
+
+    public int TaxType { get; set; } = 1; // 1 = شامل الضريبة، 2 = غير شامل الضريبة، 3 = ضريبة صفرية
+    public string TaxTypeName => TaxType switch { 1 => "شامل الضريبة", 2 => "غير شامل الضريبة", 3 => "ضريبة صفرية", _ => "شامل الضريبة" };
+
+
 
     public decimal TotalOnHandQty { get; set; }
     public List<ItemWarehouseBalanceDto> WarehouseBalances { get; set; } = new();

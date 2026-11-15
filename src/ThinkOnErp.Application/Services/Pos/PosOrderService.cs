@@ -13,6 +13,7 @@ using ThinkOnErp.Domain.Constants;
 using ThinkOnErp.Domain.Entities.Pos;
 using ThinkOnErp.Domain.Entities.Pos.Enums;
 using ThinkOnErp.Domain.Interfaces;
+using ThinkOnErp.Domain.Interfaces.Hr;
 using ThinkOnErp.Domain.Interfaces.Inventory;
 using ThinkOnErp.Domain.Interfaces.Pos;
 
@@ -43,6 +44,9 @@ public class PosOrderService : IPosOrderService
     private readonly IGlFiscalPeriodRepository? _fiscalPeriodRepository;
     private readonly IArSubledgerRepository? _arSubledgerRepository;
     private readonly IPosBranchSettingRepository? _branchSettingRepository;
+    private readonly IUserRepository? _userRepository;
+    private readonly IEmployeeRepository? _employeeRepository;
+    private Dictionary<long, string>? _cachedUserNames;
 
     public PosOrderService(
         IPosOrderRepository orderRepository,
@@ -62,7 +66,9 @@ public class PosOrderService : IPosOrderService
         IGlVoucherService? voucherService = null,
         IGlFiscalPeriodRepository? fiscalPeriodRepository = null,
         IArSubledgerRepository? arSubledgerRepository = null,
-        IPosBranchSettingRepository? branchSettingRepository = null)
+        IPosBranchSettingRepository? branchSettingRepository = null,
+        IUserRepository? userRepository = null,
+        IEmployeeRepository? employeeRepository = null)
     {
         _orderRepository = orderRepository;
         _shiftRepository = shiftRepository;
@@ -82,6 +88,66 @@ public class PosOrderService : IPosOrderService
         _fiscalPeriodRepository = fiscalPeriodRepository;
         _arSubledgerRepository = arSubledgerRepository;
         _branchSettingRepository = branchSettingRepository;
+        _userRepository = userRepository;
+        _employeeRepository = employeeRepository;
+    }
+
+    private async Task<Dictionary<long, string>> ResolveUserNamesAsync(CancellationToken ct = default)
+    {
+        if (_cachedUserNames != null)
+            return _cachedUserNames;
+
+        var dict = new Dictionary<long, string>();
+
+        if (_userRepository != null)
+        {
+            try
+            {
+                var users = await _userRepository.GetAllAsync();
+                foreach (var u in users)
+                {
+                    var name = !string.IsNullOrWhiteSpace(u.FullNameLocal)
+                        ? u.FullNameLocal.Trim()
+                        : (!string.IsNullOrWhiteSpace(u.FullNameEn) ? u.FullNameEn.Trim() : u.UserName.Trim());
+                    dict[u.Id] = name;
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Failed to load user names for POS order sales employee resolution");
+            }
+        }
+
+        if (_employeeRepository != null)
+        {
+            try
+            {
+                var employees = await _employeeRepository.GetAllEmployeesForExportAsync(cancellationToken: ct);
+                foreach (var emp in employees)
+                {
+                    var empName = !string.IsNullOrWhiteSpace(emp.NameLocal)
+                        ? emp.NameLocal.Trim()
+                        : (!string.IsNullOrWhiteSpace(emp.NameEn) ? emp.NameEn.Trim() : emp.EmployeeCode.Trim());
+
+                    if (emp.UserId.HasValue && (!dict.ContainsKey(emp.UserId.Value) || string.IsNullOrWhiteSpace(dict[emp.UserId.Value])))
+                    {
+                        dict[emp.UserId.Value] = empName;
+                    }
+
+                    if (long.TryParse(emp.EmployeeCode, out var empNum) && !dict.ContainsKey(empNum))
+                    {
+                        dict[empNum] = empName;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Failed to load employee names for POS order sales employee resolution");
+            }
+        }
+
+        _cachedUserNames = dict;
+        return dict;
     }
 
     public async Task<ApiResponse<PosOrderSummaryDto>> CreateOrderAsync(CreatePosOrderDto dto, string username, CancellationToken ct = default)
@@ -91,7 +157,10 @@ public class PosOrderService : IPosOrderService
         {
             var existing = await _orderRepository.GetOrderByClientUuidAsync(dto.BranchId, dto.ClientUuid, ct);
             if (existing != null)
-                return ApiResponse<PosOrderSummaryDto>.CreateSuccess(MapToSummary(existing), "Order retrieved from cache (idempotent)");
+            {
+                var cachedUserNames = await ResolveUserNamesAsync(ct);
+                return ApiResponse<PosOrderSummaryDto>.CreateSuccess(MapToSummary(existing, cachedUserNames), "Order retrieved from cache (idempotent)");
+            }
         }
 
         // 2. Validate Active Shift
@@ -168,7 +237,7 @@ public class PosOrderService : IPosOrderService
 
         // 3. Compute Totals using Calculation Engine (Dynamic Tax Resolution & Tax Inclusion)
         var taxOverride = await ResolveBranchTaxOverrideAsync(dto.BranchId, ct);
-        var isInclusive = await ResolveBranchTaxInclusiveAsync(dto.BranchId, dto.IsTaxInclusive, ct);
+        var isInclusive = await ResolveBranchTaxInclusiveAsync(dto.BranchId, null, ct);
         var calcResult = await _calculationEngine.CalculateOrderTotalsAsync(dto.BranchId, dto, taxOverride, isInclusive, ct);
 
         // 4. Generate Shift-scoped Order Number (0001, 0002, ...) and Fiscal Invoice Number (INV-2026-000008)
@@ -201,6 +270,17 @@ public class PosOrderService : IPosOrderService
             }
         }
 
+        var userNames = await ResolveUserNamesAsync(ct);
+
+        string? resolvedOrderTaker = !string.IsNullOrWhiteSpace(dto.OrderTakerName)
+            ? dto.OrderTakerName.Trim()
+            : (!string.IsNullOrWhiteSpace(dto.SalesEmployeeName) ? dto.SalesEmployeeName.Trim() : null);
+
+        if (string.IsNullOrWhiteSpace(resolvedOrderTaker) && dto.SalesEmployeeId.HasValue && userNames.TryGetValue(dto.SalesEmployeeId.Value, out var takerNm))
+        {
+            resolvedOrderTaker = takerNm;
+        }
+
         var order = new PosOrderHeader
         {
             BranchId = dto.BranchId,
@@ -216,6 +296,7 @@ public class PosOrderService : IPosOrderService
             TableId = dto.TableId,
             Covers = dto.Covers,
             PriceListId = dto.PriceListId,
+            OrderTakerName = resolvedOrderTaker,
 
             SubtotalAmount = calcResult.SubtotalAmount,
             DiscountAmount = calcResult.TotalDiscountAmount,
@@ -227,11 +308,7 @@ public class PosOrderService : IPosOrderService
             TipAmount = calcResult.TipAmount,
             TotalAmount = calcResult.TotalAmount,
 
-            Notes = string.IsNullOrWhiteSpace(dto.TaxExemptionReason)
-                ? dto.Notes
-                : (string.IsNullOrWhiteSpace(dto.Notes)
-                    ? $"[إعفاء ضريبي: {dto.TaxExemptionReason.Trim()}]"
-                    : $"{dto.Notes} | [إعفاء ضريبي: {dto.TaxExemptionReason.Trim()}]"),
+            Notes = dto.Notes,
             IsActive = true,
             CreationUser = username,
             CreationDate = DateTime.UtcNow
@@ -241,6 +318,23 @@ public class PosOrderService : IPosOrderService
         int lineIdx = 1;
         foreach (var reqLine in dto.Lines)
         {
+            long? lineEmpId = reqLine.SalesEmployeeId ?? dto.SalesEmployeeId;
+            if (!lineEmpId.HasValue && !string.IsNullOrWhiteSpace(reqLine.SalesEmployeeName))
+            {
+                var match = userNames.FirstOrDefault(kv => string.Equals(kv.Value, reqLine.SalesEmployeeName.Trim(), StringComparison.OrdinalIgnoreCase));
+                if (match.Key > 0) lineEmpId = match.Key;
+            }
+            if (!lineEmpId.HasValue && !string.IsNullOrWhiteSpace(dto.SalesEmployeeName))
+            {
+                var match = userNames.FirstOrDefault(kv => string.Equals(kv.Value, dto.SalesEmployeeName.Trim(), StringComparison.OrdinalIgnoreCase));
+                if (match.Key > 0) lineEmpId = match.Key;
+            }
+            if (!lineEmpId.HasValue && !string.IsNullOrWhiteSpace(resolvedOrderTaker))
+            {
+                var match = userNames.FirstOrDefault(kv => string.Equals(kv.Value, resolvedOrderTaker.Trim(), StringComparison.OrdinalIgnoreCase));
+                if (match.Key > 0) lineEmpId = match.Key;
+            }
+
             var calculated = calcResult.Lines.FirstOrDefault(l => l.LineNumber == reqLine.LineNumber);
             var orderLine = new PosOrderLine
             {
@@ -254,7 +348,7 @@ public class PosOrderService : IPosOrderService
                 DiscountAmount = calculated?.LineDiscount ?? 0m,
                 DiscountPercent = reqLine.DiscountPercent,
                 TaxAmount = calculated?.TaxAmount ?? 0m,
-                TaxPercent = calculated?.TaxPercent ?? 15m,
+                TaxPercent = calculated?.TaxPercent ?? 0m,
                 LineTotal = calculated?.LineTotal ?? (reqLine.Quantity * reqLine.UnitPrice),
                 PrepStation = reqLine.PrepStation,
                 KdsStatus = PosKdsStatus.Pending,
@@ -262,7 +356,7 @@ public class PosOrderService : IPosOrderService
                 IsScaleItem = reqLine.IsScaleItem,
                 ScaleWeight = reqLine.ScaleWeight,
                 ScaleBarcode = reqLine.ScaleBarcode,
-                SalesEmployeeId = reqLine.SalesEmployeeId,
+                SalesEmployeeId = lineEmpId,
                 SpecialInstructions = reqLine.SpecialInstructions
             };
 
@@ -293,12 +387,7 @@ public class PosOrderService : IPosOrderService
             string taxCode;
             long taxRateId;
 
-            if (dto.IsTaxExempt == true)
-            {
-                taxCode = "VAT_EXEMPT";
-                taxRateId = 4;
-            }
-            else if (tg.Key == 0)
+            if (tg.Key == 0)
             {
                 taxCode = taxRateEntity?.TaxRateCode ?? "VAT_0";
                 taxRateId = taxRateEntity?.Id ?? 3;
@@ -1076,9 +1165,10 @@ public class PosOrderService : IPosOrderService
         line.VoidApprovedBy = dto.ApprovedBy;
 
         // Recalculate order totals
-        order.SubtotalAmount -= (line.Quantity * line.UnitPrice);
-        order.TaxAmount -= line.TaxAmount;
-        order.TotalAmount = Math.Max(0, order.TotalAmount - line.LineTotal);
+        var activeLines = order.Lines.Where(l => !l.IsVoided).ToList();
+        order.TaxAmount = activeLines.Sum(l => l.TaxAmount);
+        order.TotalAmount = Math.Max(0m, activeLines.Sum(l => l.LineTotal) + order.ServiceChargeAmount + order.DeliveryFee + order.TipAmount);
+        order.SubtotalAmount = Math.Max(0m, activeLines.Sum(l => l.LineTotal - l.TaxAmount) + order.DiscountAmount);
 
         await _orderRepository.UpdateOrderAsync(order, ct);
         await _orderRepository.SaveChangesAsync(ct);
@@ -1104,7 +1194,8 @@ public class PosOrderService : IPosOrderService
         if (order == null)
             return ApiResponse<PosOrderSummaryDto>.CreateFailure("Order not found", null, 404);
 
-        var summary = MapToSummary(order);
+        var userNames = await ResolveUserNamesAsync(ct);
+        var summary = MapToSummary(order, userNames);
         if (summary.IsCreditSale && order.CustomerId.HasValue && _arSubledgerRepository != null && _customerRepository != null)
         {
             try
@@ -1178,7 +1269,8 @@ public class PosOrderService : IPosOrderService
     public async Task<ApiResponse<IReadOnlyList<PosOrderSummaryDto>>> GetActiveOrdersAsync(long branchId, PosOrderStatus? status = null, CancellationToken ct = default)
     {
         var orders = await _orderRepository.GetActiveOrdersAsync(branchId, status, ct);
-        var summaries = orders.Select(MapToSummary).ToList();
+        var userNames = await ResolveUserNamesAsync(ct);
+        var summaries = orders.Select(o => MapToSummary(o, userNames)).ToList();
         return ApiResponse<IReadOnlyList<PosOrderSummaryDto>>.CreateSuccess(summaries);
     }
 
@@ -1196,7 +1288,8 @@ public class PosOrderService : IPosOrderService
         var (items, totalCount) = await _orderRepository.GetOrdersPagedAsync(
             branchId, shiftId, status, orderType, fromDate, toDate, pageIndex, pageSize, ct);
 
-        var dtos = items.Select(MapToSummary).ToList();
+        var userNames = await ResolveUserNamesAsync(ct);
+        var dtos = items.Select(i => MapToSummary(i, userNames)).ToList();
         var paged = new PagedResultDto<PosOrderSummaryDto>(dtos, totalCount, pageIndex, pageSize);
         return ApiResponse<PagedResultDto<PosOrderSummaryDto>>.CreateSuccess(paged);
     }
@@ -1227,6 +1320,31 @@ public class PosOrderService : IPosOrderService
 
         order.CustomerId = dto.CustomerId;
         order.CustomerName = dto.CustomerName;
+        if (!string.IsNullOrWhiteSpace(dto.OrderTakerName))
+        {
+            order.OrderTakerName = dto.OrderTakerName.Trim();
+        }
+        else if (!string.IsNullOrWhiteSpace(dto.SalesEmployeeName))
+        {
+            order.OrderTakerName = dto.SalesEmployeeName.Trim();
+        }
+        else if (dto.SalesEmployeeId.HasValue)
+        {
+            var userNamesForUpdate = await ResolveUserNamesAsync(ct);
+            if (userNamesForUpdate.TryGetValue(dto.SalesEmployeeId.Value, out var uName))
+            {
+                order.OrderTakerName = uName;
+            }
+        }
+
+        if (dto.SalesEmployeeId.HasValue)
+        {
+            foreach (var l in order.Lines.Where(l => !l.IsVoided && !l.SalesEmployeeId.HasValue))
+            {
+                l.SalesEmployeeId = dto.SalesEmployeeId.Value;
+            }
+        }
+
         order.TableId = dto.TableId;
         order.Covers = dto.Covers > 0 ? dto.Covers : 1;
         order.Notes = dto.Notes;
@@ -1238,9 +1356,10 @@ public class PosOrderService : IPosOrderService
         order.TipAmount = dto.TipAmount;
 
         // Recalculate totals
-        var linesNet = order.Lines.Where(l => !l.IsVoided).Sum(l => l.LineTotal);
-        order.SubtotalAmount = linesNet;
-        order.TotalAmount = Math.Max(0, linesNet - dto.ManualDiscountAmount + dto.ServiceChargeAmount + dto.DeliveryFee + dto.TipAmount);
+        var activeLines = order.Lines.Where(l => !l.IsVoided).ToList();
+        order.TaxAmount = activeLines.Sum(l => l.TaxAmount);
+        order.TotalAmount = Math.Max(0m, activeLines.Sum(l => l.LineTotal) - dto.ManualDiscountAmount + dto.ServiceChargeAmount + dto.DeliveryFee + dto.TipAmount);
+        order.SubtotalAmount = Math.Max(0m, activeLines.Sum(l => l.LineTotal - l.TaxAmount) + dto.ManualDiscountAmount);
 
         order.UpdateUser = username;
         order.UpdateDate = DateTime.UtcNow;
@@ -1248,7 +1367,8 @@ public class PosOrderService : IPosOrderService
         await _orderRepository.UpdateOrderAsync(order, ct);
         await _orderRepository.SaveChangesAsync(ct);
 
-        return ApiResponse<PosOrderSummaryDto>.CreateSuccess(MapToSummary(order), "Order updated successfully");
+        var userNames = await ResolveUserNamesAsync(ct);
+        return ApiResponse<PosOrderSummaryDto>.CreateSuccess(MapToSummary(order, userNames), "Order updated successfully");
     }
 
     public async Task<ApiResponse<PosOrderSummaryDto>> UpdateOrderStatusAsync(long orderId, PosOrderStatus newStatus, string username, CancellationToken ct = default)
@@ -1338,8 +1458,10 @@ public class PosOrderService : IPosOrderService
         return ApiResponse<bool>.CreateSuccess(true, "Order deleted successfully");
     }
 
-    private static PosOrderSummaryDto MapToSummary(PosOrderHeader o)
+    private PosOrderSummaryDto MapToSummary(PosOrderHeader o, Dictionary<long, string>? userNames = null)
     {
+        userNames ??= _cachedUserNames;
+
         var custPayments = o.Payments.Where(p => p.PaymentMethod == PosPaymentMethod.CustomerAccount).ToList();
         var custAccountAmount = custPayments.Sum(p => p.Amount);
         var isCreditSale = custAccountAmount > 0;
@@ -1374,6 +1496,21 @@ public class PosOrderService : IPosOrderService
         };
         decimal remainingAmount = o.RemainingAmount;
 
+        var firstLineEmpId = o.Lines.FirstOrDefault(l => l.SalesEmployeeId.HasValue)?.SalesEmployeeId;
+        string? headerEmpName = null;
+        if (firstLineEmpId.HasValue && userNames != null && userNames.TryGetValue(firstLineEmpId.Value, out var n1) && !string.IsNullOrWhiteSpace(n1))
+        {
+            headerEmpName = n1;
+        }
+        else if (!string.IsNullOrWhiteSpace(o.OrderTakerName))
+        {
+            headerEmpName = o.OrderTakerName.Trim();
+        }
+        else if (firstLineEmpId.HasValue)
+        {
+            headerEmpName = $"موظف ({firstLineEmpId.Value})";
+        }
+
         return new PosOrderSummaryDto
         {
             Id = o.Id,
@@ -1390,6 +1527,9 @@ public class PosOrderService : IPosOrderService
             TableId = o.TableId,
             TableNumber = o.Table?.TableNumber,
             Covers = o.Covers,
+            OrderTakerName = o.OrderTakerName,
+            SalesEmployeeId = firstLineEmpId,
+            SalesEmployeeName = headerEmpName,
             SubtotalAmount = o.SubtotalAmount,
             DiscountAmount = o.DiscountAmount,
             TaxAmount = o.TaxAmount,
@@ -1417,34 +1557,53 @@ public class PosOrderService : IPosOrderService
             CustomerAccountAmount = custAccountAmount,
             CustomerAdvanceDeducted = advanceDeducted,
             CustomerReceivableCharged = receivableCharged,
-            Lines = o.Lines.Select(l => new PosOrderLineSummaryDto
+            Lines = o.Lines.Select(l =>
             {
-                Id = l.Id,
-                LineNumber = l.LineNumber,
-                ItemId = l.ItemId,
-                ItemCode = l.ItemCode,
-                ItemName = l.ItemName,
-                Quantity = l.Quantity,
-                UomId = l.UomId,
-                UnitPrice = l.UnitPrice,
-                DiscountAmount = l.DiscountAmount,
-                TaxAmount = l.TaxAmount,
-                LineTotal = l.LineTotal,
-                KdsStatus = l.KdsStatus,
-                PrepStation = l.PrepStation,
-                IsScaleItem = l.IsScaleItem,
-                ScaleWeight = l.ScaleWeight,
-                IsVoided = l.IsVoided,
-                VoidReason = l.VoidReason,
-                Modifiers = l.Modifiers.Select(m => new PosOrderLineModifierDto
+                string? lineEmpName = null;
+                if (l.SalesEmployeeId.HasValue && userNames != null && userNames.TryGetValue(l.SalesEmployeeId.Value, out var ln) && !string.IsNullOrWhiteSpace(ln))
                 {
-                    Id = m.Id,
-                    ModifierItemId = m.ModifierItemId,
-                    ModifierName = m.ModifierName,
-                    Quantity = m.Quantity,
-                    UnitPrice = m.UnitPrice,
-                    ExtraPrice = m.ExtraPrice
-                }).ToList()
+                    lineEmpName = ln;
+                }
+                else if (!string.IsNullOrWhiteSpace(o.OrderTakerName))
+                {
+                    lineEmpName = o.OrderTakerName.Trim();
+                }
+                else if (l.SalesEmployeeId.HasValue)
+                {
+                    lineEmpName = $"موظف ({l.SalesEmployeeId.Value})";
+                }
+
+                return new PosOrderLineSummaryDto
+                {
+                    Id = l.Id,
+                    LineNumber = l.LineNumber,
+                    ItemId = l.ItemId,
+                    ItemCode = l.ItemCode,
+                    ItemName = l.ItemName,
+                    Quantity = l.Quantity,
+                    UomId = l.UomId,
+                    UnitPrice = l.UnitPrice,
+                    DiscountAmount = l.DiscountAmount,
+                    TaxAmount = l.TaxAmount,
+                    LineTotal = l.LineTotal,
+                    KdsStatus = l.KdsStatus,
+                    PrepStation = l.PrepStation,
+                    IsScaleItem = l.IsScaleItem,
+                    ScaleWeight = l.ScaleWeight,
+                    IsVoided = l.IsVoided,
+                    VoidReason = l.VoidReason,
+                    SalesEmployeeId = l.SalesEmployeeId,
+                    SalesEmployeeName = lineEmpName,
+                    Modifiers = l.Modifiers.Select(m => new PosOrderLineModifierDto
+                    {
+                        Id = m.Id,
+                        ModifierItemId = m.ModifierItemId,
+                        ModifierName = m.ModifierName,
+                        Quantity = m.Quantity,
+                        UnitPrice = m.UnitPrice,
+                        ExtraPrice = m.ExtraPrice
+                    }).ToList()
+                };
             }).ToList(),
             Payments = o.Payments.Select(p => new PosOrderPaymentSummaryDto
             {
@@ -1696,8 +1855,21 @@ public class PosOrderService : IPosOrderService
         var calcResult = await _calculationEngine.CalculateOrderTotalsAsync(order.BranchId, combinedCalcDto, taxOverride, isInclusive, ct);
 
         // Append new lines with proper tax & discount
+        var userNamesForAdd = await ResolveUserNamesAsync(ct);
         foreach (var reqLine in dto.Lines)
         {
+            long? lineEmpId = reqLine.SalesEmployeeId;
+            if (!lineEmpId.HasValue && !string.IsNullOrWhiteSpace(reqLine.SalesEmployeeName))
+            {
+                var match = userNamesForAdd.FirstOrDefault(kv => string.Equals(kv.Value, reqLine.SalesEmployeeName.Trim(), StringComparison.OrdinalIgnoreCase));
+                if (match.Key > 0) lineEmpId = match.Key;
+            }
+            if (!lineEmpId.HasValue && !string.IsNullOrWhiteSpace(order.OrderTakerName))
+            {
+                var match = userNamesForAdd.FirstOrDefault(kv => string.Equals(kv.Value, order.OrderTakerName.Trim(), StringComparison.OrdinalIgnoreCase));
+                if (match.Key > 0) lineEmpId = match.Key;
+            }
+
             var calculated = calcResult.Lines.FirstOrDefault(l => l.LineNumber == reqLine.LineNumber);
             var orderLine = new PosOrderLine
             {
@@ -1712,7 +1884,7 @@ public class PosOrderService : IPosOrderService
                 DiscountAmount = calculated?.LineDiscount ?? 0m,
                 DiscountPercent = reqLine.DiscountPercent,
                 TaxAmount = calculated?.TaxAmount ?? 0m,
-                TaxPercent = calculated?.TaxPercent ?? 15m,
+                TaxPercent = calculated?.TaxPercent ?? 0m,
                 LineTotal = calculated?.LineTotal ?? (reqLine.Quantity * reqLine.UnitPrice),
                 PrepStation = reqLine.PrepStation,
                 KdsStatus = PosKdsStatus.Pending,
@@ -1720,7 +1892,7 @@ public class PosOrderService : IPosOrderService
                 IsScaleItem = reqLine.IsScaleItem,
                 ScaleWeight = reqLine.ScaleWeight,
                 ScaleBarcode = reqLine.ScaleBarcode,
-                SalesEmployeeId = reqLine.SalesEmployeeId,
+                SalesEmployeeId = lineEmpId,
                 SpecialInstructions = reqLine.SpecialInstructions
             };
 
@@ -1855,6 +2027,20 @@ public class PosOrderService : IPosOrderService
         if (dto.SpecialInstructions != null)
         {
             line.SpecialInstructions = dto.SpecialInstructions;
+        }
+
+        if (dto.SalesEmployeeId.HasValue)
+        {
+            line.SalesEmployeeId = dto.SalesEmployeeId.Value;
+        }
+        else if (!string.IsNullOrWhiteSpace(dto.SalesEmployeeName))
+        {
+            var userNames = await ResolveUserNamesAsync(ct);
+            var match = userNames.FirstOrDefault(kv => string.Equals(kv.Value, dto.SalesEmployeeName.Trim(), StringComparison.OrdinalIgnoreCase));
+            if (match.Key > 0)
+            {
+                line.SalesEmployeeId = match.Key;
+            }
         }
 
         // Recalculate order totals
@@ -2035,7 +2221,7 @@ public class PosOrderService : IPosOrderService
                 DiscountAmount = calculated?.LineDiscount ?? 0m,
                 DiscountPercent = reqLine.DiscountPercent,
                 TaxAmount = calculated?.TaxAmount ?? 0m,
-                TaxPercent = calculated?.TaxPercent ?? 15m,
+                TaxPercent = calculated?.TaxPercent ?? 0m,
                 LineTotal = calculated?.LineTotal ?? (reqLine.Quantity * reqLine.UnitPrice),
                 PrepStation = reqLine.PrepStation,
                 KdsStatus = originalMatching?.KdsStatus ?? PosKdsStatus.Pending,
@@ -2226,10 +2412,11 @@ public class PosOrderService : IPosOrderService
         var updatedParent = await _orderRepository.GetOrderByIdAsync(parentOrder.Id, ct);
         var updatedChild = await _orderRepository.GetOrderByIdAsync(childOrder.Id, ct);
 
+        var userNamesForSplit = await ResolveUserNamesAsync(ct);
         var result = new SplitOrderResultDto
         {
-            ParentOrder = MapToSummary(updatedParent!),
-            SplitOrder = MapToSummary(updatedChild!)
+            ParentOrder = MapToSummary(updatedParent!, userNamesForSplit),
+            SplitOrder = MapToSummary(updatedChild!, userNamesForSplit)
         };
 
         return ApiResponse<SplitOrderResultDto>.CreateSuccess(result, "تم فصل الفاتورة بنجاح.");
@@ -2450,7 +2637,7 @@ public class PosOrderService : IPosOrderService
                 DiscountAmount = calculated?.LineDiscount ?? 0m,
                 DiscountPercent = reqLine.DiscountPercent,
                 TaxAmount = calculated?.TaxAmount ?? 0m,
-                TaxPercent = calculated?.TaxPercent ?? 15m,
+                TaxPercent = calculated?.TaxPercent ?? 0m,
                 LineTotal = calculated?.LineTotal ?? (reqLine.Quantity * reqLine.UnitPrice),
                 PrepStation = reqLine.PrepStation,
                 KdsStatus = PosKdsStatus.Pending,
@@ -2642,10 +2829,11 @@ public class PosOrderService : IPosOrderService
         var refreshedRefund = await _orderRepository.GetOrderByIdAsync(refundOrder.Id, ct);
         var refreshedNewSales = await _orderRepository.GetOrderByIdAsync(newSalesOrder.Id, ct);
 
+        var userNamesForExchange = await ResolveUserNamesAsync(ct);
         var result = new ExchangeOrderResultDto
         {
-            RefundOrder = MapToSummary(refreshedRefund!),
-            NewSalesOrder = MapToSummary(refreshedNewSales!),
+            RefundOrder = MapToSummary(refreshedRefund!, userNamesForExchange),
+            NewSalesOrder = MapToSummary(refreshedNewSales!, userNamesForExchange),
             ReturnedTotalAmount = totalReturnedAmount,
             NewSalesTotalAmount = totalNewAmount,
             NetDifferenceAmount = netDifference,
@@ -3050,26 +3238,49 @@ public class PosOrderService : IPosOrderService
             {
                 return null;
             }
+
+            // mode == 1 (TaxInclusive) أو mode == 2 (TaxExclusive): جلب نسبة الضريبة الخاصة بالفرع
+            var rateStr = await _settingRepo.GetEffectiveValueAsync(SysSettingKeys.PosBranchTaxPercent, branchId, ct);
+            if (!string.IsNullOrWhiteSpace(rateStr))
+            {
+                if (decimal.TryParse(rateStr, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out var branchRate))
+                    return branchRate;
+                if (decimal.TryParse(rateStr, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.CurrentCulture, out branchRate))
+                    return branchRate;
+            }
+
+            // إذا لم يتم تحديد نسبة بالفرع وكان النمط شاملاً أو غير شامل، نعتمد النسبة الافتراضية 15%
+            return 15.00m;
         }
+
         return null;
     }
 
-    private async Task<bool> ResolveBranchTaxInclusiveAsync(long branchId, bool? requestedInclusive, CancellationToken ct)
+    private async Task<bool?> ResolveBranchTaxInclusiveAsync(long branchId, bool? requestedInclusive, CancellationToken ct)
     {
-        if (requestedInclusive.HasValue)
-            return requestedInclusive.Value;
-
-        // إعداد رقم 59: 1 = شامل، 2 = غير شامل، 0 = على مستوى الصنف
+        // إعداد رقم 59: 1 = شامل، 2 = غير شامل، 0 = على مستوى الصنف (يعتمد على المادة)
         var modeStr = await _settingRepo.GetEffectiveValueAsync(SysSettingKeys.PosTaxApplicationMode, branchId, ct);
         if (int.TryParse(modeStr, out var mode))
         {
-            if (mode == 1) return true;  // 1: شامل الضريبة
-            if (mode == 2) return false; // 2: غير شامل الضريبة
-            // 0: على مستوى الصنف بالفاتورة (يرجع لإعداد 61 أو الافتراضي)
+            if (mode == 1) return true;  // 1: شامل الضريبة لكل الفواتير
+            if (mode == 2) return false; // 2: غير شامل الضريبة لكل الفواتير
+            if (mode == 0)
+            {
+                if (requestedInclusive.HasValue) return requestedInclusive.Value;
+                return null;  // 0: يعتمد على كارت المادة
+            }
         }
 
+        if (requestedInclusive.HasValue)
+            return requestedInclusive.Value;
+
         var incStr = await _settingRepo.GetEffectiveValueAsync(SysSettingKeys.PosPricesIncludeTax, branchId, ct);
-        return incStr == "1" || incStr?.Equals("true", StringComparison.OrdinalIgnoreCase) == true;
+        if (incStr == "1" || incStr?.Equals("true", StringComparison.OrdinalIgnoreCase) == true)
+            return true;
+        if (incStr == "0" || incStr?.Equals("false", StringComparison.OrdinalIgnoreCase) == true)
+            return false;
+
+        return null;
     }
 }
 

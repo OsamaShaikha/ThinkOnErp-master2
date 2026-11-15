@@ -4,7 +4,6 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using ThinkOnErp.Application.DTOs.Pos;
-
 using ThinkOnErp.Application.Services.Validation;
 
 namespace ThinkOnErp.Application.Services.Pos;
@@ -90,16 +89,34 @@ public class PosCalculationEngine : IPosCalculationEngine
         CancellationToken ct = default)
     {
         var result = new PosOrderCalculationResult();
-        bool orderInclusive = isTaxInclusive ?? (orderDto.IsTaxInclusive ?? false);
-        result.IsTaxInclusive = orderInclusive;
+        bool? orderInclusive = isTaxInclusive;
+        result.IsTaxInclusive = orderInclusive ?? false;
 
-        decimal rawSubtotal = 0m;
         decimal totalLineDiscounts = 0m;
+        decimal rawSubtotal = 0m;
 
         // Step 1: Calculate Line Gross, Modifiers, Line Discounts and Dynamic Item Tax
         foreach (var line in orderDto.Lines)
         {
-            bool lineInclusive = line.IsTaxInclusive ?? orderInclusive;
+            // Determine if line price includes tax:
+            // 1. Explicit line override / branch mode
+            // 2. Item-level setting in DB (TaxType == 1: Inclusive, 2: Exclusive)
+            // 3. Fall back to false (Exclusive)
+            bool lineInclusive;
+            if (orderInclusive.HasValue)
+            {
+                lineInclusive = orderInclusive.Value;
+            }
+            else
+            {
+                bool? itemInclusive = null;
+                if (line.ItemId > 0)
+                {
+                    itemInclusive = await _validationService.GetItemPriceIncludesTaxAsync(line.ItemId, ct);
+                }
+                lineInclusive = itemInclusive ?? false;
+            }
+
             var lineGross = line.Quantity * line.UnitPrice;
             var modExtra = line.Modifiers.Sum(m => m.Quantity * m.ExtraPrice);
             var baseLineTotal = lineGross + modExtra;
@@ -120,23 +137,12 @@ public class PosCalculationEngine : IPosCalculationEngine
             rawSubtotal += baseLineTotal;
             totalLineDiscounts += lineDiscount;
 
-            // Resolve dynamic tax rate per item from database or explicit overrides (Exempt, Zero, Custom rate)
-            decimal itemTaxPercent;
-            if (orderDto.IsTaxExempt == true || line.IsTaxExempt == true)
+            // Resolve dynamic tax rate per item from database (only apply what is configured)
+            decimal itemTaxPercent = 0m;
+            var itemRate = await _validationService.GetEffectiveTaxRateAsync(line.ItemId, branchId, ct);
+            if (itemRate != null && !itemRate.IsZeroRated && !itemRate.IsExempt)
             {
-                itemTaxPercent = 0m;
-            }
-            else if (line.TaxPercentOverride.HasValue)
-            {
-                itemTaxPercent = line.TaxPercentOverride.Value;
-            }
-            else if (orderDto.TaxRateOverride.HasValue)
-            {
-                itemTaxPercent = orderDto.TaxRateOverride.Value;
-            }
-            else
-            {
-                itemTaxPercent = defaultTaxRatePercent ?? await _validationService.GetEffectiveTaxRatePercentAsync(line.ItemId, branchId, ct);
+                itemTaxPercent = itemRate.RatePercent;
             }
 
             result.Lines.Add(new CalculatedLineResult
@@ -148,14 +154,11 @@ public class PosCalculationEngine : IPosCalculationEngine
                 LineGross = lineGross,
                 ModifiersTotal = modExtra,
                 LineDiscount = lineDiscount,
-                LineNetBeforeTax = lineNet,
+                LineNetBeforeTax = lineNet, // temporary storage of lineNet for Step 4 proportion
                 TaxPercent = itemTaxPercent,
                 IsInclusive = lineInclusive
             });
         }
-
-        result.SubtotalAmount = rawSubtotal;
-        result.LineDiscountsAmount = totalLineDiscounts;
 
         var netAfterLineDiscounts = rawSubtotal - totalLineDiscounts;
 
@@ -178,81 +181,74 @@ public class PosCalculationEngine : IPosCalculationEngine
         }
         result.OrderDiscountAmount = Math.Min(orderDiscount, netAfterPromo);
 
-        result.TotalDiscountAmount = result.LineDiscountsAmount + result.PromotionDiscountsAmount + result.OrderDiscountAmount;
-        result.NetTaxableAmount = netAfterPromo - result.OrderDiscountAmount;
+        decimal totalCartDiscount = result.PromotionDiscountsAmount + result.OrderDiscountAmount;
 
-        // Step 4: Calculate Taxes (Standard 15% or item specified; Inclusive or Exclusive)
+        // Step 4: Line Taxes and Net Before Tax Calculation
         decimal totalTax = 0m;
+        decimal totalGrossBeforeTax = 0m;
+
         foreach (var lineCalc in result.Lines)
         {
-            if (lineCalc.IsInclusive)
+            decimal lineBase = lineCalc.LineNetBeforeTax; // stored lineNet
+            decimal allocatedOrderDiscount = 0m;
+            if (netAfterLineDiscounts > 0 && totalCartDiscount > 0)
             {
-                // In Tax-Inclusive mode, price already contains tax
-                decimal effectiveLineInclusive = netAfterLineDiscounts > 0
-                    ? Math.Round((lineCalc.LineNetBeforeTax / netAfterLineDiscounts) * result.NetTaxableAmount, 4)
-                    : 0m;
+                allocatedOrderDiscount = Math.Round((lineBase / netAfterLineDiscounts) * totalCartDiscount, 4);
+            }
+            decimal effectiveLineAmount = Math.Max(0m, lineBase - allocatedOrderDiscount);
 
-                decimal lineNetBeforeTax;
-                decimal lineTax;
+            decimal lineNetBeforeTax;
+            decimal lineTax;
+            decimal lineTotal;
+            decimal lineGrossBeforeTax;
 
-                if (lineCalc.TaxPercent > 0)
-                {
-                    lineNetBeforeTax = Math.Round(effectiveLineInclusive / (1.0m + (lineCalc.TaxPercent / 100.0m)), 4);
-                    lineTax = Math.Round(effectiveLineInclusive - lineNetBeforeTax, 4);
-                }
-                else
-                {
-                    lineNetBeforeTax = effectiveLineInclusive;
-                    lineTax = 0m;
-                }
-
-                lineCalc.TaxAmount = lineTax;
-                lineCalc.LineNetBeforeTax = lineNetBeforeTax;
-                lineCalc.LineTotal = effectiveLineInclusive;
-                totalTax += lineTax;
+            if (lineCalc.TaxPercent <= 0m)
+            {
+                lineNetBeforeTax = effectiveLineAmount;
+                lineTax = 0m;
+                lineTotal = effectiveLineAmount;
+                lineGrossBeforeTax = lineCalc.LineGross + lineCalc.ModifiersTotal;
+            }
+            else if (lineCalc.IsInclusive)
+            {
+                // In Tax-Inclusive: price already contains tax
+                lineNetBeforeTax = Math.Round(effectiveLineAmount / (1.0m + (lineCalc.TaxPercent / 100.0m)), 4);
+                lineTax = Math.Round(effectiveLineAmount - lineNetBeforeTax, 4);
+                lineTotal = effectiveLineAmount;
+                lineGrossBeforeTax = Math.Round((lineCalc.LineGross + lineCalc.ModifiersTotal) / (1.0m + (lineCalc.TaxPercent / 100.0m)), 4);
             }
             else
             {
-                // In Tax-Exclusive mode, tax is added on top
-                if (netAfterLineDiscounts > 0)
-                {
-                    var proportion = lineCalc.LineNetBeforeTax / netAfterLineDiscounts;
-                    var effectiveLineTaxable = proportion * result.NetTaxableAmount;
-                    var lineTax = lineCalc.TaxPercent > 0
-                        ? Math.Round(effectiveLineTaxable * (lineCalc.TaxPercent / 100m), 4)
-                        : 0m;
-                    lineCalc.TaxAmount = lineTax;
-                    lineCalc.LineTotal = Math.Round(effectiveLineTaxable + lineTax, 4);
-                    totalTax += lineTax;
-                }
-                else
-                {
-                    lineCalc.TaxAmount = 0m;
-                    lineCalc.LineTotal = 0m;
-                }
+                // In Tax-Exclusive: tax is added on top of base amount
+                lineNetBeforeTax = effectiveLineAmount;
+                lineTax = Math.Round(effectiveLineAmount * (lineCalc.TaxPercent / 100.0m), 4);
+                lineTotal = Math.Round(effectiveLineAmount + lineTax, 4);
+                lineGrossBeforeTax = lineCalc.LineGross + lineCalc.ModifiersTotal;
             }
+
+            lineCalc.LineNetBeforeTax = lineNetBeforeTax;
+            lineCalc.TaxAmount = lineTax;
+            lineCalc.LineTotal = lineTotal;
+
+            totalTax += lineTax;
+            totalGrossBeforeTax += lineGrossBeforeTax;
         }
-        result.TaxAmount = totalTax;
+
+        result.TaxAmount = Math.Round(totalTax, 4);
+        result.NetTaxableAmount = Math.Round(result.Lines.Sum(l => l.LineNetBeforeTax), 4);
+        result.SubtotalAmount = Math.Round(totalGrossBeforeTax, 4);
+        result.TotalDiscountAmount = Math.Round(result.SubtotalAmount - result.NetTaxableAmount, 4);
+        result.LineDiscountsAmount = totalLineDiscounts;
+        result.IsTaxInclusive = orderInclusive ?? (result.Lines.Count > 0 && result.Lines.All(l => l.IsInclusive));
 
         // Step 5: Additional Charges (Service charge, delivery fees, tips)
         result.ServiceChargeAmount = orderDto.ServiceChargeAmount;
         result.DeliveryFee = orderDto.DeliveryFee;
         result.TipAmount = orderDto.TipAmount;
+        decimal additionalCharges = result.ServiceChargeAmount + result.DeliveryFee + result.TipAmount;
 
-        // Final Total
-        if (orderInclusive)
-        {
-            result.NetTaxableAmount = Math.Round(result.Lines.Sum(l => l.LineNetBeforeTax), 4);
-            result.TotalAmount = Math.Round(
-                result.Lines.Sum(l => l.LineTotal) + result.ServiceChargeAmount + result.DeliveryFee + result.TipAmount,
-                4);
-        }
-        else
-        {
-            result.TotalAmount = Math.Round(
-                result.NetTaxableAmount + result.TaxAmount + result.ServiceChargeAmount + result.DeliveryFee + result.TipAmount,
-                4);
-        }
+        // Step 6: Grand Total
+        result.TotalAmount = Math.Round(result.Lines.Sum(l => l.LineTotal) + additionalCharges, 4);
 
         return result;
     }

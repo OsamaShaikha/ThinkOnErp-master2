@@ -8,11 +8,11 @@ using ThinkOnErp.Application.Common;
 using ThinkOnErp.Application.DTOs.Inventory.Documents;
 using ThinkOnErp.Application.DTOs.Inventory.StockMovements;
 using ThinkOnErp.Application.Mappings.Inventory;
+using ThinkOnErp.Application.Services.Validation;
+using ThinkOnErp.Domain.Constants;
 using ThinkOnErp.Domain.Entities.Inventory;
 using ThinkOnErp.Domain.Entities.Inventory.Enums;
 using ThinkOnErp.Domain.Interfaces.Inventory;
-
-using ThinkOnErp.Application.Services.Validation;
 
 namespace ThinkOnErp.Application.Services.Inventory;
 
@@ -126,6 +126,15 @@ public sealed class TrxDocumentService : ITrxDocumentService
         return ApiResponse<TrxDocumentDto>.CreateSuccess(TrxDocumentMapper.ToDto(doc));
     }
 
+    public async Task<ApiResponse<TrxDocumentDto>> GetDocumentByDocTypeAndIdAsync(long branchId, int docYear, int docType, long id, CancellationToken ct = default)
+    {
+        var doc = await _docRepository.GetByDocTypeAndIdAsync(branchId, docYear, docType, id, ct);
+        if (doc == null)
+            return ApiResponse<TrxDocumentDto>.CreateFailure("Document not found", null, 404);
+
+        return ApiResponse<TrxDocumentDto>.CreateSuccess(TrxDocumentMapper.ToDto(doc));
+    }
+
     public async Task<ApiResponse<PagedResultDto<TrxDocumentDto>>> GetDocumentsPagedAsync(TrxDocumentFilterDto filter, CancellationToken ct = default)
     {
         var (items, total) = await _docRepository.GetPagedAsync(
@@ -143,6 +152,20 @@ public sealed class TrxDocumentService : ITrxDocumentService
         if (doc == null)
             return ApiResponse<TrxDocumentDto>.CreateFailure("Document not found", null, 404);
 
+        return await UpdateDocumentInternalAsync(doc, dto, username, ct);
+    }
+
+    public async Task<ApiResponse<TrxDocumentDto>> UpdateDocumentByDocTypeAndIdAsync(long branchId, int docYear, int docType, long id, UpdateTrxDocumentDto dto, string username, CancellationToken ct = default)
+    {
+        var doc = await _docRepository.GetByDocTypeAndIdAsync(branchId, docYear, docType, id, ct);
+        if (doc == null)
+            return ApiResponse<TrxDocumentDto>.CreateFailure("Document not found", null, 404);
+
+        return await UpdateDocumentInternalAsync(doc, dto, username, ct);
+    }
+
+    private async Task<ApiResponse<TrxDocumentDto>> UpdateDocumentInternalAsync(TrxDocumentHeader doc, UpdateTrxDocumentDto dto, string username, CancellationToken ct)
+    {
         if (doc.DocStatusCode != 1)
             return ApiResponse<TrxDocumentDto>.CreateFailure("Only draft documents can be updated", null, 400);
 
@@ -254,6 +277,20 @@ public sealed class TrxDocumentService : ITrxDocumentService
         if (doc == null)
             return ApiResponse<TrxDocumentDto>.CreateFailure("Document not found", null, 404);
 
+        return await PostDocumentInternalAsync(doc, username, ct);
+    }
+
+    public async Task<ApiResponse<TrxDocumentDto>> PostDocumentByDocTypeAndIdAsync(long branchId, int docYear, int docType, long id, string username, CancellationToken ct = default)
+    {
+        var doc = await _docRepository.GetByDocTypeAndIdAsync(branchId, docYear, docType, id, ct);
+        if (doc == null)
+            return ApiResponse<TrxDocumentDto>.CreateFailure("Document not found", null, 404);
+
+        return await PostDocumentInternalAsync(doc, username, ct);
+    }
+
+    private async Task<ApiResponse<TrxDocumentDto>> PostDocumentInternalAsync(TrxDocumentHeader doc, string username, CancellationToken ct)
+    {
         if (doc.DocStatusCode != 1)
             return ApiResponse<TrxDocumentDto>.CreateFailure("Only draft documents can be posted", null, 400);
 
@@ -273,6 +310,12 @@ public sealed class TrxDocumentService : ITrxDocumentService
             foreach (var line in doc.Lines)
             {
                 var item = await _itemRepository.GetByIdAsync(line.ItemId, ct);
+                if (item != null && (item.ItemType == ItemType.Service || item.ItemType == ItemType.NonStock))
+                {
+                    // Services & non-stock items have no physical inventory movements
+                    continue;
+                }
+
                 if (item != null && item.ItemType == ItemType.Kit)
                 {
                     var bom = await _bomRepository.GetDefaultByParentItemIdAsync(item.Id, ct);
@@ -353,6 +396,79 @@ public sealed class TrxDocumentService : ITrxDocumentService
 
         await _docRepository.UpdateAsync(doc, ct);
         return ApiResponse<TrxDocumentDto>.CreateSuccess(TrxDocumentMapper.ToDto(doc), "Document posted successfully");
+    }
+
+    public async Task<ApiResponse<TrxDocumentDto>> CancelDocumentAsync(long branchId, int docYear, int trxType, long id, string username, CancellationToken ct = default)
+    {
+        var doc = await _docRepository.GetByKeyAsync(branchId, docYear, trxType, id, ct);
+        if (doc == null)
+            return ApiResponse<TrxDocumentDto>.CreateFailure("Document not found", null, 404);
+
+        return await CancelDocumentInternalAsync(doc, username, ct);
+    }
+
+    public async Task<ApiResponse<TrxDocumentDto>> CancelDocumentByDocTypeAndIdAsync(long branchId, int docYear, int docType, long id, string username, CancellationToken ct = default)
+    {
+        var doc = await _docRepository.GetByDocTypeAndIdAsync(branchId, docYear, docType, id, ct);
+        if (doc == null)
+            return ApiResponse<TrxDocumentDto>.CreateFailure("Document not found", null, 404);
+
+        return await CancelDocumentInternalAsync(doc, username, ct);
+    }
+
+    private async Task<ApiResponse<TrxDocumentDto>> CancelDocumentInternalAsync(TrxDocumentHeader doc, string username, CancellationToken ct)
+    {
+        if (doc.DocStatusCode == 4)
+            return ApiResponse<TrxDocumentDto>.CreateFailure("Document is already cancelled", null, 400);
+
+        // If document was posted and affected stock, reverse stock movements in opposite direction
+        if (doc.DocStatusCode == 3 && doc.IsPostedStock)
+        {
+            var trxTypeConfig = await _typeRepository.GetTrxTypeAsync(doc.TrxType, ct);
+            if (trxTypeConfig != null && trxTypeConfig.AffectsStock)
+            {
+                var isOriginalStockIn = trxTypeConfig.StockDirection > 0;
+                // Reversal direction: If originally In, then Out (SalesIssue). If originally Out, then In (GrnReceipt).
+                var reverseTrxType = isOriginalStockIn ? (int)TransactionType.SalesIssue : (int)TransactionType.GrnReceipt;
+                var whId = isOriginalStockIn ? (doc.ToWarehouseId ?? 1) : (doc.FromWarehouseId ?? 1);
+
+                foreach (var line in doc.Lines)
+                {
+                    var item = await _itemRepository.GetByIdAsync(line.ItemId, ct);
+                    if (item != null && (item.ItemType == ItemType.Service || item.ItemType == ItemType.NonStock))
+                    {
+                        continue;
+                    }
+
+                    var qty = isOriginalStockIn ? line.QuantityIn : line.QuantityOut;
+                    if (qty <= 0) qty = line.QuantityIn > 0 ? line.QuantityIn : line.QuantityOut;
+
+                    var revReq = new StockMovementRequestDto
+                    {
+                        ItemId = line.ItemId,
+                        WarehouseId = whId,
+                        Quantity = qty,
+                        UomCode = line.UomCode,
+                        UnitCost = line.UnitCost,
+                        TransactionType = reverseTrxType,
+                        LotNumber = line.LotNumber,
+                        SerialNumber = line.SerialNumber,
+                        SourceDocId = doc.DocNo,
+                        Notes = $"Cancellation reversal of {doc.DocNo}"
+                    };
+                    await _stockLedgerService.PostMovementAsync(revReq, ct);
+                }
+            }
+            doc.IsPostedStock = false;
+        }
+
+        doc.DocStatusCode = 4; // Cancelled
+        doc.IsPostedGl = false;
+        doc.UpdateUser = username;
+        doc.UpdateDate = DateTime.UtcNow;
+
+        await _docRepository.UpdateAsync(doc, ct);
+        return ApiResponse<TrxDocumentDto>.CreateSuccess(TrxDocumentMapper.ToDto(doc), ResponseCodes.DocumentCancelled);
     }
 
     public async Task<ApiResponse<ProfitabilitySummaryReportDto>> GetProfitabilityReportAsync(

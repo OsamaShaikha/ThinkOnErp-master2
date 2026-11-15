@@ -72,8 +72,13 @@ public sealed class InvItem
     // Tax Integration
     public long? TaxRateId { get; set; }
     public long? TaxGroupId { get; set; }
-    public bool IsTaxExempt { get; set; }
-    public string? TaxExemptionReasonCode { get; set; }
+    /// <summary>
+    /// خيار الضريبة الموحد للصنف: 1 = شامل الضريبة، 2 = غير شامل الضريبة، 3 = ضريبة صفرية (0%)
+    /// </summary>
+    public int TaxType { get; set; } = 1;
+    public bool IsZeroRated => TaxType == 3;
+    public bool IsTaxInclusive => TaxType == 1;
+    public bool IsTaxExempt => false;
 
     public bool IsActive { get; set; } = true;
     public string CreationUser { get; set; } = string.Empty;

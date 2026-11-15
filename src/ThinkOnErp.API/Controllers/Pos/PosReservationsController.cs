@@ -113,6 +113,49 @@ public class PosReservationsController : ControllerBase
     }
 
     /// <summary>
+    /// Calculates and returns available time slots for a branch, date, staff member, or table.
+    /// </summary>
+    [HttpGet("available-slots")]
+    [ProducesResponseType(typeof(ApiResponse<AvailableSlotsResultDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<AvailableSlotsResultDto>), StatusCodes.Status400BadRequest)]
+    public async Task<ActionResult<ApiResponse<AvailableSlotsResultDto>>> GetAvailableSlots(
+        [FromQuery] long branchId,
+        [FromQuery] DateTime date,
+        [FromQuery] long? staffEmployeeId = null,
+        [FromQuery] long? tableId = null,
+        [FromQuery] string? resourceType = null,
+        [FromQuery] int durationMinutes = 30,
+        [FromQuery] int bufferMinutes = 10,
+        [FromQuery] string? openingTime = null,
+        [FromQuery] string? closingTime = null,
+        CancellationToken ct = default)
+    {
+        TimeSpan? parsedOpen = null;
+        if (!string.IsNullOrWhiteSpace(openingTime) && TimeSpan.TryParse(openingTime, out var op))
+            parsedOpen = op;
+
+        TimeSpan? parsedClose = null;
+        if (!string.IsNullOrWhiteSpace(closingTime) && TimeSpan.TryParse(closingTime, out var cl))
+            parsedClose = cl;
+
+        var result = await _reservationService.GetAvailableSlotsAsync(
+            branchId, date, staffEmployeeId, tableId, resourceType, durationMinutes, bufferMinutes, parsedOpen, parsedClose, ct);
+
+        return result.Success ? Ok(result) : BadRequest(result);
+    }
+
+    /// <summary>
+    /// Retrieves standard resource types for POS reservations across industries (Salon, Restaurant, Sports, Medical).
+    /// </summary>
+    [HttpGet("resource-types")]
+    [ProducesResponseType(typeof(ApiResponse<IReadOnlyList<PosResourceTypeDto>>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<ApiResponse<IReadOnlyList<PosResourceTypeDto>>>> GetResourceTypes(CancellationToken ct = default)
+    {
+        var result = await _reservationService.GetResourceTypesAsync(ct);
+        return Ok(result);
+    }
+
+    /// <summary>
     /// Updates reservation status (Booked, Confirmed, Seated, Cancelled, NoShow).
     /// </summary>
     [HttpPut("{reservationId:long}/status")]
@@ -138,6 +181,36 @@ public class PosReservationsController : ControllerBase
         CancellationToken ct)
     {
         var result = await _reservationService.DeleteReservationAsync(id, ct);
+        return result.Success ? Ok(result) : NotFound(result);
+    }
+
+    /// <summary>
+    /// Creates a recurring standing reservation series (e.g., every Sunday for 12 weeks).
+    /// </summary>
+    [HttpPost("recurring")]
+    [ProducesResponseType(typeof(ApiResponse<RecurringReservationResultDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<RecurringReservationResultDto>), StatusCodes.Status400BadRequest)]
+    public async Task<ActionResult<ApiResponse<RecurringReservationResultDto>>> CreateRecurringReservation(
+        [FromBody] CreateRecurringReservationDto dto,
+        CancellationToken ct)
+    {
+        var username = User.FindFirstValue(ClaimTypes.Name) ?? "SYSTEM";
+        var result = await _reservationService.CreateRecurringReservationAsync(dto, username, ct);
+        return result.Success ? Ok(result) : BadRequest(result);
+    }
+
+    /// <summary>
+    /// Cancels all future active reservations in a recurring series.
+    /// </summary>
+    [HttpDelete("recurring/{recurrenceGroupId}")]
+    [ProducesResponseType(typeof(ApiResponse<bool>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<bool>), StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<ApiResponse<bool>>> CancelRecurringSeries(
+        string recurrenceGroupId,
+        CancellationToken ct)
+    {
+        var username = User.FindFirstValue(ClaimTypes.Name) ?? "SYSTEM";
+        var result = await _reservationService.CancelRecurringSeriesAsync(recurrenceGroupId, username, ct);
         return result.Success ? Ok(result) : NotFound(result);
     }
 }

@@ -1,6 +1,7 @@
 using System.Linq;
 using ThinkOnErp.Application.DTOs.Inventory.Items;
 using ThinkOnErp.Domain.Entities.Inventory;
+using ThinkOnErp.Domain.Entities.Inventory.Enums;
 
 namespace ThinkOnErp.Application.Mappings.Inventory;
 
@@ -17,7 +18,7 @@ public static class InvItemMapper
             Sku = entity.Sku,
             ItemNameLocal = entity.ItemNameLocal,
             ItemNameEn = entity.ItemNameEn,
-            ItemTypeId = (int)entity.ItemType,
+            ItemTypeId = ResolveItemTypeCode(entity.ItemType),
             ItemType = entity.ItemType.ToString(),
             ItemTypeName = ResolveItemTypeName((int)entity.ItemType),
             CategoryId = entity.CategoryId,
@@ -56,8 +57,8 @@ public static class InvItemMapper
             TaxGroupId = entity.TaxGroupId,
             TaxGroupCode = entity.TaxGroup?.GroupCode,
             TaxGroupNameLocal = entity.TaxGroup?.NameLocal,
-            IsTaxExempt = entity.IsTaxExempt,
-            TaxExemptionReasonCode = entity.TaxExemptionReasonCode,
+            TaxType = entity.TaxType,
+
             TotalOnHandQty = entity.StockBalances?.Sum(sb => sb.OnHandQty) ?? 0,
             WarehouseBalances = entity.StockBalances?.Select(sb => new ItemWarehouseBalanceDto
             {
@@ -89,13 +90,23 @@ public static class InvItemMapper
         };
     }
 
+    public static int ResolveItemTypeCode(ItemType type) => type switch
+    {
+        ItemType.Stock => 1,
+        ItemType.NonStock => 2,
+        ItemType.Service => 3,
+        ItemType.Kit => 4,
+        ItemType.Assembly => 5,
+        _ => 1
+    };
+
     public static string ResolveItemTypeName(int code) => code switch
     {
-        1 => "مخزني",
-        2 => "غير مخزني",
-        3 => "خدمي",
-        4 => "طقم / كيت",
-        5 => "تجميعي / تصنيعي",
+        1 or (int)ItemType.Stock => "مخزني",
+        2 or (int)ItemType.NonStock => "غير مخزني",
+        3 or (int)ItemType.Service => "خدمي",
+        4 or (int)ItemType.Kit => "طقم / كيت",
+        5 or (int)ItemType.Assembly => "تجميعي / تصنيعي",
         _ => "مخزني"
     };
 

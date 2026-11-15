@@ -51,9 +51,7 @@ public sealed class InvItemService : IInvItemService
             return ApiResponse<InvItemDto>.CreateFailure($"Item code '{request.ItemCode}' already exists", null, 400);
         }
 
-        var itemType = request.ItemTypeId.HasValue && Enum.IsDefined(typeof(ItemType), request.ItemTypeId.Value)
-            ? (ItemType)request.ItemTypeId.Value
-            : request.ItemType;
+        var itemType = ParseItemType(request.ItemTypeId, request.ItemType);
 
         var costingMethod = request.CostingMethodId.HasValue && Enum.IsDefined(typeof(CostingMethod), request.CostingMethodId.Value)
             ? (CostingMethod)request.CostingMethodId.Value
@@ -73,9 +71,9 @@ public sealed class InvItemService : IInvItemService
             StandardCost = request.StandardCost,
             DefaultSellingPrice = request.DefaultSellingPrice,
             ShowInPos = request.ShowInPos,
-            SerialTracking = request.SerialTracking,
-            LotTracking = request.LotTracking,
-            ExpiryTracking = request.ExpiryTracking,
+            SerialTracking = itemType == ItemType.Service ? false : request.SerialTracking,
+            LotTracking = itemType == ItemType.Service ? false : request.LotTracking,
+            ExpiryTracking = itemType == ItemType.Service ? false : request.ExpiryTracking,
             ShelfLifeDays = request.ShelfLifeDays,
             AllowNegativeStock = request.AllowNegativeStock,
             ReorderPoint = request.ReorderPoint,
@@ -94,8 +92,10 @@ public sealed class InvItemService : IInvItemService
             ColorCode = request.ColorCode,
             TaxRateId = request.TaxRateId,
             TaxGroupId = request.TaxGroupId,
-            IsTaxExempt = request.IsTaxExempt,
-            TaxExemptionReasonCode = request.TaxExemptionReasonCode?.Trim(),
+            TaxType = request.TaxType > 0 ? request.TaxType : 1,
+
+
+
             IsActive = true,
             CreationUser = "admin",
             CreationDate = DateTime.UtcNow
@@ -137,7 +137,7 @@ public sealed class InvItemService : IInvItemService
             await _translationService.SaveTranslationsAsync("ITEM", item.Id, request.Translations, "admin", cancellationToken);
         }
 
-        if (request.OpeningBalances != null && request.OpeningBalances.Count > 0)
+        if (request.OpeningBalances != null && request.OpeningBalances.Count > 0 && item.ItemType != ItemType.Service && item.ItemType != ItemType.NonStock)
         {
             foreach (var ob in request.OpeningBalances)
             {
@@ -227,13 +227,15 @@ public sealed class InvItemService : IInvItemService
 
         if (!string.IsNullOrWhiteSpace(request.ItemNameLocal)) item.ItemNameLocal = request.ItemNameLocal.Trim();
         if (request.Sku != null) item.Sku = string.IsNullOrWhiteSpace(request.Sku) ? null : request.Sku.Trim().ToUpperInvariant();
-        if (request.ItemTypeId.HasValue && Enum.IsDefined(typeof(ItemType), request.ItemTypeId.Value))
+        if (request.ItemTypeId.HasValue || !string.IsNullOrWhiteSpace(request.ItemType))
         {
-            item.ItemType = (ItemType)request.ItemTypeId.Value;
-        }
-        else if (!string.IsNullOrWhiteSpace(request.ItemType) && Enum.TryParse<ItemType>(request.ItemType, true, out var itemType))
-        {
-            item.ItemType = itemType;
+            item.ItemType = ParseItemType(request.ItemTypeId, item.ItemType, request.ItemType);
+            if (item.ItemType == ItemType.Service)
+            {
+                item.SerialTracking = false;
+                item.LotTracking = false;
+                item.ExpiryTracking = false;
+            }
         }
 
         if (request.CategoryId.HasValue) item.CategoryId = request.CategoryId.Value;
@@ -271,8 +273,11 @@ public sealed class InvItemService : IInvItemService
         if (request.ColorCode.HasValue) item.ColorCode = request.ColorCode.Value;
         if (request.TaxRateId.HasValue) item.TaxRateId = request.TaxRateId.Value;
         if (request.TaxGroupId.HasValue) item.TaxGroupId = request.TaxGroupId.Value;
-        if (request.IsTaxExempt.HasValue) item.IsTaxExempt = request.IsTaxExempt.Value;
-        if (request.TaxExemptionReasonCode != null) item.TaxExemptionReasonCode = request.TaxExemptionReasonCode.Trim();
+        if (request.TaxType.HasValue && request.TaxType.Value > 0) item.TaxType = request.TaxType.Value;
+
+
+
+
 
         item.UpdateUser = "admin";
         item.UpdateDate = DateTime.UtcNow;
@@ -327,7 +332,7 @@ public sealed class InvItemService : IInvItemService
             DisplayName = i.ItemNameLocal,
             CategoryId = i.CategoryId,
             CategoryName = i.Category?.CategoryNameLocal,
-            ItemTypeId = (int)i.ItemType,
+            ItemTypeId = InvItemMapper.ResolveItemTypeCode(i.ItemType),
             ItemType = i.ItemType.ToString(),
             ItemTypeName = InvItemMapper.ResolveItemTypeName((int)i.ItemType),
             UomBase = i.UomBase,
@@ -355,7 +360,9 @@ public sealed class InvItemService : IInvItemService
             TaxRatePercent = i.TaxRate?.RatePercent,
             TaxGroupId = i.TaxGroupId,
             TaxGroupCode = i.TaxGroup?.GroupCode,
-            IsTaxExempt = i.IsTaxExempt,
+            TaxType = i.TaxType,
+
+
             Barcodes = i.Barcodes?.Select(b => b.Barcode).ToList() ?? new(),
             Serials = i.Serials?.Where(s => s.Status == ThinkOnErp.Domain.Entities.Inventory.Enums.SerialStatus.Available).Select(s => s.SerialNumber).ToList() ?? new(),
             IsActive = i.IsActive
@@ -582,7 +589,7 @@ public sealed class InvItemService : IInvItemService
             DisplayName = i.ItemNameLocal,
             CategoryId = i.CategoryId,
             CategoryName = i.Category?.CategoryNameLocal,
-            ItemTypeId = (int)i.ItemType,
+            ItemTypeId = InvItemMapper.ResolveItemTypeCode(i.ItemType),
             ItemType = i.ItemType.ToString(),
             ItemTypeName = InvItemMapper.ResolveItemTypeName((int)i.ItemType),
             UomBase = i.UomBase,
@@ -596,7 +603,9 @@ public sealed class InvItemService : IInvItemService
             TaxRateId = i.TaxRateId,
             TaxRateCode = i.TaxRate?.TaxRateCode,
             TaxRatePercent = i.TaxRate?.RatePercent,
-            IsTaxExempt = i.IsTaxExempt,
+            TaxType = i.TaxType,
+
+
             Barcodes = i.Barcodes?.Select(b => b.Barcode).ToList() ?? new(),
             Serials = i.SerialTracking
                 ? (i.Serials?.Where(s => s.Status == ThinkOnErp.Domain.Entities.Inventory.Enums.SerialStatus.Available).Select(s => s.SerialNumber).ToList() ?? new())
@@ -661,7 +670,7 @@ public sealed class InvItemService : IInvItemService
             DisplayName = item.ItemNameLocal,
             CategoryId = item.CategoryId,
             CategoryName = item.Category?.CategoryNameLocal,
-            ItemTypeId = (int)item.ItemType,
+            ItemTypeId = InvItemMapper.ResolveItemTypeCode(item.ItemType),
             ItemType = item.ItemType.ToString(),
             ItemTypeName = InvItemMapper.ResolveItemTypeName((int)item.ItemType),
             UomBase = item.UomBase,
@@ -675,7 +684,9 @@ public sealed class InvItemService : IInvItemService
             TaxRateId = item.TaxRateId,
             TaxRateCode = item.TaxRate?.TaxRateCode,
             TaxRatePercent = item.TaxRate?.RatePercent,
-            IsTaxExempt = item.IsTaxExempt,
+            TaxType = item.TaxType,
+
+
             Barcodes = item.Barcodes?.Select(b => b.Barcode).ToList() ?? new(),
             Serials = item.SerialTracking
                 ? (item.Serials?.Where(s => s.Status == ThinkOnErp.Domain.Entities.Inventory.Enums.SerialStatus.Available).Select(s => s.SerialNumber).ToList() ?? new())
@@ -706,7 +717,7 @@ public sealed class InvItemService : IInvItemService
             DisplayName = item.ItemNameLocal,
             CategoryId = item.CategoryId,
             CategoryName = item.Category?.CategoryNameLocal,
-            ItemTypeId = (int)item.ItemType,
+            ItemTypeId = InvItemMapper.ResolveItemTypeCode(item.ItemType),
             ItemType = item.ItemType.ToString(),
             ItemTypeName = InvItemMapper.ResolveItemTypeName((int)item.ItemType),
             UomBase = item.UomBase,
@@ -720,7 +731,9 @@ public sealed class InvItemService : IInvItemService
             TaxRateId = item.TaxRateId,
             TaxRateCode = item.TaxRate?.TaxRateCode,
             TaxRatePercent = item.TaxRate?.RatePercent,
-            IsTaxExempt = item.IsTaxExempt,
+            TaxType = item.TaxType,
+
+
             Barcodes = item.Barcodes?.Select(b => b.Barcode).ToList() ?? new(),
             Serials = item.SerialTracking
                 ? (item.Serials?.Where(s => s.Status == ThinkOnErp.Domain.Entities.Inventory.Enums.SerialStatus.Available).Select(s => s.SerialNumber).ToList() ?? new())
@@ -759,5 +772,50 @@ public sealed class InvItemService : IInvItemService
 
         var list = serials.Select(s => s.SerialNumber).ToList();
         return ApiResponse<List<string>>.CreateSuccess(list, "Available serials retrieved successfully");
+    }
+
+    private static ItemType ParseItemType(int? itemTypeId, ItemType defaultType, string? itemTypeString = null)
+    {
+        if (itemTypeId.HasValue)
+        {
+            return itemTypeId.Value switch
+            {
+                1 => ItemType.Stock,
+                2 => ItemType.NonStock,
+                3 => ItemType.Service,
+                4 => ItemType.Kit,
+                5 => ItemType.Assembly,
+                _ => Enum.IsDefined(typeof(ItemType), itemTypeId.Value) ? (ItemType)itemTypeId.Value : defaultType
+            };
+        }
+
+        if (!string.IsNullOrWhiteSpace(itemTypeString))
+        {
+            var trimmed = itemTypeString.Trim();
+            if (int.TryParse(trimmed, out var numericVal))
+            {
+                return numericVal switch
+                {
+                    1 => ItemType.Stock,
+                    2 => ItemType.NonStock,
+                    3 => ItemType.Service,
+                    4 => ItemType.Kit,
+                    5 => ItemType.Assembly,
+                    _ => Enum.IsDefined(typeof(ItemType), numericVal) ? (ItemType)numericVal : defaultType
+                };
+            }
+
+            if (Enum.TryParse<ItemType>(trimmed, true, out var parsed))
+            {
+                return parsed;
+            }
+
+            if (trimmed.Equals("NON_STOCK", StringComparison.OrdinalIgnoreCase) || trimmed.Equals("NONSTOCK", StringComparison.OrdinalIgnoreCase))
+            {
+                return ItemType.NonStock;
+            }
+        }
+
+        return defaultType;
     }
 }

@@ -43,6 +43,7 @@ public class PosZReportService : IPosZReportService
     private readonly IInvWarehouseRepository _warehouseRepo;
     private readonly ILogger<PosZReportService> _logger;
     private readonly IPosBranchSettingRepository? _branchSettingRepository;
+    private readonly IUserRepository? _userRepository;
 
     public PosZReportService(
         IPosZReportRepository zReportRepository,
@@ -53,7 +54,8 @@ public class PosZReportService : IPosZReportService
         ISysSettingRepository settingRepo,
         IInvWarehouseRepository warehouseRepo,
         ILogger<PosZReportService> logger,
-        IPosBranchSettingRepository? branchSettingRepository = null)
+        IPosBranchSettingRepository? branchSettingRepository = null,
+        IUserRepository? userRepository = null)
     {
         _zReportRepository = zReportRepository;
         _shiftRepository = shiftRepository;
@@ -64,6 +66,7 @@ public class PosZReportService : IPosZReportService
         _warehouseRepo = warehouseRepo;
         _logger = logger;
         _branchSettingRepository = branchSettingRepository;
+        _userRepository = userRepository;
     }
 
     public async Task<ApiResponse<ZReportSummaryDto>> GenerateZReportAsync(GenerateZReportDto dto, string username, CancellationToken ct = default)
@@ -176,12 +179,15 @@ public class PosZReportService : IPosZReportService
             username,
             ct);
 
+        var userNames = await GetUserNamesAsync(ct);
         var resultDto = MapToDto(zReport);
         resultDto.OrderTypeBreakdowns = BuildOrderTypeBreakdowns(salesOrders, zReport.NetSalesAmount);
         resultDto.TaxBreakdown = BuildTaxBreakdown(salesOrders, refundOrders);
         resultDto.CashMovementSummary = BuildCashMovementSummary(shift, cashSales, refundOrders.Sum(o => o.Payments.Where(p => p.PaymentMethod == PosPaymentMethod.Cash).Sum(p => p.Amount)));
         resultDto.OperationalStats = BuildOperationalStats(shift, salesOrders, refundOrders, zReport.NetSalesAmount);
         resultDto.CategorySales = BuildCategorySales(salesOrders, zReport.NetSalesAmount);
+        resultDto.OrderTakerSales = BuildOrderTakerSales(salesOrders, zReport.NetSalesAmount);
+        resultDto.SalesEmployeeSales = BuildSalesEmployeeSales(salesOrders, zReport.NetSalesAmount, userNames);
 
         return ApiResponse<ZReportSummaryDto>.CreateSuccess(resultDto);
     }
@@ -283,7 +289,9 @@ public class PosZReportService : IPosZReportService
             TaxBreakdown = BuildTaxBreakdown(salesOrders, refundOrders),
             CashMovementSummary = BuildCashMovementSummary(shift, cashSales, refundOrders.Sum(o => o.Payments.Where(p => p.PaymentMethod == PosPaymentMethod.Cash).Sum(p => p.Amount))),
             OperationalStats = BuildOperationalStats(shift, salesOrders, refundOrders, netSales),
-            CategorySales = BuildCategorySales(salesOrders, netSales)
+            CategorySales = BuildCategorySales(salesOrders, netSales),
+            OrderTakerSales = BuildOrderTakerSales(salesOrders, netSales),
+            SalesEmployeeSales = BuildSalesEmployeeSales(salesOrders, netSales, await GetUserNamesAsync(ct))
         };
 
         return ApiResponse<XReportSummaryDto>.CreateSuccess(xReport);
@@ -306,11 +314,14 @@ public class PosZReportService : IPosZReportService
                 var refundOrders = shiftOrders.Where(o => o.IsRefund).ToList();
                 var shift = z.Shift ?? await _shiftRepository.GetShiftByIdAsync(z.ShiftId.Value, ct);
 
+                var userNames = await GetUserNamesAsync(ct);
                 dto.OrderTypeBreakdowns = BuildOrderTypeBreakdowns(salesOrders, z.NetSalesAmount);
                 dto.TaxBreakdown = BuildTaxBreakdown(salesOrders, refundOrders);
                 dto.CashMovementSummary = BuildCashMovementSummary(shift, z.CashPaymentsTotal, refundOrders.Sum(o => o.Payments.Where(p => p.PaymentMethod == PosPaymentMethod.Cash).Sum(p => p.Amount)));
                 dto.OperationalStats = BuildOperationalStats(shift, salesOrders, refundOrders, z.NetSalesAmount);
                 dto.CategorySales = BuildCategorySales(salesOrders, z.NetSalesAmount);
+                dto.OrderTakerSales = BuildOrderTakerSales(salesOrders, z.NetSalesAmount);
+                dto.SalesEmployeeSales = BuildSalesEmployeeSales(salesOrders, z.NetSalesAmount, userNames);
             }
         }
 
@@ -336,11 +347,14 @@ public class PosZReportService : IPosZReportService
         var refundOrders = shiftOrders.Where(o => o.IsRefund).ToList();
         var shift = z.Shift ?? await _shiftRepository.GetShiftByIdAsync(shiftId, ct);
 
+        var userNames = await GetUserNamesAsync(ct);
         dto.OrderTypeBreakdowns = BuildOrderTypeBreakdowns(salesOrders, z.NetSalesAmount);
         dto.TaxBreakdown = BuildTaxBreakdown(salesOrders, refundOrders);
         dto.CashMovementSummary = BuildCashMovementSummary(shift, z.CashPaymentsTotal, refundOrders.Sum(o => o.Payments.Where(p => p.PaymentMethod == PosPaymentMethod.Cash).Sum(p => p.Amount)));
         dto.OperationalStats = BuildOperationalStats(shift, salesOrders, refundOrders, z.NetSalesAmount);
         dto.CategorySales = BuildCategorySales(salesOrders, z.NetSalesAmount);
+        dto.OrderTakerSales = BuildOrderTakerSales(salesOrders, z.NetSalesAmount);
+        dto.SalesEmployeeSales = BuildSalesEmployeeSales(salesOrders, z.NetSalesAmount, userNames);
 
         return ApiResponse<ZReportSummaryDto>.CreateSuccess(dto);
     }
@@ -711,6 +725,131 @@ public class PosZReportService : IPosZReportService
         }
 
         return list.OrderByDescending(c => c.TotalSalesAmount).Take(10).ToList();
+    }
+
+    private static List<PosOrderTakerSalesSummaryDto> BuildOrderTakerSales(List<PosOrderHeader> salesOrders, decimal netSales)
+    {
+        var list = new List<PosOrderTakerSalesSummaryDto>();
+        if (salesOrders == null || salesOrders.Count == 0) return list;
+
+        var grouped = salesOrders.GroupBy(o =>
+            !string.IsNullOrWhiteSpace(o.OrderTakerName)
+                ? o.OrderTakerName.Trim()
+                : (!string.IsNullOrWhiteSpace(o.CreationUser) ? $"الكاشير ({o.CreationUser})" : "غير محدد"));
+
+        foreach (var g in grouped)
+        {
+            var count = g.Count();
+            var gross = g.Sum(o => o.SubtotalAmount);
+            var discount = g.Sum(o => o.DiscountAmount);
+            var tax = g.Sum(o => o.TaxAmount);
+            var total = g.Sum(o => o.TotalAmount);
+            var net = gross - discount;
+            var percent = netSales > 0 ? Math.Round((net / netSales) * 100m, 2) : 0m;
+
+            list.Add(new PosOrderTakerSalesSummaryDto
+            {
+                OrderTakerName = g.Key,
+                OrdersCount = count,
+                GrossSalesAmount = gross,
+                DiscountAmount = discount,
+                NetSalesAmount = net,
+                TaxAmount = tax,
+                TotalSalesAmount = total,
+                PercentageOfTotal = percent
+            });
+        }
+
+        return list.OrderByDescending(x => x.TotalSalesAmount).ToList();
+    }
+
+    private async Task<Dictionary<long, string>> GetUserNamesAsync(CancellationToken ct)
+    {
+        var dict = new Dictionary<long, string>();
+        if (_userRepository != null)
+        {
+            try
+            {
+                var users = await _userRepository.GetAllAsync();
+                foreach (var u in users)
+                {
+                    var name = !string.IsNullOrWhiteSpace(u.FullNameLocal) 
+                        ? u.FullNameLocal 
+                        : (!string.IsNullOrWhiteSpace(u.FullNameEn) ? u.FullNameEn : u.UserName);
+                    dict[u.Id] = name;
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Failed to load user names for sales employee breakdown");
+            }
+        }
+        return dict;
+    }
+
+    private static List<PosSalesEmployeeSalesSummaryDto> BuildSalesEmployeeSales(
+        List<PosOrderHeader> salesOrders,
+        decimal netSales,
+        Dictionary<long, string>? userNames)
+    {
+        var list = new List<PosSalesEmployeeSalesSummaryDto>();
+        if (salesOrders == null || salesOrders.Count == 0) return list;
+
+        var allLines = salesOrders
+            .Where(o => o.Lines != null)
+            .SelectMany(o => o.Lines)
+            .Where(l => !l.IsVoided)
+            .ToList();
+
+        if (allLines.Count == 0) return list;
+
+        var grouped = allLines.GroupBy(l => l.SalesEmployeeId);
+
+        foreach (var g in grouped)
+        {
+            var empId = g.Key;
+            string empName;
+            if (empId.HasValue)
+            {
+                if (userNames != null && userNames.TryGetValue(empId.Value, out var n) && !string.IsNullOrWhiteSpace(n))
+                {
+                    empName = n;
+                }
+                else
+                {
+                    empName = $"موظف ({empId.Value})";
+                }
+            }
+            else
+            {
+                empName = "غير محدد";
+            }
+
+            var count = g.Count();
+            var totalQty = g.Sum(l => l.Quantity);
+            var gross = g.Sum(l => l.Quantity * l.UnitPrice);
+            var discount = g.Sum(l => l.DiscountAmount);
+            var tax = g.Sum(l => l.TaxAmount);
+            var total = g.Sum(l => l.LineTotal);
+            var net = gross - discount;
+            var percent = netSales > 0 ? Math.Round((net / netSales) * 100m, 2) : 0m;
+
+            list.Add(new PosSalesEmployeeSalesSummaryDto
+            {
+                SalesEmployeeId = empId,
+                SalesEmployeeName = empName,
+                LinesCount = count,
+                TotalQuantitySold = totalQty,
+                GrossSalesAmount = gross,
+                DiscountAmount = discount,
+                NetSalesAmount = net,
+                TaxAmount = tax,
+                TotalSalesAmount = total,
+                PercentageOfTotal = percent
+            });
+        }
+
+        return list.OrderByDescending(x => x.TotalSalesAmount).ToList();
     }
 
     private async Task DeductShiftConsolidatedStockIfConfiguredAsync(

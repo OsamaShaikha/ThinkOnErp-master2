@@ -1271,7 +1271,7 @@ public class PosReportService : IPosReportService
                     OpenedAt = openAt,
                     DurationMinutes = duration,
                     CurrentTotalAmount = currentTotal,
-                    WaiterOrCashier = t.ActiveOrder?.CreationUser
+                    WaiterOrCashier = !string.IsNullOrWhiteSpace(t.ActiveOrder?.OrderTakerName) ? t.ActiveOrder.OrderTakerName : t.ActiveOrder?.CreationUser
                 };
             }).ToList();
 

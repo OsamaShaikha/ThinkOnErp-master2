@@ -15,7 +15,7 @@ namespace ThinkOnErp.API.Controllers;
 [ApiController]
 [Route("api/branches/{branchId}/access")]
 [TenantScoped]
-[Authorize(Policy = "AdminOnly")]
+[Authorize]
 public class BranchAccessController : ControllerBase
 {
     private readonly IBranchRepository _branchRepo;
@@ -187,6 +187,7 @@ public class BranchAccessController : ControllerBase
     }
 
     [HttpPut("systems")]
+    [Authorize(Policy = "AdminOnly")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -277,6 +278,7 @@ public class BranchAccessController : ControllerBase
     }
 
     [HttpPost("screens/{screenId}/revoke")]
+    [Authorize(Policy = "AdminOnly")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<ApiResponse<object>>> RevokeScreen(long branchId, long screenId)
@@ -303,6 +305,7 @@ public class BranchAccessController : ControllerBase
     }
 
     [HttpDelete("screens/{screenId}/revoke")]
+    [Authorize(Policy = "AdminOnly")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<ApiResponse<object>>> AllowScreen(long branchId, long screenId)
@@ -391,6 +394,7 @@ public class BranchAccessController : ControllerBase
     }
 
     [HttpPost("screens/{screenId}/features/{featureId}/revoke")]
+    [Authorize(Policy = "AdminOnly")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<ApiResponse<object>>> RevokeFeature(long branchId, long screenId, long featureId)
@@ -417,6 +421,7 @@ public class BranchAccessController : ControllerBase
     }
 
     [HttpDelete("screens/{screenId}/features/{featureId}/revoke")]
+    [Authorize(Policy = "AdminOnly")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<ApiResponse<object>>> AllowFeature(long branchId, long screenId, long featureId)

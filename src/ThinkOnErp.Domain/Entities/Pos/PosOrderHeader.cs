@@ -24,6 +24,7 @@ public class PosOrderHeader
     public long? TableId { get; set; }
     public int Covers { get; set; } = 1;
     public long? PriceListId { get; set; }
+    public string? OrderTakerName { get; set; }
 
     // Financial totals
     public decimal SubtotalAmount { get; set; }

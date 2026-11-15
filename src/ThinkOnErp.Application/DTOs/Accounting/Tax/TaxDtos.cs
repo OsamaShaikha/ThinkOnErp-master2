@@ -1,4 +1,4 @@
-﻿namespace ThinkOnErp.Application.DTOs.Accounting.Tax;
+namespace ThinkOnErp.Application.DTOs.Accounting.Tax;
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Tax Master Data DTOs
@@ -153,6 +153,9 @@ public sealed class TaxCalculationRequestDto
     public bool IsSales { get; set; } = true; // true = Sales (Output VAT), false = Purchase (Input VAT)
     public bool IsInclusive { get; set; } // true = price entered includes tax
     public decimal ExchangeRate { get; set; } = 1.0m;
+    public bool? IsTaxExempt { get; set; } // true = Exempt from tax
+    public bool? IsZeroRated { get; set; } // true = Zero-rated (0%)
+    public decimal? TaxRateOverride { get; set; } // Explicit tax rate override for all lines (e.g. 0.0)
     public List<TaxCalculationLineRequestDto> Lines { get; set; } = new();
 }
 
@@ -166,6 +169,10 @@ public sealed class TaxCalculationLineRequestDto
     public decimal DiscountAmount { get; set; } // Discount on this line
     public string? TaxRateCode { get; set; } // e.g. VAT_15, VAT_0, VAT_EXEMPT
     public long? TaxRateId { get; set; }
+    public bool? IsInclusive { get; set; } // Override inclusive/exclusive per line
+    public bool? IsTaxExempt { get; set; } // Override exempt per line
+    public bool? IsZeroRated { get; set; } // Override zero-rated per line
+    public decimal? TaxPercentOverride { get; set; } // Explicit tax rate override per line (e.g. 0.0)
 }
 
 public sealed class TaxCalculationResultDto
@@ -204,6 +211,9 @@ public sealed class TaxCalculationLineResultDto
     public string TaxRateCode { get; set; } = string.Empty;
     public string TaxRateNameLocal { get; set; } = string.Empty;
     public string? GlAccountCode { get; set; }
+    public bool IsInclusive { get; set; }
+    public bool IsExempt { get; set; }
+    public bool IsZeroRated { get; set; }
 }
 
 public sealed class TaxSummaryItemDto

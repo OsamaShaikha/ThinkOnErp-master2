@@ -23,6 +23,9 @@ namespace ThinkOnErp.API.Controllers.Pos;
 /// </summary>
 [ApiController]
 [Route("api/pos/payment-methods")]
+[Route("api/pos/paymentmethods")]
+[Route("api/pos/payment-method")]
+[Route("api/pos/paymentmethod")]
 [ApiExplorerSettings(GroupName = ApiCategories.Pos)]
 [TenantScoped]
 [Authorize]
@@ -50,15 +53,27 @@ public class PosPaymentMethodsController : ControllerBase
     public async Task<ActionResult<ApiResponse<IReadOnlyList<PosPaymentMethodDto>>>> GetPosPaymentMethods(
         [FromQuery] long? branchId = null,
         [FromQuery] int? lang = null,
-        [FromQuery] bool? activeOnly = true,
+        [FromQuery(Name = "activeOnly")] bool? activeOnly = null,
+        [FromQuery(Name = "active_only")] bool? active_only = null,
+        [FromQuery(Name = "active only")] bool? active_space_only = null,
+        [FromQuery(Name = "active-only")] bool? active_dash_only = null,
+        [FromQuery(Name = "isActive")] bool? isActive = null,
+        [FromQuery(Name = "is_active")] bool? is_active = null,
+        [FromQuery(Name = "active")] bool? active = null,
         CancellationToken cancellationToken = default)
     {
+        var effectiveActiveOnly = PaymentMethodsController.ResolveActiveOnly(
+            activeOnly ?? active_only ?? active_space_only ?? active_dash_only ?? isActive ?? is_active ?? active,
+            Request?.Query) ?? true;
+
+        // استرجاع كل وسائل الدفع المخصصة للفرع بدون فلتر active مبدئياً
+        // حتى نتمكن من فحص هل الذمم (99) أو الضيافة (98) معرفة في الفرع (حتى لو معطلة) قبل إضافة الـ fallback
         var methods = await _paymentMethodRepo.GetAllAsync(
             branchId: branchId,
             methodType: null,
             showInPos: true,
             showInInvoices: null,
-            activeOnly: activeOnly,
+            activeOnly: null,
             ct: cancellationToken);
 
         var isEnglish = lang == 2;
@@ -69,7 +84,7 @@ public class PosPaymentMethodsController : ControllerBase
             list.Add(MapToPosDto(m, isEnglish));
         }
 
-        // ضمان توفر الذمم (99) والضيافة (98) لكل الفروع بشكل دائم
+        // ضمان توفر الذمم (99) والضيافة (98) كـ fallback فقط في حال عدم وجودها في قاعدة البيانات نهائياً
         if (!list.Any(x => x.Id == (int)PaymentMethodConstants.CustomerAccountId || x.Code.Equals(PaymentMethodConstants.CustomerAccount, System.StringComparison.OrdinalIgnoreCase)))
         {
             list.Add(GetCustomerAccountFallback(isEnglish));
@@ -78,6 +93,12 @@ public class PosPaymentMethodsController : ControllerBase
         if (!list.Any(x => x.Id == (int)PaymentMethodConstants.HospitalityId || x.Code.Equals(PaymentMethodConstants.Hospitality, System.StringComparison.OrdinalIgnoreCase)))
         {
             list.Add(GetHospitalityFallback(isEnglish));
+        }
+
+        // تطبيق فلتر التفعيل بعد تجهيز القائمة لضمان عدم ظهور أي وسيلة غير مفعلة إذا طلب المفعل فقط
+        if (effectiveActiveOnly)
+        {
+            list = list.Where(x => x.IsActive).ToList();
         }
 
         // إزالة التكرار وترتيب العرض
@@ -90,7 +111,7 @@ public class PosPaymentMethodsController : ControllerBase
 
         return Ok(ApiResponse<IReadOnlyList<PosPaymentMethodDto>>.CreateSuccess(
             result,
-            "تم جلب وسائل الدفع لنقاط البيع بنجاح مع تثبيت الذمم على 99 والضيافة على 98 لجميع الفروع",
+            "تم جلب وسائل الدفع لنقاط البيع بنجاح",
             200));
     }
 

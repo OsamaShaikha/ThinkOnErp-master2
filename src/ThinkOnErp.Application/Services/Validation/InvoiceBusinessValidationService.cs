@@ -60,6 +60,23 @@ public class InvoiceBusinessValidationService : IInvoiceBusinessValidationServic
         if (item == null || item.IsTaxExempt)
             return null;
 
+        if (item.IsZeroRated)
+        {
+            var zeroRate = (await _taxRepository.GetTaxRatesAsync(includeInactive: false, ct))
+                .FirstOrDefault(r => r.IsZeroRated || r.RatePercent == 0m || string.Equals(r.TaxRateCode, "VAT_0", StringComparison.OrdinalIgnoreCase));
+            if (zeroRate != null)
+                return zeroRate;
+
+            return new TaxRate
+            {
+                TaxRateCode = "VAT_0",
+                NameLocal = "خاضعة لنسبة الصفر 0%",
+                NameEn = "Zero-Rated 0%",
+                RatePercent = 0m,
+                IsZeroRated = true
+            };
+        }
+
         // 1. Direct TaxRate assigned to item
         if (item.TaxRateId.HasValue)
         {
@@ -77,7 +94,7 @@ public class InvoiceBusinessValidationService : IInvoiceBusinessValidationServic
                 return groupRate;
         }
 
-        // If no explicit tax rate or group is assigned to the item, it is non-taxable (0% tax)
+        // 3. If no tax rate or tax group is assigned to item, tax is not applicable (0%)
         return null;
     }
 
@@ -85,6 +102,13 @@ public class InvoiceBusinessValidationService : IInvoiceBusinessValidationServic
     {
         var rate = await GetEffectiveTaxRateAsync(itemId, branchId, ct);
         return rate?.RatePercent ?? 0m;
+    }
+
+    public async Task<bool?> GetItemPriceIncludesTaxAsync(long itemId, CancellationToken ct = default)
+    {
+        var item = await _itemRepository.GetByIdAsync(itemId, ct);
+        if (item == null) return null;
+        return item.TaxType == 1;
     }
 
     public async Task<BusinessValidationResult> ValidateWarehouseDocumentDtoAsync(CreateTrxDocumentDto dto, CancellationToken ct = default)
@@ -396,32 +420,8 @@ public class InvoiceBusinessValidationService : IInvoiceBusinessValidationServic
             result.AddError("ManualDiscountAmount", "مبلغ الخصم اليدوي لا يمكن أن يكون سالباً.", ErrorCodes.OutOfRange);
         }
 
-        // 4. Tax Exemption & Customer Tax Number Validation (ZATCA & General Tax Regulations)
-        bool isOrderOrLineExempt = (dto.IsTaxExempt == true) || (dto.Lines != null && dto.Lines.Any(l => l.IsTaxExempt == true));
-        if (isOrderOrLineExempt)
-        {
-            if (!dto.CustomerId.HasValue || dto.CustomerId.Value <= 0)
-            {
-                result.AddError("CustomerId", "لا يمكن إصدار فاتورة معفاة من الضريبة (كلياً أو جزئياً) دون تحديد عميل مسجل برقم ضريبي.", ErrorCodes.FieldRequired);
-            }
-            else
-            {
-                var customer = await _customerRepository.GetByIdAsync(dto.CustomerId.Value, ct);
-                if (customer == null)
-                {
-                    result.AddError("CustomerId", $"العميل المحدد برقم ({dto.CustomerId.Value}) غير موجود في النظام.", ErrorCodes.CustomerNotFound);
-                }
-                else if (!customer.IsActive)
-                {
-                    result.AddError("CustomerId", $"حساب العميل '{customer.NameLocal}' مجمّد أو غير نشط في النظام.", ErrorCodes.UnauthorizedAction);
-                }
-                else if (string.IsNullOrWhiteSpace(customer.TaxNumber))
-                {
-                    result.AddError("Customer.TaxNumber", $"العميل '{customer.NameLocal}' ليس لديه رقم ضريبي مسجل. يشترط وجود رقم ضريبي قانوني للعميل لإصدار فواتير معفاة من الضريبة.", ErrorCodes.FieldRequired);
-                }
-            }
-        }
-        else if (dto.CustomerId.HasValue && dto.CustomerId.Value > 0)
+        // 4. Customer Validation
+        if (dto.CustomerId.HasValue && dto.CustomerId.Value > 0)
         {
             var customer = await _customerRepository.GetByIdAsync(dto.CustomerId.Value, ct);
             if (customer == null)
