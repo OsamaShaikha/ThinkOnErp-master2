@@ -1,0 +1,187 @@
+{
+  "testedAt": "2026-10-25T21:26:44.750Z",
+  "baseUrl": "http://localhost:5160",
+  "companyCode": "1122",
+  "companyId": "461",
+  "testTicketId": 102,
+  "evidence": [
+    {
+      "check": "create-with-attachment",
+      "status": 201,
+      "ticketId": 102,
+      "message": "تم إنشاء السجل بنجاح.",
+      "errors": null
+    },
+    {
+      "check": "read-created",
+      "status": 200,
+      "companyId": 461,
+      "branchId": 1,
+      "requesterId": 1,
+      "attachments": 1,
+      "statusId": 1
+    },
+    {
+      "check": "public-comment",
+      "status": 201,
+      "message": "تم إنشاء السجل بنجاح.",
+      "errors": null
+    },
+    {
+      "check": "internal-comment",
+      "status": 201,
+      "message": "تم إنشاء السجل بنجاح.",
+      "errors": null
+    },
+    {
+      "check": "assign-to-company-admin",
+      "status": 200,
+      "message": "تم تحديث البيانات بنجاح.",
+      "errors": null
+    },
+    {
+      "check": "assignment-persisted",
+      "status": 200,
+      "assigneeId": 1,
+      "statusId": 2,
+      "comments": 2,
+      "internalVisible": true
+    },
+    {
+      "check": "admin-internal-comment-visible",
+      "status": 200,
+      "internalVisible": true
+    },
+    {
+      "check": "priority-and-deadline-persisted",
+      "status": 200,
+      "readStatus": 200,
+      "previousPriority": 3,
+      "newPriority": 1,
+      "oldDeadline": "2026-10-26T05:23:22.1085429",
+      "newDeadline": "2026-10-25T22:23:22.1085429",
+      "changed": true
+    },
+    {
+      "check": "attachment-download-integrity",
+      "status": 200,
+      "contentMatches": true
+    },
+    {
+      "check": "resolved-state-persisted",
+      "status": 200,
+      "readStatus": 200,
+      "statusId": 4,
+      "hasResolutionDate": true,
+      "interpretation": "ID 4 persisted, but live database maps it to CLOSED, not RESOLVED; see actual status checks."
+    },
+    {
+      "check": "report-volume",
+      "status": 200,
+      "rowCount": 1
+    },
+    {
+      "check": "report-sla-compliance",
+      "status": 200,
+      "rowCount": 1
+    },
+    {
+      "check": "report-workload",
+      "status": 200,
+      "rowCount": 1
+    },
+    {
+      "check": "filter-status-4",
+      "status": 200,
+      "containsTestTicket": true
+    },
+    {
+      "check": "filter-status-6",
+      "status": 200,
+      "containsTestTicket": false
+    },
+    {
+      "check": "reject-foreign-company-filter",
+      "status": 403
+    },
+    {
+      "check": "close-and-reject-invalid-reopen",
+      "closeStatus": 400,
+      "reopenStatus": 200,
+      "interpretation": "Legacy assumed ID 5 does not exist; reopening ID 4 actually violates final CLOSED state."
+    },
+    {
+      "check": "actual-resolved-code-3-resolution-date",
+      "status": 200,
+      "statusId": 3,
+      "statusName": "تم الحل",
+      "hasResolutionDate": false,
+      "passed": false
+    },
+    {
+      "check": "actual-closed-code-4-reopen-rejection",
+      "closeStatus": 200,
+      "reopenStatus": 200,
+      "passed": false
+    },
+    {
+      "check": "cleanup-soft-delete",
+      "deleteStatus": 200,
+      "readAfterDelete": 404,
+      "stillInList": false
+    }
+  ],
+  "databaseStatusMapping": [
+    {
+      "id": 1,
+      "code": "OPEN"
+    },
+    {
+      "id": 2,
+      "code": "IN_PROGRESS"
+    },
+    {
+      "id": 3,
+      "code": "RESOLVED"
+    },
+    {
+      "id": 4,
+      "code": "CLOSED",
+      "final": true
+    }
+  ],
+  "companyAdminEmailContacts": 0,
+  "testNotifications": [
+    {
+      "subject": "New Ticket Created",
+      "attempts": 0,
+      "sent": false
+    },
+    {
+      "subject": "Ticket Status Updated",
+      "attempts": 0,
+      "sent": false
+    },
+    {
+      "subject": "Ticket Status Updated",
+      "attempts": 0,
+      "sent": false
+    },
+    {
+      "subject": "Ticket Status Updated",
+      "attempts": 0,
+      "sent": false
+    },
+    {
+      "subject": "Ticket Status Updated",
+      "attempts": 0,
+      "sent": false
+    },
+    {
+      "subject": "Ticket Status Updated",
+      "attempts": 0,
+      "sent": false
+    }
+  ],
+  "cancelledPendingTestMessages": 6
+}

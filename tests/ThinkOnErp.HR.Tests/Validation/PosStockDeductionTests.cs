@@ -84,8 +84,8 @@ public class PosStockDeductionTests
             .ReturnsAsync(new List<PosModifierGroup>());
 
         _calcEngine
-            .Setup(x => x.CalculateOrderTotalsAsync(It.IsAny<long>(), It.IsAny<CreatePosOrderDto>(), It.IsAny<decimal?>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync((long branchId, CreatePosOrderDto dto, decimal? tax, CancellationToken ct) =>
+            .Setup(x => x.CalculateOrderTotalsAsync(It.IsAny<long>(), It.IsAny<CreatePosOrderDto>(), It.IsAny<decimal?>(), It.IsAny<bool?>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((long branchId, CreatePosOrderDto dto, decimal? tax, bool? isTaxInclusive, CancellationToken ct) =>
             {
                 var total = dto.Lines.Sum(l => l.Quantity * l.UnitPrice);
                 return new PosOrderCalculationResult
@@ -115,7 +115,7 @@ public class PosStockDeductionTests
         // Arrange
         // Setting 50 = "1" (RealTime) referencing SYS_CODE
         _settingRepo
-            .Setup(x => x.GetByCodeAsync(SysSettingKeys.PosStockDeductionMode))
+            .Setup(x => x.GetByCodeAsync(SysSettingKeys.PosStockDeductionMode, It.IsAny<long>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new SysSetting
             {
                 SettingCode = SysSettingKeys.PosStockDeductionMode,
@@ -124,7 +124,7 @@ public class PosStockDeductionTests
 
         // Setting 51 = "61" (Default POS Warehouse)
         _settingRepo
-            .Setup(x => x.GetByCodeAsync(SysSettingKeys.PosDefaultWarehouseId))
+            .Setup(x => x.GetByCodeAsync(SysSettingKeys.PosDefaultWarehouseId, It.IsAny<long>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new SysSetting
             {
                 SettingCode = SysSettingKeys.PosDefaultWarehouseId,
@@ -183,7 +183,7 @@ public class PosStockDeductionTests
         // Arrange
         // Setting 50 = "3" (None) referencing SYS_CODE
         _settingRepo
-            .Setup(x => x.GetByCodeAsync(SysSettingKeys.PosStockDeductionMode))
+            .Setup(x => x.GetByCodeAsync(SysSettingKeys.PosStockDeductionMode, It.IsAny<long>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new SysSetting
             {
                 SettingCode = SysSettingKeys.PosStockDeductionMode,
@@ -234,11 +234,11 @@ public class PosStockDeductionTests
     {
         // Arrange
         _settingRepo
-            .Setup(x => x.GetByCodeAsync(SysSettingKeys.PosStockDeductionMode))
+            .Setup(x => x.GetByCodeAsync(SysSettingKeys.PosStockDeductionMode, It.IsAny<long>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new SysSetting { SettingCode = 50, SettingValue = "1" });
 
         _settingRepo
-            .Setup(x => x.GetByCodeAsync(SysSettingKeys.PosDefaultWarehouseId))
+            .Setup(x => x.GetByCodeAsync(SysSettingKeys.PosDefaultWarehouseId, It.IsAny<long>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new SysSetting { SettingCode = 51, SettingValue = "61" });
 
         var origOrder = new PosOrderHeader
@@ -289,11 +289,11 @@ public class PosStockDeductionTests
         // Arrange
         // Setting 50 = "2" (Consolidated)
         _settingRepo
-            .Setup(x => x.GetByCodeAsync(SysSettingKeys.PosStockDeductionMode))
+            .Setup(x => x.GetByCodeAsync(SysSettingKeys.PosStockDeductionMode, It.IsAny<long>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new SysSetting { SettingCode = 50, SettingValue = "2" });
 
         _settingRepo
-            .Setup(x => x.GetByCodeAsync(SysSettingKeys.PosDefaultWarehouseId))
+            .Setup(x => x.GetByCodeAsync(SysSettingKeys.PosDefaultWarehouseId, It.IsAny<long>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new SysSetting { SettingCode = 51, SettingValue = "61" });
 
         var shiftOrders = new List<PosOrderHeader>
@@ -366,10 +366,10 @@ public class PosStockDeductionTests
     {
         // Arrange
         // Stock deduction mode: RealTime (1)
-        _settingRepo.Setup(x => x.GetByCodeAsync(SysSettingKeys.PosStockDeductionMode))
+        _settingRepo.Setup(x => x.GetByCodeAsync(SysSettingKeys.PosStockDeductionMode, It.IsAny<long>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new SysSetting { SettingCode = SysSettingKeys.PosStockDeductionMode, SettingValue = "1" });
 
-        _settingRepo.Setup(x => x.GetByCodeAsync(SysSettingKeys.PosDefaultWarehouseId))
+        _settingRepo.Setup(x => x.GetByCodeAsync(SysSettingKeys.PosDefaultWarehouseId, It.IsAny<long>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new SysSetting { SettingCode = SysSettingKeys.PosDefaultWarehouseId, SettingValue = "61" });
 
         _shiftRepo.Setup(x => x.GetShiftByIdAsync(1, It.IsAny<CancellationToken>()))

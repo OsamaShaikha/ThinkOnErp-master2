@@ -1,0 +1,83 @@
+{
+  "testedAt": "2026-10-25T21:39:19.663Z",
+  "baseUrl": "http://127.0.0.1:5187",
+  "companyCode": "1122",
+  "companyId": "461",
+  "testTicketId": 103,
+  "statuses": {
+    "OPEN": 1,
+    "IN_PROGRESS": 2,
+    "RESOLVED": 3,
+    "CLOSED": 4
+  },
+  "notificationsDisabledForTest": true,
+  "evidence": [
+    {
+      "check": "create",
+      "status": 201,
+      "ticketId": 103
+    },
+    {
+      "check": "assigned-in-progress",
+      "status": 200,
+      "statusId": 2,
+      "passed": true
+    },
+    {
+      "check": "resolved-persists-date",
+      "status": 200,
+      "statusId": 3,
+      "hasResolutionDate": true,
+      "passed": true
+    },
+    {
+      "check": "report-counts-resolved",
+      "status": 200,
+      "resolved": 1,
+      "closed": 0
+    },
+    {
+      "check": "reopen-resolved-clears-date",
+      "status": 200,
+      "cleared": true,
+      "passed": true
+    },
+    {
+      "check": "close-preserves-resolution-date",
+      "status": 200,
+      "statusId": 4,
+      "datePreserved": true,
+      "passed": true
+    },
+    {
+      "check": "reject-reopen-closed",
+      "status": 400,
+      "passed": true,
+      "message": "Invalid status transition from 4 to 2."
+    },
+    {
+      "check": "reject-comment-on-closed",
+      "status": 400,
+      "passed": true,
+      "message": "Cannot add comments to tickets in final status (Closed or Cancelled)."
+    },
+    {
+      "check": "reject-assignment-on-closed",
+      "status": 400,
+      "passed": true,
+      "message": "Cannot assign ticket in final status (Closed or Cancelled)."
+    },
+    {
+      "check": "report-counts-closed",
+      "status": 200,
+      "resolved": 0,
+      "closed": 1
+    },
+    {
+      "check": "cleanup",
+      "deleteStatus": 200,
+      "readAfterDelete": 404,
+      "passed": true
+    }
+  ]
+}

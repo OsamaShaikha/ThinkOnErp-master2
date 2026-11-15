@@ -1,0 +1,204 @@
+{
+  "success": true,
+  "statusCode": 200,
+  "message": "تمت العملية بنجاح.",
+  "data": {
+    "code": "open-tables-live",
+    "title": "Live tables report",
+    "isLive": true,
+    "header": {
+      "language": "en",
+      "isRightToLeft": false,
+      "companyName": "debis acc",
+      "branchName": "All accessible branches",
+      "taxNumber": null,
+      "phone": "0796211887",
+      "currency": "JOD",
+      "cashier": "All",
+      "payment": "All",
+      "preparedBy": "admin",
+      "reportNumber": "RPT-20261028-ff19848bbb254",
+      "issuedAtUtc": "2026-10-28T18:01:39.5544136Z",
+      "startDate": "2026-10-19T00:00:00Z",
+      "endDate": "2026-10-28T00:00:00Z",
+      "shiftId": null,
+      "tillId": null,
+      "days": [],
+      "payments": [],
+      "totals": {
+        "date": "0001-01-01T00:00:00",
+        "invoices": 0,
+        "sales": 0,
+        "discount": 0,
+        "returns": 0,
+        "net": 0,
+        "tax": 0,
+        "charges": 0,
+        "total": 0
+      },
+      "averageInvoice": 0
+    },
+    "filterNotes": [],
+    "branches": [
+      {
+        "branchId": 1,
+        "branchName": "debis acc",
+        "metrics": [
+          {
+            "label": "Active sales",
+            "value": "0.000",
+            "unit": "JOD"
+          },
+          {
+            "label": "Tables",
+            "value": "3",
+            "unit": ""
+          },
+          {
+            "label": "Occupied",
+            "value": "0",
+            "unit": ""
+          },
+          {
+            "label": "Occupancy",
+            "value": "0%",
+            "unit": ""
+          }
+        ],
+        "tables": [
+          {
+            "title": "Live table status",
+            "columns": [
+              {
+                "label": "Table",
+                "numeric": false,
+                "code": false,
+                "width": 1.5
+              },
+              {
+                "label": "Floor",
+                "numeric": false,
+                "code": false,
+                "width": 1.5
+              },
+              {
+                "label": "Status",
+                "numeric": false,
+                "code": false,
+                "width": 1
+              },
+              {
+                "label": "Order",
+                "numeric": false,
+                "code": true,
+                "width": 1
+              },
+              {
+                "label": "Covers",
+                "numeric": true,
+                "code": false,
+                "width": 1
+              },
+              {
+                "label": "Minutes",
+                "numeric": true,
+                "code": false,
+                "width": 1
+              },
+              {
+                "label": "Current total",
+                "numeric": true,
+                "code": false,
+                "width": 1
+              }
+            ],
+            "rows": [
+              [
+                "1 1",
+                "first floor",
+                "Available",
+                "-",
+                "0",
+                "14187",
+                "0.000"
+              ],
+              [
+                "2 2",
+                "first floor",
+                "Available",
+                "-",
+                "0",
+                "7022",
+                "0.000"
+              ],
+              [
+                "5 5",
+                "first floor",
+                "Available",
+                "-",
+                "0",
+                "6116",
+                "0.000"
+              ]
+            ]
+          },
+          {
+            "title": "Table capacity & service",
+            "columns": [
+              {
+                "label": "Table",
+                "numeric": false,
+                "code": false,
+                "width": 1.5
+              },
+              {
+                "label": "Capacity",
+                "numeric": true,
+                "code": false,
+                "width": 1
+              },
+              {
+                "label": "Waiter / cashier",
+                "numeric": false,
+                "code": false,
+                "width": 2
+              },
+              {
+                "label": "Opened UTC",
+                "numeric": false,
+                "code": true,
+                "width": 1.5
+              }
+            ],
+            "rows": [
+              [
+                "first floor / 1",
+                "12",
+                "-",
+                "18/10/2026 21:34"
+              ],
+              [
+                "first floor / 2",
+                "4",
+                "-",
+                "23/10/2026 20:59"
+              ],
+              [
+                "first floor / 5",
+                "7",
+                "-",
+                "24/10/2026 12:05"
+              ]
+            ]
+          }
+        ],
+        "notes": [
+          "Available: 3 · Billed: 0"
+        ]
+      }
+    ]
+  },
+  "errors": null,
+  "timestamp": "2026-10-28T18:01:39.7019914Z",
+  "traceId": "33017b52-cfb7-42d2-ac37-36b08153de10"
+}

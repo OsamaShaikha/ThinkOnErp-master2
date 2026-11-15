@@ -340,11 +340,19 @@ public class CompanyController : ControllerBase
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status409Conflict)]
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status500InternalServerError)]
     public async Task<ActionResult<ApiResponse<object>>> SyncCompanySchemaFromDevTemplate(Int64 id)
     {
         try
         {
+            if (!_oracleSchemaService.ExistingTenantSchemaSyncEnabled)
+            {
+                return Conflict(ApiResponse<object>.CreateFailure(
+                    "Tenant schema synchronization is disabled until target preflight, backup, rollback plan, and approval are complete.",
+                    statusCode: 409));
+            }
+
             _logger.LogInformation("Exporting schema changes from DEV_TEMPLATE to company ID: {CompanyId}", id);
 
             var company = await _companyRepository.GetByIdAsync(id);
@@ -387,11 +395,19 @@ public class CompanyController : ControllerBase
     [HttpPost("sync-all-schemas-from-dev-template")]
     [Authorize(Policy = "AdminOnly")]
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status409Conflict)]
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status500InternalServerError)]
     public async Task<ActionResult<ApiResponse<object>>> SyncAllCompanySchemasFromDevTemplate()
     {
         try
         {
+            if (!_oracleSchemaService.ExistingTenantSchemaSyncEnabled)
+            {
+                return Conflict(ApiResponse<object>.CreateFailure(
+                    "Tenant schema synchronization is disabled until target preflight, backups, rollback plan, and approval are complete.",
+                    statusCode: 409));
+            }
+
             _logger.LogInformation("Exporting schema changes from DEV_TEMPLATE to all tenant company schemas in background");
 
             _ = Task.Run(async () =>

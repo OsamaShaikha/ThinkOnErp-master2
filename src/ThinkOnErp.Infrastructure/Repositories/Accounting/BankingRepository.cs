@@ -58,6 +58,9 @@ public sealed class BankingRepository : IBankingRepository
         await _context.Set<BankAccount>().AddAsync(account, cancellationToken);
     }
 
+    public Task<bool> CurrencyExistsAsync(long currencyId, CancellationToken cancellationToken = default) =>
+        _context.SysCurrencies.AsNoTracking().AnyAsync(currency => currency.Id == currencyId, cancellationToken);
+
     public async Task<CashRegister?> GetCashRegisterByIdAsync(long id, CancellationToken cancellationToken = default)
     {
         return await _context.Set<CashRegister>()

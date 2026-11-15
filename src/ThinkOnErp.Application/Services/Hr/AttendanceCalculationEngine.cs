@@ -10,7 +10,7 @@ namespace ThinkOnErp.Application.Services.Hr;
 
 public interface IAttendanceCalculationEngine
 {
-    Task<RawAttendance> IngestPunchAsync(string employeeCode, DateTime punchTime, string punchType, string? deviceId, string source = "BIOMETRIC", CancellationToken cancellationToken = default);
+    Task<RawAttendance> IngestPunchAsync(string employeeCode, DateTime punchTime, string punchType, string? deviceId, string source = "BIOMETRIC", string? eventId = null, string user = "BIOMETRIC_SYNC", CancellationToken cancellationToken = default);
     Task<AttendanceDay> ProcessEmployeeDayAttendanceAsync(string employeeCode, DateTime date, DateTime? checkIn, DateTime? checkOut, AttendancePolicy policy, decimal scheduledHours = 8.0m, TimeSpan? shiftStart = null, TimeSpan? shiftEnd = null, CancellationToken cancellationToken = default);
     string ComputePunchHash(string employeeCode, DateTime punchTime, string punchType);
 }
@@ -18,15 +18,18 @@ public interface IAttendanceCalculationEngine
 public sealed class AttendanceCalculationEngine : IAttendanceCalculationEngine
 {
     private readonly IAttendanceCorrectionRepository _repository;
+    private readonly IShiftTimingService? _timing;
+    private readonly IAttendanceDayClassifier? _classifier;
 
-    public AttendanceCalculationEngine(IAttendanceCorrectionRepository repository)
+    public AttendanceCalculationEngine(IAttendanceCorrectionRepository repository, IShiftTimingService? timing = null, IAttendanceDayClassifier? classifier = null)
     {
         _repository = repository;
+        _timing = timing; _classifier = classifier;
     }
 
     public string ComputePunchHash(string employeeCode, DateTime punchTime, string punchType)
     {
-        var rawString = $"{employeeCode.Trim().ToUpperInvariant()}_{punchTime:yyyyMMddHHmmss}_{punchType.Trim().ToUpperInvariant()}";
+        var rawString = $"{employeeCode.Trim().ToUpperInvariant()}_{punchTime:yyyyMMddHHmmssfffffff}_{punchType.Trim().ToUpperInvariant()}";
         using var sha = SHA256.Create();
         var bytes = sha.ComputeHash(Encoding.UTF8.GetBytes(rawString));
         return Convert.ToHexString(bytes);
@@ -37,118 +40,39 @@ public sealed class AttendanceCalculationEngine : IAttendanceCalculationEngine
         DateTime punchTime,
         string punchType,
         string? deviceId,
-        string source = "BIOMETRIC",
+        string source = "BIOMETRIC", string? eventId = null, string user = "BIOMETRIC_SYNC",
         CancellationToken cancellationToken = default)
     {
-        var hash = ComputePunchHash(employeeCode, punchTime, punchType);
-
+        if (string.IsNullOrWhiteSpace(employeeCode) || string.IsNullOrWhiteSpace(deviceId) || deviceId.Trim().Length > 200 ||
+            string.IsNullOrWhiteSpace(eventId) || eventId.Trim().Length > 200 || string.IsNullOrWhiteSpace(source) || source.Trim().Length > 100)
+            throw new ArgumentException("Employee, device, source and stable source EventId are required within their field limits.");
+        if (punchTime.Kind != DateTimeKind.Utc || punchType is not ("IN" or "OUT")) throw new ArgumentException("Device punch time must explicitly be UTC and type must be IN or OUT.");
+        var device = deviceId.Trim(); var external = eventId.Trim(); var origin = source.Trim().ToUpperInvariant();
+        var key = "D:" + LeaveMovementKey.Hash(System.Text.Json.JsonSerializer.Serialize(new { device, external, origin }));
+        var payload = LeaveMovementKey.Hash(System.Text.Json.JsonSerializer.Serialize(new { employeeCode, PunchTicks = punchTime.Ticks, punchType, device, origin }));
         var raw = new RawAttendance
         {
-            EmployeeCode = employeeCode,
-            PunchTime = punchTime,
-            PunchType = punchType,
-            DeviceId = deviceId,
-            ExternalReference = hash,
-            Source = source,
-            IsProcessed = false,
-            CreationUser = "BIOMETRIC_SYNC",
-            CreationDate = DateTime.UtcNow
+            EmployeeCode = employeeCode, PunchTime = punchTime, PunchType = punchType, DeviceId = device,
+            ExternalReference = external, EventId = key, EventPayloadHash = payload, Source = origin,
+            IsProcessed = false, CreationUser = user, CreationDate = DateTime.UtcNow
         };
-
-        await _repository.AddRawAttendanceAsync(raw, cancellationToken);
-        await _repository.SaveChangesAsync(cancellationToken);
-        return raw;
+        // Intake stores evidence only, even when its payroll date is closed.
+        // Processing this event into a financial day remains a separate guarded workflow.
+        return await _repository.AcceptDeviceEventAsync(raw, cancellationToken);
     }
 
-    public Task<AttendanceDay> ProcessEmployeeDayAttendanceAsync(
-        string employeeCode,
-        DateTime date,
-        DateTime? checkIn,
-        DateTime? checkOut,
-        AttendancePolicy policy,
-        decimal scheduledHours = 8.0m,
-        TimeSpan? shiftStart = null,
-        TimeSpan? shiftEnd = null,
+    public async Task<AttendanceDay> ProcessEmployeeDayAttendanceAsync(
+        string employeeCode, DateTime date, DateTime? checkIn, DateTime? checkOut, AttendancePolicy policy,
+        decimal scheduledHours = 8.0m, TimeSpan? shiftStart = null, TimeSpan? shiftEnd = null,
         CancellationToken cancellationToken = default)
     {
-        var attendanceDay = new AttendanceDay
-        {
-            EmployeeCode = employeeCode,
-            AttendanceDate = date.Date,
-            ScheduledHours = scheduledHours,
-            FirstCheckIn = checkIn,
-            LastCheckOut = checkOut,
-            CreationUser = "ATTENDANCE_ENGINE",
-            CreationDate = DateTime.UtcNow
-        };
-
-        // Missing Punch detection
-        if (checkIn.HasValue && !checkOut.HasValue || !checkIn.HasValue && checkOut.HasValue)
-        {
-            attendanceDay.HasMissingPunch = true;
-            attendanceDay.Status = "INCOMPLETE";
-        }
-        else if (!checkIn.HasValue && !checkOut.HasValue)
-        {
-            attendanceDay.Status = "ABSENT";
-            return Task.FromResult(attendanceDay);
-        }
-        else
-        {
-            attendanceDay.Status = "PRESENT";
-        }
-
-        // Calculate hours worked
-        if (checkIn.HasValue && checkOut.HasValue)
-        {
-            var diff = checkOut.Value - checkIn.Value;
-            if (diff.TotalHours < 0) // Overnight boundary
-                diff = diff.Add(TimeSpan.FromHours(24));
-
-            attendanceDay.ActualWorkedHours = Math.Round((decimal)diff.TotalHours, 2);
-
-            // Shift comparisons if shift schedule is provided
-            var targetStart = shiftStart ?? new TimeSpan(8, 0, 0); // Default 08:00
-            var actualStart = checkIn.Value.TimeOfDay;
-
-            if (actualStart > targetStart)
-            {
-                var lateSpan = actualStart - targetStart;
-                var totalLateMinutes = (int)lateSpan.TotalMinutes;
-                // Subtract policy Grace Period
-                if (totalLateMinutes > policy.GracePeriodMinutes)
-                {
-                    attendanceDay.LateArrivalMinutes = policy.AutoDeductLateArrival
-                        ? totalLateMinutes - policy.GracePeriodMinutes
-                        : totalLateMinutes;
-                }
-            }
-
-            var targetEnd = shiftEnd ?? new TimeSpan(17, 0, 0); // Default 17:00
-            var actualEnd = checkOut.Value.TimeOfDay;
-
-            if (actualEnd < targetEnd)
-            {
-                var earlySpan = targetEnd - actualEnd;
-                var totalEarlyMinutes = (int)earlySpan.TotalMinutes;
-                if (totalEarlyMinutes > policy.EarlyLeaveToleranceMinutes)
-                {
-                    attendanceDay.EarlyLeaveMinutes = totalEarlyMinutes;
-                }
-            }
-
-            // Overtime evaluation
-            if (attendanceDay.ActualWorkedHours > scheduledHours)
-            {
-                var excessHours = attendanceDay.ActualWorkedHours - scheduledHours;
-                var excessMinutes = excessHours * 60;
-                if (excessMinutes >= policy.MinMinutesForOvertime)
-                {
-                    attendanceDay.OvertimeHours = Math.Round(excessHours, 2);
-                }
-            }
-        }
-
-        return Task.FromResult(attendanceDay);
+        // Legacy parameters remain for source compatibility. Configured roster is authoritative.
+        var workDate = DateOnly.FromDateTime(date);
+        var schedule = await (_timing ?? throw new InvalidOperationException("Configured shift timing is required for attendance calculation."))
+            .PreviewConfiguredAsync(employeeCode, workDate, cancellationToken);
+        var result = ScheduledAttendanceCalculator.Calculate(employeeCode, workDate, checkIn, checkOut, schedule, policy);
+        if (_classifier != null) await _classifier.ClassifyAsync(result, schedule, cancellationToken);
+        result.CreationUser = "ATTENDANCE_ENGINE"; result.CreationDate = DateTime.UtcNow;
+        return result;
     }
 }

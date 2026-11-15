@@ -85,7 +85,12 @@ public static class DependencyInjection
             }));
 
         services.AddScoped<ThinkOnErp.Application.Services.Hr.IHrUnitOfWork, ThinkOnErp.Infrastructure.Services.Hr.HrUnitOfWork>();
+        services.AddScoped<ThinkOnErp.Application.Services.Hr.IPayrollInputSnapshotService, ThinkOnErp.Infrastructure.Services.Hr.PayrollInputSnapshotService>();
         services.AddScoped<ThinkOnErp.Application.Services.Hr.IHrPayrollPostingService, ThinkOnErp.Infrastructure.Services.Hr.HrPayrollPostingService>();
+        services.AddScoped<ThinkOnErp.Application.Services.Hr.IHrAccountingHandoffService, ThinkOnErp.Infrastructure.Services.Hr.HrAccountingHandoffService>();
+        services.AddHostedService<ThinkOnErp.Infrastructure.Services.Hr.AccountingHandoffOutboxWorker>();
+        services.AddHostedService<ThinkOnErp.Infrastructure.Services.Hr.LeaveAccrualBackgroundService>();
+        services.AddHostedService<ThinkOnErp.Infrastructure.Services.Hr.RawAttendanceProcessingBackgroundService>();
 
         services.AddDbContext<SupportDbContext>(options =>
             options.UseOracle(connectionString, b =>
@@ -243,11 +248,24 @@ public static class DependencyInjection
         services.AddScoped<IWorkCalendarRepository, WorkCalendarRepository>();
         services.AddScoped<IPolicyRepository, PolicyRepository>();
         services.AddScoped<IAttendanceCorrectionRepository, AttendanceCorrectionRepository>();
+        services.AddScoped<IAttendanceBranchRepository, AttendanceBranchRepository>();
+        services.AddScoped<IOrganizationRepository, OrganizationRepository>();
+        services.AddScoped<IBranchAttendanceLocationRepository, AttendanceBranchRepository>();
+        services.AddScoped<IShiftResolutionRepository, ShiftResolutionRepository>();
+        services.AddScoped<IShiftDefinitionRepository, ShiftDefinitionRepository>();
+        services.AddScoped<IShiftAssignmentRepository, ShiftAssignmentRepository>();
+        services.AddScoped<IShiftDayRepository, ShiftDayRepository>();
+        services.AddScoped<IShiftGenerationRepository, ShiftDayRepository>();
+        services.AddScoped<IAttendanceTimeSettingsRepository, AttendanceTimeSettingsRepository>();
+        services.AddScoped<IAttendanceDayContextRepository, AttendanceDayContextRepository>();
         services.AddScoped<ILoanRepository, LoanRepository>();
         services.AddScoped<IPayrollPeriodRepository, PayrollPeriodRepository>();
         services.AddScoped<IPayrollAdjustmentRepository, PayrollAdjustmentRepository>();
         services.AddScoped<IEmployeeRepository, EmployeeRepository>();
         services.AddScoped<ILeaveRepository, LeaveRepository>();
+        services.AddScoped<IEndOfServiceRepository, EndOfServiceRepository>();
+        services.AddScoped<IEndOfServiceTransactionRunner, EndOfServiceRepository>();
+        services.AddScoped<IShortLeaveRepository, ShortLeaveRepository>();
 
         // Register audit logging services
         services.AddScoped<IAuditRepository, AuditRepository>();

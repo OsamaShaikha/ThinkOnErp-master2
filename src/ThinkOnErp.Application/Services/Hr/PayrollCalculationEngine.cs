@@ -77,7 +77,9 @@ public sealed class PayrollCalculationEngine : IPayrollCalculationEngine
         var deductionPolicy = await _policyRepository.GetActiveDeductionPolicyAsync(period.CompanyId, period.StartDate, cancellationToken);
 
         // 2. Fetch approved adjustments for this period
-        var allAdjustments = await _adjustmentRepository.GetApprovedAdjustmentsForPeriodAsync(period.CompanyId, period.PeriodCode, cancellationToken);
+        var allAdjustments = await _adjustmentRepository.GetPayrollCalculationAdjustmentsAsync(period.CompanyId, period.PeriodCode, cancellationToken);
+        var configuredCurrencyDecimals = await _policyRepository.GetConfiguredPayrollCurrencyDecimalsAsync(period.CompanyId, cancellationToken)
+            ?? new Dictionary<string, int>(StringComparer.Ordinal);
 
         var run = new PayrollRun
         {
@@ -91,6 +93,7 @@ public sealed class PayrollCalculationEngine : IPayrollCalculationEngine
             CreationDate = DateTime.UtcNow
         };
 
+        var roundingRulesByBranch = new Dictionary<long, int?>();
         foreach (var employee in employees)
         {
             if (!employee.IsActive || employee.EmploymentStatus == "TERMINATED")
@@ -109,8 +112,20 @@ public sealed class PayrollCalculationEngine : IPayrollCalculationEngine
             }
 
             var empAdjustments = allAdjustments.Where(a => a.EmployeeCode == employee.EmployeeCode).ToList();
+            var roundingBranchId = branchId ?? employee.BranchId;
+            int? roundingRules = null;
+            if (roundingBranchId.HasValue)
+            {
+                if (!roundingRulesByBranch.TryGetValue(roundingBranchId.Value, out roundingRules))
+                {
+                    roundingRules = await _policyRepository.GetBranchRoundingRulesAsync(roundingBranchId.Value, cancellationToken) ?? 1;
+                    if (roundingRules is < 1 or > 6)
+                        throw new InvalidOperationException($"Branch {roundingBranchId.Value} has unsupported payroll rounding rules.");
+                    roundingRulesByBranch[roundingBranchId.Value] = roundingRules;
+                }
+            }
 
-            var line = await CalculateEmployeePayrollLineAsync(
+            var line = await CalculateEmployeePayrollLineCoreAsync(
                 period,
                 employee,
                 prorationPolicy,
@@ -118,12 +133,16 @@ public sealed class PayrollCalculationEngine : IPayrollCalculationEngine
                 taxPolicy,
                 deductionPolicy,
                 empAdjustments,
-                cancellationToken
+                cancellationToken,
+                roundingRules,
+                configuredCurrencyDecimals
             );
 
             run.Lines.Add(line);
         }
 
+        // A single numeric total cannot represent multiple currencies without conversion.
+        PayrollCurrencyRules.RequireSingleCurrency(run.Lines.Select(l => l.CurrencyCode));
         // Aggregate run totals
         run.TotalGrossSalary = run.Lines.Sum(l => l.GrossSalary);
         run.TotalNetSalary = run.Lines.Sum(l => l.NetPay);
@@ -144,17 +163,36 @@ public sealed class PayrollCalculationEngine : IPayrollCalculationEngine
         TaxPolicy? taxPolicy,
         DeductionPolicy? deductionPolicy,
         IReadOnlyList<PayrollAdjustment> adjustments,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default) =>
+        await CalculateEmployeePayrollLineCoreAsync(period, employee, prorationPolicy, sscPolicy, taxPolicy,
+            deductionPolicy, adjustments, cancellationToken, null,
+            await _policyRepository.GetConfiguredPayrollCurrencyDecimalsAsync(period.CompanyId, cancellationToken)
+                ?? new Dictionary<string, int>(StringComparer.Ordinal));
+
+    private async Task<PayrollRunLine> CalculateEmployeePayrollLineCoreAsync(
+        PayrollPeriod period,
+        Employee employee,
+        ProrationPolicy? prorationPolicy,
+        SSCPolicy? sscPolicy,
+        TaxPolicy? taxPolicy,
+        DeductionPolicy? deductionPolicy,
+        IReadOnlyList<PayrollAdjustment> adjustments,
+        CancellationToken cancellationToken,
+        int? roundingRules,
+        IReadOnlyDictionary<string, int>? configuredCurrencyDecimals = null)
     {
         // 1. Get current active salary structure
-        var structure = employee.SalaryStructures
-            .Where(s => s.IsActive && s.EffectiveFrom <= period.EndDate && (!s.EffectiveTo.HasValue || s.EffectiveTo.Value >= period.StartDate))
-            .OrderByDescending(s => s.EffectiveFrom)
-            .FirstOrDefault();
+        var salarySegments = PayrollSalarySegments.Build(employee, period);
+        var structure = salarySegments.LastOrDefault()?.Structure;
 
         if (structure == null)
             throw new InvalidOperationException($"Employee '{employee.EmployeeCode}' has no active salary structure covering this payroll period.");
         decimal nominalBasic = structure.BasicSalary;
+        var currencyCode = SalaryPaymentMetadata.Normalize(structure.CurrencyCode);
+        var configuredDecimals = configuredCurrencyDecimals != null && configuredCurrencyDecimals.TryGetValue(currencyCode, out var decimals)
+            ? decimals
+            : (int?)null;
+        var roundingDecimals = PayrollCurrencyRules.GetCurrencyDecimals(structure.CurrencyCode, configuredDecimals);
 
         // 2. Dynamic Proration
         var prorationResult = await _prorationService.CalculateProrationFactorAsync(
@@ -167,17 +205,60 @@ public sealed class PayrollCalculationEngine : IPayrollCalculationEngine
             cancellationToken
         );
 
-        decimal proratedBasic = Math.Round(nominalBasic * prorationResult.ProrationFactor, 3);
+        var weightPolicy = prorationPolicy;
+        var fixedThirtySegments = salarySegments.Count > 1 && string.Equals(prorationResult.MethodUsed, "FIXED_30", StringComparison.OrdinalIgnoreCase);
+        if (fixedThirtySegments)
+        {
+            var weightMethod = prorationPolicy?.SalarySegmentAllocation switch
+            {
+                "CALENDAR_WEIGHTED" => "CALENDAR_DAYS",
+                "WORKING_WEIGHTED" => "WORKING_DAYS",
+                _ => throw new InvalidOperationException("Select CALENDAR_WEIGHTED or WORKING_WEIGHTED salary allocation for FIXED_30 transitions before calculation.")
+            };
+            weightPolicy = new ProrationPolicy { Method = weightMethod, Code = prorationPolicy!.Code };
+        }
+        var weightedSegments = new List<(PayrollSalarySegment Segment, decimal Factor)>();
+        foreach (var segment in salarySegments)
+        {
+            var factor = prorationResult.ProrationFactor;
+            if (salarySegments.Count > 1)
+            {
+                var segmentProration = await _prorationService.CalculateProrationFactorAsync(period.CompanyId,
+                    period.StartDate, period.EndDate, segment.Start, segment.End, weightPolicy, cancellationToken);
+                factor = segmentProration.ProrationFactor;
+            }
+            weightedSegments.Add((segment, factor));
+        }
+        if (fixedThirtySegments)
+        {
+            var totalWeight = weightedSegments.Sum(s => s.Factor);
+            if (totalWeight <= 0m)
+                throw new InvalidOperationException("The selected salary allocation has no eligible days. Review the work calendar and policy.");
+            decimal allocated = 0m;
+            for (var index = 0; index < weightedSegments.Count; index++)
+            {
+                var item = weightedSegments[index];
+                var factor = index == weightedSegments.Count - 1 ? prorationResult.ProrationFactor - allocated
+                    : Math.Round(prorationResult.ProrationFactor * item.Factor / totalWeight, 6);
+                weightedSegments[index] = (item.Segment, factor);
+                allocated += factor;
+            }
+        }
+        decimal proratedBasic = PayrollCurrencyRules.Round(weightedSegments.Sum(s => s.Segment.Structure.BasicSalary * s.Factor), roundingDecimals, roundingRules);
 
         // 2b. Unpaid Leave deduction
-        decimal unpaidLeaveDays = await _leaveService.GetUnpaidLeaveDaysInPeriodAsync(
-            employee.EmployeeCode, period.StartDate, period.EndDate, cancellationToken);
+        decimal unpaidLeaveDays = 0m;
         decimal unpaidLeaveDeduction = 0m;
-        if (unpaidLeaveDays > 0 && prorationResult.TotalBaseDays > 0)
+        foreach (var item in weightedSegments)
         {
-            unpaidLeaveDeduction = Math.Round((nominalBasic / prorationResult.TotalBaseDays) * unpaidLeaveDays, 3);
-            proratedBasic = Math.Max(0m, proratedBasic - unpaidLeaveDeduction);
+            var days = await _leaveService.GetUnpaidLeaveDaysInPeriodAsync(employee.EmployeeCode,
+                item.Segment.Start, item.Segment.End, cancellationToken);
+            unpaidLeaveDays += days;
+            if (days > 0m && prorationResult.TotalBaseDays > 0m)
+                unpaidLeaveDeduction += item.Segment.Structure.BasicSalary / prorationResult.TotalBaseDays * days;
         }
+        unpaidLeaveDeduction = PayrollCurrencyRules.Round(unpaidLeaveDeduction, roundingDecimals, roundingRules);
+        proratedBasic = Math.Max(0m, proratedBasic - unpaidLeaveDeduction);
 
         var components = new List<PayrollRunLineComponent>();
 
@@ -209,20 +290,21 @@ public sealed class PayrollCalculationEngine : IPayrollCalculationEngine
         decimal sscAllowances = 0m;
         decimal otherFixedDeductions = 0m;
 
-        if (structure?.Lines != null)
+        foreach (var item in weightedSegments)
         {
-            foreach (var line in structure.Lines.Where(l => l.IsActive))
+            foreach (var line in item.Segment.Structure.Lines.Where(l => l.IsActive))
             {
-                decimal compAmount = line.Amount;
-                if (line.Percent.HasValue && line.Percent.Value > 0)
-                {
-                    compAmount = Math.Round(nominalBasic * (line.Percent.Value / 100m), 3);
-                }
+                var rawComponentAmount = line.Component is null
+                    ? (line.Percent is > 0m
+                        ? item.Segment.Structure.BasicSalary * (line.Percent.Value / 100m)
+                        : line.Amount)
+                    : SalaryStructureLineRules.ResolveAmount(line, line.Component, item.Segment.Structure.BasicSalary);
+                var compAmount = PayrollCurrencyRules.Round(rawComponentAmount, roundingDecimals, roundingRules);
 
                 // Prorate allowances according to proration factor
-                decimal proratedCompAmount = Math.Round(compAmount * prorationResult.ProrationFactor, 3);
+                decimal proratedCompAmount = PayrollCurrencyRules.Round(compAmount * item.Factor, roundingDecimals, roundingRules);
 
-                var compType = line.Component?.ComponentType ?? "ALLOWANCE";
+                var compType = line.Component?.ComponentType?.Trim().ToUpperInvariant() ?? "ALLOWANCE";
                 if (compType == "ALLOWANCE" || compType == "EARNING")
                 {
                     totalAllowances += proratedCompAmount;
@@ -252,22 +334,11 @@ public sealed class PayrollCalculationEngine : IPayrollCalculationEngine
             }
         }
 
-        // 4. Overtime (0 hours default unless integrated from daily attendance)
+        // PAY-15/PAY-17: raw attendance overtime is never paid automatically.
+        // PAY-17 makes attendance overtime payable only through an explicitly approved
+        // HR_PAYROLL_ADJUSTMENT, which is included with other approved adjustments below.
         decimal overtimeHours = 0m;
         decimal overtimeEarnings = 0m;
-        if (_attendanceRepository != null)
-        {
-            var days = await _attendanceRepository.GetAttendanceDaysAsync(employee.EmployeeCode, period.StartDate, period.EndDate, cancellationToken);
-            foreach (var day in days.Where(d => d.OvertimeHours > 0 && !d.HasMissingPunch && !d.HasGeofenceViolation && d.LastCheckOut.HasValue))
-            {
-                overtimeHours += day.OvertimeHours;
-                var dayType = day.Status == "HOLIDAY" ? "HOLIDAY" : day.Status == "REST_DAY" ? "WEEKEND" : "NORMAL";
-                overtimeEarnings += await _overtimeService.CalculateOvertimeEarningsAsync(period.CompanyId, nominalBasic,
-                    day.OvertimeHours, dayType, day.AttendanceDate, cancellationToken);
-            }
-            if (overtimeEarnings > 0) components.Add(new PayrollRunLineComponent { ComponentCode = "OVERTIME",
-                ComponentNameLocal = "العمل الإضافي", ComponentNameEn = "Overtime", ComponentType = "EARNING", Amount = overtimeEarnings });
-        }
 
 
         // 5. Variable Adjustments (from HR_PAYROLL_ADJUSTMENT)
@@ -278,30 +349,31 @@ public sealed class PayrollCalculationEngine : IPayrollCalculationEngine
 
         foreach (var adj in adjustments)
         {
+            var adjustmentAmount = PayrollCurrencyRules.Round(adj.Amount, roundingDecimals, roundingRules);
             if (adj.AdjustmentType == "EARNING")
             {
-                variableEarnings += adj.Amount;
-                if (adj.Component?.IsTaxable != false) taxableVariable += adj.Amount;
-                if (adj.Component?.IsSscApplicable != false) sscVariable += adj.Amount;
+                variableEarnings += adjustmentAmount;
+                if (adj.Component?.IsTaxable != false) taxableVariable += adjustmentAmount;
+                if (adj.Component?.IsSscApplicable != false) sscVariable += adjustmentAmount;
                 components.Add(new PayrollRunLineComponent
                 {
                     ComponentCode = adj.ComponentCode,
                     ComponentNameLocal = adj.Component?.NameLocal ?? adj.ComponentCode,
                     ComponentNameEn = adj.Component?.NameEn ?? adj.ComponentCode,
                     ComponentType = "EARNING",
-                    Amount = adj.Amount
+                    Amount = adjustmentAmount
                 });
             }
             else if (adj.AdjustmentType == "DEDUCTION")
             {
-                variableDeductions += adj.Amount;
+                variableDeductions += adjustmentAmount;
                 components.Add(new PayrollRunLineComponent
                 {
                     ComponentCode = adj.ComponentCode,
                     ComponentNameLocal = adj.Component?.NameLocal ?? adj.ComponentCode,
                     ComponentNameEn = adj.Component?.NameEn ?? adj.ComponentCode,
                     ComponentType = "DEDUCTION",
-                    Amount = adj.Amount
+                    Amount = adjustmentAmount
                 });
             }
         }
@@ -311,9 +383,12 @@ public sealed class PayrollCalculationEngine : IPayrollCalculationEngine
         decimal grossSalary = proratedBasic + totalEarnings;
 
         // 7. SSC Calculation
-        // In Jordanian labor law: Basic + applicable allowances form the SSC eligible salary
+        // In statutory rules: Basic + applicable allowances form the SSC eligible salary
         decimal sscEligibleSalary = proratedBasic + sscAllowances + sscVariable;
-        var sscResult = _sscService.CalculateSSC(sscEligibleSalary, employee.IsHighRiskRole, sscPolicy);
+        var sscResult = _sscService.CalculateSSC(sscEligibleSalary, employee.IsHighRiskRole, sscPolicy, roundingDecimals, roundingRules)
+            ?? _sscService.CalculateSSC(sscEligibleSalary, employee.IsHighRiskRole, sscPolicy, roundingDecimals)
+            ?? _sscService.CalculateSSC(sscEligibleSalary, employee.IsHighRiskRole, sscPolicy)
+            ?? new SSCResult(0, 0, 0, 0, 0, 0, 0, "DEFAULT");
 
         components.Add(new PayrollRunLineComponent
         {
@@ -336,7 +411,10 @@ public sealed class PayrollCalculationEngine : IPayrollCalculationEngine
         // 8. Income Tax Calculation
         int dependentCount = employee.Dependents.Count(d => d.IsActive && d.IsTaxExemptionClaimed) + employee.TaxExemptionCount;
         var taxableGross = proratedBasic + taxableAllowances + taxableVariable + overtimeEarnings;
-        var taxResult = _taxEngine.CalculateIncomeTax(taxableGross, sscResult.EmployeeContribution, dependentCount, taxPolicy);
+        var taxResult = _taxEngine.CalculateIncomeTax(taxableGross, sscResult.EmployeeContribution, dependentCount, taxPolicy, roundingDecimals, roundingRules)
+            ?? _taxEngine.CalculateIncomeTax(taxableGross, sscResult.EmployeeContribution, dependentCount, taxPolicy, roundingDecimals)
+            ?? _taxEngine.CalculateIncomeTax(taxableGross, sscResult.EmployeeContribution, dependentCount, taxPolicy)
+            ?? new TaxResult(0, 0, 0, 0, 0, 0, "DEFAULT");
 
         components.Add(new PayrollRunLineComponent
         {
@@ -370,7 +448,8 @@ public sealed class PayrollCalculationEngine : IPayrollCalculationEngine
             netPayBeforeLoans,
             deductionPolicy,
             persistChanges: false,
-            cancellationToken: cancellationToken
+            cancellationToken: cancellationToken,
+            payrollCurrencyCode: structure.CurrencyCode ?? string.Empty
         );
 
         if (loanResult.TotalActualDeduction > 0)
@@ -394,7 +473,7 @@ public sealed class PayrollCalculationEngine : IPayrollCalculationEngine
             EmployeeCode = employee.EmployeeCode,
             BranchId = employee.BranchId,
             DepartmentCode = employee.DepartmentCode,
-            CostCenterCode = structure?.Lines.FirstOrDefault()?.Component?.GlAccountCode,
+            CostCenterCode = !string.IsNullOrWhiteSpace(employee.DepartmentCode) ? employee.DepartmentCode : structure?.Lines.FirstOrDefault()?.Component?.GlAccountCode,
             BasicSalary = proratedBasic,
             TotalEarnings = totalEarnings,
             GrossSalary = grossSalary,
@@ -410,6 +489,10 @@ public sealed class PayrollCalculationEngine : IPayrollCalculationEngine
             TotalDeductions = totalDeductions,
             NetPay = netPay,
             PaymentMethod = structure?.PaymentMethod ?? "BANK_TRANSFER",
+            CurrencyCode = structure?.CurrencyCode,
+            BeneficiaryName = !string.IsNullOrWhiteSpace(employee.NameLocal) ? employee.NameLocal
+                : !string.IsNullOrWhiteSpace(employee.NameEn) ? employee.NameEn : employee.EmployeeCode,
+            BeneficiaryNationalId = employee.NationalId,
             BankCode = employee.BankName,
             Iban = employee.BankIban,
             Status = "CALCULATED",
@@ -425,6 +508,19 @@ public sealed class PayrollCalculationEngine : IPayrollCalculationEngine
             employeeName = employee.NameLocal,
             payPeriod = period.PeriodCode,
             nominalBasicSalary = nominalBasic,
+            salarySegmentAllocation = fixedThirtySegments ? prorationPolicy!.SalarySegmentAllocation : prorationResult.MethodUsed,
+            salarySegments = weightedSegments.Select(s => new
+            {
+                structureId = s.Segment.Structure.Id,
+                startDate = s.Segment.Start,
+                endDate = s.Segment.End,
+                basicSalary = s.Segment.Structure.BasicSalary,
+                factor = s.Factor,
+                basicEarned = PayrollCurrencyRules.Round(s.Segment.Structure.BasicSalary * s.Factor, roundingDecimals, roundingRules),
+                paymentMethod = s.Segment.Structure.PaymentMethod,
+                currencyCode = s.Segment.Structure.CurrencyCode
+            }).ToArray(),
+            hasMixedPaymentMethods = weightedSegments.Select(s => s.Segment.Structure.PaymentMethod).Distinct().Count() > 1,
             proration = new
             {
                 factor = prorationResult.ProrationFactor,

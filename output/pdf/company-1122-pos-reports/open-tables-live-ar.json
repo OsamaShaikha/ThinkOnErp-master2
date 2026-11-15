@@ -1,0 +1,204 @@
+{
+  "success": true,
+  "statusCode": 200,
+  "message": "تمت العملية بنجاح.",
+  "data": {
+    "code": "open-tables-live",
+    "title": "تقرير الطاولات المباشر",
+    "isLive": true,
+    "header": {
+      "language": "ar",
+      "isRightToLeft": true,
+      "companyName": "debis acc",
+      "branchName": "جميع الفروع المتاحة",
+      "taxNumber": null,
+      "phone": "0796211887",
+      "currency": "JOD",
+      "cashier": "الكل",
+      "payment": "الكل",
+      "preparedBy": "admin",
+      "reportNumber": "RPT-20261028-2df70d304d824",
+      "issuedAtUtc": "2026-10-28T18:01:37.4407768Z",
+      "startDate": "2026-10-19T00:00:00Z",
+      "endDate": "2026-10-28T00:00:00Z",
+      "shiftId": null,
+      "tillId": null,
+      "days": [],
+      "payments": [],
+      "totals": {
+        "date": "0001-01-01T00:00:00",
+        "invoices": 0,
+        "sales": 0,
+        "discount": 0,
+        "returns": 0,
+        "net": 0,
+        "tax": 0,
+        "charges": 0,
+        "total": 0
+      },
+      "averageInvoice": 0
+    },
+    "filterNotes": [],
+    "branches": [
+      {
+        "branchId": 1,
+        "branchName": "debis acc",
+        "metrics": [
+          {
+            "label": "المبيعات الحالية",
+            "value": "0.000",
+            "unit": "JOD"
+          },
+          {
+            "label": "الطاولات",
+            "value": "3",
+            "unit": ""
+          },
+          {
+            "label": "المشغولة",
+            "value": "0",
+            "unit": ""
+          },
+          {
+            "label": "الإشغال",
+            "value": "0%",
+            "unit": ""
+          }
+        ],
+        "tables": [
+          {
+            "title": "حالة الطاولات المباشرة",
+            "columns": [
+              {
+                "label": "الطاولة",
+                "numeric": false,
+                "code": false,
+                "width": 1.5
+              },
+              {
+                "label": "الطابق",
+                "numeric": false,
+                "code": false,
+                "width": 1.5
+              },
+              {
+                "label": "الحالة",
+                "numeric": false,
+                "code": false,
+                "width": 1
+              },
+              {
+                "label": "الطلب",
+                "numeric": false,
+                "code": true,
+                "width": 1
+              },
+              {
+                "label": "الأشخاص",
+                "numeric": true,
+                "code": false,
+                "width": 1
+              },
+              {
+                "label": "الدقائق",
+                "numeric": true,
+                "code": false,
+                "width": 1
+              },
+              {
+                "label": "القيمة الحالية",
+                "numeric": true,
+                "code": false,
+                "width": 1
+              }
+            ],
+            "rows": [
+              [
+                "1 1",
+                "first floor",
+                "متاحة",
+                "-",
+                "0",
+                "14187",
+                "0.000"
+              ],
+              [
+                "2 2",
+                "first floor",
+                "متاحة",
+                "-",
+                "0",
+                "7022",
+                "0.000"
+              ],
+              [
+                "5 5",
+                "first floor",
+                "متاحة",
+                "-",
+                "0",
+                "6116",
+                "0.000"
+              ]
+            ]
+          },
+          {
+            "title": "سعة الطاولات والخدمة",
+            "columns": [
+              {
+                "label": "الطاولة",
+                "numeric": false,
+                "code": false,
+                "width": 1.5
+              },
+              {
+                "label": "السعة",
+                "numeric": true,
+                "code": false,
+                "width": 1
+              },
+              {
+                "label": "النادل / الكاشير",
+                "numeric": false,
+                "code": false,
+                "width": 2
+              },
+              {
+                "label": "وقت الفتح UTC",
+                "numeric": false,
+                "code": true,
+                "width": 1.5
+              }
+            ],
+            "rows": [
+              [
+                "first floor / 1",
+                "12",
+                "-",
+                "18/10/2026 21:34"
+              ],
+              [
+                "first floor / 2",
+                "4",
+                "-",
+                "23/10/2026 20:59"
+              ],
+              [
+                "first floor / 5",
+                "7",
+                "-",
+                "24/10/2026 12:05"
+              ]
+            ]
+          }
+        ],
+        "notes": [
+          "المتاحة: 3 · المفوتَرة: 0"
+        ]
+      }
+    ]
+  },
+  "errors": null,
+  "timestamp": "2026-10-28T18:01:37.5710171Z",
+  "traceId": "8fb1cbaa-3555-41da-9595-51736f3d05b3"
+}

@@ -1,0 +1,34 @@
+{
+  "success": true,
+  "statusCode": 200,
+  "message": "تمت العملية بنجاح.",
+  "data": {
+    "language": "ar",
+    "isRightToLeft": true,
+    "allBranchesLabel": "جميع الفروع",
+    "allCashiersLabel": "جميع الكاشيرات",
+    "branches": [
+      {
+        "id": 1,
+        "name": "debis acc"
+      }
+    ],
+    "cashiers": [
+      {
+        "userName": "admin",
+        "name": "مدير النظام"
+      },
+      {
+        "userName": "testuser_1789655588700",
+        "name": "مستخدم تجريبي"
+      },
+      {
+        "userName": "chk_1789657621208",
+        "name": "مستخدم فحص"
+      }
+    ]
+  },
+  "errors": null,
+  "timestamp": "2026-10-26T20:19:29.7511162Z",
+  "traceId": "bc5a8325-579c-48c6-b9aa-a418f74f18cc"
+}

@@ -4,19 +4,24 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage;
 using ThinkOnErp.Domain.Entities.Hr;
 using ThinkOnErp.Domain.Interfaces.Hr;
 using ThinkOnErp.Infrastructure.Data;
 
 namespace ThinkOnErp.Infrastructure.Repositories.Hr;
 
-public sealed class EmployeeRepository : IEmployeeRepository
+public sealed partial class EmployeeRepository : IEmployeeRepository
 {
     private readonly OracleDbContext _context;
+    private readonly EmployeeStorageTextValidator _textStorage;
+    private readonly ThinkOnErp.Application.Services.Hr.EmployeeFieldAccess? _fields;
 
-    public EmployeeRepository(OracleDbContext context)
+    public EmployeeRepository(OracleDbContext context, ThinkOnErp.Application.Services.Hr.EmployeeFieldAccess? fields = null)
     {
         _context = context;
+        _fields = fields;
+        _textStorage = new(context);
     }
 
     public Task<Employee?> GetEmployeeByUserIdAsync(long userId, CancellationToken cancellationToken = default)
@@ -26,12 +31,22 @@ public sealed class EmployeeRepository : IEmployeeRepository
 
     public async Task<bool> IsUserAvailableForEmployeeAsync(long userId, long? branchId, CancellationToken cancellationToken = default)
     {
+        if (_context.Database.IsOracle() && _context.Database.CurrentTransaction != null)
+        {
+            // Account activation/company changes must not race the subsequent link write.
+            await using var command = _context.Database.GetDbConnection().CreateCommand();
+            command.Transaction = _context.Database.CurrentTransaction.GetDbTransaction();
+            command.CommandText = "SELECT 1 FROM SYS_USERS WHERE \"Id\"=:userId FOR UPDATE";
+            var parameter = command.CreateParameter(); parameter.ParameterName = "userId"; parameter.Value = userId; command.Parameters.Add(parameter);
+            if (await command.ExecuteScalarAsync(cancellationToken) == null) return false;
+        }
         if (!await _context.SysUsers.AnyAsync(u => u.Id == userId && u.IsActive &&
-            (!_context.HrScopeEnabled || u.CompanyId == _context.HrScopeCompanyId), cancellationToken))
+            (_context.HrScopeCompanyId <= 0 && !_context.HrScopeEnabled || u.CompanyId == _context.HrScopeCompanyId), cancellationToken))
             return false;
 
         return !branchId.HasValue || await _context.SysUserBranches.AnyAsync(
-            b => b.UserId == userId && b.BranchId == branchId.Value, cancellationToken);
+            b => b.UserId == userId && b.BranchId == branchId.Value && _context.SysBranches.Any(branch => branch.Id == b.BranchId && branch.IsActive &&
+                (_context.HrScopeCompanyId <= 0 && !_context.HrScopeEnabled || branch.CompanyId == _context.HrScopeCompanyId)), cancellationToken);
     }
 
     public async Task<(IReadOnlyList<Employee> Items, int TotalCount)> GetEmployeesAsync(
@@ -54,13 +69,15 @@ public sealed class EmployeeRepository : IEmployeeRepository
         if (!string.IsNullOrWhiteSpace(searchKeyword))
         {
             var kw = searchKeyword.Trim().ToLower();
+            var identityAll = _fields == null || _fields.AllBranches;
+            var identityBranches = _fields?.Branches(ThinkOnErp.Application.Services.Hr.EmployeeFieldAccess.ViewIdentity) ?? Array.Empty<long>();
             query = query.Where(e =>
                 e.EmployeeCode.ToLower().Contains(kw) ||
                 e.NameLocal.ToLower().Contains(kw) ||
                 e.NameEn.ToLower().Contains(kw) ||
-                e.NationalId.ToLower().Contains(kw) ||
-                (e.Phone != null && e.Phone.Contains(kw)) ||
-                (e.Email != null && e.Email.ToLower().Contains(kw)));
+                ((identityAll || e.BranchId.HasValue && identityBranches.Contains(e.BranchId.Value)) &&
+                 (e.NationalId.ToLower().Contains(kw) || (e.Phone != null && e.Phone.Contains(kw)) ||
+                  (e.Email != null && e.Email.ToLower().Contains(kw)))));
         }
 
         if (!string.IsNullOrWhiteSpace(departmentCode))
@@ -106,13 +123,15 @@ public sealed class EmployeeRepository : IEmployeeRepository
         if (!string.IsNullOrWhiteSpace(searchKeyword))
         {
             var kw = searchKeyword.Trim().ToLower();
+            var identityAll = _fields == null || _fields.AllBranches;
+            var identityBranches = _fields?.Branches(ThinkOnErp.Application.Services.Hr.EmployeeFieldAccess.ViewIdentity) ?? Array.Empty<long>();
             query = query.Where(e =>
                 e.EmployeeCode.ToLower().Contains(kw) ||
                 e.NameLocal.ToLower().Contains(kw) ||
                 e.NameEn.ToLower().Contains(kw) ||
-                e.NationalId.ToLower().Contains(kw) ||
-                (e.Phone != null && e.Phone.Contains(kw)) ||
-                (e.Email != null && e.Email.ToLower().Contains(kw)));
+                ((identityAll || e.BranchId.HasValue && identityBranches.Contains(e.BranchId.Value)) &&
+                 (e.NationalId.ToLower().Contains(kw) || (e.Phone != null && e.Phone.Contains(kw)) ||
+                  (e.Email != null && e.Email.ToLower().Contains(kw)))));
         }
 
         if (!string.IsNullOrWhiteSpace(departmentCode))
@@ -145,14 +164,25 @@ public sealed class EmployeeRepository : IEmployeeRepository
             .FirstOrDefaultAsync(e => e.EmployeeCode == employeeCode, cancellationToken);
     }
 
+    public Task<string?> GetLinkedUserNameByEmployeeCodeAsync(string employeeCode, CancellationToken cancellationToken = default) =>
+        _context.Employees.AsNoTracking()
+            .Where(e => e.EmployeeCode == employeeCode && e.UserId.HasValue)
+            .Select(e => e.User == null ? null : e.User.UserName)
+            .FirstOrDefaultAsync(cancellationToken);
+
     public async Task<bool> ExistsByCodeAsync(string employeeCode, CancellationToken cancellationToken = default)
     {
-        return await _context.Employees.AnyAsync(e => e.EmployeeCode == employeeCode, cancellationToken);
+        var key = employeeCode.Trim().ToUpperInvariant();
+        return await _context.Employees.IgnoreQueryFilters().AnyAsync(e => e.EmployeeCode.Trim().ToUpper() == key, cancellationToken);
     }
 
     public async Task<bool> ExistsByNationalIdAsync(string nationalId, string? excludeEmployeeCode = null, CancellationToken cancellationToken = default)
     {
-        var query = _context.Employees.Where(e => e.NationalId == nationalId);
+        if (_context.HrScopeEnabled && _context.HrScopeCompanyId <= 0) throw new InvalidOperationException("Trusted company scope is required for identity validation.");
+        var key = nationalId.Trim();
+        var query = _context.Employees.IgnoreQueryFilters().Where(e => e.NationalId.Trim() == key &&
+            (!_context.HrScopeEnabled && _context.HrScopeCompanyId <= 0 || !e.BranchId.HasValue ||
+                _context.SysBranches.Any(b => b.Id == e.BranchId && b.CompanyId == _context.HrScopeCompanyId)));
         if (!string.IsNullOrWhiteSpace(excludeEmployeeCode))
         {
             query = query.Where(e => e.EmployeeCode != excludeEmployeeCode);
@@ -167,7 +197,18 @@ public sealed class EmployeeRepository : IEmployeeRepository
 
     public Task UpdateEmployeeAsync(Employee employee, CancellationToken cancellationToken = default)
     {
-        _context.Employees.Update(employee);
+        // Mark only the root: Update(graph) would also rewrite stale pre-lock dependents/salary structures.
+        _context.Entry(employee).State = EntityState.Modified;
+        return Task.CompletedTask;
+    }
+
+    public Task UpdateEmployeeUserLinkAsync(Employee employee, CancellationToken cancellationToken = default)
+    {
+        var entry = _context.Entry(employee);
+        if (entry.State == EntityState.Detached) entry.State = EntityState.Unchanged;
+        // This security operation must never rewrite payroll/profile fields or child graphs.
+        foreach (var property in entry.Properties)
+            property.IsModified = property.Metadata.Name is nameof(Employee.UserId) or nameof(Employee.UpdateUser) or nameof(Employee.UpdateDate);
         return Task.CompletedTask;
     }
 
@@ -179,7 +220,10 @@ public sealed class EmployeeRepository : IEmployeeRepository
 
     public async Task<EmployeeDependent?> GetDependentByIdAsync(long id, CancellationToken cancellationToken = default)
     {
-        return await _context.EmployeeDependents.FirstOrDefaultAsync(d => d.Id == id, cancellationToken);
+        var dependent = await _context.EmployeeDependents.FirstOrDefaultAsync(d => d.Id == id, cancellationToken);
+        if (dependent != null && _context.Database.CurrentTransaction != null && _context.Entry(dependent).State == EntityState.Unchanged)
+            await _context.Entry(dependent).ReloadAsync(cancellationToken);
+        return dependent;
     }
 
     public async Task AddDependentAsync(EmployeeDependent dependent, CancellationToken cancellationToken = default)
@@ -195,12 +239,17 @@ public sealed class EmployeeRepository : IEmployeeRepository
 
     public async Task<SalaryStructure?> GetActiveSalaryStructureAsync(string employeeCode, DateTime asOfDate, CancellationToken cancellationToken = default)
     {
-        return await _context.SalaryStructures
+        var dayStart = asOfDate.Date;
+        var query = _context.SalaryStructures
             .Include(s => s.Lines.Where(l => l.IsActive))
                 .ThenInclude(l => l.Component)
-            .Where(s => s.EmployeeCode == employeeCode && s.IsActive && s.EffectiveFrom <= asOfDate && (!s.EffectiveTo.HasValue || s.EffectiveTo.Value >= asOfDate))
-            .OrderByDescending(s => s.EffectiveFrom)
-            .FirstOrDefaultAsync(cancellationToken);
+            .Where(s => s.EmployeeCode == employeeCode && s.IsActive && (!s.EffectiveTo.HasValue || s.EffectiveTo.Value >= dayStart));
+        // Effective dates are calendar-day values. An exclusive next-day bound
+        // includes legacy rows with non-midnight time components without TRUNC(column).
+        if (dayStart != DateTime.MaxValue.Date)
+            query = query.Where(s => s.EffectiveFrom < dayStart.AddDays(1));
+
+        return await query.OrderByDescending(s => s.EffectiveFrom).FirstOrDefaultAsync(cancellationToken);
     }
 
     public async Task<IReadOnlyList<SalaryStructure>> GetSalaryStructuresAsync(string employeeCode, CancellationToken cancellationToken = default)
@@ -235,6 +284,9 @@ public sealed class EmployeeRepository : IEmployeeRepository
         await _context.SalaryComponents.AddAsync(component, cancellationToken);
     }
 
+    public Task ValidateStorageAsync(Employee employee, CancellationToken cancellationToken = default)
+        => _textStorage.ValidateAsync(_context.Entry(employee), cancellationToken);
+
     public async Task SaveChangesAsync(CancellationToken cancellationToken = default)
     {
         try
@@ -251,7 +303,16 @@ public sealed class EmployeeRepository : IEmployeeRepository
                         throw new UnauthorizedAccessException("Employee changes must remain inside the permitted company and branches.");
                 }
             }
-            foreach (var entry in _context.ChangeTracker.Entries<Employee>().Where(e => e.Entity.UserId.HasValue &&
+            foreach (var entry in _context.ChangeTracker.Entries<Employee>().Where(e => e.State is EntityState.Added or EntityState.Modified).ToArray())
+            {
+                if (entry.State == EntityState.Added || entry.Properties.Any(p => p.Metadata.Name is not (nameof(Employee.UserId) or nameof(Employee.UpdateUser) or nameof(Employee.UpdateDate)) && !Equals(p.OriginalValue, p.CurrentValue)))
+                    EmployeeProfileRules.Validate(entry.Entity);
+                await EmployeeOrganizationValidator.ValidateAsync(_context, entry, cancellationToken);
+                await _textStorage.ValidateAsync(entry, cancellationToken);
+            }
+            foreach (var entry in _context.ChangeTracker.Entries<EmployeeDependent>().Where(e => e.State is EntityState.Added or EntityState.Modified).ToArray())
+                await _textStorage.ValidateAsync(entry, cancellationToken);
+            foreach (var entry in _context.ChangeTracker.Entries<Employee>().Where(e => (e.State is EntityState.Added or EntityState.Modified) && e.Entity.UserId.HasValue &&
                 (!e.Entity.IsActive || e.Entity.EmploymentStatus != "ACTIVE")))
             {
                 var account = await _context.SysUsers.SingleOrDefaultAsync(u => u.Id == entry.Entity.UserId, cancellationToken);

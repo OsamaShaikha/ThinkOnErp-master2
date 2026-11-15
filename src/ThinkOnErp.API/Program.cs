@@ -295,6 +295,10 @@ try
     // Register Application and Infrastructure services
     builder.Services.AddApplication();
     builder.Services.AddInfrastructure(builder.Configuration);
+    builder.Services.AddSingleton<ThinkOnErp.API.Middleware.ITenantSchemaResolver,
+        ThinkOnErp.API.Middleware.OracleTenantSchemaResolver>();
+    builder.Services.AddSingleton<ThinkOnErp.API.Middleware.ITenantSchemaSession,
+        ThinkOnErp.API.Middleware.OracleTenantSchemaSession>();
 
     // Add services to the container.
     builder.Services.AddControllers(options =>

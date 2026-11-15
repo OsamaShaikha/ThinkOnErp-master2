@@ -1,0 +1,221 @@
+{
+  "success": true,
+  "statusCode": 200,
+  "message": "تمت العملية بنجاح.",
+  "data": {
+    "code": "sales-by-customer",
+    "title": "المبيعات حسب العميل",
+    "isLive": false,
+    "header": {
+      "language": "ar",
+      "isRightToLeft": true,
+      "companyName": "debis acc",
+      "branchName": "جميع الفروع المتاحة",
+      "taxNumber": null,
+      "phone": "0796211887",
+      "currency": "JOD",
+      "cashier": "الكل",
+      "payment": "الكل",
+      "preparedBy": "admin",
+      "reportNumber": "RPT-20261028-d9ae71ea67b94",
+      "issuedAtUtc": "2026-10-28T18:01:21.3001978Z",
+      "startDate": "2026-10-01T00:00:00",
+      "endDate": "2026-10-28T00:00:00",
+      "shiftId": null,
+      "tillId": null,
+      "days": [],
+      "payments": [],
+      "totals": {
+        "date": "0001-01-01T00:00:00",
+        "invoices": 0,
+        "sales": 0,
+        "discount": 0,
+        "returns": 0,
+        "net": 0,
+        "tax": 0,
+        "charges": 0,
+        "total": 0
+      },
+      "averageInvoice": 0
+    },
+    "filterNotes": [],
+    "branches": [
+      {
+        "branchId": 1,
+        "branchName": "debis acc",
+        "metrics": [
+          {
+            "label": "مبيعات العملاء",
+            "value": "3,955.498",
+            "unit": "JOD"
+          },
+          {
+            "label": "العملاء",
+            "value": "5",
+            "unit": ""
+          },
+          {
+            "label": "المدفوع",
+            "value": "3,676.649",
+            "unit": "JOD"
+          },
+          {
+            "label": "المتبقي",
+            "value": "278.849",
+            "unit": "JOD"
+          }
+        ],
+        "tables": [
+          {
+            "title": "مبيعات وأرصدة العملاء",
+            "columns": [
+              {
+                "label": "العميل",
+                "numeric": false,
+                "code": false,
+                "width": 2.5
+              },
+              {
+                "label": "الطلبات",
+                "numeric": true,
+                "code": false,
+                "width": 1
+              },
+              {
+                "label": "المبيعات",
+                "numeric": true,
+                "code": false,
+                "width": 1
+              },
+              {
+                "label": "الخصم",
+                "numeric": true,
+                "code": false,
+                "width": 1
+              },
+              {
+                "label": "المدفوع",
+                "numeric": true,
+                "code": false,
+                "width": 1
+              },
+              {
+                "label": "المتبقي",
+                "numeric": true,
+                "code": false,
+                "width": 1
+              }
+            ],
+            "rows": [
+              [
+                "زبون نقدي / عام\nWALK-IN",
+                "146",
+                "2,966.498",
+                "16.350",
+                "2,804.599",
+                "161.899"
+              ],
+              [
+                "عميل محدث تجريبي\nCUST-001",
+                "4",
+                "710.000",
+                "0.000",
+                "710.000",
+                "0.000"
+              ],
+              [
+                "اسامة\nCUST_004",
+                "13",
+                "121.450",
+                "0.000",
+                "82.300",
+                "39.150"
+              ],
+              [
+                "محمد الدبسي\nCUST_005",
+                "15",
+                "103.500",
+                "0.000",
+                "79.750",
+                "23.750"
+              ],
+              [
+                "مؤسسة الوفاق لتقنية المعلومات\nCUST-002",
+                "7",
+                "54.050",
+                "0.000",
+                "0.000",
+                "54.050"
+              ]
+            ]
+          },
+          {
+            "title": "زيارات العملاء",
+            "columns": [
+              {
+                "label": "العميل",
+                "numeric": false,
+                "code": false,
+                "width": 2
+              },
+              {
+                "label": "الهاتف",
+                "numeric": false,
+                "code": true,
+                "width": 1
+              },
+              {
+                "label": "متوسط الفاتورة",
+                "numeric": true,
+                "code": false,
+                "width": 1
+              },
+              {
+                "label": "آخر زيارة UTC",
+                "numeric": false,
+                "code": true,
+                "width": 1.5
+              }
+            ],
+            "rows": [
+              [
+                "زبون نقدي / عام\nWALK-IN",
+                "-",
+                "20.320",
+                "25/10/2026 10:57"
+              ],
+              [
+                "عميل محدث تجريبي\nCUST-001",
+                "-",
+                "177.500",
+                "02/10/2026 22:15"
+              ],
+              [
+                "اسامة\nCUST_004",
+                "0796211887",
+                "9.340",
+                "24/10/2026 12:05"
+              ],
+              [
+                "محمد الدبسي\nCUST_005",
+                "0796211887",
+                "6.900",
+                "15/10/2026 22:14"
+              ],
+              [
+                "مؤسسة الوفاق لتقنية المعلومات\nCUST-002",
+                "0559876543",
+                "7.720",
+                "13/10/2026 16:52"
+              ]
+            ]
+          }
+        ],
+        "notes": []
+      }
+    ]
+  },
+  "errors": null,
+  "timestamp": "2026-10-28T18:01:22.0860199Z",
+  "traceId": "51dd2e87-2575-4631-81bc-f1b5b21225fc"
+}

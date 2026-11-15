@@ -1,0 +1,153 @@
+{
+  "success": true,
+  "statusCode": 200,
+  "message": "تمت العملية بنجاح.",
+  "data": {
+    "code": "sales-by-floor-and-table",
+    "title": "المبيعات حسب الطابق والطاولة",
+    "isLive": false,
+    "header": {
+      "language": "ar",
+      "isRightToLeft": true,
+      "companyName": "debis acc",
+      "branchName": "جميع الفروع المتاحة",
+      "taxNumber": null,
+      "phone": "0796211887",
+      "currency": "JOD",
+      "cashier": "الكل",
+      "payment": "الكل",
+      "preparedBy": "admin",
+      "reportNumber": "RPT-20261028-c3884c4117194",
+      "issuedAtUtc": "2026-10-28T18:01:10.7061373Z",
+      "startDate": "2026-10-01T00:00:00",
+      "endDate": "2026-10-28T00:00:00",
+      "shiftId": null,
+      "tillId": null,
+      "days": [],
+      "payments": [],
+      "totals": {
+        "date": "0001-01-01T00:00:00",
+        "invoices": 0,
+        "sales": 0,
+        "discount": 0,
+        "returns": 0,
+        "net": 0,
+        "tax": 0,
+        "charges": 0,
+        "total": 0
+      },
+      "averageInvoice": 0
+    },
+    "filterNotes": [],
+    "branches": [
+      {
+        "branchId": 1,
+        "branchName": "debis acc",
+        "metrics": [
+          {
+            "label": "مبيعات الطاولات",
+            "value": "475.500",
+            "unit": "JOD"
+          },
+          {
+            "label": "الطلبات",
+            "value": "20",
+            "unit": ""
+          },
+          {
+            "label": "الأشخاص",
+            "value": "30",
+            "unit": ""
+          },
+          {
+            "label": "الإنفاق للشخص",
+            "value": "15.850",
+            "unit": "JOD"
+          }
+        ],
+        "tables": [
+          {
+            "title": "مبيعات الطوابق والطاولات",
+            "columns": [
+              {
+                "label": "الطابق / الطاولة",
+                "numeric": false,
+                "code": false,
+                "width": 2
+              },
+              {
+                "label": "السعة",
+                "numeric": true,
+                "code": false,
+                "width": 1
+              },
+              {
+                "label": "الطلبات",
+                "numeric": true,
+                "code": false,
+                "width": 1
+              },
+              {
+                "label": "الأشخاص",
+                "numeric": true,
+                "code": false,
+                "width": 1
+              },
+              {
+                "label": "المبيعات",
+                "numeric": true,
+                "code": false,
+                "width": 1
+              },
+              {
+                "label": "متوسط الفاتورة",
+                "numeric": true,
+                "code": false,
+                "width": 1
+              },
+              {
+                "label": "للشخص",
+                "numeric": true,
+                "code": false,
+                "width": 1
+              }
+            ],
+            "rows": [
+              [
+                "first floor\n2 2",
+                "4",
+                "11",
+                "17",
+                "415.875",
+                "37.810",
+                "24.460"
+              ],
+              [
+                "first floor\n1 1",
+                "12",
+                "8",
+                "8",
+                "56.625",
+                "7.080",
+                "7.080"
+              ],
+              [
+                "first floor\n5 5",
+                "7",
+                "1",
+                "5",
+                "3.000",
+                "3.000",
+                "0.600"
+              ]
+            ]
+          }
+        ],
+        "notes": []
+      }
+    ]
+  },
+  "errors": null,
+  "timestamp": "2026-10-28T18:01:10.895134Z",
+  "traceId": "db7b9dbd-3189-428a-969d-720b6b2aa310"
+}

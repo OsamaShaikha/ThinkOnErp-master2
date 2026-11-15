@@ -9,6 +9,7 @@ public interface IBankingRepository
     Task<BankAccount?> GetBankAccountByNumberAsync(string accountNumber, CancellationToken cancellationToken = default);
     Task<IReadOnlyList<BankAccount>> GetBankAccountsAsync(long? branchId, bool? activeOnly, CancellationToken cancellationToken = default);
     Task AddBankAccountAsync(BankAccount account, CancellationToken cancellationToken = default);
+    Task<bool> CurrencyExistsAsync(long currencyId, CancellationToken cancellationToken = default);
 
     // Cash Registers
     Task<CashRegister?> GetCashRegisterByIdAsync(long id, CancellationToken cancellationToken = default);

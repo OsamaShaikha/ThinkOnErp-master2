@@ -7,6 +7,11 @@ namespace ThinkOnErp.Application.Services.Hr;
 
 public interface IHrAttendanceService
 {
+    Task<IReadOnlyList<AttendanceDayHistoryDto>> GetAttendanceHistoryAsync(
+        string employeeCode, DateOnly fromDate, DateOnly toDate, string? status = null,
+        CancellationToken cancellationToken = default);
+    Task<AttendanceMonthSummaryDto> GetAttendanceMonthSummaryAsync(
+        string employeeCode, int year, int month, CancellationToken cancellationToken = default);
     /// <summary>
     /// Validates employee location against branch geofence range and registers an attendance Check-In.
     /// </summary>

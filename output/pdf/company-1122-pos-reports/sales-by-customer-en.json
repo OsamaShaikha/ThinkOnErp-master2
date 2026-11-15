@@ -1,0 +1,221 @@
+{
+  "success": true,
+  "statusCode": 200,
+  "message": "تمت العملية بنجاح.",
+  "data": {
+    "code": "sales-by-customer",
+    "title": "Sales by customer",
+    "isLive": false,
+    "header": {
+      "language": "en",
+      "isRightToLeft": false,
+      "companyName": "debis acc",
+      "branchName": "All accessible branches",
+      "taxNumber": null,
+      "phone": "0796211887",
+      "currency": "JOD",
+      "cashier": "All",
+      "payment": "All",
+      "preparedBy": "admin",
+      "reportNumber": "RPT-20261028-a54b24cffcd44",
+      "issuedAtUtc": "2026-10-28T18:01:24.5938325Z",
+      "startDate": "2026-10-01T00:00:00",
+      "endDate": "2026-10-28T00:00:00",
+      "shiftId": null,
+      "tillId": null,
+      "days": [],
+      "payments": [],
+      "totals": {
+        "date": "0001-01-01T00:00:00",
+        "invoices": 0,
+        "sales": 0,
+        "discount": 0,
+        "returns": 0,
+        "net": 0,
+        "tax": 0,
+        "charges": 0,
+        "total": 0
+      },
+      "averageInvoice": 0
+    },
+    "filterNotes": [],
+    "branches": [
+      {
+        "branchId": 1,
+        "branchName": "debis acc",
+        "metrics": [
+          {
+            "label": "Customer sales",
+            "value": "3,955.498",
+            "unit": "JOD"
+          },
+          {
+            "label": "Customers",
+            "value": "5",
+            "unit": ""
+          },
+          {
+            "label": "Paid",
+            "value": "3,676.649",
+            "unit": "JOD"
+          },
+          {
+            "label": "Remaining",
+            "value": "278.849",
+            "unit": "JOD"
+          }
+        ],
+        "tables": [
+          {
+            "title": "Customer sales & balances",
+            "columns": [
+              {
+                "label": "Customer",
+                "numeric": false,
+                "code": false,
+                "width": 2.5
+              },
+              {
+                "label": "Orders",
+                "numeric": true,
+                "code": false,
+                "width": 1
+              },
+              {
+                "label": "Sales",
+                "numeric": true,
+                "code": false,
+                "width": 1
+              },
+              {
+                "label": "Discount",
+                "numeric": true,
+                "code": false,
+                "width": 1
+              },
+              {
+                "label": "Paid",
+                "numeric": true,
+                "code": false,
+                "width": 1
+              },
+              {
+                "label": "Remaining",
+                "numeric": true,
+                "code": false,
+                "width": 1
+              }
+            ],
+            "rows": [
+              [
+                "Walk-in customer\nWALK-IN",
+                "146",
+                "2,966.498",
+                "16.350",
+                "2,804.599",
+                "161.899"
+              ],
+              [
+                "عميل محدث تجريبي\nCUST-001",
+                "4",
+                "710.000",
+                "0.000",
+                "710.000",
+                "0.000"
+              ],
+              [
+                "اسامة\nCUST_004",
+                "13",
+                "121.450",
+                "0.000",
+                "82.300",
+                "39.150"
+              ],
+              [
+                "محمد الدبسي\nCUST_005",
+                "15",
+                "103.500",
+                "0.000",
+                "79.750",
+                "23.750"
+              ],
+              [
+                "مؤسسة الوفاق لتقنية المعلومات\nCUST-002",
+                "7",
+                "54.050",
+                "0.000",
+                "0.000",
+                "54.050"
+              ]
+            ]
+          },
+          {
+            "title": "Customer visits",
+            "columns": [
+              {
+                "label": "Customer",
+                "numeric": false,
+                "code": false,
+                "width": 2
+              },
+              {
+                "label": "Phone",
+                "numeric": false,
+                "code": true,
+                "width": 1
+              },
+              {
+                "label": "Average invoice",
+                "numeric": true,
+                "code": false,
+                "width": 1
+              },
+              {
+                "label": "Last visit UTC",
+                "numeric": false,
+                "code": true,
+                "width": 1.5
+              }
+            ],
+            "rows": [
+              [
+                "Walk-in customer\nWALK-IN",
+                "-",
+                "20.320",
+                "25/10/2026 10:57"
+              ],
+              [
+                "عميل محدث تجريبي\nCUST-001",
+                "-",
+                "177.500",
+                "02/10/2026 22:15"
+              ],
+              [
+                "اسامة\nCUST_004",
+                "0796211887",
+                "9.340",
+                "24/10/2026 12:05"
+              ],
+              [
+                "محمد الدبسي\nCUST_005",
+                "0796211887",
+                "6.900",
+                "15/10/2026 22:14"
+              ],
+              [
+                "مؤسسة الوفاق لتقنية المعلومات\nCUST-002",
+                "0559876543",
+                "7.720",
+                "13/10/2026 16:52"
+              ]
+            ]
+          }
+        ],
+        "notes": []
+      }
+    ]
+  },
+  "errors": null,
+  "timestamp": "2026-10-28T18:01:25.4952099Z",
+  "traceId": "a33091a0-2b14-4234-8b1a-a34c3aea2db4"
+}

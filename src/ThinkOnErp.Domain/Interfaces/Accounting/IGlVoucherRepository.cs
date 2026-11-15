@@ -15,6 +15,7 @@ public interface IGlVoucherRepository
     Task<bool> HasAssociatedVouchersAsync(int typeCode, CancellationToken cancellationToken = default);
 
     Task<GlVoucherHeader?> GetByIdAsync(long id, CancellationToken cancellationToken = default);
+    Task<IReadOnlyList<GlVoucherHeader>> GetBySourceAsync(long branchId, string sourceSystemCode, long sourceRefId, CancellationToken cancellationToken = default);
     Task<GlVoucherHeader?> GetByNumberAsync(
         long branchId,
         int year,

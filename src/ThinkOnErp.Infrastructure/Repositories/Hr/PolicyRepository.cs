@@ -5,6 +5,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using ThinkOnErp.Domain.Entities.Hr;
+using ThinkOnErp.Domain.Entities;
 using ThinkOnErp.Domain.Interfaces.Hr;
 using ThinkOnErp.Infrastructure.Data;
 
@@ -17,6 +18,55 @@ public sealed class PolicyRepository : IPolicyRepository
     public PolicyRepository(OracleDbContext context)
     {
         _context = context;
+    }
+
+    public Task<int?> GetBranchRoundingRulesAsync(long branchId, CancellationToken cancellationToken = default) =>
+        _context.SysBranches.AsNoTracking().Where(b => b.Id == branchId)
+            .Select(b => b.RoundingRules).SingleOrDefaultAsync(cancellationToken);
+
+    public async Task<IReadOnlyDictionary<string, int>> GetConfiguredPayrollCurrencyDecimalsAsync(long companyId, CancellationToken cancellationToken = default)
+    {
+        var rows = await _context.PayrollCurrencyPrecisions.AsNoTracking()
+            .Where(x => x.CompanyId == companyId).ToListAsync(cancellationToken);
+        var result = new Dictionary<string, int>(StringComparer.Ordinal);
+        foreach (var group in rows.GroupBy(x => SalaryPaymentMetadata.Normalize(x.CurrencyCode), StringComparer.Ordinal))
+        {
+            var values = group.Select(x => x.DecimalPlaces).Distinct().ToArray();
+            if (values.Length != 1)
+                throw new InvalidOperationException($"Currency code '{group.Key}' has conflicting payroll precision values for company {companyId}.");
+            result.Add(group.Key, values[0]);
+        }
+        return result;
+    }
+
+    public async Task<IReadOnlyList<PayrollCurrencyPrecision>> GetPayrollCurrencyPrecisionsAsync(long companyId, CancellationToken cancellationToken = default) =>
+        await _context.PayrollCurrencyPrecisions.AsNoTracking().Where(x => x.CompanyId == companyId)
+            .OrderBy(x => x.CurrencyCode).ToListAsync(cancellationToken);
+
+    public async Task SavePayrollCurrencyPrecisionAsync(PayrollCurrencyPrecision precision, CancellationToken cancellationToken = default)
+    {
+        var current = await _context.PayrollCurrencyPrecisions.SingleOrDefaultAsync(
+            x => x.CompanyId == precision.CompanyId && x.CurrencyCode == precision.CurrencyCode, cancellationToken);
+        if (current is null)
+        {
+            precision.UpdateUser = null;
+            precision.UpdateDate = null;
+            await _context.PayrollCurrencyPrecisions.AddAsync(precision, cancellationToken);
+            return;
+        }
+
+        current.DecimalPlaces = precision.DecimalPlaces;
+        current.UpdateUser = precision.UpdateUser;
+        current.UpdateDate = precision.UpdateDate;
+    }
+
+    public async Task<bool> DeletePayrollCurrencyPrecisionAsync(long companyId, string currencyCode, CancellationToken cancellationToken = default)
+    {
+        var current = await _context.PayrollCurrencyPrecisions.SingleOrDefaultAsync(
+            x => x.CompanyId == companyId && x.CurrencyCode == currencyCode, cancellationToken);
+        if (current is null) return false;
+        _context.PayrollCurrencyPrecisions.Remove(current);
+        return true;
     }
 
     public async Task<TaxPolicy?> GetActiveTaxPolicyAsync(long companyId, DateTime effectiveDate, CancellationToken cancellationToken = default)
@@ -111,6 +161,8 @@ public sealed class PolicyRepository : IPolicyRepository
     {
         return await _context.OvertimeRules
             .Where(r => r.CompanyId == companyId && r.IsActive && r.EffectiveFrom <= effectiveDate && (r.EffectiveTo == null || r.EffectiveTo >= effectiveDate))
+            .OrderByDescending(r => r.EffectiveFrom)
+            .ThenBy(r => r.Id)
             .ToListAsync(cancellationToken);
     }
 
@@ -122,7 +174,7 @@ public sealed class PolicyRepository : IPolicyRepository
     public async Task<AttendancePolicy?> GetActiveAttendancePolicyAsync(long companyId, DateTime effectiveDate, CancellationToken cancellationToken = default)
     {
         return await _context.AttendancePolicies
-            .Where(p => p.CompanyId == companyId && p.IsActive && p.EffectiveFrom <= effectiveDate && (p.EffectiveTo == null || p.EffectiveTo >= effectiveDate))
+            .Where(p => p.CompanyId == companyId && (p.IsActive || p.EffectiveTo.HasValue) && p.EffectiveFrom <= effectiveDate && (p.EffectiveTo == null || p.EffectiveTo >= effectiveDate))
             .OrderByDescending(p => p.IsDefault)
             .ThenByDescending(p => p.EffectiveFrom)
             .FirstOrDefaultAsync(cancellationToken);

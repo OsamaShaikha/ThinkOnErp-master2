@@ -15,16 +15,17 @@ global:
 
 # Load alert rules for audit system monitoring
 rule_files:
-  - "alerts/audit-system-alerts.yml"
-  - "alerts/database-alerts.yml"
-  - "alerts/audit-failures-alerts.yml"
-  - "alerts/security-alerts.yml"
+  - "prometheus/alerts/audit-system-alerts.yml"
+  - "prometheus/alerts/database-alerts.yml"
+  - "prometheus/alerts/audit-failures-alerts.yml"
+  - "prometheus/alerts/security-alerts.yml"
+  - "prometheus/alerts/hr-background-alerts.yml"
 
 scrape_configs:
   # ThinkOnErp API metrics
   - job_name: 'thinkonerp-api'
     static_configs:
-      - targets: ['thinkonerp-api:5000']
+      - targets: ['host.docker.internal:5000']
     metrics_path: '/metrics'
     scrape_interval: 15s
     scrape_timeout: 10s

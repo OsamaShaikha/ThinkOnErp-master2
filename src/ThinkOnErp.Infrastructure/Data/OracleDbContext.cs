@@ -29,6 +29,24 @@ public class OracleDbContext : DbContext
     {
     }
 
+    private void GuardLeaveLedger()
+    {
+        if (ChangeTracker.Entries<LeaveBalanceMovement>().Any(e => e.State is EntityState.Modified or EntityState.Deleted))
+            throw new InvalidOperationException("Leave movements are immutable; append a linked reversal instead.");
+    }
+
+    public override int SaveChanges(bool acceptAllChangesOnSuccess)
+    {
+        GuardLeaveLedger();
+        return base.SaveChanges(acceptAllChangesOnSuccess);
+    }
+
+    public override Task<int> SaveChangesAsync(bool acceptAllChangesOnSuccess, System.Threading.CancellationToken cancellationToken = default)
+    {
+        GuardLeaveLedger();
+        return base.SaveChangesAsync(acceptAllChangesOnSuccess, cancellationToken);
+    }
+
     public Task<IQueryable<SysAuditLog>> GetCombinedAuditLogsAsync()
     {
         // Audit logs are stored in the dedicated central schema "THINKON_AUDIT"."SYS_AUDIT_LOG"
@@ -215,6 +233,7 @@ public class OracleDbContext : DbContext
     public DbSet<EmployeeShiftAssignment> EmployeeShiftAssignments => Set<EmployeeShiftAssignment>();
     public DbSet<OvertimeRule> OvertimeRules => Set<OvertimeRule>();
     public DbSet<ProrationPolicy> ProrationPolicies => Set<ProrationPolicy>();
+    public DbSet<PayrollCurrencyPrecision> PayrollCurrencyPrecisions => Set<PayrollCurrencyPrecision>();
     public DbSet<DeductionPolicy> DeductionPolicies => Set<DeductionPolicy>();
     public DbSet<TaxPolicy> TaxPolicies => Set<TaxPolicy>();
     public DbSet<TaxBracket> TaxBrackets => Set<TaxBracket>();
@@ -233,10 +252,31 @@ public class OracleDbContext : DbContext
     public DbSet<PayrollRunLine> PayrollRunLines => Set<PayrollRunLine>();
     public DbSet<PayrollRunLineComponent> PayrollRunLineComponents => Set<PayrollRunLineComponent>();
     public DbSet<PayrollCalculationSnapshot> PayrollCalculationSnapshots => Set<PayrollCalculationSnapshot>();
+    public DbSet<HrAccountingHandoff> HrAccountingHandoffs => Set<HrAccountingHandoff>();
+    public DbSet<HrAccountingHandoffLine> HrAccountingHandoffLines => Set<HrAccountingHandoffLine>();
+    public DbSet<HrAccountingHandoffTransition> HrAccountingHandoffTransitions => Set<HrAccountingHandoffTransition>();
+    public DbSet<HrAccountingOutboxMessage> HrAccountingOutboxMessages => Set<HrAccountingOutboxMessage>();
+    public DbSet<AccountingHandoffInboxMessage> AccountingHandoffInboxMessages => Set<AccountingHandoffInboxMessage>();
+    public DbSet<AccountingHandoffPostingReceipt> AccountingHandoffPostingReceipts => Set<AccountingHandoffPostingReceipt>();
+    public DbSet<AccountingHandoffJournalLink> AccountingHandoffJournalLinks => Set<AccountingHandoffJournalLink>();
+    public DbSet<AccountingHandoffPayment> AccountingHandoffPayments => Set<AccountingHandoffPayment>();
+    public DbSet<AccountingLoanFundingReceipt> AccountingLoanFundingReceipts => Set<AccountingLoanFundingReceipt>();
     public DbSet<LeaveType> LeaveTypes => Set<LeaveType>();
     public DbSet<LeaveRequest> LeaveRequests => Set<LeaveRequest>();
     public DbSet<LeaveBalance> LeaveBalances => Set<LeaveBalance>();
+    public DbSet<HrLeaveSettings> HrLeaveSettings => Set<HrLeaveSettings>();
+    public DbSet<LeaveYearClose> LeaveYearCloses => Set<LeaveYearClose>();
+    public DbSet<LeaveYearCloseLine> LeaveYearCloseLines => Set<LeaveYearCloseLine>();
+    public DbSet<LeaveCashoutSettlement> LeaveCashoutSettlements => Set<LeaveCashoutSettlement>();
+    public DbSet<LeaveCashoutSettlementLine> LeaveCashoutSettlementLines => Set<LeaveCashoutSettlementLine>();
+    public DbSet<LeaveBalanceMigration> LeaveBalanceMigrations => Set<LeaveBalanceMigration>();
+    public DbSet<LeaveBalanceMigrationLine> LeaveBalanceMigrationLines => Set<LeaveBalanceMigrationLine>();
     public DbSet<LeavePolicy> LeavePolicies => Set<LeavePolicy>();
+    public DbSet<EndOfServiceSettlement> EndOfServiceSettlements => Set<EndOfServiceSettlement>();
+    public DbSet<EndOfServiceSettlementLine> EndOfServiceSettlementLines => Set<EndOfServiceSettlementLine>();
+    public DbSet<EndOfServicePolicy> EndOfServicePolicies => Set<EndOfServicePolicy>();
+    public DbSet<ShortLeaveRequest> ShortLeaveRequests => Set<ShortLeaveRequest>();
+    public DbSet<ShortLeavePolicy> ShortLeavePolicies => Set<ShortLeavePolicy>();
 
     // Universal Dynamic Translation
     public DbSet<SysEntityTranslation> EntityTranslations => Set<SysEntityTranslation>();
@@ -264,7 +304,8 @@ public class OracleDbContext : DbContext
         // Apply all entity configurations in Infrastructure assembly automatically
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(OracleDbContext).Assembly);
         modelBuilder.Entity<Employee>().HasQueryFilter(e => !HrScopeEnabled ||
-            ((HrScopeAllBranches || (e.BranchId.HasValue && HrScopeBranchIds.Contains(e.BranchId.Value))) &&
+            ((!e.BranchId.HasValue || SysBranches.Any(b => b.Id == e.BranchId.Value && b.CompanyId == HrScopeCompanyId)) &&
+             (HrScopeAllBranches || (e.BranchId.HasValue && HrScopeBranchIds.Contains(e.BranchId.Value))) &&
              (HrScopeEmployeeCode == null || e.EmployeeCode == HrScopeEmployeeCode)));
         foreach (var entity in modelBuilder.Model.GetEntityTypes().Where(e => e.ClrType != typeof(Employee) &&
             e.GetTableName()?.StartsWith("HR_") == true).ToList())
@@ -279,20 +320,52 @@ public class OracleDbContext : DbContext
                 typeof(OracleDbContext).GetMethod(nameof(SetCompanyScope), System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)!
                     .MakeGenericMethod(entity.ClrType).Invoke(this, new object[] { modelBuilder });
         }
-        modelBuilder.Entity<PayrollRun>().HasQueryFilter(r => !HrScopeEnabled || HrScopeAllBranches ||
-            (r.BranchId.HasValue && HrScopeBranchIds.Contains(r.BranchId.Value)));
+        modelBuilder.Entity<PayrollRun>().HasQueryFilter(r => !HrScopeEnabled ||
+            ((!r.BranchId.HasValue || SysBranches.Any(b => b.Id == r.BranchId.Value && b.CompanyId == HrScopeCompanyId)) &&
+             (HrScopeAllBranches || (r.BranchId.HasValue && HrScopeBranchIds.Contains(r.BranchId.Value)))));
+        modelBuilder.Entity<PayrollRunLine>().HasQueryFilter(r => !HrScopeEnabled ||
+            (Employees.Any(e => e.EmployeeCode == r.EmployeeCode) && PayrollRuns.Any(p => p.Id == r.PayrollRunId)));
+        modelBuilder.Entity<PayrollCalculationSnapshot>().HasQueryFilter(r => !HrScopeEnabled ||
+            (Employees.Any(e => e.EmployeeCode == r.EmployeeCode) && PayrollRunLines.Any(l => l.Id == r.PayrollRunLineId)));
+        modelBuilder.Entity<HrDepartment>().HasQueryFilter(d => !HrScopeEnabled ||
+            (!d.BranchId.HasValue || (SysBranches.Any(b => b.Id == d.BranchId && b.CompanyId == HrScopeCompanyId) &&
+             (HrScopeAllBranches || HrScopeBranchIds.Contains(d.BranchId.Value)))));
+        modelBuilder.Entity<HrPosition>().HasQueryFilter(p => !HrScopeEnabled || Set<HrDepartment>().Any(d => d.DepartmentCode == p.DepartmentCode));
+        modelBuilder.Entity<BranchAttendanceLocation>().HasQueryFilter(r => !HrScopeEnabled ||
+            (r.CompanyId == HrScopeCompanyId && (HrScopeAllBranches || HrScopeBranchIds.Contains(r.BranchId))));
         modelBuilder.Entity<EmployeeDependent>().HasQueryFilter(r => !HrScopeEnabled || Employees.Any(e => e.EmployeeCode == r.EmployeeCode));
         modelBuilder.Entity<PayrollRunLineComponent>().HasQueryFilter(r => !HrScopeEnabled ||
             PayrollRunLines.Any(l => l.Id == r.PayrollLineId));
+        modelBuilder.Entity<HrAccountingHandoff>().HasQueryFilter(r => !HrScopeEnabled ||
+            (r.CompanyId == HrScopeCompanyId && (HrScopeAllBranches || (r.BranchId.HasValue && HrScopeBranchIds.Contains(r.BranchId.Value)))));
+        modelBuilder.Entity<HrAccountingHandoffLine>().HasQueryFilter(r => !HrScopeEnabled ||
+            HrAccountingHandoffs.Any(h => h.Id == r.HandoffId));
+        modelBuilder.Entity<HrAccountingHandoffTransition>().HasQueryFilter(r => !HrScopeEnabled ||
+            HrAccountingHandoffs.Any(h => h.Id == r.HandoffId));
+        modelBuilder.Entity<HrAccountingOutboxMessage>().HasQueryFilter(r => !HrScopeEnabled ||
+            HrAccountingHandoffs.Any(h => h.Id == r.HandoffId));
+        modelBuilder.Entity<AccountingHandoffInboxMessage>().HasQueryFilter(r => !HrScopeEnabled ||
+            HrAccountingHandoffs.Any(h => h.Id == r.HandoffId));
+        modelBuilder.Entity<AccountingHandoffPostingReceipt>().HasQueryFilter(r => !HrScopeEnabled ||
+            HrAccountingHandoffs.Any(h => h.Id == r.HandoffId));
+        modelBuilder.Entity<AccountingHandoffJournalLink>().HasQueryFilter(r => !HrScopeEnabled ||
+            HrAccountingHandoffs.Any(h => h.Id == r.HandoffId));
+        modelBuilder.Entity<AccountingHandoffPayment>().HasQueryFilter(r => !HrScopeEnabled ||
+            HrAccountingHandoffs.Any(h => h.Id == r.HandoffId));
+        modelBuilder.Entity<AccountingLoanFundingReceipt>().HasQueryFilter(r => !HrScopeEnabled ||
+            HrAccountingHandoffs.Any(h => h.Id == r.HandoffId));
         modelBuilder.Entity<LoanRepaymentSchedule>().HasQueryFilter(r => !HrScopeEnabled || EmployeeLoans.Any(l => l.Id == r.EmployeeLoanId));
         modelBuilder.Entity<LeaveBalance>().Property(e => e.UsedDays).IsConcurrencyToken();
+        modelBuilder.Entity<LeaveCashoutSettlement>().HasQueryFilter(r => !HrScopeEnabled ||
+            LeaveCashoutSettlementLines.Any(l => l.SettlementId == r.Id && Employees.Any(e => e.EmployeeCode == l.EmployeeCode)));
         modelBuilder.Entity<LeaveRequest>().Property(e => e.Status).IsConcurrencyToken();
         modelBuilder.Entity<PayrollRun>().Property(e => e.Status).IsConcurrencyToken();
         modelBuilder.Entity<EmployeeLoan>().Property(e => e.RemainingBalance).IsConcurrencyToken();
         modelBuilder.Entity<EmployeeAdvance>().Property(e => e.RemainingBalance).IsConcurrencyToken();
         modelBuilder.Entity<LoanRepaymentSchedule>().Property(e => e.PaidAmount).IsConcurrencyToken();
         modelBuilder.Entity<PayrollPostingConfiguration>().HasQueryFilter(r => !HrScopeEnabled ||
-            (HrScopeAllBranches || HrScopeBranchIds.Contains(r.BranchId)));
+            (SysBranches.Any(b => b.Id == r.BranchId && b.CompanyId == HrScopeCompanyId) &&
+             (HrScopeAllBranches || HrScopeBranchIds.Contains(r.BranchId))));
     }
 
     private void SetEmployeeScope<TEntity>(ModelBuilder builder) where TEntity : class =>

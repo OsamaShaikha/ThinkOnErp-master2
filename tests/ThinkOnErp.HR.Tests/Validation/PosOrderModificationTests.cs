@@ -57,8 +57,8 @@ public class PosOrderModificationTests
             .ReturnsAsync(new List<PosModifierGroup>());
 
         _calcEngine
-            .Setup(x => x.CalculateOrderTotalsAsync(It.IsAny<long>(), It.IsAny<CreatePosOrderDto>(), It.IsAny<decimal?>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync((long branchId, CreatePosOrderDto dto, decimal? tax, CancellationToken ct) =>
+            .Setup(x => x.CalculateOrderTotalsAsync(It.IsAny<long>(), It.IsAny<CreatePosOrderDto>(), It.IsAny<decimal?>(), It.IsAny<bool?>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((long branchId, CreatePosOrderDto dto, decimal? tax, bool? isTaxInclusive, CancellationToken ct) =>
             {
                 var subtotal = dto.Lines.Sum(l => l.Quantity * l.UnitPrice);
                 var taxAmt = subtotal * 0.15m;
@@ -521,6 +521,8 @@ public class PosOrderModificationTests
         };
 
         _orderRepo.Setup(r => r.GetOrderByIdAsync(90, It.IsAny<CancellationToken>())).ReturnsAsync(origOrder);
+        _orderRepo.Setup(r => r.GetRefundOrdersByOriginalOrderIdAsync(90, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Array.Empty<PosOrderHeader>());
         _shiftRepo.Setup(r => r.GetShiftByIdAsync(10, It.IsAny<CancellationToken>())).ReturnsAsync(shift);
         _orderRepo.Setup(r => r.GenerateNextShiftOrderNumberAsync(10, true, It.IsAny<CancellationToken>())).ReturnsAsync("0010");
         _orderRepo.Setup(r => r.GenerateNextInvoiceNumberAsync(1, It.IsAny<int>(), true, It.IsAny<CancellationToken>())).ReturnsAsync("CN-2026-000010");

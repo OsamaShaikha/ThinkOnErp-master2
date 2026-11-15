@@ -232,7 +232,7 @@ global:
 scrape_configs:
   - job_name: 'thinkonerp-api'
     static_configs:
-      - targets: ['thinkonerp-api:5000']
+      - targets: ['host.docker.internal:5000']
     metrics_path: '/metrics'
 ```
 

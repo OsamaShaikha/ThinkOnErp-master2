@@ -1,8 +1,10 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Http;
 using ThinkOnErp.API.Authorization;
 using ThinkOnErp.Application.Services.Hr;
 using ThinkOnErp.Domain.Entities.Hr;
+using ThinkOnErp.Application.Common;
 
 namespace ThinkOnErp.API.Controllers.Hr;
 
@@ -14,10 +16,11 @@ public sealed class PayrollPostingConfigurationsController(IHrPayrollPostingServ
         Ok(await service.GetAsync(branchId, cancellationToken));
 
     [HttpPut("{branchId:long}"), HrPermission("hr-payroll-posting", "configure")]
-    public async Task<IActionResult> Save(long branchId, PayrollPostingConfiguration configuration, CancellationToken cancellationToken)
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status409Conflict)]
+    public Task<IActionResult> Save(long branchId, PayrollPostingConfiguration configuration, CancellationToken cancellationToken)
     {
-        if (branchId != configuration.BranchId) return BadRequest("Branch identifiers must match.");
-        await service.SaveAsync(configuration, cancellationToken);
-        return Ok(configuration);
+        return Task.FromResult<IActionResult>(Conflict(ApiResponse<object>.CreateFailure(
+            "Payroll accounting configuration is owned by Accounting. The independent handoff workflow must be enabled first.",
+            new() { "HR_ACCOUNTING_HANDOFF_REQUIRED" }, StatusCodes.Status409Conflict)));
     }
 }

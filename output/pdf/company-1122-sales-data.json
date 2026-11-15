@@ -1,0 +1,356 @@
+{
+  "success": true,
+  "statusCode": 200,
+  "message": "تمت العملية بنجاح.",
+  "data": {
+    "companyName": "debis acc",
+    "branchName": "All accessible branches",
+    "taxNumber": null,
+    "phone": "0796211887",
+    "currency": "JOD",
+    "cashier": "All",
+    "payment": "All",
+    "preparedBy": "admin",
+    "reportNumber": "RPT-20261026-d3cb05c97a744",
+    "issuedAtUtc": "2026-10-26T19:42:24.3060261Z",
+    "startDate": "2026-10-01T00:00:00",
+    "endDate": "2026-10-26T00:00:00",
+    "shiftId": null,
+    "tillId": null,
+    "days": [
+      {
+        "date": "2026-10-01T00:00:00",
+        "invoices": 0,
+        "sales": 0,
+        "discount": 0,
+        "returns": 0,
+        "net": 0,
+        "tax": 0,
+        "charges": 0,
+        "total": 0
+      },
+      {
+        "date": "2026-10-02T00:00:00",
+        "invoices": 16,
+        "sales": 2257.5,
+        "discount": 0,
+        "returns": 450,
+        "net": 1807.5,
+        "tax": 289.125,
+        "charges": 44,
+        "total": 2140.625
+      },
+      {
+        "date": "2026-10-03T00:00:00",
+        "invoices": 11,
+        "sales": 224.5,
+        "discount": 0,
+        "returns": 10,
+        "net": 214.5,
+        "tax": 33.675,
+        "charges": 0,
+        "total": 248.175
+      },
+      {
+        "date": "2026-10-04T00:00:00",
+        "invoices": 0,
+        "sales": 0,
+        "discount": 0,
+        "returns": 0,
+        "net": 0,
+        "tax": 0,
+        "charges": 0,
+        "total": 0
+      },
+      {
+        "date": "2026-10-05T00:00:00",
+        "invoices": 2,
+        "sales": 15.0,
+        "discount": 0,
+        "returns": 0,
+        "net": 15.0,
+        "tax": 2.25,
+        "charges": 0,
+        "total": 17.25
+      },
+      {
+        "date": "2026-10-06T00:00:00",
+        "invoices": 0,
+        "sales": 0,
+        "discount": 0,
+        "returns": 0,
+        "net": 0,
+        "tax": 0,
+        "charges": 0,
+        "total": 0
+      },
+      {
+        "date": "2026-10-07T00:00:00",
+        "invoices": 0,
+        "sales": 0,
+        "discount": 0,
+        "returns": 0,
+        "net": 0,
+        "tax": 0,
+        "charges": 0,
+        "total": 0
+      },
+      {
+        "date": "2026-10-08T00:00:00",
+        "invoices": 8,
+        "sales": 58.5,
+        "discount": 0,
+        "returns": 0,
+        "net": 58.5,
+        "tax": 8.775,
+        "charges": 0,
+        "total": 67.275
+      },
+      {
+        "date": "2026-10-09T00:00:00",
+        "invoices": 26,
+        "sales": 175.5,
+        "discount": 4.65,
+        "returns": 25,
+        "net": 145.85,
+        "tax": 20.715,
+        "charges": 0,
+        "total": 166.565
+      },
+      {
+        "date": "2026-10-10T00:00:00",
+        "invoices": 13,
+        "sales": 75.0,
+        "discount": 0,
+        "returns": 7.5,
+        "net": 67.5,
+        "tax": 10.125,
+        "charges": 0,
+        "total": 77.625
+      },
+      {
+        "date": "2026-10-11T00:00:00",
+        "invoices": 3,
+        "sales": 15,
+        "discount": 0,
+        "returns": 0,
+        "net": 15,
+        "tax": 2.25,
+        "charges": 0,
+        "total": 17.25
+      },
+      {
+        "date": "2026-10-12T00:00:00",
+        "invoices": 16,
+        "sales": 132.0,
+        "discount": 0,
+        "returns": 0,
+        "net": 132.0,
+        "tax": 19.8,
+        "charges": 0,
+        "total": 151.8
+      },
+      {
+        "date": "2026-10-13T00:00:00",
+        "invoices": 5,
+        "sales": 15,
+        "discount": 0,
+        "returns": 5,
+        "net": 10,
+        "tax": 1.5,
+        "charges": 0,
+        "total": 11.5
+      },
+      {
+        "date": "2026-10-14T00:00:00",
+        "invoices": 1,
+        "sales": 12.5,
+        "discount": 1.7,
+        "returns": 7.5,
+        "net": 3.3,
+        "tax": 0.6075,
+        "charges": 0,
+        "total": 3.9075
+      },
+      {
+        "date": "2026-10-15T00:00:00",
+        "invoices": 8,
+        "sales": 40,
+        "discount": 0.5,
+        "returns": 5,
+        "net": 34.5,
+        "tax": 5.25,
+        "charges": 0,
+        "total": 39.75
+      },
+      {
+        "date": "2026-10-16T00:00:00",
+        "invoices": 0,
+        "sales": 0,
+        "discount": 0,
+        "returns": 0,
+        "net": 0,
+        "tax": 0,
+        "charges": 0,
+        "total": 0
+      },
+      {
+        "date": "2026-10-17T00:00:00",
+        "invoices": 18,
+        "sales": 93,
+        "discount": 6.5,
+        "returns": 75.0,
+        "net": 11.5,
+        "tax": 1.82,
+        "charges": 0,
+        "total": 13.32
+      },
+      {
+        "date": "2026-10-18T00:00:00",
+        "invoices": 7,
+        "sales": 24,
+        "discount": 0,
+        "returns": 0,
+        "net": 24,
+        "tax": 0,
+        "charges": 0,
+        "total": 24
+      },
+      {
+        "date": "2026-10-19T00:00:00",
+        "invoices": 1,
+        "sales": 8,
+        "discount": 0,
+        "returns": 0,
+        "net": 8,
+        "tax": 0,
+        "charges": 0,
+        "total": 8
+      },
+      {
+        "date": "2026-10-20T00:00:00",
+        "invoices": 7,
+        "sales": 60,
+        "discount": 0,
+        "returns": 0,
+        "net": 60,
+        "tax": 0,
+        "charges": 0,
+        "total": 60
+      },
+      {
+        "date": "2026-10-21T00:00:00",
+        "invoices": 0,
+        "sales": 0,
+        "discount": 0,
+        "returns": 0,
+        "net": 0,
+        "tax": 0,
+        "charges": 0,
+        "total": 0
+      },
+      {
+        "date": "2026-10-22T00:00:00",
+        "invoices": 0,
+        "sales": 0,
+        "discount": 0,
+        "returns": 0,
+        "net": 0,
+        "tax": 0,
+        "charges": 0,
+        "total": 0
+      },
+      {
+        "date": "2026-10-23T00:00:00",
+        "invoices": 2,
+        "sales": 6,
+        "discount": 0,
+        "returns": 0,
+        "net": 6,
+        "tax": 0,
+        "charges": 0,
+        "total": 6
+      },
+      {
+        "date": "2026-10-24T00:00:00",
+        "invoices": 15,
+        "sales": 69.75,
+        "discount": 3,
+        "returns": 0,
+        "net": 66.75,
+        "tax": 1.4,
+        "charges": 1,
+        "total": 69.15
+      },
+      {
+        "date": "2026-10-25T00:00:00",
+        "invoices": 2,
+        "sales": 3.5,
+        "discount": 0,
+        "returns": 0,
+        "net": 3.5,
+        "tax": 0,
+        "charges": 0,
+        "total": 3.5
+      },
+      {
+        "date": "2026-10-26T00:00:00",
+        "invoices": 0,
+        "sales": 0,
+        "discount": 0,
+        "returns": 0,
+        "net": 0,
+        "tax": 0,
+        "charges": 0,
+        "total": 0
+      }
+    ],
+    "payments": [
+      {
+        "name": "Cash",
+        "amount": 2849.194,
+        "percentage": 77.84004618176722
+      },
+      {
+        "name": "AggregatorPaid",
+        "amount": 348,
+        "percentage": 9.507368073656968
+      },
+      {
+        "name": "Credit (AR)",
+        "amount": 223.875,
+        "percentage": 6.116270193936649
+      },
+      {
+        "name": "Card",
+        "amount": 222,
+        "percentage": 6.065045150436342
+      },
+      {
+        "name": "Hospitality",
+        "amount": 11.5,
+        "percentage": 0.31418026680188255
+      },
+      {
+        "name": "Split",
+        "amount": 5.75,
+        "percentage": 0.15709013340094127
+      }
+    ],
+    "totals": {
+      "date": "2026-10-02T00:00:00",
+      "invoices": 161,
+      "sales": 3284.75,
+      "discount": 16.35,
+      "returns": 585.0,
+      "net": 2683.4,
+      "tax": 397.2925,
+      "charges": 45,
+      "total": 3125.6925
+    },
+    "averageInvoice": 19.414239130434783
+  },
+  "errors": null,
+  "timestamp": "2026-10-26T19:42:24.3186869Z",
+  "traceId": "20e0abf1-cc51-4757-976d-6dbcb686dc43"
+}

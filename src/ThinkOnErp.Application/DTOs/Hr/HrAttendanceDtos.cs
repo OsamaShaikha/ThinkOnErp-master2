@@ -4,22 +4,24 @@ namespace ThinkOnErp.Application.DTOs.Hr;
 
 public record CheckInRequestDto(
     string EmployeeCode,
-    decimal Latitude,
-    decimal Longitude,
+    [property: global::System.Text.Json.Serialization.JsonRequired] decimal Latitude,
+    [property: global::System.Text.Json.Serialization.JsonRequired] decimal Longitude,
     long? BranchId = null,
     decimal? AccuracyMeters = null,
     string? DeviceId = null,
-    string Source = "MOBILE_APP"
+    string Source = "MOBILE_APP",
+    [param: global::System.ComponentModel.DataAnnotations.Required] string? EventId = null
 );
 
 public record CheckOutRequestDto(
     string EmployeeCode,
-    decimal Latitude,
-    decimal Longitude,
+    [property: global::System.Text.Json.Serialization.JsonRequired] decimal Latitude,
+    [property: global::System.Text.Json.Serialization.JsonRequired] decimal Longitude,
     long? BranchId = null,
     decimal? AccuracyMeters = null,
     string? DeviceId = null,
-    string Source = "MOBILE_APP"
+    string Source = "MOBILE_APP",
+    [param: global::System.ComponentModel.DataAnnotations.Required] string? EventId = null
 );
 
 public record AttendancePunchResultDto(
@@ -35,7 +37,9 @@ public record AttendancePunchResultDto(
     decimal AllowedRadiusMeters,
     bool IsWithinGeofence,
     string GeofenceStatus,
-    string Message
+    string Message,
+    long? RawEventId = null,
+    bool EvidenceOnly = false
 );
 
 public record NearbyBranchDto(
@@ -65,3 +69,31 @@ public record TodayAttendanceStatusDto(
     bool IsCurrentlyCheckedIn,
     bool HasGeofenceViolation
 );
+
+public record AttendanceDayHistoryDto(
+    string EmployeeCode,
+    DateTime AttendanceDate,
+    string Status,
+    string? ShiftCode,
+    DateTime? FirstCheckIn,
+    DateTime? LastCheckOut,
+    decimal ScheduledHours,
+    decimal ActualWorkedHours,
+    int LateArrivalMinutes,
+    int EarlyLeaveMinutes,
+    decimal OvertimeHours,
+    bool HasMissingPunch,
+    bool HasGeofenceViolation);
+
+public record AttendanceMonthSummaryDto(
+    string EmployeeCode,
+    int Year,
+    int Month,
+    int RecordedDays,
+    int PresentDays,
+    int AbsentDays,
+    int LeaveDays,
+    int LateDays,
+    int TotalLateMinutes,
+    decimal TotalWorkedHours,
+    decimal TotalOvertimeHours);

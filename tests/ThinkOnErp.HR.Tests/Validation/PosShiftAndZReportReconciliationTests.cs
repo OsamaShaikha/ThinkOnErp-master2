@@ -267,7 +267,6 @@ public class PosShiftAndZReportReconciliationTests
             VoucherType = (int)PosVoucherType.Payment, // صرف
             PaymentMethod = (int)PosPaymentMethod.Cash, // نقدي
             Amount = 45m,
-            GlAccountCode = "532101",
             BeneficiaryName = "مكتبة النور للقرطاسية",
             TaxInvoiceNumber = "INV-2026-99",
             Reason = "شراء ورق وطابعات وأقلام للكاشير",
@@ -320,7 +319,6 @@ public class PosShiftAndZReportReconciliationTests
             VoucherType = (int)PosVoucherType.Receipt, // قبض
             PaymentMethod = (int)PosPaymentMethod.Card, // شبكة / مدى
             Amount = 150m,
-            GlAccountCode = "411101",
             BeneficiaryName = "شركة الواحة للمناسبات",
             Reason = "عربون حجز قاعة بالبطاقة",
             ApprovedBy = "مدير الفرع"
@@ -541,7 +539,6 @@ public class PosShiftAndZReportReconciliationTests
             Amount = 150m,
             PayerName = "Customer Ali",
             ReferenceNumber = "REC-REF-01",
-            GlAccountCode = "112101",
             Reason = "Customer Account Debt Payment",
             ApprovedBy = "Supervisor"
         };
@@ -596,7 +593,6 @@ public class PosShiftAndZReportReconciliationTests
             Amount = 35m,
             BeneficiaryName = "Cleaning Services Co",
             TaxInvoiceNumber = "TAX-INV-777",
-            GlAccountCode = "523101",
             Reason = "Branch Cleaning Supplies",
             ApprovedBy = "Branch Manager"
         };
@@ -623,77 +619,28 @@ public class PosShiftAndZReportReconciliationTests
     }
 
     [Fact]
-    public async Task GetReceiptAndExpenseAccountsLookup_ReturnsConfiguredAccounts()
+    public async Task GetShiftVouchers_FiltersByTypeAndPaymentMethod()
     {
-        // Act
-        var receipts = await _shiftService.GetReceiptAccountsLookupAsync();
-        var expenses = await _shiftService.GetExpenseAccountsLookupAsync();
-
-        // Assert
-        Assert.True(receipts.Success);
-        Assert.NotEmpty(receipts.Data!);
-        Assert.Contains(receipts.Data!, a => a.AccountCode == "112101");
-
-        Assert.True(expenses.Success);
-        Assert.NotEmpty(expenses.Data!);
-        Assert.Contains(expenses.Data!, a => a.AccountCode == "523101");
-    }
-
-    [Fact]
-    public async Task GetDefaultAccountsAsync_WithBranchId_ReturnsBranchSpecificAccounts()
-    {
-        // Arrange
-        var branchSetting = new PosBranchSetting
+        var shift = new PosShift
         {
-            Id = 1,
-            BranchId = 2,
-            DefaultCashAccount = "111103",
-            DefaultExpenseAccount = "525102",
-            DefaultReceiptAccount = "421102"
+            Id = 70,
+            CashMovements = new List<PosShiftCashMovement>
+            {
+                new() { Id = 1, ShiftId = 70, VoucherType = PosVoucherType.Receipt, PaymentMethod = PosPaymentMethod.Cash, Amount = 10m, CreationDate = DateTime.UtcNow.AddMinutes(-2) },
+                new() { Id = 2, ShiftId = 70, VoucherType = PosVoucherType.Receipt, PaymentMethod = PosPaymentMethod.Card, Amount = 20m, CreationDate = DateTime.UtcNow.AddMinutes(-1) },
+                new() { Id = 3, ShiftId = 70, VoucherType = PosVoucherType.Payment, PaymentMethod = PosPaymentMethod.Cash, Amount = 5m }
+            }
         };
-        _branchSettingRepo.Setup(r => r.GetByBranchIdAsync(2, It.IsAny<CancellationToken>())).ReturnsAsync(branchSetting);
+        _shiftRepo.Setup(r => r.GetShiftByIdAsync(70, It.IsAny<CancellationToken>())).ReturnsAsync(shift);
 
-        // Act
-        var result = await _shiftService.GetDefaultAccountsAsync(2);
+        var result = await _shiftService.GetShiftVouchersAsync(70, (int)PosVoucherType.Receipt, (int)PosPaymentMethod.Card);
 
-        // Assert
         Assert.True(result.Success);
-        Assert.NotNull(result.Data);
-        Assert.Equal(2, result.Data.BranchId);
-        Assert.Equal("111103", result.Data.DefaultCashAccount);
-        Assert.Equal("525102", result.Data.DefaultExpenseAccount);
-        Assert.Equal("421102", result.Data.DefaultReceiptAccount);
-    }
-
-    [Fact]
-    public async Task UpdateDefaultAccountsAsync_WithBranchId_AddsOrUpdatesBranchSetting()
-    {
-        // Arrange
-        PosBranchSetting? capturedSetting = null;
-        _branchSettingRepo.Setup(r => r.GetByBranchIdAsync(3, It.IsAny<CancellationToken>())).ReturnsAsync((PosBranchSetting?)null);
-        _branchSettingRepo.Setup(r => r.AddAsync(It.IsAny<PosBranchSetting>(), It.IsAny<CancellationToken>()))
-            .Callback<PosBranchSetting, CancellationToken>((s, _) => capturedSetting = s)
-            .Returns(Task.CompletedTask);
-        _branchSettingRepo.Setup(r => r.SaveChangesAsync(It.IsAny<CancellationToken>())).Returns(Task.CompletedTask);
-
-        var updateDto = new UpdatePosDefaultAccountsDto
-        {
-            BranchId = 3,
-            DefaultCashAccount = "111105",
-            DefaultExpenseAccount = "525105",
-            DefaultReceiptAccount = "421105"
-        };
-
-        // Act
-        var result = await _shiftService.UpdateDefaultAccountsAsync(updateDto, "admin_user");
-
-        // Assert
-        Assert.NotNull(capturedSetting);
-        Assert.Equal(3, capturedSetting.BranchId);
-        Assert.Equal("111105", capturedSetting.DefaultCashAccount);
-        Assert.Equal("525105", capturedSetting.DefaultExpenseAccount);
-        Assert.Equal("421105", capturedSetting.DefaultReceiptAccount);
-        _branchSettingRepo.Verify(r => r.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
+        var voucher = Assert.Single(result.Data!);
+        Assert.Equal(2, voucher.Id);
+        Assert.Equal((int)PosVoucherType.Receipt, voucher.VoucherType);
+        Assert.Equal((int)PosPaymentMethod.Card, voucher.PaymentMethod);
+        Assert.Equal(20m, voucher.Amount);
     }
 
     [Fact]
@@ -742,7 +689,6 @@ public class PosShiftAndZReportReconciliationTests
         // Assert
         Assert.True(result.Success);
         Assert.NotNull(result.Data);
-        Assert.Equal("525199", result.Data.GlAccountCode);
         Assert.Single(shift.CashMovements);
         Assert.Equal("525199", shift.CashMovements.First().GlAccountCode);
     }

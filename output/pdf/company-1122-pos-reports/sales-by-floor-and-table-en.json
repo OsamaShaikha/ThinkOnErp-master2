@@ -1,0 +1,153 @@
+{
+  "success": true,
+  "statusCode": 200,
+  "message": "تمت العملية بنجاح.",
+  "data": {
+    "code": "sales-by-floor-and-table",
+    "title": "Sales by floor & table",
+    "isLive": false,
+    "header": {
+      "language": "en",
+      "isRightToLeft": false,
+      "companyName": "debis acc",
+      "branchName": "All accessible branches",
+      "taxNumber": null,
+      "phone": "0796211887",
+      "currency": "JOD",
+      "cashier": "All",
+      "payment": "All",
+      "preparedBy": "admin",
+      "reportNumber": "RPT-20261028-80f260a342354",
+      "issuedAtUtc": "2026-10-28T18:01:12.613614Z",
+      "startDate": "2026-10-01T00:00:00",
+      "endDate": "2026-10-28T00:00:00",
+      "shiftId": null,
+      "tillId": null,
+      "days": [],
+      "payments": [],
+      "totals": {
+        "date": "0001-01-01T00:00:00",
+        "invoices": 0,
+        "sales": 0,
+        "discount": 0,
+        "returns": 0,
+        "net": 0,
+        "tax": 0,
+        "charges": 0,
+        "total": 0
+      },
+      "averageInvoice": 0
+    },
+    "filterNotes": [],
+    "branches": [
+      {
+        "branchId": 1,
+        "branchName": "debis acc",
+        "metrics": [
+          {
+            "label": "Table sales",
+            "value": "475.500",
+            "unit": "JOD"
+          },
+          {
+            "label": "Orders",
+            "value": "20",
+            "unit": ""
+          },
+          {
+            "label": "Covers",
+            "value": "30",
+            "unit": ""
+          },
+          {
+            "label": "Spend per cover",
+            "value": "15.850",
+            "unit": "JOD"
+          }
+        ],
+        "tables": [
+          {
+            "title": "Floor & table sales",
+            "columns": [
+              {
+                "label": "Floor / table",
+                "numeric": false,
+                "code": false,
+                "width": 2
+              },
+              {
+                "label": "Capacity",
+                "numeric": true,
+                "code": false,
+                "width": 1
+              },
+              {
+                "label": "Orders",
+                "numeric": true,
+                "code": false,
+                "width": 1
+              },
+              {
+                "label": "Covers",
+                "numeric": true,
+                "code": false,
+                "width": 1
+              },
+              {
+                "label": "Sales",
+                "numeric": true,
+                "code": false,
+                "width": 1
+              },
+              {
+                "label": "Average invoice",
+                "numeric": true,
+                "code": false,
+                "width": 1
+              },
+              {
+                "label": "Per cover",
+                "numeric": true,
+                "code": false,
+                "width": 1
+              }
+            ],
+            "rows": [
+              [
+                "first floor\n2 2",
+                "4",
+                "11",
+                "17",
+                "415.875",
+                "37.810",
+                "24.460"
+              ],
+              [
+                "first floor\n1 1",
+                "12",
+                "8",
+                "8",
+                "56.625",
+                "7.080",
+                "7.080"
+              ],
+              [
+                "first floor\n5 5",
+                "7",
+                "1",
+                "5",
+                "3.000",
+                "3.000",
+                "0.600"
+              ]
+            ]
+          }
+        ],
+        "notes": []
+      }
+    ]
+  },
+  "errors": null,
+  "timestamp": "2026-10-28T18:01:12.8195668Z",
+  "traceId": "39471000-863f-43ae-b94e-e577647b0815"
+}

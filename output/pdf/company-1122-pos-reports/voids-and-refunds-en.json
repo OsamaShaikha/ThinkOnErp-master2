@@ -1,0 +1,463 @@
+{
+  "success": true,
+  "statusCode": 200,
+  "message": "تمت العملية بنجاح.",
+  "data": {
+    "code": "voids-and-refunds",
+    "title": "Voids & refunds",
+    "isLive": false,
+    "header": {
+      "language": "en",
+      "isRightToLeft": false,
+      "companyName": "debis acc",
+      "branchName": "All accessible branches",
+      "taxNumber": null,
+      "phone": "0796211887",
+      "currency": "JOD",
+      "cashier": "All",
+      "payment": "All",
+      "preparedBy": "admin",
+      "reportNumber": "RPT-20261028-d3d2c73cfaeb4",
+      "issuedAtUtc": "2026-10-28T18:00:53.0743498Z",
+      "startDate": "2026-10-01T00:00:00",
+      "endDate": "2026-10-28T00:00:00",
+      "shiftId": null,
+      "tillId": null,
+      "days": [],
+      "payments": [],
+      "totals": {
+        "date": "0001-01-01T00:00:00",
+        "invoices": 0,
+        "sales": 0,
+        "discount": 0,
+        "returns": 0,
+        "net": 0,
+        "tax": 0,
+        "charges": 0,
+        "total": 0
+      },
+      "averageInvoice": 0
+    },
+    "filterNotes": [],
+    "branches": [
+      {
+        "branchId": 1,
+        "branchName": "debis acc",
+        "metrics": [
+          {
+            "label": "Void amount",
+            "value": "522.000",
+            "unit": "JOD"
+          },
+          {
+            "label": "Void count",
+            "value": "3",
+            "unit": ""
+          },
+          {
+            "label": "Refund amount",
+            "value": "678.250",
+            "unit": "JOD"
+          },
+          {
+            "label": "Refund count",
+            "value": "29",
+            "unit": ""
+          }
+        ],
+        "tables": [
+          {
+            "title": "Voided items",
+            "columns": [
+              {
+                "label": "Order / line",
+                "numeric": false,
+                "code": true,
+                "width": 1
+              },
+              {
+                "label": "Item",
+                "numeric": false,
+                "code": false,
+                "width": 2
+              },
+              {
+                "label": "Qty",
+                "numeric": true,
+                "code": false,
+                "width": 1
+              },
+              {
+                "label": "Unit price",
+                "numeric": true,
+                "code": false,
+                "width": 1
+              },
+              {
+                "label": "Amount",
+                "numeric": true,
+                "code": false,
+                "width": 1
+              },
+              {
+                "label": "Reason / approval",
+                "numeric": false,
+                "code": false,
+                "width": 2
+              },
+              {
+                "label": "Date UTC",
+                "numeric": false,
+                "code": true,
+                "width": 1.5
+              }
+            ],
+            "rows": [
+              [
+                "ORD-1-20261002-0021\n#1",
+                "Office Desk\nITM-OB-98083",
+                "1.000",
+                "150.000",
+                "174.000",
+                "Customer cancelled this item\nshift_supervisor",
+                "02/10/2026 22:15"
+              ],
+              [
+                "ORD-1-20261002-0012\n#1",
+                "Office Desk\nITM-OB-98083",
+                "1.000",
+                "150.000",
+                "174.000",
+                "Customer cancelled this item\nshift_supervisor",
+                "02/10/2026 22:12"
+              ],
+              [
+                "ORD-1-20261002-0006\n#1",
+                "????? ??????\nITM-OB-98083",
+                "1.000",
+                "150.000",
+                "174.000",
+                "Customer changed mind\nsupervisor_admin",
+                "02/10/2026 22:11"
+              ]
+            ]
+          },
+          {
+            "title": "Refund orders",
+            "columns": [
+              {
+                "label": "Refund / invoice",
+                "numeric": false,
+                "code": true,
+                "width": 1.8
+              },
+              {
+                "label": "Original order / invoice",
+                "numeric": false,
+                "code": true,
+                "width": 1.8
+              },
+              {
+                "label": "Cashier",
+                "numeric": false,
+                "code": false,
+                "width": 1
+              },
+              {
+                "label": "Amount",
+                "numeric": true,
+                "code": false,
+                "width": 1
+              },
+              {
+                "label": "First payment method",
+                "numeric": false,
+                "code": false,
+                "width": 1
+              },
+              {
+                "label": "Reason",
+                "numeric": false,
+                "code": false,
+                "width": 2
+              },
+              {
+                "label": "Date UTC",
+                "numeric": false,
+                "code": true,
+                "width": 1.5
+              }
+            ],
+            "rows": [
+              [
+                "R0015\nRET-2026-000025",
+                "0021\nINV-2026-000128",
+                "admin",
+                "6.900",
+                "Cash",
+                "Customer Changed Mind",
+                "17/10/2026 22:49"
+              ],
+              [
+                "R0014\nRET-2026-000024",
+                "0021\nINV-2026-000128",
+                "admin",
+                "5.750",
+                "Cash",
+                "Customer Changed Mind",
+                "17/10/2026 22:48"
+              ],
+              [
+                "R0013\nRET-2026-000023",
+                "0020\nINV-2026-000127",
+                "admin",
+                "5.750",
+                "Cash",
+                "Customer Changed Mind",
+                "17/10/2026 22:46"
+              ],
+              [
+                "R0012\nRET-2026-000022",
+                "0019\nINV-2026-000126",
+                "admin",
+                "5.175",
+                "Cash",
+                "Customer Changed Mind",
+                "17/10/2026 22:10"
+              ],
+              [
+                "R0011\nRET-2026-000021",
+                "0012\nINV-2026-000119",
+                "admin",
+                "5.750",
+                "Cash",
+                "Customer Changed Mind",
+                "17/10/2026 21:34"
+              ],
+              [
+                "R0010\nRET-2026-000020",
+                "0011\nINV-2026-000118",
+                "admin",
+                "5.175",
+                "Cash",
+                "Defective / Damaged",
+                "17/10/2026 21:10"
+              ],
+              [
+                "R0009\nRET-2026-000019",
+                "0010\nINV-2026-000117",
+                "admin",
+                "5.750",
+                "Cash",
+                "Customer Changed Mind",
+                "17/10/2026 19:27"
+              ],
+              [
+                "R0008\nRET-2026-000018",
+                "0003\nINV-2026-000110",
+                "admin",
+                "5.750",
+                "Cash",
+                "طلب الزبون إرجاع كرسي مكتب (Office Chair)",
+                "17/10/2026 12:59"
+              ],
+              [
+                "R0007\nRET-2026-000017",
+                "0003\nINV-2026-000110",
+                "admin",
+                "5.750",
+                "Cash",
+                "طلب الزبون إرجاع كرسي مكتب (Office Chair)",
+                "17/10/2026 12:56"
+              ],
+              [
+                "R0006\nRET-2026-000016",
+                "0003\nINV-2026-000110",
+                "admin",
+                "5.750",
+                "Cash",
+                "طلب الزبون إرجاع كرسي مكتب (Office Chair)",
+                "17/10/2026 12:56"
+              ],
+              [
+                "R0005\nRET-2026-000015",
+                "0003\nINV-2026-000110",
+                "admin",
+                "5.750",
+                "Cash",
+                "طلب الزبون إرجاع كرسي مكتب (Office Chair)",
+                "17/10/2026 12:55"
+              ],
+              [
+                "R0004\nRET-2026-000014",
+                "0003\nINV-2026-000110",
+                "admin",
+                "5.750",
+                "Cash",
+                "طلب الزبون إرجاع كرسي مكتب (Office Chair)",
+                "17/10/2026 12:55"
+              ],
+              [
+                "R0003\nRET-2026-000013",
+                "0003\nINV-2026-000110",
+                "admin",
+                "5.750",
+                "Cash",
+                "طلب الزبون إرجاع كرسي مكتب (Office Chair)",
+                "17/10/2026 12:51"
+              ],
+              [
+                "R0002\nRET-2026-000012",
+                "0004\nINV-2026-000111",
+                "admin",
+                "5.675",
+                "Cash",
+                "Customer Changed Mind",
+                "17/10/2026 11:26"
+              ],
+              [
+                "R0001\nRET-2026-000011",
+                "0003\nINV-2026-000110",
+                "admin",
+                "5.750",
+                "Cash",
+                "Customer Changed Mind",
+                "17/10/2026 11:24"
+              ],
+              [
+                "R0004\nRET-2026-000010",
+                "0023\nINV-2026-000102",
+                "admin",
+                "5.675",
+                "Cash",
+                "Customer Changed Mind",
+                "15/10/2026 20:39"
+              ],
+              [
+                "R0003\nRET-2026-000009",
+                "0022\nINV-2026-000101",
+                "admin",
+                "8.513",
+                "Cash",
+                "Customer Changed Mind",
+                "14/10/2026 19:41"
+              ],
+              [
+                "R0002\nRET-2026-000008",
+                "0020\nINV-2026-000099",
+                "admin",
+                "0.000",
+                "Cash",
+                "Customer Changed Mind",
+                "13/10/2026 21:58"
+              ],
+              [
+                "R0001\nRET-2026-000007",
+                "0018\nINV-2026-000097",
+                "admin",
+                "5.750",
+                "Cash",
+                "Customer Changed Mind",
+                "13/10/2026 21:56"
+              ],
+              [
+                "R0005\nRET-2026-000006",
+                "0018\nINV-2026-000071",
+                "admin",
+                "8.625",
+                "Cash",
+                "Defective / Damaged",
+                "10/10/2026 18:06"
+              ],
+              [
+                "R0004\nRET-2026-000005",
+                "0003\nINV-2026-000056",
+                "admin",
+                "5.750",
+                "Cash",
+                "Defective / Damaged",
+                "09/10/2026 22:03"
+              ],
+              [
+                "R0003\nRET-2026-000004",
+                "0001\nINV-2026-000054",
+                "admin",
+                "6.125",
+                "Cash",
+                "Defective / Damaged",
+                "09/10/2026 22:02"
+              ],
+              [
+                "R0002\nRET-2026-000003",
+                "0002\nINV-2026-000055",
+                "admin",
+                "6.013",
+                "Cash",
+                "Defective / Damaged",
+                "09/10/2026 22:01"
+              ],
+              [
+                "R0001\nRET-2026-000002",
+                "0002\nINV-2026-000055",
+                "admin",
+                "6.013",
+                "Cash",
+                "Customer Changed Mind",
+                "09/10/2026 22:00"
+              ],
+              [
+                "R0001\nRET-2026-000001",
+                "0002\nINV-2026-000053",
+                "admin",
+                "6.013",
+                "Cash",
+                "Defective / Damaged",
+                "09/10/2026 21:48"
+              ],
+              [
+                "REF-1-20261003-0008\nRF-INV-1-20261003-0008",
+                "ORD-1-20261003-0007\nINV-1-20261003-0007",
+                "admin",
+                "11.600",
+                "Cash",
+                "Customer Return - Live Server Verification",
+                "03/10/2026 17:03"
+              ],
+              [
+                "REF-1-20261002-0022\nRF-INV-1-20261002-0022",
+                "ORD-1-20261002-0015\nINV-1-20261002-0015",
+                "admin",
+                "174.000",
+                "Cash",
+                "Damaged item returned by customer",
+                "02/10/2026 22:15"
+              ],
+              [
+                "REF-1-20261002-0013\nRF-INV-1-20261002-0013",
+                "ORD-1-20261002-0007\nINV-1-20261002-0007",
+                "admin",
+                "174.000",
+                "Cash",
+                "Damaged item returned by customer",
+                "02/10/2026 22:12"
+              ],
+              [
+                "REF-1-20261002-0005\nRF-INV-1-20261002-0005",
+                "ORD-1-20261002-0004\nINV-1-20261002-0004",
+                "admin",
+                "174.000",
+                "Cash",
+                "Customer requested refund",
+                "02/10/2026 22:07"
+              ]
+            ]
+          }
+        ],
+        "notes": []
+      }
+    ]
+  },
+  "errors": null,
+  "timestamp": "2026-10-28T18:00:53.3769387Z",
+  "traceId": "355c2e0c-00ad-41ce-a7e1-7aec99704677"
+}

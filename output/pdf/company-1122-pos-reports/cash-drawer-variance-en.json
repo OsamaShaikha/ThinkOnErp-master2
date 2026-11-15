@@ -1,0 +1,454 @@
+{
+  "success": true,
+  "statusCode": 200,
+  "message": "تمت العملية بنجاح.",
+  "data": {
+    "code": "cash-drawer-variance",
+    "title": "Cash drawer variance",
+    "isLive": false,
+    "header": {
+      "language": "en",
+      "isRightToLeft": false,
+      "companyName": "debis acc",
+      "branchName": "All accessible branches",
+      "taxNumber": null,
+      "phone": "0796211887",
+      "currency": "JOD",
+      "cashier": "All",
+      "payment": "All",
+      "preparedBy": "admin",
+      "reportNumber": "RPT-20261028-7de1ddcaf9b94",
+      "issuedAtUtc": "2026-10-28T18:01:00.3506506Z",
+      "startDate": "2026-10-01T00:00:00",
+      "endDate": "2026-10-28T00:00:00",
+      "shiftId": null,
+      "tillId": null,
+      "days": [],
+      "payments": [],
+      "totals": {
+        "date": "0001-01-01T00:00:00",
+        "invoices": 0,
+        "sales": 0,
+        "discount": 0,
+        "returns": 0,
+        "net": 0,
+        "tax": 0,
+        "charges": 0,
+        "total": 0
+      },
+      "averageInvoice": 0
+    },
+    "filterNotes": [],
+    "branches": [
+      {
+        "branchId": 1,
+        "branchName": "debis acc",
+        "metrics": [
+          {
+            "label": "Net cash variance",
+            "value": "-193.582",
+            "unit": "JOD"
+          },
+          {
+            "label": "Shortage",
+            "value": "234.717",
+            "unit": "JOD"
+          },
+          {
+            "label": "Overage",
+            "value": "41.135",
+            "unit": "JOD"
+          },
+          {
+            "label": "Audited shifts",
+            "value": "8",
+            "unit": ""
+          }
+        ],
+        "tables": [
+          {
+            "title": "Cash reconciliation",
+            "columns": [
+              {
+                "label": "Shift / till",
+                "numeric": false,
+                "code": false,
+                "width": 1.7
+              },
+              {
+                "label": "Cashier",
+                "numeric": false,
+                "code": false,
+                "width": 1.3
+              },
+              {
+                "label": "Status",
+                "numeric": false,
+                "code": false,
+                "width": 1
+              },
+              {
+                "label": "Opening",
+                "numeric": true,
+                "code": false,
+                "width": 1
+              },
+              {
+                "label": "Expected",
+                "numeric": true,
+                "code": false,
+                "width": 1
+              },
+              {
+                "label": "Counted",
+                "numeric": true,
+                "code": false,
+                "width": 1
+              },
+              {
+                "label": "Variance",
+                "numeric": true,
+                "code": false,
+                "width": 1
+              }
+            ],
+            "rows": [
+              [
+                "SH-1-1-20261025-002\ntest",
+                "admin",
+                "Open",
+                "1.000",
+                "1.000",
+                "-",
+                "0.000"
+              ],
+              [
+                "SH-1-1-20261025-001\ntest",
+                "admin",
+                "Blind closed",
+                "1.000",
+                "2.000",
+                "1.000",
+                "-1.000"
+              ],
+              [
+                "SH-1-1-20261024-002\ntest",
+                "admin",
+                "Blind closed",
+                "1.000",
+                "34.250",
+                "50.000",
+                "15.750"
+              ],
+              [
+                "SH-1-41-20261024-001\ntest",
+                "admin",
+                "Blind closed",
+                "1.000",
+                "3.000",
+                "3.000",
+                "0.000"
+              ],
+              [
+                "SH-1-41-20261018-001\ntest",
+                "admin",
+                "Blind closed",
+                "1.000",
+                "133.000",
+                "132.000",
+                "-1.000"
+              ],
+              [
+                "SH-1-41-20261015-001\ntest",
+                "admin",
+                "Blind closed",
+                "1.000",
+                "74.615",
+                "100.000",
+                "25.385"
+              ],
+              [
+                "SH-1-41-20261012-001\ntest",
+                "admin",
+                "Blind closed",
+                "100.000",
+                "314.830",
+                "100.000",
+                "-214.830"
+              ],
+              [
+                "SH-1-41-20261009-002\ntest",
+                "admin",
+                "Blind closed",
+                "1.000",
+                "26.511",
+                "10.000",
+                "-16.511"
+              ],
+              [
+                "SH-1-41-20261009-001\ntest",
+                "admin",
+                "Blind closed",
+                "1.000",
+                "11.376",
+                "10.000",
+                "-1.376"
+              ]
+            ]
+          },
+          {
+            "title": "Cash activity",
+            "columns": [
+              {
+                "label": "Shift",
+                "numeric": false,
+                "code": true,
+                "width": 1.5
+              },
+              {
+                "label": "Cash sales",
+                "numeric": true,
+                "code": false,
+                "width": 1
+              },
+              {
+                "label": "Cash refunds",
+                "numeric": true,
+                "code": false,
+                "width": 1
+              },
+              {
+                "label": "Float in",
+                "numeric": true,
+                "code": false,
+                "width": 1
+              },
+              {
+                "label": "Cash drop",
+                "numeric": true,
+                "code": false,
+                "width": 1
+              },
+              {
+                "label": "Pay out",
+                "numeric": true,
+                "code": false,
+                "width": 1
+              },
+              {
+                "label": "Tips paid",
+                "numeric": true,
+                "code": false,
+                "width": 1
+              }
+            ],
+            "rows": [
+              [
+                "SH-1-1-20261025-002",
+                "0.000",
+                "0.000",
+                "0.000",
+                "0.000",
+                "0.000",
+                "0.000"
+              ],
+              [
+                "SH-1-1-20261025-001",
+                "0.000",
+                "0.000",
+                "2.000",
+                "0.000",
+                "1.000",
+                "0.000"
+              ],
+              [
+                "SH-1-1-20261024-002",
+                "33.250",
+                "0.000",
+                "0.000",
+                "0.000",
+                "0.000",
+                "0.000"
+              ],
+              [
+                "SH-1-41-20261024-001",
+                "2.000",
+                "0.000",
+                "0.000",
+                "0.000",
+                "0.000",
+                "0.000"
+              ],
+              [
+                "SH-1-41-20261018-001",
+                "132.000",
+                "0.000",
+                "0.000",
+                "0.000",
+                "0.000",
+                "0.000"
+              ],
+              [
+                "SH-1-41-20261015-001",
+                "121.300",
+                "85.685",
+                "50.000",
+                "0.000",
+                "12.000",
+                "0.000"
+              ],
+              [
+                "SH-1-41-20261012-001",
+                "80.095",
+                "18.690",
+                "153.425",
+                "0.000",
+                "0.000",
+                "0.000"
+              ],
+              [
+                "SH-1-41-20261009-002",
+                "58.041",
+                "32.530",
+                "0.000",
+                "0.000",
+                "0.000",
+                "0.000"
+              ],
+              [
+                "SH-1-41-20261009-001",
+                "16.388",
+                "6.013",
+                "0.000",
+                "0.000",
+                "0.000",
+                "0.000"
+              ]
+            ]
+          },
+          {
+            "title": "Card reconciliation & audit",
+            "columns": [
+              {
+                "label": "Shift",
+                "numeric": false,
+                "code": true,
+                "width": 1
+              },
+              {
+                "label": "Expected card",
+                "numeric": true,
+                "code": false,
+                "width": 1
+              },
+              {
+                "label": "Counted card",
+                "numeric": true,
+                "code": false,
+                "width": 1
+              },
+              {
+                "label": "Card variance",
+                "numeric": true,
+                "code": false,
+                "width": 1
+              },
+              {
+                "label": "Opened / closed UTC",
+                "numeric": false,
+                "code": true,
+                "width": 1.8
+              },
+              {
+                "label": "Audit",
+                "numeric": false,
+                "code": false,
+                "width": 2
+              }
+            ],
+            "rows": [
+              [
+                "SH-1-1-20261025-002",
+                "0.000",
+                "-",
+                "0.000",
+                "25/10/2026 22:23\n-",
+                "No - \n"
+              ],
+              [
+                "SH-1-1-20261025-001",
+                "0.000",
+                "0.000",
+                "0.000",
+                "25/10/2026 21:43\n25/10/2026 22:07",
+                "No - \n"
+              ],
+              [
+                "SH-1-1-20261024-002",
+                "0.000",
+                "0.000",
+                "0.000",
+                "24/10/2026 12:03\n25/10/2026 11:30",
+                "No - \n"
+              ],
+              [
+                "SH-1-41-20261024-001",
+                "0.000",
+                "0.000",
+                "0.000",
+                "24/10/2026 12:02\n24/10/2026 12:03",
+                "No - \n"
+              ],
+              [
+                "SH-1-41-20261018-001",
+                "0.000",
+                "0.000",
+                "0.000",
+                "18/10/2026 21:32\n24/10/2026 12:02",
+                "No - \n"
+              ],
+              [
+                "SH-1-41-20261015-001",
+                "0.000",
+                "0.000",
+                "0.000",
+                "15/10/2026 22:17\n18/10/2026 21:27",
+                "No - \n"
+              ],
+              [
+                "SH-1-41-20261012-001",
+                "5.750",
+                "0.000",
+                "-5.750",
+                "12/10/2026 13:14\n15/10/2026 22:16",
+                "No - \n"
+              ],
+              [
+                "SH-1-41-20261009-002",
+                "0.000",
+                "0.000",
+                "0.000",
+                "09/10/2026 21:58\n12/10/2026 13:13",
+                "No - \n"
+              ],
+              [
+                "SH-1-41-20261009-001",
+                "0.000",
+                "0.000",
+                "0.000",
+                "09/10/2026 21:37\n09/10/2026 21:54",
+                "No - \n"
+              ]
+            ]
+          }
+        ],
+        "notes": [
+          "Expected cash: 600.582 · Counted cash: 406.000 · Net card variance: -5.750 JOD"
+        ]
+      }
+    ]
+  },
+  "errors": null,
+  "timestamp": "2026-10-28T18:01:00.4144959Z",
+  "traceId": "6e9fd67a-3e0f-4a94-89e3-aa25962d0d39"
+}

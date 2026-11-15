@@ -1,0 +1,160 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TestRun id="24c2e1b5-212f-4daf-a487-04f83e2bdfab" name="Khaled@KHALED 2026-10-25 23:50:34" runUser="KHALED\Khaled" xmlns="http://microsoft.com/schemas/VisualStudio/TeamTest/2010">
+  <Times creation="2026-10-25T23:50:34.7864063+03:00" queuing="2026-10-25T23:50:34.7864067+03:00" start="2026-10-25T23:50:33.2748060+03:00" finish="2026-10-25T23:50:42.7011288+03:00" />
+  <TestSettings name="default" id="9e4eb753-456d-4bc8-8db7-c7add45125ed">
+    <Deployment runDeploymentRoot="Khaled_KHALED_2026-10-25_23_50_34" />
+  </TestSettings>
+  <Results>
+    <UnitTestResult executionId="c525dedb-ce33-428c-9947-7ff3cac675d1" testId="f0e663f0-5fe0-3e9e-485b-08f4605c7b1f" testName="TicketAuditTests.StatusWorkflow_AllowsResolutionAndRejectsReopeningFinalStatuses(current: 2, next: 4, allowed: True)" computerName="KHALED" duration="00:00:00.0191733" startTime="2026-10-25T23:50:34.6868198+03:00" endTime="2026-10-25T23:50:34.6868204+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="c525dedb-ce33-428c-9947-7ff3cac675d1" />
+    <UnitTestResult executionId="fbace412-83c3-4828-b2cc-91524115a0ab" testId="4d2fb073-f5c5-6549-8e96-8aaacb3f1be2" testName="TicketControllerAuditTests.DeleteSendsDedicatedDeleteCommand" computerName="KHALED" duration="00:00:00.0051687" startTime="2026-10-25T23:50:34.6446191+03:00" endTime="2026-10-25T23:50:34.6446193+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="fbace412-83c3-4828-b2cc-91524115a0ab" />
+    <UnitTestResult executionId="30d92acd-0522-4bf3-acd8-a492af4a6815" testId="ab2e62bd-dc5b-f801-ce0f-e904f9e05c9f" testName="TicketEmailQueueTests.MissingSmtpRetainsPendingMessageAcrossRestartAndDeduplicates" computerName="KHALED" duration="00:00:00.0064138" startTime="2026-10-25T23:50:36.9103677+03:00" endTime="2026-10-25T23:50:36.9103681+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="30d92acd-0522-4bf3-acd8-a492af4a6815" />
+    <UnitTestResult executionId="770d5bd9-9bbc-481f-a451-416760715a76" testId="1a7a1d21-eb36-ab06-2439-2de15921f2cd" testName="TicketAuditTests.ReadHandlerMapsTicketReturnedByScopedRepository" computerName="KHALED" duration="00:00:00.0240287" startTime="2026-10-25T23:50:34.7403962+03:00" endTime="2026-10-25T23:50:34.7403967+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="770d5bd9-9bbc-481f-a451-416760715a76" />
+    <UnitTestResult executionId="a821b371-8296-4234-afe4-8ce6caefebef" testId="d3723d66-c4e3-e4fe-e735-4cdcc3b5d27e" testName="TicketHttpTests.LifecycleAcrossRolesPersistsAndPreventsForeignAccess" computerName="KHALED" duration="00:00:01.0882563" startTime="2026-10-25T23:50:42.4466655+03:00" endTime="2026-10-25T23:50:42.4466657+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="a821b371-8296-4234-afe4-8ce6caefebef" />
+    <UnitTestResult executionId="0e99814f-d0d8-46e0-beed-e165a1380fab" testId="7cee663e-702f-12c4-4757-0135ee93d85e" testName="TicketHttpTests.UnauthenticatedAndSuperWithoutCompanyAreRejected" computerName="KHALED" duration="00:00:00.0581845" startTime="2026-10-25T23:50:42.5050329+03:00" endTime="2026-10-25T23:50:42.5050331+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="0e99814f-d0d8-46e0-beed-e165a1380fab" />
+    <UnitTestResult executionId="8f19d48e-12a0-49be-9a9e-1f06c444cd2e" testId="bfb55ea6-ea08-5023-f46f-8ebe7dfc1006" testName="TicketControllerAuditTests.CreateOverridesForeignCompanyBranchAndRequester" computerName="KHALED" duration="00:00:00.1433131" startTime="2026-10-25T23:50:34.6330624+03:00" endTime="2026-10-25T23:50:34.6330976+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="8f19d48e-12a0-49be-9a9e-1f06c444cd2e" />
+    <UnitTestResult executionId="b32e998a-e1c7-443f-8f80-c4e64fa92500" testId="a4e1357a-370c-d78c-1b0f-6027e2e35637" testName="TicketHttpTests.FiltersReportsAndPriorityDeadlineUsePersistedData" computerName="KHALED" duration="00:00:06.8724587" startTime="2026-10-25T23:50:41.3579491+03:00" endTime="2026-10-25T23:50:41.3579494+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="b32e998a-e1c7-443f-8f80-c4e64fa92500" />
+    <UnitTestResult executionId="4571dff4-254a-4385-bb4c-500edb30a108" testId="bba0890c-ea30-e23e-549e-e4bdfa4a42d6" testName="TicketControllerAuditTests.ListRejectsForeignCompany" computerName="KHALED" duration="00:00:00.0060485" startTime="2026-10-25T23:50:34.6392025+03:00" endTime="2026-10-25T23:50:34.6392032+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="4571dff4-254a-4385-bb4c-500edb30a108" />
+    <UnitTestResult executionId="4d6acb80-0029-4939-b471-35509c20c1af" testId="f40b94aa-11aa-fb32-b6d1-ebb5eda0ba4c" testName="TicketAuditTests.CreationRecipientsContainRequesterAndOnlyCompanyAdminAndActiveSuperAdmin" computerName="KHALED" duration="00:00:00.0392662" startTime="2026-10-25T23:50:34.7786358+03:00" endTime="2026-10-25T23:50:34.7786363+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="4d6acb80-0029-4939-b471-35509c20c1af" />
+    <UnitTestResult executionId="bcd05855-e997-40b3-8caa-376f97deaaa7" testId="78389133-77f8-3b63-4ab7-0520bf7e54e9" testName="TicketAuditTests.StatusWorkflow_AllowsResolutionAndRejectsReopeningFinalStatuses(current: 6, next: 2, allowed: False)" computerName="KHALED" duration="00:00:00.0275386" startTime="2026-10-25T23:50:34.6634946+03:00" endTime="2026-10-25T23:50:34.6634951+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="bcd05855-e997-40b3-8caa-376f97deaaa7" />
+    <UnitTestResult executionId="036d21e2-8036-4db1-9b59-92b9c72d0f56" testId="2984af08-d5e0-c34f-b8b2-2a6e1da72dba" testName="TicketHttpTests.InvalidAttachmentCreatesNoPartialTicket" computerName="KHALED" duration="00:00:00.0999347" startTime="2026-10-25T23:50:42.6051471+03:00" endTime="2026-10-25T23:50:42.6051472+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="036d21e2-8036-4db1-9b59-92b9c72d0f56" />
+    <UnitTestResult executionId="b0fdb0ed-cf94-40d7-8feb-9039af15378c" testId="31354fd0-de8d-fa60-fb40-e65293458b3a" testName="TicketAuditTests.InternalCommentDoesNotSendPublicNotification" computerName="KHALED" duration="00:00:00.1530512" startTime="2026-10-25T23:50:34.6376180+03:00" endTime="2026-10-25T23:50:34.6376181+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="b0fdb0ed-cf94-40d7-8feb-9039af15378c" />
+    <UnitTestResult executionId="0c5917b2-2bb8-479b-b79a-8d595ee67de8" testId="86208d07-139e-671f-ff6e-31c2d8b73af2" testName="TicketAuditTests.PriorityChangeRecalculatesDeadline" computerName="KHALED" duration="00:00:00.0233434" startTime="2026-10-25T23:50:34.7407292+03:00" endTime="2026-10-25T23:50:34.7407292+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="0c5917b2-2bb8-479b-b79a-8d595ee67de8" />
+    <UnitTestResult executionId="dbf4da66-76ec-4dd5-a49a-cd725a17888e" testId="059d4306-a3c4-e9da-e032-57e04b3cd6cb" testName="TicketAuditTests.AttachmentFromDifferentTicketIsRejected" computerName="KHALED" duration="00:00:00.0046837" startTime="2026-10-25T23:50:34.7406558+03:00" endTime="2026-10-25T23:50:34.7406559+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="dbf4da66-76ec-4dd5-a49a-cd725a17888e" />
+    <UnitTestResult executionId="6932d40e-a917-4a5c-b62b-452071d6e410" testId="5e4bae72-1ed2-07fc-c641-01e8c7842efb" testName="TicketAuditTests.StatusWorkflow_AllowsResolutionAndRejectsReopeningFinalStatuses(current: 5, next: 2, allowed: False)" computerName="KHALED" duration="00:00:00.0058273" startTime="2026-10-25T23:50:34.6675331+03:00" endTime="2026-10-25T23:50:34.6675335+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="6932d40e-a917-4a5c-b62b-452071d6e410" />
+    <UnitTestResult executionId="54944484-c285-45a4-8cdb-88bdb38e7316" testId="08710c45-8475-c587-3132-fc576df4cd10" testName="TicketEmailQueueTests.FailedSmtpIsRetainedThenDeliveredAfterRetry" computerName="KHALED" duration="00:00:02.4124037" startTime="2026-10-25T23:50:36.9020504+03:00" endTime="2026-10-25T23:50:36.9020506+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="54944484-c285-45a4-8cdb-88bdb38e7316" />
+  </Results>
+  <TestDefinitions>
+    <UnitTest name="TicketHttpTests.LifecycleAcrossRolesPersistsAndPreventsForeignAccess" storage="c:\users\khaled\thinkonerp-master2\tests\thinkonerp.ticketaudit.tests\bin\debug\net8.0\thinkonerp.ticketaudit.tests.dll" id="d3723d66-c4e3-e4fe-e735-4cdcc3b5d27e">
+      <Execution id="a821b371-8296-4234-afe4-8ce6caefebef" />
+      <TestMethod codeBase="C:\Users\Khaled\ThinkOnErp-master2\tests\ThinkOnErp.TicketAudit.Tests\bin\Debug\net8.0\ThinkOnErp.TicketAudit.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="TicketHttpTests" name="LifecycleAcrossRolesPersistsAndPreventsForeignAccess" />
+    </UnitTest>
+    <UnitTest name="TicketHttpTests.InvalidAttachmentCreatesNoPartialTicket" storage="c:\users\khaled\thinkonerp-master2\tests\thinkonerp.ticketaudit.tests\bin\debug\net8.0\thinkonerp.ticketaudit.tests.dll" id="2984af08-d5e0-c34f-b8b2-2a6e1da72dba">
+      <Execution id="036d21e2-8036-4db1-9b59-92b9c72d0f56" />
+      <TestMethod codeBase="C:\Users\Khaled\ThinkOnErp-master2\tests\ThinkOnErp.TicketAudit.Tests\bin\Debug\net8.0\ThinkOnErp.TicketAudit.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="TicketHttpTests" name="InvalidAttachmentCreatesNoPartialTicket" />
+    </UnitTest>
+    <UnitTest name="TicketAuditTests.CreationRecipientsContainRequesterAndOnlyCompanyAdminAndActiveSuperAdmin" storage="c:\users\khaled\thinkonerp-master2\tests\thinkonerp.ticketaudit.tests\bin\debug\net8.0\thinkonerp.ticketaudit.tests.dll" id="f40b94aa-11aa-fb32-b6d1-ebb5eda0ba4c">
+      <Execution id="4d6acb80-0029-4939-b471-35509c20c1af" />
+      <TestMethod codeBase="C:\Users\Khaled\ThinkOnErp-master2\tests\ThinkOnErp.TicketAudit.Tests\bin\Debug\net8.0\ThinkOnErp.TicketAudit.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="TicketAuditTests" name="CreationRecipientsContainRequesterAndOnlyCompanyAdminAndActiveSuperAdmin" />
+    </UnitTest>
+    <UnitTest name="TicketAuditTests.StatusWorkflow_AllowsResolutionAndRejectsReopeningFinalStatuses(current: 5, next: 2, allowed: False)" storage="c:\users\khaled\thinkonerp-master2\tests\thinkonerp.ticketaudit.tests\bin\debug\net8.0\thinkonerp.ticketaudit.tests.dll" id="5e4bae72-1ed2-07fc-c641-01e8c7842efb">
+      <Execution id="6932d40e-a917-4a5c-b62b-452071d6e410" />
+      <TestMethod codeBase="C:\Users\Khaled\ThinkOnErp-master2\tests\ThinkOnErp.TicketAudit.Tests\bin\Debug\net8.0\ThinkOnErp.TicketAudit.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="TicketAuditTests" name="StatusWorkflow_AllowsResolutionAndRejectsReopeningFinalStatuses" />
+    </UnitTest>
+    <UnitTest name="TicketEmailQueueTests.FailedSmtpIsRetainedThenDeliveredAfterRetry" storage="c:\users\khaled\thinkonerp-master2\tests\thinkonerp.ticketaudit.tests\bin\debug\net8.0\thinkonerp.ticketaudit.tests.dll" id="08710c45-8475-c587-3132-fc576df4cd10">
+      <Execution id="54944484-c285-45a4-8cdb-88bdb38e7316" />
+      <TestMethod codeBase="C:\Users\Khaled\ThinkOnErp-master2\tests\ThinkOnErp.TicketAudit.Tests\bin\Debug\net8.0\ThinkOnErp.TicketAudit.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="TicketEmailQueueTests" name="FailedSmtpIsRetainedThenDeliveredAfterRetry" />
+    </UnitTest>
+    <UnitTest name="TicketHttpTests.FiltersReportsAndPriorityDeadlineUsePersistedData" storage="c:\users\khaled\thinkonerp-master2\tests\thinkonerp.ticketaudit.tests\bin\debug\net8.0\thinkonerp.ticketaudit.tests.dll" id="a4e1357a-370c-d78c-1b0f-6027e2e35637">
+      <Execution id="b32e998a-e1c7-443f-8f80-c4e64fa92500" />
+      <TestMethod codeBase="C:\Users\Khaled\ThinkOnErp-master2\tests\ThinkOnErp.TicketAudit.Tests\bin\Debug\net8.0\ThinkOnErp.TicketAudit.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="TicketHttpTests" name="FiltersReportsAndPriorityDeadlineUsePersistedData" />
+    </UnitTest>
+    <UnitTest name="TicketControllerAuditTests.CreateOverridesForeignCompanyBranchAndRequester" storage="c:\users\khaled\thinkonerp-master2\tests\thinkonerp.ticketaudit.tests\bin\debug\net8.0\thinkonerp.ticketaudit.tests.dll" id="bfb55ea6-ea08-5023-f46f-8ebe7dfc1006">
+      <Execution id="8f19d48e-12a0-49be-9a9e-1f06c444cd2e" />
+      <TestMethod codeBase="C:\Users\Khaled\ThinkOnErp-master2\tests\ThinkOnErp.TicketAudit.Tests\bin\Debug\net8.0\ThinkOnErp.TicketAudit.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="TicketControllerAuditTests" name="CreateOverridesForeignCompanyBranchAndRequester" />
+    </UnitTest>
+    <UnitTest name="TicketControllerAuditTests.ListRejectsForeignCompany" storage="c:\users\khaled\thinkonerp-master2\tests\thinkonerp.ticketaudit.tests\bin\debug\net8.0\thinkonerp.ticketaudit.tests.dll" id="bba0890c-ea30-e23e-549e-e4bdfa4a42d6">
+      <Execution id="4571dff4-254a-4385-bb4c-500edb30a108" />
+      <TestMethod codeBase="C:\Users\Khaled\ThinkOnErp-master2\tests\ThinkOnErp.TicketAudit.Tests\bin\Debug\net8.0\ThinkOnErp.TicketAudit.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="TicketControllerAuditTests" name="ListRejectsForeignCompany" />
+    </UnitTest>
+    <UnitTest name="TicketAuditTests.ReadHandlerMapsTicketReturnedByScopedRepository" storage="c:\users\khaled\thinkonerp-master2\tests\thinkonerp.ticketaudit.tests\bin\debug\net8.0\thinkonerp.ticketaudit.tests.dll" id="1a7a1d21-eb36-ab06-2439-2de15921f2cd">
+      <Execution id="770d5bd9-9bbc-481f-a451-416760715a76" />
+      <TestMethod codeBase="C:\Users\Khaled\ThinkOnErp-master2\tests\ThinkOnErp.TicketAudit.Tests\bin\Debug\net8.0\ThinkOnErp.TicketAudit.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="TicketAuditTests" name="ReadHandlerMapsTicketReturnedByScopedRepository" />
+    </UnitTest>
+    <UnitTest name="TicketAuditTests.PriorityChangeRecalculatesDeadline" storage="c:\users\khaled\thinkonerp-master2\tests\thinkonerp.ticketaudit.tests\bin\debug\net8.0\thinkonerp.ticketaudit.tests.dll" id="86208d07-139e-671f-ff6e-31c2d8b73af2">
+      <Execution id="0c5917b2-2bb8-479b-b79a-8d595ee67de8" />
+      <TestMethod codeBase="C:\Users\Khaled\ThinkOnErp-master2\tests\ThinkOnErp.TicketAudit.Tests\bin\Debug\net8.0\ThinkOnErp.TicketAudit.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="TicketAuditTests" name="PriorityChangeRecalculatesDeadline" />
+    </UnitTest>
+    <UnitTest name="TicketAuditTests.StatusWorkflow_AllowsResolutionAndRejectsReopeningFinalStatuses(current: 6, next: 2, allowed: False)" storage="c:\users\khaled\thinkonerp-master2\tests\thinkonerp.ticketaudit.tests\bin\debug\net8.0\thinkonerp.ticketaudit.tests.dll" id="78389133-77f8-3b63-4ab7-0520bf7e54e9">
+      <Execution id="bcd05855-e997-40b3-8caa-376f97deaaa7" />
+      <TestMethod codeBase="C:\Users\Khaled\ThinkOnErp-master2\tests\ThinkOnErp.TicketAudit.Tests\bin\Debug\net8.0\ThinkOnErp.TicketAudit.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="TicketAuditTests" name="StatusWorkflow_AllowsResolutionAndRejectsReopeningFinalStatuses" />
+    </UnitTest>
+    <UnitTest name="TicketControllerAuditTests.DeleteSendsDedicatedDeleteCommand" storage="c:\users\khaled\thinkonerp-master2\tests\thinkonerp.ticketaudit.tests\bin\debug\net8.0\thinkonerp.ticketaudit.tests.dll" id="4d2fb073-f5c5-6549-8e96-8aaacb3f1be2">
+      <Execution id="fbace412-83c3-4828-b2cc-91524115a0ab" />
+      <TestMethod codeBase="C:\Users\Khaled\ThinkOnErp-master2\tests\ThinkOnErp.TicketAudit.Tests\bin\Debug\net8.0\ThinkOnErp.TicketAudit.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="TicketControllerAuditTests" name="DeleteSendsDedicatedDeleteCommand" />
+    </UnitTest>
+    <UnitTest name="TicketEmailQueueTests.MissingSmtpRetainsPendingMessageAcrossRestartAndDeduplicates" storage="c:\users\khaled\thinkonerp-master2\tests\thinkonerp.ticketaudit.tests\bin\debug\net8.0\thinkonerp.ticketaudit.tests.dll" id="ab2e62bd-dc5b-f801-ce0f-e904f9e05c9f">
+      <Execution id="30d92acd-0522-4bf3-acd8-a492af4a6815" />
+      <TestMethod codeBase="C:\Users\Khaled\ThinkOnErp-master2\tests\ThinkOnErp.TicketAudit.Tests\bin\Debug\net8.0\ThinkOnErp.TicketAudit.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="TicketEmailQueueTests" name="MissingSmtpRetainsPendingMessageAcrossRestartAndDeduplicates" />
+    </UnitTest>
+    <UnitTest name="TicketHttpTests.UnauthenticatedAndSuperWithoutCompanyAreRejected" storage="c:\users\khaled\thinkonerp-master2\tests\thinkonerp.ticketaudit.tests\bin\debug\net8.0\thinkonerp.ticketaudit.tests.dll" id="7cee663e-702f-12c4-4757-0135ee93d85e">
+      <Execution id="0e99814f-d0d8-46e0-beed-e165a1380fab" />
+      <TestMethod codeBase="C:\Users\Khaled\ThinkOnErp-master2\tests\ThinkOnErp.TicketAudit.Tests\bin\Debug\net8.0\ThinkOnErp.TicketAudit.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="TicketHttpTests" name="UnauthenticatedAndSuperWithoutCompanyAreRejected" />
+    </UnitTest>
+    <UnitTest name="TicketAuditTests.InternalCommentDoesNotSendPublicNotification" storage="c:\users\khaled\thinkonerp-master2\tests\thinkonerp.ticketaudit.tests\bin\debug\net8.0\thinkonerp.ticketaudit.tests.dll" id="31354fd0-de8d-fa60-fb40-e65293458b3a">
+      <Execution id="b0fdb0ed-cf94-40d7-8feb-9039af15378c" />
+      <TestMethod codeBase="C:\Users\Khaled\ThinkOnErp-master2\tests\ThinkOnErp.TicketAudit.Tests\bin\Debug\net8.0\ThinkOnErp.TicketAudit.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="TicketAuditTests" name="InternalCommentDoesNotSendPublicNotification" />
+    </UnitTest>
+    <UnitTest name="TicketAuditTests.AttachmentFromDifferentTicketIsRejected" storage="c:\users\khaled\thinkonerp-master2\tests\thinkonerp.ticketaudit.tests\bin\debug\net8.0\thinkonerp.ticketaudit.tests.dll" id="059d4306-a3c4-e9da-e032-57e04b3cd6cb">
+      <Execution id="dbf4da66-76ec-4dd5-a49a-cd725a17888e" />
+      <TestMethod codeBase="C:\Users\Khaled\ThinkOnErp-master2\tests\ThinkOnErp.TicketAudit.Tests\bin\Debug\net8.0\ThinkOnErp.TicketAudit.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="TicketAuditTests" name="AttachmentFromDifferentTicketIsRejected" />
+    </UnitTest>
+    <UnitTest name="TicketAuditTests.StatusWorkflow_AllowsResolutionAndRejectsReopeningFinalStatuses(current: 2, next: 4, allowed: True)" storage="c:\users\khaled\thinkonerp-master2\tests\thinkonerp.ticketaudit.tests\bin\debug\net8.0\thinkonerp.ticketaudit.tests.dll" id="f0e663f0-5fe0-3e9e-485b-08f4605c7b1f">
+      <Execution id="c525dedb-ce33-428c-9947-7ff3cac675d1" />
+      <TestMethod codeBase="C:\Users\Khaled\ThinkOnErp-master2\tests\ThinkOnErp.TicketAudit.Tests\bin\Debug\net8.0\ThinkOnErp.TicketAudit.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="TicketAuditTests" name="StatusWorkflow_AllowsResolutionAndRejectsReopeningFinalStatuses" />
+    </UnitTest>
+  </TestDefinitions>
+  <TestEntries>
+    <TestEntry testId="f0e663f0-5fe0-3e9e-485b-08f4605c7b1f" executionId="c525dedb-ce33-428c-9947-7ff3cac675d1" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="4d2fb073-f5c5-6549-8e96-8aaacb3f1be2" executionId="fbace412-83c3-4828-b2cc-91524115a0ab" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="ab2e62bd-dc5b-f801-ce0f-e904f9e05c9f" executionId="30d92acd-0522-4bf3-acd8-a492af4a6815" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="1a7a1d21-eb36-ab06-2439-2de15921f2cd" executionId="770d5bd9-9bbc-481f-a451-416760715a76" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="d3723d66-c4e3-e4fe-e735-4cdcc3b5d27e" executionId="a821b371-8296-4234-afe4-8ce6caefebef" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="7cee663e-702f-12c4-4757-0135ee93d85e" executionId="0e99814f-d0d8-46e0-beed-e165a1380fab" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="bfb55ea6-ea08-5023-f46f-8ebe7dfc1006" executionId="8f19d48e-12a0-49be-9a9e-1f06c444cd2e" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="a4e1357a-370c-d78c-1b0f-6027e2e35637" executionId="b32e998a-e1c7-443f-8f80-c4e64fa92500" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="bba0890c-ea30-e23e-549e-e4bdfa4a42d6" executionId="4571dff4-254a-4385-bb4c-500edb30a108" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="f40b94aa-11aa-fb32-b6d1-ebb5eda0ba4c" executionId="4d6acb80-0029-4939-b471-35509c20c1af" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="78389133-77f8-3b63-4ab7-0520bf7e54e9" executionId="bcd05855-e997-40b3-8caa-376f97deaaa7" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="2984af08-d5e0-c34f-b8b2-2a6e1da72dba" executionId="036d21e2-8036-4db1-9b59-92b9c72d0f56" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="31354fd0-de8d-fa60-fb40-e65293458b3a" executionId="b0fdb0ed-cf94-40d7-8feb-9039af15378c" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="86208d07-139e-671f-ff6e-31c2d8b73af2" executionId="0c5917b2-2bb8-479b-b79a-8d595ee67de8" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="059d4306-a3c4-e9da-e032-57e04b3cd6cb" executionId="dbf4da66-76ec-4dd5-a49a-cd725a17888e" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="5e4bae72-1ed2-07fc-c641-01e8c7842efb" executionId="6932d40e-a917-4a5c-b62b-452071d6e410" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="08710c45-8475-c587-3132-fc576df4cd10" executionId="54944484-c285-45a4-8cdb-88bdb38e7316" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+  </TestEntries>
+  <TestLists>
+    <TestList name="Results Not in a List" id="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestList name="All Loaded Results" id="19431567-8539-422a-85d7-44ee4e166bda" />
+  </TestLists>
+  <ResultSummary outcome="Completed">
+    <Counters total="17" executed="17" passed="17" failed="0" error="0" timeout="0" aborted="0" inconclusive="0" passedButRunAborted="0" notRunnable="0" notExecuted="0" disconnected="0" warning="0" completed="0" inProgress="0" pending="0" />
+    <Output>
+      <StdOut>[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v2.5.6+bf9b858c26 (64-bit .NET 8.0.32)&#xD;
+[xUnit.net 00:00:00.14]   Discovering: ThinkOnErp.TicketAudit.Tests&#xD;
+[xUnit.net 00:00:00.23]   Discovered:  ThinkOnErp.TicketAudit.Tests&#xD;
+[xUnit.net 00:00:00.23]   Starting:    ThinkOnErp.TicketAudit.Tests&#xD;
+warn: Microsoft.EntityFrameworkCore.Model.Validation[10622]&#xD;
+      Entity 'SalaryStructure' has a global query filter defined and is the required end of a relationship with the entity 'SalaryStructureLine'. This may lead to unexpected results when the required entity is filtered out. Either configure the navigation as optional, or define matching query filters for both entities in the navigation. See https://go.microsoft.com/fwlink/?linkid=2131316 for more information.&#xD;
+warn: Microsoft.EntityFrameworkCore.Model.Validation[10622]&#xD;
+      Entity 'TaxPolicy' has a global query filter defined and is the required end of a relationship with the entity 'TaxBracket'. This may lead to unexpected results when the required entity is filtered out. Either configure the navigation as optional, or define matching query filters for both entities in the navigation. See https://go.microsoft.com/fwlink/?linkid=2131316 for more information.&#xD;
+warn: Microsoft.EntityFrameworkCore.Model.Validation[10622]&#xD;
+      Entity 'WorkCalendar' has a global query filter defined and is the required end of a relationship with the entity 'WorkCalendarDay'. This may lead to unexpected results when the required entity is filtered out. Either configure the navigation as optional, or define matching query filters for both entities in the navigation. See https://go.microsoft.com/fwlink/?linkid=2131316 for more information.&#xD;
+fail: ThinkOnErp.Infrastructure.Repositories.TicketRepository[0]&#xD;
+      Failed to retrieve request tickets from database&#xD;
+      System.ArgumentException: Unsupported ticket sort field.&#xD;
+         at ThinkOnErp.Infrastructure.Repositories.TicketRepository.Sort(IQueryable`1 query, String field, String direction) in C:\Users\Khaled\ThinkOnErp-master2\src\ThinkOnErp.Infrastructure\Repositories\TicketRepository.cs:line 299&#xD;
+         at ThinkOnErp.Infrastructure.Repositories.TicketRepository.GetAllAsync(Nullable`1 companyId, Nullable`1 branchId, Nullable`1 assigneeId, Nullable`1 statusId, Nullable`1 priorityId, Nullable`1 typeId, String searchTerm, Nullable`1 createdFrom, Nullable`1 createdTo, Int32 page, Int32 pageSize, String sortBy, String sortDirection) in C:\Users\Khaled\ThinkOnErp-master2\src\ThinkOnErp.Infrastructure\Repositories\TicketRepository.cs:line 55&#xD;
+fail: ThinkOnErp.Application.Features.Tickets.Queries.GetTickets.GetTicketsQueryHandler[0]&#xD;
+      Error retrieving tickets&#xD;
+      System.ArgumentException: Unsupported ticket sort field.&#xD;
+         at ThinkOnErp.Infrastructure.Repositories.TicketRepository.Sort(IQueryable`1 query, String field, String direction) in C:\Users\Khaled\ThinkOnErp-master2\src\ThinkOnErp.Infrastructure\Repositories\TicketRepository.cs:line 299&#xD;
+         at ThinkOnErp.Infrastructure.Repositories.TicketRepository.GetAllAsync(Nullable`1 companyId, Nullable`1 branchId, Nullable`1 assigneeId, Nullable`1 statusId, Nullable`1 priorityId, Nullable`1 typeId, String searchTerm, Nullable`1 createdFrom, Nullable`1 createdTo, Int32 page, Int32 pageSize, String sortBy, String sortDirection) in C:\Users\Khaled\ThinkOnErp-master2\src\ThinkOnErp.Infrastructure\Repositories\TicketRepository.cs:line 55&#xD;
+         at ThinkOnErp.Application.Features.Tickets.Queries.GetTickets.GetTicketsQueryHandler.Handle(GetTicketsQuery request, CancellationToken cancellationToken) in C:\Users\Khaled\ThinkOnErp-master2\src\ThinkOnErp.Application\Features\Tickets\Queries\GetTickets\GetTicketsQueryHandler.cs:line 85&#xD;
+warn: ThinkOnErp.Infrastructure.Services.AttachmentService[0]&#xD;
+      File signature does not match expected signature for extension .png&#xD;
+fail: ThinkOnErp.Application.Features.Tickets.Commands.CreateTicket.CreateTicketCommandHandler[0]&#xD;
+      Error validating attachment image.png&#xD;
+      System.ArgumentException: File content validation failed for image.png&#xD;
+         at ThinkOnErp.Application.Features.Tickets.Commands.CreateTicket.CreateTicketCommandHandler.PrepareAttachmentsAsync(List`1 attachments, String creationUser) in C:\Users\Khaled\ThinkOnErp-master2\src\ThinkOnErp.Application\Features\Tickets\Commands\CreateTicket\CreateTicketCommandHandler.cs:line 184&#xD;
+fail: ThinkOnErp.Application.Features.Tickets.Commands.CreateTicket.CreateTicketCommandHandler[0]&#xD;
+      Error creating ticket for company 1, branch 10&#xD;
+      System.ArgumentException: File content validation failed for image.png&#xD;
+         at ThinkOnErp.Application.Features.Tickets.Commands.CreateTicket.CreateTicketCommandHandler.PrepareAttachmentsAsync(List`1 attachments, String creationUser) in C:\Users\Khaled\ThinkOnErp-master2\src\ThinkOnErp.Application\Features\Tickets\Commands\CreateTicket\CreateTicketCommandHandler.cs:line 184&#xD;
+         at ThinkOnErp.Application.Features.Tickets.Commands.CreateTicket.CreateTicketCommandHandler.Handle(CreateTicketCommand request, CancellationToken cancellationToken) in C:\Users\Khaled\ThinkOnErp-master2\src\ThinkOnErp.Application\Features\Tickets\Commands\CreateTicket\CreateTicketCommandHandler.cs:line 90&#xD;
+warn: ThinkOnErp.API.Controllers.TicketsController[0]&#xD;
+      Validation error creating ticket: File content validation failed for image.png&#xD;
+[xUnit.net 00:00:08.43]   Finished:    ThinkOnErp.TicketAudit.Tests&#xD;
+</StdOut>
+    </Output>
+  </ResultSummary>
+</TestRun>

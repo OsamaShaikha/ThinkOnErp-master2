@@ -1,0 +1,179 @@
+{
+  "success": true,
+  "statusCode": 200,
+  "message": "تمت العملية بنجاح.",
+  "data": {
+    "code": "tax-summary",
+    "title": "ملخص الضريبة",
+    "isLive": false,
+    "header": {
+      "language": "ar",
+      "isRightToLeft": true,
+      "companyName": "debis acc",
+      "branchName": "جميع الفروع المتاحة",
+      "taxNumber": null,
+      "phone": "0796211887",
+      "currency": "JOD",
+      "cashier": "الكل",
+      "payment": "الكل",
+      "preparedBy": "admin",
+      "reportNumber": "RPT-20261028-158119cede064",
+      "issuedAtUtc": "2026-10-28T18:01:29.6751997Z",
+      "startDate": "2026-10-01T00:00:00",
+      "endDate": "2026-10-28T00:00:00",
+      "shiftId": null,
+      "tillId": null,
+      "days": [],
+      "payments": [],
+      "totals": {
+        "date": "0001-01-01T00:00:00",
+        "invoices": 0,
+        "sales": 0,
+        "discount": 0,
+        "returns": 0,
+        "net": 0,
+        "tax": 0,
+        "charges": 0,
+        "total": 0
+      },
+      "averageInvoice": 0
+    },
+    "filterNotes": [],
+    "branches": [
+      {
+        "branchId": 1,
+        "branchName": "debis acc",
+        "metrics": [
+          {
+            "label": "صافي الضريبة المستحقة",
+            "value": "416.848",
+            "unit": "JOD"
+          },
+          {
+            "label": "الضريبة المحصّلة",
+            "value": "510.098",
+            "unit": "JOD"
+          },
+          {
+            "label": "ضريبة المرتجعات",
+            "value": "93.250",
+            "unit": "JOD"
+          },
+          {
+            "label": "مبيعات خاضعة",
+            "value": "3,244.200",
+            "unit": "JOD"
+          }
+        ],
+        "tables": [
+          {
+            "title": "نسب الضريبة على المبيعات",
+            "columns": [
+              {
+                "label": "رمز الضريبة",
+                "numeric": false,
+                "code": true,
+                "width": 2
+              },
+              {
+                "label": "النسبة",
+                "numeric": true,
+                "code": false,
+                "width": 1
+              },
+              {
+                "label": "المبلغ الخاضع",
+                "numeric": true,
+                "code": false,
+                "width": 1
+              },
+              {
+                "label": "قيمة الضريبة",
+                "numeric": true,
+                "code": false,
+                "width": 1
+              },
+              {
+                "label": "شاملة",
+                "numeric": false,
+                "code": false,
+                "width": 1
+              }
+            ],
+            "rows": [
+              [
+                "VAT_0",
+                "0%",
+                "156.000",
+                "0.000",
+                "لا"
+              ],
+              [
+                "VAT_0",
+                "0%",
+                "12.250",
+                "0.000",
+                "لا"
+              ],
+              [
+                "VAT_15",
+                "15%",
+                "821.700",
+                "122.498",
+                "لا"
+              ],
+              [
+                "TEST",
+                "16%",
+                "2,422.500",
+                "387.600",
+                "لا"
+              ]
+            ]
+          },
+          {
+            "title": "تصنيف المبيعات ضريبيًا",
+            "columns": [
+              {
+                "label": "التصنيف",
+                "numeric": false,
+                "code": false,
+                "width": 3
+              },
+              {
+                "label": "القيمة",
+                "numeric": true,
+                "code": false,
+                "width": 1
+              }
+            ],
+            "rows": [
+              [
+                "إجمالي المبيعات",
+                "3,416.750"
+              ],
+              [
+                "مبيعات خاضعة",
+                "3,244.200"
+              ],
+              [
+                "مبيعات بنسبة صفر",
+                "168.250"
+              ],
+              [
+                "مبيعات معفاة",
+                "4.300"
+              ]
+            ]
+          }
+        ],
+        "notes": [
+          "يعرض تفصيل النسب ضريبة المبيعات؛ وتظهر ضريبة المرتجعات في الملخص."
+        ]
+      }
+    ]
+  },
+  "errors": null,
+  "timestamp": "2026-10-28T18:01:30.551313Z",
+  "traceId": "8812ca2b-acf5-42c3-8938-761b799151a7"
+}

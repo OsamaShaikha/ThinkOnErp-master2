@@ -1,0 +1,123 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TestRun id="9897c899-b46c-4184-8860-034e6b34a423" name="Khaled@KHALED 2026-10-25 23:49:24" runUser="KHALED\Khaled" xmlns="http://microsoft.com/schemas/VisualStudio/TeamTest/2010">
+  <Times creation="2026-10-25T23:49:24.4632059+03:00" queuing="2026-10-25T23:49:24.4632063+03:00" start="2026-10-25T23:49:16.8338690+03:00" finish="2026-10-25T23:49:24.9883072+03:00" />
+  <TestSettings name="default" id="bce3b35f-07c7-4113-909d-bdf524095965">
+    <Deployment runDeploymentRoot="Khaled_KHALED_2026-10-25_23_49_24" />
+  </TestSettings>
+  <Results>
+    <UnitTestResult executionId="47cf5560-9f3e-46f2-972d-8e61331d0757" testId="7cee663e-702f-12c4-4757-0135ee93d85e" testName="TicketHttpTests.UnauthenticatedAndSuperWithoutCompanyAreRejected" computerName="KHALED" duration="00:00:00.0915652" startTime="2026-10-25T23:49:24.7329771+03:00" endTime="2026-10-25T23:49:24.7329774+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="47cf5560-9f3e-46f2-972d-8e61331d0757" />
+    <UnitTestResult executionId="59b081de-b231-4326-a8b3-b2bf86b626d7" testId="a4e1357a-370c-d78c-1b0f-6027e2e35637" testName="TicketHttpTests.FiltersReportsAndPriorityDeadlineUsePersistedData" computerName="KHALED" duration="00:00:06.2627144" startTime="2026-10-25T23:49:24.4198317+03:00" endTime="2026-10-25T23:49:24.4198550+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Failed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="59b081de-b231-4326-a8b3-b2bf86b626d7">
+      <Output>
+        <ErrorInfo>
+          <StackTrace>   at TicketHttpTests.Create(HttpClient client, Boolean attachment) in C:\Users\Khaled\ThinkOnErp-master2\tests\ThinkOnErp.TicketAudit.Tests\TicketHttpTests.cs:line 112&#xD;
+   at TicketHttpTests.FiltersReportsAndPriorityDeadlineUsePersistedData() in C:\Users\Khaled\ThinkOnErp-master2\tests\ThinkOnErp.TicketAudit.Tests\TicketHttpTests.cs:line 173&#xD;
+   at TicketHttpTests.FiltersReportsAndPriorityDeadlineUsePersistedData() in C:\Users\Khaled\ThinkOnErp-master2\tests\ThinkOnErp.TicketAudit.Tests\TicketHttpTests.cs:line 185&#xD;
+--- End of stack trace from previous location ---</StackTrace>
+        </ErrorInfo>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="287a14f3-4537-4d6d-818a-bf531aa7f9d8" testId="d3723d66-c4e3-e4fe-e735-4cdcc3b5d27e" testName="TicketHttpTests.LifecycleAcrossRolesPersistsAndPreventsForeignAccess" computerName="KHALED" duration="00:00:00.2240689" startTime="2026-10-25T23:49:24.6417856+03:00" endTime="2026-10-25T23:49:24.6417861+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Failed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="287a14f3-4537-4d6d-818a-bf531aa7f9d8">
+      <Output>
+        <ErrorInfo>
+          <StackTrace>   at TicketHttpTests.Create(HttpClient client, Boolean attachment) in C:\Users\Khaled\ThinkOnErp-master2\tests\ThinkOnErp.TicketAudit.Tests\TicketHttpTests.cs:line 112&#xD;
+   at TicketHttpTests.LifecycleAcrossRolesPersistsAndPreventsForeignAccess() in C:\Users\Khaled\ThinkOnErp-master2\tests\ThinkOnErp.TicketAudit.Tests\TicketHttpTests.cs:line 122&#xD;
+   at TicketHttpTests.LifecycleAcrossRolesPersistsAndPreventsForeignAccess() in C:\Users\Khaled\ThinkOnErp-master2\tests\ThinkOnErp.TicketAudit.Tests\TicketHttpTests.cs:line 148&#xD;
+--- End of stack trace from previous location ---</StackTrace>
+        </ErrorInfo>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="d96309c1-4483-46e4-b2c1-23b303e23f20" testId="2984af08-d5e0-c34f-b8b2-2a6e1da72dba" testName="TicketHttpTests.InvalidAttachmentCreatesNoPartialTicket" computerName="KHALED" duration="00:00:00.1368536" startTime="2026-10-25T23:49:24.8777694+03:00" endTime="2026-10-25T23:49:24.8777695+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Failed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="d96309c1-4483-46e4-b2c1-23b303e23f20">
+      <Output>
+        <ErrorInfo>
+          <Message>Assert.Equal() Failure: Values differ&#xD;
+Expected: BadRequest&#xD;
+Actual:   Forbidden</Message>
+          <StackTrace>   at TicketHttpTests.InvalidAttachmentCreatesNoPartialTicket() in C:\Users\Khaled\ThinkOnErp-master2\tests\ThinkOnErp.TicketAudit.Tests\TicketHttpTests.cs:line 165&#xD;
+   at TicketHttpTests.InvalidAttachmentCreatesNoPartialTicket() in C:\Users\Khaled\ThinkOnErp-master2\tests\ThinkOnErp.TicketAudit.Tests\TicketHttpTests.cs:line 166&#xD;
+--- End of stack trace from previous location ---</StackTrace>
+        </ErrorInfo>
+      </Output>
+    </UnitTestResult>
+  </Results>
+  <TestDefinitions>
+    <UnitTest name="TicketHttpTests.LifecycleAcrossRolesPersistsAndPreventsForeignAccess" storage="c:\users\khaled\thinkonerp-master2\tests\thinkonerp.ticketaudit.tests\bin\debug\net8.0\thinkonerp.ticketaudit.tests.dll" id="d3723d66-c4e3-e4fe-e735-4cdcc3b5d27e">
+      <Execution id="287a14f3-4537-4d6d-818a-bf531aa7f9d8" />
+      <TestMethod codeBase="C:\Users\Khaled\ThinkOnErp-master2\tests\ThinkOnErp.TicketAudit.Tests\bin\Debug\net8.0\ThinkOnErp.TicketAudit.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="TicketHttpTests" name="LifecycleAcrossRolesPersistsAndPreventsForeignAccess" />
+    </UnitTest>
+    <UnitTest name="TicketHttpTests.UnauthenticatedAndSuperWithoutCompanyAreRejected" storage="c:\users\khaled\thinkonerp-master2\tests\thinkonerp.ticketaudit.tests\bin\debug\net8.0\thinkonerp.ticketaudit.tests.dll" id="7cee663e-702f-12c4-4757-0135ee93d85e">
+      <Execution id="47cf5560-9f3e-46f2-972d-8e61331d0757" />
+      <TestMethod codeBase="C:\Users\Khaled\ThinkOnErp-master2\tests\ThinkOnErp.TicketAudit.Tests\bin\Debug\net8.0\ThinkOnErp.TicketAudit.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="TicketHttpTests" name="UnauthenticatedAndSuperWithoutCompanyAreRejected" />
+    </UnitTest>
+    <UnitTest name="TicketHttpTests.InvalidAttachmentCreatesNoPartialTicket" storage="c:\users\khaled\thinkonerp-master2\tests\thinkonerp.ticketaudit.tests\bin\debug\net8.0\thinkonerp.ticketaudit.tests.dll" id="2984af08-d5e0-c34f-b8b2-2a6e1da72dba">
+      <Execution id="d96309c1-4483-46e4-b2c1-23b303e23f20" />
+      <TestMethod codeBase="C:\Users\Khaled\ThinkOnErp-master2\tests\ThinkOnErp.TicketAudit.Tests\bin\Debug\net8.0\ThinkOnErp.TicketAudit.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="TicketHttpTests" name="InvalidAttachmentCreatesNoPartialTicket" />
+    </UnitTest>
+    <UnitTest name="TicketHttpTests.FiltersReportsAndPriorityDeadlineUsePersistedData" storage="c:\users\khaled\thinkonerp-master2\tests\thinkonerp.ticketaudit.tests\bin\debug\net8.0\thinkonerp.ticketaudit.tests.dll" id="a4e1357a-370c-d78c-1b0f-6027e2e35637">
+      <Execution id="59b081de-b231-4326-a8b3-b2bf86b626d7" />
+      <TestMethod codeBase="C:\Users\Khaled\ThinkOnErp-master2\tests\ThinkOnErp.TicketAudit.Tests\bin\Debug\net8.0\ThinkOnErp.TicketAudit.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="TicketHttpTests" name="FiltersReportsAndPriorityDeadlineUsePersistedData" />
+    </UnitTest>
+  </TestDefinitions>
+  <TestEntries>
+    <TestEntry testId="7cee663e-702f-12c4-4757-0135ee93d85e" executionId="47cf5560-9f3e-46f2-972d-8e61331d0757" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="a4e1357a-370c-d78c-1b0f-6027e2e35637" executionId="59b081de-b231-4326-a8b3-b2bf86b626d7" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="d3723d66-c4e3-e4fe-e735-4cdcc3b5d27e" executionId="287a14f3-4537-4d6d-818a-bf531aa7f9d8" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="2984af08-d5e0-c34f-b8b2-2a6e1da72dba" executionId="d96309c1-4483-46e4-b2c1-23b303e23f20" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+  </TestEntries>
+  <TestLists>
+    <TestList name="Results Not in a List" id="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestList name="All Loaded Results" id="19431567-8539-422a-85d7-44ee4e166bda" />
+  </TestLists>
+  <ResultSummary outcome="Failed">
+    <Counters total="4" executed="4" passed="1" failed="3" error="0" timeout="0" aborted="0" inconclusive="0" passedButRunAborted="0" notRunnable="0" notExecuted="0" disconnected="0" warning="0" completed="0" inProgress="0" pending="0" />
+    <Output>
+      <StdOut>[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v2.5.6+bf9b858c26 (64-bit .NET 8.0.32)&#xD;
+[xUnit.net 00:00:00.15]   Discovering: ThinkOnErp.TicketAudit.Tests&#xD;
+[xUnit.net 00:00:00.24]   Discovered:  ThinkOnErp.TicketAudit.Tests&#xD;
+[xUnit.net 00:00:00.25]   Starting:    ThinkOnErp.TicketAudit.Tests&#xD;
+warn: Microsoft.EntityFrameworkCore.Model.Validation[10622]&#xD;
+      Entity 'SalaryStructure' has a global query filter defined and is the required end of a relationship with the entity 'SalaryStructureLine'. This may lead to unexpected results when the required entity is filtered out. Either configure the navigation as optional, or define matching query filters for both entities in the navigation. See https://go.microsoft.com/fwlink/?linkid=2131316 for more information.&#xD;
+warn: Microsoft.EntityFrameworkCore.Model.Validation[10622]&#xD;
+      Entity 'TaxPolicy' has a global query filter defined and is the required end of a relationship with the entity 'TaxBracket'. This may lead to unexpected results when the required entity is filtered out. Either configure the navigation as optional, or define matching query filters for both entities in the navigation. See https://go.microsoft.com/fwlink/?linkid=2131316 for more information.&#xD;
+warn: Microsoft.EntityFrameworkCore.Model.Validation[10622]&#xD;
+      Entity 'WorkCalendar' has a global query filter defined and is the required end of a relationship with the entity 'WorkCalendarDay'. This may lead to unexpected results when the required entity is filtered out. Either configure the navigation as optional, or define matching query filters for both entities in the navigation. See https://go.microsoft.com/fwlink/?linkid=2131316 for more information.&#xD;
+warn: ThinkOnErp.API.Authorization.TicketAccessFilter[0]&#xD;
+      Ticket creation rejected: user branch is inactive or outside company&#xD;
+[xUnit.net 00:00:06.60]       &#xD;
+[xUnit.net 00:00:06.61]       Stack Trace:&#xD;
+[xUnit.net 00:00:06.61]         C:\Users\Khaled\ThinkOnErp-master2\tests\ThinkOnErp.TicketAudit.Tests\TicketHttpTests.cs(112,0): at TicketHttpTests.Create(HttpClient client, Boolean attachment)&#xD;
+[xUnit.net 00:00:06.61]         C:\Users\Khaled\ThinkOnErp-master2\tests\ThinkOnErp.TicketAudit.Tests\TicketHttpTests.cs(173,0): at TicketHttpTests.FiltersReportsAndPriorityDeadlineUsePersistedData()&#xD;
+[xUnit.net 00:00:06.61]         C:\Users\Khaled\ThinkOnErp-master2\tests\ThinkOnErp.TicketAudit.Tests\TicketHttpTests.cs(185,0): at TicketHttpTests.FiltersReportsAndPriorityDeadlineUsePersistedData()&#xD;
+[xUnit.net 00:00:06.61]         --- End of stack trace from previous location ---&#xD;
+warn: ThinkOnErp.API.Authorization.TicketAccessFilter[0]&#xD;
+      Ticket creation rejected: user branch is inactive or outside company&#xD;
+[xUnit.net 00:00:06.83]       &#xD;
+[xUnit.net 00:00:06.83]       Stack Trace:&#xD;
+[xUnit.net 00:00:06.83]         C:\Users\Khaled\ThinkOnErp-master2\tests\ThinkOnErp.TicketAudit.Tests\TicketHttpTests.cs(112,0): at TicketHttpTests.Create(HttpClient client, Boolean attachment)&#xD;
+[xUnit.net 00:00:06.83]         C:\Users\Khaled\ThinkOnErp-master2\tests\ThinkOnErp.TicketAudit.Tests\TicketHttpTests.cs(122,0): at TicketHttpTests.LifecycleAcrossRolesPersistsAndPreventsForeignAccess()&#xD;
+[xUnit.net 00:00:06.83]         C:\Users\Khaled\ThinkOnErp-master2\tests\ThinkOnErp.TicketAudit.Tests\TicketHttpTests.cs(148,0): at TicketHttpTests.LifecycleAcrossRolesPersistsAndPreventsForeignAccess()&#xD;
+[xUnit.net 00:00:06.83]         --- End of stack trace from previous location ---&#xD;
+warn: ThinkOnErp.API.Authorization.TicketAccessFilter[0]&#xD;
+      Ticket creation rejected: user branch is inactive or outside company&#xD;
+[xUnit.net 00:00:07.06]       Assert.Equal() Failure: Values differ&#xD;
+[xUnit.net 00:00:07.06]       Expected: BadRequest&#xD;
+[xUnit.net 00:00:07.06]       Actual:   Forbidden&#xD;
+[xUnit.net 00:00:07.07]       Stack Trace:&#xD;
+[xUnit.net 00:00:07.07]         C:\Users\Khaled\ThinkOnErp-master2\tests\ThinkOnErp.TicketAudit.Tests\TicketHttpTests.cs(165,0): at TicketHttpTests.InvalidAttachmentCreatesNoPartialTicket()&#xD;
+[xUnit.net 00:00:07.07]         C:\Users\Khaled\ThinkOnErp-master2\tests\ThinkOnErp.TicketAudit.Tests\TicketHttpTests.cs(166,0): at TicketHttpTests.InvalidAttachmentCreatesNoPartialTicket()&#xD;
+[xUnit.net 00:00:07.07]         --- End of stack trace from previous location ---&#xD;
+[xUnit.net 00:00:07.07]   Finished:    ThinkOnErp.TicketAudit.Tests&#xD;
+</StdOut>
+    </Output>
+    <RunInfos>
+      <RunInfo computerName="KHALED" outcome="Error" timestamp="2026-10-25T23:49:24.4154099+03:00">
+        <Text>[xUnit.net 00:00:06.60]     TicketHttpTests.FiltersReportsAndPriorityDeadlineUsePersistedData [FAIL]</Text>
+      </RunInfo>
+      <RunInfo computerName="KHALED" outcome="Error" timestamp="2026-10-25T23:49:24.6409918+03:00">
+        <Text>[xUnit.net 00:00:06.83]     TicketHttpTests.LifecycleAcrossRolesPersistsAndPreventsForeignAccess [FAIL]</Text>
+      </RunInfo>
+      <RunInfo computerName="KHALED" outcome="Error" timestamp="2026-10-25T23:49:24.8705580+03:00">
+        <Text>[xUnit.net 00:00:07.06]     TicketHttpTests.InvalidAttachmentCreatesNoPartialTicket [FAIL]</Text>
+      </RunInfo>
+    </RunInfos>
+  </ResultSummary>
+</TestRun>

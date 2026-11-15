@@ -26,13 +26,14 @@ public sealed class PayrollValidationService : IPayrollValidationService
 {
     private readonly IPayrollPeriodRepository _payrollPeriodRepo;
     private readonly IPolicyRepository _policyRepo;
+    private readonly IAttendanceDayContextRepository? _attendanceContext;
 
     public PayrollValidationService(
         IPayrollPeriodRepository payrollPeriodRepo,
-        IPolicyRepository policyRepo)
+        IPolicyRepository policyRepo, IAttendanceDayContextRepository? attendanceContext = null)
     {
         _payrollPeriodRepo = payrollPeriodRepo;
-        _policyRepo = policyRepo;
+        _policyRepo = policyRepo; _attendanceContext = attendanceContext;
     }
 
     public async Task<PayrollValidationResultDto> ValidatePreCalculationAsync(
@@ -59,7 +60,7 @@ public sealed class PayrollValidationService : IPayrollValidationService
 
         // 2. Existing run check
         var existingRun = await _payrollPeriodRepo.GetPayrollRunByPeriodAsync(payPeriod, branchId, cancellationToken);
-        if (existingRun != null && (existingRun.Status == "POSTED_TO_GL" || existingRun.Status == "PAID"))
+        if (existingRun != null && existingRun.Status != "CANCELLED")
         {
             errors.Add($"Payroll period '{payPeriod}' already has a {existingRun.Status} run (ID: {existingRun.Id}). Calculations cannot be rerun without cancellation/reversal.");
         }
@@ -93,13 +94,29 @@ public sealed class PayrollValidationService : IPayrollValidationService
         {
             foreach (var emp in employees)
             {
-                var hasActiveSalary = emp.SalaryStructures.Any(s => s.IsActive && s.EffectiveFrom <= period.EndDate);
+                var hasActiveSalary = emp.SalaryStructures.Any(s => s.IsActive &&
+                    s.EffectiveFrom.Date <= period.EndDate.Date &&
+                    (!s.EffectiveTo.HasValue || s.EffectiveTo.Value.Date >= period.StartDate.Date));
                 if (!hasActiveSalary)
                 {
                     warnings.Add($"Employee {emp.EmployeeCode} ({emp.NameLocal}) has no active salary structure effective for {payPeriod}.");
                 }
+                try
+                {
+                    var segments = PayrollSalarySegments.Build(emp, period);
+                    if (segments.Count > 1 && string.Equals(prorationPolicy?.Method, "FIXED_30", StringComparison.OrdinalIgnoreCase) &&
+                        prorationPolicy?.SalarySegmentAllocation is not ("CALENDAR_WEIGHTED" or "WORKING_WEIGHTED"))
+                        errors.Add($"Employee {emp.EmployeeCode} has a salary transition under FIXED_30. Configure a segment allocation policy before calculation.");
+                }
+                catch (InvalidOperationException exception)
+                {
+                    errors.Add(exception.Message);
+                }
             }
         }
+
+        if (_attendanceContext != null && await _attendanceContext.HasReviewDaysAsync(employees.Select(e => e.EmployeeCode).ToArray(), period.StartDate, period.EndDate, cancellationToken))
+            errors.Add("Attendance has unresolved review-required days or unprocessed evidence in this payroll period. Resolve their evidence/leave conflicts before calculation.");
 
         return new PayrollValidationResultDto(errors.Count == 0, errors, warnings);
     }
@@ -118,7 +135,7 @@ public sealed class PayrollValidationService : IPayrollValidationService
             return new PayrollValidationResultDto(false, errors, warnings);
         }
 
-        if (run.Status != "CALCULATED" && run.Status != "DRAFT")
+        if (run.Status != "CALCULATED")
         {
             errors.Add($"Payroll run {payrollRunId} is in '{run.Status}' status and cannot be approved.");
         }
@@ -127,12 +144,28 @@ public sealed class PayrollValidationService : IPayrollValidationService
         {
             errors.Add($"Payroll run {payrollRunId} has no lines to approve.");
         }
+        try
+        {
+            PayrollCurrencyRules.RequireSingleCurrency(run.Lines.Select(l => l.CurrencyCode));
+        }
+        catch (InvalidOperationException exception)
+        {
+            errors.Add(exception.Message);
+        }
+        if (await _payrollPeriodRepo.HasOtherActivePayrollRunAsync(run.PayPeriod, run.BranchId, run.Id, cancellationToken))
+            errors.Add("Another active payroll run exists for this branch and period. Resolve duplicate runs before approval.");
+        var period = await _payrollPeriodRepo.GetPeriodForRunAsync(run, cancellationToken);
+        if (period == null || period.Status == "CLOSED")
+            errors.Add("The payroll period is missing or closed and cannot be approved.");
 
         var negativeLines = run.Lines.Where(l => l.NetPay < 0).ToList();
         if (negativeLines.Count > 0)
         {
             warnings.Add($"Payroll run contains {negativeLines.Count} employee(s) with negative net pay.");
         }
+
+        if (_attendanceContext != null && period != null && await _attendanceContext.HasReviewDaysAsync(run.Lines.Select(l => l.EmployeeCode).ToArray(), period.StartDate, period.EndDate, cancellationToken))
+            errors.Add("Attendance has unresolved review-required days or unprocessed evidence. Resolve them before approval.");
 
         return new PayrollValidationResultDto(errors.Count == 0, errors, warnings);
     }

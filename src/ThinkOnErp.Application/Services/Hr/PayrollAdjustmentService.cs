@@ -12,8 +12,14 @@ namespace ThinkOnErp.Application.Services.Hr;
 public interface IPayrollAdjustmentService
 {
     Task<PayrollAdjustment> CreateAdjustmentAsync(CreatePayrollAdjustmentDto dto, string user, CancellationToken cancellationToken = default);
+    Task<PayrollAdjustment> CreateOvertimeAdjustmentAsync(CreateOvertimePayrollAdjustmentDto dto, string user, CancellationToken cancellationToken = default);
     Task<PayrollAdjustment> ApproveAdjustmentAsync(long id, string user, CancellationToken cancellationToken = default);
     Task<PayrollAdjustment> RejectAdjustmentAsync(long id, string user, CancellationToken cancellationToken = default);
+    Task<PayrollAdjustment> DecideAdjustmentAsync(long id, bool approve, string reason, string user, CancellationToken cancellationToken = default);
+    Task<PayrollAdjustment> DecideAdjustmentAsync(long id, bool approve, string reason, string user, long? branchId, CancellationToken cancellationToken = default);
+    Task<PayrollAdjustment> UnpostAdjustmentAsync(long id, string user, CancellationToken cancellationToken = default);
+    Task<PayrollAdjustment> UnpostAdjustmentAsync(long id, string user, long? branchId, CancellationToken cancellationToken = default);
+    Task<PayrollAdjustment> UnpostAdjustmentAsync(long id, string user, long? branchId, string? reason, CancellationToken cancellationToken = default);
     Task<IReadOnlyList<PayrollAdjustmentDto>> GetAdjustmentsAsync(long companyId, string? employeeCode, string? payPeriod, string? status, CancellationToken cancellationToken = default);
     Task<PayrollAdjustment?> GetAdjustmentByIdAsync(long id, CancellationToken cancellationToken = default);
     Task DeleteAdjustmentAsync(long id, CancellationToken cancellationToken = default);
@@ -22,24 +28,171 @@ public interface IPayrollAdjustmentService
 public sealed class PayrollAdjustmentService : IPayrollAdjustmentService
 {
     private readonly IPayrollAdjustmentRepository _adjustmentRepository;
+    private readonly IHrUnitOfWork? _unitOfWork;
+    private readonly IAttendanceCorrectionRepository? _attendanceRepository;
+    private readonly IEmployeeRepository? _employeeRepository;
+    private readonly IPayrollPeriodRepository? _payrollPeriodRepository;
+    private readonly IOvertimeCalculationService? _overtimeCalculationService;
 
-    public PayrollAdjustmentService(IPayrollAdjustmentRepository adjustmentRepository)
+    public PayrollAdjustmentService(
+        IPayrollAdjustmentRepository adjustmentRepository,
+        IHrUnitOfWork? unitOfWork = null,
+        IAttendanceCorrectionRepository? attendanceRepository = null,
+        IEmployeeRepository? employeeRepository = null,
+        IPayrollPeriodRepository? payrollPeriodRepository = null,
+        IOvertimeCalculationService? overtimeCalculationService = null)
     {
         _adjustmentRepository = adjustmentRepository;
+        _unitOfWork = unitOfWork;
+        _attendanceRepository = attendanceRepository;
+        _employeeRepository = employeeRepository;
+        _payrollPeriodRepository = payrollPeriodRepository;
+        _overtimeCalculationService = overtimeCalculationService;
+    }
+
+    public Task<PayrollAdjustment> CreateOvertimeAdjustmentAsync(CreateOvertimePayrollAdjustmentDto dto, string user, CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(dto);
+        if (dto.CompanyId <= 0 || dto.BranchId <= 0 || string.IsNullOrWhiteSpace(dto.EmployeeCode)
+            || string.IsNullOrWhiteSpace(dto.PayPeriod) || string.IsNullOrWhiteSpace(dto.ComponentCode))
+            throw new ArgumentException("Company, branch, employee, pay period and earning component are required.");
+        if (_attendanceRepository == null || _employeeRepository == null || _payrollPeriodRepository == null || _overtimeCalculationService == null)
+            throw new InvalidOperationException("Attendance-linked overtime adjustment dependencies are not configured.");
+        return _unitOfWork == null
+            ? CreateOvertimeAdjustmentCoreAsync(dto, user, cancellationToken)
+            : _unitOfWork.ExecuteForPayrollPeriodAsync(dto.CompanyId, dto.PayPeriod,
+                () => _attendanceRepository.ExecuteForRawWorkDateAsync(dto.EmployeeCode.Trim(), dto.AttendanceDate.Date,
+                    () => CreateOvertimeAdjustmentCoreAsync(dto, user, cancellationToken), cancellationToken), cancellationToken);
+    }
+
+    private async Task<PayrollAdjustment> CreateOvertimeAdjustmentCoreAsync(CreateOvertimePayrollAdjustmentDto dto, string user, CancellationToken cancellationToken)
+    {
+        var attendanceDate = dto.AttendanceDate.Date;
+        var employeeCode = dto.EmployeeCode.Trim();
+        var payPeriodCode = dto.PayPeriod.Trim();
+        var componentCode = dto.ComponentCode.Trim();
+        var attendance = await _attendanceRepository!.GetAttendanceDayAsync(employeeCode, attendanceDate, cancellationToken)
+            ?? throw new KeyNotFoundException("Attendance day was not found for the requested employee and date.");
+        var attendanceStatus = attendance.Status?.Trim().ToUpperInvariant();
+        if (!string.Equals(attendance.EmployeeCode, employeeCode, StringComparison.OrdinalIgnoreCase)
+            || attendance.AttendanceDate.Date != attendanceDate)
+            throw new InvalidOperationException("Attendance source does not match the requested employee and date.");
+        if (attendance.Id <= 0 || attendance.HasMissingPunch || attendance.OvertimeHours <= 0m || attendanceStatus is not ("PRESENT" or "REST_DAY" or "HOLIDAY"))
+            throw new InvalidOperationException("Only completed attendance with positive overtime and no missing punch can be submitted for review.");
+
+        var employee = await _employeeRepository!.GetEmployeeByCodeAsync(employeeCode, cancellationToken)
+            ?? throw new KeyNotFoundException("Employee was not found.");
+        if (!employee.IsActive || !string.Equals(employee.EmploymentStatus, "ACTIVE", StringComparison.OrdinalIgnoreCase))
+            throw new InvalidOperationException("Overtime cannot be submitted for an inactive employee.");
+        if (attendance.CheckInBranchId.HasValue && attendance.CheckOutBranchId.HasValue
+            && attendance.CheckInBranchId.Value != attendance.CheckOutBranchId.Value)
+            throw new InvalidOperationException("Attendance branch evidence conflicts between check-in and check-out.");
+        var sourceBranchId = attendance.CheckInBranchId ?? attendance.CheckOutBranchId ?? employee.BranchId;
+        if (!sourceBranchId.HasValue || sourceBranchId.Value != dto.BranchId)
+            throw new InvalidOperationException("Requested branch is not the branch recorded for this attendance source.");
+        var pendingCorrections = await _attendanceRepository.GetCorrectionRequestsAsync(employeeCode, "PENDING", cancellationToken);
+        if (pendingCorrections.Any(request => request.AttendanceDate.Date == attendanceDate))
+            throw new InvalidOperationException("Attendance overtime cannot be submitted while a correction request is pending for the source date.");
+
+        var sourceType = "ATTENDANCE_OVERTIME";
+        var sourceId = attendance.Id.ToString(System.Globalization.CultureInfo.InvariantCulture);
+        var existing = await _adjustmentRepository.GetAdjustmentBySourceAsync(dto.CompanyId, sourceType, sourceId, cancellationToken);
+
+        var period = await _payrollPeriodRepository!.GetPeriodByCodeAsync(dto.CompanyId, payPeriodCode, cancellationToken)
+            ?? throw new KeyNotFoundException("Payroll period was not found for this company.");
+        if (period.CompanyId != dto.CompanyId || !string.Equals(period.Status?.Trim(), "OPEN", StringComparison.OrdinalIgnoreCase)
+            || attendanceDate < period.StartDate.Date || attendanceDate > period.EndDate.Date)
+            throw new InvalidOperationException("Attendance date must be inside an open payroll period.");
+        if (await _adjustmentRepository.HasCalculatedPayrollAsync(employeeCode, payPeriodCode, cancellationToken))
+            throw new InvalidOperationException("Payroll is already calculated for this employee and period. Cancel the calculation before submitting overtime.");
+
+        var component = await _employeeRepository.GetSalaryComponentByCodeAsync(componentCode, cancellationToken)
+            ?? throw new KeyNotFoundException("Configured salary component was not found.");
+        var componentType = component.ComponentType?.Trim().ToUpperInvariant();
+        if (!component.IsActive || componentType is not ("BASIC" or "ALLOWANCE"))
+            throw new InvalidOperationException("Overtime must use an active earning salary component.");
+
+        var salary = await _employeeRepository.GetActiveSalaryStructureAsync(employeeCode, attendanceDate, cancellationToken)
+            ?? throw new InvalidOperationException("No active salary structure exists for the attendance date.");
+        if (salary.BasicSalary <= 0m)
+            throw new InvalidOperationException("Active salary structure has no positive basic salary for overtime calculation.");
+        var dayType = attendanceStatus switch
+        {
+            "HOLIDAY" => "HOLIDAY",
+            "REST_DAY" => "WEEKEND",
+            _ => "REGULAR"
+        };
+        var amount = await _overtimeCalculationService!.CalculateOvertimeEarningsAsync(
+            dto.CompanyId, sourceBranchId.Value, salary.CurrencyCode, salary.BasicSalary, attendance.OvertimeHours,
+            dayType, attendanceDate, cancellationToken);
+        if (amount <= 0m)
+            throw new InvalidOperationException("Attendance overtime does not meet the effective company policy minimum.");
+
+        if (existing != null)
+        {
+            var sameSourceSnapshot = string.Equals(existing.SourceType, sourceType, StringComparison.OrdinalIgnoreCase)
+                && string.Equals(existing.SourceId, sourceId, StringComparison.Ordinal)
+                && string.Equals(existing.EmployeeCode, employeeCode, StringComparison.OrdinalIgnoreCase)
+                && string.Equals(existing.PayPeriod, payPeriodCode, StringComparison.Ordinal)
+                && string.Equals(existing.ComponentCode, component.ComponentCode, StringComparison.OrdinalIgnoreCase)
+                && existing.SourceBranchId == sourceBranchId
+                && existing.SourceAttendanceDate?.Date == attendanceDate
+                && existing.SourceOvertimeHours == attendance.OvertimeHours
+                && existing.SourceBaseSalary == salary.BasicSalary
+                && string.Equals(existing.SourceCurrencyCode?.Trim(), salary.CurrencyCode?.Trim(), StringComparison.OrdinalIgnoreCase)
+                && string.Equals(existing.SourceDayType, dayType, StringComparison.OrdinalIgnoreCase)
+                && existing.Amount == amount;
+            if (!sameSourceSnapshot)
+                throw new InvalidOperationException("Attendance overtime already has a payroll adjustment with a different attendance, salary, currency, policy, or payroll snapshot.");
+            return existing;
+        }
+
+        var adjustment = new PayrollAdjustment
+        {
+            CompanyId = dto.CompanyId,
+            EmployeeCode = employeeCode,
+            PayPeriod = payPeriodCode,
+            ComponentCode = component.ComponentCode,
+            AdjustmentType = "EARNING",
+            Amount = amount,
+            Description = $"Attendance overtime {attendance.OvertimeHours:0.####} hours on {attendanceDate:yyyy-MM-dd}",
+            Status = "PENDING",
+            SourceType = sourceType,
+            SourceId = sourceId,
+            SourceBranchId = sourceBranchId,
+            SourceAttendanceDate = attendanceDate,
+            SourceOvertimeHours = attendance.OvertimeHours,
+            SourceBaseSalary = salary.BasicSalary,
+            SourceDayType = dayType,
+            SourceCurrencyCode = salary.CurrencyCode?.Trim(),
+            CreationUser = user,
+            CreationDate = DateTime.UtcNow
+        };
+        await _adjustmentRepository.AddAdjustmentAsync(adjustment, cancellationToken);
+        await _adjustmentRepository.SaveChangesAsync(cancellationToken);
+        return adjustment;
     }
 
     public async Task<PayrollAdjustment> CreateAdjustmentAsync(CreatePayrollAdjustmentDto dto, string user, CancellationToken cancellationToken = default)
     {
+        ArgumentNullException.ThrowIfNull(dto);
+        if (dto.CompanyId <= 0 || string.IsNullOrWhiteSpace(dto.EmployeeCode) || string.IsNullOrWhiteSpace(dto.ComponentCode) || string.IsNullOrWhiteSpace(dto.PayPeriod))
+            throw new ArgumentException("Company, employee, payroll period and salary component are required.");
+        if (dto.Amount <= 0m)
+            throw new ArgumentOutOfRangeException(nameof(dto.Amount), "Adjustment amount must be positive.");
+        var adjustmentType = dto.AdjustmentType?.Trim().ToUpperInvariant();
+        if (adjustmentType is not ("EARNING" or "DEDUCTION"))
+            throw new ArgumentException("Adjustment type must be EARNING or DEDUCTION.");
         var adjustment = new PayrollAdjustment
         {
             CompanyId = dto.CompanyId,
             EmployeeCode = dto.EmployeeCode,
             PayPeriod = dto.PayPeriod,
             ComponentCode = dto.ComponentCode,
-            AdjustmentType = dto.AdjustmentType.ToUpperInvariant(), // EARNING or DEDUCTION
+            AdjustmentType = adjustmentType,
             Amount = dto.Amount,
             Description = dto.Description,
-            Status = "APPROVED", // Approved by default on creation or PENDING if workflow requires
+            Status = "PENDING",
             CreationUser = user,
             CreationDate = DateTime.UtcNow
         };
@@ -49,10 +202,60 @@ public sealed class PayrollAdjustmentService : IPayrollAdjustmentService
         return adjustment;
     }
 
-    public async Task<PayrollAdjustment> ApproveAdjustmentAsync(long id, string user, CancellationToken cancellationToken = default)
+    public Task<PayrollAdjustment> ApproveAdjustmentAsync(long id, string user, CancellationToken cancellationToken = default)
+        => ExecuteLockedAsync(id, () => ApproveAdjustmentCoreAsync(id, user, cancellationToken), cancellationToken);
+
+    public Task<PayrollAdjustment> DecideAdjustmentAsync(long id, bool approve, string reason, string user, CancellationToken cancellationToken = default)
+        => DecideAdjustmentAsync(id, approve, reason, user, null, cancellationToken);
+
+    public Task<PayrollAdjustment> DecideAdjustmentAsync(long id, bool approve, string reason, string user, long? branchId, CancellationToken cancellationToken = default)
+    {
+        var normalizedReason = reason?.Trim();
+        if (string.IsNullOrWhiteSpace(normalizedReason) || normalizedReason.Length > 1000)
+            throw new ArgumentException("A decision reason between 1 and 1000 characters is required.", nameof(reason));
+        return ExecuteLockedAsync(id, () => DecideAdjustmentCoreAsync(id, approve, normalizedReason, user, branchId, cancellationToken), cancellationToken);
+    }
+
+    private async Task<PayrollAdjustment> DecideAdjustmentCoreAsync(long id, bool approve, string reason, string user, long? branchId, CancellationToken cancellationToken)
+    {
+        var adjustment = await _adjustmentRepository.GetAdjustmentByIdAsync(id, cancellationToken)
+            ?? throw new KeyNotFoundException($"Payroll adjustment with ID {id} not found.");
+        await EnsureMutableAsync(adjustment, cancellationToken);
+        if (adjustment.Status != "PENDING")
+            throw new InvalidOperationException("Only a pending adjustment can be approved or rejected.");
+        EnsureOvertimeBranchScope(adjustment, branchId);
+        if (approve)
+        {
+            var employeeUserName = _employeeRepository == null ? null :
+                await _employeeRepository.GetLinkedUserNameByEmployeeCodeAsync(adjustment.EmployeeCode, cancellationToken);
+            HrApprovalGuard.EnsureNotSelfApproved(user, adjustment.CreationUser, employeeUserName, "payroll adjustment");
+        }
+        if (approve && IsAttendanceOvertime(adjustment))
+            await EnsureAttendanceOvertimeSourceCurrentAsync(adjustment, cancellationToken);
+
+        adjustment.Status = approve ? "APPROVED" : "REJECTED";
+        adjustment.DecisionReason = reason;
+        adjustment.UpdateUser = user;
+        adjustment.UpdateDate = DateTime.UtcNow;
+        await _adjustmentRepository.UpdateAdjustmentAsync(adjustment, cancellationToken);
+        await _adjustmentRepository.SaveChangesAsync(cancellationToken);
+        return adjustment;
+    }
+
+    private async Task<PayrollAdjustment> ApproveAdjustmentCoreAsync(long id, string user, CancellationToken cancellationToken)
     {
         var adj = await _adjustmentRepository.GetAdjustmentByIdAsync(id, cancellationToken);
         if (adj == null) throw new KeyNotFoundException($"Payroll adjustment with ID {id} not found.");
+
+        await EnsureMutableAsync(adj, cancellationToken);
+        if (adj.Status != "PENDING")
+            throw new InvalidOperationException("Only a pending adjustment can be approved.");
+        if (IsAttendanceOvertime(adj))
+            throw new InvalidOperationException("Attendance overtime approval requires a reason and branch-scoped decision.");
+
+        var employeeUserName = _employeeRepository == null ? null :
+            await _employeeRepository.GetLinkedUserNameByEmployeeCodeAsync(adj.EmployeeCode, cancellationToken);
+        HrApprovalGuard.EnsureNotSelfApproved(user, adj.CreationUser, employeeUserName, "payroll adjustment");
 
         adj.Status = "APPROVED";
         adj.UpdateUser = user;
@@ -63,10 +266,19 @@ public sealed class PayrollAdjustmentService : IPayrollAdjustmentService
         return adj;
     }
 
-    public async Task<PayrollAdjustment> RejectAdjustmentAsync(long id, string user, CancellationToken cancellationToken = default)
+    public Task<PayrollAdjustment> RejectAdjustmentAsync(long id, string user, CancellationToken cancellationToken = default)
+        => ExecuteLockedAsync(id, () => RejectAdjustmentCoreAsync(id, user, cancellationToken), cancellationToken);
+
+    private async Task<PayrollAdjustment> RejectAdjustmentCoreAsync(long id, string user, CancellationToken cancellationToken)
     {
         var adj = await _adjustmentRepository.GetAdjustmentByIdAsync(id, cancellationToken);
         if (adj == null) throw new KeyNotFoundException($"Payroll adjustment with ID {id} not found.");
+
+        await EnsureMutableAsync(adj, cancellationToken);
+        if (adj.Status != "PENDING")
+            throw new InvalidOperationException("Only a pending adjustment can be rejected. Unpost an approved adjustment first.");
+        if (IsAttendanceOvertime(adj))
+            throw new InvalidOperationException("Attendance overtime rejection requires a reason and branch-scoped decision.");
 
         adj.Status = "REJECTED";
         adj.UpdateUser = user;
@@ -75,6 +287,119 @@ public sealed class PayrollAdjustmentService : IPayrollAdjustmentService
         await _adjustmentRepository.UpdateAdjustmentAsync(adj, cancellationToken);
         await _adjustmentRepository.SaveChangesAsync(cancellationToken);
         return adj;
+    }
+
+    public Task<PayrollAdjustment> UnpostAdjustmentAsync(long id, string user, CancellationToken cancellationToken = default)
+        => UnpostAdjustmentAsync(id, user, null, cancellationToken);
+
+    public Task<PayrollAdjustment> UnpostAdjustmentAsync(long id, string user, long? branchId, CancellationToken cancellationToken = default)
+        => UnpostAdjustmentAsync(id, user, branchId, null, cancellationToken);
+
+    public Task<PayrollAdjustment> UnpostAdjustmentAsync(long id, string user, long? branchId, string? reason, CancellationToken cancellationToken = default)
+        => ExecuteLockedAsync(id, () => UnpostAdjustmentCoreAsync(id, user, branchId, reason, cancellationToken), cancellationToken);
+
+    private async Task<PayrollAdjustment> UnpostAdjustmentCoreAsync(long id, string user, long? branchId, string? reason, CancellationToken cancellationToken)
+    {
+        var adj = await _adjustmentRepository.GetAdjustmentByIdAsync(id, cancellationToken)
+            ?? throw new KeyNotFoundException($"Payroll adjustment with ID {id} not found.");
+        await EnsureMutableAsync(adj, cancellationToken);
+        if (adj.Status != "APPROVED")
+            throw new InvalidOperationException("Only an approved adjustment can be unposted.");
+        EnsureOvertimeBranchScope(adj, branchId);
+        if (IsAttendanceOvertime(adj))
+        {
+            var normalizedReason = reason?.Trim();
+            if (string.IsNullOrWhiteSpace(normalizedReason) || normalizedReason.Length > 1000)
+                throw new ArgumentException("A reason between 1 and 1000 characters is required to unpost attendance overtime.", nameof(reason));
+            adj.DecisionReason = normalizedReason;
+        }
+        adj.Status = "PENDING";
+        adj.UpdateUser = user;
+        adj.UpdateDate = DateTime.UtcNow;
+        await _adjustmentRepository.UpdateAdjustmentAsync(adj, cancellationToken);
+        await _adjustmentRepository.SaveChangesAsync(cancellationToken);
+        return adj;
+    }
+
+    private async Task EnsureMutableAsync(PayrollAdjustment adjustment, CancellationToken cancellationToken)
+    {
+        if (adjustment.PayrollRunLineId.HasValue || adjustment.Status == "PROCESSED")
+            throw new InvalidOperationException("This adjustment has been consumed by payroll; reverse the dependent payroll first.");
+        if (await _adjustmentRepository.HasCalculatedPayrollAsync(adjustment.EmployeeCode, adjustment.PayPeriod, cancellationToken))
+            throw new InvalidOperationException("Payroll is already calculated for this employee and period. Cancel the calculation before changing adjustments.");
+    }
+
+    private async Task<T> ExecuteLockedAsync<T>(long id, Func<Task<T>> action, CancellationToken cancellationToken)
+    {
+        if (_unitOfWork == null) return await action();
+        var adjustment = await _adjustmentRepository.GetAdjustmentByIdAsync(id, cancellationToken)
+            ?? throw new KeyNotFoundException($"Payroll adjustment with ID {id} not found.");
+        return await _unitOfWork.ExecuteForPayrollPeriodAsync(adjustment.CompanyId, adjustment.PayPeriod, () =>
+        {
+            if (IsAttendanceOvertime(adjustment) && adjustment.SourceAttendanceDate.HasValue && _attendanceRepository != null)
+                return _attendanceRepository.ExecuteForRawWorkDateAsync(adjustment.EmployeeCode, adjustment.SourceAttendanceDate.Value.Date, action, cancellationToken);
+            return action();
+        }, cancellationToken);
+    }
+
+    private static bool IsAttendanceOvertime(PayrollAdjustment adjustment)
+        => string.Equals(adjustment.SourceType, "ATTENDANCE_OVERTIME", StringComparison.OrdinalIgnoreCase);
+
+    private static void EnsureOvertimeBranchScope(PayrollAdjustment adjustment, long? branchId)
+    {
+        if (IsAttendanceOvertime(adjustment) && (!branchId.HasValue || branchId != adjustment.SourceBranchId))
+            throw new UnauthorizedAccessException("A matching permitted source branch is required for this attendance overtime adjustment.");
+    }
+
+    private async Task EnsureAttendanceOvertimeSourceCurrentAsync(PayrollAdjustment adjustment, CancellationToken cancellationToken)
+    {
+        if (_attendanceRepository == null || _employeeRepository == null || _payrollPeriodRepository == null || _overtimeCalculationService == null
+            || !long.TryParse(adjustment.SourceId, System.Globalization.NumberStyles.None, System.Globalization.CultureInfo.InvariantCulture, out var attendanceId)
+            || !adjustment.SourceAttendanceDate.HasValue || !adjustment.SourceBranchId.HasValue || !adjustment.SourceOvertimeHours.HasValue
+            || !adjustment.SourceBaseSalary.HasValue || string.IsNullOrWhiteSpace(adjustment.SourceDayType)
+            || string.IsNullOrWhiteSpace(adjustment.SourceCurrencyCode))
+            throw new InvalidOperationException("Attendance overtime source snapshot is incomplete; it cannot be approved.");
+
+        var date = adjustment.SourceAttendanceDate.Value.Date;
+        var day = await _attendanceRepository.GetAttendanceDayAsync(adjustment.EmployeeCode, date, cancellationToken);
+        if (day == null || day.Id != attendanceId || day.AttendanceDate.Date != date || day.HasMissingPunch
+            || day.OvertimeHours != adjustment.SourceOvertimeHours.Value)
+            throw new InvalidOperationException("Attendance source changed after overtime submission. Remove and resubmit the adjustment after review.");
+        var status = day.Status?.Trim().ToUpperInvariant();
+        if (status is not ("PRESENT" or "REST_DAY" or "HOLIDAY"))
+            throw new InvalidOperationException("Attendance status no longer qualifies for overtime approval.");
+        var employee = await _employeeRepository.GetEmployeeByCodeAsync(adjustment.EmployeeCode, cancellationToken)
+            ?? throw new InvalidOperationException("Attendance overtime employee no longer exists.");
+        if (!employee.IsActive || !string.Equals(employee.EmploymentStatus, "ACTIVE", StringComparison.OrdinalIgnoreCase))
+            throw new InvalidOperationException("Inactive employees cannot receive attendance overtime approval.");
+        if (day.CheckInBranchId.HasValue && day.CheckOutBranchId.HasValue && day.CheckInBranchId.Value != day.CheckOutBranchId.Value)
+            throw new InvalidOperationException("Attendance branch evidence now conflicts between check-in and check-out.");
+        var currentBranch = day.CheckInBranchId ?? day.CheckOutBranchId ?? employee.BranchId;
+        if (currentBranch != adjustment.SourceBranchId)
+            throw new InvalidOperationException("Attendance source branch changed after overtime submission.");
+        var pending = await _attendanceRepository.GetCorrectionRequestsAsync(adjustment.EmployeeCode, "PENDING", cancellationToken);
+        if (pending.Any(r => r.AttendanceDate.Date == date))
+            throw new InvalidOperationException("A pending attendance correction must be resolved before overtime approval.");
+
+        var period = await _payrollPeriodRepository.GetPeriodByCodeAsync(adjustment.CompanyId, adjustment.PayPeriod, cancellationToken);
+        if (period == null || period.CompanyId != adjustment.CompanyId || !string.Equals(period.Status?.Trim(), "OPEN", StringComparison.OrdinalIgnoreCase)
+            || date < period.StartDate.Date || date > period.EndDate.Date)
+            throw new InvalidOperationException("The source attendance date is no longer inside an open payroll period.");
+        var component = await _employeeRepository.GetSalaryComponentByCodeAsync(adjustment.ComponentCode, cancellationToken);
+        if (component == null || !component.IsActive || component.ComponentType?.Trim().ToUpperInvariant() is not ("BASIC" or "ALLOWANCE"))
+            throw new InvalidOperationException("The overtime earning component is no longer active.");
+        var salary = await _employeeRepository.GetActiveSalaryStructureAsync(adjustment.EmployeeCode, date, cancellationToken);
+        if (salary == null || salary.BasicSalary != adjustment.SourceBaseSalary.Value
+            || !string.Equals(salary.CurrencyCode?.Trim(), adjustment.SourceCurrencyCode, StringComparison.OrdinalIgnoreCase))
+            throw new InvalidOperationException("The salary basis changed after overtime submission. Remove and resubmit the adjustment.");
+        var currentDayType = status switch { "HOLIDAY" => "HOLIDAY", "REST_DAY" => "WEEKEND", _ => "REGULAR" };
+        if (!string.Equals(currentDayType, adjustment.SourceDayType, StringComparison.OrdinalIgnoreCase))
+            throw new InvalidOperationException("The attendance day type changed after overtime submission.");
+        var currentAmount = await _overtimeCalculationService.CalculateOvertimeEarningsAsync(
+            adjustment.CompanyId, currentBranch.Value, salary.CurrencyCode, salary.BasicSalary, day.OvertimeHours,
+            currentDayType, date, cancellationToken);
+        if (currentAmount != adjustment.Amount)
+            throw new InvalidOperationException("The effective overtime policy changed after submission. Remove and resubmit under the current policy.");
     }
 
     public async Task<IReadOnlyList<PayrollAdjustmentDto>> GetAdjustmentsAsync(long companyId, string? employeeCode, string? payPeriod, string? status, CancellationToken cancellationToken = default)
@@ -91,7 +416,16 @@ public sealed class PayrollAdjustmentService : IPayrollAdjustmentService
             a.AdjustmentType,
             a.Amount,
             a.Description,
-            a.Status
+            a.Status,
+            a.DecisionReason,
+            a.SourceType,
+            a.SourceId,
+            a.SourceBranchId,
+            a.SourceAttendanceDate,
+            a.SourceOvertimeHours,
+            a.SourceBaseSalary,
+            a.SourceDayType,
+            a.SourceCurrencyCode
         )).ToList();
     }
 
@@ -101,10 +435,20 @@ public sealed class PayrollAdjustmentService : IPayrollAdjustmentService
     }
 
     public async Task DeleteAdjustmentAsync(long id, CancellationToken cancellationToken = default)
+        => await ExecuteLockedAsync(id, async () =>
+        {
+            await DeleteAdjustmentCoreAsync(id, cancellationToken);
+            return true;
+        }, cancellationToken);
+
+    private async Task DeleteAdjustmentCoreAsync(long id, CancellationToken cancellationToken)
     {
         var adj = await _adjustmentRepository.GetAdjustmentByIdAsync(id, cancellationToken);
         if (adj != null)
         {
+            await EnsureMutableAsync(adj, cancellationToken);
+            if (adj.Status is not ("PENDING" or "REJECTED"))
+                throw new InvalidOperationException("Only pending or rejected adjustments can be deleted. Unpost an approved adjustment first.");
             await _adjustmentRepository.DeleteAdjustmentAsync(adj, cancellationToken);
             await _adjustmentRepository.SaveChangesAsync(cancellationToken);
         }

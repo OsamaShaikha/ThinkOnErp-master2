@@ -1,0 +1,191 @@
+{
+  "success": true,
+  "statusCode": 200,
+  "message": "تمت العملية بنجاح.",
+  "data": {
+    "code": "kitchen-prep-time",
+    "title": "Kitchen preparation time",
+    "isLive": false,
+    "header": {
+      "language": "en",
+      "isRightToLeft": false,
+      "companyName": "debis acc",
+      "branchName": "All accessible branches",
+      "taxNumber": null,
+      "phone": "0796211887",
+      "currency": "JOD",
+      "cashier": "All",
+      "payment": "All",
+      "preparedBy": "admin",
+      "reportNumber": "RPT-20261028-ca6d4dfbeb6d4",
+      "issuedAtUtc": "2026-10-28T18:01:43.0529586Z",
+      "startDate": "2026-10-01T00:00:00",
+      "endDate": "2026-10-28T00:00:00",
+      "shiftId": null,
+      "tillId": null,
+      "days": [],
+      "payments": [],
+      "totals": {
+        "date": "0001-01-01T00:00:00",
+        "invoices": 0,
+        "sales": 0,
+        "discount": 0,
+        "returns": 0,
+        "net": 0,
+        "tax": 0,
+        "charges": 0,
+        "total": 0
+      },
+      "averageInvoice": 0
+    },
+    "filterNotes": [
+      "Delay threshold (minutes): 15"
+    ],
+    "branches": [
+      {
+        "branchId": 1,
+        "branchName": "debis acc",
+        "metrics": [
+          {
+            "label": "Items analyzed",
+            "value": "13",
+            "unit": ""
+          },
+          {
+            "label": "Average preparation",
+            "value": "46.64",
+            "unit": "min"
+          },
+          {
+            "label": "Delayed items",
+            "value": "1",
+            "unit": ""
+          },
+          {
+            "label": "Delay threshold",
+            "value": "15",
+            "unit": "min"
+          }
+        ],
+        "tables": [
+          {
+            "title": "Preparation stations",
+            "columns": [
+              {
+                "label": "Station",
+                "numeric": false,
+                "code": false,
+                "width": 2
+              },
+              {
+                "label": "Items",
+                "numeric": true,
+                "code": false,
+                "width": 1
+              },
+              {
+                "label": "Average min",
+                "numeric": true,
+                "code": false,
+                "width": 1
+              },
+              {
+                "label": "Minimum min",
+                "numeric": true,
+                "code": false,
+                "width": 1
+              },
+              {
+                "label": "Maximum min",
+                "numeric": true,
+                "code": false,
+                "width": 1
+              },
+              {
+                "label": "Delayed",
+                "numeric": true,
+                "code": false,
+                "width": 1
+              }
+            ],
+            "rows": [
+              [
+                "Main kitchen",
+                "13",
+                "46.64",
+                "0.39",
+                "578.52",
+                "1"
+              ]
+            ]
+          },
+          {
+            "title": "Slowest items",
+            "columns": [
+              {
+                "label": "Item",
+                "numeric": false,
+                "code": false,
+                "width": 2
+              },
+              {
+                "label": "Station",
+                "numeric": false,
+                "code": false,
+                "width": 2
+              },
+              {
+                "label": "Items",
+                "numeric": true,
+                "code": false,
+                "width": 1
+              },
+              {
+                "label": "Average min",
+                "numeric": true,
+                "code": false,
+                "width": 1
+              }
+            ],
+            "rows": [
+              [
+                "Office Chair\nITM-90001",
+                "Main kitchen",
+                "9",
+                "66.30"
+              ],
+              [
+                "Item With Opening Balance ITM-OB-98083\nITM-OB-98083",
+                "Main kitchen",
+                "1",
+                "3.20"
+              ],
+              [
+                "Test Item ITM-53403\nITM-53403",
+                "Main kitchen",
+                "1",
+                "2.82"
+              ],
+              [
+                "Test Item ITM-53707\nITM-53707",
+                "Main kitchen",
+                "1",
+                "2.81"
+              ],
+              [
+                "Test Item ITM-95700\nITM-95700",
+                "Main kitchen",
+                "1",
+                "0.84"
+              ]
+            ]
+          }
+        ],
+        "notes": []
+      }
+    ]
+  },
+  "errors": null,
+  "timestamp": "2026-10-28T18:01:43.1758375Z",
+  "traceId": "d958b9f4-ffde-47ab-b408-bab315ce2735"
+}

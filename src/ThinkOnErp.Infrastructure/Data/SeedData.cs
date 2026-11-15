@@ -230,6 +230,7 @@ public static class SeedData
             context.SysFeatures.AddRange(features);
             await context.SaveChangesAsync();
         }
+        await ThinkOnErp.Infrastructure.Services.Hr.EmployeeFieldPermissionCatalog.EnsureAsync(context,seedUser);
     }
 }
 

@@ -8,6 +8,8 @@ namespace ThinkOnErp.Domain.Interfaces.Hr;
 
 public interface IEmployeeRepository
 {
+    Task<EmployeeImportImpact> GetImportImpactAsync(string employeeCode, long? proposedBranchId, DateTime from, CancellationToken cancellationToken = default);
+    Task<(IReadOnlyList<Employee> Items, int TotalCount)> GetDirectReportsAsync(long userId, bool activeOnly, string? search, int pageIndex, int pageSize, CancellationToken cancellationToken = default);
     Task<(IReadOnlyList<Employee> Items, int TotalCount)> GetEmployeesAsync(
         string? searchKeyword = null,
         string? departmentCode = null,
@@ -25,12 +27,14 @@ public interface IEmployeeRepository
         CancellationToken cancellationToken = default);
 
     Task<Employee?> GetEmployeeByCodeAsync(string employeeCode, CancellationToken cancellationToken = default);
+    Task<string?> GetLinkedUserNameByEmployeeCodeAsync(string employeeCode, CancellationToken cancellationToken = default);
     Task<Employee?> GetEmployeeByUserIdAsync(long userId, CancellationToken cancellationToken = default);
     Task<bool> IsUserAvailableForEmployeeAsync(long userId, long? branchId, CancellationToken cancellationToken = default);
     Task<bool> ExistsByCodeAsync(string employeeCode, CancellationToken cancellationToken = default);
     Task<bool> ExistsByNationalIdAsync(string nationalId, string? excludeEmployeeCode = null, CancellationToken cancellationToken = default);
     Task AddEmployeeAsync(Employee employee, CancellationToken cancellationToken = default);
     Task UpdateEmployeeAsync(Employee employee, CancellationToken cancellationToken = default);
+    Task UpdateEmployeeUserLinkAsync(Employee employee, CancellationToken cancellationToken = default);
     Task DeleteEmployeeAsync(Employee employee, CancellationToken cancellationToken = default);
 
     Task<EmployeeDependent?> GetDependentByIdAsync(long id, CancellationToken cancellationToken = default);
@@ -45,5 +49,7 @@ public interface IEmployeeRepository
     Task<SalaryComponent?> GetSalaryComponentByCodeAsync(string componentCode, CancellationToken cancellationToken = default);
     Task AddSalaryComponentAsync(SalaryComponent component, CancellationToken cancellationToken = default);
 
+    Task ValidateStorageAsync(Employee employee, CancellationToken cancellationToken = default);
+    Task ValidateSalaryMetadataAsync(string currencyCode,string paymentMethod,CancellationToken cancellationToken=default);
     Task SaveChangesAsync(CancellationToken cancellationToken = default);
 }

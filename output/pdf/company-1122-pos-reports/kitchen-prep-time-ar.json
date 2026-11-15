@@ -1,0 +1,191 @@
+{
+  "success": true,
+  "statusCode": 200,
+  "message": "تمت العملية بنجاح.",
+  "data": {
+    "code": "kitchen-prep-time",
+    "title": "زمن تحضير المطبخ",
+    "isLive": false,
+    "header": {
+      "language": "ar",
+      "isRightToLeft": true,
+      "companyName": "debis acc",
+      "branchName": "جميع الفروع المتاحة",
+      "taxNumber": null,
+      "phone": "0796211887",
+      "currency": "JOD",
+      "cashier": "الكل",
+      "payment": "الكل",
+      "preparedBy": "admin",
+      "reportNumber": "RPT-20261028-1f627f0102034",
+      "issuedAtUtc": "2026-10-28T18:01:41.3444073Z",
+      "startDate": "2026-10-01T00:00:00",
+      "endDate": "2026-10-28T00:00:00",
+      "shiftId": null,
+      "tillId": null,
+      "days": [],
+      "payments": [],
+      "totals": {
+        "date": "0001-01-01T00:00:00",
+        "invoices": 0,
+        "sales": 0,
+        "discount": 0,
+        "returns": 0,
+        "net": 0,
+        "tax": 0,
+        "charges": 0,
+        "total": 0
+      },
+      "averageInvoice": 0
+    },
+    "filterNotes": [
+      "حد التأخير (دقائق): 15"
+    ],
+    "branches": [
+      {
+        "branchId": 1,
+        "branchName": "debis acc",
+        "metrics": [
+          {
+            "label": "الأصناف المحللة",
+            "value": "13",
+            "unit": ""
+          },
+          {
+            "label": "متوسط التحضير",
+            "value": "46.64",
+            "unit": "دقيقة"
+          },
+          {
+            "label": "الأصناف المتأخرة",
+            "value": "1",
+            "unit": ""
+          },
+          {
+            "label": "حد التأخير",
+            "value": "15",
+            "unit": "دقيقة"
+          }
+        ],
+        "tables": [
+          {
+            "title": "محطات التحضير",
+            "columns": [
+              {
+                "label": "المحطة",
+                "numeric": false,
+                "code": false,
+                "width": 2
+              },
+              {
+                "label": "الأصناف",
+                "numeric": true,
+                "code": false,
+                "width": 1
+              },
+              {
+                "label": "متوسط الدقائق",
+                "numeric": true,
+                "code": false,
+                "width": 1
+              },
+              {
+                "label": "أقل دقائق",
+                "numeric": true,
+                "code": false,
+                "width": 1
+              },
+              {
+                "label": "أعلى دقائق",
+                "numeric": true,
+                "code": false,
+                "width": 1
+              },
+              {
+                "label": "المتأخر",
+                "numeric": true,
+                "code": false,
+                "width": 1
+              }
+            ],
+            "rows": [
+              [
+                "المطبخ الرئيسي",
+                "13",
+                "46.64",
+                "0.39",
+                "578.52",
+                "1"
+              ]
+            ]
+          },
+          {
+            "title": "الأصناف الأبطأ",
+            "columns": [
+              {
+                "label": "الصنف",
+                "numeric": false,
+                "code": false,
+                "width": 2
+              },
+              {
+                "label": "المحطة",
+                "numeric": false,
+                "code": false,
+                "width": 2
+              },
+              {
+                "label": "العدد",
+                "numeric": true,
+                "code": false,
+                "width": 1
+              },
+              {
+                "label": "متوسط الدقائق",
+                "numeric": true,
+                "code": false,
+                "width": 1
+              }
+            ],
+            "rows": [
+              [
+                "Office Chair\nITM-90001",
+                "المطبخ الرئيسي",
+                "9",
+                "66.30"
+              ],
+              [
+                "Item With Opening Balance ITM-OB-98083\nITM-OB-98083",
+                "المطبخ الرئيسي",
+                "1",
+                "3.20"
+              ],
+              [
+                "Test Item ITM-53403\nITM-53403",
+                "المطبخ الرئيسي",
+                "1",
+                "2.82"
+              ],
+              [
+                "Test Item ITM-53707\nITM-53707",
+                "المطبخ الرئيسي",
+                "1",
+                "2.81"
+              ],
+              [
+                "Test Item ITM-95700\nITM-95700",
+                "المطبخ الرئيسي",
+                "1",
+                "0.84"
+              ]
+            ]
+          }
+        ],
+        "notes": []
+      }
+    ]
+  },
+  "errors": null,
+  "timestamp": "2026-10-28T18:01:41.4642211Z",
+  "traceId": "28ac40ec-5c5c-4972-8ddc-4a7afb46b558"
+}

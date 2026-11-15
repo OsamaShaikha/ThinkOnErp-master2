@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Controllers;
 using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.EntityFrameworkCore;
+using ThinkOnErp.Application.DTOs.Hr;
 using ThinkOnErp.Domain.Entities;
 using ThinkOnErp.Domain.Models;
 using ThinkOnErp.Infrastructure.Data;
@@ -9,7 +10,7 @@ using ThinkOnErp.Infrastructure.Data;
 namespace ThinkOnErp.API.Authorization;
 
 // Runs after tenant routing and binding, before any HR action or business mutation.
-public sealed class HrAccessFilter(OracleDbContext db) : IAsyncActionFilter, IOrderedFilter
+public sealed class HrAccessFilter(OracleDbContext db, ThinkOnErp.Application.Services.Hr.EmployeeFieldAccess fields) : IAsyncActionFilter, IOrderedFilter
 {
     public int Order => -2000;
 
@@ -85,6 +86,8 @@ public sealed class HrAccessFilter(OracleDbContext db) : IAsyncActionFilter, IOr
             long? company = argument.Key == "companyId" ? value as long? : value?.GetType().GetProperty("CompanyId")?.GetValue(value) as long?;
             long? branch = argument.Key == "branchId" ? value as long? : value?.GetType().GetProperty("BranchId")?.GetValue(value) as long?;
             string? employee = argument.Key == "employeeCode" ? value as string : value?.GetType().GetProperty("EmployeeCode")?.GetValue(value) as string;
+            if (value is CreateShortLeaveDto { CompanyId: 0 })
+                company = null;
             if (argument.Key == "code" && action.ControllerName == "Employees") employee = value as string;
             if ((company.HasValue && company != tenant.CompanyId) ||
                 (branch.HasValue && !await db.SysBranches.AnyAsync(b => b.Id == branch && b.CompanyId == tenant.CompanyId && b.IsActive, cancellation)) ||
@@ -98,6 +101,8 @@ public sealed class HrAccessFilter(OracleDbContext db) : IAsyncActionFilter, IOr
         if (!db.HrScopeAllBranches && action.ActionName == "CalculatePayroll" &&
             !context.ActionArguments.Values.Any(v => v?.GetType().GetProperty("BranchId")?.GetValue(v) is long))
         { context.Result = new ForbidResult(); return; }
+        if(action.ControllerName=="Employees")
+            await ThinkOnErp.Infrastructure.Services.Hr.EmployeeFieldAuthorization.PopulateAsync(db,fields,user,db.HrScopeAllBranches,assigned,cancellation);
         await next();
     }
 }

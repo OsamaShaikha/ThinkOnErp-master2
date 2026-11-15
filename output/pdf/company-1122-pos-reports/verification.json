@@ -1,0 +1,226 @@
+[
+  {
+    "Report": "sales-summary",
+    "Language": "ar",
+    "Success": true,
+    "Status": 200,
+    "ContentLanguage": "ar"
+  },
+  {
+    "Report": "sales-summary",
+    "Language": "en",
+    "Success": true,
+    "Status": 200,
+    "ContentLanguage": "en"
+  },
+  {
+    "Report": "sales-by-payment-method",
+    "Language": "ar",
+    "Success": true,
+    "Status": 200,
+    "ContentLanguage": "ar"
+  },
+  {
+    "Report": "sales-by-payment-method",
+    "Language": "en",
+    "Success": true,
+    "Status": 200,
+    "ContentLanguage": "en"
+  },
+  {
+    "Report": "sales-by-cashier",
+    "Language": "ar",
+    "Success": true,
+    "Status": 200,
+    "ContentLanguage": "ar"
+  },
+  {
+    "Report": "sales-by-cashier",
+    "Language": "en",
+    "Success": true,
+    "Status": 200,
+    "ContentLanguage": "en"
+  },
+  {
+    "Report": "sales-by-item",
+    "Language": "ar",
+    "Success": true,
+    "Status": 200,
+    "ContentLanguage": "ar"
+  },
+  {
+    "Report": "sales-by-item",
+    "Language": "en",
+    "Success": true,
+    "Status": 200,
+    "ContentLanguage": "en"
+  },
+  {
+    "Report": "sales-by-category",
+    "Language": "ar",
+    "Success": true,
+    "Status": 200,
+    "ContentLanguage": "ar"
+  },
+  {
+    "Report": "sales-by-category",
+    "Language": "en",
+    "Success": true,
+    "Status": 200,
+    "ContentLanguage": "en"
+  },
+  {
+    "Report": "voids-and-refunds",
+    "Language": "ar",
+    "Success": true,
+    "Status": 200,
+    "ContentLanguage": "ar"
+  },
+  {
+    "Report": "voids-and-refunds",
+    "Language": "en",
+    "Success": true,
+    "Status": 200,
+    "ContentLanguage": "en"
+  },
+  {
+    "Report": "discounts",
+    "Language": "ar",
+    "Success": true,
+    "Status": 200,
+    "ContentLanguage": "ar"
+  },
+  {
+    "Report": "discounts",
+    "Language": "en",
+    "Success": true,
+    "Status": 200,
+    "ContentLanguage": "en"
+  },
+  {
+    "Report": "cash-drawer-variance",
+    "Language": "ar",
+    "Success": true,
+    "Status": 200,
+    "ContentLanguage": "ar"
+  },
+  {
+    "Report": "cash-drawer-variance",
+    "Language": "en",
+    "Success": true,
+    "Status": 200,
+    "ContentLanguage": "en"
+  },
+  {
+    "Report": "cash-movements",
+    "Language": "ar",
+    "Success": true,
+    "Status": 200,
+    "ContentLanguage": "ar"
+  },
+  {
+    "Report": "cash-movements",
+    "Language": "en",
+    "Success": true,
+    "Status": 200,
+    "ContentLanguage": "en"
+  },
+  {
+    "Report": "hourly-sales",
+    "Language": "ar",
+    "Success": true,
+    "Status": 200,
+    "ContentLanguage": "ar"
+  },
+  {
+    "Report": "hourly-sales",
+    "Language": "en",
+    "Success": true,
+    "Status": 200,
+    "ContentLanguage": "en"
+  },
+  {
+    "Report": "sales-by-floor-and-table",
+    "Language": "ar",
+    "Success": true,
+    "Status": 200,
+    "ContentLanguage": "ar"
+  },
+  {
+    "Report": "sales-by-floor-and-table",
+    "Language": "en",
+    "Success": true,
+    "Status": 200,
+    "ContentLanguage": "en"
+  },
+  {
+    "Report": "sales-by-order-type",
+    "Language": "ar",
+    "Success": true,
+    "Status": 200,
+    "ContentLanguage": "ar"
+  },
+  {
+    "Report": "sales-by-order-type",
+    "Language": "en",
+    "Success": true,
+    "Status": 200,
+    "ContentLanguage": "en"
+  },
+  {
+    "Report": "sales-by-customer",
+    "Language": "ar",
+    "Success": true,
+    "Status": 200,
+    "ContentLanguage": "ar"
+  },
+  {
+    "Report": "sales-by-customer",
+    "Language": "en",
+    "Success": true,
+    "Status": 200,
+    "ContentLanguage": "en"
+  },
+  {
+    "Report": "tax-summary",
+    "Language": "ar",
+    "Success": true,
+    "Status": 200,
+    "ContentLanguage": "ar"
+  },
+  {
+    "Report": "tax-summary",
+    "Language": "en",
+    "Success": true,
+    "Status": 200,
+    "ContentLanguage": "en"
+  },
+  {
+    "Report": "open-tables-live",
+    "Language": "ar",
+    "Success": true,
+    "Status": 200,
+    "ContentLanguage": "ar"
+  },
+  {
+    "Report": "open-tables-live",
+    "Language": "en",
+    "Success": true,
+    "Status": 200,
+    "ContentLanguage": "en"
+  },
+  {
+    "Report": "kitchen-prep-time",
+    "Language": "ar",
+    "Success": true,
+    "Status": 200,
+    "ContentLanguage": "ar"
+  },
+  {
+    "Report": "kitchen-prep-time",
+    "Language": "en",
+    "Success": true,
+    "Status": 200,
+    "ContentLanguage": "en"
+  }
+]

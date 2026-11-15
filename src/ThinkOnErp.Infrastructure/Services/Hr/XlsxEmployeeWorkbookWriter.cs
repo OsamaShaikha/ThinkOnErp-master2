@@ -19,6 +19,7 @@ public sealed class XlsxEmployeeWorkbookWriter : IXlsxEmployeeWorkbookWriter
         ("NameEn", "الاسم بالإنجليزي (NameEn)", 24),
         ("NationalId", "رقم الهوية / الوطني (NationalId)", 20),
         ("Nationality", "الجنسية (Nationality)", 16),
+        ("CitizenshipCountryCode", "رمز بلد الجنسية (CitizenshipCountryCode: ISO 3166-1 alpha-2)", 22),
         ("PassportNumber", "رقم الجواز (PassportNumber)", 18),
         ("DateOfBirth", "تاريخ الميلاد (DateOfBirth)", 16),
         ("Gender", "الجنس (Gender: M/F)", 14),
@@ -42,7 +43,10 @@ public sealed class XlsxEmployeeWorkbookWriter : IXlsxEmployeeWorkbookWriter
         ("BankAccountNumber", "رقم الحساب (BankAccountNumber)", 20),
         ("BankIban", "الآيبان (BankIban)", 30),
         ("BasicSalary", "الراتب الأساسي (BasicSalary)", 16),
-        ("IsActive", "نشط (IsActive: true/false)", 14)
+        ("SalaryEffectiveFrom", "تاريخ سريان الراتب (SalaryEffectiveFrom)", 22),
+        ("IsActive", "نشط (IsActive: true/false)", 14),
+        ("CurrencyCode", "عملة أول راتب (CurrencyCode)", 22),
+        ("PaymentMethod", "طريقة الدفع (PaymentMethod: BANK_TRANSFER/CASH/CHEQUE)", 28)
     };
 
     public byte[] WriteExportWorkbook(IReadOnlyList<EmployeeExportRowDto> employees)
@@ -206,6 +210,7 @@ public sealed class XlsxEmployeeWorkbookWriter : IXlsxEmployeeWorkbookWriter
                 emp.NameEn,
                 emp.NationalId,
                 emp.Nationality,
+                emp.CitizenshipCountryCode ?? string.Empty,
                 emp.PassportNumber ?? string.Empty,
                 emp.DateOfBirth.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture),
                 emp.Gender,
@@ -228,8 +233,11 @@ public sealed class XlsxEmployeeWorkbookWriter : IXlsxEmployeeWorkbookWriter
                 emp.BankName ?? string.Empty,
                 emp.BankAccountNumber ?? string.Empty,
                 emp.BankIban ?? string.Empty,
-                emp.BasicSalary?.ToString("F2", CultureInfo.InvariantCulture) ?? string.Empty,
-                emp.IsActive ? "true" : "false"
+                emp.BasicSalary?.ToString("F3", CultureInfo.InvariantCulture) ?? string.Empty,
+                emp.SalaryEffectiveFrom?.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture) ?? string.Empty,
+                emp.IsActive ? "true" : "false",
+                emp.CurrencyCode ?? string.Empty,
+                emp.PaymentMethod ?? string.Empty
             };
 
             for (var c = 0; c < values.Length; c++)
@@ -284,6 +292,7 @@ public sealed class XlsxEmployeeWorkbookWriter : IXlsxEmployeeWorkbookWriter
             "Mohammad Ahmad Khalil",
             "9901020304",
             "Jordanian",
+            "",
             "P1234567",
             "1990-05-15",
             "M",
@@ -307,7 +316,10 @@ public sealed class XlsxEmployeeWorkbookWriter : IXlsxEmployeeWorkbookWriter
             "123456789",
             "JO94ARAB1234567890123456789012",
             "750.00",
-            "true"
+            "2024-01-01",
+            "true",
+            "",
+            ""
         };
 
         for (var c = 0; c < sampleValues.Length; c++)

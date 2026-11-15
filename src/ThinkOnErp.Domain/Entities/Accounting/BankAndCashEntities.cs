@@ -8,6 +8,7 @@ public sealed class BankAccount
     public string AccountNameLocal { get; set; } = string.Empty;
     public string AccountNameEn { get; set; } = string.Empty;
     public string BankName { get; set; } = string.Empty;
+    public string? BankCode { get; set; }
     public string? BankBranchName { get; set; }
     public string? Iban { get; set; }
     public string? SwiftCode { get; set; }

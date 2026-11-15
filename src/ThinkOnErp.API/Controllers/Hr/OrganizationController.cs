@@ -1,0 +1,70 @@
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using ThinkOnErp.API.Authorization;
+using ThinkOnErp.API.Swagger;
+using ThinkOnErp.Application.Common;
+using ThinkOnErp.Domain.Entities.Hr;
+using ThinkOnErp.Domain.Interfaces.Hr;
+namespace ThinkOnErp.API.Controllers.Hr;
+[ApiController, Route("api/hr/organization"), Authorize, TenantScoped]
+[ApiExplorerSettings(GroupName = ApiCategories.Hr)]
+public sealed class OrganizationController(IOrganizationRepository organization) : ControllerBase
+{
+    [HttpGet("departments"), HrPermission("hr-employees", "view")]
+    public async Task<ActionResult<ApiResponse<IReadOnlyList<HrDepartment>>>> Departments(CancellationToken ct)
+        => Ok(ApiResponse<IReadOnlyList<HrDepartment>>.CreateSuccess(await organization.DepartmentsAsync(ct)));
+    [HttpGet("positions"), HrPermission("hr-employees", "view")]
+    public async Task<ActionResult<ApiResponse<IReadOnlyList<HrPosition>>>> Positions([FromQuery] string? departmentCode, CancellationToken ct)
+        => Ok(ApiResponse<IReadOnlyList<HrPosition>>.CreateSuccess(await organization.PositionsAsync(departmentCode, ct)));
+
+    [HttpGet("departments/{code}"), HrPermission("hr-employees", "view")]
+    public async Task<ActionResult<ApiResponse<HrDepartment>>> Department(string code, CancellationToken ct)
+    {
+        var result = await organization.DepartmentAsync(OrganizationCatalogRules.Code(code), ct) ?? throw new KeyNotFoundException("Department not found.");
+        Response.Headers.ETag = '"' + result.Version + '"';
+        return Ok(ApiResponse<HrDepartment>.CreateSuccess(result));
+    }
+    [HttpGet("positions/{code}"), HrPermission("hr-employees", "view")]
+    public async Task<ActionResult<ApiResponse<HrPosition>>> Position(string code, CancellationToken ct)
+    {
+        var result = await organization.PositionAsync(OrganizationCatalogRules.Code(code), ct) ?? throw new KeyNotFoundException("Position not found.");
+        Response.Headers.ETag = '"' + result.Version + '"';
+        return Ok(ApiResponse<HrPosition>.CreateSuccess(result));
+    }
+    [HttpPost("departments/{code}"), HrPermission("hr-employees", "configure")]
+    public async Task<ActionResult<ApiResponse<HrDepartment>>> CreateDepartment(string code, [FromBody] DepartmentWrite value, CancellationToken ct)
+    {
+        var result = await organization.WriteDepartmentAsync(code, value, null, User.Identity?.Name ?? "SYSTEM", ct);
+        Response.Headers.ETag = '"' + result.Version + '"';
+        return CreatedAtAction(nameof(Department), new { code = result.DepartmentCode }, ApiResponse<HrDepartment>.CreateSuccess(result));
+    }
+    [HttpPost("positions/{code}"), HrPermission("hr-employees", "configure")]
+    public async Task<ActionResult<ApiResponse<HrPosition>>> CreatePosition(string code, [FromBody] PositionWrite value, CancellationToken ct)
+    {
+        var result = await organization.WritePositionAsync(code, value, null, User.Identity?.Name ?? "SYSTEM", ct);
+        Response.Headers.ETag = '"' + result.Version + '"';
+        return CreatedAtAction(nameof(Position), new { code = result.PositionCode }, ApiResponse<HrPosition>.CreateSuccess(result));
+    }
+    [HttpPut("departments/{code}"), HrPermission("hr-employees", "configure")]
+    public async Task<ActionResult<ApiResponse<HrDepartment>>> UpdateDepartment(string code, [FromBody] DepartmentWrite value, [FromHeader(Name = "If-Match")] string version, CancellationToken ct)
+    {
+        try
+        {
+            var result = await organization.WriteDepartmentAsync(code, value, OrganizationCatalogRules.ExpectedVersion(version), User.Identity?.Name ?? "SYSTEM", ct);
+            Response.Headers.ETag = '"' + result.Version + '"';
+            return Ok(ApiResponse<HrDepartment>.CreateSuccess(result));
+        }
+        catch (OrganizationVersionConflictException ex) { return StatusCode(412, ApiResponse<HrDepartment>.CreateFailure(ex.Message, statusCode: 412)); }
+    }
+    [HttpPut("positions/{code}"), HrPermission("hr-employees", "configure")]
+    public async Task<ActionResult<ApiResponse<HrPosition>>> UpdatePosition(string code, [FromBody] PositionWrite value, [FromHeader(Name = "If-Match")] string version, CancellationToken ct)
+    {
+        try
+        {
+            var result = await organization.WritePositionAsync(code, value, OrganizationCatalogRules.ExpectedVersion(version), User.Identity?.Name ?? "SYSTEM", ct);
+            Response.Headers.ETag = '"' + result.Version + '"';
+            return Ok(ApiResponse<HrPosition>.CreateSuccess(result));
+        }
+        catch (OrganizationVersionConflictException ex) { return StatusCode(412, ApiResponse<HrPosition>.CreateFailure(ex.Message, statusCode: 412)); }
+    }
+}

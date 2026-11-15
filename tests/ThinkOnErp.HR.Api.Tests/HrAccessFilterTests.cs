@@ -36,7 +36,7 @@ public sealed class HrAccessFilterTests : IDisposable
             new SysScreenFeature { ScreenId = 51, FeatureId = 61 }, new SysScreenFeature { ScreenId = 52, FeatureId = 62 },
             new SysScreenFeature { ScreenId = 53, FeatureId = 63 },
             new SysBranchSystem { Id = 70, BranchId = 7, SystemId = 50 }, new SysBranchSystem { Id = 71, BranchId = 8, SystemId = 50 },
-            new Employee { EmployeeCode = "SELF", BranchId = 7, UserId = 12 }, new Employee { EmployeeCode = "OTHER", BranchId = 8 });
+            new Employee { EmployeeCode = "SELF", BranchId = 7, UserId = 12, NameLocal = "Self", NameEn = "Self", NationalId = "SELF_ID", Nationality = "X", DateOfBirth = new(1990, 1, 1), HireDate = new(2020, 1, 1) }, new Employee { EmployeeCode = "OTHER", BranchId = 8, NameLocal = "Other", NameEn = "Other", NationalId = "OTHER_ID", Nationality = "X", DateOfBirth = new(1990, 1, 1), HireDate = new(2020, 1, 1) });
         db.SaveChanges(); db.ChangeTracker.Clear();
     }
 
@@ -53,7 +53,7 @@ public sealed class HrAccessFilterTests : IDisposable
         var context = new ActionExecutingContext(new ActionContext(http, new(), action, new ModelStateDictionary()), new List<IFilterMetadata>(),
             arguments ?? new(), new object());
         var invoked = false;
-        await new HrAccessFilter(db).OnActionExecutionAsync(context, () =>
+        await new HrAccessFilter(db,new ThinkOnErp.Application.Services.Hr.EmployeeFieldAccess()).OnActionExecutionAsync(context, () =>
         {
             invoked = true;
             return Task.FromResult(new ActionExecutedContext(context, new List<IFilterMetadata>(), new object()));
@@ -118,7 +118,7 @@ public sealed class HrAccessFilterTests : IDisposable
     {
         var account = await db.SysUsers.SingleAsync(); account.RefreshToken = "old-refresh";
         account.RefreshTokenExpiry = DateTime.UtcNow.AddDays(1); await db.SaveChangesAsync();
-        var employee = await db.Employees.SingleAsync(e => e.EmployeeCode == "SELF"); employee.EmploymentStatus = "TERMINATED";
+        var employee = await db.Employees.SingleAsync(e => e.EmployeeCode == "SELF"); employee.EmploymentStatus = "TERMINATED"; employee.IsActive = false; employee.TerminationDate = DateTime.UtcNow.Date;
         await new ThinkOnErp.Infrastructure.Repositories.Hr.EmployeeRepository(db).SaveChangesAsync();
         Assert.False(account.IsActive); Assert.Null(account.RefreshToken); Assert.Null(account.RefreshTokenExpiry); Assert.NotNull(account.ForceLogoutDate);
     }
@@ -166,6 +166,246 @@ public sealed class HrAccessFilterTests : IDisposable
         foreach (var type in typeof(EmployeesController).Assembly.GetTypes().Where(t => t.Namespace == "ThinkOnErp.API.Controllers.Hr"))
             foreach (var method in type.GetMethods().Where(m => m.GetCustomAttributes(true).OfType<Microsoft.AspNetCore.Mvc.Routing.HttpMethodAttribute>().Any()))
                 Assert.True(method.GetCustomAttributes(true).OfType<HrPermissionAttribute>().Any(), type.Name + "." + method.Name);
+    }
+    [Fact] public void ManualLeaveBalanceEndpointsRequireEditPermissionAndBindReversalToEmployeeMovement()
+    {
+        var grant = typeof(LeavesController).GetMethod("GrantOrAdjustBalance")!;
+        var reverse = typeof(LeavesController).GetMethod("ReverseManualBalanceMovement")!;
+        foreach (var action in new[] { grant, reverse })
+        {
+            var permission = Assert.Single(action.GetCustomAttributes(true).OfType<HrPermissionAttribute>());
+            Assert.Equal("hr-leaves", permission.Screen);
+            Assert.Equal("edit", permission.Feature);
+            Assert.False(permission.SelfService);
+        }
+        Assert.Equal("balances/{employeeCode}/movements/{movementId:long}/reverse",
+            Assert.Single(reverse.GetCustomAttributes(true).OfType<HttpPostAttribute>()).Template);
+    }
+
+    [Fact]
+    public async Task FinancialTransitionPermissionMatrixRequiresExactGrantAndKeepsItsBranchScope()
+    {
+        var actions = new (Type Controller, string Method, string Screen, string Feature)[]
+        {
+            (typeof(PayrollController), "ApprovePayroll", "hr-payroll", "approve"),
+            (typeof(PayrollController), "CorrectPayroll", "hr-payroll", "reverse"),
+            (typeof(PayrollController), "CancelPayroll", "hr-payroll", "reverse"),
+            (typeof(PayrollController), "ClosePeriod", "hr-payroll", "edit"),
+            (typeof(PayrollController), "ReopenPeriod", "hr-payroll", "reverse"),
+            (typeof(PayrollController), "PostToGl", "hr-payroll", "post"),
+            (typeof(PayrollController), "ReverseGl", "hr-payroll", "reverse"),
+            (typeof(PayrollController), "ExportBankFile", "hr-payroll", "export"),
+            (typeof(PayrollController), "PreviewBankExport", "hr-payroll", "export"),
+            (typeof(PayrollAdjustmentsController), "CreateOvertimeAdjustment", "hr-payroll-adjustments", "create"),
+            (typeof(PayrollAdjustmentsController), "ApproveAdjustment", "hr-payroll-adjustments", "approve"),
+            (typeof(PayrollAdjustmentsController), "RejectAdjustment", "hr-payroll-adjustments", "reject"),
+            (typeof(PayrollAdjustmentsController), "PostAdjustment", "hr-payroll-adjustments", "post"),
+            (typeof(PayrollAdjustmentsController), "UnpostAdjustment", "hr-payroll-adjustments", "reverse"),
+            (typeof(LeavesController), "ProcessLeaveRequest", "hr-leaves", "approve"),
+            (typeof(LeavesController), "PostYearEndClose", "hr-leaves", "post"),
+            (typeof(LeavesController), "UnpostYearEndClose", "hr-leaves", "reverse"),
+            (typeof(AccountingHandoffController), "Accept", "accounting-handoff", "review"),
+            (typeof(AccountingHandoffController), "Return", "accounting-handoff", "review"),
+            (typeof(AccountingHandoffController), "CreateJournalVoucher", "accounting-handoff", "post"),
+            (typeof(AccountingHandoffController), "ReverseJournalVoucher", "accounting-handoff", "reverse"),
+            (typeof(AccountingHandoffController), "PostingReceipt", "accounting-handoff", "post"),
+            (typeof(AccountingHandoffController), "PreparePayment", "accounting-handoff", "pay"),
+            (typeof(AccountingHandoffController), "FailPayment", "accounting-handoff", "pay"),
+            (typeof(AccountingHandoffController), "ReversePayment", "accounting-handoff", "reverse"),
+            (typeof(AccountingHandoffController), "ConfirmPayment", "accounting-handoff", "pay"),
+            (typeof(AccountingHandoffController), "ConfirmLoanFunding", "accounting-handoff", "fund"),
+            (typeof(AccountingHandoffController), "ReverseLoanFunding", "accounting-handoff", "reverse"),
+            (typeof(EndOfServiceController), "ApproveSettlement", "hr-end-of-service", "approve"),
+            (typeof(EndOfServiceController), "CancelSettlement", "hr-end-of-service", "reverse"),
+            (typeof(EndOfServiceController), "SubmitPayoutRequest", "hr-end-of-service", "approve"),
+            (typeof(ShortLeavesController), "ApproveRequest", "hr-leaves", "approve"),
+            (typeof(ShortLeavesController), "CancelRequest", "hr-leaves", "reverse"),
+            (typeof(ShortLeavesController), "SavePolicy", "hr-leaves", "edit"),
+            (typeof(LoansController), "ApproveLoan", "hr-loans", "approve"),
+            (typeof(LoansController), "CancelLoan", "hr-loans", "reverse"),
+            (typeof(LoansController), "SkipInstallment", "hr-loans", "edit"),
+            (typeof(LoansController), "SettleLoanEarly", "hr-loans", "edit"),
+            (typeof(WorkCalendarsController), "CreateCalendar", "hr-work-calendars", "create"),
+            (typeof(WorkCalendarsController), "CreateHoliday", "hr-work-calendars", "create")
+        };
+
+        long id = 1000;
+        foreach (var action in actions)
+        {
+            var screen = await db.SysScreens.SingleOrDefaultAsync(s => s.ScreenCode == action.Screen);
+            if (screen == null)
+            {
+                screen = new SysScreen { Id = id++, SystemId = 50, ScreenCode = action.Screen, IsActive = true };
+                db.SysScreens.Add(screen);
+            }
+            var feature = await db.SysFeatures.SingleOrDefaultAsync(f => f.FeatureCode == action.Feature);
+            if (feature == null)
+            {
+                feature = new SysFeature { Id = id++, FeatureCode = action.Feature, IsActive = true };
+                db.SysFeatures.Add(feature);
+            }
+            if (!await db.Set<SysScreenFeature>().AnyAsync(sf => sf.ScreenId == screen.Id && sf.FeatureId == feature.Id))
+                db.Add(new SysScreenFeature { ScreenId = screen.Id, FeatureId = feature.Id });
+            var grant = new SysUserScreenPermission
+            {
+                Id = id++, BranchId = 7, UserId = 12, ScreenId = screen.Id, FeatureId = feature.Id, IsGranted = true
+            };
+            db.Add(grant);
+            await db.SaveChangesAsync();
+
+            ResetHrScope();
+            var allowed = await Execute(action.Controller, action.Method);
+            Assert.True(allowed.Invoked, $"Exact grant should allow {action.Controller.Name}.{action.Method} ({action.Screen}:{action.Feature}).");
+            Assert.Equal(new long[] { 7 }, db.HrScopeBranchIds);
+
+            grant.IsGranted = false;
+            await db.SaveChangesAsync();
+            ResetHrScope();
+            var denied = await Execute(action.Controller, action.Method);
+            Assert.False(denied.Invoked, $"Revoked grant should deny {action.Controller.Name}.{action.Method}.");
+
+            db.Remove(grant);
+            await db.SaveChangesAsync();
+        }
+    }
+
+    [Fact]
+    public async Task OvertimeDecisionBodyMustMatchExplicitlyGrantedBranch()
+    {
+        db.AddRange(
+            new SysScreen { Id = 90, SystemId = 50, ScreenCode = "hr-payroll-adjustments", IsActive = true },
+            new SysScreenFeature { ScreenId = 90, FeatureId = 63 },
+            new SysUserScreenPermission { Id = 91, BranchId = 7, UserId = 12, ScreenId = 90, FeatureId = 63, IsGranted = true });
+        await db.SaveChangesAsync();
+
+        var allowed = await Execute(typeof(PayrollAdjustmentsController), "ApproveAdjustment",
+            new() { ["id"] = 501L, ["decision"] = new PayrollAdjustmentDecisionDto("reviewed", 7) });
+        Assert.True(allowed.Invoked);
+        Assert.Equal(new long[] { 7 }, db.HrScopeBranchIds);
+
+        ResetHrScope();
+        var denied = await Execute(typeof(PayrollAdjustmentsController), "ApproveAdjustment",
+            new() { ["id"] = 501L, ["decision"] = new PayrollAdjustmentDecisionDto("reviewed", 8) });
+        Assert.False(denied.Invoked);
+    }
+
+    private void ResetHrScope()
+    {
+        db.HrScopeEnabled = false;
+        db.HrScopeCompanyId = 0;
+        db.HrScopeAllBranches = false;
+        db.HrScopeBranchIds.Clear();
+        db.HrScopeEmployeeCode = null;
+    }
+
+    [Fact]
+    public void CashoutAndBalanceMigrationTransitionsRemainAdminOnly()
+    {
+        foreach (var method in new[] { "GetLeaveCashoutDraft", "PostLeaveCashout", "ReverseLeaveCashout",
+                     "CreateBalanceMigrationDraft", "GetBalanceMigration", "PostBalanceMigration", "ReverseBalanceMigration" })
+        {
+            var action = typeof(LeavesController).GetMethod(method)!;
+            Assert.Contains(action.GetCustomAttributes(true).OfType<Microsoft.AspNetCore.Authorization.AuthorizeAttribute>(),
+                attribute => attribute.Policy == "AdminOnly");
+        }
+    }
+
+    private async Task RegisterAttendanceReadAndConfigure()
+    {
+        db.AddRange(new SysFeature { Id = 65, FeatureCode = "configure", IsActive = true }, new SysFeature { Id = 66, FeatureCode = "reject", IsActive = true },
+            new SysScreenFeature { ScreenId = 51, FeatureId = 62 }, new SysScreenFeature { ScreenId = 51, FeatureId = 65 },
+            new SysScreen { Id = 54, SystemId = 50, ScreenCode = "hr-attendance-corrections", IsActive = true },
+            new SysScreenFeature { ScreenId = 54, FeatureId = 63 }, new SysScreenFeature { ScreenId = 54, FeatureId = 66 });
+        await db.SaveChangesAsync();
+    }
+
+    [Theory]
+    [InlineData(typeof(RawAttendanceController), "Ingest")]
+    [InlineData(typeof(RawAttendanceController), "Process")]
+    [InlineData(typeof(RawAttendanceController), "Batch")]
+    [InlineData(typeof(RawAttendanceController), "Ignore")]
+    [InlineData(typeof(RawAttendanceController), "Pending")]
+    [InlineData(typeof(AttendanceTimeSettingsController), "Initialize")]
+    [InlineData(typeof(ShiftDaysController), "Generate")]
+    public async Task EmployeeCannotUseAdministrativeAttendanceOperations(Type controller, string method)
+    {
+        await RegisterAttendanceReadAndConfigure();
+        Assert.False((await Execute(controller, method)).Invoked);
+    }
+
+    [Fact] public async Task ManagerRelationshipDoesNotGrantConfigurationPermission()
+    {
+        await RegisterAttendanceReadAndConfigure();
+        (await db.Employees.SingleAsync(e => e.EmployeeCode == "OTHER")).ManagerEmployeeCode = "SELF"; await db.SaveChangesAsync();
+        Assert.False((await Execute(typeof(RawAttendanceController), "Process")).Invoked);
+    }
+
+    [Fact] public async Task SelfServiceRawQueryHidesOtherEmployeeEvenWhenTheirBranchIsAssigned()
+    {
+        await RegisterAttendanceReadAndConfigure();
+        db.AddRange(new RawAttendance { Id = 100, EmployeeCode = "SELF" }, new RawAttendance { Id = 101, EmployeeCode = "OTHER" }); await db.SaveChangesAsync();
+        Assert.True((await Execute(typeof(RawAttendanceController), "Get", new() { ["employeeCode"] = "SELF" })).Invoked);
+        var repository = new ThinkOnErp.Infrastructure.Repositories.Hr.AttendanceCorrectionRepository(db);
+        Assert.NotNull(await repository.GetRawEventAsync(100)); Assert.Null(await repository.GetRawEventAsync(101));
+    }
+
+    [Fact] public async Task ApproveGrantCannotAuthorizeCorrectionRejection()
+    {
+        await RegisterAttendanceReadAndConfigure();
+        db.Add(new SysUserScreenPermission { Id = 80, BranchId = 7, UserId = 12, ScreenId = 54, FeatureId = 63, IsGranted = true }); await db.SaveChangesAsync();
+        Assert.False((await Execute(typeof(AttendanceCorrectionsController), "ProcessCorrection", new() { ["dto"] = new ProcessAttendanceCorrectionDto(false, "Reviewed") })).Invoked);
+    }
+
+    [Fact] public async Task ExplicitRejectGrantAuthorizesOnlyItsBranch()
+    {
+        await RegisterAttendanceReadAndConfigure();
+        db.Add(new SysUserScreenPermission { Id = 80, BranchId = 7, UserId = 12, ScreenId = 54, FeatureId = 66, IsGranted = true }); await db.SaveChangesAsync();
+        Assert.True((await Execute(typeof(AttendanceCorrectionsController), "ProcessCorrection", new() { ["dto"] = new ProcessAttendanceCorrectionDto(false, "Reviewed") })).Invoked);
+        Assert.Equal(new long[] { 7 }, db.HrScopeBranchIds);
+    }
+
+    [Fact] public async Task AdministratorCannotReadForeignCompanyEmployeesOrEvidence()
+    {
+        db.AddRange(new SysBranch { Id = 9, CompanyId = 2, IsActive = true }, new Employee { EmployeeCode = "FOREIGN", BranchId = 9 },
+            new RawAttendance { Id = 100, EmployeeCode = "FOREIGN" }); await db.SaveChangesAsync();
+        (await db.SysUsers.SingleAsync()).IsAdmin = true; await db.SaveChangesAsync();
+        Assert.True((await Execute(typeof(EmployeesController), "GetEmployees")).Invoked);
+        Assert.False(await db.Employees.AnyAsync(e => e.EmployeeCode == "FOREIGN"));
+        Assert.False(await db.RawAttendances.AnyAsync(r => r.Id == 100));
+    }
+
+    [Fact] public async Task AdministratorCannotReadForeignCompanyPayrollOrPostingAccounts()
+    {
+        db.AddRange(new SysBranch { Id = 9, CompanyId = 2, IsActive = true }, new PayrollRun { Id = 33, BranchId = 9 },
+            new PayrollPostingConfiguration { BranchId = 9 }); await db.SaveChangesAsync();
+        (await db.SysUsers.SingleAsync()).IsAdmin = true; await db.SaveChangesAsync();
+        Assert.True((await Execute(typeof(PayrollController), "GetPayrollRun")).Invoked);
+        Assert.False(await db.PayrollRuns.AnyAsync(r => r.Id == 33)); Assert.False(await db.Set<PayrollPostingConfiguration>().AnyAsync(r => r.BranchId == 9));
+    }
+
+    [Fact] public async Task PayrollLineSnapshotAndComponentsFollowParentRunBranchScope()
+    {
+        db.AddRange(new PayrollRun { Id = 31, BranchId = 7 }, new PayrollRun { Id = 32, BranchId = 8 },
+            new PayrollRunLine { Id = 41, PayrollRunId = 31, EmployeeCode = "SELF" }, new PayrollRunLine { Id = 42, PayrollRunId = 32, EmployeeCode = "SELF" },
+            new PayrollCalculationSnapshot { Id = 51, PayrollRunLineId = 41, EmployeeCode = "SELF" }, new PayrollCalculationSnapshot { Id = 52, PayrollRunLineId = 42, EmployeeCode = "SELF" },
+            new PayrollRunLineComponent { Id = 61, PayrollLineId = 41 }, new PayrollRunLineComponent { Id = 62, PayrollLineId = 42 }); await db.SaveChangesAsync();
+        db.HrScopeEnabled = true; db.HrScopeCompanyId = 1; db.HrScopeBranchIds.Add(7);
+        Assert.Equal(new long[] { 41 }, await db.PayrollRunLines.OrderBy(l => l.Id).Select(l => l.Id).ToArrayAsync());
+        Assert.Equal(new long[] { 51 }, await db.PayrollCalculationSnapshots.OrderBy(l => l.Id).Select(l => l.Id).ToArrayAsync());
+        Assert.Equal(new long[] { 61 }, await db.Set<PayrollRunLineComponent>().OrderBy(l => l.Id).Select(l => l.Id).ToArrayAsync());
+    }
+
+    [Fact] public async Task IdentityUniquenessIncludesHiddenBranchesButNotAnotherCompany()
+    {
+        (await db.Employees.SingleAsync(e => e.EmployeeCode == "OTHER")).NationalId = "  DUPLICATE  ";
+        db.AddRange(new SysBranch { Id = 9, CompanyId = 2, IsActive = true }, new Employee { EmployeeCode = "FOREIGN", BranchId = 9, NationalId = "FOREIGN_ID" });
+        await db.SaveChangesAsync(); db.ChangeTracker.Clear();
+        db.HrScopeEnabled = true; db.HrScopeCompanyId = 1; db.HrScopeBranchIds.Add(7);
+        var repository = new ThinkOnErp.Infrastructure.Repositories.Hr.EmployeeRepository(db);
+        Assert.Null(await repository.GetEmployeeByCodeAsync("OTHER"));
+        Assert.True(await repository.ExistsByNationalIdAsync("DUPLICATE"));
+        Assert.False(await repository.ExistsByNationalIdAsync("FOREIGN_ID"));
+        Assert.True(await repository.ExistsByCodeAsync(" other "));
     }
     public void Dispose() => db.Dispose();
 }

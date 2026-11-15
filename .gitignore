@@ -366,3 +366,6 @@ FodyWeavers.xsd
 .env
 .env.local
 .env.*.local
+
+# Local Oracle dumps and export logs can contain personnel data.
+artifacts/hr-audit/backups/

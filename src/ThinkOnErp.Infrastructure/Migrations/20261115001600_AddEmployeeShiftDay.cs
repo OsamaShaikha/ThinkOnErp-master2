@@ -1,0 +1,227 @@
+using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
+using ThinkOnErp.Infrastructure.Data;
+
+#nullable disable
+
+namespace ThinkOnErp.Infrastructure.Migrations;
+
+[DbContext(typeof(OracleDbContext))]
+[Migration("20261115001600_AddEmployeeShiftDay")]
+public sealed class AddEmployeeShiftDay : Migration
+{
+    protected override void Up(MigrationBuilder migrationBuilder)
+    {
+        migrationBuilder.Sql("""
+            DECLARE
+                owner_name VARCHAR2(128) := SYS_CONTEXT('USERENV', 'CURRENT_SCHEMA');
+                table_count NUMBER;
+                compatible_columns NUMBER;
+                compatible_parent NUMBER;
+                compatible_key NUMBER;
+                compatible_constraints NUMBER;
+                compatible_index NUMBER;
+                compatible_fk NUMBER;
+                compatible_check NUMBER;
+                v_parent_table VARCHAR2(128);
+                v_parent_column VARCHAR2(128);
+                v_fk_name VARCHAR2(128);
+                v_fk_parent_table VARCHAR2(128);
+                v_fk_column VARCHAR2(128);
+                v_check_name VARCHAR2(128);
+                v_check_condition VARCHAR2(4000);
+            BEGIN
+                SELECT COUNT(*) INTO table_count
+                FROM ALL_TABLES
+                WHERE OWNER = owner_name AND TABLE_NAME = 'HR_EMPLOYEE_SHIFT_DAY';
+
+                IF table_count = 0 THEN
+                    -- Both parent tables and keys are checked before the first tenant DDL.
+                    FOR parent IN (
+                        SELECT 'HR_EMPLOYEE' AS TABLE_NAME, 'EMPLOYEE_CODE' AS COLUMN_NAME FROM DUAL
+                        UNION ALL
+                        SELECT 'HR_SHIFT_SCHEDULE', 'SHIFT_CODE' FROM DUAL
+                    ) LOOP
+                        v_parent_table := parent.TABLE_NAME;
+                        v_parent_column := parent.COLUMN_NAME;
+                        SELECT COUNT(*) INTO compatible_parent
+                        FROM ALL_TABLES
+                        WHERE OWNER = owner_name AND TABLE_NAME = v_parent_table;
+                        IF compatible_parent <> 1 THEN
+                            RAISE_APPLICATION_ERROR(-20241, v_parent_table || ' is required before HR_EMPLOYEE_SHIFT_DAY.');
+                        END IF;
+
+                        SELECT COUNT(*) INTO compatible_parent
+                        FROM ALL_TAB_COLS
+                        WHERE OWNER = owner_name AND TABLE_NAME = v_parent_table AND COLUMN_NAME = v_parent_column
+                          AND DATA_TYPE = 'NVARCHAR2' AND CHAR_LENGTH >= 50 AND NULLABLE = 'N' AND VIRTUAL_COLUMN = 'NO';
+                        IF compatible_parent <> 1 THEN
+                            RAISE_APPLICATION_ERROR(-20242, v_parent_table || '.' || v_parent_column || ' has incompatible metadata.');
+                        END IF;
+
+                        SELECT COUNT(*) INTO compatible_key
+                        FROM ALL_CONSTRAINTS c
+                        WHERE c.OWNER = owner_name AND c.TABLE_NAME = v_parent_table
+                          AND c.CONSTRAINT_TYPE IN ('P', 'U') AND c.STATUS = 'ENABLED' AND c.VALIDATED = 'VALIDATED'
+                          AND (SELECT COUNT(*) FROM ALL_CONS_COLUMNS cc WHERE cc.OWNER = c.OWNER AND cc.TABLE_NAME = c.TABLE_NAME AND cc.CONSTRAINT_NAME = c.CONSTRAINT_NAME) = 1
+                          AND EXISTS (SELECT 1 FROM ALL_CONS_COLUMNS cc WHERE cc.OWNER = c.OWNER AND cc.TABLE_NAME = c.TABLE_NAME AND cc.CONSTRAINT_NAME = c.CONSTRAINT_NAME AND cc.COLUMN_NAME = v_parent_column AND cc.POSITION = 1);
+                        IF compatible_key = 0 THEN
+                            RAISE_APPLICATION_ERROR(-20243, v_parent_table || '.' || v_parent_column || ' needs an enabled, validated single-column key.');
+                        END IF;
+                    END LOOP;
+
+                    SELECT COUNT(*) INTO compatible_constraints
+                    FROM ALL_CONSTRAINTS
+                    WHERE OWNER = owner_name AND CONSTRAINT_NAME IN (
+                        'PK_HR_EMPLOYEE_SHIFT_DAY', 'UX_HR_SHIFT_DAY_EMP_DATE', 'FK_HR_SHIFT_DAY_EMP', 'FK_HR_SHIFT_DAY_SHIFT',
+                        'CK_HR_SHIFT_DAY_DATE', 'CK_HR_SHIFT_DAY_KIND', 'CK_HR_SHIFT_DAY_ACTIVE', 'CK_HR_SHIFT_DAY_SOURCE');
+                    SELECT COUNT(*) INTO compatible_index
+                    FROM ALL_INDEXES
+                    WHERE OWNER = owner_name AND INDEX_NAME IN ('PK_HR_EMPLOYEE_SHIFT_DAY', 'UX_HR_SHIFT_DAY_EMP_DATE');
+                    IF compatible_constraints <> 0 OR compatible_index <> 0 THEN
+                        RAISE_APPLICATION_ERROR(-20244, 'HR_EMPLOYEE_SHIFT_DAY constraint or index names are already in use.');
+                    END IF;
+
+                    EXECUTE IMMEDIATE q'~
+                        CREATE TABLE "HR_EMPLOYEE_SHIFT_DAY" (
+                          "ID" NUMBER(19) GENERATED BY DEFAULT ON NULL AS IDENTITY CONSTRAINT "PK_HR_EMPLOYEE_SHIFT_DAY" PRIMARY KEY,
+                          "EMPLOYEE_CODE" NVARCHAR2(100) NOT NULL,
+                          "WORK_DATE" DATE NOT NULL,
+                          "SHIFT_CODE" NVARCHAR2(100) NULL,
+                          "IS_REST_DAY" NUMBER(10) DEFAULT 0 NOT NULL,
+                          "IS_ACTIVE" NUMBER(10) DEFAULT 1 NOT NULL,
+                          "SOURCE_REF" NVARCHAR2(20) DEFAULT 'MANUAL' NOT NULL,
+                          "CREATION_USER" NVARCHAR2(200) NOT NULL,
+                          "CREATION_DATE" TIMESTAMP(7) NOT NULL,
+                          "UPDATE_USER" NVARCHAR2(200) NULL,
+                          "UPDATE_DATE" TIMESTAMP(7) NULL,
+                          CONSTRAINT "UX_HR_SHIFT_DAY_EMP_DATE" UNIQUE ("EMPLOYEE_CODE", "WORK_DATE"),
+                          CONSTRAINT "FK_HR_SHIFT_DAY_EMP" FOREIGN KEY ("EMPLOYEE_CODE") REFERENCES "HR_EMPLOYEE" ("EMPLOYEE_CODE"),
+                          CONSTRAINT "FK_HR_SHIFT_DAY_SHIFT" FOREIGN KEY ("SHIFT_CODE") REFERENCES "HR_SHIFT_SCHEDULE" ("SHIFT_CODE"),
+                          CONSTRAINT "CK_HR_SHIFT_DAY_DATE" CHECK ("WORK_DATE" = TRUNC("WORK_DATE")),
+                          CONSTRAINT "CK_HR_SHIFT_DAY_KIND" CHECK (("IS_REST_DAY"=1 AND "SHIFT_CODE" IS NULL) OR ("IS_REST_DAY"=0 AND "SHIFT_CODE" IS NOT NULL)),
+                          CONSTRAINT "CK_HR_SHIFT_DAY_ACTIVE" CHECK ("IS_ACTIVE" IN (0,1)),
+                          CONSTRAINT "CK_HR_SHIFT_DAY_SOURCE" CHECK ("SOURCE_REF" IN ('MANUAL','GENERATED'))
+                        )
+                    ~';
+                ELSE
+                    SELECT COUNT(*) INTO compatible_columns
+                    FROM ALL_TAB_COLS
+                    WHERE OWNER = owner_name AND TABLE_NAME = 'HR_EMPLOYEE_SHIFT_DAY'
+                      AND ((COLUMN_NAME='ID' AND DATA_TYPE='NUMBER' AND DATA_PRECISION=19 AND DATA_SCALE=0 AND NULLABLE='N' AND VIRTUAL_COLUMN='NO')
+                        OR (COLUMN_NAME='EMPLOYEE_CODE' AND DATA_TYPE='NVARCHAR2' AND CHAR_LENGTH>=100 AND NULLABLE='N' AND VIRTUAL_COLUMN='NO')
+                        OR (COLUMN_NAME='WORK_DATE' AND DATA_TYPE='DATE' AND NULLABLE='N' AND VIRTUAL_COLUMN='NO')
+                        OR (COLUMN_NAME='SHIFT_CODE' AND DATA_TYPE='NVARCHAR2' AND CHAR_LENGTH>=100 AND NULLABLE='Y' AND VIRTUAL_COLUMN='NO')
+                        OR (COLUMN_NAME='IS_REST_DAY' AND DATA_TYPE='NUMBER' AND DATA_PRECISION=10 AND DATA_SCALE=0 AND NULLABLE='N' AND VIRTUAL_COLUMN='NO')
+                        OR (COLUMN_NAME='IS_ACTIVE' AND DATA_TYPE='NUMBER' AND DATA_PRECISION=10 AND DATA_SCALE=0 AND NULLABLE='N' AND VIRTUAL_COLUMN='NO')
+                        OR (COLUMN_NAME='SOURCE_REF' AND DATA_TYPE='NVARCHAR2' AND CHAR_LENGTH>=20 AND NULLABLE='N' AND VIRTUAL_COLUMN='NO')
+                        OR (COLUMN_NAME='CREATION_USER' AND DATA_TYPE='NVARCHAR2' AND CHAR_LENGTH>=200 AND NULLABLE='N' AND VIRTUAL_COLUMN='NO')
+                        OR (COLUMN_NAME='CREATION_DATE' AND DATA_TYPE LIKE 'TIMESTAMP%' AND NULLABLE='N' AND VIRTUAL_COLUMN='NO')
+                        OR (COLUMN_NAME='UPDATE_USER' AND DATA_TYPE='NVARCHAR2' AND CHAR_LENGTH>=200 AND NULLABLE='Y' AND VIRTUAL_COLUMN='NO')
+                        OR (COLUMN_NAME='UPDATE_DATE' AND DATA_TYPE LIKE 'TIMESTAMP%' AND NULLABLE='Y' AND VIRTUAL_COLUMN='NO'));
+                    IF compatible_columns <> 11 THEN
+                        RAISE_APPLICATION_ERROR(-20245, 'Existing HR_EMPLOYEE_SHIFT_DAY columns do not match the expected EF schema.');
+                    END IF;
+                    SELECT COUNT(*) INTO compatible_key
+                    FROM ALL_TAB_IDENTITY_COLS
+                    WHERE OWNER=owner_name AND TABLE_NAME='HR_EMPLOYEE_SHIFT_DAY' AND COLUMN_NAME='ID';
+                    IF compatible_key <> 1 THEN
+                        RAISE_APPLICATION_ERROR(-20252, 'Existing HR_EMPLOYEE_SHIFT_DAY.ID must be an identity column.');
+                    END IF;
+
+                    SELECT COUNT(*) INTO compatible_key
+                    FROM ALL_CONSTRAINTS c
+                    WHERE c.OWNER = owner_name AND c.TABLE_NAME = 'HR_EMPLOYEE_SHIFT_DAY'
+                      AND c.CONSTRAINT_TYPE = 'P' AND c.STATUS = 'ENABLED' AND c.VALIDATED = 'VALIDATED'
+                      AND (SELECT COUNT(*) FROM ALL_CONS_COLUMNS cc WHERE cc.OWNER=c.OWNER AND cc.TABLE_NAME=c.TABLE_NAME AND cc.CONSTRAINT_NAME=c.CONSTRAINT_NAME)=1
+                      AND EXISTS (SELECT 1 FROM ALL_CONS_COLUMNS cc WHERE cc.OWNER=c.OWNER AND cc.TABLE_NAME=c.TABLE_NAME AND cc.CONSTRAINT_NAME=c.CONSTRAINT_NAME AND cc.COLUMN_NAME='ID' AND cc.POSITION=1);
+                    IF compatible_key <> 1 THEN
+                        RAISE_APPLICATION_ERROR(-20246, 'Existing HR_EMPLOYEE_SHIFT_DAY must have a validated single-column ID primary key.');
+                    END IF;
+
+                    SELECT COUNT(*) INTO compatible_constraints
+                    FROM ALL_CONSTRAINTS
+                    WHERE OWNER = owner_name AND TABLE_NAME = 'HR_EMPLOYEE_SHIFT_DAY'
+                      AND STATUS = 'ENABLED' AND VALIDATED = 'VALIDATED'
+                      AND ((CONSTRAINT_NAME='UX_HR_SHIFT_DAY_EMP_DATE' AND CONSTRAINT_TYPE='U')
+                        OR (CONSTRAINT_NAME IN ('FK_HR_SHIFT_DAY_EMP','FK_HR_SHIFT_DAY_SHIFT') AND CONSTRAINT_TYPE='R')
+                        OR (CONSTRAINT_NAME IN ('CK_HR_SHIFT_DAY_DATE','CK_HR_SHIFT_DAY_KIND','CK_HR_SHIFT_DAY_ACTIVE','CK_HR_SHIFT_DAY_SOURCE') AND CONSTRAINT_TYPE='C'));
+                    IF compatible_constraints <> 7 THEN
+                        RAISE_APPLICATION_ERROR(-20247, 'Existing HR_EMPLOYEE_SHIFT_DAY constraints are missing or disabled; review before recording the migration.');
+                    END IF;
+                    SELECT COUNT(*) INTO compatible_key
+                    FROM ALL_CONSTRAINTS c
+                    WHERE c.OWNER=owner_name AND c.TABLE_NAME='HR_EMPLOYEE_SHIFT_DAY'
+                      AND c.CONSTRAINT_NAME='UX_HR_SHIFT_DAY_EMP_DATE' AND c.CONSTRAINT_TYPE='U'
+                      AND (SELECT LISTAGG(cc.COLUMN_NAME, ',') WITHIN GROUP (ORDER BY cc.POSITION)
+                           FROM ALL_CONS_COLUMNS cc WHERE cc.OWNER=c.OWNER AND cc.TABLE_NAME=c.TABLE_NAME AND cc.CONSTRAINT_NAME=c.CONSTRAINT_NAME)='EMPLOYEE_CODE,WORK_DATE';
+                    IF compatible_key <> 1 THEN
+                        RAISE_APPLICATION_ERROR(-20251, 'Existing HR_EMPLOYEE_SHIFT_DAY unique constraint has incompatible columns.');
+                    END IF;
+
+                    FOR expected_fk IN (
+                        SELECT 'FK_HR_SHIFT_DAY_EMP' AS CONSTRAINT_NAME, 'HR_EMPLOYEE' AS PARENT_TABLE, 'EMPLOYEE_CODE' AS COLUMN_NAME FROM DUAL
+                        UNION ALL
+                        SELECT 'FK_HR_SHIFT_DAY_SHIFT', 'HR_SHIFT_SCHEDULE', 'SHIFT_CODE' FROM DUAL
+                    ) LOOP
+                        v_fk_name := expected_fk.CONSTRAINT_NAME;
+                        v_fk_parent_table := expected_fk.PARENT_TABLE;
+                        v_fk_column := expected_fk.COLUMN_NAME;
+                        SELECT COUNT(*) INTO compatible_fk
+                        FROM ALL_CONSTRAINTS c
+                        WHERE c.OWNER=owner_name AND c.TABLE_NAME='HR_EMPLOYEE_SHIFT_DAY'
+                          AND c.CONSTRAINT_NAME=v_fk_name AND c.CONSTRAINT_TYPE='R'
+                          AND c.STATUS='ENABLED' AND c.VALIDATED='VALIDATED' AND c.R_OWNER=owner_name AND c.DELETE_RULE='NO ACTION'
+                          AND (SELECT COUNT(*) FROM ALL_CONS_COLUMNS cc WHERE cc.OWNER=c.OWNER AND cc.TABLE_NAME=c.TABLE_NAME AND cc.CONSTRAINT_NAME=c.CONSTRAINT_NAME)=1
+                          AND EXISTS (SELECT 1 FROM ALL_CONS_COLUMNS cc WHERE cc.OWNER=c.OWNER AND cc.TABLE_NAME=c.TABLE_NAME AND cc.CONSTRAINT_NAME=c.CONSTRAINT_NAME AND cc.COLUMN_NAME=v_fk_column AND cc.POSITION=1)
+                          AND EXISTS (
+                              SELECT 1 FROM ALL_CONSTRAINTS p
+                              WHERE p.OWNER=c.R_OWNER AND p.CONSTRAINT_NAME=c.R_CONSTRAINT_NAME AND p.TABLE_NAME=v_fk_parent_table
+                                AND p.CONSTRAINT_TYPE IN ('P','U') AND p.STATUS='ENABLED' AND p.VALIDATED='VALIDATED'
+                                AND (SELECT COUNT(*) FROM ALL_CONS_COLUMNS pc WHERE pc.OWNER=p.OWNER AND pc.TABLE_NAME=p.TABLE_NAME AND pc.CONSTRAINT_NAME=p.CONSTRAINT_NAME)=1
+                                AND EXISTS (SELECT 1 FROM ALL_CONS_COLUMNS pc WHERE pc.OWNER=p.OWNER AND pc.TABLE_NAME=p.TABLE_NAME AND pc.CONSTRAINT_NAME=p.CONSTRAINT_NAME AND pc.COLUMN_NAME=v_fk_column AND pc.POSITION=1)
+                          );
+                        IF compatible_fk <> 1 THEN
+                            RAISE_APPLICATION_ERROR(-20249, v_fk_name || ' does not reference the expected validated parent key.');
+                        END IF;
+                    END LOOP;
+
+                    FOR expected_check IN (
+                        SELECT 'CK_HR_SHIFT_DAY_DATE' AS CONSTRAINT_NAME, 'WORK_DATE=TRUNC(WORK_DATE)' AS CONDITION_TEXT FROM DUAL
+                        UNION ALL SELECT 'CK_HR_SHIFT_DAY_KIND', '(IS_REST_DAY=1 AND SHIFT_CODE IS NULL) OR (IS_REST_DAY=0 AND SHIFT_CODE IS NOT NULL)' FROM DUAL
+                        UNION ALL SELECT 'CK_HR_SHIFT_DAY_ACTIVE', 'IS_ACTIVE IN (0,1)' FROM DUAL
+                        UNION ALL SELECT 'CK_HR_SHIFT_DAY_SOURCE', 'SOURCE_REF IN (''MANUAL'',''GENERATED'')' FROM DUAL
+                    ) LOOP
+                        v_check_name := expected_check.CONSTRAINT_NAME;
+                        v_check_condition := expected_check.CONDITION_TEXT;
+                        SELECT COUNT(*) INTO compatible_check
+                        FROM ALL_CONSTRAINTS c
+                        WHERE c.OWNER=owner_name AND c.TABLE_NAME='HR_EMPLOYEE_SHIFT_DAY'
+                          AND c.CONSTRAINT_NAME=v_check_name AND c.CONSTRAINT_TYPE='C'
+                          AND c.STATUS='ENABLED' AND c.VALIDATED='VALIDATED'
+                          AND REPLACE(REPLACE(REPLACE(REGEXP_REPLACE(UPPER(c.SEARCH_CONDITION_VC), '[[:space:]]', ''), '"', ''), '(', ''), ')', '')
+                              = REPLACE(REPLACE(REPLACE(REGEXP_REPLACE(UPPER(v_check_condition), '[[:space:]]', ''), '"', ''), '(', ''), ')', '');
+                        IF compatible_check <> 1 THEN
+                            RAISE_APPLICATION_ERROR(-20250, v_check_name || ' has an incompatible check definition.');
+                        END IF;
+                    END LOOP;
+
+                    SELECT COUNT(*) INTO compatible_index
+                    FROM ALL_INDEXES i
+                    WHERE i.OWNER = owner_name AND i.TABLE_NAME = 'HR_EMPLOYEE_SHIFT_DAY'
+                      AND i.INDEX_NAME = 'UX_HR_SHIFT_DAY_EMP_DATE' AND i.UNIQUENESS = 'UNIQUE' AND i.STATUS = 'VALID'
+                      AND (SELECT LISTAGG(ic.COLUMN_NAME, ',') WITHIN GROUP (ORDER BY ic.COLUMN_POSITION)
+                           FROM ALL_IND_COLUMNS ic WHERE ic.INDEX_OWNER=i.OWNER AND ic.INDEX_NAME=i.INDEX_NAME) = 'EMPLOYEE_CODE,WORK_DATE';
+                    IF compatible_index <> 1 THEN
+                        RAISE_APPLICATION_ERROR(-20248, 'Existing HR_EMPLOYEE_SHIFT_DAY unique index is missing or incompatible.');
+                    END IF;
+                END IF;
+            END;
+            """);
+    }
+
+    protected override void Down(MigrationBuilder migrationBuilder)
+    {
+        // Preserve employee schedules; removing this table could erase reviewed work-date assignments.
+    }
+}

@@ -1,0 +1,759 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TestRun id="35163472-6cc4-4c3b-b97e-8bb23300f2b2" name="Khaled@KHALED 2026-10-25 23:46:36" runUser="KHALED\Khaled" xmlns="http://microsoft.com/schemas/VisualStudio/TeamTest/2010">
+  <Times creation="2026-10-25T23:46:36.2351928+03:00" queuing="2026-10-25T23:46:36.2351932+03:00" start="2026-10-25T23:46:33.7126584+03:00" finish="2026-10-25T23:46:53.3737973+03:00" />
+  <TestSettings name="default" id="ff99c059-615f-409b-9c60-6e94dd63d0c0">
+    <Deployment runDeploymentRoot="Khaled_KHALED_2026-10-25_23_46_36" />
+  </TestSettings>
+  <Results>
+    <UnitTestResult executionId="e0e03947-08e2-4e26-a574-fdfd3a61180f" testId="7cee663e-702f-12c4-4757-0135ee93d85e" testName="TicketHttpTests.UnauthenticatedAndSuperWithoutCompanyAreRejected" computerName="KHALED" duration="00:00:01.3897101" startTime="2026-10-25T23:46:42.7812756+03:00" endTime="2026-10-25T23:46:42.7812758+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Failed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="e0e03947-08e2-4e26-a574-fdfd3a61180f">
+      <Output>
+        <ErrorInfo>
+          <Message>System.AggregateException : An error occurred while writing to logger(s). (Cannot open log for source '.NET Runtime'. You may not have write access.)&#xD;
+---- System.InvalidOperationException : Cannot open log for source '.NET Runtime'. You may not have write access.&#xD;
+-------- System.ComponentModel.Win32Exception : Access is denied.</Message>
+          <StackTrace>   at Microsoft.Extensions.Logging.Logger.ThrowLoggingError(List`1 exceptions)&#xD;
+   at Microsoft.Extensions.Logging.Logger.Log[TState](LogLevel logLevel, EventId eventId, TState state, Exception exception, Func`3 formatter)&#xD;
+   at Microsoft.Extensions.Logging.LoggerMessage.&lt;&gt;c__DisplayClass12_0`2.&lt;Define&gt;g__Log|0(ILogger logger, T1 arg1, T2 arg2, Exception exception)&#xD;
+   at Microsoft.EntityFrameworkCore.Diagnostics.EventDefinition`2.Log[TLoggerCategory](IDiagnosticsLogger`1 logger, TParam1 arg1, TParam2 arg2)&#xD;
+   at Microsoft.EntityFrameworkCore.Diagnostics.CoreLoggerExtensions.PossibleIncorrectRequiredNavigationWithQueryFilterInteractionWarning(IDiagnosticsLogger`1 diagnostics, IForeignKey foreignKey)&#xD;
+   at Microsoft.EntityFrameworkCore.Infrastructure.ModelValidator.ValidateQueryFilters(IModel model, IDiagnosticsLogger`1 logger)&#xD;
+   at Microsoft.EntityFrameworkCore.Infrastructure.ModelValidator.Validate(IModel model, IDiagnosticsLogger`1 logger)&#xD;
+   at Microsoft.EntityFrameworkCore.InMemory.Infrastructure.Internal.InMemoryModelValidator.Validate(IModel model, IDiagnosticsLogger`1 logger)&#xD;
+   at Microsoft.EntityFrameworkCore.Infrastructure.ModelRuntimeInitializer.Initialize(IModel model, Boolean designTime, IDiagnosticsLogger`1 validationLogger)&#xD;
+   at Microsoft.EntityFrameworkCore.Infrastructure.ModelSource.GetModel(DbContext context, ModelCreationDependencies modelCreationDependencies, Boolean designTime)&#xD;
+   at Microsoft.EntityFrameworkCore.Internal.DbContextServices.CreateModel(Boolean designTime)&#xD;
+   at Microsoft.EntityFrameworkCore.Internal.DbContextServices.get_Model()&#xD;
+   at Microsoft.EntityFrameworkCore.Infrastructure.EntityFrameworkServicesBuilder.&lt;&gt;c.&lt;TryAddCoreServices&gt;b__8_4(IServiceProvider p)&#xD;
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSiteMain(ServiceCallSite callSite, TArgument argument)&#xD;
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitCache(ServiceCallSite callSite, RuntimeResolverContext context, ServiceProviderEngineScope serviceProviderEngine, RuntimeResolverLock lockType)&#xD;
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitScopeCache(ServiceCallSite callSite, RuntimeResolverContext context)&#xD;
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSite(ServiceCallSite callSite, TArgument argument)&#xD;
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitConstructor(ConstructorCallSite constructorCallSite, RuntimeResolverContext context)&#xD;
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSiteMain(ServiceCallSite callSite, TArgument argument)&#xD;
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitCache(ServiceCallSite callSite, RuntimeResolverContext context, ServiceProviderEngineScope serviceProviderEngine, RuntimeResolverLock lockType)&#xD;
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitScopeCache(ServiceCallSite callSite, RuntimeResolverContext context)&#xD;
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSite(ServiceCallSite callSite, TArgument argument)&#xD;
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitConstructor(ConstructorCallSite constructorCallSite, RuntimeResolverContext context)&#xD;
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSiteMain(ServiceCallSite callSite, TArgument argument)&#xD;
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitCache(ServiceCallSite callSite, RuntimeResolverContext context, ServiceProviderEngineScope serviceProviderEngine, RuntimeResolverLock lockType)&#xD;
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitScopeCache(ServiceCallSite callSite, RuntimeResolverContext context)&#xD;
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSite(ServiceCallSite callSite, TArgument argument)&#xD;
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitConstructor(ConstructorCallSite constructorCallSite, RuntimeResolverContext context)&#xD;
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSiteMain(ServiceCallSite callSite, TArgument argument)&#xD;
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitCache(ServiceCallSite callSite, RuntimeResolverContext context, ServiceProviderEngineScope serviceProviderEngine, RuntimeResolverLock lockType)&#xD;
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitScopeCache(ServiceCallSite callSite, RuntimeResolverContext context)&#xD;
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSite(ServiceCallSite callSite, TArgument argument)&#xD;
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitConstructor(ConstructorCallSite constructorCallSite, RuntimeResolverContext context)&#xD;
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSiteMain(ServiceCallSite callSite, TArgument argument)&#xD;
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitCache(ServiceCallSite callSite, RuntimeResolverContext context, ServiceProviderEngineScope serviceProviderEngine, RuntimeResolverLock lockType)&#xD;
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitScopeCache(ServiceCallSite callSite, RuntimeResolverContext context)&#xD;
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSite(ServiceCallSite callSite, TArgument argument)&#xD;
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitConstructor(ConstructorCallSite constructorCallSite, RuntimeResolverContext context)&#xD;
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSiteMain(ServiceCallSite callSite, TArgument argument)&#xD;
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitCache(ServiceCallSite callSite, RuntimeResolverContext context, ServiceProviderEngineScope serviceProviderEngine, RuntimeResolverLock lockType)&#xD;
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitScopeCache(ServiceCallSite callSite, RuntimeResolverContext context)&#xD;
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSite(ServiceCallSite callSite, TArgument argument)&#xD;
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.Resolve(ServiceCallSite callSite, ServiceProviderEngineScope scope)&#xD;
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.DynamicServiceProviderEngine.&lt;&gt;c__DisplayClass2_0.&lt;RealizeService&gt;b__0(ServiceProviderEngineScope scope)&#xD;
+   at Microsoft.Extensions.DependencyInjection.ServiceProvider.GetService(ServiceIdentifier serviceIdentifier, ServiceProviderEngineScope serviceProviderEngineScope)&#xD;
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.ServiceProviderEngineScope.GetService(Type serviceType)&#xD;
+   at Microsoft.Extensions.DependencyInjection.ServiceProviderServiceExtensions.GetRequiredService(IServiceProvider provider, Type serviceType)&#xD;
+   at Microsoft.Extensions.DependencyInjection.ServiceProviderServiceExtensions.GetRequiredService[T](IServiceProvider provider)&#xD;
+   at Microsoft.EntityFrameworkCore.DbContext.get_DbContextDependencies()&#xD;
+   at Microsoft.EntityFrameworkCore.DbContext.get_ContextServices()&#xD;
+   at Microsoft.EntityFrameworkCore.DbContext.get_InternalServiceProvider()&#xD;
+   at Microsoft.EntityFrameworkCore.DbContext.get_DbContextDependencies()&#xD;
+   at Microsoft.EntityFrameworkCore.DbContext.Set[TEntity]()&#xD;
+   at ThinkOnErp.Infrastructure.Data.OracleDbContext.get_SysCompanies() in C:\Users\Khaled\ThinkOnErp-master2\src\ThinkOnErp.Infrastructure\Data\OracleDbContext.cs:line 47&#xD;
+   at TicketHttpTests.Host() in C:\Users\Khaled\ThinkOnErp-master2\tests\ThinkOnErp.TicketAudit.Tests\TicketHttpTests.cs:line 83&#xD;
+   at TicketHttpTests.UnauthenticatedAndSuperWithoutCompanyAreRejected() in C:\Users\Khaled\ThinkOnErp-master2\tests\ThinkOnErp.TicketAudit.Tests\TicketHttpTests.cs:line 150&#xD;
+--- End of stack trace from previous location ---&#xD;
+----- Inner Stack Trace -----&#xD;
+   at System.Diagnostics.EventLogInternal.OpenForWrite(String currentMachineName)&#xD;
+   at System.Diagnostics.EventLogInternal.InternalWriteEvent(UInt32 eventID, UInt16 category, EventLogEntryType type, String[] strings, Byte[] rawData, String currentMachineName)&#xD;
+   at System.Diagnostics.EventLogInternal.WriteEvent(EventInstance instance, Byte[] data, Object[] values)&#xD;
+   at Microsoft.Extensions.Logging.EventLog.WindowsEventLog.WriteEntry(String message, EventLogEntryType type, Int32 eventID, Int16 category)&#xD;
+   at Microsoft.Extensions.Logging.EventLog.EventLogLogger.WriteMessage(String message, EventLogEntryType eventLogEntryType, Int32 eventId)&#xD;
+   at Microsoft.Extensions.Logging.EventLog.EventLogLogger.Log[TState](LogLevel logLevel, EventId eventId, TState state, Exception exception, Func`3 formatter)&#xD;
+   at Microsoft.Extensions.Logging.Logger.&lt;Log&gt;g__LoggerLog|14_0[TState](LogLevel logLevel, EventId eventId, ILogger logger, Exception exception, Func`3 formatter, List`1&amp; exceptions, TState&amp; state)&#xD;
+----- Inner Stack Trace -----&#xD;
+</StackTrace>
+        </ErrorInfo>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="d94ff328-1517-4a79-88d1-ae9ab6609412" testId="86208d07-139e-671f-ff6e-31c2d8b73af2" testName="TicketAuditTests.PriorityChangeRecalculatesDeadline" computerName="KHALED" duration="00:00:00.0182322" startTime="2026-10-25T23:46:36.2240105+03:00" endTime="2026-10-25T23:46:36.2240109+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="d94ff328-1517-4a79-88d1-ae9ab6609412" />
+    <UnitTestResult executionId="9a262b91-8fb8-4832-8976-a23122df8975" testId="08710c45-8475-c587-3132-fc576df4cd10" testName="TicketEmailQueueTests.FailedSmtpIsRetainedThenDeliveredAfterRetry" computerName="KHALED" duration="00:00:17.9325148" startTime="2026-10-25T23:46:53.2646669+03:00" endTime="2026-10-25T23:46:53.2646676+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Failed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="9a262b91-8fb8-4832-8976-a23122df8975">
+      <Output>
+        <ErrorInfo>
+          <Message>System.OperationCanceledException : The operation was canceled.</Message>
+          <StackTrace>   at System.Threading.CancellationToken.ThrowOperationCanceledException()&#xD;
+   at System.Threading.CancellationToken.ThrowIfCancellationRequested()&#xD;
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.ThrowException(SocketError error, CancellationToken cancellationToken)&#xD;
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.System.Threading.Tasks.Sources.IValueTaskSource&lt;System.Net.Sockets.Socket&gt;.GetResult(Int16 token)&#xD;
+   at System.Net.Sockets.TcpListener.&lt;AcceptTcpClientAsync&gt;g__WaitAndWrap|32_0(ValueTask`1 task)&#xD;
+   at TicketEmailQueueTests.Receive(TcpListener listener, CancellationToken cancellation) in C:\Users\Khaled\ThinkOnErp-master2\tests\ThinkOnErp.TicketAudit.Tests\TicketEmailQueueTests.cs:line 60&#xD;
+   at TicketEmailQueueTests.FailedSmtpIsRetainedThenDeliveredAfterRetry() in C:\Users\Khaled\ThinkOnErp-master2\tests\ThinkOnErp.TicketAudit.Tests\TicketEmailQueueTests.cs:line 50&#xD;
+--- End of stack trace from previous location ---</StackTrace>
+        </ErrorInfo>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="048692e2-ecb8-421a-b68d-5cb406080ba7" testId="bba0890c-ea30-e23e-549e-e4bdfa4a42d6" testName="TicketControllerAuditTests.ListRejectsForeignCompany" computerName="KHALED" duration="00:00:00.0080899" startTime="2026-10-25T23:46:36.1507716+03:00" endTime="2026-10-25T23:46:36.1507719+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="048692e2-ecb8-421a-b68d-5cb406080ba7" />
+    <UnitTestResult executionId="7b7be808-ce41-42b4-826e-60d2c70860dc" testId="f0e663f0-5fe0-3e9e-485b-08f4605c7b1f" testName="TicketAuditTests.StatusWorkflow_AllowsResolutionAndRejectsReopeningFinalStatuses(current: 2, next: 4, allowed: True)" computerName="KHALED" duration="00:00:00.0067584" startTime="2026-10-25T23:46:36.1768941+03:00" endTime="2026-10-25T23:46:36.1768944+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="7b7be808-ce41-42b4-826e-60d2c70860dc" />
+    <UnitTestResult executionId="fb388f6b-5938-49c6-8d0c-e98cf9f3f0ac" testId="2984af08-d5e0-c34f-b8b2-2a6e1da72dba" testName="TicketHttpTests.InvalidAttachmentCreatesNoPartialTicket" computerName="KHALED" duration="00:00:00.8863756" startTime="2026-10-25T23:46:43.6700264+03:00" endTime="2026-10-25T23:46:43.6700266+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Failed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="fb388f6b-5938-49c6-8d0c-e98cf9f3f0ac">
+      <Output>
+        <ErrorInfo>
+          <Message>System.AggregateException : An error occurred while writing to logger(s). (Cannot open log for source '.NET Runtime'. You may not have write access.)&#xD;
+---- System.InvalidOperationException : Cannot open log for source '.NET Runtime'. You may not have write access.&#xD;
+-------- System.ComponentModel.Win32Exception : Access is denied.</Message>
+          <StackTrace>   at Microsoft.Extensions.Logging.Logger.ThrowLoggingError(List`1 exceptions)&#xD;
+   at Microsoft.Extensions.Logging.Logger.Log[TState](LogLevel logLevel, EventId eventId, TState state, Exception exception, Func`3 formatter)&#xD;
+   at Microsoft.Extensions.Logging.LoggerMessage.&lt;&gt;c__DisplayClass12_0`2.&lt;Define&gt;g__Log|0(ILogger logger, T1 arg1, T2 arg2, Exception exception)&#xD;
+   at Microsoft.EntityFrameworkCore.Diagnostics.EventDefinition`2.Log[TLoggerCategory](IDiagnosticsLogger`1 logger, TParam1 arg1, TParam2 arg2)&#xD;
+   at Microsoft.EntityFrameworkCore.Diagnostics.CoreLoggerExtensions.PossibleIncorrectRequiredNavigationWithQueryFilterInteractionWarning(IDiagnosticsLogger`1 diagnostics, IForeignKey foreignKey)&#xD;
+   at Microsoft.EntityFrameworkCore.Infrastructure.ModelValidator.ValidateQueryFilters(IModel model, IDiagnosticsLogger`1 logger)&#xD;
+   at Microsoft.EntityFrameworkCore.Infrastructure.ModelValidator.Validate(IModel model, IDiagnosticsLogger`1 logger)&#xD;
+   at Microsoft.EntityFrameworkCore.InMemory.Infrastructure.Internal.InMemoryModelValidator.Validate(IModel model, IDiagnosticsLogger`1 logger)&#xD;
+   at Microsoft.EntityFrameworkCore.Infrastructure.ModelRuntimeInitializer.Initialize(IModel model, Boolean designTime, IDiagnosticsLogger`1 validationLogger)&#xD;
+   at Microsoft.EntityFrameworkCore.Infrastructure.ModelSource.GetModel(DbContext context, ModelCreationDependencies modelCreationDependencies, Boolean designTime)&#xD;
+   at Microsoft.EntityFrameworkCore.Internal.DbContextServices.CreateModel(Boolean designTime)&#xD;
+   at Microsoft.EntityFrameworkCore.Internal.DbContextServices.get_Model()&#xD;
+   at Microsoft.EntityFrameworkCore.Infrastructure.EntityFrameworkServicesBuilder.&lt;&gt;c.&lt;TryAddCoreServices&gt;b__8_4(IServiceProvider p)&#xD;
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitCache(ServiceCallSite callSite, RuntimeResolverContext context, ServiceProviderEngineScope serviceProviderEngine, RuntimeResolverLock lockType)&#xD;
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitScopeCache(ServiceCallSite callSite, RuntimeResolverContext context)&#xD;
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSite(ServiceCallSite callSite, TArgument argument)&#xD;
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitConstructor(ConstructorCallSite constructorCallSite, RuntimeResolverContext context)&#xD;
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitCache(ServiceCallSite callSite, RuntimeResolverContext context, ServiceProviderEngineScope serviceProviderEngine, RuntimeResolverLock lockType)&#xD;
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitScopeCache(ServiceCallSite callSite, RuntimeResolverContext context)&#xD;
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSite(ServiceCallSite callSite, TArgument argument)&#xD;
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitConstructor(ConstructorCallSite constructorCallSite, RuntimeResolverContext context)&#xD;
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitCache(ServiceCallSite callSite, RuntimeResolverContext context, ServiceProviderEngineScope serviceProviderEngine, RuntimeResolverLock lockType)&#xD;
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitScopeCache(ServiceCallSite callSite, RuntimeResolverContext context)&#xD;
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSite(ServiceCallSite callSite, TArgument argument)&#xD;
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitConstructor(ConstructorCallSite constructorCallSite, RuntimeResolverContext context)&#xD;
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitCache(ServiceCallSite callSite, RuntimeResolverContext context, ServiceProviderEngineScope serviceProviderEngine, RuntimeResolverLock lockType)&#xD;
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitScopeCache(ServiceCallSite callSite, RuntimeResolverContext context)&#xD;
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSite(ServiceCallSite callSite, TArgument argument)&#xD;
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitConstructor(ConstructorCallSite constructorCallSite, RuntimeResolverContext context)&#xD;
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitCache(ServiceCallSite callSite, RuntimeResolverContext context, ServiceProviderEngineScope serviceProviderEngine, RuntimeResolverLock lockType)&#xD;
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitScopeCache(ServiceCallSite callSite, RuntimeResolverContext context)&#xD;
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSite(ServiceCallSite callSite, TArgument argument)&#xD;
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitConstructor(ConstructorCallSite constructorCallSite, RuntimeResolverContext context)&#xD;
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitCache(ServiceCallSite callSite, RuntimeResolverContext context, ServiceProviderEngineScope serviceProviderEngine, RuntimeResolverLock lockType)&#xD;
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitScopeCache(ServiceCallSite callSite, RuntimeResolverContext context)&#xD;
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSite(ServiceCallSite callSite, TArgument argument)&#xD;
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.Resolve(ServiceCallSite callSite, ServiceProviderEngineScope scope)&#xD;
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.DynamicServiceProviderEngine.&lt;&gt;c__DisplayClass2_0.&lt;RealizeService&gt;b__0(ServiceProviderEngineScope scope)&#xD;
+   at Microsoft.Extensions.DependencyInjection.ServiceProvider.GetService(ServiceIdentifier serviceIdentifier, ServiceProviderEngineScope serviceProviderEngineScope)&#xD;
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.ServiceProviderEngineScope.GetService(Type serviceType)&#xD;
+   at Microsoft.Extensions.DependencyInjection.ServiceProviderServiceExtensions.GetRequiredService(IServiceProvider provider, Type serviceType)&#xD;
+   at Microsoft.Extensions.DependencyInjection.ServiceProviderServiceExtensions.GetRequiredService[T](IServiceProvider provider)&#xD;
+   at Microsoft.EntityFrameworkCore.DbContext.get_DbContextDependencies()&#xD;
+   at Microsoft.EntityFrameworkCore.DbContext.get_ContextServices()&#xD;
+   at Microsoft.EntityFrameworkCore.DbContext.get_InternalServiceProvider()&#xD;
+   at Microsoft.EntityFrameworkCore.DbContext.get_DbContextDependencies()&#xD;
+   at Microsoft.EntityFrameworkCore.DbContext.Set[TEntity]()&#xD;
+   at ThinkOnErp.Infrastructure.Data.OracleDbContext.get_SysCompanies() in C:\Users\Khaled\ThinkOnErp-master2\src\ThinkOnErp.Infrastructure\Data\OracleDbContext.cs:line 47&#xD;
+   at TicketHttpTests.Host() in C:\Users\Khaled\ThinkOnErp-master2\tests\ThinkOnErp.TicketAudit.Tests\TicketHttpTests.cs:line 83&#xD;
+   at TicketHttpTests.InvalidAttachmentCreatesNoPartialTicket() in C:\Users\Khaled\ThinkOnErp-master2\tests\ThinkOnErp.TicketAudit.Tests\TicketHttpTests.cs:line 158&#xD;
+--- End of stack trace from previous location ---&#xD;
+----- Inner Stack Trace -----&#xD;
+   at System.Diagnostics.EventLogInternal.OpenForWrite(String currentMachineName)&#xD;
+   at System.Diagnostics.EventLogInternal.InternalWriteEvent(UInt32 eventID, UInt16 category, EventLogEntryType type, String[] strings, Byte[] rawData, String currentMachineName)&#xD;
+   at System.Diagnostics.EventLogInternal.WriteEvent(EventInstance instance, Byte[] data, Object[] values)&#xD;
+   at Microsoft.Extensions.Logging.EventLog.WindowsEventLog.WriteEntry(String message, EventLogEntryType type, Int32 eventID, Int16 category)&#xD;
+   at Microsoft.Extensions.Logging.EventLog.EventLogLogger.WriteMessage(String message, EventLogEntryType eventLogEntryType, Int32 eventId)&#xD;
+   at Microsoft.Extensions.Logging.EventLog.EventLogLogger.Log[TState](LogLevel logLevel, EventId eventId, TState state, Exception exception, Func`3 formatter)&#xD;
+   at Microsoft.Extensions.Logging.Logger.&lt;Log&gt;g__LoggerLog|14_0[TState](LogLevel logLevel, EventId eventId, ILogger logger, Exception exception, Func`3 formatter, List`1&amp; exceptions, TState&amp; state)&#xD;
+----- Inner Stack Trace -----&#xD;
+</StackTrace>
+        </ErrorInfo>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="5fe978c5-6976-4819-b5ce-b7331903deb8" testId="d3723d66-c4e3-e4fe-e735-4cdcc3b5d27e" testName="TicketHttpTests.LifecycleAcrossRolesPersistsAndPreventsForeignAccess" computerName="KHALED" duration="00:00:02.0416095" startTime="2026-10-25T23:46:41.3936705+03:00" endTime="2026-10-25T23:46:41.3936708+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Failed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="5fe978c5-6976-4819-b5ce-b7331903deb8">
+      <Output>
+        <ErrorInfo>
+          <Message>System.AggregateException : An error occurred while writing to logger(s). (Cannot open log for source '.NET Runtime'. You may not have write access.)&#xD;
+---- System.InvalidOperationException : Cannot open log for source '.NET Runtime'. You may not have write access.&#xD;
+-------- System.ComponentModel.Win32Exception : Access is denied.</Message>
+          <StackTrace>   at Microsoft.Extensions.Logging.Logger.ThrowLoggingError(List`1 exceptions)&#xD;
+   at Microsoft.Extensions.Logging.Logger.Log[TState](LogLevel logLevel, EventId eventId, TState state, Exception exception, Func`3 formatter)&#xD;
+   at Microsoft.Extensions.Logging.LoggerMessage.&lt;&gt;c__DisplayClass12_0`2.&lt;Define&gt;g__Log|0(ILogger logger, T1 arg1, T2 arg2, Exception exception)&#xD;
+   at Microsoft.EntityFrameworkCore.Diagnostics.EventDefinition`2.Log[TLoggerCategory](IDiagnosticsLogger`1 logger, TParam1 arg1, TParam2 arg2)&#xD;
+   at Microsoft.EntityFrameworkCore.Diagnostics.CoreLoggerExtensions.PossibleIncorrectRequiredNavigationWithQueryFilterInteractionWarning(IDiagnosticsLogger`1 diagnostics, IForeignKey foreignKey)&#xD;
+   at Microsoft.EntityFrameworkCore.Infrastructure.ModelValidator.ValidateQueryFilters(IModel model, IDiagnosticsLogger`1 logger)&#xD;
+   at Microsoft.EntityFrameworkCore.Infrastructure.ModelValidator.Validate(IModel model, IDiagnosticsLogger`1 logger)&#xD;
+   at Microsoft.EntityFrameworkCore.InMemory.Infrastructure.Internal.InMemoryModelValidator.Validate(IModel model, IDiagnosticsLogger`1 logger)&#xD;
+   at Microsoft.EntityFrameworkCore.Infrastructure.ModelRuntimeInitializer.Initialize(IModel model, Boolean designTime, IDiagnosticsLogger`1 validationLogger)&#xD;
+   at Microsoft.EntityFrameworkCore.Infrastructure.ModelSource.GetModel(DbContext context, ModelCreationDependencies modelCreationDependencies, Boolean designTime)&#xD;
+   at Microsoft.EntityFrameworkCore.Internal.DbContextServices.CreateModel(Boolean designTime)&#xD;
+   at Microsoft.EntityFrameworkCore.Internal.DbContextServices.get_Model()&#xD;
+   at Microsoft.EntityFrameworkCore.Infrastructure.EntityFrameworkServicesBuilder.&lt;&gt;c.&lt;TryAddCoreServices&gt;b__8_4(IServiceProvider p)&#xD;
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSiteMain(ServiceCallSite callSite, TArgument argument)&#xD;
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitCache(ServiceCallSite callSite, RuntimeResolverContext context, ServiceProviderEngineScope serviceProviderEngine, RuntimeResolverLock lockType)&#xD;
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitScopeCache(ServiceCallSite callSite, RuntimeResolverContext context)&#xD;
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSite(ServiceCallSite callSite, TArgument argument)&#xD;
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitConstructor(ConstructorCallSite constructorCallSite, RuntimeResolverContext context)&#xD;
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSiteMain(ServiceCallSite callSite, TArgument argument)&#xD;
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitCache(ServiceCallSite callSite, RuntimeResolverContext context, ServiceProviderEngineScope serviceProviderEngine, RuntimeResolverLock lockType)&#xD;
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitScopeCache(ServiceCallSite callSite, RuntimeResolverContext context)&#xD;
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSite(ServiceCallSite callSite, TArgument argument)&#xD;
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitConstructor(ConstructorCallSite constructorCallSite, RuntimeResolverContext context)&#xD;
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSiteMain(ServiceCallSite callSite, TArgument argument)&#xD;
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitCache(ServiceCallSite callSite, RuntimeResolverContext context, ServiceProviderEngineScope serviceProviderEngine, RuntimeResolverLock lockType)&#xD;
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitScopeCache(ServiceCallSite callSite, RuntimeResolverContext context)&#xD;
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSite(ServiceCallSite callSite, TArgument argument)&#xD;
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitConstructor(ConstructorCallSite constructorCallSite, RuntimeResolverContext context)&#xD;
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSiteMain(ServiceCallSite callSite, TArgument argument)&#xD;
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitCache(ServiceCallSite callSite, RuntimeResolverContext context, ServiceProviderEngineScope serviceProviderEngine, RuntimeResolverLock lockType)&#xD;
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitScopeCache(ServiceCallSite callSite, RuntimeResolverContext context)&#xD;
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSite(ServiceCallSite callSite, TArgument argument)&#xD;
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitConstructor(ConstructorCallSite constructorCallSite, RuntimeResolverContext context)&#xD;
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSiteMain(ServiceCallSite callSite, TArgument argument)&#xD;
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitCache(ServiceCallSite callSite, RuntimeResolverContext context, ServiceProviderEngineScope serviceProviderEngine, RuntimeResolverLock lockType)&#xD;
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitScopeCache(ServiceCallSite callSite, RuntimeResolverContext context)&#xD;
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSite(ServiceCallSite callSite, TArgument argument)&#xD;
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitConstructor(ConstructorCallSite constructorCallSite, RuntimeResolverContext context)&#xD;
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSiteMain(ServiceCallSite callSite, TArgument argument)&#xD;
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitCache(ServiceCallSite callSite, RuntimeResolverContext context, ServiceProviderEngineScope serviceProviderEngine, RuntimeResolverLock lockType)&#xD;
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitScopeCache(ServiceCallSite callSite, RuntimeResolverContext context)&#xD;
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSite(ServiceCallSite callSite, TArgument argument)&#xD;
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.Resolve(ServiceCallSite callSite, ServiceProviderEngineScope scope)&#xD;
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.DynamicServiceProviderEngine.&lt;&gt;c__DisplayClass2_0.&lt;RealizeService&gt;b__0(ServiceProviderEngineScope scope)&#xD;
+   at Microsoft.Extensions.DependencyInjection.ServiceProvider.GetService(ServiceIdentifier serviceIdentifier, ServiceProviderEngineScope serviceProviderEngineScope)&#xD;
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.ServiceProviderEngineScope.GetService(Type serviceType)&#xD;
+   at Microsoft.Extensions.DependencyInjection.ServiceProviderServiceExtensions.GetRequiredService(IServiceProvider provider, Type serviceType)&#xD;
+   at Microsoft.Extensions.DependencyInjection.ServiceProviderServiceExtensions.GetRequiredService[T](IServiceProvider provider)&#xD;
+   at Microsoft.EntityFrameworkCore.DbContext.get_DbContextDependencies()&#xD;
+   at Microsoft.EntityFrameworkCore.DbContext.get_ContextServices()&#xD;
+   at Microsoft.EntityFrameworkCore.DbContext.get_InternalServiceProvider()&#xD;
+   at Microsoft.EntityFrameworkCore.DbContext.get_DbContextDependencies()&#xD;
+   at Microsoft.EntityFrameworkCore.DbContext.Set[TEntity]()&#xD;
+   at ThinkOnErp.Infrastructure.Data.OracleDbContext.get_SysCompanies() in C:\Users\Khaled\ThinkOnErp-master2\src\ThinkOnErp.Infrastructure\Data\OracleDbContext.cs:line 47&#xD;
+   at TicketHttpTests.Host() in C:\Users\Khaled\ThinkOnErp-master2\tests\ThinkOnErp.TicketAudit.Tests\TicketHttpTests.cs:line 83&#xD;
+   at TicketHttpTests.LifecycleAcrossRolesPersistsAndPreventsForeignAccess() in C:\Users\Khaled\ThinkOnErp-master2\tests\ThinkOnErp.TicketAudit.Tests\TicketHttpTests.cs:line 115&#xD;
+--- End of stack trace from previous location ---&#xD;
+----- Inner Stack Trace -----&#xD;
+   at System.Diagnostics.EventLogInternal.OpenForWrite(String currentMachineName)&#xD;
+   at System.Diagnostics.EventLogInternal.InternalWriteEvent(UInt32 eventID, UInt16 category, EventLogEntryType type, String[] strings, Byte[] rawData, String currentMachineName)&#xD;
+   at System.Diagnostics.EventLogInternal.WriteEvent(EventInstance instance, Byte[] data, Object[] values)&#xD;
+   at Microsoft.Extensions.Logging.EventLog.WindowsEventLog.WriteEntry(String message, EventLogEntryType type, Int32 eventID, Int16 category)&#xD;
+   at Microsoft.Extensions.Logging.EventLog.EventLogLogger.WriteMessage(String message, EventLogEntryType eventLogEntryType, Int32 eventId)&#xD;
+   at Microsoft.Extensions.Logging.EventLog.EventLogLogger.Log[TState](LogLevel logLevel, EventId eventId, TState state, Exception exception, Func`3 formatter)&#xD;
+   at Microsoft.Extensions.Logging.Logger.&lt;Log&gt;g__LoggerLog|14_0[TState](LogLevel logLevel, EventId eventId, ILogger logger, Exception exception, Func`3 formatter, List`1&amp; exceptions, TState&amp; state)&#xD;
+----- Inner Stack Trace -----&#xD;
+</StackTrace>
+        </ErrorInfo>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="b806cdea-5c35-4d88-84d4-008a794d2d5c" testId="059d4306-a3c4-e9da-e032-57e04b3cd6cb" testName="TicketAuditTests.AttachmentFromDifferentTicketIsRejected" computerName="KHALED" duration="00:00:00.0042944" startTime="2026-10-25T23:46:36.2056494+03:00" endTime="2026-10-25T23:46:36.2056497+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="b806cdea-5c35-4d88-84d4-008a794d2d5c" />
+    <UnitTestResult executionId="e1748ec9-04bc-4854-b834-a9e09a0bee16" testId="ab2e62bd-dc5b-f801-ce0f-e904f9e05c9f" testName="TicketEmailQueueTests.MissingSmtpRetainsPendingMessageAcrossRestartAndDeduplicates" computerName="KHALED" duration="00:00:00.0151541" startTime="2026-10-25T23:46:53.2812660+03:00" endTime="2026-10-25T23:46:53.2812664+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="e1748ec9-04bc-4854-b834-a9e09a0bee16" />
+    <UnitTestResult executionId="dd8f6df0-4503-433c-88d6-a2b490fe4650" testId="78389133-77f8-3b63-4ab7-0520bf7e54e9" testName="TicketAuditTests.StatusWorkflow_AllowsResolutionAndRejectsReopeningFinalStatuses(current: 6, next: 2, allowed: False)" computerName="KHALED" duration="00:00:00.0237762" startTime="2026-10-25T23:46:36.1680099+03:00" endTime="2026-10-25T23:46:36.1680103+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="dd8f6df0-4503-433c-88d6-a2b490fe4650" />
+    <UnitTestResult executionId="b99005a8-d65e-44e7-9710-30d3703018ca" testId="4d2fb073-f5c5-6549-8e96-8aaacb3f1be2" testName="TicketControllerAuditTests.DeleteSendsDedicatedDeleteCommand" computerName="KHALED" duration="00:00:00.0049657" startTime="2026-10-25T23:46:36.1556661+03:00" endTime="2026-10-25T23:46:36.1556664+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="b99005a8-d65e-44e7-9710-30d3703018ca" />
+    <UnitTestResult executionId="6e6d7da7-c28a-4efa-84f1-d5588391a87e" testId="a4e1357a-370c-d78c-1b0f-6027e2e35637" testName="TicketHttpTests.FiltersReportsAndPriorityDeadlineUsePersistedData" computerName="KHALED" duration="00:00:03.9953554" startTime="2026-10-25T23:46:39.3535542+03:00" endTime="2026-10-25T23:46:39.3535546+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Failed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="6e6d7da7-c28a-4efa-84f1-d5588391a87e">
+      <Output>
+        <ErrorInfo>
+          <Message>System.AggregateException : An error occurred while writing to logger(s). (Cannot open log for source '.NET Runtime'. You may not have write access.)&#xD;
+---- System.InvalidOperationException : Cannot open log for source '.NET Runtime'. You may not have write access.&#xD;
+-------- System.ComponentModel.Win32Exception : Access is denied.</Message>
+          <StackTrace>   at Microsoft.Extensions.Logging.Logger.ThrowLoggingError(List`1 exceptions)&#xD;
+   at Microsoft.Extensions.Logging.Logger.Log[TState](LogLevel logLevel, EventId eventId, TState state, Exception exception, Func`3 formatter)&#xD;
+   at Microsoft.Extensions.Logging.LoggerMessage.&lt;&gt;c__DisplayClass12_0`2.&lt;Define&gt;g__Log|0(ILogger logger, T1 arg1, T2 arg2, Exception exception)&#xD;
+   at Microsoft.EntityFrameworkCore.Diagnostics.EventDefinition`2.Log[TLoggerCategory](IDiagnosticsLogger`1 logger, TParam1 arg1, TParam2 arg2)&#xD;
+   at Microsoft.EntityFrameworkCore.Diagnostics.CoreLoggerExtensions.PossibleIncorrectRequiredNavigationWithQueryFilterInteractionWarning(IDiagnosticsLogger`1 diagnostics, IForeignKey foreignKey)&#xD;
+   at Microsoft.EntityFrameworkCore.Infrastructure.ModelValidator.ValidateQueryFilters(IModel model, IDiagnosticsLogger`1 logger)&#xD;
+   at Microsoft.EntityFrameworkCore.Infrastructure.ModelValidator.Validate(IModel model, IDiagnosticsLogger`1 logger)&#xD;
+   at Microsoft.EntityFrameworkCore.InMemory.Infrastructure.Internal.InMemoryModelValidator.Validate(IModel model, IDiagnosticsLogger`1 logger)&#xD;
+   at Microsoft.EntityFrameworkCore.Infrastructure.ModelRuntimeInitializer.Initialize(IModel model, Boolean designTime, IDiagnosticsLogger`1 validationLogger)&#xD;
+   at Microsoft.EntityFrameworkCore.Infrastructure.ModelSource.GetModel(DbContext context, ModelCreationDependencies modelCreationDependencies, Boolean designTime)&#xD;
+   at Microsoft.EntityFrameworkCore.Internal.DbContextServices.CreateModel(Boolean designTime)&#xD;
+   at Microsoft.EntityFrameworkCore.Internal.DbContextServices.get_Model()&#xD;
+   at Microsoft.EntityFrameworkCore.Infrastructure.EntityFrameworkServicesBuilder.&lt;&gt;c.&lt;TryAddCoreServices&gt;b__8_4(IServiceProvider p)&#xD;
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSiteMain(ServiceCallSite callSite, TArgument argument)&#xD;
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitCache(ServiceCallSite callSite, RuntimeResolverContext context, ServiceProviderEngineScope serviceProviderEngine, RuntimeResolverLock lockType)&#xD;
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitScopeCache(ServiceCallSite callSite, RuntimeResolverContext context)&#xD;
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSite(ServiceCallSite callSite, TArgument argument)&#xD;
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitConstructor(ConstructorCallSite constructorCallSite, RuntimeResolverContext context)&#xD;
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSiteMain(ServiceCallSite callSite, TArgument argument)&#xD;
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitCache(ServiceCallSite callSite, RuntimeResolverContext context, ServiceProviderEngineScope serviceProviderEngine, RuntimeResolverLock lockType)&#xD;
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitScopeCache(ServiceCallSite callSite, RuntimeResolverContext context)&#xD;
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSite(ServiceCallSite callSite, TArgument argument)&#xD;
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitConstructor(ConstructorCallSite constructorCallSite, RuntimeResolverContext context)&#xD;
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSiteMain(ServiceCallSite callSite, TArgument argument)&#xD;
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitCache(ServiceCallSite callSite, RuntimeResolverContext context, ServiceProviderEngineScope serviceProviderEngine, RuntimeResolverLock lockType)&#xD;
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitScopeCache(ServiceCallSite callSite, RuntimeResolverContext context)&#xD;
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSite(ServiceCallSite callSite, TArgument argument)&#xD;
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitConstructor(ConstructorCallSite constructorCallSite, RuntimeResolverContext context)&#xD;
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSiteMain(ServiceCallSite callSite, TArgument argument)&#xD;
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitCache(ServiceCallSite callSite, RuntimeResolverContext context, ServiceProviderEngineScope serviceProviderEngine, RuntimeResolverLock lockType)&#xD;
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitScopeCache(ServiceCallSite callSite, RuntimeResolverContext context)&#xD;
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSite(ServiceCallSite callSite, TArgument argument)&#xD;
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitConstructor(ConstructorCallSite constructorCallSite, RuntimeResolverContext context)&#xD;
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSiteMain(ServiceCallSite callSite, TArgument argument)&#xD;
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitCache(ServiceCallSite callSite, RuntimeResolverContext context, ServiceProviderEngineScope serviceProviderEngine, RuntimeResolverLock lockType)&#xD;
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitScopeCache(ServiceCallSite callSite, RuntimeResolverContext context)&#xD;
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSite(ServiceCallSite callSite, TArgument argument)&#xD;
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitConstructor(ConstructorCallSite constructorCallSite, RuntimeResolverContext context)&#xD;
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSiteMain(ServiceCallSite callSite, TArgument argument)&#xD;
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitCache(ServiceCallSite callSite, RuntimeResolverContext context, ServiceProviderEngineScope serviceProviderEngine, RuntimeResolverLock lockType)&#xD;
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitScopeCache(ServiceCallSite callSite, RuntimeResolverContext context)&#xD;
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSite(ServiceCallSite callSite, TArgument argument)&#xD;
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.Resolve(ServiceCallSite callSite, ServiceProviderEngineScope scope)&#xD;
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.DynamicServiceProviderEngine.&lt;&gt;c__DisplayClass2_0.&lt;RealizeService&gt;b__0(ServiceProviderEngineScope scope)&#xD;
+   at Microsoft.Extensions.DependencyInjection.ServiceProvider.GetService(ServiceIdentifier serviceIdentifier, ServiceProviderEngineScope serviceProviderEngineScope)&#xD;
+   at Microsoft.Extensions.DependencyInjection.ServiceLookup.ServiceProviderEngineScope.GetService(Type serviceType)&#xD;
+   at Microsoft.Extensions.DependencyInjection.ServiceProviderServiceExtensions.GetRequiredService(IServiceProvider provider, Type serviceType)&#xD;
+   at Microsoft.Extensions.DependencyInjection.ServiceProviderServiceExtensions.GetRequiredService[T](IServiceProvider provider)&#xD;
+   at Microsoft.EntityFrameworkCore.DbContext.get_DbContextDependencies()&#xD;
+   at Microsoft.EntityFrameworkCore.DbContext.get_ContextServices()&#xD;
+   at Microsoft.EntityFrameworkCore.DbContext.get_InternalServiceProvider()&#xD;
+   at Microsoft.EntityFrameworkCore.DbContext.get_DbContextDependencies()&#xD;
+   at Microsoft.EntityFrameworkCore.DbContext.Set[TEntity]()&#xD;
+   at ThinkOnErp.Infrastructure.Data.OracleDbContext.get_SysCompanies() in C:\Users\Khaled\ThinkOnErp-master2\src\ThinkOnErp.Infrastructure\Data\OracleDbContext.cs:line 47&#xD;
+   at TicketHttpTests.Host() in C:\Users\Khaled\ThinkOnErp-master2\tests\ThinkOnErp.TicketAudit.Tests\TicketHttpTests.cs:line 83&#xD;
+   at TicketHttpTests.FiltersReportsAndPriorityDeadlineUsePersistedData() in C:\Users\Khaled\ThinkOnErp-master2\tests\ThinkOnErp.TicketAudit.Tests\TicketHttpTests.cs:line 168&#xD;
+--- End of stack trace from previous location ---&#xD;
+----- Inner Stack Trace -----&#xD;
+   at System.Diagnostics.EventLogInternal.OpenForWrite(String currentMachineName)&#xD;
+   at System.Diagnostics.EventLogInternal.InternalWriteEvent(UInt32 eventID, UInt16 category, EventLogEntryType type, String[] strings, Byte[] rawData, String currentMachineName)&#xD;
+   at System.Diagnostics.EventLogInternal.WriteEvent(EventInstance instance, Byte[] data, Object[] values)&#xD;
+   at Microsoft.Extensions.Logging.EventLog.WindowsEventLog.WriteEntry(String message, EventLogEntryType type, Int32 eventID, Int16 category)&#xD;
+   at Microsoft.Extensions.Logging.EventLog.EventLogLogger.WriteMessage(String message, EventLogEntryType eventLogEntryType, Int32 eventId)&#xD;
+   at Microsoft.Extensions.Logging.EventLog.EventLogLogger.Log[TState](LogLevel logLevel, EventId eventId, TState state, Exception exception, Func`3 formatter)&#xD;
+   at Microsoft.Extensions.Logging.Logger.&lt;Log&gt;g__LoggerLog|14_0[TState](LogLevel logLevel, EventId eventId, ILogger logger, Exception exception, Func`3 formatter, List`1&amp; exceptions, TState&amp; state)&#xD;
+----- Inner Stack Trace -----&#xD;
+</StackTrace>
+        </ErrorInfo>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="9092e29c-9294-4bbc-9888-81b6b48de0d0" testId="1a7a1d21-eb36-ab06-2439-2de15921f2cd" testName="TicketAuditTests.ReadHandlerMapsTicketReturnedByScopedRepository" computerName="KHALED" duration="00:00:00.0242006" startTime="2026-10-25T23:46:36.2012366+03:00" endTime="2026-10-25T23:46:36.2012371+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="9092e29c-9294-4bbc-9888-81b6b48de0d0" />
+    <UnitTestResult executionId="ffb4b3c3-2f3d-45de-9f1a-c8aadd726e7b" testId="bfb55ea6-ea08-5023-f46f-8ebe7dfc1006" testName="TicketControllerAuditTests.CreateOverridesForeignCompanyBranchAndRequester" computerName="KHALED" duration="00:00:00.8128450" startTime="2026-10-25T23:46:36.1428573+03:00" endTime="2026-10-25T23:46:36.1428857+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="ffb4b3c3-2f3d-45de-9f1a-c8aadd726e7b" />
+    <UnitTestResult executionId="d2efc3e4-6c7f-4e2c-8484-8bafab7456f1" testId="31354fd0-de8d-fa60-fb40-e65293458b3a" testName="TicketAuditTests.InternalCommentDoesNotSendPublicNotification" computerName="KHALED" duration="00:00:00.8205730" startTime="2026-10-25T23:46:36.1483037+03:00" endTime="2026-10-25T23:46:36.1483041+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="d2efc3e4-6c7f-4e2c-8484-8bafab7456f1" />
+    <UnitTestResult executionId="78d2133f-22d4-4573-b94e-be118d3827e4" testId="5e4bae72-1ed2-07fc-c641-01e8c7842efb" testName="TicketAuditTests.StatusWorkflow_AllowsResolutionAndRejectsReopeningFinalStatuses(current: 5, next: 2, allowed: False)" computerName="KHALED" duration="00:00:00.0018807" startTime="2026-10-25T23:46:36.1700111+03:00" endTime="2026-10-25T23:46:36.1700114+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="78d2133f-22d4-4573-b94e-be118d3827e4" />
+    <UnitTestResult executionId="f9644040-c6d7-4396-88ce-10ff478c3088" testId="f40b94aa-11aa-fb32-b6d1-ebb5eda0ba4c" testName="TicketAuditTests.CreationRecipientsContainRequesterAndOnlyCompanyAdminAndActiveSuperAdmin" computerName="KHALED" duration="00:00:00.0198729" startTime="2026-10-25T23:46:36.2439873+03:00" endTime="2026-10-25T23:46:36.2439875+03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="f9644040-c6d7-4396-88ce-10ff478c3088" />
+  </Results>
+  <TestDefinitions>
+    <UnitTest name="TicketHttpTests.LifecycleAcrossRolesPersistsAndPreventsForeignAccess" storage="c:\users\khaled\thinkonerp-master2\tests\thinkonerp.ticketaudit.tests\bin\debug\net8.0\thinkonerp.ticketaudit.tests.dll" id="d3723d66-c4e3-e4fe-e735-4cdcc3b5d27e">
+      <Execution id="5fe978c5-6976-4819-b5ce-b7331903deb8" />
+      <TestMethod codeBase="C:\Users\Khaled\ThinkOnErp-master2\tests\ThinkOnErp.TicketAudit.Tests\bin\Debug\net8.0\ThinkOnErp.TicketAudit.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="TicketHttpTests" name="LifecycleAcrossRolesPersistsAndPreventsForeignAccess" />
+    </UnitTest>
+    <UnitTest name="TicketHttpTests.InvalidAttachmentCreatesNoPartialTicket" storage="c:\users\khaled\thinkonerp-master2\tests\thinkonerp.ticketaudit.tests\bin\debug\net8.0\thinkonerp.ticketaudit.tests.dll" id="2984af08-d5e0-c34f-b8b2-2a6e1da72dba">
+      <Execution id="fb388f6b-5938-49c6-8d0c-e98cf9f3f0ac" />
+      <TestMethod codeBase="C:\Users\Khaled\ThinkOnErp-master2\tests\ThinkOnErp.TicketAudit.Tests\bin\Debug\net8.0\ThinkOnErp.TicketAudit.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="TicketHttpTests" name="InvalidAttachmentCreatesNoPartialTicket" />
+    </UnitTest>
+    <UnitTest name="TicketAuditTests.CreationRecipientsContainRequesterAndOnlyCompanyAdminAndActiveSuperAdmin" storage="c:\users\khaled\thinkonerp-master2\tests\thinkonerp.ticketaudit.tests\bin\debug\net8.0\thinkonerp.ticketaudit.tests.dll" id="f40b94aa-11aa-fb32-b6d1-ebb5eda0ba4c">
+      <Execution id="f9644040-c6d7-4396-88ce-10ff478c3088" />
+      <TestMethod codeBase="C:\Users\Khaled\ThinkOnErp-master2\tests\ThinkOnErp.TicketAudit.Tests\bin\Debug\net8.0\ThinkOnErp.TicketAudit.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="TicketAuditTests" name="CreationRecipientsContainRequesterAndOnlyCompanyAdminAndActiveSuperAdmin" />
+    </UnitTest>
+    <UnitTest name="TicketEmailQueueTests.FailedSmtpIsRetainedThenDeliveredAfterRetry" storage="c:\users\khaled\thinkonerp-master2\tests\thinkonerp.ticketaudit.tests\bin\debug\net8.0\thinkonerp.ticketaudit.tests.dll" id="08710c45-8475-c587-3132-fc576df4cd10">
+      <Execution id="9a262b91-8fb8-4832-8976-a23122df8975" />
+      <TestMethod codeBase="C:\Users\Khaled\ThinkOnErp-master2\tests\ThinkOnErp.TicketAudit.Tests\bin\Debug\net8.0\ThinkOnErp.TicketAudit.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="TicketEmailQueueTests" name="FailedSmtpIsRetainedThenDeliveredAfterRetry" />
+    </UnitTest>
+    <UnitTest name="TicketAuditTests.StatusWorkflow_AllowsResolutionAndRejectsReopeningFinalStatuses(current: 5, next: 2, allowed: False)" storage="c:\users\khaled\thinkonerp-master2\tests\thinkonerp.ticketaudit.tests\bin\debug\net8.0\thinkonerp.ticketaudit.tests.dll" id="5e4bae72-1ed2-07fc-c641-01e8c7842efb">
+      <Execution id="78d2133f-22d4-4573-b94e-be118d3827e4" />
+      <TestMethod codeBase="C:\Users\Khaled\ThinkOnErp-master2\tests\ThinkOnErp.TicketAudit.Tests\bin\Debug\net8.0\ThinkOnErp.TicketAudit.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="TicketAuditTests" name="StatusWorkflow_AllowsResolutionAndRejectsReopeningFinalStatuses" />
+    </UnitTest>
+    <UnitTest name="TicketHttpTests.FiltersReportsAndPriorityDeadlineUsePersistedData" storage="c:\users\khaled\thinkonerp-master2\tests\thinkonerp.ticketaudit.tests\bin\debug\net8.0\thinkonerp.ticketaudit.tests.dll" id="a4e1357a-370c-d78c-1b0f-6027e2e35637">
+      <Execution id="6e6d7da7-c28a-4efa-84f1-d5588391a87e" />
+      <TestMethod codeBase="C:\Users\Khaled\ThinkOnErp-master2\tests\ThinkOnErp.TicketAudit.Tests\bin\Debug\net8.0\ThinkOnErp.TicketAudit.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="TicketHttpTests" name="FiltersReportsAndPriorityDeadlineUsePersistedData" />
+    </UnitTest>
+    <UnitTest name="TicketControllerAuditTests.CreateOverridesForeignCompanyBranchAndRequester" storage="c:\users\khaled\thinkonerp-master2\tests\thinkonerp.ticketaudit.tests\bin\debug\net8.0\thinkonerp.ticketaudit.tests.dll" id="bfb55ea6-ea08-5023-f46f-8ebe7dfc1006">
+      <Execution id="ffb4b3c3-2f3d-45de-9f1a-c8aadd726e7b" />
+      <TestMethod codeBase="C:\Users\Khaled\ThinkOnErp-master2\tests\ThinkOnErp.TicketAudit.Tests\bin\Debug\net8.0\ThinkOnErp.TicketAudit.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="TicketControllerAuditTests" name="CreateOverridesForeignCompanyBranchAndRequester" />
+    </UnitTest>
+    <UnitTest name="TicketControllerAuditTests.ListRejectsForeignCompany" storage="c:\users\khaled\thinkonerp-master2\tests\thinkonerp.ticketaudit.tests\bin\debug\net8.0\thinkonerp.ticketaudit.tests.dll" id="bba0890c-ea30-e23e-549e-e4bdfa4a42d6">
+      <Execution id="048692e2-ecb8-421a-b68d-5cb406080ba7" />
+      <TestMethod codeBase="C:\Users\Khaled\ThinkOnErp-master2\tests\ThinkOnErp.TicketAudit.Tests\bin\Debug\net8.0\ThinkOnErp.TicketAudit.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="TicketControllerAuditTests" name="ListRejectsForeignCompany" />
+    </UnitTest>
+    <UnitTest name="TicketAuditTests.ReadHandlerMapsTicketReturnedByScopedRepository" storage="c:\users\khaled\thinkonerp-master2\tests\thinkonerp.ticketaudit.tests\bin\debug\net8.0\thinkonerp.ticketaudit.tests.dll" id="1a7a1d21-eb36-ab06-2439-2de15921f2cd">
+      <Execution id="9092e29c-9294-4bbc-9888-81b6b48de0d0" />
+      <TestMethod codeBase="C:\Users\Khaled\ThinkOnErp-master2\tests\ThinkOnErp.TicketAudit.Tests\bin\Debug\net8.0\ThinkOnErp.TicketAudit.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="TicketAuditTests" name="ReadHandlerMapsTicketReturnedByScopedRepository" />
+    </UnitTest>
+    <UnitTest name="TicketAuditTests.PriorityChangeRecalculatesDeadline" storage="c:\users\khaled\thinkonerp-master2\tests\thinkonerp.ticketaudit.tests\bin\debug\net8.0\thinkonerp.ticketaudit.tests.dll" id="86208d07-139e-671f-ff6e-31c2d8b73af2">
+      <Execution id="d94ff328-1517-4a79-88d1-ae9ab6609412" />
+      <TestMethod codeBase="C:\Users\Khaled\ThinkOnErp-master2\tests\ThinkOnErp.TicketAudit.Tests\bin\Debug\net8.0\ThinkOnErp.TicketAudit.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="TicketAuditTests" name="PriorityChangeRecalculatesDeadline" />
+    </UnitTest>
+    <UnitTest name="TicketAuditTests.StatusWorkflow_AllowsResolutionAndRejectsReopeningFinalStatuses(current: 6, next: 2, allowed: False)" storage="c:\users\khaled\thinkonerp-master2\tests\thinkonerp.ticketaudit.tests\bin\debug\net8.0\thinkonerp.ticketaudit.tests.dll" id="78389133-77f8-3b63-4ab7-0520bf7e54e9">
+      <Execution id="dd8f6df0-4503-433c-88d6-a2b490fe4650" />
+      <TestMethod codeBase="C:\Users\Khaled\ThinkOnErp-master2\tests\ThinkOnErp.TicketAudit.Tests\bin\Debug\net8.0\ThinkOnErp.TicketAudit.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="TicketAuditTests" name="StatusWorkflow_AllowsResolutionAndRejectsReopeningFinalStatuses" />
+    </UnitTest>
+    <UnitTest name="TicketControllerAuditTests.DeleteSendsDedicatedDeleteCommand" storage="c:\users\khaled\thinkonerp-master2\tests\thinkonerp.ticketaudit.tests\bin\debug\net8.0\thinkonerp.ticketaudit.tests.dll" id="4d2fb073-f5c5-6549-8e96-8aaacb3f1be2">
+      <Execution id="b99005a8-d65e-44e7-9710-30d3703018ca" />
+      <TestMethod codeBase="C:\Users\Khaled\ThinkOnErp-master2\tests\ThinkOnErp.TicketAudit.Tests\bin\Debug\net8.0\ThinkOnErp.TicketAudit.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="TicketControllerAuditTests" name="DeleteSendsDedicatedDeleteCommand" />
+    </UnitTest>
+    <UnitTest name="TicketEmailQueueTests.MissingSmtpRetainsPendingMessageAcrossRestartAndDeduplicates" storage="c:\users\khaled\thinkonerp-master2\tests\thinkonerp.ticketaudit.tests\bin\debug\net8.0\thinkonerp.ticketaudit.tests.dll" id="ab2e62bd-dc5b-f801-ce0f-e904f9e05c9f">
+      <Execution id="e1748ec9-04bc-4854-b834-a9e09a0bee16" />
+      <TestMethod codeBase="C:\Users\Khaled\ThinkOnErp-master2\tests\ThinkOnErp.TicketAudit.Tests\bin\Debug\net8.0\ThinkOnErp.TicketAudit.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="TicketEmailQueueTests" name="MissingSmtpRetainsPendingMessageAcrossRestartAndDeduplicates" />
+    </UnitTest>
+    <UnitTest name="TicketHttpTests.UnauthenticatedAndSuperWithoutCompanyAreRejected" storage="c:\users\khaled\thinkonerp-master2\tests\thinkonerp.ticketaudit.tests\bin\debug\net8.0\thinkonerp.ticketaudit.tests.dll" id="7cee663e-702f-12c4-4757-0135ee93d85e">
+      <Execution id="e0e03947-08e2-4e26-a574-fdfd3a61180f" />
+      <TestMethod codeBase="C:\Users\Khaled\ThinkOnErp-master2\tests\ThinkOnErp.TicketAudit.Tests\bin\Debug\net8.0\ThinkOnErp.TicketAudit.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="TicketHttpTests" name="UnauthenticatedAndSuperWithoutCompanyAreRejected" />
+    </UnitTest>
+    <UnitTest name="TicketAuditTests.InternalCommentDoesNotSendPublicNotification" storage="c:\users\khaled\thinkonerp-master2\tests\thinkonerp.ticketaudit.tests\bin\debug\net8.0\thinkonerp.ticketaudit.tests.dll" id="31354fd0-de8d-fa60-fb40-e65293458b3a">
+      <Execution id="d2efc3e4-6c7f-4e2c-8484-8bafab7456f1" />
+      <TestMethod codeBase="C:\Users\Khaled\ThinkOnErp-master2\tests\ThinkOnErp.TicketAudit.Tests\bin\Debug\net8.0\ThinkOnErp.TicketAudit.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="TicketAuditTests" name="InternalCommentDoesNotSendPublicNotification" />
+    </UnitTest>
+    <UnitTest name="TicketAuditTests.AttachmentFromDifferentTicketIsRejected" storage="c:\users\khaled\thinkonerp-master2\tests\thinkonerp.ticketaudit.tests\bin\debug\net8.0\thinkonerp.ticketaudit.tests.dll" id="059d4306-a3c4-e9da-e032-57e04b3cd6cb">
+      <Execution id="b806cdea-5c35-4d88-84d4-008a794d2d5c" />
+      <TestMethod codeBase="C:\Users\Khaled\ThinkOnErp-master2\tests\ThinkOnErp.TicketAudit.Tests\bin\Debug\net8.0\ThinkOnErp.TicketAudit.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="TicketAuditTests" name="AttachmentFromDifferentTicketIsRejected" />
+    </UnitTest>
+    <UnitTest name="TicketAuditTests.StatusWorkflow_AllowsResolutionAndRejectsReopeningFinalStatuses(current: 2, next: 4, allowed: True)" storage="c:\users\khaled\thinkonerp-master2\tests\thinkonerp.ticketaudit.tests\bin\debug\net8.0\thinkonerp.ticketaudit.tests.dll" id="f0e663f0-5fe0-3e9e-485b-08f4605c7b1f">
+      <Execution id="7b7be808-ce41-42b4-826e-60d2c70860dc" />
+      <TestMethod codeBase="C:\Users\Khaled\ThinkOnErp-master2\tests\ThinkOnErp.TicketAudit.Tests\bin\Debug\net8.0\ThinkOnErp.TicketAudit.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="TicketAuditTests" name="StatusWorkflow_AllowsResolutionAndRejectsReopeningFinalStatuses" />
+    </UnitTest>
+  </TestDefinitions>
+  <TestEntries>
+    <TestEntry testId="7cee663e-702f-12c4-4757-0135ee93d85e" executionId="e0e03947-08e2-4e26-a574-fdfd3a61180f" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="86208d07-139e-671f-ff6e-31c2d8b73af2" executionId="d94ff328-1517-4a79-88d1-ae9ab6609412" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="08710c45-8475-c587-3132-fc576df4cd10" executionId="9a262b91-8fb8-4832-8976-a23122df8975" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="bba0890c-ea30-e23e-549e-e4bdfa4a42d6" executionId="048692e2-ecb8-421a-b68d-5cb406080ba7" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="f0e663f0-5fe0-3e9e-485b-08f4605c7b1f" executionId="7b7be808-ce41-42b4-826e-60d2c70860dc" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="2984af08-d5e0-c34f-b8b2-2a6e1da72dba" executionId="fb388f6b-5938-49c6-8d0c-e98cf9f3f0ac" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="d3723d66-c4e3-e4fe-e735-4cdcc3b5d27e" executionId="5fe978c5-6976-4819-b5ce-b7331903deb8" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="059d4306-a3c4-e9da-e032-57e04b3cd6cb" executionId="b806cdea-5c35-4d88-84d4-008a794d2d5c" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="ab2e62bd-dc5b-f801-ce0f-e904f9e05c9f" executionId="e1748ec9-04bc-4854-b834-a9e09a0bee16" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="78389133-77f8-3b63-4ab7-0520bf7e54e9" executionId="dd8f6df0-4503-433c-88d6-a2b490fe4650" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="4d2fb073-f5c5-6549-8e96-8aaacb3f1be2" executionId="b99005a8-d65e-44e7-9710-30d3703018ca" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="a4e1357a-370c-d78c-1b0f-6027e2e35637" executionId="6e6d7da7-c28a-4efa-84f1-d5588391a87e" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="1a7a1d21-eb36-ab06-2439-2de15921f2cd" executionId="9092e29c-9294-4bbc-9888-81b6b48de0d0" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="bfb55ea6-ea08-5023-f46f-8ebe7dfc1006" executionId="ffb4b3c3-2f3d-45de-9f1a-c8aadd726e7b" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="31354fd0-de8d-fa60-fb40-e65293458b3a" executionId="d2efc3e4-6c7f-4e2c-8484-8bafab7456f1" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="5e4bae72-1ed2-07fc-c641-01e8c7842efb" executionId="78d2133f-22d4-4573-b94e-be118d3827e4" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="f40b94aa-11aa-fb32-b6d1-ebb5eda0ba4c" executionId="f9644040-c6d7-4396-88ce-10ff478c3088" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+  </TestEntries>
+  <TestLists>
+    <TestList name="Results Not in a List" id="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestList name="All Loaded Results" id="19431567-8539-422a-85d7-44ee4e166bda" />
+  </TestLists>
+  <ResultSummary outcome="Failed">
+    <Counters total="17" executed="17" passed="12" failed="5" error="0" timeout="0" aborted="0" inconclusive="0" passedButRunAborted="0" notRunnable="0" notExecuted="0" disconnected="0" warning="0" completed="0" inProgress="0" pending="0" />
+    <Output>
+      <StdOut>[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v2.5.6+bf9b858c26 (64-bit .NET 8.0.32)&#xD;
+[xUnit.net 00:00:00.46]   Discovering: ThinkOnErp.TicketAudit.Tests&#xD;
+[xUnit.net 00:00:00.53]   Discovered:  ThinkOnErp.TicketAudit.Tests&#xD;
+[xUnit.net 00:00:00.54]   Starting:    ThinkOnErp.TicketAudit.Tests&#xD;
+info: Microsoft.AspNetCore.DataProtection.KeyManagement.XmlKeyManager[63]&#xD;
+      User profile is available. Using 'C:\Users\Khaled\AppData\Local\ASP.NET\DataProtection-Keys' as key repository and Windows DPAPI to encrypt keys at rest.&#xD;
+warn: Microsoft.EntityFrameworkCore.Model.Validation[10622]&#xD;
+      Entity 'SalaryStructure' has a global query filter defined and is the required end of a relationship with the entity 'SalaryStructureLine'. This may lead to unexpected results when the required entity is filtered out. Either configure the navigation as optional, or define matching query filters for both entities in the navigation. See https://go.microsoft.com/fwlink/?linkid=2131316 for more information.&#xD;
+[xUnit.net 00:00:04.61]       System.AggregateException : An error occurred while writing to logger(s). (Cannot open log for source '.NET Runtime'. You may not have write access.)&#xD;
+[xUnit.net 00:00:04.61]       ---- System.InvalidOperationException : Cannot open log for source '.NET Runtime'. You may not have write access.&#xD;
+[xUnit.net 00:00:04.61]       -------- System.ComponentModel.Win32Exception : Access is denied.&#xD;
+[xUnit.net 00:00:04.61]       Stack Trace:&#xD;
+[xUnit.net 00:00:04.61]            at Microsoft.Extensions.Logging.Logger.ThrowLoggingError(List`1 exceptions)&#xD;
+[xUnit.net 00:00:04.61]            at Microsoft.Extensions.Logging.Logger.Log[TState](LogLevel logLevel, EventId eventId, TState state, Exception exception, Func`3 formatter)&#xD;
+[xUnit.net 00:00:04.61]            at Microsoft.Extensions.Logging.LoggerMessage.&lt;&gt;c__DisplayClass12_0`2.&lt;Define&gt;g__Log|0(ILogger logger, T1 arg1, T2 arg2, Exception exception)&#xD;
+[xUnit.net 00:00:04.61]            at Microsoft.EntityFrameworkCore.Diagnostics.EventDefinition`2.Log[TLoggerCategory](IDiagnosticsLogger`1 logger, TParam1 arg1, TParam2 arg2)&#xD;
+[xUnit.net 00:00:04.61]            at Microsoft.EntityFrameworkCore.Diagnostics.CoreLoggerExtensions.PossibleIncorrectRequiredNavigationWithQueryFilterInteractionWarning(IDiagnosticsLogger`1 diagnostics, IForeignKey foreignKey)&#xD;
+[xUnit.net 00:00:04.61]            at Microsoft.EntityFrameworkCore.Infrastructure.ModelValidator.ValidateQueryFilters(IModel model, IDiagnosticsLogger`1 logger)&#xD;
+[xUnit.net 00:00:04.61]            at Microsoft.EntityFrameworkCore.Infrastructure.ModelValidator.Validate(IModel model, IDiagnosticsLogger`1 logger)&#xD;
+[xUnit.net 00:00:04.61]            at Microsoft.EntityFrameworkCore.InMemory.Infrastructure.Internal.InMemoryModelValidator.Validate(IModel model, IDiagnosticsLogger`1 logger)&#xD;
+[xUnit.net 00:00:04.61]            at Microsoft.EntityFrameworkCore.Infrastructure.ModelRuntimeInitializer.Initialize(IModel model, Boolean designTime, IDiagnosticsLogger`1 validationLogger)&#xD;
+[xUnit.net 00:00:04.61]            at Microsoft.EntityFrameworkCore.Infrastructure.ModelSource.GetModel(DbContext context, ModelCreationDependencies modelCreationDependencies, Boolean designTime)&#xD;
+[xUnit.net 00:00:04.61]            at Microsoft.EntityFrameworkCore.Internal.DbContextServices.CreateModel(Boolean designTime)&#xD;
+[xUnit.net 00:00:04.61]            at Microsoft.EntityFrameworkCore.Internal.DbContextServices.get_Model()&#xD;
+[xUnit.net 00:00:04.61]            at Microsoft.EntityFrameworkCore.Infrastructure.EntityFrameworkServicesBuilder.&lt;&gt;c.&lt;TryAddCoreServices&gt;b__8_4(IServiceProvider p)&#xD;
+[xUnit.net 00:00:04.61]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSiteMain(ServiceCallSite callSite, TArgument argument)&#xD;
+[xUnit.net 00:00:04.61]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitCache(ServiceCallSite callSite, RuntimeResolverContext context, ServiceProviderEngineScope serviceProviderEngine, RuntimeResolverLock lockType)&#xD;
+[xUnit.net 00:00:04.61]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitScopeCache(ServiceCallSite callSite, RuntimeResolverContext context)&#xD;
+[xUnit.net 00:00:04.61]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSite(ServiceCallSite callSite, TArgument argument)&#xD;
+[xUnit.net 00:00:04.61]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitConstructor(ConstructorCallSite constructorCallSite, RuntimeResolverContext context)&#xD;
+[xUnit.net 00:00:04.61]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSiteMain(ServiceCallSite callSite, TArgument argument)&#xD;
+[xUnit.net 00:00:04.61]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitCache(ServiceCallSite callSite, RuntimeResolverContext context, ServiceProviderEngineScope serviceProviderEngine, RuntimeResolverLock lockType)&#xD;
+[xUnit.net 00:00:04.61]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitScopeCache(ServiceCallSite callSite, RuntimeResolverContext context)&#xD;
+[xUnit.net 00:00:04.61]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSite(ServiceCallSite callSite, TArgument argument)&#xD;
+[xUnit.net 00:00:04.61]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitConstructor(ConstructorCallSite constructorCallSite, RuntimeResolverContext context)&#xD;
+[xUnit.net 00:00:04.61]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSiteMain(ServiceCallSite callSite, TArgument argument)&#xD;
+[xUnit.net 00:00:04.61]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitCache(ServiceCallSite callSite, RuntimeResolverContext context, ServiceProviderEngineScope serviceProviderEngine, RuntimeResolverLock lockType)&#xD;
+[xUnit.net 00:00:04.61]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitScopeCache(ServiceCallSite callSite, RuntimeResolverContext context)&#xD;
+[xUnit.net 00:00:04.61]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSite(ServiceCallSite callSite, TArgument argument)&#xD;
+[xUnit.net 00:00:04.61]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitConstructor(ConstructorCallSite constructorCallSite, RuntimeResolverContext context)&#xD;
+[xUnit.net 00:00:04.61]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSiteMain(ServiceCallSite callSite, TArgument argument)&#xD;
+[xUnit.net 00:00:04.61]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitCache(ServiceCallSite callSite, RuntimeResolverContext context, ServiceProviderEngineScope serviceProviderEngine, RuntimeResolverLock lockType)&#xD;
+[xUnit.net 00:00:04.61]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitScopeCache(ServiceCallSite callSite, RuntimeResolverContext context)&#xD;
+[xUnit.net 00:00:04.61]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSite(ServiceCallSite callSite, TArgument argument)&#xD;
+[xUnit.net 00:00:04.61]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitConstructor(ConstructorCallSite constructorCallSite, RuntimeResolverContext context)&#xD;
+[xUnit.net 00:00:04.61]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSiteMain(ServiceCallSite callSite, TArgument argument)&#xD;
+[xUnit.net 00:00:04.61]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitCache(ServiceCallSite callSite, RuntimeResolverContext context, ServiceProviderEngineScope serviceProviderEngine, RuntimeResolverLock lockType)&#xD;
+[xUnit.net 00:00:04.61]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitScopeCache(ServiceCallSite callSite, RuntimeResolverContext context)&#xD;
+[xUnit.net 00:00:04.61]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSite(ServiceCallSite callSite, TArgument argument)&#xD;
+[xUnit.net 00:00:04.61]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitConstructor(ConstructorCallSite constructorCallSite, RuntimeResolverContext context)&#xD;
+[xUnit.net 00:00:04.61]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSiteMain(ServiceCallSite callSite, TArgument argument)&#xD;
+[xUnit.net 00:00:04.61]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitCache(ServiceCallSite callSite, RuntimeResolverContext context, ServiceProviderEngineScope serviceProviderEngine, RuntimeResolverLock lockType)&#xD;
+[xUnit.net 00:00:04.61]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitScopeCache(ServiceCallSite callSite, RuntimeResolverContext context)&#xD;
+[xUnit.net 00:00:04.61]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSite(ServiceCallSite callSite, TArgument argument)&#xD;
+[xUnit.net 00:00:04.61]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.Resolve(ServiceCallSite callSite, ServiceProviderEngineScope scope)&#xD;
+[xUnit.net 00:00:04.61]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.DynamicServiceProviderEngine.&lt;&gt;c__DisplayClass2_0.&lt;RealizeService&gt;b__0(ServiceProviderEngineScope scope)&#xD;
+[xUnit.net 00:00:04.61]            at Microsoft.Extensions.DependencyInjection.ServiceProvider.GetService(ServiceIdentifier serviceIdentifier, ServiceProviderEngineScope serviceProviderEngineScope)&#xD;
+[xUnit.net 00:00:04.61]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.ServiceProviderEngineScope.GetService(Type serviceType)&#xD;
+[xUnit.net 00:00:04.61]            at Microsoft.Extensions.DependencyInjection.ServiceProviderServiceExtensions.GetRequiredService(IServiceProvider provider, Type serviceType)&#xD;
+[xUnit.net 00:00:04.61]            at Microsoft.Extensions.DependencyInjection.ServiceProviderServiceExtensions.GetRequiredService[T](IServiceProvider provider)&#xD;
+[xUnit.net 00:00:04.61]            at Microsoft.EntityFrameworkCore.DbContext.get_DbContextDependencies()&#xD;
+[xUnit.net 00:00:04.61]            at Microsoft.EntityFrameworkCore.DbContext.get_ContextServices()&#xD;
+[xUnit.net 00:00:04.61]            at Microsoft.EntityFrameworkCore.DbContext.get_InternalServiceProvider()&#xD;
+[xUnit.net 00:00:04.61]            at Microsoft.EntityFrameworkCore.DbContext.get_DbContextDependencies()&#xD;
+[xUnit.net 00:00:04.61]            at Microsoft.EntityFrameworkCore.DbContext.Set[TEntity]()&#xD;
+[xUnit.net 00:00:04.61]         C:\Users\Khaled\ThinkOnErp-master2\src\ThinkOnErp.Infrastructure\Data\OracleDbContext.cs(47,0): at ThinkOnErp.Infrastructure.Data.OracleDbContext.get_SysCompanies()&#xD;
+[xUnit.net 00:00:04.61]         C:\Users\Khaled\ThinkOnErp-master2\tests\ThinkOnErp.TicketAudit.Tests\TicketHttpTests.cs(83,0): at TicketHttpTests.Host()&#xD;
+[xUnit.net 00:00:04.61]         C:\Users\Khaled\ThinkOnErp-master2\tests\ThinkOnErp.TicketAudit.Tests\TicketHttpTests.cs(168,0): at TicketHttpTests.FiltersReportsAndPriorityDeadlineUsePersistedData()&#xD;
+[xUnit.net 00:00:04.61]         --- End of stack trace from previous location ---&#xD;
+[xUnit.net 00:00:04.61]         ----- Inner Stack Trace -----&#xD;
+[xUnit.net 00:00:04.61]            at System.Diagnostics.EventLogInternal.OpenForWrite(String currentMachineName)&#xD;
+[xUnit.net 00:00:04.61]            at System.Diagnostics.EventLogInternal.InternalWriteEvent(UInt32 eventID, UInt16 category, EventLogEntryType type, String[] strings, Byte[] rawData, String currentMachineName)&#xD;
+[xUnit.net 00:00:04.61]            at System.Diagnostics.EventLogInternal.WriteEvent(EventInstance instance, Byte[] data, Object[] values)&#xD;
+[xUnit.net 00:00:04.61]            at Microsoft.Extensions.Logging.EventLog.WindowsEventLog.WriteEntry(String message, EventLogEntryType type, Int32 eventID, Int16 category)&#xD;
+[xUnit.net 00:00:04.61]            at Microsoft.Extensions.Logging.EventLog.EventLogLogger.WriteMessage(String message, EventLogEntryType eventLogEntryType, Int32 eventId)&#xD;
+[xUnit.net 00:00:04.61]            at Microsoft.Extensions.Logging.EventLog.EventLogLogger.Log[TState](LogLevel logLevel, EventId eventId, TState state, Exception exception, Func`3 formatter)&#xD;
+[xUnit.net 00:00:04.61]            at Microsoft.Extensions.Logging.Logger.&lt;Log&gt;g__LoggerLog|14_0[TState](LogLevel logLevel, EventId eventId, ILogger logger, Exception exception, Func`3 formatter, List`1&amp; exceptions, TState&amp; state)&#xD;
+[xUnit.net 00:00:04.61]         ----- Inner Stack Trace -----&#xD;
+[xUnit.net 00:00:04.61]         &#xD;
+info: Microsoft.AspNetCore.DataProtection.KeyManagement.XmlKeyManager[63]&#xD;
+      User profile is available. Using 'C:\Users\Khaled\AppData\Local\ASP.NET\DataProtection-Keys' as key repository and Windows DPAPI to encrypt keys at rest.&#xD;
+warn: Microsoft.EntityFrameworkCore.Model.Validation[10622]&#xD;
+      Entity 'SalaryStructure' has a global query filter defined and is the required end of a relationship with the entity 'SalaryStructureLine'. This may lead to unexpected results when the required entity is filtered out. Either configure the navigation as optional, or define matching query filters for both entities in the navigation. See https://go.microsoft.com/fwlink/?linkid=2131316 for more information.&#xD;
+[xUnit.net 00:00:06.65]       System.AggregateException : An error occurred while writing to logger(s). (Cannot open log for source '.NET Runtime'. You may not have write access.)&#xD;
+[xUnit.net 00:00:06.65]       ---- System.InvalidOperationException : Cannot open log for source '.NET Runtime'. You may not have write access.&#xD;
+[xUnit.net 00:00:06.65]       -------- System.ComponentModel.Win32Exception : Access is denied.&#xD;
+[xUnit.net 00:00:06.65]       Stack Trace:&#xD;
+[xUnit.net 00:00:06.65]            at Microsoft.Extensions.Logging.Logger.ThrowLoggingError(List`1 exceptions)&#xD;
+[xUnit.net 00:00:06.65]            at Microsoft.Extensions.Logging.Logger.Log[TState](LogLevel logLevel, EventId eventId, TState state, Exception exception, Func`3 formatter)&#xD;
+[xUnit.net 00:00:06.65]            at Microsoft.Extensions.Logging.LoggerMessage.&lt;&gt;c__DisplayClass12_0`2.&lt;Define&gt;g__Log|0(ILogger logger, T1 arg1, T2 arg2, Exception exception)&#xD;
+[xUnit.net 00:00:06.65]            at Microsoft.EntityFrameworkCore.Diagnostics.EventDefinition`2.Log[TLoggerCategory](IDiagnosticsLogger`1 logger, TParam1 arg1, TParam2 arg2)&#xD;
+[xUnit.net 00:00:06.65]            at Microsoft.EntityFrameworkCore.Diagnostics.CoreLoggerExtensions.PossibleIncorrectRequiredNavigationWithQueryFilterInteractionWarning(IDiagnosticsLogger`1 diagnostics, IForeignKey foreignKey)&#xD;
+[xUnit.net 00:00:06.65]            at Microsoft.EntityFrameworkCore.Infrastructure.ModelValidator.ValidateQueryFilters(IModel model, IDiagnosticsLogger`1 logger)&#xD;
+[xUnit.net 00:00:06.65]            at Microsoft.EntityFrameworkCore.Infrastructure.ModelValidator.Validate(IModel model, IDiagnosticsLogger`1 logger)&#xD;
+[xUnit.net 00:00:06.65]            at Microsoft.EntityFrameworkCore.InMemory.Infrastructure.Internal.InMemoryModelValidator.Validate(IModel model, IDiagnosticsLogger`1 logger)&#xD;
+[xUnit.net 00:00:06.65]            at Microsoft.EntityFrameworkCore.Infrastructure.ModelRuntimeInitializer.Initialize(IModel model, Boolean designTime, IDiagnosticsLogger`1 validationLogger)&#xD;
+[xUnit.net 00:00:06.65]            at Microsoft.EntityFrameworkCore.Infrastructure.ModelSource.GetModel(DbContext context, ModelCreationDependencies modelCreationDependencies, Boolean designTime)&#xD;
+[xUnit.net 00:00:06.65]            at Microsoft.EntityFrameworkCore.Internal.DbContextServices.CreateModel(Boolean designTime)&#xD;
+[xUnit.net 00:00:06.65]            at Microsoft.EntityFrameworkCore.Internal.DbContextServices.get_Model()&#xD;
+[xUnit.net 00:00:06.65]            at Microsoft.EntityFrameworkCore.Infrastructure.EntityFrameworkServicesBuilder.&lt;&gt;c.&lt;TryAddCoreServices&gt;b__8_4(IServiceProvider p)&#xD;
+[xUnit.net 00:00:06.65]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSiteMain(ServiceCallSite callSite, TArgument argument)&#xD;
+[xUnit.net 00:00:06.65]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitCache(ServiceCallSite callSite, RuntimeResolverContext context, ServiceProviderEngineScope serviceProviderEngine, RuntimeResolverLock lockType)&#xD;
+[xUnit.net 00:00:06.65]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitScopeCache(ServiceCallSite callSite, RuntimeResolverContext context)&#xD;
+[xUnit.net 00:00:06.65]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSite(ServiceCallSite callSite, TArgument argument)&#xD;
+[xUnit.net 00:00:06.65]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitConstructor(ConstructorCallSite constructorCallSite, RuntimeResolverContext context)&#xD;
+[xUnit.net 00:00:06.65]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSiteMain(ServiceCallSite callSite, TArgument argument)&#xD;
+[xUnit.net 00:00:06.65]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitCache(ServiceCallSite callSite, RuntimeResolverContext context, ServiceProviderEngineScope serviceProviderEngine, RuntimeResolverLock lockType)&#xD;
+[xUnit.net 00:00:06.65]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitScopeCache(ServiceCallSite callSite, RuntimeResolverContext context)&#xD;
+[xUnit.net 00:00:06.65]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSite(ServiceCallSite callSite, TArgument argument)&#xD;
+[xUnit.net 00:00:06.65]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitConstructor(ConstructorCallSite constructorCallSite, RuntimeResolverContext context)&#xD;
+[xUnit.net 00:00:06.65]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSiteMain(ServiceCallSite callSite, TArgument argument)&#xD;
+[xUnit.net 00:00:06.65]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitCache(ServiceCallSite callSite, RuntimeResolverContext context, ServiceProviderEngineScope serviceProviderEngine, RuntimeResolverLock lockType)&#xD;
+[xUnit.net 00:00:06.65]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitScopeCache(ServiceCallSite callSite, RuntimeResolverContext context)&#xD;
+[xUnit.net 00:00:06.65]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSite(ServiceCallSite callSite, TArgument argument)&#xD;
+[xUnit.net 00:00:06.65]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitConstructor(ConstructorCallSite constructorCallSite, RuntimeResolverContext context)&#xD;
+[xUnit.net 00:00:06.65]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSiteMain(ServiceCallSite callSite, TArgument argument)&#xD;
+[xUnit.net 00:00:06.65]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitCache(ServiceCallSite callSite, RuntimeResolverContext context, ServiceProviderEngineScope serviceProviderEngine, RuntimeResolverLock lockType)&#xD;
+[xUnit.net 00:00:06.65]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitScopeCache(ServiceCallSite callSite, RuntimeResolverContext context)&#xD;
+[xUnit.net 00:00:06.65]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSite(ServiceCallSite callSite, TArgument argument)&#xD;
+[xUnit.net 00:00:06.65]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitConstructor(ConstructorCallSite constructorCallSite, RuntimeResolverContext context)&#xD;
+[xUnit.net 00:00:06.65]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSiteMain(ServiceCallSite callSite, TArgument argument)&#xD;
+[xUnit.net 00:00:06.65]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitCache(ServiceCallSite callSite, RuntimeResolverContext context, ServiceProviderEngineScope serviceProviderEngine, RuntimeResolverLock lockType)&#xD;
+[xUnit.net 00:00:06.65]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitScopeCache(ServiceCallSite callSite, RuntimeResolverContext context)&#xD;
+[xUnit.net 00:00:06.65]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSite(ServiceCallSite callSite, TArgument argument)&#xD;
+[xUnit.net 00:00:06.65]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitConstructor(ConstructorCallSite constructorCallSite, RuntimeResolverContext context)&#xD;
+[xUnit.net 00:00:06.65]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSiteMain(ServiceCallSite callSite, TArgument argument)&#xD;
+[xUnit.net 00:00:06.65]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitCache(ServiceCallSite callSite, RuntimeResolverContext context, ServiceProviderEngineScope serviceProviderEngine, RuntimeResolverLock lockType)&#xD;
+[xUnit.net 00:00:06.65]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitScopeCache(ServiceCallSite callSite, RuntimeResolverContext context)&#xD;
+[xUnit.net 00:00:06.65]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSite(ServiceCallSite callSite, TArgument argument)&#xD;
+[xUnit.net 00:00:06.65]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.Resolve(ServiceCallSite callSite, ServiceProviderEngineScope scope)&#xD;
+[xUnit.net 00:00:06.65]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.DynamicServiceProviderEngine.&lt;&gt;c__DisplayClass2_0.&lt;RealizeService&gt;b__0(ServiceProviderEngineScope scope)&#xD;
+[xUnit.net 00:00:06.65]            at Microsoft.Extensions.DependencyInjection.ServiceProvider.GetService(ServiceIdentifier serviceIdentifier, ServiceProviderEngineScope serviceProviderEngineScope)&#xD;
+[xUnit.net 00:00:06.65]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.ServiceProviderEngineScope.GetService(Type serviceType)&#xD;
+[xUnit.net 00:00:06.65]            at Microsoft.Extensions.DependencyInjection.ServiceProviderServiceExtensions.GetRequiredService(IServiceProvider provider, Type serviceType)&#xD;
+[xUnit.net 00:00:06.65]            at Microsoft.Extensions.DependencyInjection.ServiceProviderServiceExtensions.GetRequiredService[T](IServiceProvider provider)&#xD;
+[xUnit.net 00:00:06.65]            at Microsoft.EntityFrameworkCore.DbContext.get_DbContextDependencies()&#xD;
+[xUnit.net 00:00:06.65]            at Microsoft.EntityFrameworkCore.DbContext.get_ContextServices()&#xD;
+[xUnit.net 00:00:06.65]            at Microsoft.EntityFrameworkCore.DbContext.get_InternalServiceProvider()&#xD;
+[xUnit.net 00:00:06.65]            at Microsoft.EntityFrameworkCore.DbContext.get_DbContextDependencies()&#xD;
+[xUnit.net 00:00:06.65]            at Microsoft.EntityFrameworkCore.DbContext.Set[TEntity]()&#xD;
+[xUnit.net 00:00:06.65]         C:\Users\Khaled\ThinkOnErp-master2\src\ThinkOnErp.Infrastructure\Data\OracleDbContext.cs(47,0): at ThinkOnErp.Infrastructure.Data.OracleDbContext.get_SysCompanies()&#xD;
+[xUnit.net 00:00:06.65]         C:\Users\Khaled\ThinkOnErp-master2\tests\ThinkOnErp.TicketAudit.Tests\TicketHttpTests.cs(83,0): at TicketHttpTests.Host()&#xD;
+[xUnit.net 00:00:06.65]         C:\Users\Khaled\ThinkOnErp-master2\tests\ThinkOnErp.TicketAudit.Tests\TicketHttpTests.cs(115,0): at TicketHttpTests.LifecycleAcrossRolesPersistsAndPreventsForeignAccess()&#xD;
+[xUnit.net 00:00:06.65]         --- End of stack trace from previous location ---&#xD;
+[xUnit.net 00:00:06.65]         ----- Inner Stack Trace -----&#xD;
+[xUnit.net 00:00:06.65]            at System.Diagnostics.EventLogInternal.OpenForWrite(String currentMachineName)&#xD;
+[xUnit.net 00:00:06.65]            at System.Diagnostics.EventLogInternal.InternalWriteEvent(UInt32 eventID, UInt16 category, EventLogEntryType type, String[] strings, Byte[] rawData, String currentMachineName)&#xD;
+[xUnit.net 00:00:06.65]            at System.Diagnostics.EventLogInternal.WriteEvent(EventInstance instance, Byte[] data, Object[] values)&#xD;
+[xUnit.net 00:00:06.65]            at Microsoft.Extensions.Logging.EventLog.WindowsEventLog.WriteEntry(String message, EventLogEntryType type, Int32 eventID, Int16 category)&#xD;
+[xUnit.net 00:00:06.65]            at Microsoft.Extensions.Logging.EventLog.EventLogLogger.WriteMessage(String message, EventLogEntryType eventLogEntryType, Int32 eventId)&#xD;
+[xUnit.net 00:00:06.65]            at Microsoft.Extensions.Logging.EventLog.EventLogLogger.Log[TState](LogLevel logLevel, EventId eventId, TState state, Exception exception, Func`3 formatter)&#xD;
+[xUnit.net 00:00:06.65]            at Microsoft.Extensions.Logging.Logger.&lt;Log&gt;g__LoggerLog|14_0[TState](LogLevel logLevel, EventId eventId, ILogger logger, Exception exception, Func`3 formatter, List`1&amp; exceptions, TState&amp; state)&#xD;
+[xUnit.net 00:00:06.65]         ----- Inner Stack Trace -----&#xD;
+[xUnit.net 00:00:06.65]         &#xD;
+info: Microsoft.AspNetCore.DataProtection.KeyManagement.XmlKeyManager[63]&#xD;
+      User profile is available. Using 'C:\Users\Khaled\AppData\Local\ASP.NET\DataProtection-Keys' as key repository and Windows DPAPI to encrypt keys at rest.&#xD;
+warn: Microsoft.EntityFrameworkCore.Model.Validation[10622]&#xD;
+      Entity 'SalaryStructure' has a global query filter defined and is the required end of a relationship with the entity 'SalaryStructureLine'. This may lead to unexpected results when the required entity is filtered out. Either configure the navigation as optional, or define matching query filters for both entities in the navigation. See https://go.microsoft.com/fwlink/?linkid=2131316 for more information.&#xD;
+[xUnit.net 00:00:08.04]       System.AggregateException : An error occurred while writing to logger(s). (Cannot open log for source '.NET Runtime'. You may not have write access.)&#xD;
+[xUnit.net 00:00:08.04]       ---- System.InvalidOperationException : Cannot open log for source '.NET Runtime'. You may not have write access.&#xD;
+[xUnit.net 00:00:08.04]       -------- System.ComponentModel.Win32Exception : Access is denied.&#xD;
+[xUnit.net 00:00:08.04]       Stack Trace:&#xD;
+[xUnit.net 00:00:08.04]            at Microsoft.Extensions.Logging.Logger.ThrowLoggingError(List`1 exceptions)&#xD;
+[xUnit.net 00:00:08.04]            at Microsoft.Extensions.Logging.Logger.Log[TState](LogLevel logLevel, EventId eventId, TState state, Exception exception, Func`3 formatter)&#xD;
+[xUnit.net 00:00:08.04]            at Microsoft.Extensions.Logging.LoggerMessage.&lt;&gt;c__DisplayClass12_0`2.&lt;Define&gt;g__Log|0(ILogger logger, T1 arg1, T2 arg2, Exception exception)&#xD;
+[xUnit.net 00:00:08.04]            at Microsoft.EntityFrameworkCore.Diagnostics.EventDefinition`2.Log[TLoggerCategory](IDiagnosticsLogger`1 logger, TParam1 arg1, TParam2 arg2)&#xD;
+[xUnit.net 00:00:08.04]            at Microsoft.EntityFrameworkCore.Diagnostics.CoreLoggerExtensions.PossibleIncorrectRequiredNavigationWithQueryFilterInteractionWarning(IDiagnosticsLogger`1 diagnostics, IForeignKey foreignKey)&#xD;
+[xUnit.net 00:00:08.04]            at Microsoft.EntityFrameworkCore.Infrastructure.ModelValidator.ValidateQueryFilters(IModel model, IDiagnosticsLogger`1 logger)&#xD;
+[xUnit.net 00:00:08.04]            at Microsoft.EntityFrameworkCore.Infrastructure.ModelValidator.Validate(IModel model, IDiagnosticsLogger`1 logger)&#xD;
+[xUnit.net 00:00:08.04]            at Microsoft.EntityFrameworkCore.InMemory.Infrastructure.Internal.InMemoryModelValidator.Validate(IModel model, IDiagnosticsLogger`1 logger)&#xD;
+[xUnit.net 00:00:08.04]            at Microsoft.EntityFrameworkCore.Infrastructure.ModelRuntimeInitializer.Initialize(IModel model, Boolean designTime, IDiagnosticsLogger`1 validationLogger)&#xD;
+[xUnit.net 00:00:08.04]            at Microsoft.EntityFrameworkCore.Infrastructure.ModelSource.GetModel(DbContext context, ModelCreationDependencies modelCreationDependencies, Boolean designTime)&#xD;
+[xUnit.net 00:00:08.04]            at Microsoft.EntityFrameworkCore.Internal.DbContextServices.CreateModel(Boolean designTime)&#xD;
+[xUnit.net 00:00:08.04]            at Microsoft.EntityFrameworkCore.Internal.DbContextServices.get_Model()&#xD;
+[xUnit.net 00:00:08.04]            at Microsoft.EntityFrameworkCore.Infrastructure.EntityFrameworkServicesBuilder.&lt;&gt;c.&lt;TryAddCoreServices&gt;b__8_4(IServiceProvider p)&#xD;
+[xUnit.net 00:00:08.04]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSiteMain(ServiceCallSite callSite, TArgument argument)&#xD;
+[xUnit.net 00:00:08.04]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitCache(ServiceCallSite callSite, RuntimeResolverContext context, ServiceProviderEngineScope serviceProviderEngine, RuntimeResolverLock lockType)&#xD;
+[xUnit.net 00:00:08.04]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitScopeCache(ServiceCallSite callSite, RuntimeResolverContext context)&#xD;
+[xUnit.net 00:00:08.04]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSite(ServiceCallSite callSite, TArgument argument)&#xD;
+[xUnit.net 00:00:08.04]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitConstructor(ConstructorCallSite constructorCallSite, RuntimeResolverContext context)&#xD;
+[xUnit.net 00:00:08.04]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSiteMain(ServiceCallSite callSite, TArgument argument)&#xD;
+[xUnit.net 00:00:08.04]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitCache(ServiceCallSite callSite, RuntimeResolverContext context, ServiceProviderEngineScope serviceProviderEngine, RuntimeResolverLock lockType)&#xD;
+[xUnit.net 00:00:08.04]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitScopeCache(ServiceCallSite callSite, RuntimeResolverContext context)&#xD;
+[xUnit.net 00:00:08.04]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSite(ServiceCallSite callSite, TArgument argument)&#xD;
+[xUnit.net 00:00:08.04]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitConstructor(ConstructorCallSite constructorCallSite, RuntimeResolverContext context)&#xD;
+[xUnit.net 00:00:08.04]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSiteMain(ServiceCallSite callSite, TArgument argument)&#xD;
+[xUnit.net 00:00:08.04]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitCache(ServiceCallSite callSite, RuntimeResolverContext context, ServiceProviderEngineScope serviceProviderEngine, RuntimeResolverLock lockType)&#xD;
+[xUnit.net 00:00:08.04]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitScopeCache(ServiceCallSite callSite, RuntimeResolverContext context)&#xD;
+[xUnit.net 00:00:08.04]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSite(ServiceCallSite callSite, TArgument argument)&#xD;
+[xUnit.net 00:00:08.04]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitConstructor(ConstructorCallSite constructorCallSite, RuntimeResolverContext context)&#xD;
+[xUnit.net 00:00:08.04]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSiteMain(ServiceCallSite callSite, TArgument argument)&#xD;
+[xUnit.net 00:00:08.04]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitCache(ServiceCallSite callSite, RuntimeResolverContext context, ServiceProviderEngineScope serviceProviderEngine, RuntimeResolverLock lockType)&#xD;
+[xUnit.net 00:00:08.04]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitScopeCache(ServiceCallSite callSite, RuntimeResolverContext context)&#xD;
+[xUnit.net 00:00:08.04]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSite(ServiceCallSite callSite, TArgument argument)&#xD;
+[xUnit.net 00:00:08.04]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitConstructor(ConstructorCallSite constructorCallSite, RuntimeResolverContext context)&#xD;
+[xUnit.net 00:00:08.04]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSiteMain(ServiceCallSite callSite, TArgument argument)&#xD;
+[xUnit.net 00:00:08.04]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitCache(ServiceCallSite callSite, RuntimeResolverContext context, ServiceProviderEngineScope serviceProviderEngine, RuntimeResolverLock lockType)&#xD;
+[xUnit.net 00:00:08.04]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitScopeCache(ServiceCallSite callSite, RuntimeResolverContext context)&#xD;
+[xUnit.net 00:00:08.04]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSite(ServiceCallSite callSite, TArgument argument)&#xD;
+[xUnit.net 00:00:08.04]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitConstructor(ConstructorCallSite constructorCallSite, RuntimeResolverContext context)&#xD;
+[xUnit.net 00:00:08.04]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSiteMain(ServiceCallSite callSite, TArgument argument)&#xD;
+[xUnit.net 00:00:08.04]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitCache(ServiceCallSite callSite, RuntimeResolverContext context, ServiceProviderEngineScope serviceProviderEngine, RuntimeResolverLock lockType)&#xD;
+[xUnit.net 00:00:08.04]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitScopeCache(ServiceCallSite callSite, RuntimeResolverContext context)&#xD;
+[xUnit.net 00:00:08.04]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSite(ServiceCallSite callSite, TArgument argument)&#xD;
+[xUnit.net 00:00:08.04]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.Resolve(ServiceCallSite callSite, ServiceProviderEngineScope scope)&#xD;
+[xUnit.net 00:00:08.04]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.DynamicServiceProviderEngine.&lt;&gt;c__DisplayClass2_0.&lt;RealizeService&gt;b__0(ServiceProviderEngineScope scope)&#xD;
+[xUnit.net 00:00:08.04]            at Microsoft.Extensions.DependencyInjection.ServiceProvider.GetService(ServiceIdentifier serviceIdentifier, ServiceProviderEngineScope serviceProviderEngineScope)&#xD;
+[xUnit.net 00:00:08.04]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.ServiceProviderEngineScope.GetService(Type serviceType)&#xD;
+[xUnit.net 00:00:08.04]            at Microsoft.Extensions.DependencyInjection.ServiceProviderServiceExtensions.GetRequiredService(IServiceProvider provider, Type serviceType)&#xD;
+[xUnit.net 00:00:08.04]            at Microsoft.Extensions.DependencyInjection.ServiceProviderServiceExtensions.GetRequiredService[T](IServiceProvider provider)&#xD;
+[xUnit.net 00:00:08.04]            at Microsoft.EntityFrameworkCore.DbContext.get_DbContextDependencies()&#xD;
+[xUnit.net 00:00:08.04]            at Microsoft.EntityFrameworkCore.DbContext.get_ContextServices()&#xD;
+[xUnit.net 00:00:08.04]            at Microsoft.EntityFrameworkCore.DbContext.get_InternalServiceProvider()&#xD;
+[xUnit.net 00:00:08.04]            at Microsoft.EntityFrameworkCore.DbContext.get_DbContextDependencies()&#xD;
+[xUnit.net 00:00:08.04]            at Microsoft.EntityFrameworkCore.DbContext.Set[TEntity]()&#xD;
+[xUnit.net 00:00:08.04]         C:\Users\Khaled\ThinkOnErp-master2\src\ThinkOnErp.Infrastructure\Data\OracleDbContext.cs(47,0): at ThinkOnErp.Infrastructure.Data.OracleDbContext.get_SysCompanies()&#xD;
+[xUnit.net 00:00:08.04]         C:\Users\Khaled\ThinkOnErp-master2\tests\ThinkOnErp.TicketAudit.Tests\TicketHttpTests.cs(83,0): at TicketHttpTests.Host()&#xD;
+[xUnit.net 00:00:08.04]         C:\Users\Khaled\ThinkOnErp-master2\tests\ThinkOnErp.TicketAudit.Tests\TicketHttpTests.cs(150,0): at TicketHttpTests.UnauthenticatedAndSuperWithoutCompanyAreRejected()&#xD;
+[xUnit.net 00:00:08.04]         --- End of stack trace from previous location ---&#xD;
+[xUnit.net 00:00:08.04]         ----- Inner Stack Trace -----&#xD;
+[xUnit.net 00:00:08.04]            at System.Diagnostics.EventLogInternal.OpenForWrite(String currentMachineName)&#xD;
+[xUnit.net 00:00:08.04]            at System.Diagnostics.EventLogInternal.InternalWriteEvent(UInt32 eventID, UInt16 category, EventLogEntryType type, String[] strings, Byte[] rawData, String currentMachineName)&#xD;
+[xUnit.net 00:00:08.04]            at System.Diagnostics.EventLogInternal.WriteEvent(EventInstance instance, Byte[] data, Object[] values)&#xD;
+[xUnit.net 00:00:08.04]            at Microsoft.Extensions.Logging.EventLog.WindowsEventLog.WriteEntry(String message, EventLogEntryType type, Int32 eventID, Int16 category)&#xD;
+[xUnit.net 00:00:08.04]            at Microsoft.Extensions.Logging.EventLog.EventLogLogger.WriteMessage(String message, EventLogEntryType eventLogEntryType, Int32 eventId)&#xD;
+[xUnit.net 00:00:08.04]            at Microsoft.Extensions.Logging.EventLog.EventLogLogger.Log[TState](LogLevel logLevel, EventId eventId, TState state, Exception exception, Func`3 formatter)&#xD;
+[xUnit.net 00:00:08.04]            at Microsoft.Extensions.Logging.Logger.&lt;Log&gt;g__LoggerLog|14_0[TState](LogLevel logLevel, EventId eventId, ILogger logger, Exception exception, Func`3 formatter, List`1&amp; exceptions, TState&amp; state)&#xD;
+[xUnit.net 00:00:08.04]         ----- Inner Stack Trace -----&#xD;
+[xUnit.net 00:00:08.04]         &#xD;
+info: Microsoft.AspNetCore.DataProtection.KeyManagement.XmlKeyManager[63]&#xD;
+      User profile is available. Using 'C:\Users\Khaled\AppData\Local\ASP.NET\DataProtection-Keys' as key repository and Windows DPAPI to encrypt keys at rest.&#xD;
+warn: Microsoft.EntityFrameworkCore.Model.Validation[10622]&#xD;
+      Entity 'SalaryStructure' has a global query filter defined and is the required end of a relationship with the entity 'SalaryStructureLine'. This may lead to unexpected results when the required entity is filtered out. Either configure the navigation as optional, or define matching query filters for both entities in the navigation. See https://go.microsoft.com/fwlink/?linkid=2131316 for more information.&#xD;
+[xUnit.net 00:00:08.93]       System.AggregateException : An error occurred while writing to logger(s). (Cannot open log for source '.NET Runtime'. You may not have write access.)&#xD;
+[xUnit.net 00:00:08.93]       ---- System.InvalidOperationException : Cannot open log for source '.NET Runtime'. You may not have write access.&#xD;
+[xUnit.net 00:00:08.93]       -------- System.ComponentModel.Win32Exception : Access is denied.&#xD;
+[xUnit.net 00:00:08.93]       Stack Trace:&#xD;
+[xUnit.net 00:00:08.93]            at Microsoft.Extensions.Logging.Logger.ThrowLoggingError(List`1 exceptions)&#xD;
+[xUnit.net 00:00:08.93]            at Microsoft.Extensions.Logging.Logger.Log[TState](LogLevel logLevel, EventId eventId, TState state, Exception exception, Func`3 formatter)&#xD;
+[xUnit.net 00:00:08.93]            at Microsoft.Extensions.Logging.LoggerMessage.&lt;&gt;c__DisplayClass12_0`2.&lt;Define&gt;g__Log|0(ILogger logger, T1 arg1, T2 arg2, Exception exception)&#xD;
+[xUnit.net 00:00:08.93]            at Microsoft.EntityFrameworkCore.Diagnostics.EventDefinition`2.Log[TLoggerCategory](IDiagnosticsLogger`1 logger, TParam1 arg1, TParam2 arg2)&#xD;
+[xUnit.net 00:00:08.93]            at Microsoft.EntityFrameworkCore.Diagnostics.CoreLoggerExtensions.PossibleIncorrectRequiredNavigationWithQueryFilterInteractionWarning(IDiagnosticsLogger`1 diagnostics, IForeignKey foreignKey)&#xD;
+[xUnit.net 00:00:08.93]            at Microsoft.EntityFrameworkCore.Infrastructure.ModelValidator.ValidateQueryFilters(IModel model, IDiagnosticsLogger`1 logger)&#xD;
+[xUnit.net 00:00:08.93]            at Microsoft.EntityFrameworkCore.Infrastructure.ModelValidator.Validate(IModel model, IDiagnosticsLogger`1 logger)&#xD;
+[xUnit.net 00:00:08.93]            at Microsoft.EntityFrameworkCore.InMemory.Infrastructure.Internal.InMemoryModelValidator.Validate(IModel model, IDiagnosticsLogger`1 logger)&#xD;
+[xUnit.net 00:00:08.93]            at Microsoft.EntityFrameworkCore.Infrastructure.ModelRuntimeInitializer.Initialize(IModel model, Boolean designTime, IDiagnosticsLogger`1 validationLogger)&#xD;
+[xUnit.net 00:00:08.93]            at Microsoft.EntityFrameworkCore.Infrastructure.ModelSource.GetModel(DbContext context, ModelCreationDependencies modelCreationDependencies, Boolean designTime)&#xD;
+[xUnit.net 00:00:08.93]            at Microsoft.EntityFrameworkCore.Internal.DbContextServices.CreateModel(Boolean designTime)&#xD;
+[xUnit.net 00:00:08.93]            at Microsoft.EntityFrameworkCore.Internal.DbContextServices.get_Model()&#xD;
+[xUnit.net 00:00:08.93]            at Microsoft.EntityFrameworkCore.Infrastructure.EntityFrameworkServicesBuilder.&lt;&gt;c.&lt;TryAddCoreServices&gt;b__8_4(IServiceProvider p)&#xD;
+[xUnit.net 00:00:08.93]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitCache(ServiceCallSite callSite, RuntimeResolverContext context, ServiceProviderEngineScope serviceProviderEngine, RuntimeResolverLock lockType)&#xD;
+[xUnit.net 00:00:08.93]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitScopeCache(ServiceCallSite callSite, RuntimeResolverContext context)&#xD;
+[xUnit.net 00:00:08.93]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSite(ServiceCallSite callSite, TArgument argument)&#xD;
+[xUnit.net 00:00:08.93]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitConstructor(ConstructorCallSite constructorCallSite, RuntimeResolverContext context)&#xD;
+[xUnit.net 00:00:08.93]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitCache(ServiceCallSite callSite, RuntimeResolverContext context, ServiceProviderEngineScope serviceProviderEngine, RuntimeResolverLock lockType)&#xD;
+[xUnit.net 00:00:08.93]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitScopeCache(ServiceCallSite callSite, RuntimeResolverContext context)&#xD;
+[xUnit.net 00:00:08.93]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSite(ServiceCallSite callSite, TArgument argument)&#xD;
+[xUnit.net 00:00:08.93]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitConstructor(ConstructorCallSite constructorCallSite, RuntimeResolverContext context)&#xD;
+[xUnit.net 00:00:08.93]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitCache(ServiceCallSite callSite, RuntimeResolverContext context, ServiceProviderEngineScope serviceProviderEngine, RuntimeResolverLock lockType)&#xD;
+[xUnit.net 00:00:08.93]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitScopeCache(ServiceCallSite callSite, RuntimeResolverContext context)&#xD;
+[xUnit.net 00:00:08.93]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSite(ServiceCallSite callSite, TArgument argument)&#xD;
+[xUnit.net 00:00:08.93]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitConstructor(ConstructorCallSite constructorCallSite, RuntimeResolverContext context)&#xD;
+[xUnit.net 00:00:08.93]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitCache(ServiceCallSite callSite, RuntimeResolverContext context, ServiceProviderEngineScope serviceProviderEngine, RuntimeResolverLock lockType)&#xD;
+[xUnit.net 00:00:08.93]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitScopeCache(ServiceCallSite callSite, RuntimeResolverContext context)&#xD;
+[xUnit.net 00:00:08.93]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSite(ServiceCallSite callSite, TArgument argument)&#xD;
+[xUnit.net 00:00:08.93]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitConstructor(ConstructorCallSite constructorCallSite, RuntimeResolverContext context)&#xD;
+[xUnit.net 00:00:08.93]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitCache(ServiceCallSite callSite, RuntimeResolverContext context, ServiceProviderEngineScope serviceProviderEngine, RuntimeResolverLock lockType)&#xD;
+[xUnit.net 00:00:08.93]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitScopeCache(ServiceCallSite callSite, RuntimeResolverContext context)&#xD;
+[xUnit.net 00:00:08.93]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSite(ServiceCallSite callSite, TArgument argument)&#xD;
+[xUnit.net 00:00:08.93]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitConstructor(ConstructorCallSite constructorCallSite, RuntimeResolverContext context)&#xD;
+[xUnit.net 00:00:08.93]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitCache(ServiceCallSite callSite, RuntimeResolverContext context, ServiceProviderEngineScope serviceProviderEngine, RuntimeResolverLock lockType)&#xD;
+[xUnit.net 00:00:08.93]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.VisitScopeCache(ServiceCallSite callSite, RuntimeResolverContext context)&#xD;
+[xUnit.net 00:00:08.93]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteVisitor`2.VisitCallSite(ServiceCallSite callSite, TArgument argument)&#xD;
+[xUnit.net 00:00:08.93]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.CallSiteRuntimeResolver.Resolve(ServiceCallSite callSite, ServiceProviderEngineScope scope)&#xD;
+[xUnit.net 00:00:08.93]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.DynamicServiceProviderEngine.&lt;&gt;c__DisplayClass2_0.&lt;RealizeService&gt;b__0(ServiceProviderEngineScope scope)&#xD;
+[xUnit.net 00:00:08.93]            at Microsoft.Extensions.DependencyInjection.ServiceProvider.GetService(ServiceIdentifier serviceIdentifier, ServiceProviderEngineScope serviceProviderEngineScope)&#xD;
+[xUnit.net 00:00:08.93]            at Microsoft.Extensions.DependencyInjection.ServiceLookup.ServiceProviderEngineScope.GetService(Type serviceType)&#xD;
+[xUnit.net 00:00:08.93]            at Microsoft.Extensions.DependencyInjection.ServiceProviderServiceExtensions.GetRequiredService(IServiceProvider provider, Type serviceType)&#xD;
+[xUnit.net 00:00:08.93]            at Microsoft.Extensions.DependencyInjection.ServiceProviderServiceExtensions.GetRequiredService[T](IServiceProvider provider)&#xD;
+[xUnit.net 00:00:08.93]            at Microsoft.EntityFrameworkCore.DbContext.get_DbContextDependencies()&#xD;
+[xUnit.net 00:00:08.93]            at Microsoft.EntityFrameworkCore.DbContext.get_ContextServices()&#xD;
+[xUnit.net 00:00:08.93]            at Microsoft.EntityFrameworkCore.DbContext.get_InternalServiceProvider()&#xD;
+[xUnit.net 00:00:08.93]            at Microsoft.EntityFrameworkCore.DbContext.get_DbContextDependencies()&#xD;
+[xUnit.net 00:00:08.93]            at Microsoft.EntityFrameworkCore.DbContext.Set[TEntity]()&#xD;
+[xUnit.net 00:00:08.93]         C:\Users\Khaled\ThinkOnErp-master2\src\ThinkOnErp.Infrastructure\Data\OracleDbContext.cs(47,0): at ThinkOnErp.Infrastructure.Data.OracleDbContext.get_SysCompanies()&#xD;
+[xUnit.net 00:00:08.93]         C:\Users\Khaled\ThinkOnErp-master2\tests\ThinkOnErp.TicketAudit.Tests\TicketHttpTests.cs(83,0): at TicketHttpTests.Host()&#xD;
+[xUnit.net 00:00:08.93]         C:\Users\Khaled\ThinkOnErp-master2\tests\ThinkOnErp.TicketAudit.Tests\TicketHttpTests.cs(158,0): at TicketHttpTests.InvalidAttachmentCreatesNoPartialTicket()&#xD;
+[xUnit.net 00:00:08.93]         --- End of stack trace from previous location ---&#xD;
+[xUnit.net 00:00:08.93]         ----- Inner Stack Trace -----&#xD;
+[xUnit.net 00:00:08.93]            at System.Diagnostics.EventLogInternal.OpenForWrite(String currentMachineName)&#xD;
+[xUnit.net 00:00:08.93]            at System.Diagnostics.EventLogInternal.InternalWriteEvent(UInt32 eventID, UInt16 category, EventLogEntryType type, String[] strings, Byte[] rawData, String currentMachineName)&#xD;
+[xUnit.net 00:00:08.93]            at System.Diagnostics.EventLogInternal.WriteEvent(EventInstance instance, Byte[] data, Object[] values)&#xD;
+[xUnit.net 00:00:08.93]            at Microsoft.Extensions.Logging.EventLog.WindowsEventLog.WriteEntry(String message, EventLogEntryType type, Int32 eventID, Int16 category)&#xD;
+[xUnit.net 00:00:08.93]            at Microsoft.Extensions.Logging.EventLog.EventLogLogger.WriteMessage(String message, EventLogEntryType eventLogEntryType, Int32 eventId)&#xD;
+[xUnit.net 00:00:08.93]            at Microsoft.Extensions.Logging.EventLog.EventLogLogger.Log[TState](LogLevel logLevel, EventId eventId, TState state, Exception exception, Func`3 formatter)&#xD;
+[xUnit.net 00:00:08.93]            at Microsoft.Extensions.Logging.Logger.&lt;Log&gt;g__LoggerLog|14_0[TState](LogLevel logLevel, EventId eventId, ILogger logger, Exception exception, Func`3 formatter, List`1&amp; exceptions, TState&amp; state)&#xD;
+[xUnit.net 00:00:08.93]         ----- Inner Stack Trace -----&#xD;
+[xUnit.net 00:00:08.93]         &#xD;
+[xUnit.net 00:00:18.52]       System.OperationCanceledException : The operation was canceled.&#xD;
+[xUnit.net 00:00:18.52]       Stack Trace:&#xD;
+[xUnit.net 00:00:18.52]            at System.Threading.CancellationToken.ThrowOperationCanceledException()&#xD;
+[xUnit.net 00:00:18.52]            at System.Threading.CancellationToken.ThrowIfCancellationRequested()&#xD;
+[xUnit.net 00:00:18.52]            at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.ThrowException(SocketError error, CancellationToken cancellationToken)&#xD;
+[xUnit.net 00:00:18.52]            at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.System.Threading.Tasks.Sources.IValueTaskSource&lt;System.Net.Sockets.Socket&gt;.GetResult(Int16 token)&#xD;
+[xUnit.net 00:00:18.52]            at System.Net.Sockets.TcpListener.&lt;AcceptTcpClientAsync&gt;g__WaitAndWrap|32_0(ValueTask`1 task)&#xD;
+[xUnit.net 00:00:18.52]         C:\Users\Khaled\ThinkOnErp-master2\tests\ThinkOnErp.TicketAudit.Tests\TicketEmailQueueTests.cs(60,0): at TicketEmailQueueTests.Receive(TcpListener listener, CancellationToken cancellation)&#xD;
+[xUnit.net 00:00:18.52]         C:\Users\Khaled\ThinkOnErp-master2\tests\ThinkOnErp.TicketAudit.Tests\TicketEmailQueueTests.cs(50,0): at TicketEmailQueueTests.FailedSmtpIsRetainedThenDeliveredAfterRetry()&#xD;
+[xUnit.net 00:00:18.52]         --- End of stack trace from previous location ---&#xD;
+[xUnit.net 00:00:18.55]   Finished:    ThinkOnErp.TicketAudit.Tests&#xD;
+</StdOut>
+    </Output>
+    <RunInfos>
+      <RunInfo computerName="KHALED" outcome="Error" timestamp="2026-10-25T23:46:39.3471635+03:00">
+        <Text>[xUnit.net 00:00:04.61]     TicketHttpTests.FiltersReportsAndPriorityDeadlineUsePersistedData [FAIL]</Text>
+      </RunInfo>
+      <RunInfo computerName="KHALED" outcome="Error" timestamp="2026-10-25T23:46:41.3868144+03:00">
+        <Text>[xUnit.net 00:00:06.65]     TicketHttpTests.LifecycleAcrossRolesPersistsAndPreventsForeignAccess [FAIL]</Text>
+      </RunInfo>
+      <RunInfo computerName="KHALED" outcome="Error" timestamp="2026-10-25T23:46:42.7750883+03:00">
+        <Text>[xUnit.net 00:00:08.04]     TicketHttpTests.UnauthenticatedAndSuperWithoutCompanyAreRejected [FAIL]</Text>
+      </RunInfo>
+      <RunInfo computerName="KHALED" outcome="Error" timestamp="2026-10-25T23:46:43.6656690+03:00">
+        <Text>[xUnit.net 00:00:08.93]     TicketHttpTests.InvalidAttachmentCreatesNoPartialTicket [FAIL]</Text>
+      </RunInfo>
+      <RunInfo computerName="KHALED" outcome="Error" timestamp="2026-10-25T23:46:53.2634229+03:00">
+        <Text>[xUnit.net 00:00:18.52]     TicketEmailQueueTests.FailedSmtpIsRetainedThenDeliveredAfterRetry [FAIL]</Text>
+      </RunInfo>
+    </RunInfos>
+  </ResultSummary>
+</TestRun>

@@ -9,13 +9,14 @@ public sealed class EmployeeLoan
     public string EmployeeCode { get; set; } = string.Empty;
     public string LoanType { get; set; } = "PERSONAL"; // PERSONAL, HOUSING, EMERGENCY
     public decimal PrincipalAmount { get; set; }
+    public string? CurrencyCode { get; set; } // Explicitly required before new Accounting funding request; legacy NULL is not inferred.
     public decimal MonthlyInstallmentAmount { get; set; }
     public int TotalInstallments { get; set; }
     public decimal TotalPaidAmount { get; set; }
     public decimal RemainingBalance { get; set; }
     public DateTime StartDate { get; set; }
     public DateTime? EndDate { get; set; }
-    public string Status { get; set; } = "PENDING"; // PENDING, APPROVED, ACTIVE, COMPLETED, CANCELLED
+    public string Status { get; set; } = "PENDING"; // APPROVED is HR-only; ACTIVE requires Accounting funding confirmation (INT-08/legacy review).
     public string? ApprovedBy { get; set; }
     public DateTime? ApprovalDate { get; set; }
     public string? Notes { get; set; }
@@ -41,6 +42,7 @@ public sealed class LoanRepaymentSchedule
     public string Status { get; set; } = "PENDING"; // PENDING, PAID, PARTIAL, SKIPPED
     public DateTime? PaidDate { get; set; }
     public long? PayrollRunLineId { get; set; }
+    public long? ReservedByHandoffId { get; set; }
 
     public EmployeeLoan? EmployeeLoan { get; set; }
 }
@@ -50,9 +52,11 @@ public sealed class EmployeeAdvance
     public long Id { get; set; }
     public string EmployeeCode { get; set; } = string.Empty;
     public decimal AdvanceAmount { get; set; }
+    public string? CurrencyCode { get; set; } // Explicitly required before new Accounting funding request; legacy NULL is not inferred.
     public string TargetPayPeriod { get; set; } = string.Empty; // e.g. "2026-09"
     public decimal DeductedAmount { get; set; }
     public decimal RemainingBalance { get; set; }
+    public long? ReservedByHandoffId { get; set; }
     public string Status { get; set; } = "PENDING"; // PENDING, APPROVED, RECOVERED, CANCELLED
     public string? ApprovedBy { get; set; }
     public DateTime? ApprovalDate { get; set; }
@@ -76,7 +80,16 @@ public sealed class PayrollAdjustment
     public string AdjustmentType { get; set; } = "EARNING"; // EARNING, DEDUCTION
     public decimal Amount { get; set; }
     public string? Description { get; set; }
-    public string Status { get; set; } = "APPROVED"; // PENDING, APPROVED, PROCESSED, REJECTED
+    public string? DecisionReason { get; set; }
+    public string? SourceType { get; set; }
+    public string? SourceId { get; set; }
+    public long? SourceBranchId { get; set; }
+    public DateTime? SourceAttendanceDate { get; set; }
+    public decimal? SourceOvertimeHours { get; set; }
+    public decimal? SourceBaseSalary { get; set; }
+    public string? SourceDayType { get; set; }
+    public string? SourceCurrencyCode { get; set; }
+    public string Status { get; set; } = "PENDING"; // PENDING, APPROVED, PROCESSED, REJECTED
     public long? PayrollRunLineId { get; set; }
 
     public string CreationUser { get; set; } = string.Empty;

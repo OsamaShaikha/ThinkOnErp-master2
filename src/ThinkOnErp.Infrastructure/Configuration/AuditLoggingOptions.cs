@@ -49,7 +49,8 @@ public class AuditLoggingOptions
     [MinLength(1, ErrorMessage = "At least one sensitive field must be specified")]
     public string[] SensitiveFields { get; set; } = 
     {
-        "password", "token", "refreshToken", "creditCard", "ssn", "socialSecurityNumber"
+        "password", "token", "refreshToken", "creditCard", "ssn", "socialSecurityNumber",
+        "nationalId", "passportNumber", "bankAccountNumber", "bankIban", "iban", "sscNumber"
     };
 
     /// <summary>

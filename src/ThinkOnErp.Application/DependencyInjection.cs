@@ -110,6 +110,15 @@ public static class DependencyInjection
         // HR & Dynamic Payroll Engine Services
         services.AddScoped<ThinkOnErp.Application.Services.Hr.IWorkCalendarService, ThinkOnErp.Application.Services.Hr.WorkCalendarService>();
         services.AddScoped<ThinkOnErp.Application.Services.Hr.IAttendanceCalculationEngine, ThinkOnErp.Application.Services.Hr.AttendanceCalculationEngine>();
+        services.AddScoped<ThinkOnErp.Application.Services.Hr.IEffectiveShiftService, ThinkOnErp.Application.Services.Hr.EffectiveShiftService>();
+        services.AddScoped<ThinkOnErp.Application.Services.Hr.IShiftDefinitionService, ThinkOnErp.Application.Services.Hr.ShiftDefinitionService>();
+        services.AddScoped<ThinkOnErp.Application.Services.Hr.IShiftAssignmentService, ThinkOnErp.Application.Services.Hr.ShiftAssignmentService>();
+        services.AddScoped<ThinkOnErp.Application.Services.Hr.IShiftDayService, ThinkOnErp.Application.Services.Hr.ShiftDayService>();
+        services.AddScoped<ThinkOnErp.Application.Services.Hr.IShiftGenerationService, ThinkOnErp.Application.Services.Hr.ShiftGenerationService>();
+        services.AddScoped<ThinkOnErp.Application.Services.Hr.IShiftTimingService, ThinkOnErp.Application.Services.Hr.ShiftTimingService>();
+        services.AddScoped<ThinkOnErp.Application.Services.Hr.IAttendanceDayClassifier, ThinkOnErp.Application.Services.Hr.AttendanceDayClassifier>();
+        services.AddScoped<ThinkOnErp.Application.Services.Hr.IAttendanceDayStatusService, ThinkOnErp.Application.Services.Hr.AttendanceDayStatusService>();
+        services.AddScoped<ThinkOnErp.Application.Services.Hr.IRawAttendanceProcessingService, ThinkOnErp.Application.Services.Hr.RawAttendanceProcessingService>();
         services.AddScoped<ThinkOnErp.Application.Services.Hr.IAttendanceCorrectionService, ThinkOnErp.Application.Services.Hr.AttendanceCorrectionService>();
         services.AddScoped<ThinkOnErp.Application.Services.Hr.IGeoLocationService, ThinkOnErp.Application.Services.Hr.GeoLocationService>();
         services.AddScoped<ThinkOnErp.Application.Services.Hr.IHrAttendanceService, ThinkOnErp.Application.Services.Hr.HrAttendanceService>();
@@ -123,9 +132,15 @@ public static class DependencyInjection
         services.AddScoped<ThinkOnErp.Application.Services.Hr.IPayrollValidationService, ThinkOnErp.Application.Services.Hr.PayrollValidationService>();
         services.AddScoped<ThinkOnErp.Application.Services.Hr.IPayrollExplanationService, ThinkOnErp.Application.Services.Hr.PayrollExplanationService>();
         services.AddScoped<ThinkOnErp.Application.Services.Hr.IPayrollService, ThinkOnErp.Application.Services.Hr.PayrollService>();
-        services.AddScoped<ThinkOnErp.Application.Services.Hr.IEmployeeService, ThinkOnErp.Application.Services.Hr.EmployeeService>();
+        services.AddScoped<ThinkOnErp.Application.Services.Hr.EmployeeFieldAccess>();
+        // HR Employees: handlers live in Features/Hr/Employees (registered by the MediatR assembly scan).
+        services.AddScoped(sp => new ThinkOnErp.Application.Features.Hr.Employees.Common.EmployeeFieldGuard(
+            sp.GetRequiredService<ThinkOnErp.Application.Services.Hr.EmployeeFieldAccess>()));
         services.AddScoped<ThinkOnErp.Application.Services.Hr.ILeaveService, ThinkOnErp.Application.Services.Hr.LeaveService>();
-        services.AddScoped<ThinkOnErp.Application.Services.Hr.IBankPayrollExportService, ThinkOnErp.Application.Services.Hr.BankPayrollExportService>();
+        services.AddScoped<ThinkOnErp.Application.Services.Hr.IEndOfServiceCalculationEngine, ThinkOnErp.Application.Services.Hr.EndOfServiceCalculationEngine>();
+        services.AddScoped<ThinkOnErp.Application.Services.Hr.IEndOfServiceService, ThinkOnErp.Application.Services.Hr.EndOfServiceService>();
+        services.AddScoped<ThinkOnErp.Application.Services.Hr.IShortLeaveService, ThinkOnErp.Application.Services.Hr.ShortLeaveService>();
+        // Bank export is retained as a tested legacy formatter; INT-07 exposes it from Accounting payment batches.
         services.AddScoped<ThinkOnErp.Application.Services.Hr.IEmployeeExcelService, ThinkOnErp.Application.Services.Hr.EmployeeExcelService>();
 
         return services;

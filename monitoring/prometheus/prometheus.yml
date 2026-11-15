@@ -7,12 +7,13 @@ global:
     cluster: 'thinkonerp'
     environment: 'production'
 
-# Alertmanager configuration (optional)
-alerting:
-  alertmanagers:
-    - static_configs:
-        - targets:
-            - alertmanager:9093
+# Alertmanager is optional and is not part of docker-compose.monitoring.yml.
+# Uncomment and configure an Alertmanager service before enabling alert routing.
+# alerting:
+#   alertmanagers:
+#     - static_configs:
+#         - targets:
+#             - alertmanager:9093
 
 # Load rules once and periodically evaluate them
 rule_files:
@@ -20,6 +21,7 @@ rule_files:
   - "alerts/database-alerts.yml"
   - "alerts/audit-failures-alerts.yml"
   - "alerts/security-alerts.yml"
+  - "alerts/hr-background-alerts.yml"
 
 # Scrape configurations
 scrape_configs:
@@ -49,10 +51,4 @@ scrape_configs:
           service: 'grafana'
     metrics_path: '/metrics'
 
-  # AlertManager monitoring (optional)
-  - job_name: 'alertmanager'
-    static_configs:
-      - targets: ['alertmanager:9093']
-        labels:
-          service: 'alertmanager'
-    metrics_path: '/metrics'
+  # Add an alertmanager scrape job only when a service is configured.

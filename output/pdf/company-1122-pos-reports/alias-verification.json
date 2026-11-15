@@ -1,0 +1,35 @@
+[
+  {
+    "Alias": "drawer-variance",
+    "Status": 200,
+    "Pdf": [
+      "application/pdf"
+    ]
+  },
+  {
+    "Alias": "cash-in-out",
+    "Status": 200,
+    "Pdf": [
+      "application/pdf"
+    ]
+  },
+  {
+    "Alias": "sales-by-table",
+    "Status": 200,
+    "Pdf": [
+      "application/pdf"
+    ]
+  },
+  {
+    "Alias": "open-tables",
+    "Status": 200,
+    "Pdf": [
+      "application/pdf"
+    ]
+  },
+  {
+    "Check": "Historical operator options",
+    "Success": true,
+    "Cashiers": 4
+  }
+]

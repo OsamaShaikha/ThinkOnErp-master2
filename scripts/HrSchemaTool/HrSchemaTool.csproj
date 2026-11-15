@@ -6,6 +6,7 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
   <ItemGroup>
+    <ProjectReference Include="../../src/ThinkOnErp.Application/ThinkOnErp.Application.csproj" />
     <ProjectReference Include="../../src/ThinkOnErp.Infrastructure/ThinkOnErp.Infrastructure.csproj" />
   </ItemGroup>
 </Project>

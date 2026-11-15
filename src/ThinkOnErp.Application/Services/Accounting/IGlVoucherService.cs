@@ -38,4 +38,13 @@ public interface IGlVoucherService
         string username,
         string? reversalReason,
         CancellationToken cancellationToken = default);
+
+    Task<GlVoucherHeaderDto> ReverseVoucherAsync(
+        long id,
+        string username,
+        string? reversalReason,
+        DateTime reversalDate,
+        long fiscalYearId,
+        string serialResetPolicy,
+        CancellationToken cancellationToken = default);
 }

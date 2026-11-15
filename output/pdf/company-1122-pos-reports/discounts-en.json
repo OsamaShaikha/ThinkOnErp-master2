@@ -1,0 +1,447 @@
+{
+  "success": true,
+  "statusCode": 200,
+  "message": "تمت العملية بنجاح.",
+  "data": {
+    "code": "discounts",
+    "title": "Discounts & price adjustments",
+    "isLive": false,
+    "header": {
+      "language": "en",
+      "isRightToLeft": false,
+      "companyName": "debis acc",
+      "branchName": "All accessible branches",
+      "taxNumber": null,
+      "phone": "0796211887",
+      "currency": "JOD",
+      "cashier": "All",
+      "payment": "All",
+      "preparedBy": "admin",
+      "reportNumber": "RPT-20261028-ca03200fecc04",
+      "issuedAtUtc": "2026-10-28T18:00:56.9350443Z",
+      "startDate": "2026-10-01T00:00:00",
+      "endDate": "2026-10-28T00:00:00",
+      "shiftId": null,
+      "tillId": null,
+      "days": [],
+      "payments": [],
+      "totals": {
+        "date": "0001-01-01T00:00:00",
+        "invoices": 0,
+        "sales": 0,
+        "discount": 0,
+        "returns": 0,
+        "net": 0,
+        "tax": 0,
+        "charges": 0,
+        "total": 0
+      },
+      "averageInvoice": 0
+    },
+    "filterNotes": [],
+    "branches": [
+      {
+        "branchId": 1,
+        "branchName": "debis acc",
+        "metrics": [
+          {
+            "label": "Discount amount",
+            "value": "24.650",
+            "unit": "JOD"
+          },
+          {
+            "label": "Discounted orders",
+            "value": "14",
+            "unit": ""
+          },
+          {
+            "label": "Average discount",
+            "value": "1.760",
+            "unit": "JOD"
+          },
+          {
+            "label": "Reasons",
+            "value": "2",
+            "unit": ""
+          }
+        ],
+        "tables": [
+          {
+            "title": "Discount details",
+            "columns": [
+              {
+                "label": "Order / invoice",
+                "numeric": false,
+                "code": true,
+                "width": 1.5
+              },
+              {
+                "label": "Cashier / date",
+                "numeric": false,
+                "code": false,
+                "width": 1.5
+              },
+              {
+                "label": "Scope / item",
+                "numeric": false,
+                "code": false,
+                "width": 1.5
+              },
+              {
+                "label": "Reason",
+                "numeric": false,
+                "code": false,
+                "width": 1.5
+              },
+              {
+                "label": "Discount",
+                "numeric": true,
+                "code": false,
+                "width": 1
+              },
+              {
+                "label": "Rate",
+                "numeric": true,
+                "code": false,
+                "width": 1
+              },
+              {
+                "label": "Subtotal",
+                "numeric": true,
+                "code": false,
+                "width": 1
+              },
+              {
+                "label": "Total",
+                "numeric": true,
+                "code": false,
+                "width": 1
+              }
+            ],
+            "rows": [
+              [
+                "0003\nINV-2026-000151",
+                "admin\n24/10/2026 12:23",
+                "فاتورة (Order)\nكامل الفاتورة",
+                "خصم يدوي / عام",
+                "3.000",
+                "50%",
+                "6.000",
+                "3.000"
+              ],
+              [
+                "0019\nINV-2026-000126",
+                "admin\n17/10/2026 22:09",
+                "فاتورة (Order)\nكامل الفاتورة",
+                "خصم يدوي / عام",
+                "0.500",
+                "0%",
+                "5.000",
+                "5.175"
+              ],
+              [
+                "0019\nINV-2026-000126",
+                "admin\n17/10/2026 22:09",
+                "صنف (Line)\nOffice Chair",
+                "خصم صنف",
+                "0.500",
+                "10%",
+                "5.000",
+                "5.175"
+              ],
+              [
+                "0018\nINV-2026-000125",
+                "admin\n17/10/2026 22:01",
+                "فاتورة (Order)\nكامل الفاتورة",
+                "خصم يدوي / عام",
+                "1.000",
+                "0%",
+                "5.000",
+                "4.600"
+              ],
+              [
+                "0018\nINV-2026-000125",
+                "admin\n17/10/2026 22:01",
+                "صنف (Line)\nOffice Chair",
+                "خصم صنف",
+                "1.000",
+                "10%",
+                "5.000",
+                "4.600"
+              ],
+              [
+                "0017\nINV-2026-000124",
+                "admin\n17/10/2026 21:59",
+                "فاتورة (Order)\nكامل الفاتورة",
+                "خصم يدوي / عام",
+                "1.000",
+                "0%",
+                "5.000",
+                "4.600"
+              ],
+              [
+                "0017\nINV-2026-000124",
+                "admin\n17/10/2026 21:59",
+                "صنف (Line)\nOffice Chair",
+                "خصم صنف",
+                "1.000",
+                "10%",
+                "5.000",
+                "4.600"
+              ],
+              [
+                "0016\nINV-2026-000123",
+                "admin\n17/10/2026 21:55",
+                "فاتورة (Order)\nكامل الفاتورة",
+                "خصم يدوي / عام",
+                "1.000",
+                "0%",
+                "5.000",
+                "4.600"
+              ],
+              [
+                "0016\nINV-2026-000123",
+                "admin\n17/10/2026 21:55",
+                "صنف (Line)\nOffice Chair",
+                "خصم صنف",
+                "1.000",
+                "10%",
+                "5.000",
+                "4.600"
+              ],
+              [
+                "0015\nINV-2026-000122",
+                "admin\n17/10/2026 21:38",
+                "فاتورة (Order)\nكامل الفاتورة",
+                "خصم يدوي / عام",
+                "1.000",
+                "0%",
+                "5.000",
+                "4.600"
+              ],
+              [
+                "0015\nINV-2026-000122",
+                "admin\n17/10/2026 21:38",
+                "صنف (Line)\nOffice Chair",
+                "خصم صنف",
+                "1.000",
+                "10%",
+                "5.000",
+                "4.600"
+              ],
+              [
+                "0013\nINV-2026-000120",
+                "admin\n17/10/2026 21:35",
+                "فاتورة (Order)\nكامل الفاتورة",
+                "خصم يدوي / عام",
+                "1.000",
+                "0%",
+                "5.000",
+                "4.600"
+              ],
+              [
+                "0013\nINV-2026-000120",
+                "admin\n17/10/2026 21:35",
+                "صنف (Line)\nOffice Chair",
+                "خصم صنف",
+                "1.000",
+                "10%",
+                "5.000",
+                "4.600"
+              ],
+              [
+                "0011\nINV-2026-000118",
+                "admin\n17/10/2026 19:28",
+                "فاتورة (Order)\nكامل الفاتورة",
+                "خصم يدوي / عام",
+                "0.500",
+                "0%",
+                "5.000",
+                "5.175"
+              ],
+              [
+                "0011\nINV-2026-000118",
+                "admin\n17/10/2026 19:28",
+                "صنف (Line)\nOffice Chair",
+                "خصم صنف",
+                "0.500",
+                "10%",
+                "5.000",
+                "5.175"
+              ],
+              [
+                "0004\nINV-2026-000111",
+                "admin\n17/10/2026 11:24",
+                "فاتورة (Order)\nكامل الفاتورة",
+                "خصم يدوي / عام",
+                "0.500",
+                "10%",
+                "5.000",
+                "5.175"
+              ],
+              [
+                "0023\nINV-2026-000102",
+                "admin\n15/10/2026 20:39",
+                "فاتورة (Order)\nكامل الفاتورة",
+                "خصم يدوي / عام",
+                "0.500",
+                "10%",
+                "5.000",
+                "5.175"
+              ],
+              [
+                "0022\nINV-2026-000101",
+                "admin\n14/10/2026 19:40",
+                "فاتورة (Order)\nكامل الفاتورة",
+                "خصم يدوي / عام",
+                "1.700",
+                "10%",
+                "12.500",
+                "12.420"
+              ],
+              [
+                "0022\nINV-2026-000101",
+                "admin\n14/10/2026 19:40",
+                "صنف (Line)\nOffice Chair",
+                "خصم صنف",
+                "0.500",
+                "10%",
+                "5.000",
+                "4.658"
+              ],
+              [
+                "0004\nINV-2026-000057",
+                "admin\n09/10/2026 22:47",
+                "فاتورة (Order)\nكامل الفاتورة",
+                "خصم يدوي / عام",
+                "3.150",
+                "50%",
+                "6.000",
+                "3.278"
+              ],
+              [
+                "0004\nINV-2026-000057",
+                "admin\n09/10/2026 22:47",
+                "صنف (Line)\nOffice Chair",
+                "خصم صنف",
+                "0.300",
+                "5%",
+                "5.000",
+                "3.278"
+              ],
+              [
+                "0002\nINV-2026-000055",
+                "admin\n09/10/2026 22:00",
+                "فاتورة (Order)\nكامل الفاتورة",
+                "خصم يدوي / عام",
+                "0.750",
+                "0%",
+                "7.500",
+                "7.763"
+              ],
+              [
+                "0002\nINV-2026-000055",
+                "admin\n09/10/2026 22:00",
+                "صنف (Line)\nOffice Chair",
+                "خصم صنف",
+                "0.750",
+                "10%",
+                "5.000",
+                "7.763"
+              ],
+              [
+                "0002\nINV-2026-000053",
+                "admin\n09/10/2026 21:41",
+                "فاتورة (Order)\nكامل الفاتورة",
+                "خصم يدوي / عام",
+                "0.750",
+                "0%",
+                "7.500",
+                "7.763"
+              ],
+              [
+                "0002\nINV-2026-000053",
+                "admin\n09/10/2026 21:41",
+                "صنف (Line)\nOffice Chair",
+                "خصم صنف",
+                "0.750",
+                "10%",
+                "5.000",
+                "7.763"
+              ]
+            ]
+          },
+          {
+            "title": "Discounts by reason",
+            "columns": [
+              {
+                "label": "Reason",
+                "numeric": false,
+                "code": false,
+                "width": 3
+              },
+              {
+                "label": "Count",
+                "numeric": true,
+                "code": false,
+                "width": 1
+              },
+              {
+                "label": "Amount",
+                "numeric": true,
+                "code": false,
+                "width": 1
+              }
+            ],
+            "rows": [
+              [
+                "خصم يدوي / عام",
+                "14",
+                "16.350"
+              ],
+              [
+                "خصم صنف",
+                "11",
+                "8.300"
+              ]
+            ]
+          },
+          {
+            "title": "Discounts by cashier",
+            "columns": [
+              {
+                "label": "Cashier",
+                "numeric": false,
+                "code": false,
+                "width": 3
+              },
+              {
+                "label": "Count",
+                "numeric": true,
+                "code": false,
+                "width": 1
+              },
+              {
+                "label": "Amount",
+                "numeric": true,
+                "code": false,
+                "width": 1
+              }
+            ],
+            "rows": [
+              [
+                "admin",
+                "25",
+                "24.650"
+              ]
+            ]
+          }
+        ],
+        "notes": []
+      }
+    ]
+  },
+  "errors": null,
+  "timestamp": "2026-10-28T18:00:57.115914Z",
+  "traceId": "79e58fb6-528f-4646-8f02-85ca37422065"
+}

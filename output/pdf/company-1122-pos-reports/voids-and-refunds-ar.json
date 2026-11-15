@@ -1,0 +1,463 @@
+{
+  "success": true,
+  "statusCode": 200,
+  "message": "تمت العملية بنجاح.",
+  "data": {
+    "code": "voids-and-refunds",
+    "title": "الإلغاءات والمرتجعات",
+    "isLive": false,
+    "header": {
+      "language": "ar",
+      "isRightToLeft": true,
+      "companyName": "debis acc",
+      "branchName": "جميع الفروع المتاحة",
+      "taxNumber": null,
+      "phone": "0796211887",
+      "currency": "JOD",
+      "cashier": "الكل",
+      "payment": "الكل",
+      "preparedBy": "admin",
+      "reportNumber": "RPT-20261028-9ecc302e60404",
+      "issuedAtUtc": "2026-10-28T18:00:50.9577496Z",
+      "startDate": "2026-10-01T00:00:00",
+      "endDate": "2026-10-28T00:00:00",
+      "shiftId": null,
+      "tillId": null,
+      "days": [],
+      "payments": [],
+      "totals": {
+        "date": "0001-01-01T00:00:00",
+        "invoices": 0,
+        "sales": 0,
+        "discount": 0,
+        "returns": 0,
+        "net": 0,
+        "tax": 0,
+        "charges": 0,
+        "total": 0
+      },
+      "averageInvoice": 0
+    },
+    "filterNotes": [],
+    "branches": [
+      {
+        "branchId": 1,
+        "branchName": "debis acc",
+        "metrics": [
+          {
+            "label": "قيمة الإلغاءات",
+            "value": "522.000",
+            "unit": "JOD"
+          },
+          {
+            "label": "عدد الإلغاءات",
+            "value": "3",
+            "unit": ""
+          },
+          {
+            "label": "قيمة المرتجعات",
+            "value": "678.250",
+            "unit": "JOD"
+          },
+          {
+            "label": "عدد المرتجعات",
+            "value": "29",
+            "unit": ""
+          }
+        ],
+        "tables": [
+          {
+            "title": "الأصناف الملغاة",
+            "columns": [
+              {
+                "label": "الطلب / السطر",
+                "numeric": false,
+                "code": true,
+                "width": 1
+              },
+              {
+                "label": "الصنف",
+                "numeric": false,
+                "code": false,
+                "width": 2
+              },
+              {
+                "label": "الكمية",
+                "numeric": true,
+                "code": false,
+                "width": 1
+              },
+              {
+                "label": "سعر الوحدة",
+                "numeric": true,
+                "code": false,
+                "width": 1
+              },
+              {
+                "label": "القيمة",
+                "numeric": true,
+                "code": false,
+                "width": 1
+              },
+              {
+                "label": "السبب / الاعتماد",
+                "numeric": false,
+                "code": false,
+                "width": 2
+              },
+              {
+                "label": "التاريخ UTC",
+                "numeric": false,
+                "code": true,
+                "width": 1.5
+              }
+            ],
+            "rows": [
+              [
+                "ORD-1-20261002-0021\n#1",
+                "Office Desk\nITM-OB-98083",
+                "1.000",
+                "150.000",
+                "174.000",
+                "Customer cancelled this item\nshift_supervisor",
+                "02/10/2026 22:15"
+              ],
+              [
+                "ORD-1-20261002-0012\n#1",
+                "Office Desk\nITM-OB-98083",
+                "1.000",
+                "150.000",
+                "174.000",
+                "Customer cancelled this item\nshift_supervisor",
+                "02/10/2026 22:12"
+              ],
+              [
+                "ORD-1-20261002-0006\n#1",
+                "????? ??????\nITM-OB-98083",
+                "1.000",
+                "150.000",
+                "174.000",
+                "Customer changed mind\nsupervisor_admin",
+                "02/10/2026 22:11"
+              ]
+            ]
+          },
+          {
+            "title": "طلبات الإرجاع",
+            "columns": [
+              {
+                "label": "المرتجع / الفاتورة",
+                "numeric": false,
+                "code": true,
+                "width": 1.8
+              },
+              {
+                "label": "الطلب / الفاتورة الأصلية",
+                "numeric": false,
+                "code": true,
+                "width": 1.8
+              },
+              {
+                "label": "الكاشير",
+                "numeric": false,
+                "code": false,
+                "width": 1
+              },
+              {
+                "label": "القيمة",
+                "numeric": true,
+                "code": false,
+                "width": 1
+              },
+              {
+                "label": "طريقة الدفع الأولى",
+                "numeric": false,
+                "code": false,
+                "width": 1
+              },
+              {
+                "label": "السبب",
+                "numeric": false,
+                "code": false,
+                "width": 2
+              },
+              {
+                "label": "التاريخ UTC",
+                "numeric": false,
+                "code": true,
+                "width": 1.5
+              }
+            ],
+            "rows": [
+              [
+                "R0015\nRET-2026-000025",
+                "0021\nINV-2026-000128",
+                "admin",
+                "6.900",
+                "نقدًا",
+                "Customer Changed Mind",
+                "17/10/2026 22:49"
+              ],
+              [
+                "R0014\nRET-2026-000024",
+                "0021\nINV-2026-000128",
+                "admin",
+                "5.750",
+                "نقدًا",
+                "Customer Changed Mind",
+                "17/10/2026 22:48"
+              ],
+              [
+                "R0013\nRET-2026-000023",
+                "0020\nINV-2026-000127",
+                "admin",
+                "5.750",
+                "نقدًا",
+                "Customer Changed Mind",
+                "17/10/2026 22:46"
+              ],
+              [
+                "R0012\nRET-2026-000022",
+                "0019\nINV-2026-000126",
+                "admin",
+                "5.175",
+                "نقدًا",
+                "Customer Changed Mind",
+                "17/10/2026 22:10"
+              ],
+              [
+                "R0011\nRET-2026-000021",
+                "0012\nINV-2026-000119",
+                "admin",
+                "5.750",
+                "نقدًا",
+                "Customer Changed Mind",
+                "17/10/2026 21:34"
+              ],
+              [
+                "R0010\nRET-2026-000020",
+                "0011\nINV-2026-000118",
+                "admin",
+                "5.175",
+                "نقدًا",
+                "Defective / Damaged",
+                "17/10/2026 21:10"
+              ],
+              [
+                "R0009\nRET-2026-000019",
+                "0010\nINV-2026-000117",
+                "admin",
+                "5.750",
+                "نقدًا",
+                "Customer Changed Mind",
+                "17/10/2026 19:27"
+              ],
+              [
+                "R0008\nRET-2026-000018",
+                "0003\nINV-2026-000110",
+                "admin",
+                "5.750",
+                "نقدًا",
+                "طلب الزبون إرجاع كرسي مكتب (Office Chair)",
+                "17/10/2026 12:59"
+              ],
+              [
+                "R0007\nRET-2026-000017",
+                "0003\nINV-2026-000110",
+                "admin",
+                "5.750",
+                "نقدًا",
+                "طلب الزبون إرجاع كرسي مكتب (Office Chair)",
+                "17/10/2026 12:56"
+              ],
+              [
+                "R0006\nRET-2026-000016",
+                "0003\nINV-2026-000110",
+                "admin",
+                "5.750",
+                "نقدًا",
+                "طلب الزبون إرجاع كرسي مكتب (Office Chair)",
+                "17/10/2026 12:56"
+              ],
+              [
+                "R0005\nRET-2026-000015",
+                "0003\nINV-2026-000110",
+                "admin",
+                "5.750",
+                "نقدًا",
+                "طلب الزبون إرجاع كرسي مكتب (Office Chair)",
+                "17/10/2026 12:55"
+              ],
+              [
+                "R0004\nRET-2026-000014",
+                "0003\nINV-2026-000110",
+                "admin",
+                "5.750",
+                "نقدًا",
+                "طلب الزبون إرجاع كرسي مكتب (Office Chair)",
+                "17/10/2026 12:55"
+              ],
+              [
+                "R0003\nRET-2026-000013",
+                "0003\nINV-2026-000110",
+                "admin",
+                "5.750",
+                "نقدًا",
+                "طلب الزبون إرجاع كرسي مكتب (Office Chair)",
+                "17/10/2026 12:51"
+              ],
+              [
+                "R0002\nRET-2026-000012",
+                "0004\nINV-2026-000111",
+                "admin",
+                "5.675",
+                "نقدًا",
+                "Customer Changed Mind",
+                "17/10/2026 11:26"
+              ],
+              [
+                "R0001\nRET-2026-000011",
+                "0003\nINV-2026-000110",
+                "admin",
+                "5.750",
+                "نقدًا",
+                "Customer Changed Mind",
+                "17/10/2026 11:24"
+              ],
+              [
+                "R0004\nRET-2026-000010",
+                "0023\nINV-2026-000102",
+                "admin",
+                "5.675",
+                "نقدًا",
+                "Customer Changed Mind",
+                "15/10/2026 20:39"
+              ],
+              [
+                "R0003\nRET-2026-000009",
+                "0022\nINV-2026-000101",
+                "admin",
+                "8.513",
+                "نقدًا",
+                "Customer Changed Mind",
+                "14/10/2026 19:41"
+              ],
+              [
+                "R0002\nRET-2026-000008",
+                "0020\nINV-2026-000099",
+                "admin",
+                "0.000",
+                "نقدًا",
+                "Customer Changed Mind",
+                "13/10/2026 21:58"
+              ],
+              [
+                "R0001\nRET-2026-000007",
+                "0018\nINV-2026-000097",
+                "admin",
+                "5.750",
+                "نقدًا",
+                "Customer Changed Mind",
+                "13/10/2026 21:56"
+              ],
+              [
+                "R0005\nRET-2026-000006",
+                "0018\nINV-2026-000071",
+                "admin",
+                "8.625",
+                "نقدًا",
+                "Defective / Damaged",
+                "10/10/2026 18:06"
+              ],
+              [
+                "R0004\nRET-2026-000005",
+                "0003\nINV-2026-000056",
+                "admin",
+                "5.750",
+                "نقدًا",
+                "Defective / Damaged",
+                "09/10/2026 22:03"
+              ],
+              [
+                "R0003\nRET-2026-000004",
+                "0001\nINV-2026-000054",
+                "admin",
+                "6.125",
+                "نقدًا",
+                "Defective / Damaged",
+                "09/10/2026 22:02"
+              ],
+              [
+                "R0002\nRET-2026-000003",
+                "0002\nINV-2026-000055",
+                "admin",
+                "6.013",
+                "نقدًا",
+                "Defective / Damaged",
+                "09/10/2026 22:01"
+              ],
+              [
+                "R0001\nRET-2026-000002",
+                "0002\nINV-2026-000055",
+                "admin",
+                "6.013",
+                "نقدًا",
+                "Customer Changed Mind",
+                "09/10/2026 22:00"
+              ],
+              [
+                "R0001\nRET-2026-000001",
+                "0002\nINV-2026-000053",
+                "admin",
+                "6.013",
+                "نقدًا",
+                "Defective / Damaged",
+                "09/10/2026 21:48"
+              ],
+              [
+                "REF-1-20261003-0008\nRF-INV-1-20261003-0008",
+                "ORD-1-20261003-0007\nINV-1-20261003-0007",
+                "admin",
+                "11.600",
+                "نقدًا",
+                "Customer Return - Live Server Verification",
+                "03/10/2026 17:03"
+              ],
+              [
+                "REF-1-20261002-0022\nRF-INV-1-20261002-0022",
+                "ORD-1-20261002-0015\nINV-1-20261002-0015",
+                "admin",
+                "174.000",
+                "نقدًا",
+                "Damaged item returned by customer",
+                "02/10/2026 22:15"
+              ],
+              [
+                "REF-1-20261002-0013\nRF-INV-1-20261002-0013",
+                "ORD-1-20261002-0007\nINV-1-20261002-0007",
+                "admin",
+                "174.000",
+                "نقدًا",
+                "Damaged item returned by customer",
+                "02/10/2026 22:12"
+              ],
+              [
+                "REF-1-20261002-0005\nRF-INV-1-20261002-0005",
+                "ORD-1-20261002-0004\nINV-1-20261002-0004",
+                "admin",
+                "174.000",
+                "نقدًا",
+                "Customer requested refund",
+                "02/10/2026 22:07"
+              ]
+            ]
+          }
+        ],
+        "notes": []
+      }
+    ]
+  },
+  "errors": null,
+  "timestamp": "2026-10-28T18:00:51.2599856Z",
+  "traceId": "013e5114-840d-41d5-a601-5abecc753363"
+}

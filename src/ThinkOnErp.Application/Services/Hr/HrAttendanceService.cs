@@ -1,3 +1,4 @@
+using System.Text.Json;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -20,6 +21,10 @@ public sealed class HrAttendanceService : IHrAttendanceService
     private readonly IPolicyRepository _policyRepo;
     private readonly IGeoLocationService _geoService;
     private readonly ILogger<HrAttendanceService> _logger;
+    private readonly IShiftTimingService? _timing;
+    private readonly IRawAttendanceProcessingService? _processing;
+    private readonly IAttendanceBranchRepository? _branchAccess;
+    private readonly IAttendanceTimeSettingsRepository? _timeSettings;
 
     public HrAttendanceService(
         IAttendanceCorrectionRepository attendanceRepo,
@@ -27,7 +32,8 @@ public sealed class HrAttendanceService : IHrAttendanceService
         IBranchRepository branchRepo,
         IPolicyRepository policyRepo,
         IGeoLocationService geoService,
-        ILogger<HrAttendanceService> logger)
+        ILogger<HrAttendanceService> logger,
+        IHrUnitOfWork? unitOfWork = null, IShiftTimingService? timing = null, IAttendanceTimeSettingsRepository? timeSettings = null, IAttendanceDayClassifier? classifier = null, IRawAttendanceProcessingService? processing = null, IAttendanceBranchRepository? branchAccess = null)
     {
         _attendanceRepo = attendanceRepo;
         _employeeRepo = employeeRepo;
@@ -35,281 +41,133 @@ public sealed class HrAttendanceService : IHrAttendanceService
         _policyRepo = policyRepo;
         _geoService = geoService;
         _logger = logger;
+        _timing = timing; _timeSettings = timeSettings; _processing = processing; _branchAccess = branchAccess;
     }
 
-    public async Task<AttendancePunchResultDto> CheckInAsync(
-        CheckInRequestDto dto,
-        string user,
+    public async Task<IReadOnlyList<AttendanceDayHistoryDto>> GetAttendanceHistoryAsync(
+        string employeeCode, DateOnly fromDate, DateOnly toDate, string? status = null,
         CancellationToken cancellationToken = default)
     {
-        if (dto == null) throw new ArgumentNullException(nameof(dto));
-        if (string.IsNullOrWhiteSpace(dto.EmployeeCode))
-            throw new ArgumentException("Employee code is required.", nameof(dto.EmployeeCode));
+        if (string.IsNullOrWhiteSpace(employeeCode)) throw new ArgumentException("Employee code is required.", nameof(employeeCode));
+        if (fromDate > toDate || toDate.DayNumber - fromDate.DayNumber > 366)
+            throw new ArgumentException("Attendance history range must be valid and no longer than 367 days.");
 
+        var start = fromDate.ToDateTime(TimeOnly.MinValue);
+        var end = toDate.ToDateTime(TimeOnly.MaxValue);
+        var days = await _attendanceRepo.GetAttendanceDaysAsync(employeeCode.Trim(), start, end, cancellationToken);
+        var normalizedStatus = string.IsNullOrWhiteSpace(status) ? null : status.Trim().ToUpperInvariant();
+        return days.Where(day => normalizedStatus == null || string.Equals(day.Status, normalizedStatus, StringComparison.OrdinalIgnoreCase))
+            .Select(day => new AttendanceDayHistoryDto(
+                day.EmployeeCode, day.AttendanceDate, day.Status, day.ShiftCode,
+                day.FirstCheckIn, day.LastCheckOut, day.ScheduledHours, day.ActualWorkedHours,
+                day.LateArrivalMinutes, day.EarlyLeaveMinutes, day.OvertimeHours,
+                day.HasMissingPunch, day.HasGeofenceViolation))
+            .ToList();
+    }
+
+    public async Task<AttendanceMonthSummaryDto> GetAttendanceMonthSummaryAsync(
+        string employeeCode, int year, int month, CancellationToken cancellationToken = default)
+    {
+        if (year is < 1 or > 9998 || month is < 1 or > 12)
+            throw new ArgumentOutOfRangeException(nameof(month), "A valid year and month are required.");
+        var from = new DateOnly(year, month, 1);
+        var to = from.AddMonths(1).AddDays(-1);
+        var days = await GetAttendanceHistoryAsync(employeeCode, from, to, cancellationToken: cancellationToken);
+        return new AttendanceMonthSummaryDto(
+            employeeCode.Trim(), year, month, days.Count,
+            days.Count(day => day.Status.Equals("PRESENT", StringComparison.OrdinalIgnoreCase)),
+            days.Count(day => day.Status.Equals("ABSENT", StringComparison.OrdinalIgnoreCase)),
+            days.Count(day => day.Status.Equals("ON_LEAVE", StringComparison.OrdinalIgnoreCase)),
+            days.Count(day => day.LateArrivalMinutes > 0),
+            days.Sum(day => day.LateArrivalMinutes),
+            days.Sum(day => day.ActualWorkedHours),
+            days.Sum(day => day.OvertimeHours));
+    }
+
+    public Task<AttendancePunchResultDto> CheckInAsync(CheckInRequestDto dto, string user, CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(dto);
+        return RecordPunch(dto.EmployeeCode, dto.Latitude, dto.Longitude, dto.BranchId, dto.AccuracyMeters, dto.DeviceId, dto.Source, dto.EventId, "IN", user, cancellationToken);
+    }
+
+    public Task<AttendancePunchResultDto> CheckOutAsync(CheckOutRequestDto dto, string user, CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(dto);
+        return RecordPunch(dto.EmployeeCode, dto.Latitude, dto.Longitude, dto.BranchId, dto.AccuracyMeters, dto.DeviceId, dto.Source, dto.EventId, "OUT", user, cancellationToken);
+    }
+
+    private async Task<AttendancePunchResultDto> RecordPunch(string employeeCode, decimal latitude, decimal longitude, long? branchId,
+        decimal? accuracy, string? deviceId, string? source, string? eventId, string type, string user, CancellationToken ct)
+    {
+        if (string.IsNullOrWhiteSpace(employeeCode) || employeeCode.Length > 100 || latitude < -90m || latitude > 90m || longitude < -180m || longitude > 180m ||
+            accuracy < 0m || accuracy > 99999.99m || deviceId?.Length > 200 || source?.Length > 100)
+            throw new ArgumentException("Valid employee, coordinates, accuracy and source/device field lengths are required.");
+        var key = MobilePunchEventKey.Create(eventId, employeeCode, type, latitude, longitude, branchId, accuracy, deviceId, source);
+        var employee = await _employeeRepo.GetEmployeeByCodeAsync(employeeCode, ct) ?? throw new KeyNotFoundException("Employee not found in the current HR scope.");
+        var replay = await TryReplay(employeeCode, key, ct); if (replay != null) return replay;
+        if (!string.IsNullOrWhiteSpace(source) && source.Trim().ToUpperInvariant() != "MOBILE_APP")
+            throw new ArgumentException("Mobile punch source must be MOBILE_APP; trusted device/online intake uses its own permission-protected endpoint.");
         var now = DateTime.UtcNow;
-        var employee = await _employeeRepo.GetEmployeeByCodeAsync(dto.EmployeeCode, cancellationToken);
-        if (employee == null)
-            throw new KeyNotFoundException($"Employee with code '{dto.EmployeeCode}' not found.");
-
-        var branch = await ResolveBranchAsync(dto.BranchId, employee.BranchId, cancellationToken);
-        var policy = await ResolvePolicyAsync(branch.CompanyId, now, cancellationToken);
-
-        var proximity = _geoService.CheckProximity(dto.Latitude, dto.Longitude, branch, policy.DefaultAllowedRadiusMeters);
-
-        // Check if strict rejection applies
-        var shouldBlock = policy.EnforceGeofence &&
-                          branch.EnforceGeofence &&
-                          !proximity.IsWithinRange &&
-                          string.Equals(policy.GeofenceViolationAction, "REJECT", StringComparison.OrdinalIgnoreCase);
-
-        if (shouldBlock)
+        var target = branchId ?? employee.BranchId;
+        // Legacy direct service callers can only use the already scoped employee's assigned branch.
+        // Production DI supplies the explicit company/branch-scoped repository.
+        if (_branchAccess == null && target != employee.BranchId) throw new UnauthorizedAccessException("Scoped branch access is required for a different punch branch.");
+        var branch = target.HasValue ? _branchAccess != null ? await _branchAccess.GetAsync(target.Value, ct) : await _branchRepo.GetByIdAsync(target.Value) : null;
+        if (target.HasValue && branch == null) throw new KeyNotFoundException("Punch branch not found in the current HR scope.");
+        if (branch != null && employee.BranchId.HasValue && branch.Id != employee.BranchId.Value)
         {
-            _logger.LogWarning(
-                "Check-in rejected for employee {EmployeeCode}: outside branch {BranchId} range ({Distance}m > {Radius}m)",
-                dto.EmployeeCode, branch.Id, proximity.DistanceMeters, proximity.AllowedRadiusMeters);
-
-            return new AttendancePunchResultDto(
-                Success: false,
-                EmployeeCode: dto.EmployeeCode,
-                PunchType: "IN",
-                PunchTime: now,
-                BranchId: branch.Id,
-                BranchName: proximity.BranchName,
-                Latitude: dto.Latitude,
-                Longitude: dto.Longitude,
-                DistanceMeters: proximity.DistanceMeters,
-                AllowedRadiusMeters: proximity.AllowedRadiusMeters,
-                IsWithinGeofence: false,
-                GeofenceStatus: proximity.Status,
-                Message: proximity.Message
-            );
+            var assignedBranch = await _branchRepo.GetByIdAsync(employee.BranchId.Value);
+            if (assignedBranch?.CompanyId != branch.CompanyId) throw new UnauthorizedAccessException("The punch branch is outside the employee company.");
         }
-
-        // Persist raw punch
-        var raw = new RawAttendance
+        var policy = await ResolvePolicyAsync(branch?.CompanyId, now, ct);
+        var geoAction = policy.GeofenceViolationAction?.Trim().ToUpperInvariant();
+        GeofenceCheckResult location;
+        string? rejected;
+        if (branch == null || !branch.IsActive || !branch.CompanyId.HasValue)
         {
-            EmployeeCode = dto.EmployeeCode,
-            PunchTime = now,
-            PunchType = "IN",
-            DeviceId = dto.DeviceId,
-            Source = !string.IsNullOrWhiteSpace(dto.Source) ? dto.Source : "MOBILE_APP",
-            BranchId = branch.Id,
-            Latitude = dto.Latitude,
-            Longitude = dto.Longitude,
-            AccuracyMeters = dto.AccuracyMeters,
-            DistanceToBranchMeters = proximity.DistanceMeters,
-            IsWithinGeofence = proximity.IsWithinRange,
-            GeofenceStatus = proximity.Status,
-            IsProcessed = true,
-            ProcessedDate = now,
-            CreationUser = user,
-            CreationDate = now
-        };
-        await _attendanceRepo.AddRawAttendanceAsync(raw, cancellationToken);
-
-        // Update daily record
-        var day = await _attendanceRepo.GetAttendanceDayAsync(dto.EmployeeCode, now.Date, cancellationToken);
-        if (day == null)
-        {
-            day = new AttendanceDay
-            {
-                EmployeeCode = dto.EmployeeCode,
-                AttendanceDate = now.Date,
-                FirstCheckIn = now,
-                CheckInBranchId = branch.Id,
-                CheckInLatitude = dto.Latitude,
-                CheckInLongitude = dto.Longitude,
-                CheckInDistanceMeters = proximity.DistanceMeters,
-                IsCheckInWithinGeofence = proximity.IsWithinRange,
-                HasGeofenceViolation = !proximity.IsWithinRange,
-                Status = "PRESENT",
-                CreationUser = user,
-                CreationDate = now
-            };
-            await _attendanceRepo.AddAttendanceDayAsync(day, cancellationToken);
+            location = new GeofenceCheckResult { Status = "NO_ACTIVE_BRANCH", BranchId = null, Message = "No active authorized branch is configured for this punch." };
+            rejected = location.Message;
         }
         else
         {
-            if (!day.FirstCheckIn.HasValue)
-            {
-                day.FirstCheckIn = now;
-                day.CheckInBranchId = branch.Id;
-                day.CheckInLatitude = dto.Latitude;
-                day.CheckInLongitude = dto.Longitude;
-                day.CheckInDistanceMeters = proximity.DistanceMeters;
-                day.IsCheckInWithinGeofence = proximity.IsWithinRange;
-            }
-
-            if (!proximity.IsWithinRange)
-            {
-                day.HasGeofenceViolation = true;
-            }
-
-            day.Status = "PRESENT";
-            day.UpdateUser = user;
-            day.UpdateDate = now;
-            await _attendanceRepo.UpdateAttendanceDayAsync(day, cancellationToken);
+            location = _geoService.CheckProximity(latitude, longitude, branch, branch.GeofenceRadiusMeters > 0m ? null : policy.DefaultAllowedRadiusMeters);
+            if (!policy.EnforceGeofence) location = new GeofenceCheckResult { IsWithinRange = true, BranchId = branch.Id,
+                BranchName = location.BranchName, DistanceMeters = location.DistanceMeters, AllowedRadiusMeters = location.AllowedRadiusMeters,
+                Status = "GEOFENCE_DISABLED", Message = "Company policy disables geofence enforcement." };
+            rejected = geoAction is not ("REJECT" or "FLAG_AND_ALLOW") ? "Geofence policy action is invalid; review company settings." : !policy.AllowAnyBranchPunch && employee.BranchId != branch.Id ? "Attendance policy does not allow a different branch." :
+                policy.EnforceGeofence && branch.EnforceGeofence && !location.IsWithinRange && geoAction == "REJECT"
+                    ? string.IsNullOrWhiteSpace(location.Message) ? "Punch rejected by the configured geofence policy." : location.Message : null;
         }
-
-        await _attendanceRepo.SaveChangesAsync(cancellationToken);
-
-        return new AttendancePunchResultDto(
-            Success: true,
-            EmployeeCode: dto.EmployeeCode,
-            PunchType: "IN",
-            PunchTime: now,
-            BranchId: branch.Id,
-            BranchName: proximity.BranchName,
-            Latitude: dto.Latitude,
-            Longitude: dto.Longitude,
-            DistanceMeters: proximity.DistanceMeters,
-            AllowedRadiusMeters: proximity.AllowedRadiusMeters,
-            IsWithinGeofence: proximity.IsWithinRange,
-            GeofenceStatus: proximity.Status,
-            Message: proximity.IsWithinRange
-                ? $"Check-in successful at branch '{proximity.BranchName}'."
-                : $"Check-in registered with geofence warning ({proximity.DistanceMeters:F1}m from branch)."
-        );
-    }
-
-    public async Task<AttendancePunchResultDto> CheckOutAsync(
-        CheckOutRequestDto dto,
-        string user,
-        CancellationToken cancellationToken = default)
-    {
-        if (dto == null) throw new ArgumentNullException(nameof(dto));
-        if (string.IsNullOrWhiteSpace(dto.EmployeeCode))
-            throw new ArgumentException("Employee code is required.", nameof(dto.EmployeeCode));
-
-        var now = DateTime.UtcNow;
-        var employee = await _employeeRepo.GetEmployeeByCodeAsync(dto.EmployeeCode, cancellationToken);
-        if (employee == null)
-            throw new KeyNotFoundException($"Employee with code '{dto.EmployeeCode}' not found.");
-
-        var branch = await ResolveBranchAsync(dto.BranchId, employee.BranchId, cancellationToken);
-        var policy = await ResolvePolicyAsync(branch.CompanyId, now, cancellationToken);
-
-        var proximity = _geoService.CheckProximity(dto.Latitude, dto.Longitude, branch, policy.DefaultAllowedRadiusMeters);
-
-        // Check if strict rejection applies
-        var shouldBlock = policy.EnforceGeofence &&
-                          branch.EnforceGeofence &&
-                          !proximity.IsWithinRange &&
-                          string.Equals(policy.GeofenceViolationAction, "REJECT", StringComparison.OrdinalIgnoreCase);
-
-        if (shouldBlock)
-        {
-            _logger.LogWarning(
-                "Check-out rejected for employee {EmployeeCode}: outside branch {BranchId} range ({Distance}m > {Radius}m)",
-                dto.EmployeeCode, branch.Id, proximity.DistanceMeters, proximity.AllowedRadiusMeters);
-
-            return new AttendancePunchResultDto(
-                Success: false,
-                EmployeeCode: dto.EmployeeCode,
-                PunchType: "OUT",
-                PunchTime: now,
-                BranchId: branch.Id,
-                BranchName: proximity.BranchName,
-                Latitude: dto.Latitude,
-                Longitude: dto.Longitude,
-                DistanceMeters: proximity.DistanceMeters,
-                AllowedRadiusMeters: proximity.AllowedRadiusMeters,
-                IsWithinGeofence: false,
-                GeofenceStatus: proximity.Status,
-                Message: proximity.Message
-            );
-        }
-
-        // Persist raw punch
         var raw = new RawAttendance
         {
-            EmployeeCode = dto.EmployeeCode,
-            PunchTime = now,
-            PunchType = "OUT",
-            DeviceId = dto.DeviceId,
-            Source = !string.IsNullOrWhiteSpace(dto.Source) ? dto.Source : "MOBILE_APP",
-            BranchId = branch.Id,
-            Latitude = dto.Latitude,
-            Longitude = dto.Longitude,
-            AccuracyMeters = dto.AccuracyMeters,
-            DistanceToBranchMeters = proximity.DistanceMeters,
-            IsWithinGeofence = proximity.IsWithinRange,
-            GeofenceStatus = proximity.Status,
-            IsProcessed = true,
-            ProcessedDate = now,
-            CreationUser = user,
-            CreationDate = now
+            EmployeeCode = employeeCode, PunchTime = now, PunchType = type, DeviceId = deviceId,
+            Source = string.IsNullOrWhiteSpace(source) ? "MOBILE_APP" : source.Trim().ToUpperInvariant(), EventId = key.Id, EventPayloadHash = key.PayloadHash,
+            BranchId = branch?.IsActive == true ? branch.Id : null, Latitude = latitude, Longitude = longitude, AccuracyMeters = accuracy,
+            DistanceToBranchMeters = location.DistanceMeters, IsWithinGeofence = location.Status == "GEOFENCE_DISABLED" ? null : location.IsWithinRange, GeofenceStatus = location.Status,
+            IsProcessed = rejected != null, ProcessingOutcome = rejected == null ? null : "REJECTED",
+            ProcessingReason = rejected == null ? null : rejected.Length <= 1000 ? rejected : rejected[..1000],
+            ProcessedBy = rejected == null ? null : user, ProcessedDate = rejected == null ? null : now, CreationUser = user, CreationDate = now
         };
-        await _attendanceRepo.AddRawAttendanceAsync(raw, cancellationToken);
-
-        // Update daily record
-        var day = await _attendanceRepo.GetAttendanceDayAsync(dto.EmployeeCode, now.Date, cancellationToken);
-        if (day == null)
+        string Receipt(long id) => JsonSerializer.Serialize(new AttendancePunchResultDto(rejected == null, employeeCode, type, now, raw.BranchId,
+            branch?.BranchNameEn ?? branch?.BranchNameLocal ?? string.Empty, latitude, longitude, location.DistanceMeters, location.AllowedRadiusMeters,
+            location.IsWithinRange, location.Status, rejected ?? "Attendance evidence saved. Check day status for its financial processing outcome.", id, rejected == null));
+        var stored = await _attendanceRepo.AcceptMobileEvidenceAsync(raw, Receipt, ct);
+        var result = JsonSerializer.Deserialize<AttendancePunchResultDto>(stored.EventResponseJson ?? throw new InvalidOperationException("Evidence receipt was not saved."))
+            ?? throw new InvalidOperationException("Evidence receipt could not be read.");
+        if (raw.Id > 0 && stored.Id == raw.Id && !stored.IsProcessed && _processing != null)
         {
-            day = new AttendanceDay
+            try { await _processing.ProcessAsync(stored.Id, user, ct); }
+            catch (OperationCanceledException) { throw; }
+            catch (Exception ex)
             {
-                EmployeeCode = dto.EmployeeCode,
-                AttendanceDate = now.Date,
-                LastCheckOut = now,
-                CheckOutBranchId = branch.Id,
-                CheckOutLatitude = dto.Latitude,
-                CheckOutLongitude = dto.Longitude,
-                CheckOutDistanceMeters = proximity.DistanceMeters,
-                IsCheckOutWithinGeofence = proximity.IsWithinRange,
-                HasGeofenceViolation = !proximity.IsWithinRange,
-                HasMissingPunch = true, // Check-out without check-in
-                Status = "PRESENT",
-                CreationUser = user,
-                CreationDate = now
-            };
-            await _attendanceRepo.AddAttendanceDayAsync(day, cancellationToken);
-        }
-        else
-        {
-            day.LastCheckOut = now;
-            day.CheckOutBranchId = branch.Id;
-            day.CheckOutLatitude = dto.Latitude;
-            day.CheckOutLongitude = dto.Longitude;
-            day.CheckOutDistanceMeters = proximity.DistanceMeters;
-            day.IsCheckOutWithinGeofence = proximity.IsWithinRange;
-
-            if (!proximity.IsWithinRange)
-            {
-                day.HasGeofenceViolation = true;
+                _logger.LogWarning("Attendance evidence {RawId} was saved; financial processing deferred ({ErrorType}).", stored.Id, ex.GetType().Name);
+                var reason = ex is InvalidOperationException or ArgumentException or KeyNotFoundException ? ex.Message : "Financial processing failed; review the evidence queue.";
+                try { await _attendanceRepo.RecordRawAttemptAsync(stored.Id, user, reason, ct); }
+                catch (OperationCanceledException) { throw; }
+                catch (Exception recordingError) { _logger.LogWarning("Evidence {RawId} is durable but its attempt note could not be saved ({ErrorType}).", stored.Id, recordingError.GetType().Name); }
             }
-
-            if (day.FirstCheckIn.HasValue)
-            {
-                var diff = now - day.FirstCheckIn.Value;
-                day.ActualWorkedHours = Math.Max(0m, Math.Round((decimal)diff.TotalHours, 2));
-                day.HasMissingPunch = false;
-            }
-
-            day.Status = "PRESENT";
-            day.UpdateUser = user;
-            day.UpdateDate = now;
-            await _attendanceRepo.UpdateAttendanceDayAsync(day, cancellationToken);
         }
-
-        await _attendanceRepo.SaveChangesAsync(cancellationToken);
-
-        return new AttendancePunchResultDto(
-            Success: true,
-            EmployeeCode: dto.EmployeeCode,
-            PunchType: "OUT",
-            PunchTime: now,
-            BranchId: branch.Id,
-            BranchName: proximity.BranchName,
-            Latitude: dto.Latitude,
-            Longitude: dto.Longitude,
-            DistanceMeters: proximity.DistanceMeters,
-            AllowedRadiusMeters: proximity.AllowedRadiusMeters,
-            IsWithinGeofence: proximity.IsWithinRange,
-            GeofenceStatus: proximity.Status,
-            Message: proximity.IsWithinRange
-                ? $"Check-out successful at branch '{proximity.BranchName}'."
-                : $"Check-out registered with geofence warning ({proximity.DistanceMeters:F1}m from branch)."
-        );
+        return result;
     }
 
     public async Task<TodayAttendanceStatusDto?> GetTodayStatusAsync(
@@ -319,7 +177,10 @@ public sealed class HrAttendanceService : IHrAttendanceService
         if (string.IsNullOrWhiteSpace(employeeCode))
             return null;
 
-        var today = DateTime.UtcNow.Date;
+        var timeSetting = await (_timeSettings ?? throw new InvalidOperationException("Company time settings are required.")).GetForEmployeeAsync(employeeCode, cancellationToken);
+        var today = TimeZoneInfo.ConvertTime(DateTimeOffset.UtcNow, ShiftTimeRules.Zone(timeSetting.TimeZoneId)).Date;
+        var statusSchedule = await ResolvePunchSchedule(employeeCode, DateTime.UtcNow, DateOnly.FromDateTime(today), "OUT", cancellationToken);
+        today = statusSchedule.Shift.WorkDate.ToDateTime(TimeOnly.MinValue);
         var day = await _attendanceRepo.GetAttendanceDayAsync(employeeCode, today, cancellationToken);
         if (day == null)
         {
@@ -344,14 +205,14 @@ public sealed class HrAttendanceService : IHrAttendanceService
         string? checkInBranchName = null;
         if (day.CheckInBranchId.HasValue)
         {
-            var b = await _branchRepo.GetByIdAsync(day.CheckInBranchId.Value);
+            var b = _branchAccess != null ? await _branchAccess.GetAsync(day.CheckInBranchId.Value, cancellationToken) : await _branchRepo.GetByIdAsync(day.CheckInBranchId.Value);
             checkInBranchName = b?.BranchNameEn ?? b?.BranchNameLocal;
         }
 
         string? checkOutBranchName = null;
         if (day.CheckOutBranchId.HasValue)
         {
-            var b = await _branchRepo.GetByIdAsync(day.CheckOutBranchId.Value);
+            var b = _branchAccess != null ? await _branchAccess.GetAsync(day.CheckOutBranchId.Value, cancellationToken) : await _branchRepo.GetByIdAsync(day.CheckOutBranchId.Value);
             checkOutBranchName = b?.BranchNameEn ?? b?.BranchNameLocal;
         }
 
@@ -381,9 +242,8 @@ public sealed class HrAttendanceService : IHrAttendanceService
         long? companyId = null,
         CancellationToken cancellationToken = default)
     {
-        var branches = companyId.HasValue
-            ? await _branchRepo.GetByCompanyIdAsync(companyId.Value)
-            : await _branchRepo.GetAllAsync();
+        if (latitude is < -90m or > 90m || longitude is < -180m or > 180m) throw new ArgumentException("Valid coordinates are required.");
+        var branches = await (_branchAccess ?? throw new InvalidOperationException("Scoped HR branch access is required.")).ListAsync(companyId, cancellationToken);
 
         var result = new List<NearbyBranchDto>();
 
@@ -416,22 +276,19 @@ public sealed class HrAttendanceService : IHrAttendanceService
         return result.OrderBy(x => x.DistanceMeters).ToList();
     }
 
-    private async Task<SysBranch> ResolveBranchAsync(long? requestedBranchId, long? employeeBranchId, CancellationToken cancellationToken)
+    private async Task<AttendancePunchResultDto?> TryReplay(string employeeCode, MobilePunchEventKey key, CancellationToken ct)
     {
-        var targetId = requestedBranchId ?? employeeBranchId;
-        if (!targetId.HasValue)
-        {
-            throw new InvalidOperationException("No branch specified and employee is not assigned to a default branch.");
-        }
-
-        var branch = await _branchRepo.GetByIdAsync(targetId.Value);
-        if (branch == null)
-        {
-            throw new KeyNotFoundException($"Branch with ID {targetId.Value} not found.");
-        }
-
-        return branch;
+        var raw = await _attendanceRepo.GetMobileEventAsync(employeeCode, key.Id, ct);
+        if (raw == null) return null;
+        if (raw.EventPayloadHash != key.PayloadHash) throw new MobilePunchEventConflictException();
+        if (string.IsNullOrEmpty(raw.EventResponseJson)) throw new InvalidOperationException("Accepted event response is missing; review the stored evidence.");
+        return JsonSerializer.Deserialize<AttendancePunchResultDto>(raw.EventResponseJson)
+            ?? throw new InvalidOperationException("Accepted event response could not be read.");
     }
+
+    private Task<TimedShiftDto> ResolvePunchSchedule(string employeeCode, DateTime now, DateOnly localDate, string type, CancellationToken ct)
+        => AttendanceWorkDateResolver.ResolveAsync(employeeCode, new DateTimeOffset(now), localDate, type,
+            _timing ?? throw new InvalidOperationException("Configured shift timing is required."), _attendanceRepo, ct);
 
     private async Task<AttendancePolicy> ResolvePolicyAsync(long? companyId, DateTime date, CancellationToken cancellationToken)
     {

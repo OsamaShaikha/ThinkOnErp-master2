@@ -4,6 +4,8 @@ namespace ThinkOnErp.Domain.Interfaces;
 
 public interface IOracleSchemaService
 {
+    bool ExistingTenantSchemaSyncEnabled { get; }
+
     Task CreateCompanySchemaAsync(string schemaName, string password);
 
     Task SeedDefaultAdminAsync(string schemaName, string schemaPassword, string defaultPassword, long companyId, long branchId, string creationUser);

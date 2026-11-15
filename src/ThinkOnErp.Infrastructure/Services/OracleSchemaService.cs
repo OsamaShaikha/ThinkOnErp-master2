@@ -24,7 +24,10 @@ public class OracleSchemaService : IOracleSchemaService
     private readonly PasswordHashingService _passwordHashingService;
     private readonly string _devSchemaName;
     private readonly string _devSchemaPassword;
+    private readonly bool _existingTenantSchemaSyncEnabled;
     private readonly List<string> _objectTypesToClone;
+
+    public bool ExistingTenantSchemaSyncEnabled => _existingTenantSchemaSyncEnabled;
 
     private static readonly HashSet<string> GlobalTables = new(StringComparer.OrdinalIgnoreCase)
     {
@@ -76,8 +79,10 @@ public class OracleSchemaService : IOracleSchemaService
         _logger = logger;
         _passwordHashingService = passwordHashingService;
 
-        _devSchemaName = configuration["TenantProvisioning:DeveloperSchemaName"] ?? "DEV_TEMPLATE";
+        _devSchemaName = (configuration["TenantProvisioning:DeveloperSchemaName"] ?? "DEV_TEMPLATE").ToUpperInvariant();
+        OracleTenantSchemaDiffSqlBuilder.ValidateSchemaIdentifier(_devSchemaName, "TenantProvisioning:DeveloperSchemaName");
         _devSchemaPassword = configuration["TenantProvisioning:DeveloperSchemaPassword"] ?? "DEV_TEMPLATE";
+        _existingTenantSchemaSyncEnabled = configuration.GetValue<bool>("TenantProvisioning:AllowExistingTenantSchemaSync");
         _objectTypesToClone = configuration.GetSection("TenantProvisioning:ObjectTypesToClone").Get<List<string>>() 
             ?? new List<string> { "TABLE", "INDEX", "SEQUENCE", "TRIGGER", "CONSTRAINT" };
     }
@@ -85,10 +90,15 @@ public class OracleSchemaService : IOracleSchemaService
     public async Task CreateCompanySchemaAsync(string schemaName, string password)
     {
         schemaName = schemaName.ToUpperInvariant();
+        OracleTenantSchemaDiffSqlBuilder.ValidateSchemaIdentifier(schemaName, nameof(schemaName));
         _logger.LogInformation("Creating Oracle schema: {SchemaName}", schemaName);
 
         await using var masterConn = new OracleConnection(_masterConnectionString);
         await masterConn.OpenAsync();
+
+        // Never provision a tenant from a developer template that is missing a
+        // currently mapped HR string column or whose column is too narrow.
+        await EnsureDeveloperTemplateHasCurrentHrStringColumnsAsync(masterConn);
 
         // Enable Oracle 12c+ script mode to allow regular usernames in CDB
         // Enable Oracle 12c+ script mode to allow regular usernames when in CDB$ROOT (skipped if in PDB or if privilege not granted)
@@ -444,6 +454,101 @@ public class OracleSchemaService : IOracleSchemaService
         }
     }
 
+    private async Task EnsureDeveloperTemplateHasCurrentHrStringColumnsAsync(OracleConnection connection)
+    {
+        using var scope = _scopeFactory.CreateScope();
+        await using var context = scope.ServiceProvider.GetRequiredService<OracleDbContext>();
+        var expectedColumns = context.Model.GetEntityTypes()
+            .Where(entity => entity.ClrType.Namespace?.StartsWith(
+                "ThinkOnErp.Domain.Entities.Hr", StringComparison.Ordinal) == true)
+            .SelectMany(entity =>
+            {
+                var table = entity.GetTableName();
+                if (string.IsNullOrWhiteSpace(table))
+                    return Enumerable.Empty<(string Table, string Column, string StoreType, bool ByteSemantics, int MaxLength, bool Nullable)>();
+
+                var storeObject = StoreObjectIdentifier.Table(table);
+                return entity.GetProperties()
+                    .Where(property =>
+                        (Nullable.GetUnderlyingType(property.ClrType) ?? property.ClrType) == typeof(string)
+                        && property.GetMaxLength() is > 0)
+                    .Select(property =>
+                    {
+                        var columnType = property.GetColumnType();
+                        var storeType = columnType?.Split('(')[0].Trim().ToUpperInvariant() ?? "NVARCHAR2";
+                        var hasExplicitSemantics = columnType != null && Regex.IsMatch(
+                            columnType, @"\(\s*\d+\s+(?:BYTE|CHAR)\s*\)", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
+                        var byteSemantics = columnType?.Contains("BYTE", StringComparison.OrdinalIgnoreCase) == true
+                            || (!hasExplicitSemantics && (storeType is "VARCHAR2" or "CHAR"));
+                        return (
+                            Table: table,
+                            Column: property.GetColumnName(storeObject)!,
+                            StoreType: storeType,
+                            ByteSemantics: byteSemantics,
+                            MaxLength: property.GetMaxLength()!.Value,
+                            Nullable: property.IsNullable);
+                    });
+            })
+            .Distinct()
+            .ToArray();
+        if (expectedColumns.Length == 0)
+            return;
+
+        var actualColumns = new Dictionary<(string Table, string Column), (string Type, int DataLength, int CharLength, string CharUsed, bool Nullable, string VirtualColumn)>();
+        await using (var command = connection.CreateCommand())
+        {
+            command.BindByName = true;
+            var expectedTables = expectedColumns.Select(column => column.Table).Distinct().ToArray();
+            var tableParameters = expectedTables.Select((_, index) => $":table{index}").ToArray();
+            command.CommandText = @"
+                SELECT TABLE_NAME, COLUMN_NAME, DATA_TYPE, NVL(DATA_LENGTH, 0), NVL(CHAR_LENGTH, 0), NVL(CHAR_USED, '-'), NULLABLE, NVL(VIRTUAL_COLUMN, 'NO')
+                FROM ALL_TAB_COLUMNS
+                WHERE OWNER = :owner
+                  AND TABLE_NAME IN (" + string.Join(", ", tableParameters) + ")";
+            command.Parameters.Add(new OracleParameter("owner", _devSchemaName));
+            for (var index = 0; index < expectedTables.Length; index++)
+                command.Parameters.Add(new OracleParameter($"table{index}", expectedTables[index]));
+            await using var reader = await command.ExecuteReaderAsync();
+            while (await reader.ReadAsync())
+            {
+                actualColumns[(reader.GetString(0), reader.GetString(1))] =
+                    (reader.GetString(2), Convert.ToInt32(reader.GetValue(3)), Convert.ToInt32(reader.GetValue(4)), reader.GetString(5), reader.GetString(6) == "Y", reader.GetString(7));
+            }
+        }
+
+        var gaps = new List<string>();
+        foreach (var expected in expectedColumns)
+        {
+            if (!actualColumns.TryGetValue((expected.Table, expected.Column), out var actual))
+            {
+                gaps.Add($"{expected.Table}.{expected.Column} missing");
+                continue;
+            }
+
+            if (!string.Equals(actual.Type, expected.StoreType, StringComparison.OrdinalIgnoreCase))
+                gaps.Add($"{expected.Table}.{expected.Column} has type {actual.Type}, expected {expected.StoreType}");
+            else if (!string.Equals(actual.VirtualColumn, "NO", StringComparison.OrdinalIgnoreCase))
+                gaps.Add($"{expected.Table}.{expected.Column} is a virtual column, but EF maps a stored column");
+            else if (!string.Equals(actual.CharUsed, expected.ByteSemantics ? "B" : "C", StringComparison.OrdinalIgnoreCase))
+                gaps.Add($"{expected.Table}.{expected.Column} has CHAR_USED={actual.CharUsed}, expected {(expected.ByteSemantics ? "BYTE" : "CHAR")}");
+            else if (actual.Nullable != expected.Nullable)
+                gaps.Add($"{expected.Table}.{expected.Column} has nullable={actual.Nullable}, expected nullable={expected.Nullable}");
+            else
+            {
+                var actualLength = expected.ByteSemantics ? actual.DataLength : actual.CharLength;
+                if (actualLength < expected.MaxLength)
+                    gaps.Add($"{expected.Table}.{expected.Column} has length {actualLength}, expected at least {expected.MaxLength}");
+            }
+        }
+
+        if (gaps.Count > 0)
+        {
+            var sample = string.Join("; ", gaps.Take(12));
+            throw new InvalidOperationException(
+                $"Developer schema {_devSchemaName} is not ready for HR tenant provisioning: {gaps.Count} mapped string column gap(s). {sample}");
+        }
+    }
+
     private static string GenerateCreateTableSql(IEntityType entityType, string schemaName, string tableName)
     {
         var columns = new List<string>();
@@ -579,7 +684,7 @@ public class OracleSchemaService : IOracleSchemaService
             {
                 await ExecuteRawAsync(tenantConn,
                     $"CREATE SYNONYM \"{table}\" FOR \"{targetSchema}\".\"{table}\"");
-                _logger.LogDebug("Synonym created: {Schema}.{Table} -> {TargetSchema}.{Table}", schemaName, table, targetSchema);
+                _logger.LogDebug("Synonym created: {Schema}.{Table} -> {TargetSchema}.{TargetTable}", schemaName, table, targetSchema, table);
             }
             catch (OracleException ex) when (ex.Number == 955)
             {
@@ -594,7 +699,7 @@ public class OracleSchemaService : IOracleSchemaService
             {
                 await ExecuteRawAsync(tenantConn,
                     $"CREATE SYNONYM \"{seq}\" FOR \"THINKON_SUPPORT\".\"{seq}\"");
-                _logger.LogDebug("Sequence synonym created: {Schema}.{Seq} -> THINKON_SUPPORT.{Seq}", schemaName, seq);
+                _logger.LogDebug("Sequence synonym created: {Schema}.{Seq} -> THINKON_SUPPORT.{TargetSeq}", schemaName, seq, seq);
             }
             catch (OracleException ex) when (ex.Number == 955)
             {
@@ -1224,9 +1329,12 @@ public class OracleSchemaService : IOracleSchemaService
 
     public async Task UpgradeExistingTenantSchemasAsync()
     {
+        EnsureExistingTenantSchemaSyncEnabled();
         _logger.LogInformation("Upgrading all existing tenant schemas against template {SourceSchema}", _devSchemaName);
         
         await using var masterConn = await OpenMasterConnectionAsync();
+        await BootstrapTablesFromEfModelAsync(masterConn, _devSchemaName);
+        await EnsureDeveloperTemplateHasCurrentHrStringColumnsAsync(masterConn);
 
         // Get all company schemas
         var schemas = new List<string>();
@@ -1244,27 +1352,30 @@ public class OracleSchemaService : IOracleSchemaService
         }
         catch (Exception ex)
         {
-            _logger.LogWarning(ex, "Failed to query company schemas for upgrade");
-            return;
+            _logger.LogError(ex, "Failed to query company schemas for upgrade");
+            throw new InvalidOperationException("Failed to read the tenant schema list; tenant synchronization was aborted.", ex);
         }
 
-        if (schemas.Count == 0)
+        var tenantSchemas = schemas
+            .Where(schema => !string.Equals(schema, _devSchemaName, StringComparison.OrdinalIgnoreCase))
+            .ToArray();
+        if (tenantSchemas.Length == 0)
         {
             _logger.LogInformation("No existing tenant schemas to upgrade");
             return;
         }
 
-        foreach (var schema in schemas)
+        var failures = new List<Exception>();
+        foreach (var schema in tenantSchemas)
         {
-            // Skip the template schema itself if it is in the list
-            if (string.Equals(schema, _devSchemaName, StringComparison.OrdinalIgnoreCase))
-                continue;
-
             try
             {
+                var targetSchema = schema.ToUpperInvariant();
+                OracleTenantSchemaDiffSqlBuilder.ValidateSchemaIdentifier(targetSchema, nameof(schema));
                 _logger.LogInformation("Syncing schema: {Schema}", schema);
-                await CloneFromDeveloperSchemaAsync(masterConn, schema);
-                await SyncTableColumnsSchemaDiffAsync(masterConn, schema);
+                await EnsureTenantSchemaDiffSafeAsync(masterConn, targetSchema);
+                await CloneFromDeveloperSchemaAsync(masterConn, targetSchema);
+                await SyncTableColumnsSchemaDiffAsync(masterConn, targetSchema);
                 await EnsureAccountingSchemaAsync(masterConn, schema);
 
                 // Regenerate synonyms & table access grants to ensure everything is correct
@@ -1275,19 +1386,27 @@ public class OracleSchemaService : IOracleSchemaService
             }
             catch (Exception ex)
             {
-                _logger.LogWarning(ex, "Failed to upgrade tenant schema: {Schema}", schema);
+                _logger.LogError(ex, "Failed to upgrade tenant schema: {Schema}", schema);
+                failures.Add(new InvalidOperationException($"Failed to upgrade tenant schema '{schema}'.", ex));
             }
         }
+
+        if (failures.Count > 0)
+            throw new AggregateException($"Tenant schema upgrade completed with {failures.Count} failure(s) out of {tenantSchemas.Length} tenant schema(s).", failures);
     }
 
     public async Task SyncTenantSchemaAsync(string schemaName, string schemaPassword)
     {
+        EnsureExistingTenantSchemaSyncEnabled();
         schemaName = schemaName.ToUpperInvariant();
+        OracleTenantSchemaDiffSqlBuilder.ValidateSchemaIdentifier(schemaName, nameof(schemaName));
         _logger.LogInformation("Syncing tenant schema {SchemaName} with template {SourceSchema}", schemaName, _devSchemaName);
         
         await using var masterConn = await OpenMasterConnectionAsync();
+        await EnsureTenantSchemaDiffSafeAsync(masterConn, schemaName);
         // Ensure developer template has all tables declared in EF Core model first
         await BootstrapTablesFromEfModelAsync(masterConn, _devSchemaName);
+        await EnsureDeveloperTemplateHasCurrentHrStringColumnsAsync(masterConn);
         await CloneFromDeveloperSchemaAsync(masterConn, schemaName);
         await SyncTableColumnsSchemaDiffAsync(masterConn, schemaName);
         await EnsureAccountingSchemaAsync(masterConn, schemaName);
@@ -1295,6 +1414,12 @@ public class OracleSchemaService : IOracleSchemaService
         // Ensure access privileges and synonyms are up to date
         await GrantTenantTableAccessAsync(schemaName, schemaPassword);
         await CreateGlobalSynonymsAsync(schemaName, schemaPassword);
+    }
+
+    private void EnsureExistingTenantSchemaSyncEnabled()
+    {
+        if (!_existingTenantSchemaSyncEnabled)
+            throw new InvalidOperationException("Existing tenant schema synchronization is disabled. Complete the target preflight, backup, rollback plan, and approval before enabling TenantProvisioning:AllowExistingTenantSchemaSync.");
     }
 
     public async Task ProvisionDeveloperSchemaAsync()
@@ -1314,6 +1439,7 @@ public class OracleSchemaService : IOracleSchemaService
             {
                 _logger.LogInformation("Developer template schema {SchemaName} already provisioned ({Count} accounts found). Checking for any new model tables...", _devSchemaName, count);
                 await BootstrapTablesFromEfModelAsync(masterConn, _devSchemaName);
+                await EnsureDeveloperTemplateHasCurrentHrStringColumnsAsync(masterConn);
                 return;
             }
         }
@@ -1354,6 +1480,7 @@ public class OracleSchemaService : IOracleSchemaService
 
         // 3. Bootstrap tables from EF model into the template schema
         await BootstrapTablesFromEfModelAsync(masterConn, _devSchemaName);
+        await EnsureDeveloperTemplateHasCurrentHrStringColumnsAsync(masterConn);
 
         // 4. Apply accounting-specific Oracle DDL that the lightweight EF bootstrap does not
         // generate (foreign keys, check constraints, defaults, and indexes), then seed the
@@ -1462,6 +1589,55 @@ public class OracleSchemaService : IOracleSchemaService
         _logger.LogInformation("Successfully seeded developer template schema: {SchemaName}", _devSchemaName);
     }
 
+    private static bool IsProgrammableSchemaObject(string objectType)
+        => objectType is "VIEW" or "PROCEDURE" or "FUNCTION" or "PACKAGE" or "PACKAGE BODY" or "TRIGGER" or "TYPE" or "TYPE BODY";
+
+    private static bool IsSharedSchemaObjectNamespaceType(string objectType)
+        => objectType is "TABLE" or "VIEW" or "SEQUENCE" or "SYNONYM" or "PROCEDURE" or "FUNCTION"
+            or "PACKAGE" or "PACKAGE BODY" or "TYPE" or "TYPE BODY" or "OPERATOR" or "MATERIALIZED VIEW";
+
+    private static bool IsBenignCloneCollision(OracleException exception, string objectType)
+        => (exception.Number != 955 || !IsProgrammableSchemaObject(objectType))
+            && exception.Number is 955 or 2261 or 2264 or 1917 or 1408 or 2275;
+
+    private static async Task EnsureNoCloneNamespaceCollisionsAsync(
+        OracleConnection connection,
+        string targetSchema,
+        IReadOnlyCollection<(string Name, string Type)> sourceObjects)
+    {
+        var programmableSources = sourceObjects.Where(o => IsProgrammableSchemaObject(o.Type)).ToArray();
+        if (programmableSources.Length == 0) return;
+
+        var collisions = new List<(string Name, string Type)>();
+        await using (var command = connection.CreateCommand())
+        {
+            command.CommandText = @"
+                SELECT OBJECT_NAME, OBJECT_TYPE
+                FROM ALL_OBJECTS
+                WHERE OWNER=:targetSchema
+                  AND OBJECT_TYPE IN ('TABLE', 'VIEW', 'SEQUENCE', 'SYNONYM', 'PROCEDURE', 'FUNCTION', 'PACKAGE', 'PACKAGE BODY', 'TYPE', 'TYPE BODY', 'OPERATOR', 'MATERIALIZED VIEW', 'TRIGGER')";
+            command.Parameters.Add(new OracleParameter("targetSchema", targetSchema));
+            await using var reader = await command.ExecuteReaderAsync();
+            while (await reader.ReadAsync())
+            {
+                var name = reader.GetString(0);
+                var targetType = reader.GetString(1);
+                if (programmableSources.Any(source =>
+                        string.Equals(source.Name, name, StringComparison.OrdinalIgnoreCase)
+                        && (source.Type == "TRIGGER"
+                            ? targetType == "TRIGGER"
+                            : IsSharedSchemaObjectNamespaceType(targetType))))
+                    collisions.Add((name, targetType));
+            }
+        }
+
+        if (collisions.Count == 0) return;
+        var summary = string.Join(", ", collisions.OrderBy(c => c.Name, StringComparer.OrdinalIgnoreCase)
+            .ThenBy(c => c.Type, StringComparer.Ordinal).Select(c => $"{c.Name} ({c.Type})"));
+        throw new InvalidOperationException(
+            $"Schema clone refused before DDL: target schema '{targetSchema}' already contains objects in a conflicting Oracle namespace; classify ownership and approve a conflict policy before synchronization: {summary}.");
+    }
+
     private async Task CloneFromDeveloperSchemaAsync(OracleConnection connection, string targetSchema)
     {
         _logger.LogInformation("Cloning schema structure from {SourceSchema} to {TargetSchema}", _devSchemaName, targetSchema);
@@ -1476,7 +1652,7 @@ public class OracleSchemaService : IOracleSchemaService
                 (OBJECT_TYPE = 'TABLE' AND OBJECT_NAME NOT LIKE 'BIN$%') OR
                 (OBJECT_TYPE = 'INDEX' AND OBJECT_NAME NOT LIKE 'SYS_%') OR
                 (OBJECT_TYPE = 'SEQUENCE' AND OBJECT_NAME NOT LIKE 'ISEQ$$%') OR
-                (OBJECT_TYPE IN ('VIEW', 'PROCEDURE', 'FUNCTION', 'PACKAGE', 'PACKAGE BODY', 'TRIGGER', 'TYPE'))
+                (OBJECT_TYPE IN ('VIEW', 'PROCEDURE', 'FUNCTION', 'PACKAGE', 'PACKAGE BODY', 'TRIGGER', 'TYPE', 'TYPE BODY'))
               )
             ORDER BY 
               CASE OBJECT_TYPE 
@@ -1484,13 +1660,14 @@ public class OracleSchemaService : IOracleSchemaService
                 WHEN 'SEQUENCE' THEN 2
                 WHEN 'TABLE' THEN 3
                 WHEN 'INDEX' THEN 4
-                WHEN 'VIEW' THEN 5
-                WHEN 'FUNCTION' THEN 6
-                WHEN 'PROCEDURE' THEN 7
-                WHEN 'PACKAGE' THEN 8
-                WHEN 'PACKAGE BODY' THEN 9
-                WHEN 'TRIGGER' THEN 10
-                ELSE 11
+                WHEN 'TYPE BODY' THEN 5
+                WHEN 'VIEW' THEN 6
+                WHEN 'FUNCTION' THEN 7
+                WHEN 'PROCEDURE' THEN 8
+                WHEN 'PACKAGE' THEN 9
+                WHEN 'PACKAGE BODY' THEN 10
+                WHEN 'TRIGGER' THEN 11
+                ELSE 12
               END";
 
         await using (var cmd = connection.CreateCommand())
@@ -1505,6 +1682,9 @@ public class OracleSchemaService : IOracleSchemaService
         }
 
         _logger.LogInformation("Found {Count} objects to clone from {SourceSchema}", objects.Count, _devSchemaName);
+
+        var pendingObjects = objects.Where(o => !GlobalTables.Contains(o.Name) && !DeprecatedTables.Contains(o.Name)).ToList();
+        await EnsureNoCloneNamespaceCollisionsAsync(connection, targetSchema, pendingObjects);
 
         // Set DBMS_METADATA session transform options for portable DDL
         try
@@ -1543,9 +1723,8 @@ public class OracleSchemaService : IOracleSchemaService
         }
         catch (Exception ex)
         {
-            _logger.LogWarning(ex, "Failed to set CURRENT_SCHEMA to {TargetSchema}", targetSchema);
+            throw new InvalidOperationException($"Could not set CURRENT_SCHEMA to {targetSchema}; refusing to continue schema cloning.", ex);
         }
-        var pendingObjects = objects.Where(o => !GlobalTables.Contains(o.Name) && !DeprecatedTables.Contains(o.Name)).ToList();
         for (int pass = 1; pass <= 4 && pendingObjects.Count > 0; pass++)
         {
             var failedObjects = new List<(string Name, string Type)>();
@@ -1558,7 +1737,12 @@ public class OracleSchemaService : IOracleSchemaService
                 {
                     await using var cmd = connection.CreateCommand();
                     cmd.CommandText = "SELECT DBMS_METADATA.GET_DDL(:objType, :objName, :sourceSchema) FROM DUAL";
-                    cmd.Parameters.Add(new OracleParameter("objType", obj.Type == "PACKAGE BODY" ? "PACKAGE_BODY" : obj.Type));
+                    cmd.Parameters.Add(new OracleParameter("objType", obj.Type switch
+                    {
+                        "PACKAGE BODY" => "PACKAGE_BODY",
+                        "TYPE BODY" => "TYPE_BODY",
+                        _ => obj.Type
+                    }));
                     cmd.Parameters.Add(new OracleParameter("objName", obj.Name));
                     cmd.Parameters.Add(new OracleParameter("sourceSchema", _devSchemaName));
 
@@ -1568,11 +1752,15 @@ public class OracleSchemaService : IOracleSchemaService
                 catch (Exception ex)
                 {
                     _logger.LogWarning(ex, "Failed to get DDL for {Type} {Name}", obj.Type, obj.Name);
+                    failedObjects.Add(obj);
                     continue;
                 }
 
                 if (string.IsNullOrWhiteSpace(ddl))
+                {
+                    failedObjects.Add(obj);
                     continue;
+                }
 
                 // Retarget DDL to the target schema name
                 var pattern = $"\"{_devSchemaName}\".";
@@ -1582,16 +1770,11 @@ public class OracleSchemaService : IOracleSchemaService
                 ddl = System.Text.RegularExpressions.Regex.Replace(ddl, @"SHARING\s*=\s*\w+", "", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
                 ddl = System.Text.RegularExpressions.Regex.Replace(ddl, @"DEFAULT\s+COLLATION\s+""[^""]+""", "", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
 
-                // For programmable routines (VIEW, FUNCTION, PROCEDURE, PACKAGE, TRIGGER, TYPE), ensure CREATE OR REPLACE
-                if (obj.Type is "VIEW" or "FUNCTION" or "PROCEDURE" or "PACKAGE" or "PACKAGE BODY" or "TRIGGER" or "TYPE")
-                {
-                    if (ddl.TrimStart().StartsWith("CREATE ", StringComparison.OrdinalIgnoreCase) &&
-                        !ddl.TrimStart().StartsWith("CREATE OR REPLACE", StringComparison.OrdinalIgnoreCase))
-                    {
-                        var trimmed = ddl.TrimStart();
-                        ddl = "CREATE OR REPLACE " + trimmed.Substring(7);
-                    }
-                }
+                // Never replace a tenant-owned program/view during schema cloning. Collisions
+                // are rejected before DDL; CREATE without OR REPLACE also protects against
+                // an object being created after preflight.
+                if (IsProgrammableSchemaObject(obj.Type))
+                    ddl = Regex.Replace(ddl, @"^(\s*CREATE\s+)OR\s+REPLACE(\s+)", "$1", RegexOptions.IgnoreCase);
 
                 var stmts = (obj.Type == "TABLE") ? SplitDdlStatements(ddl) : new List<string> { ddl };
                 _logger.LogDebug("Executing DDL for {Type} {TargetSchema}.{Name} ({Count} statement(s))", obj.Type, targetSchema, obj.Name, stmts.Count);
@@ -1609,13 +1792,13 @@ public class OracleSchemaService : IOracleSchemaService
                             cmd.CommandText = trimmedStmt;
                             await cmd.ExecuteNonQueryAsync();
                         }
-                        catch (OracleException ex) when (ex.Number == 955 || ex.Number == 2261 || ex.Number == 2264 || ex.Number == 1917 || ex.Number == 1408 || ex.Number == 2275)
+                        catch (OracleException ex) when (IsBenignCloneCollision(ex, obj.Type))
                         {
                             _logger.LogDebug("Object/constraint already exists or is redundant ({Number}): {Msg}", ex.Number, ex.Message);
                         }
                     }
                 }
-                catch (OracleException ex) when (ex.Number == 955 || ex.Number == 2261 || ex.Number == 2264 || ex.Number == 1917)
+                catch (OracleException ex) when (IsBenignCloneCollision(ex, obj.Type))
                 {
                     _logger.LogDebug("Object/constraint {Name} already exists or is redundant: {Msg}", obj.Name, ex.Message);
                 }
@@ -1635,7 +1818,8 @@ public class OracleSchemaService : IOracleSchemaService
             pendingObjects = failedObjects;
         }
         // Step: Apply referential constraints (Foreign Keys) in a separate pass after all tables exist
-        var tablesToLink = objects.Where(o => o.Type == "TABLE" && !GlobalTables.Contains(o.Name) && !DeprecatedTables.Contains(o.Name)).ToList();
+        var tablesToLink = pendingObjects.Where(o => o.Type == "TABLE").ToList();
+        var failedForeignKeys = new List<string>();
         foreach (var tbl in tablesToLink)
         {
             try
@@ -1678,6 +1862,7 @@ public class OracleSchemaService : IOracleSchemaService
                     catch (Exception ex)
                     {
                         _logger.LogWarning(ex, "Failed applying foreign key on {TargetSchema}.{TableName}: {Stmt}", targetSchema, tbl.Name, stmt);
+                        failedForeignKeys.Add($"{tbl.Name}: {ex.GetBaseException().Message}");
                     }
                 }
             }
@@ -1688,6 +1873,7 @@ public class OracleSchemaService : IOracleSchemaService
             catch (Exception ex)
             {
                 _logger.LogWarning(ex, "Failed retrieving foreign keys for {TableName}", tbl.Name);
+                failedForeignKeys.Add($"{tbl.Name}: {ex.GetBaseException().Message}");
             }
         }
 
@@ -1696,8 +1882,20 @@ public class OracleSchemaService : IOracleSchemaService
         {
             await ExecuteRawAsync(connection, "ALTER SESSION SET CURRENT_SCHEMA = \"THINKON_ERP\"");
         }
-        catch { }
+        catch (Exception ex)
+        {
+            throw new InvalidOperationException("Schema cloning completed but could not restore CURRENT_SCHEMA to THINKON_ERP.", ex);
+        }
 
+        if (pendingObjects.Count > 0 || failedForeignKeys.Count > 0)
+        {
+            var failures = new List<string>();
+            if (pendingObjects.Count > 0)
+                failures.Add($"unresolved source objects after four passes ({pendingObjects.Count}): {string.Join(", ", pendingObjects.Select(o => $"{o.Type} {o.Name}"))}");
+            if (failedForeignKeys.Count > 0)
+                failures.Add($"foreign-key DDL failures ({failedForeignKeys.Count}): {string.Join("; ", failedForeignKeys)}");
+            throw new InvalidOperationException($"Schema cloning for {targetSchema} was incomplete: {string.Join("; ", failures)}.");
+        }
 
     }
     private static List<string> SplitDdlStatements(string ddl)
@@ -1720,107 +1918,49 @@ public class OracleSchemaService : IOracleSchemaService
         return list;
     }
 
+    private async Task EnsureTenantSchemaDiffSafeAsync(OracleConnection connection, string targetSchema)
+    {
+        OracleTenantSchemaDiffSqlBuilder.ValidateSchemaIdentifier(_devSchemaName, nameof(_devSchemaName));
+        OracleTenantSchemaDiffSqlBuilder.ValidateSchemaIdentifier(targetSchema, nameof(targetSchema));
+        if (string.Equals(_devSchemaName, targetSchema, StringComparison.OrdinalIgnoreCase))
+            throw new InvalidOperationException("Refusing to synchronize an Oracle schema with itself as both template and tenant target.");
+
+        async Task<int> CountUnsafeAsync(string predicate)
+        {
+            await using var command = connection.CreateCommand();
+            command.BindByName = true;
+            command.CommandText = $@"SELECT COUNT(*)
+                FROM ALL_TAB_COLUMNS src
+                JOIN ALL_TABLES target_table ON target_table.OWNER=:target_schema AND target_table.TABLE_NAME=src.TABLE_NAME
+                LEFT JOIN ALL_TAB_COLUMNS tgt ON tgt.OWNER=:target_schema AND tgt.TABLE_NAME=src.TABLE_NAME AND tgt.COLUMN_NAME=src.COLUMN_NAME
+                WHERE src.OWNER=:source_schema AND {predicate}";
+            command.Parameters.Add(new OracleParameter("target_schema", targetSchema));
+            command.Parameters.Add(new OracleParameter("source_schema", _devSchemaName));
+            return Convert.ToInt32(await command.ExecuteScalarAsync());
+        }
+
+        var missingRequiredWithoutDefault = await CountUnsafeAsync("tgt.COLUMN_NAME IS NULL AND src.NULLABLE='N' AND src.DEFAULT_LENGTH IS NULL");
+        if (missingRequiredWithoutDefault > 0)
+            throw new InvalidOperationException($"Tenant schema {targetSchema} is missing {missingRequiredWithoutDefault} required source column(s) without defaults. Prepare an explicit backfill and reviewed migration before any schema clone or column DDL.");
+
+        var incompatibleColumnTypes = await CountUnsafeAsync("tgt.COLUMN_NAME IS NOT NULL AND src.DATA_TYPE<>tgt.DATA_TYPE");
+        if (incompatibleColumnTypes > 0)
+            throw new InvalidOperationException($"Tenant schema {targetSchema} has {incompatibleColumnTypes} column(s) with a different Oracle data type. Review values and constraints before migration.");
+
+        var incompatibleCharacterSemantics = await CountUnsafeAsync("tgt.COLUMN_NAME IS NOT NULL AND src.DATA_TYPE IN ('VARCHAR2','NVARCHAR2','CHAR','NCHAR') AND NVL(src.CHAR_USED,'?')<>NVL(tgt.CHAR_USED,'?')");
+        if (incompatibleCharacterSemantics > 0)
+            throw new InvalidOperationException($"Tenant schema {targetSchema} has {incompatibleCharacterSemantics} character column(s) with incompatible BYTE/CHAR semantics. Review values and constraints before migration.");
+
+        var incompatibleNumberShape = await CountUnsafeAsync("tgt.COLUMN_NAME IS NOT NULL AND src.DATA_TYPE='NUMBER' AND tgt.DATA_TYPE='NUMBER' AND src.DATA_PRECISION IS NOT NULL AND tgt.DATA_PRECISION IS NOT NULL AND (src.DATA_PRECISION-NVL(src.DATA_SCALE,0)>tgt.DATA_PRECISION-NVL(tgt.DATA_SCALE,0) OR NVL(src.DATA_SCALE,0)>NVL(tgt.DATA_SCALE,0)) AND NOT (NVL(src.DATA_SCALE,0)>=NVL(tgt.DATA_SCALE,0) AND src.DATA_PRECISION-NVL(src.DATA_SCALE,0)>=tgt.DATA_PRECISION-NVL(tgt.DATA_SCALE,0))");
+        if (incompatibleNumberShape > 0)
+            throw new InvalidOperationException($"Tenant schema {targetSchema} has {incompatibleNumberShape} NUMBER column(s) whose source range cannot be widened without a data review.");
+    }
+
     private async Task SyncTableColumnsSchemaDiffAsync(OracleConnection connection, string targetSchema)
     {
         _logger.LogInformation("Performing comprehensive Schema Diff for table columns between {SourceSchema} and {TargetSchema}", _devSchemaName, targetSchema);
-
-        var diffSql = $@"
-            DECLARE
-                v_sql VARCHAR2(4000);
-            BEGIN
-                -- 1. Add missing columns to targetSchema tables
-                FOR r IN (
-                    SELECT 
-                        src.table_name,
-                        src.column_name,
-                        src.data_type,
-                        src.data_length,
-                        src.data_precision,
-                        src.data_scale,
-                        src.nullable,
-                        src.data_default
-                    FROM all_tab_cols src
-                    JOIN all_tables t ON src.owner = t.owner AND src.table_name = t.table_name
-                    LEFT JOIN all_tab_cols tgt 
-                        ON tgt.owner = '{targetSchema}' 
-                       AND tgt.table_name = src.table_name 
-                       AND tgt.column_name = src.column_name
-                    WHERE src.owner = '{_devSchemaName}'
-                      AND tgt.column_name IS NULL
-                      AND src.table_name IN (
-                          SELECT table_name FROM all_tables WHERE owner = '{targetSchema}'
-                      )
-                    ORDER BY src.table_name, src.column_id
-                ) LOOP
-                    v_sql := 'ALTER TABLE ""{targetSchema}"".""' || r.table_name || '"" ADD ""' || r.column_name || '"" ' || r.data_type;
-                    
-                    IF r.data_type IN ('VARCHAR2', 'NVARCHAR2', 'RAW', 'CHAR', 'NCHAR') THEN
-                        v_sql := v_sql || '(' || r.data_length || ')';
-                    ELSIF r.data_type = 'NUMBER' AND r.data_precision IS NOT NULL THEN
-                        IF r.data_scale IS NOT NULL AND r.data_scale > 0 THEN
-                            v_sql := v_sql || '(' || r.data_precision || ',' || r.data_scale || ')';
-                        ELSE
-                            v_sql := v_sql || '(' || r.data_precision || ')';
-                        END IF;
-                    END IF;
-
-                    IF r.data_default IS NOT NULL THEN
-                        v_sql := v_sql || ' DEFAULT ' || TRIM(r.data_default);
-                    END IF;
-
-                    IF r.nullable = 'N' AND r.data_default IS NOT NULL THEN
-                        v_sql := v_sql || ' NOT NULL';
-                    ELSE
-                        v_sql := v_sql || ' NULL';
-                    END IF;
-
-                    BEGIN
-                        EXECUTE IMMEDIATE v_sql;
-                    EXCEPTION WHEN OTHERS THEN 
-                        BEGIN
-                            v_sql := 'ALTER TABLE ""{targetSchema}"".""' || r.table_name || '"" ADD ""' || r.column_name || '"" ' || r.data_type;
-                            IF r.data_type IN ('VARCHAR2', 'NVARCHAR2', 'RAW', 'CHAR', 'NCHAR') THEN
-                                v_sql := v_sql || '(' || r.data_length || ')';
-                            ELSIF r.data_type = 'NUMBER' AND r.data_precision IS NOT NULL THEN
-                                IF r.data_scale IS NOT NULL AND r.data_scale > 0 THEN
-                                    v_sql := v_sql || '(' || r.data_precision || ',' || r.data_scale || ')';
-                                ELSE
-                                    v_sql := v_sql || '(' || r.data_precision || ')';
-                                END IF;
-                            END IF;
-                            v_sql := v_sql || ' NULL';
-                            EXECUTE IMMEDIATE v_sql;
-                        EXCEPTION WHEN OTHERS THEN NULL;
-                        END;
-                    END;
-                END LOOP;
-
-                -- 2. Expand mismatched column lengths if DEV_TEMPLATE column size is larger
-                FOR r IN (
-                    SELECT 
-                        src.table_name,
-                        src.column_name,
-                        src.data_type,
-                        src.data_length AS src_length,
-                        tgt.data_length AS tgt_length
-                    FROM all_tab_cols src
-                    JOIN all_tab_cols tgt 
-                        ON tgt.owner = '{targetSchema}' 
-                       AND tgt.table_name = src.table_name 
-                       AND tgt.column_name = src.column_name
-                    WHERE src.owner = '{_devSchemaName}'
-                      AND src.data_type IN ('VARCHAR2', 'NVARCHAR2', 'CHAR', 'NCHAR')
-                      AND src.data_type = tgt.data_type
-                      AND src.data_length > tgt.data_length
-                ) LOOP
-                    BEGIN
-                        EXECUTE IMMEDIATE 'ALTER TABLE ""{targetSchema}"".""' || r.table_name || '"" MODIFY (""' || r.column_name || '"" ' || r.data_type || '(' || r.src_length || '))';
-                    EXCEPTION WHEN OTHERS THEN NULL;
-                    END;
-                END LOOP;
-            END;";
-
-        await ExecuteRawAsync(connection, diffSql);
+        await EnsureTenantSchemaDiffSafeAsync(connection, targetSchema);
+        await ExecuteRawAsync(connection, OracleTenantSchemaDiffSqlBuilder.Build(_devSchemaName, targetSchema));
     }
 
     public async Task<(long BranchId, long FiscalYearId)> ProvisionTenantBranchAndFiscalYearAsync(

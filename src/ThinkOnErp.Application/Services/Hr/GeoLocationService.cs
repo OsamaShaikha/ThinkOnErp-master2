@@ -27,6 +27,7 @@ public sealed class GeoLocationService : IGeoLocationService
                 Math.Cos(rLat1) * Math.Cos(rLat2) *
                 Math.Sin(dLon / 2) * Math.Sin(dLon / 2);
 
+        a = Math.Clamp(a, 0d, 1d);
         var c = 2 * Math.Atan2(Math.Sqrt(a), Math.Sqrt(1 - a));
         return EarthRadiusMeters * c;
     }
@@ -48,53 +49,31 @@ public sealed class GeoLocationService : IGeoLocationService
 
         var branchName = !string.IsNullOrWhiteSpace(branch.BranchNameEn) ? branch.BranchNameEn : branch.BranchNameLocal;
 
-        // Check if branch coordinates are configured
+        if (punchLat is < -90m or > 90m || punchLon is < -180m or > 180m)
+            return new GeofenceCheckResult { IsWithinRange = false, BranchId = branch.Id, Status = "INVALID_COORDINATES", Message = "Valid GPS coordinates are required." };
+        if (!branch.EnforceGeofence)
+            return new GeofenceCheckResult { IsWithinRange = true, BranchId = branch.Id, BranchName = branchName,
+                AllowedRadiusMeters = overrideAllowedRadiusMeters ?? branch.GeofenceRadiusMeters, Status = "GEOFENCE_DISABLED", Message = "Geofence enforcement is disabled for this branch." };
+        // Missing branch coordinates are unverified, never proof of proximity.
         if (!branch.Latitude.HasValue || !branch.Longitude.HasValue)
         {
             _logger.LogWarning("Branch {BranchId} ({BranchName}) has no GPS coordinates configured.", branch.Id, branchName);
             return new GeofenceCheckResult
             {
-                IsWithinRange = true, // Permissive when branch has not set coordinates
+                IsWithinRange = false,
                 DistanceMeters = 0m,
                 AllowedRadiusMeters = overrideAllowedRadiusMeters ?? branch.GeofenceRadiusMeters,
                 BranchId = branch.Id,
                 BranchName = branchName,
                 Status = "NO_BRANCH_COORDINATES",
-                Message = $"Branch '{branchName}' has no GPS coordinates configured. Geofence verification bypassed."
-            };
-        }
-
-        // Check if geofence enforcement is disabled on this branch
-        if (!branch.EnforceGeofence)
-        {
-            return new GeofenceCheckResult
-            {
-                IsWithinRange = true,
-                DistanceMeters = 0m,
-                AllowedRadiusMeters = overrideAllowedRadiusMeters ?? branch.GeofenceRadiusMeters,
-                BranchId = branch.Id,
-                BranchName = branchName,
-                Status = "GEOFENCE_DISABLED",
-                Message = $"Geofence validation is disabled for branch '{branchName}'."
-            };
-        }
-
-        // Validate coordinates bounds
-        if (punchLat < -90m || punchLat > 90m || punchLon < -180m || punchLon > 180m)
-        {
-            return new GeofenceCheckResult
-            {
-                IsWithinRange = false,
-                DistanceMeters = -1m,
-                AllowedRadiusMeters = overrideAllowedRadiusMeters ?? branch.GeofenceRadiusMeters,
-                BranchId = branch.Id,
-                BranchName = branchName,
-                Status = "INVALID_COORDINATES",
-                Message = $"Provided coordinates ({punchLat}, {punchLon}) are invalid."
+                Message = $"Branch '{branchName}' has no GPS coordinates configured. Location could not be verified; the company rejection/flag policy applies."
             };
         }
 
         var allowedRadius = overrideAllowedRadiusMeters ?? (branch.GeofenceRadiusMeters > 0 ? branch.GeofenceRadiusMeters : 100m);
+        if (branch.Latitude is < -90m or > 90m || branch.Longitude is < -180m or > 180m || allowedRadius <= 0m)
+            return new GeofenceCheckResult { IsWithinRange = false, BranchId = branch.Id, BranchName = branchName,
+                Status = "INVALID_BRANCH_GEOFENCE", Message = "Branch GPS coordinates and allowed radius need configuration review." };
         var distance = CalculateDistanceMeters(punchLat, punchLon, branch.Latitude.Value, branch.Longitude.Value);
         var isWithin = distance <= allowedRadius;
 

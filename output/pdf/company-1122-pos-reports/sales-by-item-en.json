@@ -1,0 +1,426 @@
+{
+  "success": true,
+  "statusCode": 200,
+  "message": "تمت العملية بنجاح.",
+  "data": {
+    "code": "sales-by-item",
+    "title": "Item sales & profitability",
+    "isLive": false,
+    "header": {
+      "language": "en",
+      "isRightToLeft": false,
+      "companyName": "debis acc",
+      "branchName": "All accessible branches",
+      "taxNumber": null,
+      "phone": "0796211887",
+      "currency": "JOD",
+      "cashier": "All",
+      "payment": "All",
+      "preparedBy": "admin",
+      "reportNumber": "RPT-20261028-5d94f9debe164",
+      "issuedAtUtc": "2026-10-28T17:58:26.6741184Z",
+      "startDate": "2026-10-01T00:00:00",
+      "endDate": "2026-10-28T00:00:00",
+      "shiftId": null,
+      "tillId": null,
+      "days": [],
+      "payments": [],
+      "totals": {
+        "date": "0001-01-01T00:00:00",
+        "invoices": 0,
+        "sales": 0,
+        "discount": 0,
+        "returns": 0,
+        "net": 0,
+        "tax": 0,
+        "charges": 0,
+        "total": 0
+      },
+      "averageInvoice": 0
+    },
+    "filterNotes": [],
+    "branches": [
+      {
+        "branchId": 1,
+        "branchName": "debis acc",
+        "metrics": [
+          {
+            "label": "Net sales",
+            "value": "3,310.760",
+            "unit": "JOD"
+          },
+          {
+            "label": "Quantity sold",
+            "value": "230.000",
+            "unit": ""
+          },
+          {
+            "label": "Gross profit",
+            "value": "3,310.760",
+            "unit": "JOD"
+          },
+          {
+            "label": "Profit margin",
+            "value": "100%",
+            "unit": ""
+          }
+        ],
+        "tables": [
+          {
+            "title": "Item sales",
+            "columns": [
+              {
+                "label": "Item",
+                "numeric": false,
+                "code": false,
+                "width": 2.5
+              },
+              {
+                "label": "Category",
+                "numeric": false,
+                "code": false,
+                "width": 1.5
+              },
+              {
+                "label": "Sold",
+                "numeric": true,
+                "code": false,
+                "width": 1
+              },
+              {
+                "label": "Returned",
+                "numeric": true,
+                "code": false,
+                "width": 1
+              },
+              {
+                "label": "Net qty",
+                "numeric": true,
+                "code": false,
+                "width": 1
+              },
+              {
+                "label": "Gross",
+                "numeric": true,
+                "code": false,
+                "width": 1
+              },
+              {
+                "label": "Discount",
+                "numeric": true,
+                "code": false,
+                "width": 1
+              },
+              {
+                "label": "Net sales",
+                "numeric": true,
+                "code": false,
+                "width": 1
+              }
+            ],
+            "rows": [
+              [
+                "Office Desk\nITM-OB-98083",
+                "الإلكترونيات",
+                "14.000",
+                "2.000",
+                "12.000",
+                "2,100.000",
+                "0.000",
+                "2,136.000"
+              ],
+              [
+                "Office Chair\nITM-90001",
+                "هواتف",
+                "120.000",
+                "24.000",
+                "96.000",
+                "600.000",
+                "8.300",
+                "707.410"
+              ],
+              [
+                "????? ??????\nITM-OB-98083",
+                "الإلكترونيات",
+                "2.000",
+                "1.000",
+                "1.000",
+                "300.000",
+                "0.000",
+                "198.000"
+              ],
+              [
+                "Regular Shawarma\nFOOD-SHW-REG-001",
+                "الإلكترونيات",
+                "89.000",
+                "0.000",
+                "89.000",
+                "148.000",
+                "0.000",
+                "145.000"
+              ],
+              [
+                "Chair\nITM-90001",
+                "هواتف",
+                "8.000",
+                "0.000",
+                "8.000",
+                "80.000",
+                "0.000",
+                "92.000"
+              ],
+              [
+                "Meat Shawarma Sandwich - Regular\n100104",
+                "سندويشات شاورما",
+                "8.000",
+                "0.000",
+                "8.000",
+                "14.000",
+                "0.000",
+                "14.840"
+              ],
+              [
+                "Arabi Zinger\n200201",
+                "زنجر عربي",
+                "2.000",
+                "0.000",
+                "2.000",
+                "7.000",
+                "0.000",
+                "7.560"
+              ],
+              [
+                "debsi\nFOOD-SHW-REG-001",
+                "الإلكترونيات",
+                "2.000",
+                "0.000",
+                "2.000",
+                "4.000",
+                "0.000",
+                "4.000"
+              ],
+              [
+                "Item With Opening Balance ITM-OB-98083\nITM-OB-98083",
+                "الإلكترونيات",
+                "6.000",
+                "2.000",
+                "4.000",
+                "12.000",
+                "0.000",
+                "3.920"
+              ],
+              [
+                "Chicken Shawarma Sandwich with Cheese\n100103",
+                "سندويشات شاورما",
+                "1.000",
+                "0.000",
+                "1.000",
+                "1.750",
+                "0.000",
+                "2.030"
+              ],
+              [
+                "Test Item ITM-53403\nITM-53403",
+                "المجموعة الرئيسية المعدلة 6403",
+                "3.000",
+                "1.000",
+                "2.000",
+                "0.000",
+                "0.000",
+                "0.000"
+              ],
+              [
+                "Test Item ITM-34687\nITM-34687",
+                "المجموعة الفرعية المعدلة 8687",
+                "1.000",
+                "0.000",
+                "1.000",
+                "0.000",
+                "0.000",
+                "0.000"
+              ],
+              [
+                "Test Item ITM-53707\nITM-53707",
+                "المجموعة الفرعية المعدلة 26707",
+                "2.000",
+                "0.000",
+                "2.000",
+                "0.000",
+                "0.000",
+                "0.000"
+              ],
+              [
+                "Test Item ITM-95700\nITM-95700",
+                "المجموعة الفرعية المعدلة 6700",
+                "1.000",
+                "0.000",
+                "1.000",
+                "0.000",
+                "0.000",
+                "0.000"
+              ],
+              [
+                "Test Item ITM-32575\nITM-32575",
+                "المجموعة الفرعية المعدلة 6575",
+                "1.000",
+                "0.000",
+                "1.000",
+                "0.000",
+                "0.000",
+                "0.000"
+              ]
+            ]
+          },
+          {
+            "title": "Item profitability",
+            "columns": [
+              {
+                "label": "Item",
+                "numeric": false,
+                "code": false,
+                "width": 2
+              },
+              {
+                "label": "Tax",
+                "numeric": true,
+                "code": false,
+                "width": 1
+              },
+              {
+                "label": "Cost",
+                "numeric": true,
+                "code": false,
+                "width": 1
+              },
+              {
+                "label": "Gross profit",
+                "numeric": true,
+                "code": false,
+                "width": 1
+              },
+              {
+                "label": "Margin",
+                "numeric": true,
+                "code": false,
+                "width": 1
+              }
+            ],
+            "rows": [
+              [
+                "Office Desk\nITM-OB-98083",
+                "336.000",
+                "0.000",
+                "2,136.000",
+                "100%"
+              ],
+              [
+                "Office Chair\nITM-90001",
+                "110.498",
+                "0.000",
+                "707.410",
+                "100%"
+              ],
+              [
+                "????? ??????\nITM-OB-98083",
+                "48.000",
+                "0.000",
+                "198.000",
+                "100%"
+              ],
+              [
+                "Regular Shawarma\nFOOD-SHW-REG-001",
+                "0.000",
+                "0.000",
+                "145.000",
+                "100%"
+              ],
+              [
+                "Chair\nITM-90001",
+                "12.000",
+                "0.000",
+                "92.000",
+                "100%"
+              ],
+              [
+                "Meat Shawarma Sandwich - Regular\n100104",
+                "0.840",
+                "0.000",
+                "14.840",
+                "100%"
+              ],
+              [
+                "Arabi Zinger\n200201",
+                "0.560",
+                "0.000",
+                "7.560",
+                "100%"
+              ],
+              [
+                "debsi\nFOOD-SHW-REG-001",
+                "0.000",
+                "0.000",
+                "4.000",
+                "100%"
+              ],
+              [
+                "Item With Opening Balance ITM-OB-98083\nITM-OB-98083",
+                "1.920",
+                "0.000",
+                "3.920",
+                "100%"
+              ],
+              [
+                "Chicken Shawarma Sandwich with Cheese\n100103",
+                "0.280",
+                "0.000",
+                "2.030",
+                "100%"
+              ],
+              [
+                "Test Item ITM-53403\nITM-53403",
+                "0.000",
+                "0.000",
+                "0.000",
+                "0%"
+              ],
+              [
+                "Test Item ITM-34687\nITM-34687",
+                "0.000",
+                "0.000",
+                "0.000",
+                "0%"
+              ],
+              [
+                "Test Item ITM-53707\nITM-53707",
+                "0.000",
+                "0.000",
+                "0.000",
+                "0%"
+              ],
+              [
+                "Test Item ITM-95700\nITM-95700",
+                "0.000",
+                "0.000",
+                "0.000",
+                "0%"
+              ],
+              [
+                "Test Item ITM-32575\nITM-32575",
+                "0.000",
+                "0.000",
+                "0.000",
+                "0%"
+              ]
+            ]
+          }
+        ],
+        "notes": [
+          "Item count: 15 · Gross sales: 3,266.750 · Discounts: 8.300 · Total cost: 0.000 JOD"
+        ]
+      }
+    ]
+  },
+  "errors": null,
+  "timestamp": "2026-10-28T17:58:50.9632976Z",
+  "traceId": "ac658863-55d3-4efd-8cb2-eb9297906fbc"
+}

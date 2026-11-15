@@ -533,11 +533,40 @@ public sealed class GlVoucherService : IGlVoucherService
         return GlVoucherMapper.ToDto(voucher, voucherType);
     }
 
-    public async Task<GlVoucherHeaderDto> ReverseVoucherAsync(
+    public Task<GlVoucherHeaderDto> ReverseVoucherAsync(
         long id,
         string username,
         string? reversalReason,
+        CancellationToken cancellationToken = default) =>
+        ReverseVoucherCoreAsync(id, username, reversalReason, DateTime.UtcNow.Date, null, null, cancellationToken);
+
+    public Task<GlVoucherHeaderDto> ReverseVoucherAsync(
+        long id,
+        string username,
+        string? reversalReason,
+        DateTime reversalDate,
+        long fiscalYearId,
+        string serialResetPolicy,
         CancellationToken cancellationToken = default)
+    {
+        if (reversalDate == default)
+            throw new ArgumentException("An explicit reversal date is required.", nameof(reversalDate));
+        if (fiscalYearId <= 0)
+            throw new ArgumentOutOfRangeException(nameof(fiscalYearId), "An open fiscal year is required for the reversal date.");
+        serialResetPolicy = serialResetPolicy?.Trim().ToUpperInvariant() ?? string.Empty;
+        if (serialResetPolicy is not ("MONTHLY" or "YEARLY" or "CONTINUOUS"))
+            throw new ArgumentException("A supported journal serial reset policy is required.", nameof(serialResetPolicy));
+        return ReverseVoucherCoreAsync(id, username, reversalReason, reversalDate.Date, fiscalYearId, serialResetPolicy, cancellationToken);
+    }
+
+    private async Task<GlVoucherHeaderDto> ReverseVoucherCoreAsync(
+        long id,
+        string username,
+        string? reversalReason,
+        DateTime reversalDate,
+        long? fiscalYearId,
+        string? expectedSerialResetPolicy,
+        CancellationToken cancellationToken)
     {
         var originalVoucher = await _voucherRepository.GetByIdAsync(id, cancellationToken);
         if (originalVoucher == null)
@@ -549,6 +578,9 @@ public sealed class GlVoucherService : IGlVoucherService
         {
             throw new AccountingException("يمكن عكس السندات المرحّلة فقط.", "GL_VOUCHER_CANNOT_REVERSE_UNPOSTED");
         }
+
+        if (reversalDate.Date < originalVoucher.VoucherDate.Date)
+            throw new ArgumentException("The reversal date cannot precede the original voucher date.", nameof(reversalDate));
 
         if (originalVoucher.IsReversed)
         {
@@ -566,21 +598,21 @@ public sealed class GlVoucherService : IGlVoucherService
         var now = DateTime.UtcNow;
         var nextNo = await _voucherRepository.GenerateNextSerialNoAsync(
             originalVoucher.BranchId,
-            now.Year,
-            now.Month,
+            reversalDate.Year,
+            reversalDate.Month,
             originalVoucher.VoucherType,
-            voucherType?.SerialResetPolicy ?? "MONTHLY",
+            expectedSerialResetPolicy ?? voucherType?.SerialResetPolicy ?? "MONTHLY",
             cancellationToken);
 
         var reversalHeader = new GlVoucherHeader
         {
             BranchId = originalVoucher.BranchId,
-            FiscalYearId = originalVoucher.FiscalYearId,
-            VoucherYear = now.Year,
-            VoucherMonth = now.Month,
+            FiscalYearId = fiscalYearId ?? originalVoucher.FiscalYearId,
+            VoucherYear = reversalDate.Year,
+            VoucherMonth = reversalDate.Month,
             VoucherType = originalVoucher.VoucherType,
             VoucherNo = nextNo,
-            VoucherDate = now,
+            VoucherDate = reversalDate,
             Description = $"قيد عكسي للقيد رقم ({originalVoucher.VoucherNo}). سبب العكس: {reversalReason ?? "لا يوجد"}",
             TotalAmount = originalVoucher.TotalAmount,
             TotalLocalDebit = originalVoucher.TotalLocalCredit,

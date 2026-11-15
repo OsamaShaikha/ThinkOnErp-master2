@@ -36,6 +36,7 @@ public sealed class ProrationPolicy
     public DateTime EffectiveFrom { get; set; }
     public DateTime? EffectiveTo { get; set; }
     public string Method { get; set; } = "CALENDAR_DAYS"; // CALENDAR_DAYS, FIXED_30, WORKING_DAYS
+    public string SalarySegmentAllocation { get; set; } = "UNCONFIGURED"; // UNCONFIGURED, CALENDAR_WEIGHTED, WORKING_WEIGHTED
     public bool IsDefault { get; set; }
     public bool IsActive { get; set; } = true;
 
@@ -82,6 +83,8 @@ public sealed class TaxPolicy
     public decimal NationalContribRate { get; set; } = 0.010000m;
     public bool IsSscTaxDeductible { get; set; } = true;
     public string CalculationFrequency { get; set; } = "MONTHLY"; // MONTHLY, ANNUAL
+    [System.ComponentModel.DataAnnotations.Schema.NotMapped]
+    public int? MaxExemptedDependents { get; set; } = 3;
     public bool IsActive { get; set; } = true;
 
     public string CreationUser { get; set; } = string.Empty;

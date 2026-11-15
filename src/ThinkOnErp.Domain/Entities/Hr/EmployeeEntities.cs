@@ -13,6 +13,7 @@ public sealed class Employee
     public string NameEn { get; set; } = string.Empty;
     public string NationalId { get; set; } = string.Empty;
     public string Nationality { get; set; } = string.Empty;
+    public string? CitizenshipCountryCode { get; set; }
     public string? PassportNumber { get; set; }
     public DateTime DateOfBirth { get; set; }
     public string Gender { get; set; } = "M"; // M, F

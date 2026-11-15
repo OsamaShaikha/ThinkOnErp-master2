@@ -46,6 +46,7 @@ public sealed class AttendanceCorrectionsController : ControllerBase
     }
 
     [HttpPost("{id:long}/process")]
+    [ProducesResponseType(typeof(ApiResponse<AttendanceCorrectionRequest>), StatusCodes.Status409Conflict)]
     [ProducesResponseType(typeof(ApiResponse<AttendanceCorrectionRequest>), StatusCodes.Status200OK)]
     [HrPermission("hr-attendance-corrections", "approve")]
     public async Task<ActionResult<ApiResponse<AttendanceCorrectionRequest>>> ProcessCorrection(
@@ -54,7 +55,9 @@ public sealed class AttendanceCorrectionsController : ControllerBase
         CancellationToken cancellationToken)
     {
         var user = User.Identity?.Name ?? "SYSTEM";
-        var result = await _correctionService.ProcessRequestAsync(id, dto, user, cancellationToken);
+        AttendanceCorrectionRequest result;
+        try { result = await _correctionService.ProcessRequestAsync(id, dto, user, cancellationToken); }
+        catch (AttendanceCorrectionStaleException ex) { return Conflict(ApiResponse<AttendanceCorrectionRequest>.CreateFailure(ex.Message, statusCode: 409)); }
         return Ok(ApiResponse<AttendanceCorrectionRequest>.CreateSuccess(result, "Correction request processed successfully."));
     }
 

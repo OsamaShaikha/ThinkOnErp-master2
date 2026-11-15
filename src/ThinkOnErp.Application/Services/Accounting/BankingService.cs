@@ -4,6 +4,7 @@ using ThinkOnErp.Domain.Entities.Accounting;
 using ThinkOnErp.Domain.Exceptions;
 using ThinkOnErp.Domain.Interfaces;
 using ThinkOnErp.Domain.Interfaces.Accounting;
+using ThinkOnErp.Domain.Rules;
 
 namespace ThinkOnErp.Application.Services.Accounting;
 
@@ -52,36 +53,45 @@ public sealed class BankingService : IBankingService
             throw new AccountingException("بيانات الحساب البنكي مطلوبة.", "INVALID_INPUT");
         }
 
-        if (string.IsNullOrWhiteSpace(dto.AccountNumber) || string.IsNullOrWhiteSpace(dto.AccountNameLocal) || string.IsNullOrWhiteSpace(dto.GlAccountCode))
-        {
-            throw new AccountingException("رقم الحساب واسم الحساب وكود الأستاذ العام مطلوبين.", "INVALID_INPUT");
-        }
-
         var companyId = _tenantContext.GetRequiredCompanyId();
-        var glAcc = await _accountRepository.GetByCodeAsync(companyId, dto.GlAccountCode, cancellationToken);
+        var accountNumber = Required(dto.AccountNumber, "رقم الحساب", 50);
+        var accountNameLocal = Required(dto.AccountNameLocal, "اسم الحساب المحلي", 200);
+        var accountNameEn = Required(dto.AccountNameEn, "اسم الحساب الإنجليزي", 200);
+        var bankName = Required(dto.BankName, "اسم البنك", 150);
+        var glAccountCode = Required(dto.GlAccountCode, "كود الأستاذ العام", 50);
+        username = Required(username, "المستخدم", 50);
+        if (dto.BranchId <= 0 || !await _accountRepository.BranchBelongsToCompanyAsync(companyId, dto.BranchId, cancellationToken))
+            throw new AccountingException("الفرع غير نشط أو لا يتبع الشركة الحالية.", "INVALID_BANK_BRANCH");
+        if (dto.CurrencyId <= 0 || !await _bankingRepository.CurrencyExistsAsync(dto.CurrencyId, cancellationToken))
+            throw new AccountingException("عملة حساب البنك غير موجودة.", "INVALID_BANK_CURRENCY");
+        if (dto.OverdraftLimit < 0m)
+            throw new AccountingException("حد السحب على المكشوف لا يمكن أن يكون سالباً.", "INVALID_OVERDRAFT_LIMIT");
+
+        var glAcc = await _accountRepository.GetByCodeAsync(companyId, glAccountCode, cancellationToken);
         if (glAcc == null)
         {
-            throw new AccountingNotFoundException($"حساب الأستاذ العام ({dto.GlAccountCode}) غير موجود في الدليل.", "GL_ACCOUNT_NOT_FOUND");
+            throw new AccountingNotFoundException($"حساب الأستاذ العام ({glAccountCode}) غير موجود في الدليل.", "GL_ACCOUNT_NOT_FOUND");
         }
 
-        var existing = await _bankingRepository.GetBankAccountByNumberAsync(dto.AccountNumber, cancellationToken);
+        var existing = await _bankingRepository.GetBankAccountByNumberAsync(accountNumber, cancellationToken);
         if (existing != null)
         {
-            throw new AccountingException($"رقم الحساب البنكي ({dto.AccountNumber}) مسجل مسبقاً.", "DUPLICATE_BANK_ACCOUNT");
+            throw new AccountingException($"رقم الحساب البنكي ({accountNumber}) مسجل مسبقاً.", "DUPLICATE_BANK_ACCOUNT");
         }
 
         var account = new BankAccount
         {
             BranchId = dto.BranchId,
-            AccountNumber = dto.AccountNumber,
-            AccountNameLocal = dto.AccountNameLocal,
-            AccountNameEn = dto.AccountNameEn,
-            BankName = dto.BankName,
-            BankBranchName = dto.BankBranchName,
-            Iban = dto.Iban,
-            SwiftCode = dto.SwiftCode,
+            AccountNumber = accountNumber,
+            AccountNameLocal = accountNameLocal,
+            AccountNameEn = accountNameEn,
+            BankName = bankName,
+            BankCode = Optional(dto.BankCode, "رمز البنك", 50),
+            BankBranchName = Optional(dto.BankBranchName, "فرع البنك", 150),
+            Iban = NormalizeIban(dto.Iban),
+            SwiftCode = Optional(dto.SwiftCode, "رمز SWIFT", 30),
             CurrencyId = dto.CurrencyId,
-            GlAccountCode = dto.GlAccountCode,
+            GlAccountCode = glAccountCode,
             OverdraftLimit = dto.OverdraftLimit,
             OpeningBalance = dto.OpeningBalance,
             CurrentBalance = dto.OpeningBalance,
@@ -110,19 +120,28 @@ public sealed class BankingService : IBankingService
         }
 
         var companyId = _tenantContext.GetRequiredCompanyId();
-        var glAcc = await _accountRepository.GetByCodeAsync(companyId, dto.GlAccountCode, cancellationToken);
+        var accountNameLocal = Required(dto.AccountNameLocal, "اسم الحساب المحلي", 200);
+        var accountNameEn = Required(dto.AccountNameEn, "اسم الحساب الإنجليزي", 200);
+        var bankName = Required(dto.BankName, "اسم البنك", 150);
+        var glAccountCode = Required(dto.GlAccountCode, "كود الأستاذ العام", 50);
+        username = Required(username, "المستخدم", 50);
+        if (dto.OverdraftLimit < 0m)
+            throw new AccountingException("حد السحب على المكشوف لا يمكن أن يكون سالباً.", "INVALID_OVERDRAFT_LIMIT");
+
+        var glAcc = await _accountRepository.GetByCodeAsync(companyId, glAccountCode, cancellationToken);
         if (glAcc == null)
         {
-            throw new AccountingNotFoundException($"حساب الأستاذ العام ({dto.GlAccountCode}) غير موجود في الدليل.", "GL_ACCOUNT_NOT_FOUND");
+            throw new AccountingNotFoundException($"حساب الأستاذ العام ({glAccountCode}) غير موجود في الدليل.", "GL_ACCOUNT_NOT_FOUND");
         }
 
-        account.AccountNameLocal = dto.AccountNameLocal;
-        account.AccountNameEn = dto.AccountNameEn;
-        account.BankName = dto.BankName;
-        account.BankBranchName = dto.BankBranchName;
-        account.Iban = dto.Iban;
-        account.SwiftCode = dto.SwiftCode;
-        account.GlAccountCode = dto.GlAccountCode;
+        account.AccountNameLocal = accountNameLocal;
+        account.AccountNameEn = accountNameEn;
+        account.BankName = bankName;
+        account.BankCode = Optional(dto.BankCode, "رمز البنك", 50);
+        account.BankBranchName = Optional(dto.BankBranchName, "فرع البنك", 150);
+        account.Iban = NormalizeIban(dto.Iban);
+        account.SwiftCode = Optional(dto.SwiftCode, "رمز SWIFT", 30);
+        account.GlAccountCode = glAccountCode;
         account.OverdraftLimit = dto.OverdraftLimit;
         account.IsActive = dto.IsActive;
         account.UpdateUser = username;
@@ -502,6 +521,7 @@ public sealed class BankingService : IBankingService
             AccountNameLocal = b.AccountNameLocal,
             AccountNameEn = b.AccountNameEn,
             BankName = b.BankName,
+            BankCode = b.BankCode,
             BankBranchName = b.BankBranchName,
             Iban = b.Iban,
             SwiftCode = b.SwiftCode,
@@ -514,6 +534,31 @@ public sealed class BankingService : IBankingService
             CurrentBalance = b.CurrentBalance,
             IsActive = b.IsActive
         };
+    }
+
+    private static string? NormalizeIban(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value)) return null;
+        if (!IbanRules.TryNormalize(value, out var normalized))
+            throw new AccountingException("رقم IBAN غير صالح أو رقم التحقق غير مطابق.", "INVALID_IBAN");
+        return normalized;
+    }
+
+    private static string Required(string? value, string field, int maxLength)
+    {
+        var normalized = value?.Trim();
+        if (string.IsNullOrWhiteSpace(normalized) || normalized.Length > maxLength)
+            throw new AccountingException($"{field} مطلوب ولا يتجاوز {maxLength} حرفاً.", "INVALID_INPUT");
+        return normalized;
+    }
+
+    private static string? Optional(string? value, string field, int maxLength)
+    {
+        if (string.IsNullOrWhiteSpace(value)) return null;
+        var normalized = value.Trim();
+        if (normalized.Length > maxLength)
+            throw new AccountingException($"{field} لا يتجاوز {maxLength} حرفاً.", "INVALID_INPUT");
+        return normalized;
     }
 
     private static CashRegisterDto MapToCashRegisterDto(CashRegister c)

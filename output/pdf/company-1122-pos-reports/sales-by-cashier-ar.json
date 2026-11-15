@@ -1,0 +1,174 @@
+{
+  "success": true,
+  "statusCode": 200,
+  "message": "تمت العملية بنجاح.",
+  "data": {
+    "code": "sales-by-cashier",
+    "title": "المبيعات حسب الكاشير",
+    "isLive": false,
+    "header": {
+      "language": "ar",
+      "isRightToLeft": true,
+      "companyName": "debis acc",
+      "branchName": "جميع الفروع المتاحة",
+      "taxNumber": null,
+      "phone": "0796211887",
+      "currency": "JOD",
+      "cashier": "الكل",
+      "payment": "الكل",
+      "preparedBy": "admin",
+      "reportNumber": "RPT-20261028-1161c16a77514",
+      "issuedAtUtc": "2026-10-28T17:57:07.6095356Z",
+      "startDate": "2026-10-01T00:00:00",
+      "endDate": "2026-10-28T00:00:00",
+      "shiftId": null,
+      "tillId": null,
+      "days": [],
+      "payments": [],
+      "totals": {
+        "date": "0001-01-01T00:00:00",
+        "invoices": 0,
+        "sales": 0,
+        "discount": 0,
+        "returns": 0,
+        "net": 0,
+        "tax": 0,
+        "charges": 0,
+        "total": 0
+      },
+      "averageInvoice": 0
+    },
+    "filterNotes": [],
+    "branches": [
+      {
+        "branchId": 1,
+        "branchName": "debis acc",
+        "metrics": [
+          {
+            "label": "صافي المبيعات",
+            "value": "3,277.248",
+            "unit": "JOD"
+          },
+          {
+            "label": "إجمالي المبيعات",
+            "value": "3,416.750",
+            "unit": "JOD"
+          },
+          {
+            "label": "الخصومات",
+            "value": "16.350",
+            "unit": "JOD"
+          },
+          {
+            "label": "الفواتير",
+            "value": "185",
+            "unit": ""
+          }
+        ],
+        "tables": [
+          {
+            "title": "مبيعات الكاشيرات",
+            "columns": [
+              {
+                "label": "الكاشير",
+                "numeric": false,
+                "code": false,
+                "width": 2
+              },
+              {
+                "label": "الفواتير",
+                "numeric": true,
+                "code": false,
+                "width": 1
+              },
+              {
+                "label": "الإجمالي",
+                "numeric": true,
+                "code": false,
+                "width": 1
+              },
+              {
+                "label": "الخصم",
+                "numeric": true,
+                "code": false,
+                "width": 1
+              },
+              {
+                "label": "الضريبة",
+                "numeric": true,
+                "code": false,
+                "width": 1
+              },
+              {
+                "label": "المجموع",
+                "numeric": true,
+                "code": false,
+                "width": 1
+              },
+              {
+                "label": "صافي المبيعات",
+                "numeric": true,
+                "code": false,
+                "width": 1
+              }
+            ],
+            "rows": [
+              [
+                "admin",
+                "185",
+                "3,416.750",
+                "16.350",
+                "510.098",
+                "3,955.498",
+                "3,277.248"
+              ]
+            ]
+          },
+          {
+            "title": "مرتجعات ومتوسطات الكاشيرات",
+            "columns": [
+              {
+                "label": "الكاشير",
+                "numeric": false,
+                "code": false,
+                "width": 2
+              },
+              {
+                "label": "عدد المرتجعات",
+                "numeric": true,
+                "code": false,
+                "width": 1
+              },
+              {
+                "label": "قيمة المرتجعات",
+                "numeric": true,
+                "code": false,
+                "width": 1
+              },
+              {
+                "label": "متوسط الفاتورة",
+                "numeric": true,
+                "code": false,
+                "width": 1
+              }
+            ],
+            "rows": [
+              [
+                "admin",
+                "29",
+                "678.250",
+                "17.710"
+              ]
+            ]
+          }
+        ],
+        "notes": [
+          "الكاشيرات: 1"
+        ]
+      }
+    ]
+  },
+  "errors": null,
+  "timestamp": "2026-10-28T17:57:08.2892349Z",
+  "traceId": "83ce363d-1481-496b-94dd-b7f17ce4f2d6"
+}

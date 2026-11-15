@@ -28,11 +28,35 @@ public interface ITaxCalculationEngine
         DateTime date,
         CancellationToken cancellationToken = default);
 
+    Task<TaxResult> CalculateIncomeTaxAsync(
+        long companyId,
+        decimal grossSalary,
+        decimal employeeSscContrib,
+        int dependentCount,
+        DateTime date,
+        int roundingDecimals,
+        CancellationToken cancellationToken = default);
+
     TaxResult CalculateIncomeTax(
         decimal grossSalary,
         decimal employeeSscContrib,
         int dependentCount,
         TaxPolicy? policy);
+
+    TaxResult CalculateIncomeTax(
+        decimal grossSalary,
+        decimal employeeSscContrib,
+        int dependentCount,
+        TaxPolicy? policy,
+        int roundingDecimals);
+
+    TaxResult CalculateIncomeTax(
+        decimal grossSalary,
+        decimal employeeSscContrib,
+        int dependentCount,
+        TaxPolicy? policy,
+        int roundingDecimals,
+        int? roundingRules);
 }
 
 public sealed class TaxCalculationEngine : ITaxCalculationEngine
@@ -44,25 +68,51 @@ public sealed class TaxCalculationEngine : ITaxCalculationEngine
         _policyRepository = policyRepository;
     }
 
+    public Task<TaxResult> CalculateIncomeTaxAsync(
+        long companyId,
+        decimal grossSalary,
+        decimal employeeSscContrib,
+        int dependentCount,
+        DateTime date,
+        CancellationToken cancellationToken = default) =>
+        CalculateIncomeTaxAsync(companyId, grossSalary, employeeSscContrib, dependentCount, date, 3, cancellationToken);
+
     public async Task<TaxResult> CalculateIncomeTaxAsync(
         long companyId,
         decimal grossSalary,
         decimal employeeSscContrib,
         int dependentCount,
         DateTime date,
+        int roundingDecimals,
         CancellationToken cancellationToken = default)
     {
         var policy = await _policyRepository.GetActiveTaxPolicyAsync(companyId, date, cancellationToken);
-        return CalculateIncomeTax(grossSalary, employeeSscContrib, dependentCount, policy);
+        return CalculateIncomeTax(grossSalary, employeeSscContrib, dependentCount, policy, roundingDecimals);
     }
 
     public TaxResult CalculateIncomeTax(
         decimal grossSalary,
         decimal employeeSscContrib,
         int dependentCount,
-        TaxPolicy? policy)
+        TaxPolicy? policy) =>
+        CalculateIncomeTax(grossSalary, employeeSscContrib, dependentCount, policy, 3);
+
+    public TaxResult CalculateIncomeTax(
+        decimal grossSalary,
+        decimal employeeSscContrib,
+        int dependentCount,
+        TaxPolicy? policy,
+        int roundingDecimals) => CalculateIncomeTax(grossSalary, employeeSscContrib, dependentCount, policy, roundingDecimals, null);
+
+    public TaxResult CalculateIncomeTax(
+        decimal grossSalary,
+        decimal employeeSscContrib,
+        int dependentCount,
+        TaxPolicy? policy,
+        int roundingDecimals,
+        int? roundingRules)
     {
-        // Fallback default statutory tax policy if not yet seeded
+        // Company policy driven, with statutory fallback only when unconfigured
         var personalExemptionSelf = policy?.PersonalExemptionSelf ?? 9000.00m;
         var personalExemptionDependent = policy?.PersonalExemptionDependent ?? 1000.00m;
         var nationalThreshold = policy?.NationalContribThreshold ?? 200000.00m;
@@ -70,8 +120,18 @@ public sealed class TaxCalculationEngine : ITaxCalculationEngine
         var isSscDeductible = policy?.IsSscTaxDeductible ?? true;
         var policyCode = policy?.Code ?? "DEFAULT_TAX";
 
-        // Total annual exemptions = self + (dependents, max 3 typically)
-        var clampedDependents = Math.Min(dependentCount, 3);
+        // Total annual exemptions = self + (dependents according to company policy max cap)
+        int clampedDependents;
+        if (policy?.MaxExemptedDependents.HasValue == true)
+        {
+            clampedDependents = policy.MaxExemptedDependents.Value > 0
+                ? Math.Min(dependentCount, policy.MaxExemptedDependents.Value)
+                : 0;
+        }
+        else
+        {
+            clampedDependents = policy == null ? Math.Min(dependentCount, 3) : dependentCount;
+        }
         var totalAnnualExemptions = personalExemptionSelf + (clampedDependents * personalExemptionDependent);
         var monthlyExemptions = totalAnnualExemptions / 12.0m;
 
@@ -123,14 +183,14 @@ public sealed class TaxCalculationEngine : ITaxCalculationEngine
             }
         }
 
-        var monthlyTaxWithheld = Math.Round(annualTax / 12.0m, 3);
+        var monthlyTaxWithheld = PayrollCurrencyRules.Round(annualTax / 12.0m, roundingDecimals, roundingRules);
 
-        // National solidarity contribution (1% above threshold)
+        // National solidarity contribution (configurable rate above threshold)
         decimal monthlyNationalContrib = 0.00m;
         if (annualNetTaxable > nationalThreshold)
         {
             var excess = annualNetTaxable - nationalThreshold;
-            monthlyNationalContrib = Math.Round((excess * nationalRate) / 12.0m, 3);
+            monthlyNationalContrib = PayrollCurrencyRules.Round((excess * nationalRate) / 12.0m, roundingDecimals, roundingRules);
         }
 
         return new TaxResult(

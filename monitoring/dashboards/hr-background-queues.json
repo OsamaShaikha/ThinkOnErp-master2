@@ -1,0 +1,87 @@
+{
+  "dashboard": {
+    "title": "HR Background Queues",
+    "tags": ["hr", "queues", "attendance", "accounting"],
+    "timezone": "browser",
+    "schemaVersion": 38,
+    "version": 1,
+    "refresh": "30s",
+    "panels": [
+      {
+        "id": 1,
+        "title": "Raw attendance events by outcome",
+        "type": "timeseries",
+        "gridPos": { "x": 0, "y": 0, "w": 12, "h": 8 },
+        "targets": [
+          {
+            "expr": "sum by (outcome) (rate(thinkonerp_hr_attendance_raw_events_total[5m]))",
+            "legendFormat": "{{outcome}}",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": { "unit": "ops", "min": 0 },
+          "overrides": []
+        },
+        "options": { "legend": { "displayMode": "list", "placement": "bottom" }, "tooltip": { "mode": "multi" } }
+      },
+      {
+        "id": 2,
+        "title": "Accounting outbox messages by outcome",
+        "type": "timeseries",
+        "gridPos": { "x": 12, "y": 0, "w": 12, "h": 8 },
+        "targets": [
+          {
+            "expr": "sum by (outcome) (rate(thinkonerp_hr_accounting_outbox_messages_total[5m]))",
+            "legendFormat": "{{outcome}}",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": { "unit": "ops", "min": 0 },
+          "overrides": []
+        },
+        "options": { "legend": { "displayMode": "list", "placement": "bottom" }, "tooltip": { "mode": "multi" } }
+      },
+      {
+        "id": 3,
+        "title": "Outbox payload conflicts in the last 10 minutes",
+        "type": "stat",
+        "gridPos": { "x": 0, "y": 8, "w": 8, "h": 5 },
+        "targets": [
+          {
+            "expr": "sum(increase(thinkonerp_hr_accounting_outbox_messages_total{outcome=\"conflict\"}[10m]))",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "short",
+            "min": 0,
+            "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }, { "color": "red", "value": 1 }] }
+          },
+          "overrides": []
+        },
+        "options": { "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "orientation": "auto", "colorMode": "value", "graphMode": "area", "textMode": "auto" }
+      },
+      {
+        "id": 4,
+        "title": "Selected background batches",
+        "type": "timeseries",
+        "gridPos": { "x": 8, "y": 8, "w": 16, "h": 5 },
+        "targets": [
+          { "expr": "rate(thinkonerp_hr_attendance_raw_batches_total{outcome=\"selected\"}[5m])", "legendFormat": "attendance", "refId": "A" },
+          { "expr": "rate(thinkonerp_hr_accounting_outbox_batches_total{outcome=\"selected\"}[5m])", "legendFormat": "accounting outbox", "refId": "B" }
+        ],
+        "fieldConfig": { "defaults": { "unit": "ops", "min": 0 }, "overrides": [] },
+        "options": { "legend": { "displayMode": "list", "placement": "bottom" }, "tooltip": { "mode": "multi" } }
+      }
+    ],
+    "time": { "from": "now-6h", "to": "now" },
+    "timepicker": {},
+    "title": "HR Background Queues",
+    "uid": "hr-background-queues",
+    "version": 1
+  },
+  "overwrite": true
+}

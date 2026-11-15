@@ -1,0 +1,26 @@
+[
+  {
+    "Selection": "all branches / all cashiers",
+    "Invoices": 161,
+    "Net": 2683.4,
+    "Total": 3125.6925
+  },
+  {
+    "Selection": "selected branch / all cashiers",
+    "Invoices": 161,
+    "Net": 2683.4,
+    "Total": 3125.6925
+  },
+  {
+    "Selection": "all branches / selected cashier",
+    "Invoices": 161,
+    "Net": 2683.4,
+    "Total": 3125.6925
+  },
+  {
+    "Selection": "selected branch / selected cashier",
+    "Invoices": 161,
+    "Net": 2683.4,
+    "Total": 3125.6925
+  }
+]

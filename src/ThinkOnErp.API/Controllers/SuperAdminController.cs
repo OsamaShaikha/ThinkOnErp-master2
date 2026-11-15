@@ -591,10 +591,18 @@ public class SuperAdminController : ControllerBase
         [HttpPost("sync-tenant-schemas")]
         [Authorize(Policy = "SuperAdminOnly")]
         [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status409Conflict)]
         public async Task<IActionResult> SyncTenantSchemas()
         {
             try
             {
+                if (!_oracleSchemaService.ExistingTenantSchemaSyncEnabled)
+                {
+                    return Conflict(ApiResponse<object>.CreateFailure(
+                        "Tenant schema synchronization is disabled until target preflight, backups, rollback plan, and approval are complete.",
+                        statusCode: 409));
+                }
+
                 _logger.LogInformation("SuperAdmin requesting sync/upgrade of all tenant schemas");
                 _ = Task.Run(async () =>
                 {
@@ -628,11 +636,19 @@ public class SuperAdminController : ControllerBase
         [Authorize(Policy = "SuperAdminOnly")]
         [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status404NotFound)]
+        [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status409Conflict)]
         [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> SyncCompanyTenantSchema(long companyId, [FromQuery] bool runInBackground = false)
         {
             try
             {
+                if (!_oracleSchemaService.ExistingTenantSchemaSyncEnabled)
+                {
+                    return Conflict(ApiResponse<object>.CreateFailure(
+                        "Tenant schema synchronization is disabled until target preflight, backup, rollback plan, and approval are complete.",
+                        statusCode: 409));
+                }
+
                 _logger.LogInformation("SuperAdmin requesting sync/upgrade of tenant schema for company ID {CompanyId}", companyId);
                 
                 var company = await _companyRepository.GetByIdAsync(companyId);

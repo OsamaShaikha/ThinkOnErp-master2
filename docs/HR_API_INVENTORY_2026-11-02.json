@@ -1,0 +1,1678 @@
+[
+  {
+    "controller": "AttendanceController",
+    "method": "POST",
+    "path": "/api/hr/attendance/check-in",
+    "action": "CheckIn",
+    "purpose": "تسجيل دخول GPS",
+    "screen": "hr-attendance",
+    "feature": "create",
+    "selfService": true,
+    "adminOnly": false,
+    "parameters": [
+      {
+        "binding": "body",
+        "declaration": "CheckInRequestDto dto"
+      }
+    ],
+    "response": "ApiResponse<AttendancePunchResultDto>",
+    "file": "src/ThinkOnErp.API/Controllers/Hr/AttendanceController.cs",
+    "line": 42
+  },
+  {
+    "controller": "AttendanceController",
+    "method": "POST",
+    "path": "/api/hr/attendance/check-out",
+    "action": "CheckOut",
+    "purpose": "تسجيل خروج GPS",
+    "screen": "hr-attendance",
+    "feature": "create",
+    "selfService": true,
+    "adminOnly": false,
+    "parameters": [
+      {
+        "binding": "body",
+        "declaration": "CheckOutRequestDto dto"
+      }
+    ],
+    "response": "ApiResponse<AttendancePunchResultDto>",
+    "file": "src/ThinkOnErp.API/Controllers/Hr/AttendanceController.cs",
+    "line": 70
+  },
+  {
+    "controller": "AttendanceController",
+    "method": "GET",
+    "path": "/api/hr/attendance/today-status",
+    "action": "GetTodayStatus",
+    "purpose": "حالة حضور اليوم",
+    "screen": "hr-attendance",
+    "feature": "view",
+    "selfService": true,
+    "adminOnly": false,
+    "parameters": [
+      {
+        "binding": "query",
+        "declaration": "string employeeCode"
+      }
+    ],
+    "response": "ApiResponse<TodayAttendanceStatusDto>",
+    "file": "src/ThinkOnErp.API/Controllers/Hr/AttendanceController.cs",
+    "line": 98
+  },
+  {
+    "controller": "AttendanceController",
+    "method": "GET",
+    "path": "/api/hr/attendance/nearby-branches",
+    "action": "GetNearbyBranches",
+    "purpose": "الفروع الأقرب للإحداثيات",
+    "screen": "hr-attendance",
+    "feature": "view",
+    "selfService": true,
+    "adminOnly": false,
+    "parameters": [
+      {
+        "binding": "query",
+        "declaration": "decimal latitude"
+      },
+      {
+        "binding": "query",
+        "declaration": "decimal longitude"
+      },
+      {
+        "binding": "query",
+        "declaration": "long? companyId"
+      }
+    ],
+    "response": "ApiResponse<IReadOnlyList<NearbyBranchDto>>",
+    "file": "src/ThinkOnErp.API/Controllers/Hr/AttendanceController.cs",
+    "line": 117
+  },
+  {
+    "controller": "AttendanceCorrectionsController",
+    "method": "POST",
+    "path": "/api/hr/attendance-corrections",
+    "action": "SubmitCorrection",
+    "purpose": "طلب تصحيح حضور",
+    "screen": "hr-attendance-corrections",
+    "feature": "create",
+    "selfService": true,
+    "adminOnly": false,
+    "parameters": [
+      {
+        "binding": "body",
+        "declaration": "AttendanceCorrectionRequestDto dto"
+      }
+    ],
+    "response": "ApiResponse<AttendanceCorrectionRequest>",
+    "file": "src/ThinkOnErp.API/Controllers/Hr/AttendanceCorrectionsController.cs",
+    "line": 39
+  },
+  {
+    "controller": "AttendanceCorrectionsController",
+    "method": "POST",
+    "path": "/api/hr/attendance-corrections/{id:long}/process",
+    "action": "ProcessCorrection",
+    "purpose": "اعتماد أو رفض تصحيح الحضور",
+    "screen": "hr-attendance-corrections",
+    "feature": "approve",
+    "selfService": false,
+    "adminOnly": false,
+    "parameters": [
+      {
+        "binding": "route/body inferred",
+        "declaration": "long id"
+      },
+      {
+        "binding": "body",
+        "declaration": "ProcessAttendanceCorrectionDto dto"
+      }
+    ],
+    "response": "ApiResponse<AttendanceCorrectionRequest>",
+    "file": "src/ThinkOnErp.API/Controllers/Hr/AttendanceCorrectionsController.cs",
+    "line": 51
+  },
+  {
+    "controller": "AttendanceCorrectionsController",
+    "method": "GET",
+    "path": "/api/hr/attendance-corrections",
+    "action": "GetCorrections",
+    "purpose": "قائمة طلبات التصحيح",
+    "screen": "hr-attendance-corrections",
+    "feature": "view",
+    "selfService": true,
+    "adminOnly": false,
+    "parameters": [
+      {
+        "binding": "query",
+        "declaration": "string? employeeCode"
+      },
+      {
+        "binding": "query",
+        "declaration": "string? status"
+      }
+    ],
+    "response": "ApiResponse<IReadOnlyList<AttendanceCorrectionRequest>>",
+    "file": "src/ThinkOnErp.API/Controllers/Hr/AttendanceCorrectionsController.cs",
+    "line": 64
+  },
+  {
+    "controller": "EmployeesController",
+    "method": "GET",
+    "path": "/api/hr/employees",
+    "action": "GetEmployees",
+    "purpose": "قائمة الموظفين والبحث والترقيم",
+    "screen": "hr-employees",
+    "feature": "view",
+    "selfService": false,
+    "adminOnly": false,
+    "parameters": [
+      {
+        "binding": "query",
+        "declaration": "string? searchKeyword"
+      },
+      {
+        "binding": "query",
+        "declaration": "string? departmentCode"
+      },
+      {
+        "binding": "query",
+        "declaration": "string? status"
+      },
+      {
+        "binding": "query",
+        "declaration": "long? branchId"
+      },
+      {
+        "binding": "query",
+        "declaration": "int pageIndex = 1"
+      },
+      {
+        "binding": "query",
+        "declaration": "int pageSize = 20"
+      }
+    ],
+    "response": "ApiResponse<PagedResultDto<EmployeeSummaryDto>>",
+    "file": "src/ThinkOnErp.API/Controllers/Hr/EmployeesController.cs",
+    "line": 41
+  },
+  {
+    "controller": "EmployeesController",
+    "method": "GET",
+    "path": "/api/hr/employees/export",
+    "action": "ExportEmployees",
+    "purpose": "تصدير الموظفين Excel",
+    "screen": "hr-employees",
+    "feature": "export",
+    "selfService": false,
+    "adminOnly": false,
+    "parameters": [
+      {
+        "binding": "query",
+        "declaration": "string? searchKeyword"
+      },
+      {
+        "binding": "query",
+        "declaration": "string? departmentCode"
+      },
+      {
+        "binding": "query",
+        "declaration": "string? status"
+      },
+      {
+        "binding": "query",
+        "declaration": "long? branchId"
+      }
+    ],
+    "response": "FileContentResult",
+    "file": "src/ThinkOnErp.API/Controllers/Hr/EmployeesController.cs",
+    "line": 61
+  },
+  {
+    "controller": "EmployeesController",
+    "method": "GET",
+    "path": "/api/hr/employees/export-template",
+    "action": "DownloadTemplate",
+    "purpose": "قالب استيراد الموظفين",
+    "screen": "hr-employees",
+    "feature": "view",
+    "selfService": false,
+    "adminOnly": false,
+    "parameters": [],
+    "response": "FileContentResult",
+    "file": "src/ThinkOnErp.API/Controllers/Hr/EmployeesController.cs",
+    "line": 78
+  },
+  {
+    "controller": "EmployeesController",
+    "method": "POST",
+    "path": "/api/hr/employees/import/validate",
+    "action": "ValidateImport",
+    "purpose": "فحص Excel قبل الاستيراد",
+    "screen": "hr-employees",
+    "feature": "import",
+    "selfService": false,
+    "adminOnly": false,
+    "parameters": [
+      {
+        "binding": "form",
+        "declaration": "IFormFile? file"
+      }
+    ],
+    "response": "ApiResponse<EmployeeImportResultDto>",
+    "file": "src/ThinkOnErp.API/Controllers/Hr/EmployeesController.cs",
+    "line": 89
+  },
+  {
+    "controller": "EmployeesController",
+    "method": "POST",
+    "path": "/api/hr/employees/import",
+    "action": "ImportEmployees",
+    "purpose": "استيراد الموظفين أو تحديثهم",
+    "screen": "hr-employees",
+    "feature": "import",
+    "selfService": false,
+    "adminOnly": false,
+    "parameters": [
+      {
+        "binding": "form",
+        "declaration": "IFormFile? file"
+      },
+      {
+        "binding": "query",
+        "declaration": "bool updateExisting = false"
+      }
+    ],
+    "response": "ApiResponse<EmployeeImportResultDto>",
+    "file": "src/ThinkOnErp.API/Controllers/Hr/EmployeesController.cs",
+    "line": 113
+  },
+  {
+    "controller": "EmployeesController",
+    "method": "GET",
+    "path": "/api/hr/employees/{code}",
+    "action": "GetEmployeeByCode",
+    "purpose": "تفاصيل الموظف",
+    "screen": "hr-employees",
+    "feature": "view",
+    "selfService": false,
+    "adminOnly": false,
+    "parameters": [
+      {
+        "binding": "route/body inferred",
+        "declaration": "string code"
+      }
+    ],
+    "response": "ApiResponse<EmployeeDetailsDto>",
+    "file": "src/ThinkOnErp.API/Controllers/Hr/EmployeesController.cs",
+    "line": 143
+  },
+  {
+    "controller": "EmployeesController",
+    "method": "GET",
+    "path": "/api/hr/employees/me/user-link",
+    "action": "GetMyEmployeeLink",
+    "purpose": "الموظف المرتبط بالحساب الحالي",
+    "screen": "hr-employees",
+    "feature": "view",
+    "selfService": true,
+    "adminOnly": false,
+    "parameters": [],
+    "response": "IActionResult: راجع الملاحظات",
+    "file": "src/ThinkOnErp.API/Controllers/Hr/EmployeesController.cs",
+    "line": 158
+  },
+  {
+    "controller": "EmployeesController",
+    "method": "PUT",
+    "path": "/api/hr/employees/{code}/user-link",
+    "action": "LinkEmployeeUser",
+    "purpose": "ربط أو فك ربط الحساب",
+    "screen": "hr-employees",
+    "feature": "link-user",
+    "selfService": false,
+    "adminOnly": true,
+    "parameters": [
+      {
+        "binding": "route/body inferred",
+        "declaration": "string code"
+      },
+      {
+        "binding": "body",
+        "declaration": "LinkEmployeeUserDto dto"
+      }
+    ],
+    "response": "IActionResult: راجع الملاحظات",
+    "file": "src/ThinkOnErp.API/Controllers/Hr/EmployeesController.cs",
+    "line": 172
+  },
+  {
+    "controller": "EmployeesController",
+    "method": "POST",
+    "path": "/api/hr/employees",
+    "action": "CreateEmployee",
+    "purpose": "إنشاء موظف",
+    "screen": "hr-employees",
+    "feature": "create",
+    "selfService": false,
+    "adminOnly": false,
+    "parameters": [
+      {
+        "binding": "body",
+        "declaration": "CreateEmployeeDto dto"
+      }
+    ],
+    "response": "ApiResponse<EmployeeDetailsDto>",
+    "file": "src/ThinkOnErp.API/Controllers/Hr/EmployeesController.cs",
+    "line": 183
+  },
+  {
+    "controller": "EmployeesController",
+    "method": "PUT",
+    "path": "/api/hr/employees/{code}",
+    "action": "UpdateEmployee",
+    "purpose": "تعديل موظف",
+    "screen": "hr-employees",
+    "feature": "edit",
+    "selfService": false,
+    "adminOnly": false,
+    "parameters": [
+      {
+        "binding": "route/body inferred",
+        "declaration": "string code"
+      },
+      {
+        "binding": "body",
+        "declaration": "UpdateEmployeeDto dto"
+      }
+    ],
+    "response": "ApiResponse<EmployeeDetailsDto>",
+    "file": "src/ThinkOnErp.API/Controllers/Hr/EmployeesController.cs",
+    "line": 195
+  },
+  {
+    "controller": "EmployeesController",
+    "method": "DELETE",
+    "path": "/api/hr/employees/{code}",
+    "action": "DeleteEmployee",
+    "purpose": "تعطيل الموظف وإنهاء حالته",
+    "screen": "hr-employees",
+    "feature": "delete",
+    "selfService": false,
+    "adminOnly": false,
+    "parameters": [
+      {
+        "binding": "route/body inferred",
+        "declaration": "string code"
+      }
+    ],
+    "response": "ApiResponse<bool>",
+    "file": "src/ThinkOnErp.API/Controllers/Hr/EmployeesController.cs",
+    "line": 208
+  },
+  {
+    "controller": "EmployeesController",
+    "method": "POST",
+    "path": "/api/hr/employees/{code}/dependents",
+    "action": "AddDependent",
+    "purpose": "إضافة معال",
+    "screen": "hr-employees",
+    "feature": "create",
+    "selfService": false,
+    "adminOnly": false,
+    "parameters": [
+      {
+        "binding": "route/body inferred",
+        "declaration": "string code"
+      },
+      {
+        "binding": "body",
+        "declaration": "CreateDependentDto dto"
+      }
+    ],
+    "response": "ApiResponse<DependentDto>",
+    "file": "src/ThinkOnErp.API/Controllers/Hr/EmployeesController.cs",
+    "line": 220
+  },
+  {
+    "controller": "EmployeesController",
+    "method": "DELETE",
+    "path": "/api/hr/employees/dependents/{id:long}",
+    "action": "DeleteDependent",
+    "purpose": "حذف معال",
+    "screen": "hr-employees",
+    "feature": "delete",
+    "selfService": false,
+    "adminOnly": false,
+    "parameters": [
+      {
+        "binding": "route/body inferred",
+        "declaration": "long id"
+      }
+    ],
+    "response": "ApiResponse<bool>",
+    "file": "src/ThinkOnErp.API/Controllers/Hr/EmployeesController.cs",
+    "line": 233
+  },
+  {
+    "controller": "EmployeesController",
+    "method": "POST",
+    "path": "/api/hr/employees/{code}/salary-structure",
+    "action": "AssignSalaryStructure",
+    "purpose": "تعيين تعريف راتب",
+    "screen": "hr-employees",
+    "feature": "create",
+    "selfService": false,
+    "adminOnly": false,
+    "parameters": [
+      {
+        "binding": "route/body inferred",
+        "declaration": "string code"
+      },
+      {
+        "binding": "body",
+        "declaration": "AssignSalaryStructureDto dto"
+      }
+    ],
+    "response": "ApiResponse<SalaryStructureDetailsDto>",
+    "file": "src/ThinkOnErp.API/Controllers/Hr/EmployeesController.cs",
+    "line": 245
+  },
+  {
+    "controller": "EmployeesController",
+    "method": "GET",
+    "path": "/api/hr/employees/{code}/salary-structure",
+    "action": "GetSalaryStructure",
+    "purpose": "تعريف الراتب النشط بتاريخ معين",
+    "screen": "hr-employees",
+    "feature": "view",
+    "selfService": false,
+    "adminOnly": false,
+    "parameters": [
+      {
+        "binding": "route/body inferred",
+        "declaration": "string code"
+      },
+      {
+        "binding": "query",
+        "declaration": "DateTime? asOfDate"
+      }
+    ],
+    "response": "ApiResponse<SalaryStructureDetailsDto>",
+    "file": "src/ThinkOnErp.API/Controllers/Hr/EmployeesController.cs",
+    "line": 258
+  },
+  {
+    "controller": "LeavesController",
+    "method": "GET",
+    "path": "/api/hr/leaves/types",
+    "action": "GetLeaveTypes",
+    "purpose": "أنواع الإجازات",
+    "screen": "hr-leaves",
+    "feature": "view",
+    "selfService": true,
+    "adminOnly": false,
+    "parameters": [
+      {
+        "binding": "query",
+        "declaration": "bool activeOnly = true"
+      }
+    ],
+    "response": "ApiResponse<IReadOnlyList<LeaveTypeDto>>",
+    "file": "src/ThinkOnErp.API/Controllers/Hr/LeavesController.cs",
+    "line": 38
+  },
+  {
+    "controller": "LeavesController",
+    "method": "GET",
+    "path": "/api/hr/leaves/types/{code}",
+    "action": "GetLeaveTypeByCode",
+    "purpose": "تفاصيل نوع إجازة",
+    "screen": "hr-leaves",
+    "feature": "view",
+    "selfService": true,
+    "adminOnly": false,
+    "parameters": [
+      {
+        "binding": "route/body inferred",
+        "declaration": "string code"
+      }
+    ],
+    "response": "ApiResponse<LeaveTypeDto>",
+    "file": "src/ThinkOnErp.API/Controllers/Hr/LeavesController.cs",
+    "line": 50
+  },
+  {
+    "controller": "LeavesController",
+    "method": "POST",
+    "path": "/api/hr/leaves/types",
+    "action": "CreateLeaveType",
+    "purpose": "إنشاء نوع إجازة",
+    "screen": "hr-leaves",
+    "feature": "create",
+    "selfService": false,
+    "adminOnly": false,
+    "parameters": [
+      {
+        "binding": "body",
+        "declaration": "CreateLeaveTypeDto dto"
+      }
+    ],
+    "response": "ApiResponse<LeaveTypeDto>",
+    "file": "src/ThinkOnErp.API/Controllers/Hr/LeavesController.cs",
+    "line": 66
+  },
+  {
+    "controller": "LeavesController",
+    "method": "PUT",
+    "path": "/api/hr/leaves/types/{code}",
+    "action": "UpdateLeaveType",
+    "purpose": "تعديل نوع إجازة",
+    "screen": "hr-leaves",
+    "feature": "edit",
+    "selfService": false,
+    "adminOnly": false,
+    "parameters": [
+      {
+        "binding": "route/body inferred",
+        "declaration": "string code"
+      },
+      {
+        "binding": "body",
+        "declaration": "UpdateLeaveTypeDto dto"
+      }
+    ],
+    "response": "ApiResponse<LeaveTypeDto>",
+    "file": "src/ThinkOnErp.API/Controllers/Hr/LeavesController.cs",
+    "line": 79
+  },
+  {
+    "controller": "LeavesController",
+    "method": "DELETE",
+    "path": "/api/hr/leaves/types/{code}",
+    "action": "DeleteLeaveType",
+    "purpose": "تعطيل نوع إجازة",
+    "screen": "hr-leaves",
+    "feature": "delete",
+    "selfService": false,
+    "adminOnly": false,
+    "parameters": [
+      {
+        "binding": "route/body inferred",
+        "declaration": "string code"
+      }
+    ],
+    "response": "ApiResponse<bool>",
+    "file": "src/ThinkOnErp.API/Controllers/Hr/LeavesController.cs",
+    "line": 93
+  },
+  {
+    "controller": "LeavesController",
+    "method": "GET",
+    "path": "/api/hr/leaves/requests",
+    "action": "GetLeaveRequests",
+    "purpose": "قائمة طلبات الإجازة",
+    "screen": "hr-leaves",
+    "feature": "view",
+    "selfService": true,
+    "adminOnly": false,
+    "parameters": [
+      {
+        "binding": "query",
+        "declaration": "string? employeeCode"
+      },
+      {
+        "binding": "query",
+        "declaration": "string? leaveTypeCode"
+      },
+      {
+        "binding": "query",
+        "declaration": "string? status"
+      },
+      {
+        "binding": "query",
+        "declaration": "DateTime? fromDate"
+      },
+      {
+        "binding": "query",
+        "declaration": "DateTime? toDate"
+      },
+      {
+        "binding": "query",
+        "declaration": "int pageIndex = 1"
+      },
+      {
+        "binding": "query",
+        "declaration": "int pageSize = 20"
+      }
+    ],
+    "response": "ApiResponse<PagedResultDto<LeaveRequestDto>>",
+    "file": "src/ThinkOnErp.API/Controllers/Hr/LeavesController.cs",
+    "line": 109
+  },
+  {
+    "controller": "LeavesController",
+    "method": "POST",
+    "path": "/api/hr/leaves/requests",
+    "action": "SubmitLeaveRequest",
+    "purpose": "تقديم طلب إجازة",
+    "screen": "hr-leaves",
+    "feature": "create",
+    "selfService": true,
+    "adminOnly": false,
+    "parameters": [
+      {
+        "binding": "body",
+        "declaration": "SubmitLeaveRequestDto dto"
+      }
+    ],
+    "response": "ApiResponse<LeaveRequestDto>",
+    "file": "src/ThinkOnErp.API/Controllers/Hr/LeavesController.cs",
+    "line": 129
+  },
+  {
+    "controller": "LeavesController",
+    "method": "POST",
+    "path": "/api/hr/leaves/requests/{id:long}/process",
+    "action": "ProcessLeaveRequest",
+    "purpose": "اعتماد أو رفض إجازة",
+    "screen": "hr-leaves",
+    "feature": "approve",
+    "selfService": false,
+    "adminOnly": false,
+    "parameters": [
+      {
+        "binding": "route/body inferred",
+        "declaration": "long id"
+      },
+      {
+        "binding": "body",
+        "declaration": "ProcessLeaveRequestDto dto"
+      }
+    ],
+    "response": "ApiResponse<LeaveRequestDto>",
+    "file": "src/ThinkOnErp.API/Controllers/Hr/LeavesController.cs",
+    "line": 141
+  },
+  {
+    "controller": "LeavesController",
+    "method": "GET",
+    "path": "/api/hr/leaves/balances/{employeeCode}",
+    "action": "GetEmployeeBalances",
+    "purpose": "أرصدة إجازات الموظف",
+    "screen": "hr-leaves",
+    "feature": "view",
+    "selfService": true,
+    "adminOnly": false,
+    "parameters": [
+      {
+        "binding": "route/body inferred",
+        "declaration": "string employeeCode"
+      },
+      {
+        "binding": "query",
+        "declaration": "int? year"
+      }
+    ],
+    "response": "ApiResponse<IReadOnlyList<LeaveBalanceDto>>",
+    "file": "src/ThinkOnErp.API/Controllers/Hr/LeavesController.cs",
+    "line": 154
+  },
+  {
+    "controller": "LeavesController",
+    "method": "POST",
+    "path": "/api/hr/leaves/balances/grant",
+    "action": "GrantOrAdjustBalance",
+    "purpose": "منح أو تصحيح رصيد إجازة",
+    "screen": "hr-leaves",
+    "feature": "edit",
+    "selfService": false,
+    "adminOnly": false,
+    "parameters": [
+      {
+        "binding": "body",
+        "declaration": "GrantLeaveBalanceDto dto"
+      }
+    ],
+    "response": "ApiResponse<LeaveBalanceDto>",
+    "file": "src/ThinkOnErp.API/Controllers/Hr/LeavesController.cs",
+    "line": 167
+  },
+  {
+    "controller": "LeavesController",
+    "method": "POST",
+    "path": "/api/hr/leaves/balances/accrue-monthly",
+    "action": "RunMonthlyAccrual",
+    "purpose": "تنفيذ استحقاق شهري يدوي",
+    "screen": "hr-leaves",
+    "feature": "edit",
+    "selfService": false,
+    "adminOnly": false,
+    "parameters": [
+      {
+        "binding": "body",
+        "declaration": "MonthlyLeaveAccrualDto dto"
+      }
+    ],
+    "response": "ApiResponse<LeaveAccrualResultDto>",
+    "file": "src/ThinkOnErp.API/Controllers/Hr/LeavesController.cs",
+    "line": 180
+  },
+  {
+    "controller": "LeavesController",
+    "method": "POST",
+    "path": "/api/hr/leaves/balances/yearly-grant",
+    "action": "RunYearlyAllocation",
+    "purpose": "تنفيذ توزيع سنوي",
+    "screen": "hr-leaves",
+    "feature": "edit",
+    "selfService": false,
+    "adminOnly": false,
+    "parameters": [
+      {
+        "binding": "body",
+        "declaration": "YearlyLeaveAllocationDto dto"
+      }
+    ],
+    "response": "ApiResponse<LeaveAccrualResultDto>",
+    "file": "src/ThinkOnErp.API/Controllers/Hr/LeavesController.cs",
+    "line": 193
+  },
+  {
+    "controller": "LeavesController",
+    "method": "POST",
+    "path": "/api/hr/leaves/balances/year-end-rollover",
+    "action": "RunYearEndRollover",
+    "purpose": "ترحيل الرصيد بين سنتين",
+    "screen": "hr-leaves",
+    "feature": "edit",
+    "selfService": false,
+    "adminOnly": false,
+    "parameters": [
+      {
+        "binding": "body",
+        "declaration": "YearEndRolloverDto dto"
+      }
+    ],
+    "response": "ApiResponse<LeaveRolloverResultDto>",
+    "file": "src/ThinkOnErp.API/Controllers/Hr/LeavesController.cs",
+    "line": 206
+  },
+  {
+    "controller": "LeavesController",
+    "method": "GET",
+    "path": "/api/hr/leaves/policies",
+    "action": "GetLeavePolicies",
+    "purpose": "سياسات الإجازات",
+    "screen": "hr-leaves",
+    "feature": "view",
+    "selfService": false,
+    "adminOnly": false,
+    "parameters": [],
+    "response": "ApiResponse<IReadOnlyList<LeavePolicyDetailsDto>>",
+    "file": "src/ThinkOnErp.API/Controllers/Hr/LeavesController.cs",
+    "line": 218
+  },
+  {
+    "controller": "LeavesController",
+    "method": "POST",
+    "path": "/api/hr/leaves/policies",
+    "action": "CreateOrUpdateLeavePolicy",
+    "purpose": "حفظ سياسة الإجازة حسب النوع",
+    "screen": "hr-leaves",
+    "feature": "create",
+    "selfService": false,
+    "adminOnly": false,
+    "parameters": [
+      {
+        "binding": "body",
+        "declaration": "CreateLeavePolicyDto dto"
+      }
+    ],
+    "response": "ApiResponse<LeavePolicyDetailsDto>",
+    "file": "src/ThinkOnErp.API/Controllers/Hr/LeavesController.cs",
+    "line": 229
+  },
+  {
+    "controller": "LoansController",
+    "method": "POST",
+    "path": "/api/hr/loans",
+    "action": "CreateLoan",
+    "purpose": "طلب قرض وإنشاء أقساطه",
+    "screen": "hr-loans",
+    "feature": "create",
+    "selfService": true,
+    "adminOnly": false,
+    "parameters": [
+      {
+        "binding": "body",
+        "declaration": "CreateLoanApplicationDto dto"
+      }
+    ],
+    "response": "ApiResponse<EmployeeLoan>",
+    "file": "src/ThinkOnErp.API/Controllers/Hr/LoansController.cs",
+    "line": 39
+  },
+  {
+    "controller": "LoansController",
+    "method": "POST",
+    "path": "/api/hr/loans/{id:long}/approve",
+    "action": "ApproveLoan",
+    "purpose": "اعتماد القرض",
+    "screen": "hr-loans",
+    "feature": "approve",
+    "selfService": false,
+    "adminOnly": false,
+    "parameters": [
+      {
+        "binding": "route/body inferred",
+        "declaration": "long id"
+      }
+    ],
+    "response": "ApiResponse<EmployeeLoan>",
+    "file": "src/ThinkOnErp.API/Controllers/Hr/LoansController.cs",
+    "line": 51
+  },
+  {
+    "controller": "LoansController",
+    "method": "GET",
+    "path": "/api/hr/loans",
+    "action": "GetLoans",
+    "purpose": "قائمة القروض",
+    "screen": "hr-loans",
+    "feature": "view",
+    "selfService": true,
+    "adminOnly": false,
+    "parameters": [
+      {
+        "binding": "query",
+        "declaration": "string? employeeCode"
+      },
+      {
+        "binding": "query",
+        "declaration": "string? status"
+      }
+    ],
+    "response": "ApiResponse<IReadOnlyList<EmployeeLoan>>",
+    "file": "src/ThinkOnErp.API/Controllers/Hr/LoansController.cs",
+    "line": 63
+  },
+  {
+    "controller": "LoansController",
+    "method": "POST",
+    "path": "/api/hr/loans/advances",
+    "action": "CreateAdvance",
+    "purpose": "طلب سلفة",
+    "screen": "hr-loans",
+    "feature": "create",
+    "selfService": true,
+    "adminOnly": false,
+    "parameters": [
+      {
+        "binding": "body",
+        "declaration": "CreateAdvanceRequestDto dto"
+      }
+    ],
+    "response": "ApiResponse<EmployeeAdvance>",
+    "file": "src/ThinkOnErp.API/Controllers/Hr/LoansController.cs",
+    "line": 75
+  },
+  {
+    "controller": "LoansController",
+    "method": "POST",
+    "path": "/api/hr/loans/advances/{id:long}/approve",
+    "action": "ApproveAdvance",
+    "purpose": "اعتماد السلفة",
+    "screen": "hr-loans",
+    "feature": "approve",
+    "selfService": false,
+    "adminOnly": false,
+    "parameters": [
+      {
+        "binding": "route/body inferred",
+        "declaration": "long id"
+      }
+    ],
+    "response": "ApiResponse<EmployeeAdvance>",
+    "file": "src/ThinkOnErp.API/Controllers/Hr/LoansController.cs",
+    "line": 87
+  },
+  {
+    "controller": "LoansController",
+    "method": "GET",
+    "path": "/api/hr/loans/advances",
+    "action": "GetAdvances",
+    "purpose": "قائمة السلف",
+    "screen": "hr-loans",
+    "feature": "view",
+    "selfService": true,
+    "adminOnly": false,
+    "parameters": [
+      {
+        "binding": "query",
+        "declaration": "string? employeeCode"
+      },
+      {
+        "binding": "query",
+        "declaration": "string? targetPayPeriod"
+      }
+    ],
+    "response": "ApiResponse<IReadOnlyList<EmployeeAdvance>>",
+    "file": "src/ThinkOnErp.API/Controllers/Hr/LoansController.cs",
+    "line": 99
+  },
+  {
+    "controller": "PayrollAdjustmentsController",
+    "method": "POST",
+    "path": "/api/hr/adjustments",
+    "action": "CreateAdjustment",
+    "purpose": "إنشاء تعديل راتب بحالة APPROVED حاليًا",
+    "screen": "hr-payroll-adjustments",
+    "feature": "create",
+    "selfService": false,
+    "adminOnly": false,
+    "parameters": [
+      {
+        "binding": "body",
+        "declaration": "CreatePayrollAdjustmentDto dto"
+      }
+    ],
+    "response": "ApiResponse<PayrollAdjustment>",
+    "file": "src/ThinkOnErp.API/Controllers/Hr/PayrollAdjustmentsController.cs",
+    "line": 39
+  },
+  {
+    "controller": "PayrollAdjustmentsController",
+    "method": "POST",
+    "path": "/api/hr/adjustments/{id:long}/approve",
+    "action": "ApproveAdjustment",
+    "purpose": "اعتماد تعديل",
+    "screen": "hr-payroll-adjustments",
+    "feature": "approve",
+    "selfService": false,
+    "adminOnly": false,
+    "parameters": [
+      {
+        "binding": "route/body inferred",
+        "declaration": "long id"
+      }
+    ],
+    "response": "ApiResponse<PayrollAdjustment>",
+    "file": "src/ThinkOnErp.API/Controllers/Hr/PayrollAdjustmentsController.cs",
+    "line": 51
+  },
+  {
+    "controller": "PayrollAdjustmentsController",
+    "method": "POST",
+    "path": "/api/hr/adjustments/{id:long}/reject",
+    "action": "RejectAdjustment",
+    "purpose": "رفض تعديل",
+    "screen": "hr-payroll-adjustments",
+    "feature": "reject",
+    "selfService": false,
+    "adminOnly": false,
+    "parameters": [
+      {
+        "binding": "route/body inferred",
+        "declaration": "long id"
+      }
+    ],
+    "response": "ApiResponse<PayrollAdjustment>",
+    "file": "src/ThinkOnErp.API/Controllers/Hr/PayrollAdjustmentsController.cs",
+    "line": 63
+  },
+  {
+    "controller": "PayrollAdjustmentsController",
+    "method": "GET",
+    "path": "/api/hr/adjustments",
+    "action": "GetAdjustments",
+    "purpose": "قائمة التعديلات",
+    "screen": "hr-payroll-adjustments",
+    "feature": "view",
+    "selfService": false,
+    "adminOnly": false,
+    "parameters": [
+      {
+        "binding": "query",
+        "declaration": "long companyId"
+      },
+      {
+        "binding": "query",
+        "declaration": "string? employeeCode"
+      },
+      {
+        "binding": "query",
+        "declaration": "string? payPeriod"
+      },
+      {
+        "binding": "query",
+        "declaration": "string? status"
+      }
+    ],
+    "response": "ApiResponse<IReadOnlyList<PayrollAdjustmentDto>>",
+    "file": "src/ThinkOnErp.API/Controllers/Hr/PayrollAdjustmentsController.cs",
+    "line": 75
+  },
+  {
+    "controller": "PayrollAdjustmentsController",
+    "method": "GET",
+    "path": "/api/hr/adjustments/{id:long}",
+    "action": "GetAdjustmentById",
+    "purpose": "تفاصيل تعديل",
+    "screen": "hr-payroll-adjustments",
+    "feature": "view",
+    "selfService": false,
+    "adminOnly": false,
+    "parameters": [
+      {
+        "binding": "route/body inferred",
+        "declaration": "long id"
+      }
+    ],
+    "response": "ApiResponse<PayrollAdjustment>",
+    "file": "src/ThinkOnErp.API/Controllers/Hr/PayrollAdjustmentsController.cs",
+    "line": 89
+  },
+  {
+    "controller": "PayrollAdjustmentsController",
+    "method": "DELETE",
+    "path": "/api/hr/adjustments/{id:long}",
+    "action": "DeleteAdjustment",
+    "purpose": "حذف تعديل",
+    "screen": "hr-payroll-adjustments",
+    "feature": "delete",
+    "selfService": false,
+    "adminOnly": false,
+    "parameters": [
+      {
+        "binding": "route/body inferred",
+        "declaration": "long id"
+      }
+    ],
+    "response": "ApiResponse<bool>",
+    "file": "src/ThinkOnErp.API/Controllers/Hr/PayrollAdjustmentsController.cs",
+    "line": 101
+  },
+  {
+    "controller": "PayrollController",
+    "method": "POST",
+    "path": "/api/hr/payroll/calculate",
+    "action": "CalculatePayroll",
+    "purpose": "حساب مسير راتب جديد لفرع",
+    "screen": "hr-payroll",
+    "feature": "edit",
+    "selfService": false,
+    "adminOnly": false,
+    "parameters": [
+      {
+        "binding": "body",
+        "declaration": "CreatePayrollRunDto dto"
+      }
+    ],
+    "response": "ApiResponse<PayrollCalculationResultDto>",
+    "file": "src/ThinkOnErp.API/Controllers/Hr/PayrollController.cs",
+    "line": 45
+  },
+  {
+    "controller": "PayrollController",
+    "method": "POST",
+    "path": "/api/hr/payroll/{id:long}/approve",
+    "action": "ApprovePayroll",
+    "purpose": "اعتماد المسير وتسوية الاقتطاعات",
+    "screen": "hr-payroll",
+    "feature": "approve",
+    "selfService": false,
+    "adminOnly": false,
+    "parameters": [
+      {
+        "binding": "route/body inferred",
+        "declaration": "long id"
+      }
+    ],
+    "response": "ApiResponse<PayrollRun>",
+    "file": "src/ThinkOnErp.API/Controllers/Hr/PayrollController.cs",
+    "line": 57
+  },
+  {
+    "controller": "PayrollController",
+    "method": "POST",
+    "path": "/api/hr/payroll/{id:long}/post-to-gl",
+    "action": "PostToGl",
+    "purpose": "ترحيل المسير إلى المحاسبة",
+    "screen": "hr-payroll",
+    "feature": "post",
+    "selfService": false,
+    "adminOnly": false,
+    "parameters": [
+      {
+        "binding": "route/body inferred",
+        "declaration": "long id"
+      }
+    ],
+    "response": "ApiResponse<PostGlVoucherResultDto>",
+    "file": "src/ThinkOnErp.API/Controllers/Hr/PayrollController.cs",
+    "line": 69
+  },
+  {
+    "controller": "PayrollController",
+    "method": "POST",
+    "path": "/api/hr/payroll/{id:long}/reverse-gl",
+    "action": "ReverseGl",
+    "purpose": "عكس حالة قيد الرواتب",
+    "screen": "hr-payroll",
+    "feature": "reverse",
+    "selfService": false,
+    "adminOnly": false,
+    "parameters": [
+      {
+        "binding": "route/body inferred",
+        "declaration": "long id"
+      }
+    ],
+    "response": "ApiResponse<PayrollRun>",
+    "file": "src/ThinkOnErp.API/Controllers/Hr/PayrollController.cs",
+    "line": 81
+  },
+  {
+    "controller": "PayrollController",
+    "method": "GET",
+    "path": "/api/hr/payroll/{id:long}",
+    "action": "GetPayrollRun",
+    "purpose": "نتيجة مسير بالمعرف",
+    "screen": "hr-payroll",
+    "feature": "view",
+    "selfService": false,
+    "adminOnly": false,
+    "parameters": [
+      {
+        "binding": "route/body inferred",
+        "declaration": "long id"
+      }
+    ],
+    "response": "ApiResponse<PayrollCalculationResultDto>",
+    "file": "src/ThinkOnErp.API/Controllers/Hr/PayrollController.cs",
+    "line": 93
+  },
+  {
+    "controller": "PayrollController",
+    "method": "GET",
+    "path": "/api/hr/payroll/{id:long}/export-bank",
+    "action": "ExportBankFile",
+    "purpose": "تنزيل ملف البنك",
+    "screen": "hr-payroll",
+    "feature": "export",
+    "selfService": false,
+    "adminOnly": false,
+    "parameters": [
+      {
+        "binding": "route/body inferred",
+        "declaration": "long id"
+      },
+      {
+        "binding": "query",
+        "declaration": "string? format"
+      }
+    ],
+    "response": "FileContentResult",
+    "file": "src/ThinkOnErp.API/Controllers/Hr/PayrollController.cs",
+    "line": 105
+  },
+  {
+    "controller": "PayrollController",
+    "method": "GET",
+    "path": "/api/hr/payroll/{id:long}/export-bank/preview",
+    "action": "PreviewBankExport",
+    "purpose": "معاينة تعيد بيانات الملف البنكي ومحتواه",
+    "screen": "hr-payroll",
+    "feature": "view",
+    "selfService": false,
+    "adminOnly": false,
+    "parameters": [
+      {
+        "binding": "route/body inferred",
+        "declaration": "long id"
+      },
+      {
+        "binding": "query",
+        "declaration": "string? format"
+      }
+    ],
+    "response": "ApiResponse<BankPayrollExportResultDto>",
+    "file": "src/ThinkOnErp.API/Controllers/Hr/PayrollController.cs",
+    "line": 117
+  },
+  {
+    "controller": "PayrollController",
+    "method": "GET",
+    "path": "/api/hr/payroll/run-lines/{lineId:long}/explanation",
+    "action": "GetCalculationExplanation",
+    "purpose": "شرح احتساب بند الموظف",
+    "screen": "hr-payroll",
+    "feature": "view",
+    "selfService": false,
+    "adminOnly": false,
+    "parameters": [
+      {
+        "binding": "route/body inferred",
+        "declaration": "long lineId"
+      }
+    ],
+    "response": "ApiResponse<PayrollExplanationDto>",
+    "file": "src/ThinkOnErp.API/Controllers/Hr/PayrollController.cs",
+    "line": 129
+  },
+  {
+    "controller": "PayrollController",
+    "method": "GET",
+    "path": "/api/hr/payroll/periods",
+    "action": "GetPeriods",
+    "purpose": "قائمة فترات الرواتب",
+    "screen": "hr-payroll",
+    "feature": "view",
+    "selfService": false,
+    "adminOnly": false,
+    "parameters": [
+      {
+        "binding": "query",
+        "declaration": "long companyId"
+      },
+      {
+        "binding": "query",
+        "declaration": "int? year"
+      }
+    ],
+    "response": "ApiResponse<IReadOnlyList<PayrollPeriod>>",
+    "file": "src/ThinkOnErp.API/Controllers/Hr/PayrollController.cs",
+    "line": 141
+  },
+  {
+    "controller": "PayrollController",
+    "method": "POST",
+    "path": "/api/hr/payroll/periods",
+    "action": "CreatePeriod",
+    "purpose": "إنشاء فترة رواتب",
+    "screen": "hr-payroll",
+    "feature": "create",
+    "selfService": false,
+    "adminOnly": false,
+    "parameters": [
+      {
+        "binding": "body",
+        "declaration": "PayrollPeriod period"
+      }
+    ],
+    "response": "ApiResponse<PayrollPeriod>",
+    "file": "src/ThinkOnErp.API/Controllers/Hr/PayrollController.cs",
+    "line": 154
+  },
+  {
+    "controller": "PayrollPoliciesController",
+    "method": "GET",
+    "path": "/api/hr/payroll-policies/proration",
+    "action": "GetProrationPolicies",
+    "purpose": "سياسات تجزئة الراتب",
+    "screen": "hr-payroll-policies",
+    "feature": "view",
+    "selfService": false,
+    "adminOnly": false,
+    "parameters": [
+      {
+        "binding": "query",
+        "declaration": "long companyId"
+      }
+    ],
+    "response": "ApiResponse<IReadOnlyList<ProrationPolicy>>",
+    "file": "src/ThinkOnErp.API/Controllers/Hr/PayrollPoliciesController.cs",
+    "line": 40
+  },
+  {
+    "controller": "PayrollPoliciesController",
+    "method": "POST",
+    "path": "/api/hr/payroll-policies/proration",
+    "action": "AddProrationPolicy",
+    "purpose": "إضافة سياسة تجزئة",
+    "screen": "hr-payroll-policies",
+    "feature": "create",
+    "selfService": false,
+    "adminOnly": false,
+    "parameters": [
+      {
+        "binding": "body",
+        "declaration": "ProrationPolicyDto dto"
+      }
+    ],
+    "response": "ApiResponse<ProrationPolicy>",
+    "file": "src/ThinkOnErp.API/Controllers/Hr/PayrollPoliciesController.cs",
+    "line": 51
+  },
+  {
+    "controller": "PayrollPoliciesController",
+    "method": "GET",
+    "path": "/api/hr/payroll-policies/ssc",
+    "action": "GetSSCPolicies",
+    "purpose": "سياسات الضمان",
+    "screen": "hr-payroll-policies",
+    "feature": "view",
+    "selfService": false,
+    "adminOnly": false,
+    "parameters": [
+      {
+        "binding": "query",
+        "declaration": "long companyId"
+      }
+    ],
+    "response": "ApiResponse<IReadOnlyList<SSCPolicy>>",
+    "file": "src/ThinkOnErp.API/Controllers/Hr/PayrollPoliciesController.cs",
+    "line": 78
+  },
+  {
+    "controller": "PayrollPoliciesController",
+    "method": "POST",
+    "path": "/api/hr/payroll-policies/ssc",
+    "action": "AddSSCPolicy",
+    "purpose": "إضافة سياسة ضمان",
+    "screen": "hr-payroll-policies",
+    "feature": "create",
+    "selfService": false,
+    "adminOnly": false,
+    "parameters": [
+      {
+        "binding": "body",
+        "declaration": "SSCPolicyDto dto"
+      }
+    ],
+    "response": "ApiResponse<SSCPolicy>",
+    "file": "src/ThinkOnErp.API/Controllers/Hr/PayrollPoliciesController.cs",
+    "line": 89
+  },
+  {
+    "controller": "PayrollPoliciesController",
+    "method": "GET",
+    "path": "/api/hr/payroll-policies/tax",
+    "action": "GetTaxPolicies",
+    "purpose": "سياسات الضريبة",
+    "screen": "hr-payroll-policies",
+    "feature": "view",
+    "selfService": false,
+    "adminOnly": false,
+    "parameters": [
+      {
+        "binding": "query",
+        "declaration": "long companyId"
+      }
+    ],
+    "response": "ApiResponse<IReadOnlyList<TaxPolicy>>",
+    "file": "src/ThinkOnErp.API/Controllers/Hr/PayrollPoliciesController.cs",
+    "line": 119
+  },
+  {
+    "controller": "PayrollPoliciesController",
+    "method": "POST",
+    "path": "/api/hr/payroll-policies/tax",
+    "action": "AddTaxPolicy",
+    "purpose": "إضافة سياسة ضريبة وشرائحها",
+    "screen": "hr-payroll-policies",
+    "feature": "create",
+    "selfService": false,
+    "adminOnly": false,
+    "parameters": [
+      {
+        "binding": "body",
+        "declaration": "TaxPolicyDto dto"
+      }
+    ],
+    "response": "ApiResponse<TaxPolicy>",
+    "file": "src/ThinkOnErp.API/Controllers/Hr/PayrollPoliciesController.cs",
+    "line": 130
+  },
+  {
+    "controller": "PayrollPoliciesController",
+    "method": "GET",
+    "path": "/api/hr/payroll-policies/deductions",
+    "action": "GetDeductionPolicies",
+    "purpose": "سياسات الاقتطاع",
+    "screen": "hr-payroll-policies",
+    "feature": "view",
+    "selfService": false,
+    "adminOnly": false,
+    "parameters": [
+      {
+        "binding": "query",
+        "declaration": "long companyId"
+      }
+    ],
+    "response": "ApiResponse<IReadOnlyList<DeductionPolicy>>",
+    "file": "src/ThinkOnErp.API/Controllers/Hr/PayrollPoliciesController.cs",
+    "line": 177
+  },
+  {
+    "controller": "PayrollPoliciesController",
+    "method": "POST",
+    "path": "/api/hr/payroll-policies/deductions",
+    "action": "AddDeductionPolicy",
+    "purpose": "إضافة سياسة اقتطاع",
+    "screen": "hr-payroll-policies",
+    "feature": "create",
+    "selfService": false,
+    "adminOnly": false,
+    "parameters": [
+      {
+        "binding": "body",
+        "declaration": "DeductionPolicyDto dto"
+      }
+    ],
+    "response": "ApiResponse<DeductionPolicy>",
+    "file": "src/ThinkOnErp.API/Controllers/Hr/PayrollPoliciesController.cs",
+    "line": 188
+  },
+  {
+    "controller": "PayrollPostingConfigurationsController",
+    "method": "GET",
+    "path": "/api/hr/payroll-posting/{branchId:long}",
+    "action": "Get",
+    "purpose": "إعداد حسابات الرواتب للفرع",
+    "screen": "hr-payroll-posting",
+    "feature": "view",
+    "selfService": false,
+    "adminOnly": true,
+    "parameters": [
+      {
+        "binding": "route/body inferred",
+        "declaration": "long branchId"
+      }
+    ],
+    "response": "IActionResult: راجع الملاحظات",
+    "file": "src/ThinkOnErp.API/Controllers/Hr/PayrollPostingConfigurationsController.cs",
+    "line": 13
+  },
+  {
+    "controller": "PayrollPostingConfigurationsController",
+    "method": "PUT",
+    "path": "/api/hr/payroll-posting/{branchId:long}",
+    "action": "Save",
+    "purpose": "حفظ حسابات الرواتب للفرع",
+    "screen": "hr-payroll-posting",
+    "feature": "configure",
+    "selfService": false,
+    "adminOnly": true,
+    "parameters": [
+      {
+        "binding": "route/body inferred",
+        "declaration": "long branchId"
+      },
+      {
+        "binding": "route/body inferred",
+        "declaration": "PayrollPostingConfiguration configuration"
+      }
+    ],
+    "response": "IActionResult: راجع الملاحظات",
+    "file": "src/ThinkOnErp.API/Controllers/Hr/PayrollPostingConfigurationsController.cs",
+    "line": 17
+  },
+  {
+    "controller": "SalaryComponentsController",
+    "method": "GET",
+    "path": "/api/hr/salary-components",
+    "action": "GetComponents",
+    "purpose": "قائمة مكونات الرواتب",
+    "screen": "hr-salary-components",
+    "feature": "view",
+    "selfService": false,
+    "adminOnly": false,
+    "parameters": [],
+    "response": "ApiResponse<IReadOnlyList<SalaryComponentDto>>",
+    "file": "src/ThinkOnErp.API/Controllers/Hr/SalaryComponentsController.cs",
+    "line": 38
+  },
+  {
+    "controller": "SalaryComponentsController",
+    "method": "POST",
+    "path": "/api/hr/salary-components",
+    "action": "CreateComponent",
+    "purpose": "إنشاء مكون راتب",
+    "screen": "hr-salary-components",
+    "feature": "create",
+    "selfService": false,
+    "adminOnly": false,
+    "parameters": [
+      {
+        "binding": "body",
+        "declaration": "CreateSalaryComponentDto dto"
+      }
+    ],
+    "response": "ApiResponse<SalaryComponentDto>",
+    "file": "src/ThinkOnErp.API/Controllers/Hr/SalaryComponentsController.cs",
+    "line": 48
+  },
+  {
+    "controller": "WorkCalendarsController",
+    "method": "POST",
+    "path": "/api/hr/work-calendars",
+    "action": "CreateCalendar",
+    "purpose": "إنشاء تقويم وأيام عمل",
+    "screen": "hr-work-calendars",
+    "feature": "create",
+    "selfService": false,
+    "adminOnly": false,
+    "parameters": [
+      {
+        "binding": "body",
+        "declaration": "CreateWorkCalendarDto dto"
+      }
+    ],
+    "response": "ApiResponse<WorkCalendar>",
+    "file": "src/ThinkOnErp.API/Controllers/Hr/WorkCalendarsController.cs",
+    "line": 39
+  },
+  {
+    "controller": "WorkCalendarsController",
+    "method": "GET",
+    "path": "/api/hr/work-calendars",
+    "action": "GetCalendars",
+    "purpose": "قائمة التقاويم",
+    "screen": "hr-work-calendars",
+    "feature": "view",
+    "selfService": false,
+    "adminOnly": false,
+    "parameters": [
+      {
+        "binding": "query",
+        "declaration": "long companyId"
+      }
+    ],
+    "response": "ApiResponse<IReadOnlyList<WorkCalendar>>",
+    "file": "src/ThinkOnErp.API/Controllers/Hr/WorkCalendarsController.cs",
+    "line": 51
+  },
+  {
+    "controller": "WorkCalendarsController",
+    "method": "GET",
+    "path": "/api/hr/work-calendars/{id:long}",
+    "action": "GetCalendarById",
+    "purpose": "تفاصيل تقويم",
+    "screen": "hr-work-calendars",
+    "feature": "view",
+    "selfService": false,
+    "adminOnly": false,
+    "parameters": [
+      {
+        "binding": "route/body inferred",
+        "declaration": "long id"
+      }
+    ],
+    "response": "ApiResponse<WorkCalendar>",
+    "file": "src/ThinkOnErp.API/Controllers/Hr/WorkCalendarsController.cs",
+    "line": 62
+  },
+  {
+    "controller": "WorkCalendarsController",
+    "method": "POST",
+    "path": "/api/hr/work-calendars/holidays",
+    "action": "CreateHoliday",
+    "purpose": "إضافة عطلة",
+    "screen": "hr-work-calendars",
+    "feature": "create",
+    "selfService": false,
+    "adminOnly": false,
+    "parameters": [
+      {
+        "binding": "body",
+        "declaration": "CreatePublicHolidayDto dto"
+      }
+    ],
+    "response": "ApiResponse<PublicHoliday>",
+    "file": "src/ThinkOnErp.API/Controllers/Hr/WorkCalendarsController.cs",
+    "line": 74
+  },
+  {
+    "controller": "WorkCalendarsController",
+    "method": "GET",
+    "path": "/api/hr/work-calendars/holidays",
+    "action": "GetHolidays",
+    "purpose": "قائمة العطل",
+    "screen": "hr-work-calendars",
+    "feature": "view",
+    "selfService": false,
+    "adminOnly": false,
+    "parameters": [
+      {
+        "binding": "query",
+        "declaration": "long companyId"
+      },
+      {
+        "binding": "query",
+        "declaration": "int? year"
+      }
+    ],
+    "response": "ApiResponse<IReadOnlyList<PublicHoliday>>",
+    "file": "src/ThinkOnErp.API/Controllers/Hr/WorkCalendarsController.cs",
+    "line": 86
+  },
+  {
+    "controller": "WorkCalendarsController",
+    "method": "GET",
+    "path": "/api/hr/work-calendars/working-days-count",
+    "action": "CountWorkingDays",
+    "purpose": "حساب عدد أيام العمل",
+    "screen": "hr-work-calendars",
+    "feature": "view",
+    "selfService": false,
+    "adminOnly": false,
+    "parameters": [
+      {
+        "binding": "query",
+        "declaration": "long companyId"
+      },
+      {
+        "binding": "query",
+        "declaration": "DateTime startDate"
+      },
+      {
+        "binding": "query",
+        "declaration": "DateTime endDate"
+      }
+    ],
+    "response": "ApiResponse<int>",
+    "file": "src/ThinkOnErp.API/Controllers/Hr/WorkCalendarsController.cs",
+    "line": 98
+  }
+]

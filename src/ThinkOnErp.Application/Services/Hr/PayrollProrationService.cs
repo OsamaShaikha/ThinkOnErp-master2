@@ -67,10 +67,10 @@ public sealed class PayrollProrationService : IPayrollProrationService
             return new ProrationResult(0.000000m, 0, 0, method, policyCode);
         }
 
-        if (effectiveEmpStart <= periodStart && effectiveEmpEnd >= periodEnd)
+        if (effectiveEmpStart <= periodStart && effectiveEmpEnd >= periodEnd && !method.Equals("WORKING_DAYS", StringComparison.OrdinalIgnoreCase))
         {
-            var totalCalendarDays = (periodEnd.Date - periodStart.Date).Days + 1;
-            return new ProrationResult(1.000000m, totalCalendarDays, totalCalendarDays, method, policyCode);
+            var baseDays = method.Equals("FIXED_30", StringComparison.OrdinalIgnoreCase) ? 30 : (periodEnd.Date - periodStart.Date).Days + 1;
+            return new ProrationResult(1.000000m, baseDays, baseDays, method, policyCode);
         }
 
         if (method.Equals("WORKING_DAYS", StringComparison.OrdinalIgnoreCase))
@@ -108,8 +108,8 @@ public sealed class PayrollProrationService : IPayrollProrationService
 
         if (effectiveEmpStart <= periodStart && effectiveEmpEnd >= periodEnd)
         {
-            var totalCalendarDays = (periodEnd.Date - periodStart.Date).Days + 1;
-            return new ProrationResult(1.000000m, totalCalendarDays, totalCalendarDays, method, policyCode);
+            var baseDays = method.Equals("FIXED_30", StringComparison.OrdinalIgnoreCase) ? 30 : (periodEnd.Date - periodStart.Date).Days + 1;
+            return new ProrationResult(1.000000m, baseDays, baseDays, method, policyCode);
         }
 
         switch (method.ToUpperInvariant())

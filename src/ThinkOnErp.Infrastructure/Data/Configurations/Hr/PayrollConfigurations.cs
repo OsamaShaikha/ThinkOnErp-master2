@@ -13,20 +13,20 @@ public sealed class PayrollPeriodConfiguration : IEntityTypeConfiguration<Payrol
         builder.Property(p => p.Id).HasColumnName("ID").ValueGeneratedOnAdd();
 
         builder.Property(p => p.CompanyId).HasColumnName("COMPANY_ID").IsRequired();
-        builder.Property(p => p.PeriodCode).HasColumnName("PERIOD_CODE").HasMaxLength(40).IsRequired();
-        builder.Property(p => p.NameAr).HasColumnName("NAME_AR").HasMaxLength(400).IsRequired();
-        builder.Property(p => p.NameEn).HasColumnName("NAME_EN").HasMaxLength(400).IsRequired();
+        builder.Property(p => p.PeriodCode).HasColumnName("PERIOD_CODE").HasMaxLength(20).IsRequired();
+        builder.Property(p => p.NameAr).HasColumnName("NAME_AR").HasMaxLength(200).IsRequired();
+        builder.Property(p => p.NameEn).HasColumnName("NAME_EN").HasMaxLength(200).IsRequired();
         builder.Property(p => p.FiscalYear).HasColumnName("FISCAL_YEAR").IsRequired();
         builder.Property(p => p.Month).HasColumnName("MONTH").IsRequired();
         builder.Property(p => p.StartDate).HasColumnName("START_DATE").IsRequired();
         builder.Property(p => p.EndDate).HasColumnName("END_DATE").IsRequired();
         builder.Property(p => p.PayDate).HasColumnName("PAY_DATE").IsRequired();
-        builder.Property(p => p.PayrollType).HasColumnName("PAYROLL_TYPE").HasMaxLength(100).IsRequired();
-        builder.Property(p => p.Status).HasColumnName("STATUS").HasMaxLength(100).IsRequired();
+        builder.Property(p => p.PayrollType).HasColumnName("PAYROLL_TYPE").HasMaxLength(50).IsRequired();
+        builder.Property(p => p.Status).HasColumnName("STATUS").HasMaxLength(50).IsRequired();
 
-        builder.Property(p => p.CreationUser).HasColumnName("CREATION_USER").HasMaxLength(200).IsRequired();
+        builder.Property(p => p.CreationUser).HasColumnName("CREATION_USER").HasMaxLength(100).IsRequired();
         builder.Property(p => p.CreationDate).HasColumnName("CREATION_DATE").IsRequired();
-        builder.Property(p => p.UpdateUser).HasColumnName("UPDATE_USER").HasMaxLength(200);
+        builder.Property(p => p.UpdateUser).HasColumnName("UPDATE_USER").HasMaxLength(100);
         builder.Property(p => p.UpdateDate).HasColumnName("UPDATE_DATE");
     }
 }
@@ -36,13 +36,26 @@ public sealed class PayrollRunConfiguration : IEntityTypeConfiguration<PayrollRu
     public void Configure(EntityTypeBuilder<PayrollRun> builder)
     {
         builder.ToTable("HR_PAYROLL_RUN");
+        builder.Property(r => r.CorrectionOfRunId).HasColumnName("CORRECTION_OF_RUN_ID");
+        builder.Property(r => r.CorrectionRootRunId).HasColumnName("CORRECTION_ROOT_RUN_ID");
+        builder.Property(r => r.CorrectionVersion).HasColumnName("CORRECTION_VERSION").HasDefaultValue(1).IsRequired();
+        builder.Property(r => r.CorrectionReason).HasColumnName("CORRECTION_REASON").HasMaxLength(1000);
+        builder.Property(r => r.CancelledBy).HasColumnName("CANCELLED_BY").HasMaxLength(200);
+        builder.Property(r => r.CancellationDate).HasColumnName("CANCELLATION_DATE");
+        builder.Property(r => r.CancellationReason).HasColumnName("CANCELLATION_REASON").HasMaxLength(1000);
+        builder.Property(r => r.InputFingerprint).HasColumnName("INPUT_FINGERPRINT").HasMaxLength(64);
         builder.HasKey(r => r.Id);
+        builder.HasOne<PayrollRun>().WithMany().HasForeignKey(r => r.CorrectionOfRunId).OnDelete(DeleteBehavior.Restrict);
+        builder.HasOne<PayrollRun>().WithMany().HasForeignKey(r => r.CorrectionRootRunId).OnDelete(DeleteBehavior.Restrict);
+        // Oracle's regular unique index would also restrict rows whose root is NULL. The
+        // family/version invariant is provisioned as a function-based unique index by
+        // HrPayrollCorrectionIndexSchema so each original run can start at version 1.
         builder.Property(r => r.Id).HasColumnName("ID").ValueGeneratedOnAdd();
 
-        builder.Property(r => r.PayPeriod).HasColumnName("PAY_PERIOD").HasMaxLength(40).IsRequired();
+        builder.Property(r => r.PayPeriod).HasColumnName("PAY_PERIOD").HasMaxLength(20).IsRequired();
         builder.Property(r => r.RunDate).HasColumnName("RUN_DATE").IsRequired();
         builder.Property(r => r.BranchId).HasColumnName("BRANCH_ID");
-        builder.Property(r => r.Status).HasColumnName("STATUS").HasMaxLength(60).IsRequired();
+        builder.Property(r => r.Status).HasColumnName("STATUS").HasMaxLength(30).IsRequired();
 
         builder.Property(r => r.TotalGrossSalary).HasColumnName("TOTAL_GROSS_SALARY").HasPrecision(18, 4).IsRequired();
         builder.Property(r => r.TotalNetSalary).HasColumnName("TOTAL_NET_SALARY").HasPrecision(18, 4).IsRequired();
@@ -52,19 +65,19 @@ public sealed class PayrollRunConfiguration : IEntityTypeConfiguration<PayrollRu
         builder.Property(r => r.TotalNationalContrib).HasColumnName("TOTAL_NATIONAL_CONTRIB").HasPrecision(18, 4).IsRequired();
         builder.Property(r => r.TotalOtherDeductions).HasColumnName("TOTAL_OTHER_DEDUCTIONS").HasPrecision(18, 4).IsRequired();
 
-        builder.Property(r => r.CalculatedBy).HasColumnName("CALCULATED_BY").HasMaxLength(200);
+        builder.Property(r => r.CalculatedBy).HasColumnName("CALCULATED_BY").HasMaxLength(100);
         builder.Property(r => r.CalculationDate).HasColumnName("CALCULATION_DATE");
-        builder.Property(r => r.ApprovedBy).HasColumnName("APPROVED_BY").HasMaxLength(200);
+        builder.Property(r => r.ApprovedBy).HasColumnName("APPROVED_BY").HasMaxLength(100);
         builder.Property(r => r.ApprovalDate).HasColumnName("APPROVAL_DATE");
-        builder.Property(r => r.PostedBy).HasColumnName("POSTED_BY").HasMaxLength(200);
+        builder.Property(r => r.PostedBy).HasColumnName("POSTED_BY").HasMaxLength(100);
         builder.Property(r => r.PostDate).HasColumnName("POST_DATE");
-        builder.Property(r => r.PaidBy).HasColumnName("PAID_BY").HasMaxLength(200);
+        builder.Property(r => r.PaidBy).HasColumnName("PAID_BY").HasMaxLength(100);
         builder.Property(r => r.PaymentDate).HasColumnName("PAYMENT_DATE");
         builder.Property(r => r.JournalVoucherId).HasColumnName("JOURNAL_VOUCHER_ID");
 
-        builder.Property(r => r.CreationUser).HasColumnName("CREATION_USER").HasMaxLength(200).IsRequired();
+        builder.Property(r => r.CreationUser).HasColumnName("CREATION_USER").HasMaxLength(100).IsRequired();
         builder.Property(r => r.CreationDate).HasColumnName("CREATION_DATE").IsRequired();
-        builder.Property(r => r.UpdateUser).HasColumnName("UPDATE_USER").HasMaxLength(200);
+        builder.Property(r => r.UpdateUser).HasColumnName("UPDATE_USER").HasMaxLength(100);
         builder.Property(r => r.UpdateDate).HasColumnName("UPDATE_DATE");
 
         builder.HasMany(r => r.Lines)
@@ -79,14 +92,17 @@ public sealed class PayrollRunLineConfiguration : IEntityTypeConfiguration<Payro
     public void Configure(EntityTypeBuilder<PayrollRunLine> builder)
     {
         builder.ToTable("HR_PAYROLL_RUN_LINE");
+        builder.Property(l => l.CurrencyCode).HasColumnName("CURRENCY_CODE").HasMaxLength(30);
+        builder.Property(l => l.BeneficiaryName).HasColumnName("BENEFICIARY_NAME").HasMaxLength(400);
+        builder.Property(l => l.BeneficiaryNationalId).HasColumnName("BENEFICIARY_NATIONAL_ID").HasMaxLength(100);
         builder.HasKey(l => l.Id);
         builder.Property(l => l.Id).HasColumnName("ID").ValueGeneratedOnAdd();
 
         builder.Property(l => l.PayrollRunId).HasColumnName("PAYROLL_RUN_ID").IsRequired();
-        builder.Property(l => l.EmployeeCode).HasColumnName("EMPLOYEE_CODE").HasMaxLength(100).IsRequired();
+        builder.Property(l => l.EmployeeCode).HasColumnName("EMPLOYEE_CODE").HasMaxLength(50).IsRequired();
         builder.Property(l => l.BranchId).HasColumnName("BRANCH_ID");
-        builder.Property(l => l.DepartmentCode).HasColumnName("DEPARTMENT_CODE").HasMaxLength(100);
-        builder.Property(l => l.CostCenterCode).HasColumnName("COST_CENTER_CODE").HasMaxLength(100);
+        builder.Property(l => l.DepartmentCode).HasColumnName("DEPARTMENT_CODE").HasMaxLength(50);
+        builder.Property(l => l.CostCenterCode).HasColumnName("COST_CENTER_CODE").HasMaxLength(50);
 
         builder.Property(l => l.BasicSalary).HasColumnName("BASIC_SALARY").HasPrecision(18, 4).IsRequired();
         builder.Property(l => l.TotalEarnings).HasColumnName("TOTAL_EARNINGS").HasPrecision(18, 4).IsRequired();
@@ -103,12 +119,12 @@ public sealed class PayrollRunLineConfiguration : IEntityTypeConfiguration<Payro
         builder.Property(l => l.TotalDeductions).HasColumnName("TOTAL_DEDUCTIONS").HasPrecision(18, 4).IsRequired();
         builder.Property(l => l.NetPay).HasColumnName("NET_PAY").HasPrecision(18, 4).IsRequired();
 
-        builder.Property(l => l.PaymentMethod).HasColumnName("PAYMENT_METHOD").HasMaxLength(60).IsRequired();
-        builder.Property(l => l.BankCode).HasColumnName("BANK_CODE").HasMaxLength(100);
-        builder.Property(l => l.Iban).HasColumnName("IBAN").HasMaxLength(100);
-        builder.Property(l => l.Status).HasColumnName("STATUS").HasMaxLength(60).IsRequired();
+        builder.Property(l => l.PaymentMethod).HasColumnName("PAYMENT_METHOD").HasMaxLength(30).IsRequired();
+        builder.Property(l => l.BankCode).HasColumnName("BANK_CODE").HasMaxLength(50);
+        builder.Property(l => l.Iban).HasColumnName("IBAN").HasMaxLength(50);
+        builder.Property(l => l.Status).HasColumnName("STATUS").HasMaxLength(30).IsRequired();
 
-        builder.Property(l => l.CreationUser).HasColumnName("CREATION_USER").HasMaxLength(200).IsRequired();
+        builder.Property(l => l.CreationUser).HasColumnName("CREATION_USER").HasMaxLength(100).IsRequired();
         builder.Property(l => l.CreationDate).HasColumnName("CREATION_DATE").IsRequired();
 
         builder.HasOne(l => l.Employee)
@@ -137,10 +153,10 @@ public sealed class PayrollRunLineComponentConfiguration : IEntityTypeConfigurat
         builder.Property(c => c.Id).HasColumnName("ID").ValueGeneratedOnAdd();
 
         builder.Property(c => c.PayrollLineId).HasColumnName("PAYROLL_LINE_ID").IsRequired();
-        builder.Property(c => c.ComponentCode).HasColumnName("COMPONENT_CODE").HasMaxLength(100).IsRequired();
-        builder.Property(c => c.ComponentNameLocal).HasColumnName("COMPONENT_NAME_LOCAL").HasMaxLength(400).IsRequired();
-        builder.Property(c => c.ComponentNameEn).HasColumnName("COMPONENT_NAME_EN").HasMaxLength(400).IsRequired();
-        builder.Property(c => c.ComponentType).HasColumnName("COMPONENT_TYPE").HasMaxLength(100).IsRequired();
+        builder.Property(c => c.ComponentCode).HasColumnName("COMPONENT_CODE").HasMaxLength(50).IsRequired();
+        builder.Property(c => c.ComponentNameLocal).HasColumnName("COMPONENT_NAME_LOCAL").HasMaxLength(200).IsRequired();
+        builder.Property(c => c.ComponentNameEn).HasColumnName("COMPONENT_NAME_EN").HasMaxLength(200).IsRequired();
+        builder.Property(c => c.ComponentType).HasColumnName("COMPONENT_TYPE").HasMaxLength(50).IsRequired();
         builder.Property(c => c.Amount).HasColumnName("AMOUNT").HasPrecision(18, 3).IsRequired();
     }
 }
@@ -154,25 +170,25 @@ public sealed class PayrollCalculationSnapshotConfiguration : IEntityTypeConfigu
         builder.Property(s => s.Id).HasColumnName("ID").ValueGeneratedOnAdd();
 
         builder.Property(s => s.PayrollRunLineId).HasColumnName("PAYROLL_RUN_LINE_ID").IsRequired();
-        builder.Property(s => s.EmployeeCode).HasColumnName("EMPLOYEE_CODE").HasMaxLength(100).IsRequired();
-        builder.Property(s => s.PayPeriod).HasColumnName("PAY_PERIOD").HasMaxLength(40).IsRequired();
+        builder.Property(s => s.EmployeeCode).HasColumnName("EMPLOYEE_CODE").HasMaxLength(50).IsRequired();
+        builder.Property(s => s.PayPeriod).HasColumnName("PAY_PERIOD").HasMaxLength(20).IsRequired();
         builder.Property(s => s.CalculationTimestamp).HasColumnName("CALCULATION_TIMESTAMP").IsRequired();
 
         builder.Property(s => s.TotalBaseDays).HasColumnName("TOTAL_BASE_DAYS").HasPrecision(5, 2).IsRequired();
         builder.Property(s => s.EligibleDays).HasColumnName("ELIGIBLE_DAYS").HasPrecision(5, 2).IsRequired();
         builder.Property(s => s.ProrationFactor).HasColumnName("PRORATION_FACTOR").HasPrecision(10, 6).IsRequired();
-        builder.Property(s => s.ProrationPolicyCode).HasColumnName("PRORATION_POLICY_CODE").HasMaxLength(100).IsRequired();
-        builder.Property(s => s.ProrationMethodUsed).HasColumnName("PRORATION_METHOD_USED").HasMaxLength(100).IsRequired();
+        builder.Property(s => s.ProrationPolicyCode).HasColumnName("PRORATION_POLICY_CODE").HasMaxLength(50).IsRequired();
+        builder.Property(s => s.ProrationMethodUsed).HasColumnName("PRORATION_METHOD_USED").HasMaxLength(50).IsRequired();
 
         builder.Property(s => s.OvertimeHoursApplied).HasColumnName("OVERTIME_HOURS_APPLIED").HasPrecision(5, 2).IsRequired();
         builder.Property(s => s.OvertimeEarningsApplied).HasColumnName("OVERTIME_EARNINGS_APPLIED").HasPrecision(18, 4).IsRequired();
 
-        builder.Property(s => s.SscPolicyCode).HasColumnName("SSC_POLICY_CODE").HasMaxLength(100).IsRequired();
+        builder.Property(s => s.SscPolicyCode).HasColumnName("SSC_POLICY_CODE").HasMaxLength(50).IsRequired();
         builder.Property(s => s.SscEmpRateApplied).HasColumnName("SSC_EMP_RATE_APPLIED").HasPrecision(10, 6).IsRequired();
         builder.Property(s => s.SscEmprRateApplied).HasColumnName("SSC_EMPR_RATE_APPLIED").HasPrecision(10, 6).IsRequired();
         builder.Property(s => s.SscCapApplied).HasColumnName("SSC_CAP_APPLIED").HasPrecision(18, 4).IsRequired();
 
-        builder.Property(s => s.TaxPolicyCode).HasColumnName("TAX_POLICY_CODE").HasMaxLength(100).IsRequired();
+        builder.Property(s => s.TaxPolicyCode).HasColumnName("TAX_POLICY_CODE").HasMaxLength(50).IsRequired();
         builder.Property(s => s.TaxExemptionsApplied).HasColumnName("TAX_EXEMPTIONS_APPLIED").HasPrecision(18, 4).IsRequired();
 
         builder.Property(s => s.LoanDeductionsApplied).HasColumnName("LOAN_DEDUCTIONS_APPLIED").HasPrecision(18, 4).IsRequired();

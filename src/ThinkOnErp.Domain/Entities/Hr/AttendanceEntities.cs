@@ -16,6 +16,7 @@ public sealed class AttendancePolicy
     public int MinMinutesForOvertime { get; set; } = 30;
     public bool AutoDeductLateArrival { get; set; } = true;
     public string MissingPunchHandling { get; set; } = "PENALIZE_HALF_DAY"; // PENALIZE_HALF_DAY, PENALIZE_FULL_DAY, FLAG_ONLY
+    public bool AllowMultipleSessions { get; set; } = false;
     public bool IsDefault { get; set; }
     public bool IsActive { get; set; } = true;
 
@@ -38,6 +39,9 @@ public sealed class RawAttendance
     public DateTime PunchTime { get; set; }
     public string PunchType { get; set; } = "IN"; // IN, OUT
     public string? DeviceId { get; set; }
+    public string? EventId { get; set; }
+    public string? EventPayloadHash { get; set; }
+    public string? EventResponseJson { get; set; }
     public string? ExternalReference { get; set; } // Can store PunchHash (SHA256)
     public string Source { get; set; } = "BIOMETRIC"; // BIOMETRIC, MANUAL, MOBILE_APP
     public long? BranchId { get; set; }
@@ -47,6 +51,14 @@ public sealed class RawAttendance
     public decimal? DistanceToBranchMeters { get; set; }
     public bool? IsWithinGeofence { get; set; }
     public string? GeofenceStatus { get; set; } // INSIDE, OUTSIDE_RANGE, NO_LOCATION, NO_BRANCH_COORDS
+    public DateTime? ResolvedWorkDate { get; set; }
+    public long? AttendanceDayId { get; set; }
+    public AttendanceDay? AttendanceDay { get; set; }
+    public string? ProcessingOutcome { get; set; } // APPLIED, IGNORED; null for legacy/unprocessed evidence
+    public string? ProcessingReason { get; set; }
+    public string? ProcessedBy { get; set; }
+    public DateTime? LastAttemptedAtUtc { get; set; }
+    public string? LastAttemptedBy { get; set; }
     public bool IsProcessed { get; set; }
     public DateTime? ProcessedDate { get; set; }
 
@@ -61,6 +73,11 @@ public sealed class AttendanceDay
     public DateTime AttendanceDate { get; set; }
     public long? WorkCalendarId { get; set; }
     public string? ShiftCode { get; set; }
+    public string? TimeZoneId { get; set; }
+    public DateTime? ShiftStartsAtUtc { get; set; }
+    public DateTime? ShiftEndsAtUtc { get; set; }
+    public int? ShiftBreakMinutes { get; set; }
+    public string? ShiftSource { get; set; }
     public decimal ScheduledHours { get; set; } = 8.00m;
     public DateTime? FirstCheckIn { get; set; }
     public DateTime? LastCheckOut { get; set; }
@@ -101,6 +118,9 @@ public sealed class AttendanceCorrectionRequest
     public DateTime AttendanceDate { get; set; }
     public DateTime? OldCheckIn { get; set; }
     public DateTime? OldCheckOut { get; set; }
+    public string? OriginalDayVersion { get; set; }
+    public DateTime? AppliedCheckIn { get; set; }
+    public DateTime? AppliedCheckOut { get; set; }
     public DateTime? RequestedCheckIn { get; set; }
     public DateTime? RequestedCheckOut { get; set; }
     public string Reason { get; set; } = string.Empty;
@@ -137,6 +157,7 @@ public sealed class EmployeeShiftAssignment
     public long Id { get; set; }
     public string EmployeeCode { get; set; } = string.Empty;
     public string ShiftCode { get; set; } = string.Empty;
+    public string? AssignmentKind { get; set; } // BASE, TEMPORARY; null retains legacy date-based classification.
     public DateTime EffectiveFrom { get; set; }
     public DateTime? EffectiveTo { get; set; }
     public bool IsActive { get; set; } = true;
@@ -146,3 +167,5 @@ public sealed class EmployeeShiftAssignment
     public string? UpdateUser { get; set; }
     public DateTime? UpdateDate { get; set; }
 }
+
+public class AttendanceEventConflictException() : InvalidOperationException("This event ID was already accepted with different punch details.");

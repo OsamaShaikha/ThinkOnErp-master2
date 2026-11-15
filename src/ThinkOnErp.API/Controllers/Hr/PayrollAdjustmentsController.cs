@@ -45,15 +45,27 @@ public sealed class PayrollAdjustmentsController : ControllerBase
         return Ok(ApiResponse<PayrollAdjustment>.CreateSuccess(result, "Adjustment created successfully."));
     }
 
+    [HttpPost("overtime")]
+    [ProducesResponseType(typeof(ApiResponse<PayrollAdjustment>), StatusCodes.Status200OK)]
+    [HrPermission("hr-payroll-adjustments", "create")]
+    public async Task<ActionResult<ApiResponse<PayrollAdjustment>>> CreateOvertimeAdjustment(
+        [FromBody] CreateOvertimePayrollAdjustmentDto dto,
+        CancellationToken cancellationToken)
+    {
+        var result = await _adjustmentService.CreateOvertimeAdjustmentAsync(dto, User.Identity?.Name ?? "SYSTEM", cancellationToken);
+        return Ok(ApiResponse<PayrollAdjustment>.CreateSuccess(result, "Overtime adjustment submitted for review."));
+    }
+
     [HttpPost("{id:long}/approve")]
     [ProducesResponseType(typeof(ApiResponse<PayrollAdjustment>), StatusCodes.Status200OK)]
     [HrPermission("hr-payroll-adjustments", "approve")]
     public async Task<ActionResult<ApiResponse<PayrollAdjustment>>> ApproveAdjustment(
         long id,
+        [FromBody] PayrollAdjustmentDecisionDto decision,
         CancellationToken cancellationToken)
     {
         var user = User.Identity?.Name ?? "SYSTEM";
-        var result = await _adjustmentService.ApproveAdjustmentAsync(id, user, cancellationToken);
+        var result = await _adjustmentService.DecideAdjustmentAsync(id, true, decision.Reason, user, decision.BranchId, cancellationToken);
         return Ok(ApiResponse<PayrollAdjustment>.CreateSuccess(result, "Adjustment approved successfully."));
     }
 
@@ -62,11 +74,35 @@ public sealed class PayrollAdjustmentsController : ControllerBase
     [HrPermission("hr-payroll-adjustments", "reject")]
     public async Task<ActionResult<ApiResponse<PayrollAdjustment>>> RejectAdjustment(
         long id,
+        [FromBody] PayrollAdjustmentDecisionDto decision,
         CancellationToken cancellationToken)
     {
         var user = User.Identity?.Name ?? "SYSTEM";
-        var result = await _adjustmentService.RejectAdjustmentAsync(id, user, cancellationToken);
+        var result = await _adjustmentService.DecideAdjustmentAsync(id, false, decision.Reason, user, decision.BranchId, cancellationToken);
         return Ok(ApiResponse<PayrollAdjustment>.CreateSuccess(result, "Adjustment rejected successfully."));
+    }
+
+    [HttpPost("{id:long}/post")]
+    [HrPermission("hr-payroll-adjustments", "post")]
+    public async Task<ActionResult<ApiResponse<PayrollAdjustment>>> PostAdjustment(
+        long id,
+        [FromBody] PayrollAdjustmentDecisionDto decision,
+        CancellationToken cancellationToken)
+    {
+        var result = await _adjustmentService.DecideAdjustmentAsync(id, true, decision.Reason, User.Identity?.Name ?? "SYSTEM", decision.BranchId, cancellationToken);
+        return Ok(ApiResponse<PayrollAdjustment>.CreateSuccess(result, "Adjustment posted successfully."));
+    }
+
+    [HttpPost("{id:long}/unpost")]
+    [HrPermission("hr-payroll-adjustments", "reverse")]
+    public async Task<ActionResult<ApiResponse<PayrollAdjustment>>> UnpostAdjustment(
+        long id,
+        [FromQuery] long? branchId,
+        [FromQuery] string? reason,
+        CancellationToken cancellationToken)
+    {
+        var result = await _adjustmentService.UnpostAdjustmentAsync(id, User.Identity?.Name ?? "SYSTEM", branchId, reason, cancellationToken);
+        return Ok(ApiResponse<PayrollAdjustment>.CreateSuccess(result, "Adjustment returned to pending."));
     }
 
     [HttpGet]

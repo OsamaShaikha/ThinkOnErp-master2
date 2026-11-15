@@ -14,9 +14,30 @@
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
     <PackageReference Include="Moq" Version="4.20.70" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="8.0.0" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="8.0.11" />
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="8.0.11" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="8.0.11" />
     <ProjectReference Include="../../src/ThinkOnErp.API/ThinkOnErp.API.csproj" />
     <Compile Include="../ThinkOnErp.API.Tests/Controllers/EmployeeUserLinkControllerTests.cs" Link="EmployeeUserLinkControllerTests.cs" />
+    <None Update="xunit.runner.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+  <ItemGroup Condition="'$(AttendanceReceiptOnly)' == 'true' Or '$(HrAccessMatrixOnly)' == 'true' Or '$(HrHttpOnly)' == 'true'">
+    <Compile Remove="**/*.cs;../ThinkOnErp.API.Tests/Controllers/EmployeeUserLinkControllerTests.cs" />
+    <Compile Include="AttendanceReceiptControllerTests.cs" />
+    <Compile Include="HrAttendanceHttpTests.cs" Condition="'$(HrHttpOnly)' == 'true' Or '$(HrAccessMatrixOnly)' == 'true'" />
+    <Compile Include="HrLeaveSettingsHttpTests.cs" Condition="'$(HrHttpOnly)' == 'true'" />
+    <Compile Include="HrAttendanceHttpTests.Payroll.cs" Condition="'$(HrHttpOnly)' == 'true' Or '$(HrAccessMatrixOnly)' == 'true'" />
+    <Compile Include="OrganizationScopeTests.cs" Condition="'$(HrAccessMatrixOnly)' == 'true'" />
+    <Compile Include="EmployeeAccountScopeTests.cs" Condition="'$(HrAccessMatrixOnly)' == 'true'" />
+    <Compile Include="EmployeeTeamScopeTests.cs" Condition="'$(HrAccessMatrixOnly)' == 'true'" />
+    <Compile Include="EmployeeImportImpactTests.cs" Condition="'$(HrAccessMatrixOnly)' == 'true'" />
+    <Compile Include="EmployeeSensitiveFieldTests.cs" Condition="'$(HrAccessMatrixOnly)' == 'true'" />
+    <Compile Include="SalaryMetadataStorageTests.cs" Condition="'$(HrAccessMatrixOnly)' == 'true'" />
+    <Compile Include="PayrollPostingConfigurationTests.cs" Condition="'$(HrAccessMatrixOnly)' == 'true'" />
+    <Compile Include="PayrollGlContractTests.cs" Condition="'$(HrAccessMatrixOnly)' == 'true'" />
+    <Compile Include="HrAccessFilterTests.cs" Condition="'$(HrAccessMatrixOnly)' == 'true'" />
+    <Compile Include="../ThinkOnErp.API.Tests/Controllers/EmployeeUserLinkControllerTests.cs" Link="EmployeeUserLinkControllerTests.cs" Condition="'$(HrAccessMatrixOnly)' == 'true'" />
   </ItemGroup>
 </Project>

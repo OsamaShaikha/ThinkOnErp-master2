@@ -1,0 +1,294 @@
+{
+  "success": true,
+  "statusCode": 200,
+  "message": "تمت العملية بنجاح.",
+  "data": {
+    "code": "sales-by-category",
+    "title": "Sales by category",
+    "isLive": false,
+    "header": {
+      "language": "en",
+      "isRightToLeft": false,
+      "companyName": "debis acc",
+      "branchName": "All accessible branches",
+      "taxNumber": null,
+      "phone": "0796211887",
+      "currency": "JOD",
+      "cashier": "All",
+      "payment": "All",
+      "preparedBy": "admin",
+      "reportNumber": "RPT-20261028-60e60e4476d84",
+      "issuedAtUtc": "2026-10-28T18:00:19.8019366Z",
+      "startDate": "2026-10-01T00:00:00",
+      "endDate": "2026-10-28T00:00:00",
+      "shiftId": null,
+      "tillId": null,
+      "days": [],
+      "payments": [],
+      "totals": {
+        "date": "0001-01-01T00:00:00",
+        "invoices": 0,
+        "sales": 0,
+        "discount": 0,
+        "returns": 0,
+        "net": 0,
+        "tax": 0,
+        "charges": 0,
+        "total": 0
+      },
+      "averageInvoice": 0
+    },
+    "filterNotes": [],
+    "branches": [
+      {
+        "branchId": 1,
+        "branchName": "debis acc",
+        "metrics": [
+          {
+            "label": "Net sales",
+            "value": "3,310.760",
+            "unit": "JOD"
+          },
+          {
+            "label": "Quantity sold",
+            "value": "230.000",
+            "unit": ""
+          },
+          {
+            "label": "Cost",
+            "value": "0.000",
+            "unit": "JOD"
+          },
+          {
+            "label": "Gross profit",
+            "value": "3,310.760",
+            "unit": "JOD"
+          }
+        ],
+        "tables": [
+          {
+            "title": "Category sales",
+            "columns": [
+              {
+                "label": "Category",
+                "numeric": false,
+                "code": false,
+                "width": 2
+              },
+              {
+                "label": "Items",
+                "numeric": true,
+                "code": false,
+                "width": 1
+              },
+              {
+                "label": "Quantity",
+                "numeric": true,
+                "code": false,
+                "width": 1
+              },
+              {
+                "label": "Gross",
+                "numeric": true,
+                "code": false,
+                "width": 1
+              },
+              {
+                "label": "Discount",
+                "numeric": true,
+                "code": false,
+                "width": 1
+              },
+              {
+                "label": "Tax",
+                "numeric": true,
+                "code": false,
+                "width": 1
+              },
+              {
+                "label": "Net",
+                "numeric": true,
+                "code": false,
+                "width": 1
+              }
+            ],
+            "rows": [
+              [
+                "Electronics\n100",
+                "2",
+                "108.000",
+                "2,564.000",
+                "0.000",
+                "385.920",
+                "2,486.920"
+              ],
+              [
+                "Phones\n101",
+                "1",
+                "104.000",
+                "680.000",
+                "8.300",
+                "122.498",
+                "799.410"
+              ],
+              [
+                "Shawarma Sandwiches\n1001",
+                "2",
+                "9.000",
+                "15.750",
+                "0.000",
+                "1.120",
+                "16.870"
+              ],
+              [
+                "Arabi Zinger\n2002",
+                "1",
+                "2.000",
+                "7.000",
+                "0.000",
+                "0.560",
+                "7.560"
+              ],
+              [
+                "Updated Main Group 6403\n6403",
+                "1",
+                "2.000",
+                "0.000",
+                "0.000",
+                "0.000",
+                "0.000"
+              ],
+              [
+                "Updated Sub Group 8687\n8687",
+                "1",
+                "1.000",
+                "0.000",
+                "0.000",
+                "0.000",
+                "0.000"
+              ],
+              [
+                "Updated Sub Group 26707\n26707",
+                "1",
+                "2.000",
+                "0.000",
+                "0.000",
+                "0.000",
+                "0.000"
+              ],
+              [
+                "Updated Sub Group 6700\n6700",
+                "1",
+                "1.000",
+                "0.000",
+                "0.000",
+                "0.000",
+                "0.000"
+              ],
+              [
+                "Updated Sub Group 6575\n6575",
+                "1",
+                "1.000",
+                "0.000",
+                "0.000",
+                "0.000",
+                "0.000"
+              ]
+            ]
+          },
+          {
+            "title": "Category profitability",
+            "columns": [
+              {
+                "label": "Category",
+                "numeric": false,
+                "code": false,
+                "width": 2
+              },
+              {
+                "label": "Cost",
+                "numeric": true,
+                "code": false,
+                "width": 1
+              },
+              {
+                "label": "Gross profit",
+                "numeric": true,
+                "code": false,
+                "width": 1
+              },
+              {
+                "label": "Sales share",
+                "numeric": true,
+                "code": false,
+                "width": 1
+              }
+            ],
+            "rows": [
+              [
+                "Electronics\n100",
+                "0.000",
+                "2,486.920",
+                "75.12%"
+              ],
+              [
+                "Phones\n101",
+                "0.000",
+                "799.410",
+                "24.15%"
+              ],
+              [
+                "Shawarma Sandwiches\n1001",
+                "0.000",
+                "16.870",
+                "0.51%"
+              ],
+              [
+                "Arabi Zinger\n2002",
+                "0.000",
+                "7.560",
+                "0.23%"
+              ],
+              [
+                "Updated Main Group 6403\n6403",
+                "0.000",
+                "0.000",
+                "0%"
+              ],
+              [
+                "Updated Sub Group 8687\n8687",
+                "0.000",
+                "0.000",
+                "0%"
+              ],
+              [
+                "Updated Sub Group 26707\n26707",
+                "0.000",
+                "0.000",
+                "0%"
+              ],
+              [
+                "Updated Sub Group 6700\n6700",
+                "0.000",
+                "0.000",
+                "0%"
+              ],
+              [
+                "Updated Sub Group 6575\n6575",
+                "0.000",
+                "0.000",
+                "0%"
+              ]
+            ]
+          }
+        ],
+        "notes": [
+          "Categories: 9"
+        ]
+      }
+    ]
+  },
+  "errors": null,
+  "timestamp": "2026-10-28T18:00:49.0777326Z",
+  "traceId": "4964db45-9f84-4d2c-960d-a2e3964910ab"
+}

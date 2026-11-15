@@ -1,0 +1,250 @@
+{
+  "success": true,
+  "statusCode": 200,
+  "message": "تمت العملية بنجاح.",
+  "data": {
+    "code": "cash-movements",
+    "title": "Cash in / cash out",
+    "isLive": false,
+    "header": {
+      "language": "en",
+      "isRightToLeft": false,
+      "companyName": "debis acc",
+      "branchName": "All accessible branches",
+      "taxNumber": null,
+      "phone": "0796211887",
+      "currency": "JOD",
+      "cashier": "All",
+      "payment": "All",
+      "preparedBy": "admin",
+      "reportNumber": "RPT-20261028-8fcb688cc9e04",
+      "issuedAtUtc": "2026-10-28T18:01:03.5891976Z",
+      "startDate": "2026-10-01T00:00:00",
+      "endDate": "2026-10-28T00:00:00",
+      "shiftId": null,
+      "tillId": null,
+      "days": [],
+      "payments": [],
+      "totals": {
+        "date": "0001-01-01T00:00:00",
+        "invoices": 0,
+        "sales": 0,
+        "discount": 0,
+        "returns": 0,
+        "net": 0,
+        "tax": 0,
+        "charges": 0,
+        "total": 0
+      },
+      "averageInvoice": 0
+    },
+    "filterNotes": [],
+    "branches": [
+      {
+        "branchId": 1,
+        "branchName": "debis acc",
+        "metrics": [
+          {
+            "label": "Net movements",
+            "value": "192.425",
+            "unit": "JOD"
+          },
+          {
+            "label": "Float in",
+            "value": "205.425",
+            "unit": "JOD"
+          },
+          {
+            "label": "Cash drop",
+            "value": "0.000",
+            "unit": "JOD"
+          },
+          {
+            "label": "Pay out",
+            "value": "13.000",
+            "unit": "JOD"
+          }
+        ],
+        "tables": [
+          {
+            "title": "Cash movements",
+            "columns": [
+              {
+                "label": "Voucher / shift",
+                "numeric": false,
+                "code": true,
+                "width": 1.7
+              },
+              {
+                "label": "Movement / voucher type",
+                "numeric": false,
+                "code": false,
+                "width": 1.7
+              },
+              {
+                "label": "Amount",
+                "numeric": true,
+                "code": false,
+                "width": 1
+              },
+              {
+                "label": "Reason / beneficiary",
+                "numeric": false,
+                "code": false,
+                "width": 2
+              },
+              {
+                "label": "User / approval",
+                "numeric": false,
+                "code": false,
+                "width": 1.5
+              },
+              {
+                "label": "Date UTC",
+                "numeric": false,
+                "code": true,
+                "width": 1.5
+              }
+            ],
+            "rows": [
+              [
+                "RV-SH181-0002\nSH-1-1-20261025-001",
+                "Float In\nReceipt",
+                "2.000",
+                "test\n",
+                "admin\n",
+                "25/10/2026 21:58"
+              ],
+              [
+                "PV-SH181-0001\nSH-1-1-20261025-001",
+                "Pay Out\nPayment",
+                "1.000",
+                "test\n",
+                "admin\n",
+                "25/10/2026 21:57"
+              ],
+              [
+                "RV-SH121-0003\nSH-1-41-20261015-001",
+                "Float In\nReceipt",
+                "50.000",
+                "test\n",
+                "admin\n",
+                "17/10/2026 22:43"
+              ],
+              [
+                "PV-SH121-0002\nSH-1-41-20261015-001",
+                "Pay Out\nPayment",
+                "5.000",
+                "test\n",
+                "admin\n",
+                "17/10/2026 22:43"
+              ],
+              [
+                "PV-SH121-0001\nSH-1-41-20261015-001",
+                "Pay Out\nPayment",
+                "7.000",
+                "جرة\n",
+                "admin\n",
+                "15/10/2026 22:17"
+              ],
+              [
+                "41\nSH-1-41-20261012-001",
+                "Float In\nPayment",
+                "5.750",
+                "قبض سداد ذمة عميل (CUST_005) - سند #11\n",
+                "admin\nadmin",
+                "15/10/2026 22:14"
+              ],
+              [
+                "28\nSH-1-41-20261012-001",
+                "Float In\nPayment",
+                "1.000",
+                "قبض سداد ذمة عميل (CUST-002) - سند #10\n",
+                "admin\nadmin",
+                "13/10/2026 16:52"
+              ],
+              [
+                "27\nSH-1-41-20261012-001",
+                "Float In\nPayment",
+                "46.750",
+                "قبض سداد ذمة عميل (CUST_005) - سند #9\n",
+                "admin\nadmin",
+                "12/10/2026 22:32"
+              ],
+              [
+                "26\nSH-1-41-20261012-001",
+                "Float In\nPayment",
+                "8.775",
+                "قبض سداد ذمة عميل (CUST-002) - سند #8\n",
+                "admin\nadmin",
+                "12/10/2026 22:32"
+              ],
+              [
+                "25\nSH-1-41-20261012-001",
+                "Float In\nPayment",
+                "1.000",
+                "قبض سداد ذمة عميل (CUST-002) - سند #7\n",
+                "admin\nadmin",
+                "12/10/2026 22:31"
+              ],
+              [
+                "24\nSH-1-41-20261012-001",
+                "Float In\nPayment",
+                "5.750",
+                "قبض سداد ذمة عميل (CUST-002) - سند #6\n",
+                "admin\nadmin",
+                "12/10/2026 22:30"
+              ],
+              [
+                "23\nSH-1-41-20261012-001",
+                "Float In\nPayment",
+                "13.125",
+                "قبض سداد ذمة عميل (CUST_004) - سند #5\n",
+                "admin\nadmin",
+                "12/10/2026 22:20"
+              ],
+              [
+                "22\nSH-1-41-20261012-001",
+                "Float In\nPayment",
+                "20.275",
+                "قبض سداد ذمة عميل (CUST-002) - سند #4\n",
+                "admin\nadmin",
+                "12/10/2026 22:20"
+              ],
+              [
+                "RV-SH101-0003\nSH-1-41-20261012-001",
+                "Float In\nReceipt",
+                "20.000",
+                "test\n",
+                "admin\n",
+                "12/10/2026 22:18"
+              ],
+              [
+                "2\nSH-1-41-20261012-001",
+                "Float In\nPayment",
+                "30.000",
+                "قبض سداد ذمة عميل (CUST_004) - سند #2\n",
+                "admin\nadmin",
+                "12/10/2026 20:21"
+              ],
+              [
+                "1\nSH-1-41-20261012-001",
+                "Float In\nPayment",
+                "1.000",
+                "قبض سداد ذمة عميل (CUST-002) - سند #1\n",
+                "admin\nadmin",
+                "12/10/2026 17:58"
+              ]
+            ]
+          }
+        ],
+        "notes": [
+          "Tip payouts: 0.000 JOD"
+        ]
+      }
+    ]
+  },
+  "errors": null,
+  "timestamp": "2026-10-28T18:01:03.6521272Z",
+  "traceId": "88123d34-6c85-4472-9e78-66c1510235ec"
+}

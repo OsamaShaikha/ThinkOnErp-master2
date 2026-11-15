@@ -18,6 +18,7 @@ public sealed class BankAccountConfiguration : IEntityTypeConfiguration<BankAcco
         builder.Property(e => e.AccountNameLocal).HasColumnName("ACCOUNT_NAME_LOCAL").HasMaxLength(200).IsRequired();
         builder.Property(e => e.AccountNameEn).HasColumnName("ACCOUNT_NAME_EN").HasMaxLength(200).IsRequired();
         builder.Property(e => e.BankName).HasColumnName("BANK_NAME").HasMaxLength(150).IsRequired();
+        builder.Property(e => e.BankCode).HasColumnName("BANK_CODE").HasMaxLength(50);
         builder.Property(e => e.BankBranchName).HasColumnName("BANK_BRANCH_NAME").HasMaxLength(150);
         builder.Property(e => e.Iban).HasColumnName("IBAN").HasMaxLength(50);
         builder.Property(e => e.SwiftCode).HasColumnName("SWIFT_CODE").HasMaxLength(30);

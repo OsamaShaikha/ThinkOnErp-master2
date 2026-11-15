@@ -9,6 +9,7 @@ public sealed class BankAccountDto
     public string AccountNameLocal { get; set; } = string.Empty;
     public string AccountNameEn { get; set; } = string.Empty;
     public string BankName { get; set; } = string.Empty;
+    public string? BankCode { get; set; }
     public string? BankBranchName { get; set; }
     public string? Iban { get; set; }
     public string? SwiftCode { get; set; }
@@ -31,6 +32,7 @@ public sealed class CreateBankAccountDto
     public string AccountNameLocal { get; set; } = string.Empty;
     public string AccountNameEn { get; set; } = string.Empty;
     public string BankName { get; set; } = string.Empty;
+    public string? BankCode { get; set; }
     public string? BankBranchName { get; set; }
     public string? Iban { get; set; }
     public string? SwiftCode { get; set; }
@@ -47,6 +49,7 @@ public sealed class UpdateBankAccountDto
     public string AccountNameLocal { get; set; } = string.Empty;
     public string AccountNameEn { get; set; } = string.Empty;
     public string BankName { get; set; } = string.Empty;
+    public string? BankCode { get; set; }
     public string? BankBranchName { get; set; }
     public string? Iban { get; set; }
     public string? SwiftCode { get; set; }

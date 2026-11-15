@@ -101,13 +101,13 @@ This will start:
 
 ### Update Prometheus Targets
 
-If your API is not at `thinkonerp-api:5000`, edit `prometheus.yml`:
+The monitoring stack reaches the API through the host-published port `5000` by default. If your API is published on another host/port, edit `prometheus.yml`:
 
 ```yaml
 scrape_configs:
   - job_name: 'thinkonerp-api'
     static_configs:
-      - targets: ['your-api-host:5000']  # Update this
+      - targets: ['host.docker.internal:YOUR_PORT']  # Update host/port as needed
 ```
 
 Reload Prometheus configuration:

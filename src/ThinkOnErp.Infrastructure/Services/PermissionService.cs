@@ -52,7 +52,7 @@ public class PermissionService : IPermissionService
             if (hrScreen.ScreenCode == "hr-payroll-posting" ||
                 (hrScreen.ScreenCode == "hr-employees" && (await _context.Set<SysFeature>().FindAsync(featureId))?.FeatureCode == "link-user")) return false;
             
-            var isSysActive = await _context.Set<SysSystem>().AnyAsync(s => (s.Id == hrScreen.SystemId || hrScreen.SystemScreens.Any(ss => ss.SystemId == s.Id && ss.IsActive)) && s.IsActive);
+            var isSysActive = await _context.Set<SysSystem>().AnyAsync(s => (s.Id == hrScreen.SystemId || _context.Set<SysSystemScreen>().Any(ss => ss.ScreenId == hrScreen.Id && ss.SystemId == s.Id && ss.IsActive)) && s.IsActive);
             var isFeatureActive = await _context.SysSystemScreenFeatures.AnyAsync(ssf => ssf.ScreenId == screenId && ssf.FeatureId == featureId && ssf.IsActive && ssf.Feature!.IsActive)
                                   || await _context.Set<SysScreenFeature>().AnyAsync(sf => sf.ScreenId == screenId && sf.FeatureId == featureId && sf.Feature!.IsActive);
 

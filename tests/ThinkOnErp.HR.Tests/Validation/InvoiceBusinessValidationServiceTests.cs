@@ -547,6 +547,6 @@ public class InvoiceBusinessValidationServiceTests
 
         // Assert
         Assert.False(result.IsValid);
-        Assert.Contains(result.Errors, e => e.Field == "Payments");
+        Assert.Contains(result.Errors, e => e.Field == "Payments[0].Amount" && e.ErrorCode == "ERR_POSITIVE_NUMBER_REQUIRED");
     }
 }

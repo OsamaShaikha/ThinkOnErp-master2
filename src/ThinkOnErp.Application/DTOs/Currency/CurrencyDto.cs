@@ -81,6 +81,8 @@ public class CurrencyDto
     /// </summary>
     public DateTime? CurrRateDate { get; set; }
 
+    /// <summary>Tenant-configured payroll decimal places (0..4); null uses the existing currency default.</summary>
+
     /// <summary>
     /// Username of the user who created this record
     /// </summary>

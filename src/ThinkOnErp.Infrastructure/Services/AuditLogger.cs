@@ -638,8 +638,10 @@ public class AuditLogger : IAuditLogger, IHostedService
             CorrelationId = auditEvent.CorrelationId,
             HttpMethod = auditEvent.HttpMethod,
             EndpointPath = auditEvent.EndpointPath,
-            RequestPayload = auditEvent.RequestPayload,
-            ResponsePayload = auditEvent.ResponsePayload,
+            // Payloads come from serialized MediatR requests/responses (AuditLoggingBehavior)
+            // and can carry personal data, so they are masked like OldValue/NewValue.
+            RequestPayload = dataMasker.MaskSensitiveFields(auditEvent.RequestPayload),
+            ResponsePayload = dataMasker.MaskSensitiveFields(auditEvent.ResponsePayload),
             ExecutionTimeMs = auditEvent.ExecutionTimeMs,
             StatusCode = auditEvent.StatusCode,
             CreationDate = auditEvent.Timestamp,

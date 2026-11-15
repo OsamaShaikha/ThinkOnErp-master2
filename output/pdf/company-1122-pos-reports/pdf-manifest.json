@@ -1,0 +1,194 @@
+[
+  {
+    "file": "cash-drawer-variance-ar.pdf",
+    "pages": 2,
+    "bytes": 103105,
+    "sha256": "91e4ed1e90e9ea3dc1a6ed3a1ec8e001544c6aaed28610be1e2a72769a5dd9f7"
+  },
+  {
+    "file": "cash-drawer-variance-en.pdf",
+    "pages": 2,
+    "bytes": 586438,
+    "sha256": "5dc14345dd2ec96350a602b96294cfabe81f32b96aedd32d328c40de127028c7"
+  },
+  {
+    "file": "cash-movements-ar.pdf",
+    "pages": 2,
+    "bytes": 103191,
+    "sha256": "14e0b35c8b63582ec8067f825302621af22d34ebb2c31d5781b9d1a428bb1ad7"
+  },
+  {
+    "file": "cash-movements-en.pdf",
+    "pages": 2,
+    "bytes": 407993,
+    "sha256": "8647786564836dd55b85df19b4668d634ee801663cc817dc43ae7a9bbfc3f751"
+  },
+  {
+    "file": "discounts-ar.pdf",
+    "pages": 2,
+    "bytes": 101531,
+    "sha256": "1d64058cafc255127d666db4d85c66db8492431323c7f5e0f09e8fe6a1e81ab2"
+  },
+  {
+    "file": "discounts-en.pdf",
+    "pages": 2,
+    "bytes": 521398,
+    "sha256": "2f7a080ee7d35b7469594b42c8217392e7dde49cf5c542ac6c07bed595da10b6"
+  },
+  {
+    "file": "hourly-sales-ar.pdf",
+    "pages": 2,
+    "bytes": 95201,
+    "sha256": "df066fd827d15fab3aa19967759a606a0c7db3ff7f8bcb5e0a20c3c835347089"
+  },
+  {
+    "file": "hourly-sales-en.pdf",
+    "pages": 2,
+    "bytes": 333088,
+    "sha256": "38e89d3aa6a38d451f4fa61a66b4ee4edc359b73885e8e9609e3c40c682e3c1c"
+  },
+  {
+    "file": "kitchen-prep-time-ar.pdf",
+    "pages": 1,
+    "bytes": 71097,
+    "sha256": "c2c4e4873371a9b591e910041d7a186d7c785c2f9378e2afb56678fc3d72ce87"
+  },
+  {
+    "file": "kitchen-prep-time-en.pdf",
+    "pages": 1,
+    "bytes": 278711,
+    "sha256": "8d16c9d4b49ff14e6b30d14567405803f4f2dbb9fbaac5ca393229a9989b309b"
+  },
+  {
+    "file": "open-tables-live-ar.pdf",
+    "pages": 1,
+    "bytes": 74943,
+    "sha256": "d75dfd3a36c44919afbb765dbbbd7195e092d299ed3b562db3796a5340959397"
+  },
+  {
+    "file": "open-tables-live-en.pdf",
+    "pages": 1,
+    "bytes": 283707,
+    "sha256": "6adc66bf813180cf447e45db34767437248732bc4c58314776502dd191a56554"
+  },
+  {
+    "file": "sales-by-cashier-ar.pdf",
+    "pages": 1,
+    "bytes": 67669,
+    "sha256": "8c9be58d81488802ba3580ab69ba36ef5657e4b7052849997b3a5241f29f0e06"
+  },
+  {
+    "file": "sales-by-cashier-en.pdf",
+    "pages": 1,
+    "bytes": 324971,
+    "sha256": "196e2e443263be9ba6fcaac763a66c07e24fadca873e0753e77bda8c5813ebbd"
+  },
+  {
+    "file": "sales-by-category-ar.pdf",
+    "pages": 2,
+    "bytes": 95283,
+    "sha256": "9e64483eb157232a9886484d500ed76d0c9f4af6a74db9595f3b328e7e335960"
+  },
+  {
+    "file": "sales-by-category-en.pdf",
+    "pages": 2,
+    "bytes": 417318,
+    "sha256": "20aea43635dcd2452db69a6e97e729803904a4f1fb8577aea96b49db66a163da"
+  },
+  {
+    "file": "sales-by-customer-ar.pdf",
+    "pages": 1,
+    "bytes": 76118,
+    "sha256": "7b9492498ecd7d55e00b3c2e598aa4227cd4ae5b5cadb8aa91ebcc8eb753cf27"
+  },
+  {
+    "file": "sales-by-customer-en.pdf",
+    "pages": 1,
+    "bytes": 342330,
+    "sha256": "5c95235b543baf56b43a09abd98add3c1a024e358ee30702b3914d01ef903c44"
+  },
+  {
+    "file": "sales-by-floor-and-table-ar.pdf",
+    "pages": 1,
+    "bytes": 68499,
+    "sha256": "dd10e6fd03b095cefa88cad93a58722f50572a6e05b62bdb4ac24ecb628acd63"
+  },
+  {
+    "file": "sales-by-floor-and-table-en.pdf",
+    "pages": 1,
+    "bytes": 247069,
+    "sha256": "d3fbb87cb58d633f7c339529cf99090488d362d28efbb4874b4ec69e2116c0cc"
+  },
+  {
+    "file": "sales-by-item-ar.pdf",
+    "pages": 3,
+    "bytes": 130996,
+    "sha256": "639123bf82c19a67157ae990c276188bcfb6c64b6872be09f773b3ef74f80e9f"
+  },
+  {
+    "file": "sales-by-item-en.pdf",
+    "pages": 2,
+    "bytes": 458556,
+    "sha256": "f43e45f36005a84db28c4941703398180fc8280bf065f269ef2a8a1ee133bfae"
+  },
+  {
+    "file": "sales-by-order-type-ar.pdf",
+    "pages": 1,
+    "bytes": 70849,
+    "sha256": "330235edaf0f24d45bf915dad1a020ea7e50bbaa30e96cb637b7f784de0604a7"
+  },
+  {
+    "file": "sales-by-order-type-en.pdf",
+    "pages": 1,
+    "bytes": 290574,
+    "sha256": "ecd4ea1de0449bf68747d76b68ee29fffc90bb0564ee03f8dc0441d025541e48"
+  },
+  {
+    "file": "sales-by-payment-method-ar.pdf",
+    "pages": 1,
+    "bytes": 70576,
+    "sha256": "7a962b58d5a64239a09430404bceee77df3094d950c748b60e68442f914c4b04"
+  },
+  {
+    "file": "sales-by-payment-method-en.pdf",
+    "pages": 1,
+    "bytes": 246135,
+    "sha256": "c2ca2047ccc22d16f41cd6de696d9b22d618db709eadda6d210f313a9bd0ad6f"
+  },
+  {
+    "file": "sales-summary-ar.pdf",
+    "pages": 1,
+    "bytes": 79889,
+    "sha256": "71d0028623abba6b4c519372f9c990caa7650c599797e9577825f9c549b55893"
+  },
+  {
+    "file": "sales-summary-en.pdf",
+    "pages": 1,
+    "bytes": 612263,
+    "sha256": "8a1c4727eef11a0b9418be44176269e79a974a12d1f169f99c034aa5ac727457"
+  },
+  {
+    "file": "tax-summary-ar.pdf",
+    "pages": 1,
+    "bytes": 70552,
+    "sha256": "980e0d28de511f85cc53ee76ab1905f810768a6dcfc4291808b98a5b120b65e2"
+  },
+  {
+    "file": "tax-summary-en.pdf",
+    "pages": 1,
+    "bytes": 274533,
+    "sha256": "2b7b78b248db4ae59eb5c35a684017d416e42768113a9e435c23dca0c09b397e"
+  },
+  {
+    "file": "voids-and-refunds-ar.pdf",
+    "pages": 3,
+    "bytes": 140081,
+    "sha256": "6cb9037230e1d75405e3da5fa0adf2d7613eba6ecb0f4043e1757bbe3a3f959d"
+  },
+  {
+    "file": "voids-and-refunds-en.pdf",
+    "pages": 3,
+    "bytes": 650971,
+    "sha256": "a2ee804748f220272e9525f47ad49c1a5594600e959381321eb823d4d0578a67"
+  }
+]

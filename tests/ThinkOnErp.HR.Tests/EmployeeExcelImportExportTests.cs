@@ -20,6 +20,7 @@ public class EmployeeExcelImportExportTests
     private readonly XlsxEmployeeWorkbookWriter _writer;
     private readonly XlsxEmployeeWorkbookReader _reader;
     private readonly Mock<IEmployeeRepository> _repoMock;
+    private readonly Mock<IHrUnitOfWork> _unitOfWorkMock;
     private readonly EmployeeExcelService _service;
 
     public EmployeeExcelImportExportTests()
@@ -27,11 +28,16 @@ public class EmployeeExcelImportExportTests
         _writer = new XlsxEmployeeWorkbookWriter();
         _reader = new XlsxEmployeeWorkbookReader();
         _repoMock = new Mock<IEmployeeRepository>();
+        _unitOfWorkMock = new Mock<IHrUnitOfWork>();
+        _unitOfWorkMock.Setup(u => u.ExecuteEmployeeImportAsync(It.IsAny<IReadOnlyList<EmployeeImportRowDto>>(),
+                It.IsAny<Func<Task<EmployeeImportResultDto>>>(), It.IsAny<CancellationToken>()))
+            .Returns((IReadOnlyList<EmployeeImportRowDto> _, Func<Task<EmployeeImportResultDto>> action, CancellationToken _) => action());
         _service = new EmployeeExcelService(
             _repoMock.Object,
             _reader,
             _writer,
-            NullLogger<EmployeeExcelService>.Instance);
+            NullLogger<EmployeeExcelService>.Instance,
+            _unitOfWorkMock.Object);
     }
 
     [Fact]
@@ -222,13 +228,16 @@ public class EmployeeExcelImportExportTests
                 NameLocal = "طارق حامد",
                 NameEn = "Tareq Hamed",
                 NationalId = "3333444455",
+                Nationality = "Jordanian",
                 DateOfBirth = new DateTime(1993, 4, 12),
                 HireDate = new DateTime(2024, 6, 1),
                 Gender = "M",
                 MaritalStatus = "SINGLE",
                 EmploymentType = "FULL_TIME",
                 EmploymentStatus = "ACTIVE",
-                BasicSalary = 800m
+                BasicSalary = 800m,
+                CurrencyCode = "JOD",
+                PaymentMethod = "BANK_TRANSFER"
             }
         };
 
@@ -261,7 +270,9 @@ public class EmployeeExcelImportExportTests
             {
                 EmployeeCode = "EXISTING01",
                 NameLocal = "علي حسن",
+                NameEn = "Ali Hassan",
                 NationalId = "7777888899",
+                Nationality = "Jordanian",
                 DateOfBirth = new DateTime(1989, 1, 1),
                 HireDate = new DateTime(2020, 1, 1),
                 Gender = "M"
@@ -301,10 +312,14 @@ public class EmployeeExcelImportExportTests
                 NameLocal = "علي حسن المحدث",
                 NameEn = "Ali Hassan Updated",
                 NationalId = "7777888899",
+                Nationality = "Jordanian",
                 DateOfBirth = new DateTime(1989, 1, 1),
                 HireDate = new DateTime(2020, 1, 1),
                 Gender = "M",
-                BasicSalary = 1350m
+                BasicSalary = 1350m,
+                CurrencyCode = "JOD",
+                PaymentMethod = "BANK_TRANSFER",
+                SalaryEffectiveFrom = new DateTime(2026, 1, 1)
             }
         };
 
@@ -322,6 +337,8 @@ public class EmployeeExcelImportExportTests
                 {
                     EmployeeCode = "EXISTING01",
                     BasicSalary = 1000m,
+                    CurrencyCode = "JOD",
+                    PaymentMethod = "BANK_TRANSFER",
                     IsActive = true
                 }
             }
@@ -340,8 +357,205 @@ public class EmployeeExcelImportExportTests
         Assert.Equal(0, result.InsertedCount);
         Assert.Equal(1, result.UpdatedCount);
         Assert.Equal("علي حسن المحدث", existingEmp.NameLocal);
-        Assert.Equal(1350m, existingEmp.SalaryStructures[0].BasicSalary);
+        Assert.Equal(2, existingEmp.SalaryStructures.Count);
+        Assert.Equal(1000m, existingEmp.SalaryStructures.Single(s => s.EffectiveTo.HasValue).BasicSalary);
+        Assert.Equal(1350m, existingEmp.SalaryStructures.Single(s => !s.EffectiveTo.HasValue).BasicSalary);
         _repoMock.Verify(r => r.UpdateEmployeeAsync(existingEmp, It.IsAny<CancellationToken>()), Times.Once);
         _repoMock.Verify(r => r.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task ValidateWorkbookAsync_DetectsDuplicateNationalIdsInSameFile()
+    {
+        var employees = new List<EmployeeExportRowDto>
+        {
+            new()
+            {
+                EmployeeCode = "EMP_A",
+                NameLocal = "موظف أ",
+                NameEn = "Emp A",
+                NationalId = "1122334455",
+                DateOfBirth = new DateTime(1990, 1, 1),
+                HireDate = new DateTime(2021, 1, 1),
+                Gender = "M"
+            },
+            new()
+            {
+                EmployeeCode = "EMP_B",
+                NameLocal = "موظف ب",
+                NameEn = "Emp B",
+                NationalId = "1122334455", // duplicate NationalId
+                DateOfBirth = new DateTime(1992, 1, 1),
+                HireDate = new DateTime(2021, 1, 1),
+                Gender = "F"
+            }
+        };
+
+        var bytes = _writer.WriteExportWorkbook(employees);
+        using var stream = new MemoryStream(bytes);
+
+        var result = await _service.ValidateWorkbookAsync(stream);
+
+        Assert.False(result.IsValid);
+        Assert.Contains(result.Errors, e => e.Code == "DUPLICATE_IN_FILE" && e.Column == "NationalId");
+    }
+
+    [Fact]
+    public async Task ValidateWorkbookAsync_WhenNationalIdExistsForOtherEmployee_ReturnsError()
+    {
+        var employees = new List<EmployeeExportRowDto>
+        {
+            new()
+            {
+                EmployeeCode = "EMP_NEW",
+                NameLocal = "موظف جديد",
+                NameEn = "New Emp",
+                NationalId = "9988776655",
+                Nationality = "Jordanian",
+                DateOfBirth = new DateTime(1990, 1, 1),
+                HireDate = new DateTime(2021, 1, 1),
+                Gender = "M",
+                MaritalStatus = "SINGLE",
+                EmploymentType = "FULL_TIME",
+                EmploymentStatus = "ACTIVE",
+                BranchId = 1
+            }
+        };
+
+        var bytes = _writer.WriteExportWorkbook(employees);
+        using var stream = new MemoryStream(bytes);
+
+        _repoMock.Setup(r => r.GetEmployeeByCodeAsync("EMP_NEW", It.IsAny<CancellationToken>()))
+            .ReturnsAsync((Employee?)null);
+        _repoMock.Setup(r => r.ExistsByCodeAsync("EMP_NEW", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(false);
+        _repoMock.Setup(r => r.ExistsByNationalIdAsync("9988776655", null, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
+        _repoMock.Setup(r => r.GetImportImpactAsync("EMP_NEW", 1, It.IsAny<DateTime>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new EmployeeImportImpact(new List<EmployeeImportPeriodImpact>(), false));
+
+        var result = await _service.ValidateWorkbookAsync(stream);
+
+        Assert.False(result.IsValid);
+        Assert.Contains(result.Errors, e => e.Code == "NATIONAL_ID_EXISTS");
+    }
+
+    [Fact]
+    public async Task ValidateWorkbookAsync_WhenPayrollInputBlocked_ClosedPeriod_AddsErrorAndBlocker()
+    {
+        var employees = new List<EmployeeExportRowDto>
+        {
+            new()
+            {
+                EmployeeCode = "EMP_BLOCKED",
+                NameLocal = "موظف مغلق",
+                NameEn = "Blocked Emp",
+                NationalId = "5544332211",
+                Nationality = "Jordanian",
+                DateOfBirth = new DateTime(1990, 1, 1),
+                HireDate = new DateTime(2021, 1, 1),
+                Gender = "M",
+                MaritalStatus = "SINGLE",
+                EmploymentType = "FULL_TIME",
+                EmploymentStatus = "ACTIVE",
+                BranchId = 1
+            }
+        };
+
+        var bytes = _writer.WriteExportWorkbook(employees);
+        using var stream = new MemoryStream(bytes);
+
+        _repoMock.Setup(r => r.GetEmployeeByCodeAsync("EMP_BLOCKED", It.IsAny<CancellationToken>()))
+            .ReturnsAsync((Employee?)null);
+        _repoMock.Setup(r => r.ExistsByCodeAsync("EMP_BLOCKED", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(false);
+        _repoMock.Setup(r => r.ExistsByNationalIdAsync("5544332211", null, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(false);
+
+        var periods = new List<EmployeeImportPeriodImpact>
+        {
+            new("2026-10", new DateTime(2026, 10, 1), new DateTime(2026, 10, 31), "CLOSED", false)
+        };
+        _repoMock.Setup(r => r.GetImportImpactAsync("EMP_BLOCKED", 1, It.IsAny<DateTime>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new EmployeeImportImpact(periods, false));
+
+        var result = await _service.ValidateWorkbookAsync(stream);
+
+        Assert.False(result.IsValid);
+        Assert.Contains(result.Errors, e => e.Code == "PAYROLL_INPUT_BLOCKED");
+        var preview = Assert.Single(result.PreviewRows);
+        Assert.Contains("CLOSED_PAYROLL_PERIOD", preview.BlockingReasons);
+    }
+
+    [Fact]
+    public async Task ExportEmployeesAsync_MapsActiveSalaryStructureCorrectly()
+    {
+        var employees = new List<Employee>
+        {
+            new()
+            {
+                EmployeeCode = "E100",
+                NameLocal = "سامر ناصر",
+                NameEn = "Samer Nasser",
+                NationalId = "1231231234",
+                HireDate = new DateTime(2022, 1, 1),
+                BranchId = 5,
+                IsActive = true,
+                SalaryStructures = new List<SalaryStructure>
+                {
+                    new()
+                    {
+                        BasicSalary = 1800m,
+                        CurrencyCode = "USD",
+                        PaymentMethod = "BANK_TRANSFER",
+                        EffectiveFrom = DateTime.UtcNow.AddMonths(-6),
+                        EffectiveTo = null,
+                        IsActive = true
+                    }
+                }
+            }
+        };
+
+        _repoMock.Setup(r => r.GetAllEmployeesForExportAsync(null, null, null, null, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(employees);
+
+        var bytes = await _service.ExportEmployeesAsync();
+
+        Assert.NotNull(bytes);
+        Assert.True(bytes.Length > 0);
+        // Ensure valid PK zip signature
+        Assert.Equal(0x50, bytes[0]);
+        Assert.Equal(0x4B, bytes[1]);
+    }
+
+    [Fact]
+    public async Task ImportEmployeesAsync_WhenEmployeeCodeExistsOutsideScope_ReturnsError()
+    {
+        var employees = new List<EmployeeExportRowDto>
+        {
+            new()
+            {
+                EmployeeCode = "EMP_OUTSIDE",
+                NameLocal = "موظف خارج النطاق",
+                NameEn = "Outside Emp",
+                NationalId = "4455667788",
+                DateOfBirth = new DateTime(1990, 1, 1),
+                HireDate = new DateTime(2021, 1, 1),
+                Gender = "M"
+            }
+        };
+
+        var bytes = _writer.WriteExportWorkbook(employees);
+        using var stream = new MemoryStream(bytes);
+
+        _repoMock.Setup(r => r.GetEmployeeByCodeAsync("EMP_OUTSIDE", It.IsAny<CancellationToken>()))
+            .ReturnsAsync((Employee?)null);
+        _repoMock.Setup(r => r.ExistsByCodeAsync("EMP_OUTSIDE", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true); // Exists outside editable scope
+
+        var result = await _service.ImportEmployeesAsync(stream, updateExisting: false, user: "ADMIN");
+
+        Assert.False(result.IsValid);
+        Assert.Contains(result.Errors, e => e.Code == "EMPLOYEE_NOT_EDITABLE");
     }
 }

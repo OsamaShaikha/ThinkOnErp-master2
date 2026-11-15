@@ -1,0 +1,168 @@
+{
+  "success": true,
+  "statusCode": 200,
+  "message": "تمت العملية بنجاح.",
+  "data": {
+    "code": "sales-by-payment-method",
+    "title": "Sales by payment method",
+    "isLive": false,
+    "header": {
+      "language": "en",
+      "isRightToLeft": false,
+      "companyName": "debis acc",
+      "branchName": "All accessible branches",
+      "taxNumber": null,
+      "phone": "0796211887",
+      "currency": "JOD",
+      "cashier": "All",
+      "payment": "All",
+      "preparedBy": "admin",
+      "reportNumber": "RPT-20261028-2d463f2bfdd04",
+      "issuedAtUtc": "2026-10-28T17:57:04.8381728Z",
+      "startDate": "2026-10-01T00:00:00",
+      "endDate": "2026-10-28T00:00:00",
+      "shiftId": null,
+      "tillId": null,
+      "days": [],
+      "payments": [],
+      "totals": {
+        "date": "0001-01-01T00:00:00",
+        "invoices": 0,
+        "sales": 0,
+        "discount": 0,
+        "returns": 0,
+        "net": 0,
+        "tax": 0,
+        "charges": 0,
+        "total": 0
+      },
+      "averageInvoice": 0
+    },
+    "filterNotes": [],
+    "branches": [
+      {
+        "branchId": 1,
+        "branchName": "debis acc",
+        "metrics": [
+          {
+            "label": "Net collected",
+            "value": "3,660.319",
+            "unit": "JOD"
+          },
+          {
+            "label": "Collected",
+            "value": "3,767.574",
+            "unit": "JOD"
+          },
+          {
+            "label": "Refunded",
+            "value": "107.255",
+            "unit": "JOD"
+          },
+          {
+            "label": "Transactions",
+            "value": "163",
+            "unit": ""
+          }
+        ],
+        "tables": [
+          {
+            "title": "Payment methods",
+            "columns": [
+              {
+                "label": "Method",
+                "numeric": false,
+                "code": false,
+                "width": 2
+              },
+              {
+                "label": "Transactions",
+                "numeric": true,
+                "code": false,
+                "width": 1
+              },
+              {
+                "label": "Collected",
+                "numeric": true,
+                "code": false,
+                "width": 1
+              },
+              {
+                "label": "Refunded",
+                "numeric": true,
+                "code": false,
+                "width": 1
+              },
+              {
+                "label": "Net",
+                "numeric": true,
+                "code": false,
+                "width": 1
+              },
+              {
+                "label": "Share",
+                "numeric": true,
+                "code": false,
+                "width": 1
+              }
+            ],
+            "rows": [
+              [
+                "Cash",
+                "125",
+                "2,956.449",
+                "107.255",
+                "2,849.194",
+                "78.47%"
+              ],
+              [
+                "Aggregator Paid",
+                "2",
+                "348.000",
+                "0.000",
+                "348.000",
+                "9.24%"
+              ],
+              [
+                "Customer Account",
+                "29",
+                "223.875",
+                "0.000",
+                "223.875",
+                "5.94%"
+              ],
+              [
+                "Card",
+                "3",
+                "222.000",
+                "0.000",
+                "222.000",
+                "5.89%"
+              ],
+              [
+                "Hospitality",
+                "1",
+                "11.500",
+                "0.000",
+                "11.500",
+                "0.31%"
+              ],
+              [
+                "Split",
+                "3",
+                "5.750",
+                "0.000",
+                "5.750",
+                "0.15%"
+              ]
+            ]
+          }
+        ],
+        "notes": []
+      }
+    ]
+  },
+  "errors": null,
+  "timestamp": "2026-10-28T17:57:05.451297Z",
+  "traceId": "a9530753-8b16-4430-9e9c-7800ccf319f7"
+}

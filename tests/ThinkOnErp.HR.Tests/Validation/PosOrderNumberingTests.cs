@@ -65,8 +65,8 @@ public class PosOrderNumberingTests
             .ReturnsAsync(new List<PosModifierGroup>());
 
         _calcEngine
-            .Setup(x => x.CalculateOrderTotalsAsync(It.IsAny<long>(), It.IsAny<CreatePosOrderDto>(), It.IsAny<decimal?>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync((long branchId, CreatePosOrderDto dto, decimal? tax, CancellationToken ct) =>
+            .Setup(x => x.CalculateOrderTotalsAsync(It.IsAny<long>(), It.IsAny<CreatePosOrderDto>(), It.IsAny<decimal?>(), It.IsAny<bool?>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((long branchId, CreatePosOrderDto dto, decimal? tax, bool? isTaxInclusive, CancellationToken ct) =>
             {
                 var total = dto.Lines.Sum(l => l.Quantity * l.UnitPrice);
                 return new PosOrderCalculationResult

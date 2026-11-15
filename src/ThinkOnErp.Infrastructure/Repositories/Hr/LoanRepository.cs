@@ -18,6 +18,49 @@ public sealed class LoanRepository : ILoanRepository
         _context = context;
     }
 
+    public async Task<(int DecimalPlaces, int? RoundingRule)> GetCurrencyRulesForEmployeeAsync(
+        string employeeCode,
+        string currencyCode,
+        CancellationToken cancellationToken = default)
+    {
+        var companyId = _context.HrScopeCompanyId;
+        if (companyId <= 0)
+            throw new InvalidOperationException("Trusted company scope is required to resolve loan currency rules.");
+
+        var employee = await _context.Employees.AsNoTracking()
+            .Where(e => e.EmployeeCode == employeeCode)
+            .Select(e => new { e.BranchId })
+            .SingleOrDefaultAsync(cancellationToken);
+        if (employee == null)
+            throw new KeyNotFoundException("Employee is unavailable in the current HR scope.");
+
+        if (employee.BranchId is not long branchId)
+            throw new InvalidOperationException("An active company branch is required to resolve loan currency rules.");
+
+        var branch = await _context.SysBranches.AsNoTracking()
+            .Where(b => b.Id == branchId && b.CompanyId == companyId && b.IsActive)
+            .Select(b => new { b.RoundingRules })
+            .SingleOrDefaultAsync(cancellationToken);
+        if (branch == null)
+            throw new InvalidOperationException("Employee branch is unavailable or outside the active company scope.");
+        var roundingRule = branch.RoundingRules ?? 1;
+
+        var normalizedCurrency = SalaryPaymentMetadata.Normalize(currencyCode);
+        var matchingCurrencyRows = await _context.SysCurrencies.AsNoTracking()
+            .CountAsync(c => c.ShortNameEn != null && c.ShortNameEn.Trim().ToUpper() == normalizedCurrency, cancellationToken);
+        if (matchingCurrencyRows != 1)
+            throw new InvalidOperationException(matchingCurrencyRows == 0
+                ? $"Currency '{normalizedCurrency}' is not configured in the ERP currency catalog."
+                : $"Currency '{normalizedCurrency}' is ambiguous in the ERP currency catalog.");
+
+        var configuredDecimals = await _context.PayrollCurrencyPrecisions.AsNoTracking()
+            .Where(p => p.CompanyId == companyId && p.CurrencyCode == normalizedCurrency)
+            .Select(p => (int?)p.DecimalPlaces)
+            .SingleOrDefaultAsync(cancellationToken);
+
+        return (PayrollCurrencyRules.GetCurrencyDecimals(normalizedCurrency, configuredDecimals), roundingRule);
+    }
+
     public async Task<IReadOnlyList<EmployeeLoan>> GetLoansAsync(string? employeeCode, string? status, CancellationToken cancellationToken = default)
     {
         var query = _context.EmployeeLoans
@@ -58,6 +101,14 @@ public sealed class LoanRepository : ILoanRepository
             .Where(s => string.Compare(s.PayPeriod, payPeriod) <= 0 &&
                 (s.Status == "PENDING" || s.Status == "PARTIAL" || s.Status == "SKIPPED") && s.EmployeeLoan!.Status == "ACTIVE")
             .ToListAsync(cancellationToken);
+    }
+
+    public async Task<LoanRepaymentSchedule?> GetScheduleByIdAsync(long scheduleId, CancellationToken cancellationToken = default)
+    {
+        return await _context.LoanRepaymentSchedules
+            .Include(s => s.EmployeeLoan)
+            .ThenInclude(l => l!.Schedules)
+            .FirstOrDefaultAsync(s => s.Id == scheduleId, cancellationToken);
     }
 
     public Task UpdateSchedulesAsync(IEnumerable<LoanRepaymentSchedule> schedules, CancellationToken cancellationToken = default)

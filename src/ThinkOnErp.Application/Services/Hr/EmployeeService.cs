@@ -1,500 +1,144 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
+using ThinkOnErp.Application.Common;
 using ThinkOnErp.Application.DTOs.Hr;
-using ThinkOnErp.Domain.Entities.Hr;
+using ThinkOnErp.Application.Features.Hr.Employees.Commands.AddDependent;
+using ThinkOnErp.Application.Features.Hr.Employees.Commands.AssignSalaryStructure;
+using ThinkOnErp.Application.Features.Hr.Employees.Commands.CreateEmployee;
+using ThinkOnErp.Application.Features.Hr.Employees.Commands.CreateSalaryComponent;
+using ThinkOnErp.Application.Features.Hr.Employees.Commands.DeleteDependent;
+using ThinkOnErp.Application.Features.Hr.Employees.Commands.DeleteEmployee;
+using ThinkOnErp.Application.Features.Hr.Employees.Commands.LinkEmployeeUser;
+using ThinkOnErp.Application.Features.Hr.Employees.Commands.UpdateEmployee;
+using ThinkOnErp.Application.Features.Hr.Employees.Commands.UpdateEmployeeBank;
+using ThinkOnErp.Application.Features.Hr.Employees.Commands.UpdateEmployeeIdentity;
+using ThinkOnErp.Application.Features.Hr.Employees.Commands.UpdateEmployeeWork;
+using ThinkOnErp.Application.Features.Hr.Employees.Common;
+using ThinkOnErp.Application.Features.Hr.Employees.Queries.GetActiveSalaryStructure;
+using ThinkOnErp.Application.Features.Hr.Employees.Queries.GetEmployeeByCode;
+using ThinkOnErp.Application.Features.Hr.Employees.Queries.GetEmployees;
+using ThinkOnErp.Application.Features.Hr.Employees.Queries.GetMyEmployeeLink;
+using ThinkOnErp.Application.Features.Hr.Employees.Queries.GetMyTeam;
+using ThinkOnErp.Application.Features.Hr.Employees.Queries.GetSalaryComponents;
 using ThinkOnErp.Domain.Interfaces.Hr;
 
 namespace ThinkOnErp.Application.Services.Hr;
 
+[Obsolete("Use the MediatR requests in ThinkOnErp.Application.Features.Hr.Employees.")]
 public interface IEmployeeService
 {
+    Task<EmployeeDetailsDto> UpdateEmployeeBankAsync(string employeeCode, UpdateEmployeeBankDto dto, string user, CancellationToken cancellationToken = default);
+    Task<EmployeeDetailsDto> UpdateEmployeeIdentityAsync(string employeeCode, UpdateEmployeeIdentityDto dto, string user, CancellationToken cancellationToken = default);
+    Task<EmployeeDetailsDto> UpdateEmployeeWorkAsync(string employeeCode, UpdateEmployeeWorkDto dto, string user, CancellationToken cancellationToken = default);
+    Task<(IReadOnlyList<EmployeeTeamMemberDto> Items, int TotalCount)> GetDirectReportsAsync(long userId, bool activeOnly, string? search, int pageIndex, int pageSize, CancellationToken cancellationToken = default);
     Task<(IReadOnlyList<EmployeeSummaryDto> Items, int TotalCount)> GetEmployeesPagedAsync(
-        string? searchKeyword = null,
-        string? departmentCode = null,
-        string? status = null,
-        long? branchId = null,
-        int pageIndex = 1,
-        int pageSize = 20,
-        CancellationToken cancellationToken = default);
-
+        string? searchKeyword = null, string? departmentCode = null, string? status = null, long? branchId = null,
+        int pageIndex = 1, int pageSize = 20, CancellationToken cancellationToken = default);
     Task<EmployeeDetailsDto?> GetEmployeeByCodeAsync(string employeeCode, CancellationToken cancellationToken = default);
     Task<EmployeeUserLinkDto?> GetEmployeeUserLinkAsync(long userId, CancellationToken cancellationToken = default);
     Task<EmployeeUserLinkDto> LinkEmployeeUserAsync(string employeeCode, long? userId, string user, CancellationToken cancellationToken = default);
     Task<EmployeeDetailsDto> CreateEmployeeAsync(CreateEmployeeDto dto, string user, CancellationToken cancellationToken = default);
     Task<EmployeeDetailsDto> UpdateEmployeeAsync(string employeeCode, UpdateEmployeeDto dto, string user, CancellationToken cancellationToken = default);
     Task DeleteEmployeeAsync(string employeeCode, string user, CancellationToken cancellationToken = default);
-
     Task<DependentDto> AddDependentAsync(string employeeCode, CreateDependentDto dto, string user, CancellationToken cancellationToken = default);
     Task DeleteDependentAsync(long dependentId, string user, CancellationToken cancellationToken = default);
-
     Task<SalaryStructureDetailsDto> AssignSalaryStructureAsync(string employeeCode, AssignSalaryStructureDto dto, string user, CancellationToken cancellationToken = default);
     Task<SalaryStructureDetailsDto?> GetActiveSalaryStructureAsync(string employeeCode, DateTime? asOfDate = null, CancellationToken cancellationToken = default);
-
     Task<IReadOnlyList<SalaryComponentDto>> GetSalaryComponentsAsync(CancellationToken cancellationToken = default);
     Task<SalaryComponentDto> CreateSalaryComponentAsync(CreateSalaryComponentDto dto, string user, CancellationToken cancellationToken = default);
 }
 
+/// <summary>
+/// Transitional facade. All logic lives in the Features/Hr/Employees handlers; this class only
+/// constructs them, so existing unit tests and HrSchemaTool verification scripts keep exercising
+/// the real rules. It is no longer registered in DI. Delete it once those callers use the handlers.
+/// </summary>
+/// <remarks>
+/// Constructor contract kept from the old service: a null <c>fields</c> means a trusted internal
+/// caller (no field checks); a null <c>unitOfWork</c> refuses protected writes, except trusted
+/// salary assignment, which historically ran without a lock.
+/// </remarks>
+[Obsolete("Use the MediatR requests in ThinkOnErp.Application.Features.Hr.Employees. Kept only for existing tests and HrSchemaTool.")]
 public sealed class EmployeeService : IEmployeeService
 {
-    private readonly IEmployeeRepository _employeeRepo;
+    private readonly IEmployeeRepository _repository;
+    private readonly IHrUnitOfWork? _unitOfWork;
+    private readonly EmployeeFieldGuard _fields;
 
-    public EmployeeService(IEmployeeRepository employeeRepo)
+    public EmployeeService(IEmployeeRepository employeeRepo, IHrUnitOfWork? unitOfWork = null, EmployeeFieldAccess? fields = null)
     {
-        _employeeRepo = employeeRepo;
+        _repository = employeeRepo;
+        _unitOfWork = unitOfWork;
+        _fields = EmployeeFieldGuard.From(fields);
     }
 
-    public async Task<EmployeeUserLinkDto?> GetEmployeeUserLinkAsync(long userId, CancellationToken cancellationToken = default)
+    private IHrUnitOfWork Unit => _unitOfWork ?? new UnavailableHrUnitOfWork();
+
+    public async Task<(IReadOnlyList<EmployeeTeamMemberDto> Items, int TotalCount)> GetDirectReportsAsync(
+        long userId, bool activeOnly, string? search, int pageIndex, int pageSize, CancellationToken cancellationToken = default)
     {
-        var employee = await _employeeRepo.GetEmployeeByUserIdAsync(userId, cancellationToken);
-        return employee == null ? null : new EmployeeUserLinkDto(employee.EmployeeCode, employee.UserId);
-    }
-
-    public async Task<EmployeeUserLinkDto> LinkEmployeeUserAsync(string employeeCode, long? userId, string user, CancellationToken cancellationToken = default)
-    {
-        var employee = await _employeeRepo.GetEmployeeByCodeAsync(employeeCode, cancellationToken)
-            ?? throw new KeyNotFoundException($"Employee with code '{employeeCode}' not found.");
-
-        if (userId.HasValue)
-        {
-            if (userId.Value <= 0)
-                throw new ArgumentException("User ID must be positive.");
-            if (!employee.IsActive || employee.EmploymentStatus != "ACTIVE")
-                throw new InvalidOperationException("Only active employees can be linked to a login account.");
-            if (!await _employeeRepo.IsUserAvailableForEmployeeAsync(userId.Value, employee.BranchId, cancellationToken))
-                throw new InvalidOperationException("User must be active, exist in this tenant, and have access to the employee's branch.");
-            var existing = await _employeeRepo.GetEmployeeByUserIdAsync(userId.Value, cancellationToken);
-            if (existing != null && existing.EmployeeCode != employee.EmployeeCode)
-                throw new InvalidOperationException("This user is already linked to another employee.");
-        }
-
-        employee.UserId = userId;
-        employee.UpdateUser = user;
-        employee.UpdateDate = DateTime.UtcNow;
-        await _employeeRepo.UpdateEmployeeAsync(employee, cancellationToken);
-        await _employeeRepo.SaveChangesAsync(cancellationToken);
-        return new EmployeeUserLinkDto(employee.EmployeeCode, employee.UserId);
+        var page = Data(await new GetMyTeamQueryHandler(_repository)
+            .Handle(new GetMyTeamQuery(userId, activeOnly, search, pageIndex, pageSize), cancellationToken));
+        return (page.Items, (int)page.TotalCount);
     }
 
     public async Task<(IReadOnlyList<EmployeeSummaryDto> Items, int TotalCount)> GetEmployeesPagedAsync(
-        string? searchKeyword = null,
-        string? departmentCode = null,
-        string? status = null,
-        long? branchId = null,
-        int pageIndex = 1,
-        int pageSize = 20,
-        CancellationToken cancellationToken = default)
+        string? searchKeyword = null, string? departmentCode = null, string? status = null, long? branchId = null,
+        int pageIndex = 1, int pageSize = 20, CancellationToken cancellationToken = default)
     {
-        var (items, totalCount) = await _employeeRepo.GetEmployeesAsync(
-            searchKeyword, departmentCode, status, branchId, pageIndex, pageSize, cancellationToken);
-
-        var dtos = items.Select(e =>
-        {
-            var activeStructure = e.SalaryStructures
-                .Where(s => s.IsActive && s.EffectiveFrom <= DateTime.UtcNow && (!s.EffectiveTo.HasValue || s.EffectiveTo.Value >= DateTime.UtcNow))
-                .OrderByDescending(s => s.EffectiveFrom)
-                .FirstOrDefault();
-
-            return new EmployeeSummaryDto(
-                e.EmployeeCode,
-                e.NameLocal,
-                e.NameEn,
-                e.NationalId,
-                e.DepartmentCode,
-                e.PositionCode,
-                e.EmploymentStatus,
-                activeStructure?.BasicSalary,
-                e.Phone,
-                e.Email,
-                e.UserId
-            );
-        }).ToList();
-
-        return (dtos, totalCount);
+        var page = Data(await new GetEmployeesQueryHandler(_repository, _fields)
+            .Handle(new GetEmployeesQuery(searchKeyword, departmentCode, status, branchId, pageIndex, pageSize), cancellationToken));
+        return (page.Items, (int)page.TotalCount);
     }
 
     public async Task<EmployeeDetailsDto?> GetEmployeeByCodeAsync(string employeeCode, CancellationToken cancellationToken = default)
-    {
-        var emp = await _employeeRepo.GetEmployeeByCodeAsync(employeeCode, cancellationToken);
-        if (emp == null) return null;
+        => DataOrNull(await new GetEmployeeByCodeQueryHandler(_repository, _fields).Handle(new GetEmployeeByCodeQuery(employeeCode), cancellationToken));
 
-        return MapToDetailsDto(emp);
-    }
+    public async Task<EmployeeUserLinkDto?> GetEmployeeUserLinkAsync(long userId, CancellationToken cancellationToken = default)
+        => DataOrNull(await new GetMyEmployeeLinkQueryHandler(_repository).Handle(new GetMyEmployeeLinkQuery(userId), cancellationToken));
+
+    public async Task<EmployeeUserLinkDto> LinkEmployeeUserAsync(string employeeCode, long? userId, string user, CancellationToken cancellationToken = default)
+        => Data(await new LinkEmployeeUserCommandHandler(_repository, Unit).Handle(new LinkEmployeeUserCommand(employeeCode, userId, user), cancellationToken));
 
     public async Task<EmployeeDetailsDto> CreateEmployeeAsync(CreateEmployeeDto dto, string user, CancellationToken cancellationToken = default)
-    {
-        var normalizedCode = dto.EmployeeCode.Trim().ToUpperInvariant();
-        if (await _employeeRepo.ExistsByCodeAsync(normalizedCode, cancellationToken))
-        {
-            throw new InvalidOperationException($"Employee with code '{dto.EmployeeCode}' already exists.");
-        }
-
-        if (await _employeeRepo.ExistsByNationalIdAsync(dto.NationalId, null, cancellationToken))
-        {
-            throw new InvalidOperationException($"Employee with National ID '{dto.NationalId}' already exists.");
-        }
-
-        var emp = new Employee
-        {
-            EmployeeCode = normalizedCode,
-            NameLocal = dto.NameLocal,
-            NameEn = dto.NameEn,
-            NationalId = dto.NationalId,
-            Nationality = dto.Nationality,
-            PassportNumber = dto.PassportNumber,
-            DateOfBirth = dto.DateOfBirth,
-            Gender = dto.Gender,
-            MaritalStatus = dto.MaritalStatus,
-            Email = dto.Email,
-            Phone = dto.Phone,
-            HireDate = dto.HireDate,
-            ProbationEndDate = dto.ProbationEndDate,
-            EmploymentType = dto.EmploymentType,
-            EmploymentStatus = dto.EmploymentStatus,
-            DepartmentCode = dto.DepartmentCode,
-            PositionCode = dto.PositionCode,
-            BranchId = dto.BranchId,
-            ManagerEmployeeCode = dto.ManagerEmployeeCode,
-            SscNumber = dto.SscNumber,
-            TaxExemptionCount = dto.TaxExemptionCount,
-            IsHighRiskRole = dto.IsHighRiskRole,
-            BankName = dto.BankName,
-            BankAccountNumber = dto.BankAccountNumber,
-            BankIban = dto.BankIban,
-            IsActive = true,
-            CreationUser = user,
-            CreationDate = DateTime.UtcNow
-        };
-
-        await _employeeRepo.AddEmployeeAsync(emp, cancellationToken);
-        await _employeeRepo.SaveChangesAsync(cancellationToken);
-
-        return MapToDetailsDto(emp);
-    }
+        => Data(await new CreateEmployeeCommandHandler(_repository, Unit, _fields).Handle(new CreateEmployeeCommand(dto, user), cancellationToken));
 
     public async Task<EmployeeDetailsDto> UpdateEmployeeAsync(string employeeCode, UpdateEmployeeDto dto, string user, CancellationToken cancellationToken = default)
-    {
-        var emp = await _employeeRepo.GetEmployeeByCodeAsync(employeeCode, cancellationToken);
-        if (emp == null) throw new InvalidOperationException($"Employee with code '{employeeCode}' not found.");
+        => Data(await new UpdateEmployeeCommandHandler(_repository, Unit, _fields).Handle(new UpdateEmployeeCommand(employeeCode, dto, user), cancellationToken));
 
-        if (emp.UserId.HasValue && emp.BranchId != dto.BranchId &&
-            !await _employeeRepo.IsUserAvailableForEmployeeAsync(emp.UserId.Value, dto.BranchId, cancellationToken))
-            throw new InvalidOperationException("The linked user must have access to the new employee branch. Unlink the account or assign its branch access first.");
+    public async Task<EmployeeDetailsDto> UpdateEmployeeWorkAsync(string employeeCode, UpdateEmployeeWorkDto dto, string user, CancellationToken cancellationToken = default)
+        => Data(await new UpdateEmployeeWorkCommandHandler(_repository, Unit, _fields).Handle(new UpdateEmployeeWorkCommand(employeeCode, dto, user), cancellationToken));
 
-        if (await _employeeRepo.ExistsByNationalIdAsync(dto.NationalId, employeeCode, cancellationToken))
-        {
-            throw new InvalidOperationException($"Another employee with National ID '{dto.NationalId}' already exists.");
-        }
+    public async Task<EmployeeDetailsDto> UpdateEmployeeBankAsync(string employeeCode, UpdateEmployeeBankDto dto, string user, CancellationToken cancellationToken = default)
+        => Data(await new UpdateEmployeeBankCommandHandler(_repository, Unit, _fields).Handle(new UpdateEmployeeBankCommand(employeeCode, dto, user), cancellationToken));
 
-        emp.NameLocal = dto.NameLocal;
-        emp.NameEn = dto.NameEn;
-        emp.NationalId = dto.NationalId;
-        emp.Nationality = dto.Nationality;
-        emp.PassportNumber = dto.PassportNumber;
-        emp.DateOfBirth = dto.DateOfBirth;
-        emp.Gender = dto.Gender;
-        emp.MaritalStatus = dto.MaritalStatus;
-        emp.Email = dto.Email;
-        emp.Phone = dto.Phone;
-        emp.HireDate = dto.HireDate;
-        emp.ProbationEndDate = dto.ProbationEndDate;
-        emp.TerminationDate = dto.TerminationDate;
-        emp.TerminationReason = dto.TerminationReason;
-        emp.EmploymentType = dto.EmploymentType;
-        emp.EmploymentStatus = dto.EmploymentStatus;
-        emp.DepartmentCode = dto.DepartmentCode;
-        emp.PositionCode = dto.PositionCode;
-        emp.BranchId = dto.BranchId;
-        emp.ManagerEmployeeCode = dto.ManagerEmployeeCode;
-        emp.SscNumber = dto.SscNumber;
-        emp.TaxExemptionCount = dto.TaxExemptionCount;
-        emp.IsHighRiskRole = dto.IsHighRiskRole;
-        emp.BankName = dto.BankName;
-        emp.BankAccountNumber = dto.BankAccountNumber;
-        emp.BankIban = dto.BankIban;
-        emp.IsActive = dto.IsActive;
-        emp.UpdateUser = user;
-        emp.UpdateDate = DateTime.UtcNow;
-
-        await _employeeRepo.UpdateEmployeeAsync(emp, cancellationToken);
-        await _employeeRepo.SaveChangesAsync(cancellationToken);
-
-        return MapToDetailsDto(emp);
-    }
+    public async Task<EmployeeDetailsDto> UpdateEmployeeIdentityAsync(string employeeCode, UpdateEmployeeIdentityDto dto, string user, CancellationToken cancellationToken = default)
+        => Data(await new UpdateEmployeeIdentityCommandHandler(_repository, Unit, _fields).Handle(new UpdateEmployeeIdentityCommand(employeeCode, dto, user), cancellationToken));
 
     public async Task DeleteEmployeeAsync(string employeeCode, string user, CancellationToken cancellationToken = default)
-    {
-        var emp = await _employeeRepo.GetEmployeeByCodeAsync(employeeCode, cancellationToken);
-        if (emp == null) throw new InvalidOperationException($"Employee with code '{employeeCode}' not found.");
-
-        emp.IsActive = false;
-        emp.EmploymentStatus = "TERMINATED";
-        emp.TerminationDate = DateTime.UtcNow;
-        emp.TerminationReason = "Deactivated by user " + user;
-        emp.UpdateUser = user;
-        emp.UpdateDate = DateTime.UtcNow;
-
-        await _employeeRepo.UpdateEmployeeAsync(emp, cancellationToken);
-        await _employeeRepo.SaveChangesAsync(cancellationToken);
-    }
+        => await new DeleteEmployeeCommandHandler(_repository, Unit, _fields).Handle(new DeleteEmployeeCommand(employeeCode, user), cancellationToken);
 
     public async Task<DependentDto> AddDependentAsync(string employeeCode, CreateDependentDto dto, string user, CancellationToken cancellationToken = default)
-    {
-        var emp = await _employeeRepo.GetEmployeeByCodeAsync(employeeCode, cancellationToken);
-        if (emp == null) throw new InvalidOperationException($"Employee with code '{employeeCode}' not found.");
-
-        var dep = new EmployeeDependent
-        {
-            EmployeeCode = employeeCode,
-            NameLocal = dto.NameLocal,
-            NameEn = dto.NameEn,
-            Relationship = dto.Relationship,
-            DateOfBirth = dto.DateOfBirth,
-            Gender = dto.Gender,
-            NationalId = dto.NationalId,
-            IsTaxExemptionClaimed = dto.IsTaxExemptionClaimed,
-            IsMedicalCovered = dto.IsMedicalCovered,
-            IsActive = true,
-            CreationUser = user,
-            CreationDate = DateTime.UtcNow
-        };
-
-        await _employeeRepo.AddDependentAsync(dep, cancellationToken);
-
-        // TaxExemptionCount is for additional manual exemptions; dependents are counted separately.
-
-        await _employeeRepo.SaveChangesAsync(cancellationToken);
-
-        return new DependentDto(
-            dep.Id,
-            dep.EmployeeCode,
-            dep.NameLocal,
-            dep.NameEn,
-            dep.Relationship,
-            dep.DateOfBirth,
-            dep.Gender,
-            dep.NationalId,
-            dep.IsTaxExemptionClaimed,
-            dep.IsMedicalCovered,
-            dep.IsActive
-        );
-    }
+        => Data(await new AddDependentCommandHandler(_repository, Unit, _fields).Handle(new AddDependentCommand(employeeCode, dto, user), cancellationToken));
 
     public async Task DeleteDependentAsync(long dependentId, string user, CancellationToken cancellationToken = default)
-    {
-        var dep = await _employeeRepo.GetDependentByIdAsync(dependentId, cancellationToken);
-        if (dep == null) throw new InvalidOperationException($"Dependent with ID {dependentId} not found.");
-
-        var emp = await _employeeRepo.GetEmployeeByCodeAsync(dep.EmployeeCode, cancellationToken);
-
-        await _employeeRepo.DeleteDependentAsync(dep, cancellationToken);
-        await _employeeRepo.SaveChangesAsync(cancellationToken);
-    }
+        => await new DeleteDependentCommandHandler(_repository, Unit, _fields).Handle(new DeleteDependentCommand(dependentId, user), cancellationToken);
 
     public async Task<SalaryStructureDetailsDto> AssignSalaryStructureAsync(string employeeCode, AssignSalaryStructureDto dto, string user, CancellationToken cancellationToken = default)
     {
-        var emp = await _employeeRepo.GetEmployeeByCodeAsync(employeeCode, cancellationToken);
-        if (emp == null) throw new InvalidOperationException($"Employee with code '{employeeCode}' not found.");
-
-        if (dto.BasicSalary < 0 || (dto.EffectiveTo.HasValue && dto.EffectiveTo < dto.EffectiveFrom))
-            throw new ArgumentException("Salary amount and effective date range are invalid.");
-        var existingStructures = await _employeeRepo.GetSalaryStructuresAsync(employeeCode, cancellationToken);
-        if (existingStructures.Any(s => s.IsActive && s.EffectiveFrom >= dto.EffectiveFrom))
-            throw new InvalidOperationException("A salary structure already starts on or after this date. Update or remove that future structure before assigning a backdated salary.");
-        foreach (var existing in existingStructures.Where(s => s.IsActive && s.EffectiveFrom < dto.EffectiveFrom && (!s.EffectiveTo.HasValue || s.EffectiveTo.Value >= dto.EffectiveFrom)))
-        {
-            existing.EffectiveTo = dto.EffectiveFrom.AddDays(-1);
-            existing.UpdateUser = user;
-            existing.UpdateDate = DateTime.UtcNow;
-        }
-
-        var structure = new SalaryStructure
-        {
-            EmployeeCode = employeeCode,
-            EffectiveFrom = dto.EffectiveFrom,
-            EffectiveTo = dto.EffectiveTo,
-            BasicSalary = dto.BasicSalary,
-            CurrencyCode = dto.CurrencyCode,
-            PaymentMethod = dto.PaymentMethod,
-            IsActive = true,
-            CreationUser = user,
-            CreationDate = DateTime.UtcNow
-        };
-
-        if (dto.Lines != null && dto.Lines.Count > 0)
-        {
-            foreach (var line in dto.Lines)
-            {
-                structure.Lines.Add(new SalaryStructureLine
-                {
-                    ComponentCode = line.ComponentCode,
-                    Amount = line.Amount,
-                    Percent = line.Percent,
-                    IsActive = true,
-                    CreationUser = user,
-                    CreationDate = DateTime.UtcNow
-                });
-            }
-        }
-
-        await _employeeRepo.AddSalaryStructureAsync(structure, cancellationToken);
-        await _employeeRepo.SaveChangesAsync(cancellationToken);
-
-        // Fetch reloaded structure with component names
-        var active = await _employeeRepo.GetActiveSalaryStructureAsync(employeeCode, dto.EffectiveFrom, cancellationToken);
-        return MapToStructureDetailsDto(active ?? structure);
+        IHrUnitOfWork unit = _unitOfWork ?? (_fields.IsEnforced ? new UnavailableHrUnitOfWork() : new PassThroughHrUnitOfWork());
+        return Data(await new AssignSalaryStructureCommandHandler(_repository, unit, _fields)
+            .Handle(new AssignSalaryStructureCommand(employeeCode, dto, user), cancellationToken));
     }
 
     public async Task<SalaryStructureDetailsDto?> GetActiveSalaryStructureAsync(string employeeCode, DateTime? asOfDate = null, CancellationToken cancellationToken = default)
-    {
-        var targetDate = asOfDate ?? DateTime.UtcNow;
-        var structure = await _employeeRepo.GetActiveSalaryStructureAsync(employeeCode, targetDate, cancellationToken);
-        return structure == null ? null : MapToStructureDetailsDto(structure);
-    }
+        => DataOrNull(await new GetActiveSalaryStructureQueryHandler(_repository, _fields).Handle(new GetActiveSalaryStructureQuery(employeeCode, asOfDate), cancellationToken));
 
     public async Task<IReadOnlyList<SalaryComponentDto>> GetSalaryComponentsAsync(CancellationToken cancellationToken = default)
-    {
-        var components = await _employeeRepo.GetSalaryComponentsAsync(cancellationToken);
-        return components.Select(c => new SalaryComponentDto(
-            c.ComponentCode,
-            c.NameLocal,
-            c.NameEn,
-            c.ComponentType,
-            c.CalculationType,
-            c.DefaultAmount,
-            c.DefaultPercent,
-            c.IsTaxable,
-            c.IsSscApplicable,
-            c.GlAccountCode,
-            c.IsActive
-        )).ToList();
-    }
+        => Data(await new GetSalaryComponentsQueryHandler(_repository).Handle(new GetSalaryComponentsQuery(), cancellationToken));
 
     public async Task<SalaryComponentDto> CreateSalaryComponentAsync(CreateSalaryComponentDto dto, string user, CancellationToken cancellationToken = default)
-    {
-        var normalizedComponent = dto.ComponentCode.Trim().ToUpperInvariant();
-        var existing = await _employeeRepo.GetSalaryComponentByCodeAsync(normalizedComponent, cancellationToken);
-        if (existing != null)
-        {
-            throw new InvalidOperationException($"Salary component '{dto.ComponentCode}' already exists.");
-        }
+        => Data(await new CreateSalaryComponentCommandHandler(_repository).Handle(new CreateSalaryComponentCommand(dto, user), cancellationToken));
 
-        var component = new SalaryComponent
-        {
-            ComponentCode = normalizedComponent,
-            NameLocal = dto.NameLocal,
-            NameEn = dto.NameEn,
-            ComponentType = dto.ComponentType.ToUpperInvariant(),
-            CalculationType = dto.CalculationType.ToUpperInvariant(),
-            DefaultAmount = dto.DefaultAmount,
-            DefaultPercent = dto.DefaultPercent,
-            IsTaxable = dto.IsTaxable,
-            IsSscApplicable = dto.IsSscApplicable,
-            GlAccountCode = dto.GlAccountCode,
-            IsActive = true,
-            CreationUser = user,
-            CreationDate = DateTime.UtcNow
-        };
+    private static T Data<T>(ApiResponse<T> response) => response.Data!;
 
-        await _employeeRepo.AddSalaryComponentAsync(component, cancellationToken);
-        await _employeeRepo.SaveChangesAsync(cancellationToken);
-
-        return new SalaryComponentDto(
-            component.ComponentCode,
-            component.NameLocal,
-            component.NameEn,
-            component.ComponentType,
-            component.CalculationType,
-            component.DefaultAmount,
-            component.DefaultPercent,
-            component.IsTaxable,
-            component.IsSscApplicable,
-            component.GlAccountCode,
-            component.IsActive
-        );
-    }
-
-    private static EmployeeDetailsDto MapToDetailsDto(Employee emp)
-    {
-        var activeStructure = emp.SalaryStructures
-            .Where(s => s.IsActive && s.EffectiveFrom <= DateTime.UtcNow && (!s.EffectiveTo.HasValue || s.EffectiveTo.Value >= DateTime.UtcNow))
-            .OrderByDescending(s => s.EffectiveFrom)
-            .FirstOrDefault();
-
-        var dependents = emp.Dependents.Select(d => new DependentDto(
-            d.Id,
-            d.EmployeeCode,
-            d.NameLocal,
-            d.NameEn,
-            d.Relationship,
-            d.DateOfBirth,
-            d.Gender,
-            d.NationalId,
-            d.IsTaxExemptionClaimed,
-            d.IsMedicalCovered,
-            d.IsActive
-        )).ToList();
-
-        return new EmployeeDetailsDto(
-            emp.EmployeeCode,
-            emp.NameLocal,
-            emp.NameEn,
-            emp.NationalId,
-            emp.Nationality,
-            emp.PassportNumber,
-            emp.DateOfBirth,
-            emp.Gender,
-            emp.MaritalStatus,
-            emp.Email,
-            emp.Phone,
-            emp.HireDate,
-            emp.ProbationEndDate,
-            emp.TerminationDate,
-            emp.TerminationReason,
-            emp.EmploymentType,
-            emp.EmploymentStatus,
-            emp.DepartmentCode,
-            emp.PositionCode,
-            emp.BranchId,
-            emp.ManagerEmployeeCode,
-            emp.SscNumber,
-            emp.TaxExemptionCount,
-            emp.IsHighRiskRole,
-            emp.BankName,
-            emp.BankAccountNumber,
-            emp.BankIban,
-            emp.IsActive,
-            dependents,
-            activeStructure == null ? null : MapToStructureDetailsDto(activeStructure),
-            emp.UserId
-        );
-    }
-
-    private static SalaryStructureDetailsDto MapToStructureDetailsDto(SalaryStructure s)
-    {
-        var lines = s.Lines.Select(l => new SalaryStructureLineDetailDto(
-            l.Id,
-            l.ComponentCode,
-            l.Component?.NameLocal ?? l.ComponentCode,
-            l.Component?.NameEn ?? l.ComponentCode,
-            l.Component?.ComponentType ?? "ALLOWANCE",
-            l.Amount,
-            l.Percent,
-            l.IsActive
-        )).ToList();
-
-        return new SalaryStructureDetailsDto(
-            s.Id,
-            s.EmployeeCode,
-            s.EffectiveFrom,
-            s.EffectiveTo,
-            s.BasicSalary,
-            s.CurrencyCode,
-            s.PaymentMethod,
-            s.IsActive,
-            lines
-        );
-    }
+    private static T? DataOrNull<T>(ApiResponse<T> response) where T : class => response.Success ? response.Data : null;
 }

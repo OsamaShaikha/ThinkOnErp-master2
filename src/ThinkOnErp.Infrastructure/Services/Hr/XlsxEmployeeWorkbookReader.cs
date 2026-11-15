@@ -189,6 +189,9 @@ public sealed class XlsxEmployeeWorkbookReader : IXlsxEmployeeWorkbookReader
 
         // Normalize by stripping all punctuation and special characters
         var clean = Regex.Replace(header.ToLowerInvariant().Trim(), @"[^a-z0-9\u0600-\u06FF]+", "");
+        if (clean.Contains("currencycode") || clean.Contains("عملةأولراتب") || clean.Contains("عملةالراتب")) return "CurrencyCode";
+        if (clean.Contains("paymentmethod") || clean.Contains("طريقةالدفع")) return "PaymentMethod";
+        if (clean.Contains("salaryeffectivefrom") || clean.Contains("تاريخسريانالراتب")) return "SalaryEffectiveFrom";
 
         if (clean.Contains("employeecode") || clean.Contains("كودالموظف") || clean.Contains("رمزالموظف") || clean.Contains("رقمالموظف"))
             return "EmployeeCode";
@@ -198,6 +201,8 @@ public sealed class XlsxEmployeeWorkbookReader : IXlsxEmployeeWorkbookReader
             return "NameEn";
         if (clean.Contains("nationalid") || clean.Contains("رقمالهوية") || clean.Contains("الرقمالوطني") || clean.Contains("الرقمالقومي") || clean.Contains("رقمالوطني") || clean.Contains("الهويةالوطنية") || clean == "الهوية")
             return "NationalId";
+        if (clean.Contains("citizenshipcountrycode") || clean.Contains("countrycode") || clean.Contains("رمزبلدالجنسية"))
+            return "CitizenshipCountryCode";
         if (clean.Contains("nationality") || clean.Contains("الجنسية"))
             return "Nationality";
         if (clean.Contains("passportnumber") || clean.Contains("رقمالجواز") || clean.Contains("جوازالسفر"))
@@ -286,6 +291,13 @@ public sealed class XlsxEmployeeWorkbookReader : IXlsxEmployeeWorkbookReader
         var nationalId = GetVal("NationalId");
 
         var hasError = false;
+        bool BoolField(string name, string raw, bool fallback)
+        {
+            if (!string.IsNullOrWhiteSpace(raw) && raw.Trim().ToLowerInvariant() is not ("1" or "true" or "yes" or "y" or "نعم" or "صح" or "0" or "false" or "no" or "n" or "لا" or "خطأ"))
+            { hasError = true; result.Errors.Add(new(rowNumber, name, "INVALID_BOOLEAN", "Provide an explicit true/false value.")); }
+            return ParseBool(raw, fallback);
+        }
+
 
         if (string.IsNullOrWhiteSpace(empCode))
         {
@@ -317,10 +329,6 @@ public sealed class XlsxEmployeeWorkbookReader : IXlsxEmployeeWorkbookReader
                 hasError = true;
             }
         }
-        else
-        {
-            dob = new DateTime(1990, 1, 1);
-        }
 
         var hireDateStr = GetVal("HireDate");
         DateTime? hireDate = null;
@@ -333,23 +341,21 @@ public sealed class XlsxEmployeeWorkbookReader : IXlsxEmployeeWorkbookReader
                 hasError = true;
             }
         }
-        else
-        {
-            hireDate = DateTime.UtcNow.Date;
-        }
 
         var probEndStr = GetVal("ProbationEndDate");
         DateTime? probEnd = null;
-        if (!string.IsNullOrWhiteSpace(probEndStr) && TryParseDate(probEndStr, out var pe))
+        if (!string.IsNullOrWhiteSpace(probEndStr))
         {
-            probEnd = pe;
+            if (TryParseDate(probEndStr, out var pe)) probEnd = pe;
+            else { hasError = true; result.Errors.Add(new(rowNumber, "ProbationEndDate", "INVALID_DATE", "Invalid probation end date.")); }
         }
 
         var termDateStr = GetVal("TerminationDate");
         DateTime? termDate = null;
-        if (!string.IsNullOrWhiteSpace(termDateStr) && TryParseDate(termDateStr, out var td))
+        if (!string.IsNullOrWhiteSpace(termDateStr))
         {
-            termDate = td;
+            if (TryParseDate(termDateStr, out var td)) termDate = td;
+            else { hasError = true; result.Errors.Add(new(rowNumber, "TerminationDate", "INVALID_DATE", "Invalid termination date.")); }
         }
 
         // Gender & Marital Status
@@ -361,26 +367,29 @@ public sealed class XlsxEmployeeWorkbookReader : IXlsxEmployeeWorkbookReader
 
         // Employment type and status
         var empTypeStr = GetVal("EmploymentType");
-        var empType = string.IsNullOrWhiteSpace(empTypeStr) ? "FULL_TIME" : NormalizeEmploymentType(empTypeStr);
+        var empType = NormalizeEmploymentType(empTypeStr);
 
         var empStatusStr = GetVal("EmploymentStatus");
-        var empStatus = string.IsNullOrWhiteSpace(empStatusStr) ? "ACTIVE" : NormalizeEmploymentStatus(empStatusStr);
+        var empStatus = NormalizeEmploymentStatus(empStatusStr);
 
         // BranchId
         var branchStr = GetVal("BranchId");
         long? branchId = null;
-        if (!string.IsNullOrWhiteSpace(branchStr) && long.TryParse(branchStr, out var bId))
+        if (!string.IsNullOrWhiteSpace(branchStr))
         {
-            branchId = bId;
+            if (long.TryParse(branchStr, out var bId) && bId > 0) branchId = bId;
+            else { hasError = true; result.Errors.Add(new(rowNumber, "BranchId", "INVALID_BRANCH", "Branch ID must be a positive number.")); }
         }
 
         // Tax exemption count
         var taxExStr = GetVal("TaxExemptionCount");
-        var taxCount = int.TryParse(taxExStr, out var tc) ? tc : 0;
+        var taxCount = 0;
+        if (!string.IsNullOrWhiteSpace(taxExStr) && (!int.TryParse(taxExStr, out taxCount) || taxCount < 0))
+        { hasError = true; result.Errors.Add(new(rowNumber, "TaxExemptionCount", "INVALID_COUNT", "Tax exemption count must be nonnegative.")); }
 
         // IsHighRiskRole
         var isHighRiskStr = GetVal("IsHighRiskRole");
-        var isHighRisk = ParseBool(isHighRiskStr, defaultValue: false);
+        var isHighRisk = BoolField("IsHighRiskRole", isHighRiskStr, false);
 
         // Basic Salary
         var salaryStr = GetVal("BasicSalary");
@@ -389,10 +398,41 @@ public sealed class XlsxEmployeeWorkbookReader : IXlsxEmployeeWorkbookReader
         {
             basicSalary = sal;
         }
+        if (!string.IsNullOrWhiteSpace(salaryStr) && (basicSalary == null || basicSalary <= 0m))
+        {
+            result.Errors.Add(new EmployeeImportErrorDto(rowNumber, "BasicSalary", "INVALID_SALARY", "BasicSalary must be a positive number when provided."));
+            hasError = true;
+        }
+        DateTime? salaryEffectiveFrom = null;
+        var salaryDateText = GetVal("SalaryEffectiveFrom");
+        if (!string.IsNullOrWhiteSpace(salaryDateText))
+        {
+            if (TryParseDate(salaryDateText, out var salaryDate)) salaryEffectiveFrom = salaryDate.Date;
+            else
+            {
+                result.Errors.Add(new EmployeeImportErrorDto(rowNumber, "SalaryEffectiveFrom", "INVALID_DATE", "Invalid salary effective date."));
+                hasError = true;
+            }
+        }
+        if (salaryEffectiveFrom.HasValue && !basicSalary.HasValue)
+        {
+            result.Errors.Add(new EmployeeImportErrorDto(rowNumber, "BasicSalary", "SALARY_REQUIRED", "Provide BasicSalary when SalaryEffectiveFrom is provided."));
+            hasError = true;
+        }
+        if (salaryEffectiveFrom.HasValue && hireDate.HasValue && salaryEffectiveFrom.Value < hireDate.Value.Date)
+        {
+            result.Errors.Add(new EmployeeImportErrorDto(rowNumber, "SalaryEffectiveFrom", "SALARY_BEFORE_HIRE", "Salary cannot start before the hire date."));
+            hasError = true;
+        }
 
+        if (!basicSalary.HasValue && (!string.IsNullOrWhiteSpace(GetVal("CurrencyCode")) || !string.IsNullOrWhiteSpace(GetVal("PaymentMethod"))))
+        {
+            result.Errors.Add(new EmployeeImportErrorDto(rowNumber,"BasicSalary","SALARY_REQUIRED","Provide BasicSalary with salary currency/payment metadata."));
+            hasError = true;
+        }
         // IsActive
         var activeStr = GetVal("IsActive");
-        var isActive = ParseBool(activeStr, defaultValue: true);
+        var isActive = BoolField("IsActive", activeStr, true);
 
         if (hasError)
         {
@@ -402,11 +442,14 @@ public sealed class XlsxEmployeeWorkbookReader : IXlsxEmployeeWorkbookReader
         return new EmployeeImportRowDto
         {
             RowNumber = rowNumber,
+            PresentColumns = headers.Keys.ToHashSet(StringComparer.OrdinalIgnoreCase),
+            SuppliedFields = headers.Keys.Where(key => !string.IsNullOrWhiteSpace(GetVal(key))).ToHashSet(StringComparer.OrdinalIgnoreCase),
             EmployeeCode = empCode.Trim().ToUpperInvariant(),
             NameLocal = nameLocal.Trim(),
             NameEn = string.IsNullOrWhiteSpace(nameEn) ? nameLocal.Trim() : nameEn.Trim(),
             NationalId = nationalId.Trim(),
-            Nationality = string.IsNullOrWhiteSpace(GetVal("Nationality")) ? "Jordanian" : GetVal("Nationality"),
+            Nationality = GetVal("Nationality"),
+            CitizenshipCountryCode = string.IsNullOrWhiteSpace(GetVal("CitizenshipCountryCode")) ? null : GetVal("CitizenshipCountryCode"),
             PassportNumber = string.IsNullOrWhiteSpace(GetVal("PassportNumber")) ? null : GetVal("PassportNumber"),
             DateOfBirth = dob,
             Gender = gender,
@@ -429,7 +472,10 @@ public sealed class XlsxEmployeeWorkbookReader : IXlsxEmployeeWorkbookReader
             BankName = string.IsNullOrWhiteSpace(GetVal("BankName")) ? null : GetVal("BankName"),
             BankAccountNumber = string.IsNullOrWhiteSpace(GetVal("BankAccountNumber")) ? null : GetVal("BankAccountNumber"),
             BankIban = string.IsNullOrWhiteSpace(GetVal("BankIban")) ? null : GetVal("BankIban"),
+            CurrencyCode = string.IsNullOrWhiteSpace(GetVal("CurrencyCode")) ? null : GetVal("CurrencyCode").Trim().ToUpperInvariant(),
+            PaymentMethod = string.IsNullOrWhiteSpace(GetVal("PaymentMethod")) ? null : GetVal("PaymentMethod").Trim().ToUpperInvariant(),
             BasicSalary = basicSalary,
+            SalaryEffectiveFrom = salaryEffectiveFrom,
             IsActive = isActive
         };
     }
@@ -439,7 +485,7 @@ public sealed class XlsxEmployeeWorkbookReader : IXlsxEmployeeWorkbookReader
         var clean = raw.Trim().ToUpperInvariant();
         if (clean == "M" || clean == "ذكر" || clean == "MALE" || clean == "1") return "M";
         if (clean == "F" || clean == "أنثى" || clean == "انثى" || clean == "FEMALE" || clean == "2") return "F";
-        return "M";
+        return clean;
     }
 
     private static string ParseMaritalStatus(string raw)
@@ -448,24 +494,27 @@ public sealed class XlsxEmployeeWorkbookReader : IXlsxEmployeeWorkbookReader
         if (clean == "MARRIED" || clean == "متزوج" || clean == "متزوجة") return "MARRIED";
         if (clean == "DIVORCED" || clean == "مطلق" || clean == "مطلقة") return "DIVORCED";
         if (clean == "WIDOWED" || clean == "أرمل" || clean == "ارمل" || clean == "أرملة") return "WIDOWED";
-        return "SINGLE";
+        if (clean is "SINGLE" or "أعزب" or "اعزب" or "عزباء") return "SINGLE";
+        return clean;
     }
 
     private static string NormalizeEmploymentType(string raw)
     {
         var clean = raw.Trim().ToUpperInvariant();
-        if (clean.Contains("PART") || clean.Contains("جزئي")) return "PART_TIME";
-        if (clean.Contains("CONTRACT") || clean.Contains("عقد")) return "CONTRACT";
-        if (clean.Contains("INTERN") || clean.Contains("تدريب")) return "INTERN";
-        return "FULL_TIME";
+        if (clean is "PART_TIME" or "PART TIME" or "جزئي") return "PART_TIME";
+        if (clean is "CONTRACT" or "عقد") return "CONTRACT";
+        if (clean is "INTERN" or "تدريب") return "INTERN";
+        if (clean is "FULL_TIME" or "FULL TIME" or "كامل") return "FULL_TIME";
+        return clean;
     }
 
     private static string NormalizeEmploymentStatus(string raw)
     {
         var clean = raw.Trim().ToUpperInvariant();
-        if (clean.Contains("SUSPEND") || clean.Contains("معلق") || clean.Contains("موقوف")) return "SUSPENDED";
-        if (clean.Contains("TERMINAT") || clean.Contains("منهي") || clean.Contains("مفصول")) return "TERMINATED";
-        return "ACTIVE";
+        if (clean is "SUSPENDED" or "معلق" or "موقوف") return "SUSPENDED";
+        if (clean is "TERMINATED" or "منهي" or "مفصول") return "TERMINATED";
+        if (clean is "ACTIVE" or "نشط" or "فعال") return "ACTIVE";
+        return clean;
     }
 
     private static bool ParseBool(string raw, bool defaultValue)

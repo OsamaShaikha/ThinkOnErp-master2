@@ -14,14 +14,19 @@ namespace ThinkOnErp.HR.Tests;
 public class AttendanceCorrectionTests
 {
     private readonly Mock<IAttendanceCorrectionRepository> _repoMock;
-    private readonly Mock<IAttendanceCalculationEngine> _engineMock;
     private readonly AttendanceCorrectionService _service;
 
     public AttendanceCorrectionTests()
     {
         _repoMock = new Mock<IAttendanceCorrectionRepository>();
-        _engineMock = new Mock<IAttendanceCalculationEngine>();
-        _service = new AttendanceCorrectionService(_repoMock.Object, _engineMock.Object);
+        var timing = new Mock<IShiftTimingService>();
+        timing.Setup(t => t.PreviewConfiguredAsync(It.IsAny<string>(), It.IsAny<DateOnly>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((string employee, DateOnly date, CancellationToken ct) =>
+            {
+                var schedule = ScheduledAttendanceTests.Schedule(date, 8, 17);
+                return schedule with { Shift = schedule.Shift with { EmployeeCode = employee, BreakMinutes = 0 } };
+            });
+        _service = new AttendanceCorrectionService(_repoMock.Object, new AttendanceCalculationEngine(_repoMock.Object, timing.Object));
     }
 
     [Fact]
@@ -29,8 +34,8 @@ public class AttendanceCorrectionTests
     {
         // Arrange
         var date = new DateTime(2026, 3, 10);
-        var requestedIn = new DateTime(2026, 3, 10, 8, 5, 0);
-        var requestedOut = new DateTime(2026, 3, 10, 17, 0, 0);
+        var requestedIn = new DateTime(2026, 3, 10, 8, 5, 0, DateTimeKind.Utc);
+        var requestedOut = new DateTime(2026, 3, 10, 17, 0, 0, DateTimeKind.Utc);
 
         _repoMock.Setup(r => r.GetAttendanceDayAsync("EMP001", date, It.IsAny<CancellationToken>()))
             .ReturnsAsync((AttendanceDay?)null);
@@ -40,6 +45,8 @@ public class AttendanceCorrectionTests
             .Callback<AttendanceCorrectionRequest, CancellationToken>((req, _) => saved = req)
             .Returns(Task.CompletedTask);
 
+        _repoMock.Setup(r => r.SubmitCorrectionAsync(It.IsAny<AttendanceCorrectionRequest>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((AttendanceCorrectionRequest req, CancellationToken ct) => { AttendanceCorrectionRules.CaptureOriginal(req, null); return req; });
         // Act
         var dto = new AttendanceCorrectionRequestDto(
             "EMP001",
@@ -57,7 +64,7 @@ public class AttendanceCorrectionTests
         Assert.Equal(requestedIn, result.RequestedCheckIn);
         Assert.Equal(requestedOut, result.RequestedCheckOut);
         Assert.Equal("Forgot to punch IN due to biometric machine offline", result.Reason);
-        _repoMock.Verify(r => r.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
+        _repoMock.Verify(r => r.SubmitCorrectionAsync(It.IsAny<AttendanceCorrectionRequest>(), It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
@@ -66,11 +73,13 @@ public class AttendanceCorrectionTests
         // Arrange: Day originally had CheckIn at 08:00 but no CheckOut -> HasMissingPunch = true
         var date = new DateTime(2026, 3, 10);
         var checkIn = new DateTime(2026, 3, 10, 8, 0, 0);
-        var requestedOut = new DateTime(2026, 3, 10, 17, 0, 0); // 9 hours total
+        var requestedOut = new DateTime(2026, 3, 10, 17, 0, 0, DateTimeKind.Utc); // 9 hours total
 
         var existingDay = new AttendanceDay
         {
             Id = 1,
+            TimeZoneId = "UTC", ShiftCode = "NIGHT", ShiftStartsAtUtc = date.AddHours(8), ShiftEndsAtUtc = date.AddHours(17),
+            ShiftBreakMinutes = 0, ShiftSource = "DAILY_MANUAL", ScheduledHours = 9m,
             EmployeeCode = "EMP001",
             AttendanceDate = date,
             FirstCheckIn = checkIn,
@@ -86,6 +95,7 @@ public class AttendanceCorrectionTests
             AttendanceDate = date,
             OldCheckIn = checkIn,
             OldCheckOut = null,
+            OriginalDayVersion = AttendanceCorrectionRules.Version(existingDay),
             RequestedCheckIn = null, // keeping existing check-in
             RequestedCheckOut = requestedOut,
             Reason = "Forgot to punch out",
@@ -129,6 +139,8 @@ public class AttendanceCorrectionTests
         var existingDay = new AttendanceDay
         {
             Id = 2,
+            TimeZoneId = "UTC", ShiftCode = "NIGHT", ShiftStartsAtUtc = date.AddHours(8), ShiftEndsAtUtc = date.AddHours(17),
+            ShiftBreakMinutes = 0, ShiftSource = "DAILY_MANUAL", ScheduledHours = 9m,
             EmployeeCode = "EMP002",
             AttendanceDate = date,
             FirstCheckIn = null,
@@ -142,6 +154,7 @@ public class AttendanceCorrectionTests
             Id = 20,
             EmployeeCode = "EMP002",
             AttendanceDate = date,
+            OriginalDayVersion = AttendanceCorrectionRules.Version(existingDay),
             RequestedCheckIn = correctedIn,
             RequestedCheckOut = correctedOut,
             Status = "PENDING"
@@ -188,6 +201,8 @@ public class AttendanceCorrectionTests
             .ReturnsAsync(request);
 
         // Act
+        _repoMock.Setup(r => r.RejectCorrectionAsync(30, "Evidence invalid", "HR_MANAGER", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(() => { request.Status = "REJECTED"; request.RejectionReason = "Evidence invalid"; return request; });
         var result = await _service.ProcessCorrectionRequestAsync(30, false, "HR_MANAGER", "Evidence invalid");
 
         // Assert
@@ -213,5 +228,206 @@ public class AttendanceCorrectionTests
         // Act & Assert
         await Assert.ThrowsAsync<InvalidOperationException>(() =>
             _service.ProcessCorrectionRequestAsync(40, true, "ADMIN"));
+    }
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData("")]
+    [InlineData("   ")]
+    public void ValidateInput_WhenEmployeeCodeNullOrEmpty_ThrowsArgumentException(string? empCode)
+    {
+        var req = new AttendanceCorrectionRequest
+        {
+            EmployeeCode = empCode!,
+            AttendanceDate = new DateTime(2026, 3, 1),
+            RequestedCheckIn = new DateTime(2026, 3, 1, 8, 0, 0, DateTimeKind.Utc),
+            Reason = "Valid reason"
+        };
+        Assert.Throws<ArgumentException>(() => AttendanceCorrectionRules.ValidateInput(req));
+    }
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData("")]
+    [InlineData("   ")]
+    public void ValidateInput_WhenReasonNullOrEmpty_ThrowsArgumentException(string? reason)
+    {
+        var req = new AttendanceCorrectionRequest
+        {
+            EmployeeCode = "EMP001",
+            AttendanceDate = new DateTime(2026, 3, 1),
+            RequestedCheckIn = new DateTime(2026, 3, 1, 8, 0, 0, DateTimeKind.Utc),
+            Reason = reason!
+        };
+        Assert.Throws<ArgumentException>(() => AttendanceCorrectionRules.ValidateInput(req));
+    }
+
+    [Fact]
+    public void ValidateInput_WhenReasonExceeds1000Chars_ThrowsArgumentException()
+    {
+        var req = new AttendanceCorrectionRequest
+        {
+            EmployeeCode = "EMP001",
+            AttendanceDate = new DateTime(2026, 3, 1),
+            RequestedCheckIn = new DateTime(2026, 3, 1, 8, 0, 0, DateTimeKind.Utc),
+            Reason = new string('R', 1001)
+        };
+        Assert.Throws<ArgumentException>(() => AttendanceCorrectionRules.ValidateInput(req));
+    }
+
+    [Fact]
+    public void ValidateInput_WhenNeitherCheckInNorCheckOutSupplied_ThrowsArgumentException()
+    {
+        var req = new AttendanceCorrectionRequest
+        {
+            EmployeeCode = "EMP001",
+            AttendanceDate = new DateTime(2026, 3, 1),
+            RequestedCheckIn = null,
+            RequestedCheckOut = null,
+            Reason = "Forgot both punches"
+        };
+        Assert.Throws<ArgumentException>(() => AttendanceCorrectionRules.ValidateInput(req));
+    }
+
+    [Fact]
+    public void ValidateInput_WhenCheckInNotUtc_ThrowsArgumentException()
+    {
+        var req = new AttendanceCorrectionRequest
+        {
+            EmployeeCode = "EMP001",
+            AttendanceDate = new DateTime(2026, 3, 1),
+            RequestedCheckIn = new DateTime(2026, 3, 1, 8, 0, 0, DateTimeKind.Local), // Not UTC
+            Reason = "Valid reason"
+        };
+        Assert.Throws<ArgumentException>(() => AttendanceCorrectionRules.ValidateInput(req));
+    }
+
+    [Fact]
+    public void ValidateInput_WhenCheckOutBeforeCheckIn_ThrowsArgumentException()
+    {
+        var req = new AttendanceCorrectionRequest
+        {
+            EmployeeCode = "EMP001",
+            AttendanceDate = new DateTime(2026, 3, 1),
+            RequestedCheckIn = new DateTime(2026, 3, 1, 17, 0, 0, DateTimeKind.Utc),
+            RequestedCheckOut = new DateTime(2026, 3, 1, 8, 0, 0, DateTimeKind.Utc), // Before check-in
+            Reason = "Inverted punches"
+        };
+        Assert.Throws<ArgumentException>(() => AttendanceCorrectionRules.ValidateInput(req));
+    }
+
+    [Fact]
+    public void CaptureOriginal_WhenLegacyAttendanceHasNullTimeZone_ThrowsInvalidOperationException()
+    {
+        var req = new AttendanceCorrectionRequest
+        {
+            EmployeeCode = "EMP001",
+            AttendanceDate = new DateTime(2026, 3, 1),
+            RequestedCheckIn = new DateTime(2026, 3, 1, 8, 0, 0, DateTimeKind.Utc),
+            Reason = "Valid reason"
+        };
+
+        var legacyDay = new AttendanceDay
+        {
+            Id = 1,
+            EmployeeCode = "EMP001",
+            AttendanceDate = new DateTime(2026, 3, 1),
+            TimeZoneId = null // Legacy missing snapshot
+        };
+
+        var ex = Assert.Throws<InvalidOperationException>(() =>
+            AttendanceCorrectionRules.CaptureOriginal(req, legacyDay));
+        Assert.Contains("Legacy attendance needs a reviewed time/shift snapshot", ex.Message);
+    }
+
+    [Fact]
+    public void CaptureOriginal_WhenNoPunchChanged_ThrowsArgumentException()
+    {
+        var checkIn = new DateTime(2026, 3, 1, 8, 0, 0, DateTimeKind.Utc);
+        var checkOut = new DateTime(2026, 3, 1, 17, 0, 0, DateTimeKind.Utc);
+
+        var req = new AttendanceCorrectionRequest
+        {
+            EmployeeCode = "EMP001",
+            AttendanceDate = new DateTime(2026, 3, 1),
+            RequestedCheckIn = checkIn,
+            RequestedCheckOut = checkOut,
+            Reason = "Same punches"
+        };
+
+        var day = new AttendanceDay
+        {
+            Id = 1,
+            EmployeeCode = "EMP001",
+            AttendanceDate = new DateTime(2026, 3, 1),
+            TimeZoneId = "UTC",
+            FirstCheckIn = checkIn,
+            LastCheckOut = checkOut
+        };
+
+        var ex = Assert.Throws<ArgumentException>(() =>
+            AttendanceCorrectionRules.CaptureOriginal(req, day));
+        Assert.Contains("The request must change or complete a punch", ex.Message);
+    }
+
+    [Fact]
+    public async Task SubmitRequestAsync_WhenDtoNull_ThrowsArgumentNullException()
+    {
+        await Assert.ThrowsAsync<ArgumentNullException>(() =>
+            _service.SubmitRequestAsync(null!, "USER"));
+    }
+
+    [Fact]
+    public async Task SubmitRequestAsync_WhenAttendanceDateInFuture_ThrowsArgumentException()
+    {
+        var futureDate = DateTime.UtcNow.Date.AddDays(2);
+        var dto = new AttendanceCorrectionRequestDto(
+            "EMP001",
+            futureDate,
+            DateTime.SpecifyKind(futureDate.AddHours(8), DateTimeKind.Utc),
+            DateTime.SpecifyKind(futureDate.AddHours(17), DateTimeKind.Utc),
+            "Future attendance punch"
+        );
+
+        var ex = await Assert.ThrowsAsync<ArgumentException>(() =>
+            _service.SubmitRequestAsync(dto, "USER"));
+        Assert.Contains("Future punch timestamps cannot be submitted", ex.Message);
+    }
+
+    [Fact]
+    public async Task ProcessCorrectionRequest_WhenRejectWithoutReason_ThrowsArgumentException()
+    {
+        var ex = await Assert.ThrowsAsync<ArgumentException>(() =>
+            _service.ProcessCorrectionRequestAsync(1, false, "ADMIN", rejectionReason: "  "));
+        Assert.Contains("rejection reason", ex.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public async Task ProcessCorrectionRequest_WhenNotFound_ThrowsKeyNotFoundException()
+    {
+        _repoMock.Setup(r => r.GetCorrectionRequestByIdAsync(999, It.IsAny<CancellationToken>()))
+            .ReturnsAsync((AttendanceCorrectionRequest?)null);
+
+        var ex = await Assert.ThrowsAsync<KeyNotFoundException>(() =>
+            _service.ProcessCorrectionRequestAsync(999, true, "ADMIN"));
+        Assert.Contains("not found", ex.Message);
+    }
+
+    [Fact]
+    public async Task GetRequestsAsync_FiltersByEmployeeAndStatus()
+    {
+        var list = new List<AttendanceCorrectionRequest>
+        {
+            new() { Id = 1, EmployeeCode = "EMP001", Status = "PENDING", Reason = "Reason 1" },
+            new() { Id = 2, EmployeeCode = "EMP001", Status = "PENDING", Reason = "Reason 2" }
+        };
+
+        _repoMock.Setup(r => r.GetCorrectionRequestsAsync("EMP001", "PENDING", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(list);
+
+        var result = await _service.GetRequestsAsync("EMP001", "PENDING");
+        Assert.Equal(2, result.Count);
+        Assert.Equal("EMP001", result[0].EmployeeCode);
+        Assert.Equal("PENDING", result[0].Status);
     }
 }

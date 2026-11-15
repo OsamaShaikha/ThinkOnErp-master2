@@ -8,6 +8,12 @@ namespace ThinkOnErp.Domain.Interfaces.Hr;
 
 public interface IPolicyRepository
 {
+    Task<int?> GetBranchRoundingRulesAsync(long branchId, CancellationToken cancellationToken = default);
+    Task<IReadOnlyDictionary<string, int>> GetConfiguredPayrollCurrencyDecimalsAsync(long companyId, CancellationToken cancellationToken = default);
+    Task<IReadOnlyList<PayrollCurrencyPrecision>> GetPayrollCurrencyPrecisionsAsync(long companyId, CancellationToken cancellationToken = default);
+    Task SavePayrollCurrencyPrecisionAsync(PayrollCurrencyPrecision precision, CancellationToken cancellationToken = default);
+    Task<bool> DeletePayrollCurrencyPrecisionAsync(long companyId, string currencyCode, CancellationToken cancellationToken = default);
+
     // Tax Policy & Brackets
     Task<TaxPolicy?> GetActiveTaxPolicyAsync(long companyId, DateTime effectiveDate, CancellationToken cancellationToken = default);
     Task<IReadOnlyList<TaxPolicy>> GetTaxPoliciesAsync(long companyId, CancellationToken cancellationToken = default);

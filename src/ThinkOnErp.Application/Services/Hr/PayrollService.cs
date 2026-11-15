@@ -4,9 +4,8 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using ThinkOnErp.Application.DTOs.Hr;
-using ThinkOnErp.Domain.Entities.Accounting;
+using ThinkOnErp.Application.Common;
 using ThinkOnErp.Domain.Entities.Hr;
-using ThinkOnErp.Domain.Interfaces.Accounting;
 using ThinkOnErp.Domain.Interfaces.Hr;
 
 namespace ThinkOnErp.Application.Services.Hr;
@@ -14,47 +13,72 @@ namespace ThinkOnErp.Application.Services.Hr;
 public interface IPayrollService
 {
     Task<PayrollCalculationResultDto> CreateAndCalculatePayrollRunAsync(CreatePayrollRunDto dto, string user, CancellationToken cancellationToken = default);
+    Task<PayrollCalculationResultDto> CreatePayrollCorrectionAsync(long payrollRunId, string reason, string user, CancellationToken cancellationToken = default);
     Task<PayrollRun> ApprovePayrollRunAsync(long payrollRunId, string user, CancellationToken cancellationToken = default);
-    Task<PostGlVoucherResultDto> PostPayrollToGlAsync(long payrollRunId, string user, CancellationToken cancellationToken = default);
-    Task<PayrollRun> ReversePayrollGlVoucherAsync(long payrollRunId, string user, CancellationToken cancellationToken = default);
+    Task<PayrollCalculationResultDto> CancelPayrollRunAsync(long payrollRunId, CancelPayrollRunDto dto, string user, CancellationToken cancellationToken = default);
     Task<PayrollCalculationResultDto?> GetPayrollRunByIdAsync(long id, CancellationToken cancellationToken = default);
+    Task<PagedResultDto<PayrollRunListItemDto>> GetPayrollRunsAsync(
+        long companyId, string? payPeriod, long? branchId, string? status, int pageIndex, int pageSize,
+        CancellationToken cancellationToken = default);
+    Task<PagedResultDto<PayslipSummaryDto>?> GetMyPayslipsAsync(
+        long companyId, long userId, int pageIndex, int pageSize, CancellationToken cancellationToken = default);
+    Task<PayslipSummaryDto?> GetEmployeePayslipAsync(
+        long companyId, long payrollRunId, string employeeCode, CancellationToken cancellationToken = default);
+    Task<PayrollHandoffStatusDto?> GetPayrollHandoffStatusAsync(long id, CancellationToken cancellationToken = default);
+    Task<PayrollHandoffPaymentStatusDto?> GetPayrollHandoffPaymentStatusAsync(long id, CancellationToken cancellationToken = default);
+    Task<PayrollHandoffStatusDto?> WithdrawPayrollHandoffAsync(long id, string reason, string user, CancellationToken cancellationToken = default);
     Task<IReadOnlyList<PayrollPeriod>> GetPeriodsAsync(long companyId, int? year = null, CancellationToken cancellationToken = default);
     Task<PayrollPeriod> CreatePeriodAsync(PayrollPeriod period, CancellationToken cancellationToken = default);
+    Task<PayrollPeriod> ClosePeriodAsync(long companyId, string periodCode, string reason, string user, CancellationToken cancellationToken = default);
+    Task<PayrollPeriod> ReopenPeriodAsync(long companyId, string periodCode, string reason, string user, CancellationToken cancellationToken = default);
+    Task<PayrollRunComparisonDto> ComparePayrollRunAsync(long payrollRunId, long? baselineRunId = null, CancellationToken cancellationToken = default);
 }
 
-public sealed class PayrollService : IPayrollService
+public sealed partial class PayrollService : IPayrollService
 {
     private readonly IHrUnitOfWork? _unitOfWork;
-    private readonly IHrPayrollPostingService? _postingService;
+    private readonly IPayrollInputSnapshotService? _inputSnapshots;
+    private readonly IHrAccountingHandoffService? _accountingHandoffs;
 
     private readonly IPayrollPeriodRepository _payrollPeriodRepo;
     private readonly IPayrollCalculationEngine _calculationEngine;
     private readonly IPayrollValidationService _validationService;
-    private readonly ILoanDeductionService _loanDeductionService;
-    private readonly IPolicyRepository _policyRepo;
-    private readonly IGlVoucherRepository _glVoucherRepo;
+    private readonly IEmployeeRepository? _employeeRepository;
 
     public PayrollService(
         IPayrollPeriodRepository payrollPeriodRepo,
         IPayrollCalculationEngine calculationEngine,
         IPayrollValidationService validationService,
-        ILoanDeductionService loanDeductionService,
-        IPolicyRepository policyRepo,
-        IGlVoucherRepository glVoucherRepo, IHrUnitOfWork? unitOfWork = null, IHrPayrollPostingService? postingService = null)
+        IHrUnitOfWork? unitOfWork = null,
+        IPayrollInputSnapshotService? inputSnapshots = null,
+        IHrAccountingHandoffService? accountingHandoffs = null,
+        IEmployeeRepository? employeeRepository = null)
     {
         _payrollPeriodRepo = payrollPeriodRepo;
         _calculationEngine = calculationEngine;
         _validationService = validationService;
-        _loanDeductionService = loanDeductionService;
-        _policyRepo = policyRepo;
-        _glVoucherRepo = glVoucherRepo;
         _unitOfWork = unitOfWork;
-        _postingService = postingService;
+        _inputSnapshots = inputSnapshots;
+        _accountingHandoffs = accountingHandoffs;
+        _employeeRepository = employeeRepository;
     }
 
-    public async Task<PayrollCalculationResultDto> CreateAndCalculatePayrollRunAsync(CreatePayrollRunDto dto, string user, CancellationToken cancellationToken = default)
+    public Task<PayrollCalculationResultDto> CreateAndCalculatePayrollRunAsync(CreatePayrollRunDto dto, string user, CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(dto);
+        return _unitOfWork == null
+            ? CreateAndCalculatePayrollRunCoreAsync(dto, user, cancellationToken)
+            : _unitOfWork.ExecuteForPayrollPeriodAsync(dto.CompanyId, dto.PayPeriod,
+                () => CreateAndCalculatePayrollRunCoreAsync(dto, user, cancellationToken), cancellationToken);
+    }
+
+    private async Task<PayrollCalculationResultDto> CreateAndCalculatePayrollRunCoreAsync(CreatePayrollRunDto dto, string user, CancellationToken cancellationToken,
+        long? correctionOfRunId = null, long? correctionRootRunId = null, int correctionVersion = 1, string? correctionReason = null)
     {
         if (!dto.BranchId.HasValue) throw new ArgumentException("Calculate a separate payroll run for each branch.");
+        var period = await _payrollPeriodRepo.GetPeriodByCodeAsync(dto.CompanyId, dto.PayPeriod, cancellationToken)
+            ?? throw new InvalidOperationException($"Period '{dto.PayPeriod}' not found.");
+        var inputsBefore = _inputSnapshots == null ? null : await _inputSnapshots.CaptureAsync(period, dto.BranchId, cancellationToken);
         // 1. Validation
         var validation = await _validationService.ValidatePreCalculationAsync(dto.CompanyId, dto.PayPeriod, dto.BranchId, cancellationToken);
         if (!validation.IsValid)
@@ -62,26 +86,124 @@ public sealed class PayrollService : IPayrollService
             throw new InvalidOperationException($"Payroll validation failed: {string.Join(", ", validation.Errors)}");
         }
 
-        var period = await _payrollPeriodRepo.GetPeriodByCodeAsync(dto.CompanyId, dto.PayPeriod, cancellationToken);
-        if (period == null)
-        {
-            throw new InvalidOperationException($"Period '{dto.PayPeriod}' not found.");
-        }
-
         var employees = await _payrollPeriodRepo.GetActiveEmployeesAsync(dto.BranchId, cancellationToken);
 
         // 2. Calculation
         var run = await _calculationEngine.CalculatePayrollForPeriodAsync(period, employees, dto.BranchId, user, cancellationToken);
+        run.CorrectionOfRunId = correctionOfRunId;
+        run.CorrectionRootRunId = correctionRootRunId;
+        run.CorrectionVersion = correctionVersion;
+        run.CorrectionReason = correctionReason;
+        if (_inputSnapshots != null)
+        {
+            var inputsAfter = await _inputSnapshots.CaptureAsync(period, dto.BranchId, cancellationToken);
+            if (inputsBefore != inputsAfter)
+                throw new InvalidOperationException("Payroll inputs changed during calculation. Retry the calculation using the updated inputs.");
+            run.InputFingerprint = inputsAfter;
+        }
 
         // 3. Persist run
         await _payrollPeriodRepo.AddPayrollRunAsync(run, cancellationToken);
+        await _payrollPeriodRepo.SaveChangesAsync(cancellationToken);
+        await _payrollPeriodRepo.LinkApprovedAdjustmentsToRunAsync(dto.CompanyId, run, user, cancellationToken);
         await _payrollPeriodRepo.SaveChangesAsync(cancellationToken);
 
         return MapToResultDto(run);
     }
 
-    public Task<PayrollRun> ApprovePayrollRunAsync(long payrollRunId, string user, CancellationToken cancellationToken = default) =>
-        _unitOfWork == null ? ApprovePayrollRunAsyncCore(payrollRunId, user, cancellationToken) : _unitOfWork.ExecuteAsync(() => ApprovePayrollRunAsyncCore(payrollRunId, user, cancellationToken), cancellationToken);
+    public async Task<PayrollCalculationResultDto> CreatePayrollCorrectionAsync(long payrollRunId, string reason, string user, CancellationToken cancellationToken = default)
+    {
+        reason = reason?.Trim() ?? string.Empty;
+        if (reason.Length is < 3 or > 1000) throw new ArgumentException("A payroll correction reason of 3..1000 characters is required.");
+        if (_unitOfWork == null || _accountingHandoffs == null)
+            throw new InvalidOperationException("Payroll correction requires the period lock and Accounting handoff workflow.");
+        var snapshot = await _payrollPeriodRepo.GetPayrollRunSnapshotAsync(payrollRunId, cancellationToken)
+            ?? throw new KeyNotFoundException($"Payroll run {payrollRunId} not found.");
+        var periodSnapshot = await _payrollPeriodRepo.GetPeriodForRunAsync(snapshot, cancellationToken)
+            ?? throw new InvalidOperationException("Payroll period was not found.");
+        return await _unitOfWork.ExecuteForPayrollPeriodAsync(periodSnapshot.CompanyId, periodSnapshot.PeriodCode,
+            () => CreatePayrollCorrectionCoreAsync(payrollRunId, reason, user, cancellationToken), cancellationToken);
+    }
+
+    private async Task<PayrollCalculationResultDto> CreatePayrollCorrectionCoreAsync(long payrollRunId, string reason, string user, CancellationToken cancellationToken)
+    {
+        var original = await _payrollPeriodRepo.GetPayrollRunByIdAsync(payrollRunId, cancellationToken)
+            ?? throw new KeyNotFoundException($"Payroll run {payrollRunId} not found.");
+        if (original.Status is "DRAFT" or "CALCULATED" or "CANCELLED" || !original.ApprovalDate.HasValue)
+            throw new InvalidOperationException("Only an approved payroll run can be corrected; draft runs should be recalculated or cancelled.");
+        var rootRunId = original.CorrectionRootRunId ?? original.Id;
+        var latest = await _payrollPeriodRepo.GetLatestPayrollCorrectionAsync(rootRunId, cancellationToken);
+        var followsCancelledDraft = latest?.Status == "CANCELLED" && latest.CorrectionOfRunId == original.Id;
+        if (latest == null || latest.Id != original.Id && !followsCancelledDraft)
+            throw new InvalidOperationException("Correct the latest payroll version only; older approved versions remain immutable history.");
+        var handoff = await _accountingHandoffs!.GetPayrollHandoffStatusAsync(original.Id, cancellationToken)
+            ?? throw new InvalidOperationException("Payroll correction requires a saved Accounting handoff.");
+        if (handoff.DeliveryStatus is not ("WITHDRAWN" or "RETURNED" or "REVERSED"))
+            throw new InvalidOperationException("Accounting must return or withdraw the unposted handoff, or reverse its posted journal and all dependent payments, before HR creates a correction.");
+        if (handoff.PayPeriod != original.PayPeriod)
+            throw new InvalidOperationException("Accounting handoff period does not match the source payroll run.");
+        var period = await _payrollPeriodRepo.GetPeriodForRunAsync(original, cancellationToken)
+            ?? throw new InvalidOperationException("Payroll period was not found.");
+        if (period.Status != "OPEN") throw new InvalidOperationException("Reopen the payroll period through the authorized period workflow before calculating a correction.");
+        var nextVersion = latest.CorrectionVersion + 1;
+        await _payrollPeriodRepo.SupersedePayrollCorrectionFamilyAsync(rootRunId, user, cancellationToken);
+        await _payrollPeriodRepo.SaveChangesAsync(cancellationToken);
+        return await CreateAndCalculatePayrollRunCoreAsync(new CreatePayrollRunDto(period.CompanyId, original.PayPeriod, original.BranchId), user,
+            cancellationToken, original.Id, rootRunId, nextVersion, reason);
+    }
+
+    public async Task<PayrollRun> ApprovePayrollRunAsync(long payrollRunId, string user, CancellationToken cancellationToken = default)
+    {
+        if (_unitOfWork == null) return await ApprovePayrollRunAsyncCore(payrollRunId, user, cancellationToken);
+        var run = await _payrollPeriodRepo.GetPayrollRunSnapshotAsync(payrollRunId, cancellationToken)
+            ?? throw new KeyNotFoundException($"Payroll run {payrollRunId} not found.");
+        var period = await _payrollPeriodRepo.GetPeriodForRunAsync(run, cancellationToken)
+            ?? throw new InvalidOperationException("Payroll period was not found.");
+        return await _unitOfWork.ExecuteForPayrollPeriodAsync(period.CompanyId, period.PeriodCode,
+            () => ApprovePayrollRunAsyncCore(payrollRunId, user, cancellationToken), cancellationToken);
+    }
+
+    public async Task<PayrollCalculationResultDto> CancelPayrollRunAsync(long payrollRunId, CancelPayrollRunDto dto, string user, CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(dto);
+        if (string.IsNullOrWhiteSpace(dto.Reason) || dto.Reason.Trim().Length > 1000)
+            throw new ArgumentException("A cancellation reason of at most 1000 characters is required.");
+        if (_unitOfWork == null) return await CancelPayrollRunCoreAsync(payrollRunId, dto.Reason.Trim(), user, cancellationToken);
+        var snapshot = await _payrollPeriodRepo.GetPayrollRunSnapshotAsync(payrollRunId, cancellationToken)
+            ?? throw new KeyNotFoundException($"Payroll run {payrollRunId} not found.");
+        var period = await _payrollPeriodRepo.GetPeriodForRunAsync(snapshot, cancellationToken)
+            ?? throw new InvalidOperationException("Payroll period was not found.");
+        return await _unitOfWork.ExecuteForPayrollPeriodAsync(period.CompanyId, period.PeriodCode,
+            () => CancelPayrollRunCoreAsync(payrollRunId, dto.Reason.Trim(), user, cancellationToken), cancellationToken);
+    }
+
+    private async Task<PayrollCalculationResultDto> CancelPayrollRunCoreAsync(long payrollRunId, string reason, string user, CancellationToken cancellationToken)
+    {
+        var run = await _payrollPeriodRepo.GetPayrollRunByIdAsync(payrollRunId, cancellationToken)
+            ?? throw new KeyNotFoundException($"Payroll run {payrollRunId} not found.");
+        if (run.Status == "CANCELLED") return MapToResultDto(run);
+        if (run.Status is not ("DRAFT" or "CALCULATED") || run.JournalVoucherId.HasValue || run.ApprovalDate.HasValue)
+            throw new InvalidOperationException("Only draft or calculated payroll without approval or accounting effects can be cancelled. Reverse approved payroll through its financial workflow first.");
+        if (run.Lines.Any(l => l.Status is not ("DRAFT" or "CALCULATED")))
+            throw new InvalidOperationException("One or more payroll lines are already processed. Resolve their financial state before cancellation.");
+        var period = await _payrollPeriodRepo.GetPeriodForRunAsync(run, cancellationToken)
+            ?? throw new InvalidOperationException("Payroll period was not found.");
+        if (period.Status == "CLOSED")
+            throw new InvalidOperationException("Reopen the closed payroll period before cancelling this calculation.");
+        if (await _payrollPeriodRepo.HasPayrollFinancialLinksAsync(run.Id, cancellationToken))
+            throw new InvalidOperationException("This run has linked loan or adjustment settlements. Resolve those financial dependencies before cancellation.");
+
+        run.Status = "CANCELLED";
+        run.CancelledBy = user;
+        run.CancellationDate = DateTime.UtcNow;
+        run.CancellationReason = reason;
+        run.UpdateUser = user;
+        run.UpdateDate = run.CancellationDate;
+        foreach (var line in run.Lines) line.Status = "CANCELLED";
+        await _payrollPeriodRepo.UpdatePayrollRunAsync(run, cancellationToken);
+        await _payrollPeriodRepo.SaveChangesAsync(cancellationToken);
+        return MapToResultDto(run);
+    }
 
     private async Task<PayrollRun> ApprovePayrollRunAsyncCore(long payrollRunId, string user, CancellationToken cancellationToken = default)
     {
@@ -93,257 +215,32 @@ public sealed class PayrollService : IPayrollService
 
         var run = await _payrollPeriodRepo.GetPayrollRunByIdAsync(payrollRunId, cancellationToken);
         if (run == null) throw new KeyNotFoundException($"Payroll run {payrollRunId} not found.");
+        HrApprovalGuard.EnsureNotSelfApproved(user, run.CalculatedBy, null, "payroll run");
+        HrApprovalGuard.EnsureNotSelfApproved(user, run.CreationUser, null, "payroll run");
+
+        // HR approval freezes the calculated result; financial settlement belongs to Accounting.
+        var period = await _payrollPeriodRepo.GetPeriodForRunAsync(run, cancellationToken)
+            ?? throw new InvalidOperationException("The payroll period and branch company must exist before approval.");
+        if (_inputSnapshots != null)
+        {
+            if (string.IsNullOrWhiteSpace(run.InputFingerprint))
+                throw new InvalidOperationException("This payroll has no input fingerprint. Recalculate it before approval.");
+            var currentInputs = await _inputSnapshots.CaptureAsync(period, run.BranchId, cancellationToken);
+            if (run.InputFingerprint != currentInputs)
+                throw new InvalidOperationException("Payroll inputs changed after calculation. Recalculate payroll before approval.");
+        }
+        // Do not settle loans/advances here. INT-09 reserves their allocations
+        // with the approved handoff and applies them only on the Accounting posting receipt.
 
         run.Status = "APPROVED";
         run.ApprovedBy = user;
         run.ApprovalDate = DateTime.UtcNow;
         run.UpdateUser = user;
         run.UpdateDate = DateTime.UtcNow;
-
-        // Apply and persist loan deductions for each line
-        var period = await _payrollPeriodRepo.GetPeriodForRunAsync(run, cancellationToken)
-            ?? throw new InvalidOperationException("The payroll period and branch company must exist before approval.");
-        var deductionPolicy = await _policyRepo.GetActiveDeductionPolicyAsync(period.CompanyId, period.StartDate, cancellationToken);
-        foreach (var line in run.Lines)
-        {
-            decimal netBeforeLoans = line.GrossSalary - line.SscEmployeeContrib - line.IncomeTaxWithheld - line.NationalContribWithheld - (line.OtherDeductions - (line.Snapshot?.LoanDeductionsApplied ?? 0m));
-            var settled = await _loanDeductionService.CalculateAndApplyDeductionsAsync(
-                line.Id,
-                line.EmployeeCode,
-                run.PayPeriod,
-                netBeforeLoans,
-                deductionPolicy,
-                persistChanges: true,
-                cancellationToken: cancellationToken
-            );
-            if (line.Snapshot != null && settled.TotalActualDeduction != line.Snapshot.LoanDeductionsApplied)
-                throw new InvalidOperationException("Loan balances changed since calculation. Recalculate the payroll before approval.");
-        }
-
         await _payrollPeriodRepo.UpdatePayrollRunAsync(run, cancellationToken);
         await _payrollPeriodRepo.SaveChangesAsync(cancellationToken);
-        return run;
-    }
-
-    public Task<PostGlVoucherResultDto> PostPayrollToGlAsync(long payrollRunId, string user, CancellationToken cancellationToken = default) =>
-        _unitOfWork == null ? PostPayrollToGlAsyncCore(payrollRunId, user, cancellationToken) : _unitOfWork.ExecuteAsync(() => PostPayrollToGlAsyncCore(payrollRunId, user, cancellationToken), cancellationToken);
-
-    private async Task<PostGlVoucherResultDto> PostPayrollToGlAsyncCore(long payrollRunId, string user, CancellationToken cancellationToken = default)
-    {
-        var run = await _payrollPeriodRepo.GetPayrollRunByIdAsync(payrollRunId, cancellationToken);
-        if (run == null) throw new KeyNotFoundException($"Payroll run {payrollRunId} not found.");
-        if (run.Status != "APPROVED")
-        {
-            throw new InvalidOperationException($"Payroll run {payrollRunId} cannot be posted because its status is '{run.Status}' (must be APPROVED).");
-        }
-
-        long branchId = run.BranchId ?? throw new InvalidOperationException("The payroll run must have a branch.");
-        var period = await _payrollPeriodRepo.GetPeriodForRunAsync(run, cancellationToken)
-            ?? throw new InvalidOperationException("Payroll period was not found.");
-        var postingDate = period.PayDate == default ? period.EndDate : period.PayDate;
-        var posting = _postingService == null ? throw new InvalidOperationException("Payroll posting configuration service is required.") :
-            await _postingService.ResolveAsync(branchId, postingDate, cancellationToken);
-        int year = postingDate.Year;
-        int month = postingDate.Month;
-        int voucherType = posting.Configuration.VoucherType;
-
-        long voucherNo = await _glVoucherRepo.GenerateNextSerialNoAsync(branchId, year, month, voucherType, "YEARLY", cancellationToken);
-
-        decimal totalDebit = run.TotalGrossSalary + run.TotalEmployerSsc;
-        decimal totalCredit = run.TotalNetSalary + run.TotalEmployeeSsc + run.TotalEmployerSsc + run.TotalIncomeTax + run.TotalNationalContrib + run.TotalOtherDeductions;
-
-        if (Math.Abs(totalDebit - totalCredit) > 0.001m) throw new InvalidOperationException("Payroll journal is not balanced.");
-
-        var voucher = new GlVoucherHeader
-        {
-            BranchId = branchId,
-            FiscalYearId = posting.FiscalYearId,
-            VoucherYear = year,
-            VoucherMonth = month,
-            VoucherType = voucherType,
-            VoucherNo = voucherNo,
-            VoucherDate = postingDate,
-            Description = $"قيد استحقاق رواتب وأجور شهر {run.PayPeriod}",
-            TotalAmount = totalDebit,
-            TotalLocalDebit = totalDebit,
-            TotalLocalCredit = totalCredit,
-            Status = 3, // Posted
-            IsAutoRecord = true,
-            SourceSystemCode = "HR_PAYROLL",
-            SourceRefId = run.Id,
-            IsReviewed = true,
-            ReviewUser = user,
-            ReviewDate = DateTime.UtcNow,
-            PostUser = user,
-            PostDate = DateTime.UtcNow,
-            CreationUser = user,
-            CreationDate = DateTime.UtcNow
-        };
-
-        int lineSer = 1;
-
-        // Line 1: Debit Gross Salaries Expense
-        voucher.Details.Add(new GlVoucherDetail
-        {
-            LineSer = lineSer++,
-            AccountCode = posting.Configuration.SalaryExpense, // مصاريف الرواتب والأجور
-            Debit = run.TotalGrossSalary,
-            Credit = 0m,
-            LocalDebit = run.TotalGrossSalary,
-            LocalCredit = 0m,
-            BaseDebit = run.TotalGrossSalary,
-            BaseCredit = 0m,
-            Description = $"مصاريف الرواتب والأجور - {run.PayPeriod}",
-            CurrencyId = posting.Configuration.CurrencyId,
-            ExchangeRate = 1.0m,
-            BranchId = branchId
-        });
-
-        // Line 2: Debit SSC Employer Contribution Expense
-        voucher.Details.Add(new GlVoucherDetail
-        {
-            LineSer = lineSer++,
-            AccountCode = posting.Configuration.EmployerSscExpense, // مصاريف مساهمة الشركة في الضمان
-            Debit = run.TotalEmployerSsc,
-            Credit = 0m,
-            LocalDebit = run.TotalEmployerSsc,
-            LocalCredit = 0m,
-            BaseDebit = run.TotalEmployerSsc,
-            BaseCredit = 0m,
-            Description = $"مساهمة الشركة في الضمان الاجتماعي - {run.PayPeriod}",
-            CurrencyId = posting.Configuration.CurrencyId,
-            ExchangeRate = 1.0m,
-            BranchId = branchId
-        });
-
-        // Line 3: Credit Net Salaries Payable
-        voucher.Details.Add(new GlVoucherDetail
-        {
-            LineSer = lineSer++,
-            AccountCode = posting.Configuration.SalaryPayable, // أمانات رواتب مستحقة الدفع
-            Debit = 0m,
-            Credit = run.TotalNetSalary,
-            LocalDebit = 0m,
-            LocalCredit = run.TotalNetSalary,
-            BaseDebit = 0m,
-            BaseCredit = run.TotalNetSalary,
-            Description = $"صافي الرواتب المستحقة للموظفين - {run.PayPeriod}",
-            CurrencyId = posting.Configuration.CurrencyId,
-            ExchangeRate = 1.0m,
-            BranchId = branchId
-        });
-
-        // Line 4: Credit SSC Payable (Employee + Employer)
-        decimal totalSscPayable = run.TotalEmployeeSsc + run.TotalEmployerSsc;
-        voucher.Details.Add(new GlVoucherDetail
-        {
-            LineSer = lineSer++,
-            AccountCode = posting.Configuration.SscPayable, // أمانات المؤسسة العامة للضمان الاجتماعي
-            Debit = 0m,
-            Credit = totalSscPayable,
-            LocalDebit = 0m,
-            LocalCredit = totalSscPayable,
-            BaseDebit = 0m,
-            BaseCredit = totalSscPayable,
-            Description = $"أمانات الضمان الاجتماعي (موظف + صاحب عمل) - {run.PayPeriod}",
-            CurrencyId = posting.Configuration.CurrencyId,
-            ExchangeRate = 1.0m,
-            BranchId = branchId
-        });
-
-        // Line 5: Credit Income Tax & Solidarity Withholding Payable
-        decimal totalTaxPayable = run.TotalIncomeTax + run.TotalNationalContrib;
-        voucher.Details.Add(new GlVoucherDetail
-        {
-            LineSer = lineSer++,
-            AccountCode = posting.Configuration.TaxPayable, // أمانات ضريبة الدخل المستقطعة
-            Debit = 0m,
-            Credit = totalTaxPayable,
-            LocalDebit = 0m,
-            LocalCredit = totalTaxPayable,
-            BaseDebit = 0m,
-            BaseCredit = totalTaxPayable,
-            Description = $"أمانات ضريبة الدخل والتكافل الوطني - {run.PayPeriod}",
-            CurrencyId = posting.Configuration.CurrencyId,
-            ExchangeRate = 1.0m,
-            BranchId = branchId
-        });
-
-        // Line 6: Credit Other Deductions / Advances Recoverable
-        if (run.TotalOtherDeductions > 0)
-        {
-            voucher.Details.Add(new GlVoucherDetail
-            {
-                LineSer = lineSer++,
-                AccountCode = posting.Configuration.DeductionsPayable, // سلف وقروض الموظفين / اقتطاعات أخرى
-                Debit = 0m,
-                Credit = run.TotalOtherDeductions,
-                LocalDebit = 0m,
-                LocalCredit = run.TotalOtherDeductions,
-                BaseDebit = 0m,
-                BaseCredit = run.TotalOtherDeductions,
-                Description = $"استرداد سلف واقتطاعات موظفين - {run.PayPeriod}",
-                CurrencyId = posting.Configuration.CurrencyId,
-                ExchangeRate = 1.0m,
-                BranchId = branchId
-            });
-        }
-
-        await _glVoucherRepo.AddVoucherAsync(voucher, cancellationToken);
-        await _glVoucherRepo.SaveChangesAsync(cancellationToken);
-
-        run.Status = "POSTED_TO_GL";
-        run.JournalVoucherId = voucher.Id;
-        run.PostedBy = user;
-        run.PostDate = DateTime.UtcNow;
-        run.UpdateUser = user;
-        run.UpdateDate = DateTime.UtcNow;
-
-        await _payrollPeriodRepo.UpdatePayrollRunAsync(run, cancellationToken);
-        await _payrollPeriodRepo.SaveChangesAsync(cancellationToken);
-
-        bool isBalanced = Math.Abs(totalDebit - totalCredit) < 0.001m;
-
-        return new PostGlVoucherResultDto(
-            run.Id,
-            voucher.Id,
-            totalDebit,
-            totalCredit,
-            isBalanced,
-            DateTime.UtcNow
-        );
-    }
-
-    public Task<PayrollRun> ReversePayrollGlVoucherAsync(long payrollRunId, string user, CancellationToken cancellationToken = default) =>
-        _unitOfWork == null ? ReversePayrollGlVoucherAsyncCore(payrollRunId, user, cancellationToken) : _unitOfWork.ExecuteAsync(() => ReversePayrollGlVoucherAsyncCore(payrollRunId, user, cancellationToken), cancellationToken);
-
-    private async Task<PayrollRun> ReversePayrollGlVoucherAsyncCore(long payrollRunId, string user, CancellationToken cancellationToken = default)
-    {
-        var run = await _payrollPeriodRepo.GetPayrollRunByIdAsync(payrollRunId, cancellationToken);
-        if (run == null) throw new KeyNotFoundException($"Payroll run {payrollRunId} not found.");
-        if (run.Status != "POSTED_TO_GL" || !run.JournalVoucherId.HasValue)
-        {
-            throw new InvalidOperationException($"Payroll run {payrollRunId} is not in POSTED_TO_GL status.");
-        }
-
-        var voucher = await _glVoucherRepo.GetByIdAsync(run.JournalVoucherId.Value, cancellationToken);
-        if (voucher != null)
-        {
-            voucher.IsReversed = true;
-            voucher.ReverseUser = user;
-            voucher.ReverseDate = DateTime.UtcNow;
-            voucher.Status = 4; // Reversed
-            await _glVoucherRepo.SaveChangesAsync(cancellationToken);
-        }
-
-        run.Status = "APPROVED";
-        run.JournalVoucherId = null;
-        run.UpdateUser = user;
-        run.UpdateDate = DateTime.UtcNow;
-
-        await _payrollPeriodRepo.UpdatePayrollRunAsync(run, cancellationToken);
-        await _payrollPeriodRepo.SaveChangesAsync(cancellationToken);
-
+        if (_accountingHandoffs != null)
+            await _accountingHandoffs.CreateApprovedPayrollHandoffAsync(run.Id, user, cancellationToken);
         return run;
     }
 
@@ -352,6 +249,63 @@ public sealed class PayrollService : IPayrollService
         var run = await _payrollPeriodRepo.GetPayrollRunByIdAsync(id, cancellationToken);
         return run == null ? null : MapToResultDto(run);
     }
+
+    public async Task<PagedResultDto<PayrollRunListItemDto>> GetPayrollRunsAsync(
+        long companyId, string? payPeriod, long? branchId, string? status, int pageIndex, int pageSize,
+        CancellationToken cancellationToken = default)
+    {
+        if (companyId <= 0) throw new ArgumentOutOfRangeException(nameof(companyId));
+        if (pageIndex is < 1 or > 1_000_000) throw new ArgumentOutOfRangeException(nameof(pageIndex));
+        if (pageSize is < 1 or > 100) throw new ArgumentOutOfRangeException(nameof(pageSize));
+
+        var normalizedStatus = string.IsNullOrWhiteSpace(status) ? null : status.Trim().ToUpperInvariant();
+        var (runs, total) = await _payrollPeriodRepo.GetPayrollRunsAsync(
+            companyId, string.IsNullOrWhiteSpace(payPeriod) ? null : payPeriod.Trim(), branchId,
+            normalizedStatus, pageIndex, pageSize, cancellationToken);
+        var items = runs.Select(run => new PayrollRunListItemDto(
+            run.Id, run.PayPeriod, run.BranchId, run.Status, run.RunDate, run.Lines.Count,
+            run.TotalGrossSalary, run.TotalNetSalary, run.CorrectionVersion)).ToList();
+        return new PagedResultDto<PayrollRunListItemDto>(items, total, pageIndex, pageSize);
+    }
+
+    public async Task<PagedResultDto<PayslipSummaryDto>?> GetMyPayslipsAsync(
+        long companyId, long userId, int pageIndex, int pageSize, CancellationToken cancellationToken = default)
+    {
+        if (companyId <= 0 || userId <= 0) throw new ArgumentOutOfRangeException(nameof(userId));
+        if (pageIndex is < 1 or > 1_000_000 || pageSize is < 1 or > 100)
+            throw new ArgumentOutOfRangeException(nameof(pageSize));
+        if (_employeeRepository == null)
+            throw new InvalidOperationException("Employee repository is required for self-service payslips.");
+
+        var employee = await _employeeRepository.GetEmployeeByUserIdAsync(userId, cancellationToken);
+        if (employee == null) return null;
+        var (lines, total) = await _payrollPeriodRepo.GetEmployeePayslipsAsync(
+            companyId, employee.EmployeeCode, pageIndex, pageSize, cancellationToken);
+        return new PagedResultDto<PayslipSummaryDto>(lines.Select(MapPayslipSummary).ToList(), total, pageIndex, pageSize);
+    }
+
+    public async Task<PayslipSummaryDto?> GetEmployeePayslipAsync(
+        long companyId, long payrollRunId, string employeeCode, CancellationToken cancellationToken = default)
+    {
+        if (companyId <= 0 || payrollRunId <= 0 || string.IsNullOrWhiteSpace(employeeCode)) return null;
+        var line = await _payrollPeriodRepo.GetEmployeePayslipAsync(
+            companyId, payrollRunId, employeeCode.Trim(), cancellationToken);
+        return line == null ? null : MapPayslipSummary(line);
+    }
+
+    private static PayslipSummaryDto MapPayslipSummary(PayrollRunLine line) => new(
+        line.Id, line.EmployeeCode, line.Employee?.NameLocal ?? line.EmployeeCode,
+        line.BasicSalary, line.GrossSalary, line.TotalEarnings, line.SscEmployeeContrib,
+        line.IncomeTaxWithheld, line.OtherDeductions, line.TotalDeductions, line.NetPay, line.PaymentMethod);
+
+    public Task<PayrollHandoffStatusDto?> GetPayrollHandoffStatusAsync(long id, CancellationToken cancellationToken = default) =>
+        _accountingHandoffs == null ? Task.FromResult<PayrollHandoffStatusDto?>(null) : _accountingHandoffs.GetPayrollHandoffStatusAsync(id, cancellationToken);
+
+    public Task<PayrollHandoffPaymentStatusDto?> GetPayrollHandoffPaymentStatusAsync(long id, CancellationToken cancellationToken = default) =>
+        _accountingHandoffs == null ? Task.FromResult<PayrollHandoffPaymentStatusDto?>(null) : _accountingHandoffs.GetPayrollHandoffPaymentStatusAsync(id, cancellationToken);
+
+    public Task<PayrollHandoffStatusDto?> WithdrawPayrollHandoffAsync(long id, string reason, string user, CancellationToken cancellationToken = default) =>
+        _accountingHandoffs == null ? Task.FromResult<PayrollHandoffStatusDto?>(null) : _accountingHandoffs.WithdrawPayrollHandoffAsync(id, reason, user, cancellationToken);
 
     public async Task<IReadOnlyList<PayrollPeriod>> GetPeriodsAsync(long companyId, int? year = null, CancellationToken cancellationToken = default)
     {
@@ -363,6 +317,315 @@ public sealed class PayrollService : IPayrollService
         await _payrollPeriodRepo.AddPeriodAsync(period, cancellationToken);
         await _payrollPeriodRepo.SaveChangesAsync(cancellationToken);
         return period;
+    }
+
+    public Task<PayrollPeriod> ClosePeriodAsync(long companyId, string periodCode, string reason, string user, CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(reason))
+            throw new ArgumentException("A reason is required to close a payroll period.", nameof(reason));
+
+        Func<Task<PayrollPeriod>> action = async () =>
+        {
+            var period = await _payrollPeriodRepo.GetPeriodByCodeAsync(companyId, periodCode, cancellationToken)
+                ?? throw new KeyNotFoundException($"Payroll period '{periodCode}' not found.");
+
+            if (period.Status == "CLOSED")
+                throw new InvalidOperationException($"Payroll period '{periodCode}' is already closed.");
+
+            var runs = await _payrollPeriodRepo.GetRunsByPeriodAsync(companyId, periodCode, cancellationToken);
+            var unfinalized = runs.Where(r => r.Status is "DRAFT" or "CALCULATED").ToList();
+            if (unfinalized.Count > 0)
+            {
+                var runIds = string.Join(", ", unfinalized.Select(r => $"{r.Id} ({r.Status})"));
+                throw new InvalidOperationException($"Cannot close payroll period '{periodCode}' with unfinalized payroll runs: {runIds}. Runs must be APPROVED, POSTED, CANCELLED, or SUPERSEDED.");
+            }
+
+            if (await _payrollPeriodRepo.HasPendingAdjustmentsForPeriodAsync(companyId, periodCode, cancellationToken))
+            {
+                throw new InvalidOperationException($"Cannot close payroll period '{periodCode}' while there are pending payroll adjustments.");
+            }
+
+            period.Status = "CLOSED";
+            period.UpdateUser = user;
+            period.UpdateDate = DateTime.UtcNow;
+
+            await _payrollPeriodRepo.UpdatePeriodAsync(period, cancellationToken);
+            await _payrollPeriodRepo.SaveChangesAsync(cancellationToken);
+            return period;
+        };
+
+        return _unitOfWork == null
+            ? action()
+            : _unitOfWork.ExecuteForPayrollPeriodAsync(companyId, periodCode, action, cancellationToken);
+    }
+
+    public Task<PayrollPeriod> ReopenPeriodAsync(long companyId, string periodCode, string reason, string user, CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(reason) || reason.Trim().Length < 5)
+            throw new ArgumentException("A meaningful reason (at least 5 characters) is required to reopen a payroll period.", nameof(reason));
+
+        Func<Task<PayrollPeriod>> action = async () =>
+        {
+            var period = await _payrollPeriodRepo.GetPeriodByCodeAsync(companyId, periodCode, cancellationToken)
+                ?? throw new KeyNotFoundException($"Payroll period '{periodCode}' not found.");
+
+            if (period.Status != "CLOSED")
+                throw new InvalidOperationException($"Payroll period '{periodCode}' is not closed (current status: {period.Status}).");
+
+            if (await _payrollPeriodRepo.HasSubsequentClosedPeriodsAsync(companyId, period.FiscalYear, period.Month, cancellationToken))
+            {
+                throw new InvalidOperationException($"Cannot reopen payroll period '{periodCode}' because subsequent periods are already closed. Periods must be reopened in reverse chronological order.");
+            }
+
+            period.Status = "OPEN";
+            period.UpdateUser = user;
+            period.UpdateDate = DateTime.UtcNow;
+
+            await _payrollPeriodRepo.UpdatePeriodAsync(period, cancellationToken);
+            await _payrollPeriodRepo.SaveChangesAsync(cancellationToken);
+            return period;
+        };
+
+        return _unitOfWork == null
+            ? action()
+            : _unitOfWork.ExecuteForPayrollPeriodAsync(companyId, periodCode, action, cancellationToken);
+    }
+
+    public async Task<PayrollRunComparisonDto> ComparePayrollRunAsync(long payrollRunId, long? baselineRunId = null, CancellationToken cancellationToken = default)
+    {
+        var currentRun = await _payrollPeriodRepo.GetPayrollRunByIdAsync(payrollRunId, cancellationToken)
+            ?? throw new KeyNotFoundException($"Payroll run {payrollRunId} not found.");
+
+        PayrollRun? baselineRun = null;
+        if (baselineRunId.HasValue)
+        {
+            baselineRun = await _payrollPeriodRepo.GetPayrollRunByIdAsync(baselineRunId.Value, cancellationToken)
+                ?? throw new KeyNotFoundException($"Baseline payroll run {baselineRunId.Value} not found.");
+        }
+        else if (currentRun.CorrectionOfRunId.HasValue)
+        {
+            baselineRun = await _payrollPeriodRepo.GetPayrollRunByIdAsync(currentRun.CorrectionOfRunId.Value, cancellationToken);
+        }
+        else if (currentRun.BranchId.HasValue)
+        {
+            baselineRun = await _payrollPeriodRepo.GetPreviousPayrollRunAsync(currentRun.BranchId, currentRun.PayPeriod, currentRun.Id, cancellationToken);
+        }
+
+        return BuildComparison(currentRun, baselineRun);
+    }
+
+    private static PayrollRunComparisonDto BuildComparison(PayrollRun currentRun, PayrollRun? baselineRun)
+    {
+        var employeeVariances = new List<PayrollEmployeeVarianceDto>();
+
+        if (baselineRun == null)
+        {
+            foreach (var line in currentRun.Lines)
+            {
+                var empName = line.Employee?.NameLocal ?? (!string.IsNullOrWhiteSpace(line.BeneficiaryName) ? line.BeneficiaryName : line.EmployeeCode);
+                employeeVariances.Add(new PayrollEmployeeVarianceDto(
+                    line.EmployeeCode,
+                    empName,
+                    "NEW",
+                    0m,
+                    line.GrossSalary,
+                    line.GrossSalary,
+                    0m,
+                    line.NetPay,
+                    line.NetPay,
+                    0m,
+                    line.BasicSalary,
+                    "Initial payroll run - new employee"
+                ));
+            }
+
+            var initialSummary = new PayrollComparisonSummaryDto(
+                currentRun.Lines.Count,
+                0,
+                currentRun.Lines.Count,
+                0,
+                0,
+                currentRun.TotalGrossSalary,
+                0m,
+                currentRun.TotalGrossSalary,
+                currentRun.TotalNetSalary,
+                0m,
+                currentRun.TotalNetSalary,
+                currentRun.Lines.Sum(l => l.BasicSalary),
+                0m,
+                currentRun.Lines.Sum(l => l.BasicSalary),
+                currentRun.Lines.Sum(l => l.TotalEarnings),
+                0m,
+                currentRun.Lines.Sum(l => l.TotalEarnings),
+                currentRun.TotalOtherDeductions,
+                0m,
+                currentRun.TotalOtherDeductions,
+                currentRun.TotalEmployeeSsc,
+                0m,
+                currentRun.TotalEmployeeSsc,
+                currentRun.TotalIncomeTax,
+                0m,
+                currentRun.TotalIncomeTax
+            );
+
+            return new PayrollRunComparisonDto(
+                currentRun.Id,
+                currentRun.PayPeriod,
+                currentRun.BranchId,
+                currentRun.CorrectionVersion,
+                currentRun.Status,
+                null,
+                null,
+                null,
+                null,
+                initialSummary,
+                employeeVariances
+            );
+        }
+
+        var currentDict = currentRun.Lines.ToDictionary(l => l.EmployeeCode, StringComparer.Ordinal);
+        var baselineDict = baselineRun.Lines.ToDictionary(l => l.EmployeeCode, StringComparer.Ordinal);
+
+        int addedCount = 0;
+        int retainedCount = 0;
+
+        foreach (var (code, curr) in currentDict)
+        {
+            var empName = curr.Employee?.NameLocal ?? (!string.IsNullOrWhiteSpace(curr.BeneficiaryName) ? curr.BeneficiaryName : curr.EmployeeCode);
+            if (!baselineDict.TryGetValue(code, out var prev))
+            {
+                addedCount++;
+                employeeVariances.Add(new PayrollEmployeeVarianceDto(
+                    code,
+                    empName,
+                    "NEW",
+                    0m,
+                    curr.GrossSalary,
+                    curr.GrossSalary,
+                    0m,
+                    curr.NetPay,
+                    curr.NetPay,
+                    0m,
+                    curr.BasicSalary,
+                    "New hire / newly included in payroll"
+                ));
+            }
+            else
+            {
+                retainedCount++;
+                var netDiff = curr.NetPay - prev.NetPay;
+                var grossDiff = curr.GrossSalary - prev.GrossSalary;
+                var basicDiff = curr.BasicSalary - prev.BasicSalary;
+
+                string changeType = netDiff switch
+                {
+                    > 0.001m => "INCREASED",
+                    < -0.001m => "DECREASED",
+                    _ => "UNCHANGED"
+                };
+
+                string reason;
+                if (Math.Abs(basicDiff) > 0.001m)
+                    reason = $"Basic salary changed from {prev.BasicSalary:F3} to {curr.BasicSalary:F3}";
+                else if (curr.Components.Any(c => c.ComponentCode == "UNPAID_LEAVE") || prev.Components.Any(c => c.ComponentCode == "UNPAID_LEAVE"))
+                    reason = "Unpaid leave deduction variance";
+                else if (Math.Abs(curr.TotalEarnings - prev.TotalEarnings) > 0.001m)
+                    reason = "Allowance / earnings variance";
+                else if (Math.Abs(curr.OtherDeductions - prev.OtherDeductions) > 0.001m)
+                    reason = "Loan / other deduction variance";
+                else if (Math.Abs(curr.IncomeTaxWithheld - prev.IncomeTaxWithheld) > 0.001m || Math.Abs(curr.SscEmployeeContrib - prev.SscEmployeeContrib) > 0.001m)
+                    reason = "Statutory deduction (Tax/SSC) variance";
+                else
+                    reason = "No variance";
+
+                employeeVariances.Add(new PayrollEmployeeVarianceDto(
+                    code,
+                    empName,
+                    changeType,
+                    prev.GrossSalary,
+                    curr.GrossSalary,
+                    grossDiff,
+                    prev.NetPay,
+                    curr.NetPay,
+                    netDiff,
+                    prev.BasicSalary,
+                    curr.BasicSalary,
+                    reason
+                ));
+            }
+        }
+
+        int removedCount = 0;
+        foreach (var (code, prev) in baselineDict)
+        {
+            if (!currentDict.ContainsKey(code))
+            {
+                removedCount++;
+                var empName = prev.Employee?.NameLocal ?? (!string.IsNullOrWhiteSpace(prev.BeneficiaryName) ? prev.BeneficiaryName : prev.EmployeeCode);
+                employeeVariances.Add(new PayrollEmployeeVarianceDto(
+                    code,
+                    empName,
+                    "REMOVED",
+                    prev.GrossSalary,
+                    0m,
+                    -prev.GrossSalary,
+                    prev.NetPay,
+                    0m,
+                    -prev.NetPay,
+                    prev.BasicSalary,
+                    0m,
+                    "Terminated / excluded from current payroll"
+                ));
+            }
+        }
+
+        var baselineBasic = baselineRun.Lines.Sum(l => l.BasicSalary);
+        var currentBasic = currentRun.Lines.Sum(l => l.BasicSalary);
+        var baselineEarnings = baselineRun.Lines.Sum(l => l.TotalEarnings);
+        var currentEarnings = currentRun.Lines.Sum(l => l.TotalEarnings);
+
+        var summary = new PayrollComparisonSummaryDto(
+            currentRun.Lines.Count,
+            baselineRun.Lines.Count,
+            addedCount,
+            removedCount,
+            retainedCount,
+            currentRun.TotalGrossSalary,
+            baselineRun.TotalGrossSalary,
+            currentRun.TotalGrossSalary - baselineRun.TotalGrossSalary,
+            currentRun.TotalNetSalary,
+            baselineRun.TotalNetSalary,
+            currentRun.TotalNetSalary - baselineRun.TotalNetSalary,
+            currentBasic,
+            baselineBasic,
+            currentBasic - baselineBasic,
+            currentEarnings,
+            baselineEarnings,
+            currentEarnings - baselineEarnings,
+            currentRun.TotalOtherDeductions,
+            baselineRun.TotalOtherDeductions,
+            currentRun.TotalOtherDeductions - baselineRun.TotalOtherDeductions,
+            currentRun.TotalEmployeeSsc,
+            baselineRun.TotalEmployeeSsc,
+            currentRun.TotalEmployeeSsc - baselineRun.TotalEmployeeSsc,
+            currentRun.TotalIncomeTax,
+            baselineRun.TotalIncomeTax,
+            currentRun.TotalIncomeTax - baselineRun.TotalIncomeTax
+        );
+
+        return new PayrollRunComparisonDto(
+            currentRun.Id,
+            currentRun.PayPeriod,
+            currentRun.BranchId,
+            currentRun.CorrectionVersion,
+            currentRun.Status,
+            baselineRun.Id,
+            baselineRun.PayPeriod,
+            baselineRun.CorrectionVersion,
+            baselineRun.Status,
+            summary,
+            employeeVariances
+        );
     }
 
     private static PayrollCalculationResultDto MapToResultDto(PayrollRun run)
@@ -394,6 +657,12 @@ public sealed class PayrollService : IPayrollService
             run.TotalNationalContrib,
             run.TotalOtherDeductions,
             payslips
-        );
+        )
+        {
+            Status = run.Status, CancelledBy = run.CancelledBy,
+            CancellationDate = run.CancellationDate, CancellationReason = run.CancellationReason,
+            CorrectionOfRunId = run.CorrectionOfRunId, CorrectionRootRunId = run.CorrectionRootRunId,
+            CorrectionVersion = run.CorrectionVersion, CorrectionReason = run.CorrectionReason
+        };
     }
 }

@@ -1,56 +1,38 @@
-using System;
-using System.Collections.Generic;
-using System.Threading;
-using System.Threading.Tasks;
+using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Logging;
 using ThinkOnErp.API.Authorization;
 using ThinkOnErp.API.Swagger;
 using ThinkOnErp.Application.Common;
 using ThinkOnErp.Application.DTOs.Hr;
-using ThinkOnErp.Application.Services.Hr;
+using ThinkOnErp.Application.Features.Hr.Employees.Commands.CreateSalaryComponent;
+using ThinkOnErp.Application.Features.Hr.Employees.Queries.GetSalaryComponents;
 
 namespace ThinkOnErp.API.Controllers.Hr;
 
+/// <summary>Catalog of allowances and deductions used in employee salary structures.</summary>
 [ApiController]
 [Route("api/hr/salary-components")]
 [ApiExplorerSettings(GroupName = ApiCategories.Hr)]
 [TenantScoped]
 [Authorize]
-public sealed class SalaryComponentsController : ControllerBase
+public sealed class SalaryComponentsController : HrControllerBase
 {
-    private readonly IEmployeeService _employeeService;
-    private readonly ILogger<SalaryComponentsController> _logger;
+    private readonly IMediator _mediator;
 
-    public SalaryComponentsController(
-        IEmployeeService employeeService,
-        ILogger<SalaryComponentsController> logger)
-    {
-        _employeeService = employeeService;
-        _logger = logger;
-    }
+    public SalaryComponentsController(IMediator mediator) => _mediator = mediator;
 
     [HttpGet]
-    [ProducesResponseType(typeof(ApiResponse<IReadOnlyList<SalaryComponentDto>>), StatusCodes.Status200OK)]
     [HrPermission("hr-salary-components", "view")]
-    public async Task<ActionResult<ApiResponse<IReadOnlyList<SalaryComponentDto>>>> GetComponents(
-        CancellationToken cancellationToken)
-    {
-        var result = await _employeeService.GetSalaryComponentsAsync(cancellationToken);
-        return Ok(ApiResponse<IReadOnlyList<SalaryComponentDto>>.CreateSuccess(result, "Salary components retrieved successfully."));
-    }
+    [ProducesResponseType(typeof(ApiResponse<IReadOnlyList<SalaryComponentDto>>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<ApiResponse<IReadOnlyList<SalaryComponentDto>>>> GetComponents(CancellationToken cancellationToken)
+        => FromResponse(await _mediator.Send(new GetSalaryComponentsQuery(), cancellationToken));
 
     [HttpPost]
-    [ProducesResponseType(typeof(ApiResponse<SalaryComponentDto>), StatusCodes.Status200OK)]
     [HrPermission("hr-salary-components", "create")]
+    [ProducesResponseType(typeof(ApiResponse<SalaryComponentDto>), StatusCodes.Status200OK)]
     public async Task<ActionResult<ApiResponse<SalaryComponentDto>>> CreateComponent(
-        [FromBody] CreateSalaryComponentDto dto,
-        CancellationToken cancellationToken)
-    {
-        var user = User.Identity?.Name ?? "SYSTEM";
-        var result = await _employeeService.CreateSalaryComponentAsync(dto, user, cancellationToken);
-        return Ok(ApiResponse<SalaryComponentDto>.CreateSuccess(result, "Salary component created successfully."));
-    }
+        [FromBody] CreateSalaryComponentDto dto, CancellationToken cancellationToken)
+        => FromResponse(await _mediator.Send(new CreateSalaryComponentCommand(dto, CurrentUsername), cancellationToken));
 }

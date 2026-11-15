@@ -1,0 +1,221 @@
+{
+  "success": true,
+  "statusCode": 200,
+  "message": "تمت العملية بنجاح.",
+  "data": {
+    "code": "sales-by-order-type",
+    "title": "المبيعات حسب نوع الطلب",
+    "isLive": false,
+    "header": {
+      "language": "ar",
+      "isRightToLeft": true,
+      "companyName": "debis acc",
+      "branchName": "جميع الفروع المتاحة",
+      "taxNumber": null,
+      "phone": "0796211887",
+      "currency": "JOD",
+      "cashier": "الكل",
+      "payment": "الكل",
+      "preparedBy": "admin",
+      "reportNumber": "RPT-20261028-4c1e9578edf64",
+      "issuedAtUtc": "2026-10-28T18:01:15.4444862Z",
+      "startDate": "2026-10-01T00:00:00",
+      "endDate": "2026-10-28T00:00:00",
+      "shiftId": null,
+      "tillId": null,
+      "days": [],
+      "payments": [],
+      "totals": {
+        "date": "0001-01-01T00:00:00",
+        "invoices": 0,
+        "sales": 0,
+        "discount": 0,
+        "returns": 0,
+        "net": 0,
+        "tax": 0,
+        "charges": 0,
+        "total": 0
+      },
+      "averageInvoice": 0
+    },
+    "filterNotes": [],
+    "branches": [
+      {
+        "branchId": 1,
+        "branchName": "debis acc",
+        "metrics": [
+          {
+            "label": "المبيعات",
+            "value": "3,955.498",
+            "unit": "JOD"
+          },
+          {
+            "label": "الطلبات",
+            "value": "185",
+            "unit": ""
+          },
+          {
+            "label": "أنواع الطلبات",
+            "value": "5",
+            "unit": ""
+          },
+          {
+            "label": "متوسط الطلب",
+            "value": "21.381",
+            "unit": "JOD"
+          }
+        ],
+        "tables": [
+          {
+            "title": "المبيعات حسب نوع الطلب",
+            "columns": [
+              {
+                "label": "النوع",
+                "numeric": false,
+                "code": false,
+                "width": 2
+              },
+              {
+                "label": "الطلبات",
+                "numeric": true,
+                "code": false,
+                "width": 1
+              },
+              {
+                "label": "قبل الخصم",
+                "numeric": true,
+                "code": false,
+                "width": 1
+              },
+              {
+                "label": "الخصم",
+                "numeric": true,
+                "code": false,
+                "width": 1
+              },
+              {
+                "label": "الضريبة",
+                "numeric": true,
+                "code": false,
+                "width": 1
+              },
+              {
+                "label": "التوصيل",
+                "numeric": true,
+                "code": false,
+                "width": 1
+              },
+              {
+                "label": "الإجمالي",
+                "numeric": true,
+                "code": false,
+                "width": 1
+              }
+            ],
+            "rows": [
+              [
+                "محلي / صالة",
+                "78",
+                "1,173.750",
+                "9.000",
+                "158.230",
+                "0.000",
+                "1,353.980"
+              ],
+              [
+                "سفري / استلام",
+                "14",
+                "1,125.000",
+                "0.000",
+                "179.250",
+                "0.000",
+                "1,304.250"
+              ],
+              [
+                "توصيل",
+                "90",
+                "810.500",
+                "7.350",
+                "123.493",
+                "10.000",
+                "940.643"
+              ],
+              [
+                "تطبيقات التوصيل",
+                "2",
+                "300.000",
+                "0.000",
+                "48.000",
+                "0.000",
+                "348.000"
+              ],
+              [
+                "جهاز الخدمة الذاتية (Kiosk)",
+                "1",
+                "7.500",
+                "0.000",
+                "1.125",
+                "0.000",
+                "8.625"
+              ]
+            ]
+          },
+          {
+            "title": "متوسطات أنواع الطلبات",
+            "columns": [
+              {
+                "label": "النوع",
+                "numeric": false,
+                "code": false,
+                "width": 2
+              },
+              {
+                "label": "متوسط الطلب",
+                "numeric": true,
+                "code": false,
+                "width": 1
+              },
+              {
+                "label": "النسبة",
+                "numeric": true,
+                "code": false,
+                "width": 1
+              }
+            ],
+            "rows": [
+              [
+                "محلي / صالة",
+                "17.360",
+                "34.23%"
+              ],
+              [
+                "سفري / استلام",
+                "93.160",
+                "32.97%"
+              ],
+              [
+                "توصيل",
+                "10.450",
+                "23.78%"
+              ],
+              [
+                "تطبيقات التوصيل",
+                "174.000",
+                "8.8%"
+              ],
+              [
+                "جهاز الخدمة الذاتية (Kiosk)",
+                "8.620",
+                "0.22%"
+              ]
+            ]
+          }
+        ],
+        "notes": []
+      }
+    ]
+  },
+  "errors": null,
+  "timestamp": "2026-10-28T18:01:16.1578397Z",
+  "traceId": "c6b138ee-40cc-4ce5-b107-bc28959cef89"
+}

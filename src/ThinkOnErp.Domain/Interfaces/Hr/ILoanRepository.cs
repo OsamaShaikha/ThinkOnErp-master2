@@ -8,12 +8,19 @@ namespace ThinkOnErp.Domain.Interfaces.Hr;
 
 public interface ILoanRepository
 {
+    Task<(int DecimalPlaces, int? RoundingRule)> GetCurrencyRulesForEmployeeAsync(
+        string employeeCode,
+        string currencyCode,
+        CancellationToken cancellationToken = default) =>
+        Task.FromResult((PayrollCurrencyRules.GetCurrencyDecimals(currencyCode), (int?)1));
+
     Task<IReadOnlyList<EmployeeLoan>> GetLoansAsync(string? employeeCode, string? status, CancellationToken cancellationToken = default);
     Task<EmployeeLoan?> GetLoanByIdAsync(long id, CancellationToken cancellationToken = default);
     Task AddLoanAsync(EmployeeLoan loan, CancellationToken cancellationToken = default);
     Task UpdateLoanAsync(EmployeeLoan loan, CancellationToken cancellationToken = default);
 
     Task<IReadOnlyList<LoanRepaymentSchedule>> GetPendingSchedulesForPeriodAsync(string payPeriod, CancellationToken cancellationToken = default);
+    Task<LoanRepaymentSchedule?> GetScheduleByIdAsync(long scheduleId, CancellationToken cancellationToken = default);
     Task UpdateSchedulesAsync(IEnumerable<LoanRepaymentSchedule> schedules, CancellationToken cancellationToken = default);
 
     Task<IReadOnlyList<EmployeeAdvance>> GetAdvancesAsync(string? employeeCode, string? targetPayPeriod, CancellationToken cancellationToken = default);

@@ -1,0 +1,4935 @@
+[
+  {
+    "controller": "AccountingHandoffController",
+    "method": "GET",
+    "path": "/api/accounting/hr-handoffs",
+    "action": "Inbox",
+    "purpose": "صندوق مستندات الرواتب المسلمة إلى Accounting",
+    "screen": "accounting-handoff",
+    "feature": "view",
+    "selfService": false,
+    "adminOnly": false,
+    "consumerIntent": "ويب Accounting ضمن صلاحيات ERP",
+    "requiredChange": "INT-02..12: مستند مستقل؛ Accounting يملك القبول والقيد والدفع وإيصالات ERP، والواجهة ومزامنة العميل واختبارات HTTP/النطاق ما زالت مطلوبة",
+    "returnType": "Task<IActionResult>",
+    "declaredResponses": [],
+    "parameters": [],
+    "response": "Task<IActionResult>",
+    "file": "src/ThinkOnErp.API/Controllers/Hr/AccountingHandoffController.cs",
+    "line": 25
+  },
+  {
+    "controller": "AccountingHandoffController",
+    "method": "POST",
+    "path": "/api/accounting/hr-handoffs/{id:long}/accept",
+    "action": "Accept",
+    "purpose": "قبول مراجعة مستند التسليم",
+    "screen": "accounting-handoff",
+    "feature": "review",
+    "selfService": false,
+    "adminOnly": false,
+    "consumerIntent": "ويب Accounting ضمن صلاحيات ERP",
+    "requiredChange": "INT-02..12: مستند مستقل؛ Accounting يملك القبول والقيد والدفع وإيصالات ERP، والواجهة ومزامنة العميل واختبارات HTTP/النطاق ما زالت مطلوبة",
+    "returnType": "Task<IActionResult>",
+    "declaredResponses": [],
+    "parameters": [
+      {
+        "binding": "route/body inferred",
+        "bindingAttribute": [],
+        "declaration": "long id"
+      }
+    ],
+    "response": "Task<IActionResult>",
+    "file": "src/ThinkOnErp.API/Controllers/Hr/AccountingHandoffController.cs",
+    "line": 30
+  },
+  {
+    "controller": "AccountingHandoffController",
+    "method": "POST",
+    "path": "/api/accounting/hr-handoffs/{id:long}/return",
+    "action": "Return",
+    "purpose": "إرجاع مستند التسليم بسبب موثق",
+    "screen": "accounting-handoff",
+    "feature": "review",
+    "selfService": false,
+    "adminOnly": false,
+    "consumerIntent": "ويب Accounting ضمن صلاحيات ERP",
+    "requiredChange": "INT-02..12: مستند مستقل؛ Accounting يملك القبول والقيد والدفع وإيصالات ERP، والواجهة ومزامنة العميل واختبارات HTTP/النطاق ما زالت مطلوبة",
+    "returnType": "Task<IActionResult>",
+    "declaredResponses": [],
+    "parameters": [
+      {
+        "binding": "route/body inferred",
+        "bindingAttribute": [],
+        "declaration": "long id"
+      },
+      {
+        "binding": "body",
+        "bindingAttribute": [
+          "[FromBody]"
+        ],
+        "declaration": "ReviewRequest request"
+      }
+    ],
+    "response": "Task<IActionResult>",
+    "file": "src/ThinkOnErp.API/Controllers/Hr/AccountingHandoffController.cs",
+    "line": 35
+  },
+  {
+    "controller": "AccountingHandoffController",
+    "method": "POST",
+    "path": "/api/accounting/hr-handoffs/{id:long}/journal-voucher",
+    "action": "CreateJournalVoucher",
+    "purpose": "إنشاء مسودة قيد من مستند مقبول",
+    "screen": "accounting-handoff",
+    "feature": "post",
+    "selfService": false,
+    "adminOnly": false,
+    "consumerIntent": "ويب Accounting ضمن صلاحيات ERP",
+    "requiredChange": "INT-02..12: مستند مستقل؛ Accounting يملك القبول والقيد والدفع وإيصالات ERP، والواجهة ومزامنة العميل واختبارات HTTP/النطاق ما زالت مطلوبة",
+    "returnType": "Task<IActionResult>",
+    "declaredResponses": [],
+    "parameters": [
+      {
+        "binding": "route/body inferred",
+        "bindingAttribute": [],
+        "declaration": "long id"
+      }
+    ],
+    "response": "Task<IActionResult>",
+    "file": "src/ThinkOnErp.API/Controllers/Hr/AccountingHandoffController.cs",
+    "line": 40
+  },
+  {
+    "controller": "AccountingHandoffController",
+    "method": "POST",
+    "path": "/api/accounting/hr-handoffs/{id:long}/posting-receipt",
+    "action": "PostingReceipt",
+    "purpose": "تسجيل إيصال ترحيل القيد من ERP",
+    "screen": "accounting-handoff",
+    "feature": "post",
+    "selfService": false,
+    "adminOnly": false,
+    "consumerIntent": "ويب Accounting ضمن صلاحيات ERP",
+    "requiredChange": "INT-02..12: مستند مستقل؛ Accounting يملك القبول والقيد والدفع وإيصالات ERP، والواجهة ومزامنة العميل واختبارات HTTP/النطاق ما زالت مطلوبة",
+    "returnType": "Task<IActionResult>",
+    "declaredResponses": [],
+    "parameters": [
+      {
+        "binding": "route/body inferred",
+        "bindingAttribute": [],
+        "declaration": "long id"
+      },
+      {
+        "binding": "body",
+        "bindingAttribute": [
+          "[FromBody]"
+        ],
+        "declaration": "PostingReceiptRequest request"
+      }
+    ],
+    "response": "Task<IActionResult>",
+    "file": "src/ThinkOnErp.API/Controllers/Hr/AccountingHandoffController.cs",
+    "line": 45
+  },
+  {
+    "controller": "AccountingHandoffController",
+    "method": "POST",
+    "path": "/api/accounting/hr-handoffs/{id:long}/payments",
+    "action": "PreparePayment",
+    "purpose": "تجهيز دفعة ضمن صافي المستحق",
+    "screen": "accounting-handoff",
+    "feature": "pay",
+    "selfService": false,
+    "adminOnly": false,
+    "consumerIntent": "ويب Accounting ضمن صلاحيات ERP",
+    "requiredChange": "INT-02..12: مستند مستقل؛ Accounting يملك القبول والقيد والدفع وإيصالات ERP، والواجهة ومزامنة العميل واختبارات HTTP/النطاق ما زالت مطلوبة",
+    "returnType": "Task<IActionResult>",
+    "declaredResponses": [],
+    "parameters": [
+      {
+        "binding": "route/body inferred",
+        "bindingAttribute": [],
+        "declaration": "long id"
+      },
+      {
+        "binding": "body",
+        "bindingAttribute": [
+          "[FromBody]"
+        ],
+        "declaration": "PreparePaymentRequest request"
+      }
+    ],
+    "response": "Task<IActionResult>",
+    "file": "src/ThinkOnErp.API/Controllers/Hr/AccountingHandoffController.cs",
+    "line": 53
+  },
+  {
+    "controller": "AccountingHandoffController",
+    "method": "POST",
+    "path": "/api/accounting/hr-handoffs/payments/{paymentId:long}/confirm",
+    "action": "ConfirmPayment",
+    "purpose": "تأكيد الدفع بمرجع وإثبات",
+    "screen": "accounting-handoff",
+    "feature": "pay",
+    "selfService": false,
+    "adminOnly": false,
+    "consumerIntent": "ويب Accounting ضمن صلاحيات ERP",
+    "requiredChange": "INT-02..12: مستند مستقل؛ Accounting يملك القبول والقيد والدفع وإيصالات ERP، والواجهة ومزامنة العميل واختبارات HTTP/النطاق ما زالت مطلوبة",
+    "returnType": "Task<IActionResult>",
+    "declaredResponses": [],
+    "parameters": [
+      {
+        "binding": "route/body inferred",
+        "bindingAttribute": [],
+        "declaration": "long paymentId"
+      },
+      {
+        "binding": "body",
+        "bindingAttribute": [
+          "[FromBody]"
+        ],
+        "declaration": "ConfirmPaymentRequest request"
+      }
+    ],
+    "response": "Task<IActionResult>",
+    "file": "src/ThinkOnErp.API/Controllers/Hr/AccountingHandoffController.cs",
+    "line": 58
+  },
+  {
+    "controller": "AccountingHandoffController",
+    "method": "POST",
+    "path": "/api/accounting/hr-handoffs/{id:long}/loan-funding-receipt",
+    "action": "ConfirmLoanFunding",
+    "purpose": "تسجيل إيصال تمويل قرض أو سلفة",
+    "screen": "accounting-handoff",
+    "feature": "fund",
+    "selfService": false,
+    "adminOnly": false,
+    "consumerIntent": "ويب Accounting ضمن صلاحيات ERP",
+    "requiredChange": "INT-02..12: مستند مستقل؛ Accounting يملك القبول والقيد والدفع وإيصالات ERP، والواجهة ومزامنة العميل واختبارات HTTP/النطاق ما زالت مطلوبة",
+    "returnType": "Task<IActionResult>",
+    "declaredResponses": [],
+    "parameters": [
+      {
+        "binding": "route/body inferred",
+        "bindingAttribute": [],
+        "declaration": "long id"
+      },
+      {
+        "binding": "body",
+        "bindingAttribute": [
+          "[FromBody]"
+        ],
+        "declaration": "FundingReceiptRequest request"
+      }
+    ],
+    "response": "Task<IActionResult>",
+    "file": "src/ThinkOnErp.API/Controllers/Hr/AccountingHandoffController.cs",
+    "line": 63
+  },
+  {
+    "controller": "AttendanceController",
+    "method": "GET",
+    "path": "/api/hr/attendance/employees/{employeeCode}/effective-shift",
+    "action": "GetEffectiveShift",
+    "purpose": "الشفت الفعال بتاريخ العمل",
+    "screen": "hr-attendance",
+    "feature": "view",
+    "selfService": true,
+    "adminOnly": false,
+    "consumerIntent": "موبايل / ويب HR ضمن النطاق",
+    "requiredChange": "إبقاء المسار؛ اكتمال دورة الأعمال والصلاحيات والتكامل حسب HR_ROADMAP_AR.md",
+    "returnType": "Task<ActionResult<ApiResponse<EffectiveShiftDto>>>",
+    "declaredResponses": [
+      {
+        "type": "ApiResponse<EffectiveShiftDto>",
+        "status": "Status200OK"
+      }
+    ],
+    "parameters": [
+      {
+        "binding": "route/body inferred",
+        "bindingAttribute": [],
+        "declaration": "string employeeCode"
+      },
+      {
+        "binding": "query",
+        "bindingAttribute": [
+          "[FromQuery, Microsoft.AspNetCore.Mvc.ModelBinding.BindRequired]"
+        ],
+        "declaration": "DateOnly workDate"
+      }
+    ],
+    "response": "ApiResponse<EffectiveShiftDto>",
+    "file": "src/ThinkOnErp.API/Controllers/Hr/AttendanceController.cs",
+    "line": 38
+  },
+  {
+    "controller": "AttendanceController",
+    "method": "GET",
+    "path": "/api/hr/attendance/employees/{employeeCode}/effective-shift-utc",
+    "action": "PreviewUtc",
+    "purpose": "معاينة حدود الشفت UTC",
+    "screen": "hr-attendance",
+    "feature": "view",
+    "selfService": true,
+    "adminOnly": false,
+    "consumerIntent": "موبايل / ويب HR ضمن النطاق",
+    "requiredChange": "إبقاء المسار؛ اكتمال دورة الأعمال والصلاحيات والتكامل حسب HR_ROADMAP_AR.md",
+    "returnType": "Task<ActionResult<ApiResponse<TimedShiftDto>>>",
+    "declaredResponses": [],
+    "parameters": [
+      {
+        "binding": "route/body inferred",
+        "bindingAttribute": [],
+        "declaration": "string employeeCode"
+      },
+      {
+        "binding": "query",
+        "bindingAttribute": [
+          "[FromQuery, Microsoft.AspNetCore.Mvc.ModelBinding.BindRequired]"
+        ],
+        "declaration": "DateOnly workDate"
+      }
+    ],
+    "response": "Task<ActionResult<ApiResponse<TimedShiftDto>>>",
+    "file": "src/ThinkOnErp.API/Controllers/Hr/AttendanceController.cs",
+    "line": 48
+  },
+  {
+    "controller": "AttendanceController",
+    "method": "GET",
+    "path": "/api/hr/attendance/employees/{employeeCode}/match-punch-shift",
+    "action": "MatchPunchShift",
+    "purpose": "مطابقة لحظة بصمة بالشفت",
+    "screen": "hr-attendance",
+    "feature": "view",
+    "selfService": true,
+    "adminOnly": false,
+    "consumerIntent": "موبايل / ويب HR ضمن النطاق",
+    "requiredChange": "إبقاء المسار؛ اكتمال دورة الأعمال والصلاحيات والتكامل حسب HR_ROADMAP_AR.md",
+    "returnType": "Task<ActionResult<ApiResponse<TimedShiftDto?>>>",
+    "declaredResponses": [],
+    "parameters": [
+      {
+        "binding": "route/body inferred",
+        "bindingAttribute": [],
+        "declaration": "string employeeCode"
+      },
+      {
+        "binding": "query",
+        "bindingAttribute": [
+          "[FromQuery, Microsoft.AspNetCore.Mvc.ModelBinding.BindRequired]"
+        ],
+        "declaration": "string instant"
+      },
+      {
+        "binding": "query",
+        "bindingAttribute": [
+          "[FromQuery, Microsoft.AspNetCore.Mvc.ModelBinding.BindRequired]"
+        ],
+        "declaration": "string punchType"
+      }
+    ],
+    "response": "Task<ActionResult<ApiResponse<TimedShiftDto?>>>",
+    "file": "src/ThinkOnErp.API/Controllers/Hr/AttendanceController.cs",
+    "line": 55
+  },
+  {
+    "controller": "AttendanceController",
+    "method": "GET",
+    "path": "/api/hr/attendance/employees/{employeeCode}/day-classification",
+    "action": "ClassifyDay",
+    "purpose": "معاينة تصنيف اليوم",
+    "screen": "hr-attendance",
+    "feature": "view",
+    "selfService": true,
+    "adminOnly": false,
+    "consumerIntent": "موبايل / ويب HR ضمن النطاق",
+    "requiredChange": "إبقاء المسار؛ اكتمال دورة الأعمال والصلاحيات والتكامل حسب HR_ROADMAP_AR.md",
+    "returnType": "Task<ActionResult<ApiResponse<AttendanceDayClassificationDto>>>",
+    "declaredResponses": [],
+    "parameters": [
+      {
+        "binding": "route/body inferred",
+        "bindingAttribute": [],
+        "declaration": "string employeeCode"
+      },
+      {
+        "binding": "query",
+        "bindingAttribute": [
+          "[FromQuery, Microsoft.AspNetCore.Mvc.ModelBinding.BindRequired]"
+        ],
+        "declaration": "DateOnly workDate"
+      }
+    ],
+    "response": "Task<ActionResult<ApiResponse<AttendanceDayClassificationDto>>>",
+    "file": "src/ThinkOnErp.API/Controllers/Hr/AttendanceController.cs",
+    "line": 64
+  },
+  {
+    "controller": "AttendanceController",
+    "method": "POST",
+    "path": "/api/hr/attendance/employees/{employeeCode}/day-classification",
+    "action": "SaveDayClassification",
+    "purpose": "حفظ التصنيف تحت القفل المالي",
+    "screen": "hr-attendance",
+    "feature": "configure",
+    "selfService": false,
+    "adminOnly": false,
+    "consumerIntent": "ويب HR / تكامل ERP مخول",
+    "requiredChange": "إبقاء المسار؛ اكتمال دورة الأعمال والصلاحيات والتكامل حسب HR_ROADMAP_AR.md",
+    "returnType": "Task<ActionResult<ApiResponse<AttendanceDayClassificationDto>>>",
+    "declaredResponses": [],
+    "parameters": [
+      {
+        "binding": "route/body inferred",
+        "bindingAttribute": [],
+        "declaration": "string employeeCode"
+      },
+      {
+        "binding": "query",
+        "bindingAttribute": [
+          "[FromQuery, Microsoft.AspNetCore.Mvc.ModelBinding.BindRequired]"
+        ],
+        "declaration": "DateOnly workDate"
+      }
+    ],
+    "response": "Task<ActionResult<ApiResponse<AttendanceDayClassificationDto>>>",
+    "file": "src/ThinkOnErp.API/Controllers/Hr/AttendanceController.cs",
+    "line": 71
+  },
+  {
+    "controller": "AttendanceController",
+    "method": "POST",
+    "path": "/api/hr/attendance/check-in",
+    "action": "CheckIn",
+    "purpose": "تسجيل دخول GPS",
+    "screen": "hr-attendance",
+    "feature": "create",
+    "selfService": true,
+    "adminOnly": false,
+    "consumerIntent": "موبايل / ويب حضور",
+    "requiredChange": "تحديث العميل قبل النشر: eventId ثابت، إيصال 202 وRawEventId؛ Data لا تعني نجاح المعالجة المالية",
+    "returnType": "Task<ActionResult<ApiResponse<AttendancePunchResultDto>>>",
+    "declaredResponses": [
+      {
+        "type": "ApiResponse<AttendancePunchResultDto>",
+        "status": "Status200OK"
+      },
+      {
+        "type": "ApiResponse<AttendancePunchResultDto>",
+        "status": "Status202Accepted"
+      },
+      {
+        "type": "ApiResponse<AttendancePunchResultDto>",
+        "status": "Status400BadRequest"
+      },
+      {
+        "type": "ApiResponse<AttendancePunchResultDto>",
+        "status": "Status409Conflict"
+      }
+    ],
+    "parameters": [
+      {
+        "binding": "body",
+        "bindingAttribute": [
+          "[FromBody]"
+        ],
+        "declaration": "CheckInRequestDto dto"
+      }
+    ],
+    "response": "ApiResponse<AttendancePunchResultDto>",
+    "file": "src/ThinkOnErp.API/Controllers/Hr/AttendanceController.cs",
+    "line": 85
+  },
+  {
+    "controller": "AttendanceController",
+    "method": "POST",
+    "path": "/api/hr/attendance/check-out",
+    "action": "CheckOut",
+    "purpose": "تسجيل خروج GPS",
+    "screen": "hr-attendance",
+    "feature": "create",
+    "selfService": true,
+    "adminOnly": false,
+    "consumerIntent": "موبايل / ويب حضور",
+    "requiredChange": "تحديث العميل قبل النشر: eventId ثابت، إيصال 202 وRawEventId؛ Data لا تعني نجاح المعالجة المالية",
+    "returnType": "Task<ActionResult<ApiResponse<AttendancePunchResultDto>>>",
+    "declaredResponses": [
+      {
+        "type": "ApiResponse<AttendancePunchResultDto>",
+        "status": "Status200OK"
+      },
+      {
+        "type": "ApiResponse<AttendancePunchResultDto>",
+        "status": "Status202Accepted"
+      },
+      {
+        "type": "ApiResponse<AttendancePunchResultDto>",
+        "status": "Status400BadRequest"
+      },
+      {
+        "type": "ApiResponse<AttendancePunchResultDto>",
+        "status": "Status409Conflict"
+      }
+    ],
+    "parameters": [
+      {
+        "binding": "body",
+        "bindingAttribute": [
+          "[FromBody]"
+        ],
+        "declaration": "CheckOutRequestDto dto"
+      }
+    ],
+    "response": "ApiResponse<AttendancePunchResultDto>",
+    "file": "src/ThinkOnErp.API/Controllers/Hr/AttendanceController.cs",
+    "line": 118
+  },
+  {
+    "controller": "AttendanceController",
+    "method": "GET",
+    "path": "/api/hr/attendance/today-status",
+    "action": "GetTodayStatus",
+    "purpose": "حالة حضور اليوم",
+    "screen": "hr-attendance",
+    "feature": "view",
+    "selfService": true,
+    "adminOnly": false,
+    "consumerIntent": "موبايل / ويب حضور",
+    "requiredChange": "إبقاء المسار؛ اكتمال دورة الأعمال والصلاحيات والتكامل حسب HR_ROADMAP_AR.md",
+    "returnType": "Task<ActionResult<ApiResponse<TodayAttendanceStatusDto>>>",
+    "declaredResponses": [
+      {
+        "type": "ApiResponse<TodayAttendanceStatusDto>",
+        "status": "Status200OK"
+      },
+      {
+        "type": null,
+        "status": "Status404NotFound"
+      }
+    ],
+    "parameters": [
+      {
+        "binding": "query",
+        "bindingAttribute": [
+          "[FromQuery]"
+        ],
+        "declaration": "string employeeCode"
+      }
+    ],
+    "response": "ApiResponse<TodayAttendanceStatusDto>",
+    "file": "src/ThinkOnErp.API/Controllers/Hr/AttendanceController.cs",
+    "line": 149
+  },
+  {
+    "controller": "AttendanceController",
+    "method": "GET",
+    "path": "/api/hr/attendance/nearby-branches",
+    "action": "GetNearbyBranches",
+    "purpose": "الفروع الأقرب للإحداثيات",
+    "screen": "hr-attendance",
+    "feature": "view",
+    "selfService": true,
+    "adminOnly": false,
+    "consumerIntent": "موبايل / ويب حضور",
+    "requiredChange": "إبقاء المسار؛ اكتمال دورة الأعمال والصلاحيات والتكامل حسب HR_ROADMAP_AR.md",
+    "returnType": "Task<ActionResult<ApiResponse<IReadOnlyList<NearbyBranchDto>>>>",
+    "declaredResponses": [
+      {
+        "type": "ApiResponse<IReadOnlyList<NearbyBranchDto>>",
+        "status": "Status200OK"
+      }
+    ],
+    "parameters": [
+      {
+        "binding": "query",
+        "bindingAttribute": [
+          "[FromQuery]"
+        ],
+        "declaration": "decimal latitude"
+      },
+      {
+        "binding": "query",
+        "bindingAttribute": [
+          "[FromQuery]"
+        ],
+        "declaration": "decimal longitude"
+      },
+      {
+        "binding": "query",
+        "bindingAttribute": [
+          "[FromQuery]"
+        ],
+        "declaration": "long? companyId"
+      }
+    ],
+    "response": "ApiResponse<IReadOnlyList<NearbyBranchDto>>",
+    "file": "src/ThinkOnErp.API/Controllers/Hr/AttendanceController.cs",
+    "line": 168
+  },
+  {
+    "controller": "AttendanceCorrectionsController",
+    "method": "POST",
+    "path": "/api/hr/attendance-corrections",
+    "action": "SubmitCorrection",
+    "purpose": "طلب تصحيح حضور",
+    "screen": "hr-attendance-corrections",
+    "feature": "create",
+    "selfService": true,
+    "adminOnly": false,
+    "consumerIntent": "موبايل / ويب HR ضمن النطاق",
+    "requiredChange": "UTC ونسخة يوم و409؛ الرفض المسبب مسموح عند CLOSED والموافقة محمية مالياً",
+    "returnType": "Task<ActionResult<ApiResponse<AttendanceCorrectionRequest>>>",
+    "declaredResponses": [
+      {
+        "type": "ApiResponse<AttendanceCorrectionRequest>",
+        "status": "Status200OK"
+      }
+    ],
+    "parameters": [
+      {
+        "binding": "body",
+        "bindingAttribute": [
+          "[FromBody]"
+        ],
+        "declaration": "AttendanceCorrectionRequestDto dto"
+      }
+    ],
+    "response": "ApiResponse<AttendanceCorrectionRequest>",
+    "file": "src/ThinkOnErp.API/Controllers/Hr/AttendanceCorrectionsController.cs",
+    "line": 39
+  },
+  {
+    "controller": "AttendanceCorrectionsController",
+    "method": "POST",
+    "path": "/api/hr/attendance-corrections/{id:long}/process",
+    "action": "ProcessCorrection",
+    "purpose": "اعتماد أو رفض تصحيح الحضور",
+    "screen": "hr-attendance-corrections",
+    "feature": "approve",
+    "selfService": false,
+    "adminOnly": false,
+    "consumerIntent": "ويب HR / تكامل ERP مخول",
+    "requiredChange": "UTC ونسخة يوم و409؛ الرفض المسبب مسموح عند CLOSED والموافقة محمية مالياً",
+    "returnType": "Task<ActionResult<ApiResponse<AttendanceCorrectionRequest>>>",
+    "declaredResponses": [
+      {
+        "type": "ApiResponse<AttendanceCorrectionRequest>",
+        "status": "Status409Conflict"
+      },
+      {
+        "type": "ApiResponse<AttendanceCorrectionRequest>",
+        "status": "Status200OK"
+      }
+    ],
+    "parameters": [
+      {
+        "binding": "route/body inferred",
+        "bindingAttribute": [],
+        "declaration": "long id"
+      },
+      {
+        "binding": "body",
+        "bindingAttribute": [
+          "[FromBody]"
+        ],
+        "declaration": "ProcessAttendanceCorrectionDto dto"
+      }
+    ],
+    "response": "ApiResponse<AttendanceCorrectionRequest>",
+    "file": "src/ThinkOnErp.API/Controllers/Hr/AttendanceCorrectionsController.cs",
+    "line": 52
+  },
+  {
+    "controller": "AttendanceCorrectionsController",
+    "method": "GET",
+    "path": "/api/hr/attendance-corrections",
+    "action": "GetCorrections",
+    "purpose": "قائمة طلبات التصحيح",
+    "screen": "hr-attendance-corrections",
+    "feature": "view",
+    "selfService": true,
+    "adminOnly": false,
+    "consumerIntent": "موبايل / ويب HR ضمن النطاق",
+    "requiredChange": "UTC ونسخة يوم و409؛ الرفض المسبب مسموح عند CLOSED والموافقة محمية مالياً",
+    "returnType": "Task<ActionResult<ApiResponse<IReadOnlyList<AttendanceCorrectionRequest>>>>",
+    "declaredResponses": [
+      {
+        "type": "ApiResponse<IReadOnlyList<AttendanceCorrectionRequest>>",
+        "status": "Status200OK"
+      }
+    ],
+    "parameters": [
+      {
+        "binding": "query",
+        "bindingAttribute": [
+          "[FromQuery]"
+        ],
+        "declaration": "string? employeeCode"
+      },
+      {
+        "binding": "query",
+        "bindingAttribute": [
+          "[FromQuery]"
+        ],
+        "declaration": "string? status"
+      }
+    ],
+    "response": "ApiResponse<IReadOnlyList<AttendanceCorrectionRequest>>",
+    "file": "src/ThinkOnErp.API/Controllers/Hr/AttendanceCorrectionsController.cs",
+    "line": 67
+  },
+  {
+    "controller": "AttendanceTimeSettingsController",
+    "method": "GET",
+    "path": "/api/hr/attendance/time-settings",
+    "action": "Get",
+    "purpose": "قراءة منطقة توقيت الشركة",
+    "screen": "hr-attendance",
+    "feature": "configure",
+    "selfService": false,
+    "adminOnly": false,
+    "consumerIntent": "ويب HR / تكامل ERP مخول",
+    "requiredChange": "API جديد؛ واجهة الإعداد والإصدارات المؤرخة SET-03/07 مستقلة",
+    "returnType": "Task<ActionResult<ApiResponse<AttendanceTimeSettings?>>>",
+    "declaredResponses": [],
+    "parameters": [],
+    "response": "Task<ActionResult<ApiResponse<AttendanceTimeSettings?>>>",
+    "file": "src/ThinkOnErp.API/Controllers/Hr/AttendanceTimeSettingsController.cs",
+    "line": 18
+  },
+  {
+    "controller": "AttendanceTimeSettingsController",
+    "method": "POST",
+    "path": "/api/hr/attendance/time-settings",
+    "action": "Initialize",
+    "purpose": "تهيئة منطقة توقيت الشركة مرة واحدة",
+    "screen": "hr-attendance",
+    "feature": "configure",
+    "selfService": false,
+    "adminOnly": false,
+    "consumerIntent": "ويب HR / تكامل ERP مخول",
+    "requiredChange": "API جديد؛ واجهة الإعداد والإصدارات المؤرخة SET-03/07 مستقلة",
+    "returnType": "Task<ActionResult<ApiResponse<AttendanceTimeSettings>>>",
+    "declaredResponses": [],
+    "parameters": [
+      {
+        "binding": "body",
+        "bindingAttribute": [
+          "[FromBody]"
+        ],
+        "declaration": "InitializeAttendanceTimeDto dto"
+      }
+    ],
+    "response": "Task<ActionResult<ApiResponse<AttendanceTimeSettings>>>",
+    "file": "src/ThinkOnErp.API/Controllers/Hr/AttendanceTimeSettingsController.cs",
+    "line": 22
+  },
+  {
+    "controller": "BranchAttendanceLocationsController",
+    "method": "GET",
+    "path": "/api/hr/attendance/branches/{branchId:long}/location",
+    "action": "Get",
+    "purpose": "تفاصيل موقع فرع الحضور",
+    "screen": "hr-attendance",
+    "feature": "configure",
+    "selfService": false,
+    "adminOnly": false,
+    "consumerIntent": "ويب HR / تكامل ERP مخول",
+    "requiredChange": "API جديد؛ واجهة الإعداد والإصدارات المؤرخة SET-03/07 مستقلة",
+    "returnType": "Task<ActionResult<ApiResponse<BranchAttendanceLocationDto?>>>",
+    "declaredResponses": [],
+    "parameters": [
+      {
+        "binding": "route/body inferred",
+        "bindingAttribute": [],
+        "declaration": "long branchId"
+      }
+    ],
+    "response": "Task<ActionResult<ApiResponse<BranchAttendanceLocationDto?>>>",
+    "file": "src/ThinkOnErp.API/Controllers/Hr/BranchAttendanceLocationsController.cs",
+    "line": 16
+  },
+  {
+    "controller": "BranchAttendanceLocationsController",
+    "method": "POST",
+    "path": "/api/hr/attendance/branches/{branchId:long}/location",
+    "action": "Create",
+    "purpose": "إنشاء موقع فرع الحضور",
+    "screen": "hr-attendance",
+    "feature": "configure",
+    "selfService": false,
+    "adminOnly": false,
+    "consumerIntent": "ويب HR / تكامل ERP مخول",
+    "requiredChange": "API جديد؛ واجهة الإعداد والإصدارات المؤرخة SET-03/07 مستقلة",
+    "returnType": "Task<ActionResult<ApiResponse<BranchAttendanceLocationDto>>>",
+    "declaredResponses": [],
+    "parameters": [
+      {
+        "binding": "route/body inferred",
+        "bindingAttribute": [],
+        "declaration": "long branchId"
+      },
+      {
+        "binding": "body",
+        "bindingAttribute": [
+          "[FromBody]"
+        ],
+        "declaration": "WriteBranchAttendanceLocationDto dto"
+      }
+    ],
+    "response": "Task<ActionResult<ApiResponse<BranchAttendanceLocationDto>>>",
+    "file": "src/ThinkOnErp.API/Controllers/Hr/BranchAttendanceLocationsController.cs",
+    "line": 23
+  },
+  {
+    "controller": "BranchAttendanceLocationsController",
+    "method": "PUT",
+    "path": "/api/hr/attendance/branches/{branchId:long}/location",
+    "action": "Update",
+    "purpose": "تعديل موقع فرع الحضور",
+    "screen": "hr-attendance",
+    "feature": "configure",
+    "selfService": false,
+    "adminOnly": false,
+    "consumerIntent": "ويب HR / تكامل ERP مخول",
+    "requiredChange": "API جديد؛ واجهة الإعداد والإصدارات المؤرخة SET-03/07 مستقلة",
+    "returnType": "Task<ActionResult<ApiResponse<BranchAttendanceLocationDto>>>",
+    "declaredResponses": [],
+    "parameters": [
+      {
+        "binding": "route/body inferred",
+        "bindingAttribute": [],
+        "declaration": "long branchId"
+      },
+      {
+        "binding": "body",
+        "bindingAttribute": [
+          "[FromBody]"
+        ],
+        "declaration": "WriteBranchAttendanceLocationDto dto"
+      },
+      {
+        "binding": "header",
+        "bindingAttribute": [
+          "[FromHeader(Name = \"If-Match\")]"
+        ],
+        "declaration": "string version"
+      }
+    ],
+    "response": "Task<ActionResult<ApiResponse<BranchAttendanceLocationDto>>>",
+    "file": "src/ThinkOnErp.API/Controllers/Hr/BranchAttendanceLocationsController.cs",
+    "line": 26
+  },
+  {
+    "controller": "EmployeesController",
+    "method": "GET",
+    "path": "/api/hr/employees",
+    "action": "GetEmployees",
+    "purpose": "قائمة الموظفين والبحث والترقيم",
+    "screen": "hr-employees",
+    "feature": "view",
+    "selfService": false,
+    "adminOnly": false,
+    "consumerIntent": "ويب HR / تكامل ERP مخول",
+    "requiredChange": "EMP-04: الحقول الخاصة nullable مع fieldVisibility؛ full PUT يحتاج edit-identity/edit-bank؛ work-profile يرفض الحقول الخاصة ويحفظها بعد القفل؛ النقل يحتاج edit للمجموعات الثلاث في الفرعين",
+    "returnType": "Task<ActionResult<ApiResponse<PagedResultDto<EmployeeSummaryDto>>>>",
+    "declaredResponses": [
+      {
+        "type": "ApiResponse<PagedResultDto<EmployeeSummaryDto>>",
+        "status": "Status200OK"
+      }
+    ],
+    "parameters": [
+      {
+        "binding": "query",
+        "bindingAttribute": [
+          "[FromQuery]"
+        ],
+        "declaration": "string? searchKeyword"
+      },
+      {
+        "binding": "query",
+        "bindingAttribute": [
+          "[FromQuery]"
+        ],
+        "declaration": "string? departmentCode"
+      },
+      {
+        "binding": "query",
+        "bindingAttribute": [
+          "[FromQuery]"
+        ],
+        "declaration": "string? status"
+      },
+      {
+        "binding": "query",
+        "bindingAttribute": [
+          "[FromQuery]"
+        ],
+        "declaration": "long? branchId"
+      },
+      {
+        "binding": "query",
+        "bindingAttribute": [
+          "[FromQuery]"
+        ],
+        "declaration": "int pageIndex = 1"
+      },
+      {
+        "binding": "query",
+        "bindingAttribute": [
+          "[FromQuery]"
+        ],
+        "declaration": "int pageSize = 20"
+      }
+    ],
+    "response": "ApiResponse<PagedResultDto<EmployeeSummaryDto>>",
+    "file": "src/ThinkOnErp.API/Controllers/Hr/EmployeesController.cs",
+    "line": 41
+  },
+  {
+    "controller": "EmployeesController",
+    "method": "GET",
+    "path": "/api/hr/employees/export",
+    "action": "ExportEmployees",
+    "purpose": "تصدير الموظفين Excel",
+    "screen": "hr-employees",
+    "feature": "export",
+    "selfService": false,
+    "adminOnly": false,
+    "consumerIntent": "ويب HR / تكامل ERP مخول",
+    "requiredChange": "EMP-04: export مع view-identity/view-bank/view-salary لكل صف؛ رفض الملف كله دون تصدير جزئي",
+    "returnType": "Task<IActionResult>",
+    "declaredResponses": [
+      {
+        "type": "FileContentResult",
+        "status": "Status200OK"
+      }
+    ],
+    "parameters": [
+      {
+        "binding": "query",
+        "bindingAttribute": [
+          "[FromQuery]"
+        ],
+        "declaration": "string? searchKeyword"
+      },
+      {
+        "binding": "query",
+        "bindingAttribute": [
+          "[FromQuery]"
+        ],
+        "declaration": "string? departmentCode"
+      },
+      {
+        "binding": "query",
+        "bindingAttribute": [
+          "[FromQuery]"
+        ],
+        "declaration": "string? status"
+      },
+      {
+        "binding": "query",
+        "bindingAttribute": [
+          "[FromQuery]"
+        ],
+        "declaration": "long? branchId"
+      }
+    ],
+    "response": "FileContentResult",
+    "file": "src/ThinkOnErp.API/Controllers/Hr/EmployeesController.cs",
+    "line": 61
+  },
+  {
+    "controller": "EmployeesController",
+    "method": "GET",
+    "path": "/api/hr/employees/export-template",
+    "action": "DownloadTemplate",
+    "purpose": "قالب استيراد الموظفين",
+    "screen": "hr-employees",
+    "feature": "view",
+    "selfService": false,
+    "adminOnly": false,
+    "consumerIntent": "ويب HR / تكامل ERP مخول",
+    "requiredChange": "إبقاء المسار؛ اكتمال دورة الأعمال والصلاحيات والتكامل حسب HR_ROADMAP_AR.md",
+    "returnType": "Task<IActionResult>",
+    "declaredResponses": [
+      {
+        "type": "FileContentResult",
+        "status": "Status200OK"
+      }
+    ],
+    "parameters": [],
+    "response": "FileContentResult",
+    "file": "src/ThinkOnErp.API/Controllers/Hr/EmployeesController.cs",
+    "line": 78
+  },
+  {
+    "controller": "EmployeesController",
+    "method": "POST",
+    "path": "/api/hr/employees/import/validate",
+    "action": "ValidateImport",
+    "purpose": "فحص Excel قبل الاستيراد",
+    "screen": "hr-employees",
+    "feature": "import",
+    "selfService": false,
+    "adminOnly": false,
+    "consumerIntent": "ويب HR / تكامل ERP مخول",
+    "requiredChange": "EMP-04/10: import مع صلاحيات عرض/تعديل المجموعات الثلاث؛ previewRows استرشادية والاستيراد يعيد التحقق؛ EMP-12 مكتملة: أول راتب يحتاج CurrencyCode/PaymentMethod صريحتين وكتالوج ERP وحد التخزين؛ لا افتراض عملة/دفع",
+    "returnType": "Task<ActionResult<ApiResponse<EmployeeImportResultDto>>>",
+    "declaredResponses": [
+      {
+        "type": "ApiResponse<EmployeeImportResultDto>",
+        "status": "Status200OK"
+      },
+      {
+        "type": "ApiResponse<EmployeeImportResultDto>",
+        "status": "Status400BadRequest"
+      }
+    ],
+    "parameters": [
+      {
+        "binding": "form",
+        "bindingAttribute": [],
+        "declaration": "IFormFile? file"
+      }
+    ],
+    "response": "ApiResponse<EmployeeImportResultDto>",
+    "file": "src/ThinkOnErp.API/Controllers/Hr/EmployeesController.cs",
+    "line": 89
+  },
+  {
+    "controller": "EmployeesController",
+    "method": "POST",
+    "path": "/api/hr/employees/import",
+    "action": "ImportEmployees",
+    "purpose": "استيراد الموظفين أو تحديثهم",
+    "screen": "hr-employees",
+    "feature": "import",
+    "selfService": false,
+    "adminOnly": false,
+    "consumerIntent": "ويب HR / تكامل ERP مخول",
+    "requiredChange": "EMP-04: import لا يكفي وحده؛ جميع ميزات الهوية/البنك/الراتب قراءة وكتابة للفرعين قبل العمل وبعد القفل",
+    "returnType": "Task<ActionResult<ApiResponse<EmployeeImportResultDto>>>",
+    "declaredResponses": [
+      {
+        "type": "ApiResponse<EmployeeImportResultDto>",
+        "status": "Status200OK"
+      },
+      {
+        "type": "ApiResponse<EmployeeImportResultDto>",
+        "status": "Status400BadRequest"
+      }
+    ],
+    "parameters": [
+      {
+        "binding": "form",
+        "bindingAttribute": [],
+        "declaration": "IFormFile? file"
+      },
+      {
+        "binding": "query",
+        "bindingAttribute": [
+          "[FromQuery]"
+        ],
+        "declaration": "bool updateExisting = false"
+      }
+    ],
+    "response": "ApiResponse<EmployeeImportResultDto>",
+    "file": "src/ThinkOnErp.API/Controllers/Hr/EmployeesController.cs",
+    "line": 113
+  },
+  {
+    "controller": "EmployeesController",
+    "method": "GET",
+    "path": "/api/hr/employees/{code}",
+    "action": "GetEmployeeByCode",
+    "purpose": "تفاصيل الموظف",
+    "screen": "hr-employees",
+    "feature": "view",
+    "selfService": false,
+    "adminOnly": false,
+    "consumerIntent": "ويب HR / تكامل ERP مخول",
+    "requiredChange": "EMP-04: الحقول الخاصة nullable مع fieldVisibility؛ full PUT يحتاج edit-identity/edit-bank؛ work-profile يرفض الحقول الخاصة ويحفظها بعد القفل؛ النقل يحتاج edit للمجموعات الثلاث في الفرعين",
+    "returnType": "Task<ActionResult<ApiResponse<EmployeeDetailsDto>>>",
+    "declaredResponses": [
+      {
+        "type": "ApiResponse<EmployeeDetailsDto>",
+        "status": "Status200OK"
+      }
+    ],
+    "parameters": [
+      {
+        "binding": "route/body inferred",
+        "bindingAttribute": [],
+        "declaration": "string code"
+      }
+    ],
+    "response": "ApiResponse<EmployeeDetailsDto>",
+    "file": "src/ThinkOnErp.API/Controllers/Hr/EmployeesController.cs",
+    "line": 143
+  },
+  {
+    "controller": "EmployeesController",
+    "method": "GET",
+    "path": "/api/hr/employees/me/team",
+    "action": "GetMyTeam",
+    "purpose": "الفريق المباشر للحساب الحالي ضمن منح الفروع وبحقول تنظيمية محدودة",
+    "screen": "hr-employees",
+    "feature": "view",
+    "selfService": false,
+    "adminOnly": false,
+    "consumerIntent": "ويب / موبايل المدير بمنح عرض صريحة",
+    "requiredChange": "الفريق المباشر فقط؛ علاقة المدير لا تمنح صلاحية، ولا تحصر المنح العامة القائمة؛ EMP-04 وOracle HTTP مستقلان",
+    "returnType": "Task<ActionResult<ApiResponse<PagedResultDto<EmployeeTeamMemberDto>>>>",
+    "declaredResponses": [
+      {
+        "type": "ApiResponse<PagedResultDto<EmployeeTeamMemberDto>>",
+        "status": "Status200OK"
+      }
+    ],
+    "parameters": [
+      {
+        "binding": "query",
+        "bindingAttribute": [
+          "[FromQuery]"
+        ],
+        "declaration": "bool activeOnly = true"
+      },
+      {
+        "binding": "query",
+        "bindingAttribute": [
+          "[FromQuery]"
+        ],
+        "declaration": "string? search = null"
+      },
+      {
+        "binding": "query",
+        "bindingAttribute": [
+          "[FromQuery]"
+        ],
+        "declaration": "int pageIndex = 1"
+      },
+      {
+        "binding": "query",
+        "bindingAttribute": [
+          "[FromQuery]"
+        ],
+        "declaration": "int pageSize = 20"
+      }
+    ],
+    "response": "ApiResponse<PagedResultDto<EmployeeTeamMemberDto>>",
+    "file": "src/ThinkOnErp.API/Controllers/Hr/EmployeesController.cs",
+    "line": 159
+  },
+  {
+    "controller": "EmployeesController",
+    "method": "GET",
+    "path": "/api/hr/employees/me/user-link",
+    "action": "GetMyEmployeeLink",
+    "purpose": "الموظف المرتبط بالحساب الحالي",
+    "screen": "hr-employees",
+    "feature": "view",
+    "selfService": true,
+    "adminOnly": false,
+    "consumerIntent": "موبايل / ويب HR ضمن النطاق",
+    "requiredChange": "إبقاء المسار؛ اكتمال دورة الأعمال والصلاحيات والتكامل حسب HR_ROADMAP_AR.md",
+    "returnType": "Task<ActionResult<ApiResponse<EmployeeUserLinkDto>>>",
+    "declaredResponses": [],
+    "parameters": [],
+    "response": "Task<ActionResult<ApiResponse<EmployeeUserLinkDto>>>",
+    "file": "src/ThinkOnErp.API/Controllers/Hr/EmployeesController.cs",
+    "line": 169
+  },
+  {
+    "controller": "EmployeesController",
+    "method": "PUT",
+    "path": "/api/hr/employees/{code}/user-link",
+    "action": "LinkEmployeeUser",
+    "purpose": "ربط أو فك ربط الحساب",
+    "screen": "hr-employees",
+    "feature": "link-user",
+    "selfService": false,
+    "adminOnly": true,
+    "consumerIntent": "ويب HR / تكامل ERP مخول",
+    "requiredChange": "بوابة حساب محمية EMP-13؛ إلغاء أمني عند CLOSED؛ تغيير الرابط الحقيقي يغير البصمة الحالية ويحتاج إعادة حساب غير المعتمد؛ صلاحيات الفريق وOracle HTTP مستقلة",
+    "returnType": "Task<ActionResult<ApiResponse<EmployeeUserLinkDto>>>",
+    "declaredResponses": [],
+    "parameters": [
+      {
+        "binding": "route/body inferred",
+        "bindingAttribute": [],
+        "declaration": "string code"
+      },
+      {
+        "binding": "body",
+        "bindingAttribute": [
+          "[FromBody]"
+        ],
+        "declaration": "LinkEmployeeUserDto dto"
+      }
+    ],
+    "response": "Task<ActionResult<ApiResponse<EmployeeUserLinkDto>>>",
+    "file": "src/ThinkOnErp.API/Controllers/Hr/EmployeesController.cs",
+    "line": 183
+  },
+  {
+    "controller": "EmployeesController",
+    "method": "POST",
+    "path": "/api/hr/employees",
+    "action": "CreateEmployee",
+    "purpose": "إنشاء موظف",
+    "screen": "hr-employees",
+    "feature": "create",
+    "selfService": false,
+    "adminOnly": false,
+    "consumerIntent": "ويب HR / تكامل ERP مخول",
+    "requiredChange": "EMP-04: الحقول الخاصة nullable مع fieldVisibility؛ full PUT يحتاج edit-identity/edit-bank؛ work-profile يرفض الحقول الخاصة ويحفظها بعد القفل؛ النقل يحتاج edit للمجموعات الثلاث في الفرعين",
+    "returnType": "Task<ActionResult<ApiResponse<EmployeeDetailsDto>>>",
+    "declaredResponses": [
+      {
+        "type": "ApiResponse<EmployeeDetailsDto>",
+        "status": "Status200OK"
+      }
+    ],
+    "parameters": [
+      {
+        "binding": "body",
+        "bindingAttribute": [
+          "[FromBody]"
+        ],
+        "declaration": "CreateEmployeeDto dto"
+      }
+    ],
+    "response": "ApiResponse<EmployeeDetailsDto>",
+    "file": "src/ThinkOnErp.API/Controllers/Hr/EmployeesController.cs",
+    "line": 194
+  },
+  {
+    "controller": "EmployeesController",
+    "method": "PUT",
+    "path": "/api/hr/employees/{code}",
+    "action": "UpdateEmployee",
+    "purpose": "تعديل موظف",
+    "screen": "hr-employees",
+    "feature": "edit",
+    "selfService": false,
+    "adminOnly": false,
+    "consumerIntent": "ويب HR / تكامل ERP مخول",
+    "requiredChange": "EMP-04: الحقول الخاصة nullable مع fieldVisibility؛ full PUT يحتاج edit-identity/edit-bank؛ work-profile يرفض الحقول الخاصة ويحفظها بعد القفل؛ النقل يحتاج edit للمجموعات الثلاث في الفرعين",
+    "returnType": "Task<ActionResult<ApiResponse<EmployeeDetailsDto>>>",
+    "declaredResponses": [
+      {
+        "type": "ApiResponse<EmployeeDetailsDto>",
+        "status": "Status200OK"
+      }
+    ],
+    "parameters": [
+      {
+        "binding": "route/body inferred",
+        "bindingAttribute": [],
+        "declaration": "string code"
+      },
+      {
+        "binding": "body",
+        "bindingAttribute": [
+          "[FromBody]"
+        ],
+        "declaration": "UpdateEmployeeDto dto"
+      }
+    ],
+    "response": "ApiResponse<EmployeeDetailsDto>",
+    "file": "src/ThinkOnErp.API/Controllers/Hr/EmployeesController.cs",
+    "line": 206
+  },
+  {
+    "controller": "EmployeesController",
+    "method": "PUT",
+    "path": "/api/hr/employees/{code}/work-profile",
+    "action": "UpdateEmployeeWork",
+    "purpose": "تعديل ملف العمل مع حفظ الحقول الخاصة من المصدر",
+    "screen": "hr-employees",
+    "feature": "edit",
+    "selfService": false,
+    "adminOnly": false,
+    "consumerIntent": "ويب HR / تكامل ERP مخول",
+    "requiredChange": "EMP-04: الحقول الخاصة nullable مع fieldVisibility؛ full PUT يحتاج edit-identity/edit-bank؛ work-profile يرفض الحقول الخاصة ويحفظها بعد القفل؛ النقل يحتاج edit للمجموعات الثلاث في الفرعين",
+    "returnType": "Task<ActionResult<ApiResponse<EmployeeDetailsDto>>>",
+    "declaredResponses": [],
+    "parameters": [
+      {
+        "binding": "route/body inferred",
+        "bindingAttribute": [],
+        "declaration": "string code"
+      },
+      {
+        "binding": "body",
+        "bindingAttribute": [
+          "[FromBody]"
+        ],
+        "declaration": "UpdateEmployeeWorkDto dto"
+      }
+    ],
+    "response": "Task<ActionResult<ApiResponse<EmployeeDetailsDto>>>",
+    "file": "src/ThinkOnErp.API/Controllers/Hr/EmployeesController.cs",
+    "line": 218
+  },
+  {
+    "controller": "EmployeesController",
+    "method": "PUT",
+    "path": "/api/hr/employees/{code}/bank",
+    "action": "UpdateEmployeeBank",
+    "purpose": "تعديل مجموعة البنك فقط مع حفظ بقية الملف",
+    "screen": "hr-employees",
+    "feature": "edit",
+    "selfService": false,
+    "adminOnly": false,
+    "consumerIntent": "ويب HR / تكامل ERP مخول",
+    "requiredChange": "EMP-04: edit العام مع edit-bank فقط، جميع حقول المجموعة مطلوبة وnull مسح صريح؛ لا حقل هوية أو عمل؛ الرد حسب حقوق العرض",
+    "returnType": "Task<ActionResult<ApiResponse<EmployeeDetailsDto>>>",
+    "declaredResponses": [],
+    "parameters": [
+      {
+        "binding": "route/body inferred",
+        "bindingAttribute": [],
+        "declaration": "string code"
+      },
+      {
+        "binding": "body",
+        "bindingAttribute": [
+          "[FromBody]"
+        ],
+        "declaration": "UpdateEmployeeBankDto dto"
+      }
+    ],
+    "response": "Task<ActionResult<ApiResponse<EmployeeDetailsDto>>>",
+    "file": "src/ThinkOnErp.API/Controllers/Hr/EmployeesController.cs",
+    "line": 223
+  },
+  {
+    "controller": "EmployeesController",
+    "method": "PUT",
+    "path": "/api/hr/employees/{code}/identity",
+    "action": "UpdateEmployeeIdentity",
+    "purpose": "تعديل مجموعة الهوية فقط مع حفظ البنك والعمل",
+    "screen": "hr-employees",
+    "feature": "edit",
+    "selfService": false,
+    "adminOnly": false,
+    "consumerIntent": "ويب HR / تكامل ERP مخول",
+    "requiredChange": "EMP-04: edit العام مع edit-identity فقط، مجموعة هوية كاملة مطلوبة؛ بقية الملف من الصف المقفول والرد حسب حقوق العرض",
+    "returnType": "Task<ActionResult<ApiResponse<EmployeeDetailsDto>>>",
+    "declaredResponses": [],
+    "parameters": [
+      {
+        "binding": "route/body inferred",
+        "bindingAttribute": [],
+        "declaration": "string code"
+      },
+      {
+        "binding": "body",
+        "bindingAttribute": [
+          "[FromBody]"
+        ],
+        "declaration": "UpdateEmployeeIdentityDto dto"
+      }
+    ],
+    "response": "Task<ActionResult<ApiResponse<EmployeeDetailsDto>>>",
+    "file": "src/ThinkOnErp.API/Controllers/Hr/EmployeesController.cs",
+    "line": 228
+  },
+  {
+    "controller": "EmployeesController",
+    "method": "DELETE",
+    "path": "/api/hr/employees/{code}",
+    "action": "DeleteEmployee",
+    "purpose": "تعطيل الموظف وإنهاء حالته",
+    "screen": "hr-employees",
+    "feature": "delete",
+    "selfService": false,
+    "adminOnly": false,
+    "consumerIntent": "ويب HR / تكامل ERP مخول",
+    "requiredChange": "بوابة رواتب قبل الحفظ وفق EMP-05/11؛ الملف والمعالون غير مؤرخين حالياً؛ CLOSED أو الاعتماد قد يمنع الكتابة",
+    "returnType": "Task<ActionResult<ApiResponse<bool>>>",
+    "declaredResponses": [
+      {
+        "type": "ApiResponse<bool>",
+        "status": "Status200OK"
+      }
+    ],
+    "parameters": [
+      {
+        "binding": "route/body inferred",
+        "bindingAttribute": [],
+        "declaration": "string code"
+      }
+    ],
+    "response": "ApiResponse<bool>",
+    "file": "src/ThinkOnErp.API/Controllers/Hr/EmployeesController.cs",
+    "line": 234
+  },
+  {
+    "controller": "EmployeesController",
+    "method": "POST",
+    "path": "/api/hr/employees/{code}/dependents",
+    "action": "AddDependent",
+    "purpose": "إضافة معال",
+    "screen": "hr-employees",
+    "feature": "create",
+    "selfService": false,
+    "adminOnly": false,
+    "consumerIntent": "ويب HR / تكامل ERP مخول",
+    "requiredChange": "EMP-04: edit-identity على فرع الأب بعد القفل؛ الإضافة تحتاج view-identity أيضاً لرد المعال",
+    "returnType": "Task<ActionResult<ApiResponse<DependentDto>>>",
+    "declaredResponses": [
+      {
+        "type": "ApiResponse<DependentDto>",
+        "status": "Status200OK"
+      }
+    ],
+    "parameters": [
+      {
+        "binding": "route/body inferred",
+        "bindingAttribute": [],
+        "declaration": "string code"
+      },
+      {
+        "binding": "body",
+        "bindingAttribute": [
+          "[FromBody]"
+        ],
+        "declaration": "CreateDependentDto dto"
+      }
+    ],
+    "response": "ApiResponse<DependentDto>",
+    "file": "src/ThinkOnErp.API/Controllers/Hr/EmployeesController.cs",
+    "line": 246
+  },
+  {
+    "controller": "EmployeesController",
+    "method": "DELETE",
+    "path": "/api/hr/employees/dependents/{id:long}",
+    "action": "DeleteDependent",
+    "purpose": "حذف معال",
+    "screen": "hr-employees",
+    "feature": "delete",
+    "selfService": false,
+    "adminOnly": false,
+    "consumerIntent": "ويب HR / تكامل ERP مخول",
+    "requiredChange": "EMP-04: edit-identity على فرع الأب بعد القفل؛ الإضافة تحتاج view-identity أيضاً لرد المعال",
+    "returnType": "Task<ActionResult<ApiResponse<bool>>>",
+    "declaredResponses": [
+      {
+        "type": "ApiResponse<bool>",
+        "status": "Status200OK"
+      }
+    ],
+    "parameters": [
+      {
+        "binding": "route/body inferred",
+        "bindingAttribute": [],
+        "declaration": "long id"
+      }
+    ],
+    "response": "ApiResponse<bool>",
+    "file": "src/ThinkOnErp.API/Controllers/Hr/EmployeesController.cs",
+    "line": 259
+  },
+  {
+    "controller": "EmployeesController",
+    "method": "POST",
+    "path": "/api/hr/employees/{code}/salary-structure",
+    "action": "AssignSalaryStructure",
+    "purpose": "تعيين تعريف راتب",
+    "screen": "hr-employees",
+    "feature": "create",
+    "selfService": false,
+    "adminOnly": false,
+    "consumerIntent": "ويب HR / تكامل ERP مخول",
+    "requiredChange": "EMP-04: view-salary للقراءة، وedit-salary مع view-salary للإسناد؛ العملة من ShortNameEn موحد وفريد وطريقة دفع مدعومة قبل إغلاق السابق؛ صلاحية العملية العامة لا تكفي",
+    "returnType": "Task<ActionResult<ApiResponse<SalaryStructureDetailsDto>>>",
+    "declaredResponses": [
+      {
+        "type": "ApiResponse<SalaryStructureDetailsDto>",
+        "status": "Status200OK"
+      }
+    ],
+    "parameters": [
+      {
+        "binding": "route/body inferred",
+        "bindingAttribute": [],
+        "declaration": "string code"
+      },
+      {
+        "binding": "body",
+        "bindingAttribute": [
+          "[FromBody]"
+        ],
+        "declaration": "AssignSalaryStructureDto dto"
+      }
+    ],
+    "response": "ApiResponse<SalaryStructureDetailsDto>",
+    "file": "src/ThinkOnErp.API/Controllers/Hr/EmployeesController.cs",
+    "line": 271
+  },
+  {
+    "controller": "EmployeesController",
+    "method": "GET",
+    "path": "/api/hr/employees/{code}/salary-structure",
+    "action": "GetSalaryStructure",
+    "purpose": "تعريف الراتب النشط بتاريخ معين",
+    "screen": "hr-employees",
+    "feature": "view",
+    "selfService": false,
+    "adminOnly": false,
+    "consumerIntent": "ويب HR / تكامل ERP مخول",
+    "requiredChange": "EMP-04: view-salary للقراءة، وedit-salary مع view-salary للإسناد؛ العملة من ShortNameEn موحد وفريد وطريقة دفع مدعومة قبل إغلاق السابق؛ صلاحية العملية العامة لا تكفي",
+    "returnType": "Task<ActionResult<ApiResponse<SalaryStructureDetailsDto>>>",
+    "declaredResponses": [
+      {
+        "type": "ApiResponse<SalaryStructureDetailsDto>",
+        "status": "Status200OK"
+      }
+    ],
+    "parameters": [
+      {
+        "binding": "route/body inferred",
+        "bindingAttribute": [],
+        "declaration": "string code"
+      },
+      {
+        "binding": "query",
+        "bindingAttribute": [
+          "[FromQuery]"
+        ],
+        "declaration": "DateTime? asOfDate"
+      }
+    ],
+    "response": "ApiResponse<SalaryStructureDetailsDto>",
+    "file": "src/ThinkOnErp.API/Controllers/Hr/EmployeesController.cs",
+    "line": 284
+  },
+  {
+    "controller": "LeavesController",
+    "method": "GET",
+    "path": "/api/hr/leaves/types",
+    "action": "GetLeaveTypes",
+    "purpose": "أنواع الإجازات",
+    "screen": "hr-leaves",
+    "feature": "view",
+    "selfService": true,
+    "adminOnly": false,
+    "consumerIntent": "موبايل / ويب HR ضمن النطاق",
+    "requiredChange": "إبقاء المسار؛ اكتمال دورة الأعمال والصلاحيات والتكامل حسب HR_ROADMAP_AR.md",
+    "returnType": "Task<ActionResult<ApiResponse<IReadOnlyList<LeaveTypeDto>>>>",
+    "declaredResponses": [
+      {
+        "type": "ApiResponse<IReadOnlyList<LeaveTypeDto>>",
+        "status": "Status200OK"
+      }
+    ],
+    "parameters": [
+      {
+        "binding": "query",
+        "bindingAttribute": [
+          "[FromQuery]"
+        ],
+        "declaration": "bool activeOnly = true"
+      }
+    ],
+    "response": "ApiResponse<IReadOnlyList<LeaveTypeDto>>",
+    "file": "src/ThinkOnErp.API/Controllers/Hr/LeavesController.cs",
+    "line": 38
+  },
+  {
+    "controller": "LeavesController",
+    "method": "GET",
+    "path": "/api/hr/leaves/types/{code}",
+    "action": "GetLeaveTypeByCode",
+    "purpose": "تفاصيل نوع إجازة",
+    "screen": "hr-leaves",
+    "feature": "view",
+    "selfService": true,
+    "adminOnly": false,
+    "consumerIntent": "موبايل / ويب HR ضمن النطاق",
+    "requiredChange": "إبقاء المسار؛ اكتمال دورة الأعمال والصلاحيات والتكامل حسب HR_ROADMAP_AR.md",
+    "returnType": "Task<ActionResult<ApiResponse<LeaveTypeDto>>>",
+    "declaredResponses": [
+      {
+        "type": "ApiResponse<LeaveTypeDto>",
+        "status": "Status200OK"
+      },
+      {
+        "type": null,
+        "status": "Status404NotFound"
+      }
+    ],
+    "parameters": [
+      {
+        "binding": "route/body inferred",
+        "bindingAttribute": [],
+        "declaration": "string code"
+      }
+    ],
+    "response": "ApiResponse<LeaveTypeDto>",
+    "file": "src/ThinkOnErp.API/Controllers/Hr/LeavesController.cs",
+    "line": 50
+  },
+  {
+    "controller": "LeavesController",
+    "method": "POST",
+    "path": "/api/hr/leaves/types",
+    "action": "CreateLeaveType",
+    "purpose": "إنشاء نوع إجازة",
+    "screen": "hr-leaves",
+    "feature": "create",
+    "selfService": false,
+    "adminOnly": false,
+    "consumerIntent": "ويب HR / تكامل ERP مخول",
+    "requiredChange": "إبقاء المسار؛ اكتمال دورة الأعمال والصلاحيات والتكامل حسب HR_ROADMAP_AR.md",
+    "returnType": "Task<ActionResult<ApiResponse<LeaveTypeDto>>>",
+    "declaredResponses": [
+      {
+        "type": "ApiResponse<LeaveTypeDto>",
+        "status": "Status201Created"
+      },
+      {
+        "type": null,
+        "status": "Status400BadRequest"
+      }
+    ],
+    "parameters": [
+      {
+        "binding": "body",
+        "bindingAttribute": [
+          "[FromBody]"
+        ],
+        "declaration": "CreateLeaveTypeDto dto"
+      }
+    ],
+    "response": "ApiResponse<LeaveTypeDto>",
+    "file": "src/ThinkOnErp.API/Controllers/Hr/LeavesController.cs",
+    "line": 66
+  },
+  {
+    "controller": "LeavesController",
+    "method": "PUT",
+    "path": "/api/hr/leaves/types/{code}",
+    "action": "UpdateLeaveType",
+    "purpose": "تعديل نوع إجازة",
+    "screen": "hr-leaves",
+    "feature": "edit",
+    "selfService": false,
+    "adminOnly": false,
+    "consumerIntent": "ويب HR / تكامل ERP مخول",
+    "requiredChange": "إبقاء المسار؛ اكتمال دورة الأعمال والصلاحيات والتكامل حسب HR_ROADMAP_AR.md",
+    "returnType": "Task<ActionResult<ApiResponse<LeaveTypeDto>>>",
+    "declaredResponses": [
+      {
+        "type": "ApiResponse<LeaveTypeDto>",
+        "status": "Status200OK"
+      },
+      {
+        "type": null,
+        "status": "Status404NotFound"
+      }
+    ],
+    "parameters": [
+      {
+        "binding": "route/body inferred",
+        "bindingAttribute": [],
+        "declaration": "string code"
+      },
+      {
+        "binding": "body",
+        "bindingAttribute": [
+          "[FromBody]"
+        ],
+        "declaration": "UpdateLeaveTypeDto dto"
+      }
+    ],
+    "response": "ApiResponse<LeaveTypeDto>",
+    "file": "src/ThinkOnErp.API/Controllers/Hr/LeavesController.cs",
+    "line": 79
+  },
+  {
+    "controller": "LeavesController",
+    "method": "DELETE",
+    "path": "/api/hr/leaves/types/{code}",
+    "action": "DeleteLeaveType",
+    "purpose": "تعطيل نوع إجازة",
+    "screen": "hr-leaves",
+    "feature": "delete",
+    "selfService": false,
+    "adminOnly": false,
+    "consumerIntent": "ويب HR / تكامل ERP مخول",
+    "requiredChange": "إبقاء المسار؛ اكتمال دورة الأعمال والصلاحيات والتكامل حسب HR_ROADMAP_AR.md",
+    "returnType": "Task<ActionResult<ApiResponse<bool>>>",
+    "declaredResponses": [
+      {
+        "type": "ApiResponse<bool>",
+        "status": "Status200OK"
+      },
+      {
+        "type": null,
+        "status": "Status404NotFound"
+      }
+    ],
+    "parameters": [
+      {
+        "binding": "route/body inferred",
+        "bindingAttribute": [],
+        "declaration": "string code"
+      }
+    ],
+    "response": "ApiResponse<bool>",
+    "file": "src/ThinkOnErp.API/Controllers/Hr/LeavesController.cs",
+    "line": 93
+  },
+  {
+    "controller": "LeavesController",
+    "method": "GET",
+    "path": "/api/hr/leaves/requests",
+    "action": "GetLeaveRequests",
+    "purpose": "قائمة طلبات الإجازة",
+    "screen": "hr-leaves",
+    "feature": "view",
+    "selfService": true,
+    "adminOnly": false,
+    "consumerIntent": "موبايل / ويب HR ضمن النطاق",
+    "requiredChange": "إبقاء المسار؛ اكتمال دورة الأعمال والصلاحيات والتكامل حسب HR_ROADMAP_AR.md",
+    "returnType": "Task<ActionResult<ApiResponse<PagedResultDto<LeaveRequestDto>>>>",
+    "declaredResponses": [
+      {
+        "type": "ApiResponse<PagedResultDto<LeaveRequestDto>>",
+        "status": "Status200OK"
+      }
+    ],
+    "parameters": [
+      {
+        "binding": "query",
+        "bindingAttribute": [
+          "[FromQuery]"
+        ],
+        "declaration": "string? employeeCode"
+      },
+      {
+        "binding": "query",
+        "bindingAttribute": [
+          "[FromQuery]"
+        ],
+        "declaration": "string? leaveTypeCode"
+      },
+      {
+        "binding": "query",
+        "bindingAttribute": [
+          "[FromQuery]"
+        ],
+        "declaration": "string? status"
+      },
+      {
+        "binding": "query",
+        "bindingAttribute": [
+          "[FromQuery]"
+        ],
+        "declaration": "DateTime? fromDate"
+      },
+      {
+        "binding": "query",
+        "bindingAttribute": [
+          "[FromQuery]"
+        ],
+        "declaration": "DateTime? toDate"
+      },
+      {
+        "binding": "query",
+        "bindingAttribute": [
+          "[FromQuery]"
+        ],
+        "declaration": "int pageIndex = 1"
+      },
+      {
+        "binding": "query",
+        "bindingAttribute": [
+          "[FromQuery]"
+        ],
+        "declaration": "int pageSize = 20"
+      }
+    ],
+    "response": "ApiResponse<PagedResultDto<LeaveRequestDto>>",
+    "file": "src/ThinkOnErp.API/Controllers/Hr/LeavesController.cs",
+    "line": 109
+  },
+  {
+    "controller": "LeavesController",
+    "method": "POST",
+    "path": "/api/hr/leaves/requests",
+    "action": "SubmitLeaveRequest",
+    "purpose": "تقديم طلب إجازة",
+    "screen": "hr-leaves",
+    "feature": "create",
+    "selfService": true,
+    "adminOnly": false,
+    "consumerIntent": "موبايل / ويب HR ضمن النطاق",
+    "requiredChange": "إبقاء المسار؛ اكتمال دورة الأعمال والصلاحيات والتكامل حسب HR_ROADMAP_AR.md",
+    "returnType": "Task<ActionResult<ApiResponse<LeaveRequestDto>>>",
+    "declaredResponses": [
+      {
+        "type": "ApiResponse<LeaveRequestDto>",
+        "status": "Status200OK"
+      }
+    ],
+    "parameters": [
+      {
+        "binding": "body",
+        "bindingAttribute": [
+          "[FromBody]"
+        ],
+        "declaration": "SubmitLeaveRequestDto dto"
+      }
+    ],
+    "response": "ApiResponse<LeaveRequestDto>",
+    "file": "src/ThinkOnErp.API/Controllers/Hr/LeavesController.cs",
+    "line": 129
+  },
+  {
+    "controller": "LeavesController",
+    "method": "POST",
+    "path": "/api/hr/leaves/requests/{id:long}/process",
+    "action": "ProcessLeaveRequest",
+    "purpose": "اعتماد أو رفض إجازة",
+    "screen": "hr-leaves",
+    "feature": "approve",
+    "selfService": false,
+    "adminOnly": false,
+    "consumerIntent": "ويب HR / تكامل ERP مخول",
+    "requiredChange": "إبقاء المسار؛ اكتمال دورة الأعمال والصلاحيات والتكامل حسب HR_ROADMAP_AR.md",
+    "returnType": "Task<ActionResult<ApiResponse<LeaveRequestDto>>>",
+    "declaredResponses": [
+      {
+        "type": "ApiResponse<LeaveRequestDto>",
+        "status": "Status200OK"
+      }
+    ],
+    "parameters": [
+      {
+        "binding": "route/body inferred",
+        "bindingAttribute": [],
+        "declaration": "long id"
+      },
+      {
+        "binding": "body",
+        "bindingAttribute": [
+          "[FromBody]"
+        ],
+        "declaration": "ProcessLeaveRequestDto dto"
+      }
+    ],
+    "response": "ApiResponse<LeaveRequestDto>",
+    "file": "src/ThinkOnErp.API/Controllers/Hr/LeavesController.cs",
+    "line": 141
+  },
+  {
+    "controller": "LeavesController",
+    "method": "GET",
+    "path": "/api/hr/leaves/balances/{employeeCode}",
+    "action": "GetEmployeeBalances",
+    "purpose": "أرصدة إجازات الموظف",
+    "screen": "hr-leaves",
+    "feature": "view",
+    "selfService": true,
+    "adminOnly": false,
+    "consumerIntent": "موبايل / ويب HR ضمن النطاق",
+    "requiredChange": "إبقاء المسار؛ اكتمال دورة الأعمال والصلاحيات والتكامل حسب HR_ROADMAP_AR.md",
+    "returnType": "Task<ActionResult<ApiResponse<IReadOnlyList<LeaveBalanceDto>>>>",
+    "declaredResponses": [
+      {
+        "type": "ApiResponse<IReadOnlyList<LeaveBalanceDto>>",
+        "status": "Status200OK"
+      }
+    ],
+    "parameters": [
+      {
+        "binding": "route/body inferred",
+        "bindingAttribute": [],
+        "declaration": "string employeeCode"
+      },
+      {
+        "binding": "query",
+        "bindingAttribute": [
+          "[FromQuery]"
+        ],
+        "declaration": "int? year"
+      }
+    ],
+    "response": "ApiResponse<IReadOnlyList<LeaveBalanceDto>>",
+    "file": "src/ThinkOnErp.API/Controllers/Hr/LeavesController.cs",
+    "line": 154
+  },
+  {
+    "controller": "LeavesController",
+    "method": "GET",
+    "path": "/api/hr/leaves/balances/{employeeCode}/movements",
+    "action": "GetMovements",
+    "purpose": "دفتر حركات رصيد الإجازة",
+    "screen": "hr-leaves",
+    "feature": "view",
+    "selfService": true,
+    "adminOnly": false,
+    "consumerIntent": "موبايل / ويب HR ضمن النطاق",
+    "requiredChange": "إبقاء المسار؛ اكتمال دورة الأعمال والصلاحيات والتكامل حسب HR_ROADMAP_AR.md",
+    "returnType": "Task<ActionResult<ApiResponse<LeaveMovementPageDto>>>",
+    "declaredResponses": [
+      {
+        "type": "ApiResponse<LeaveMovementPageDto>",
+        "status": "Status200OK"
+      }
+    ],
+    "parameters": [
+      {
+        "binding": "route/body inferred",
+        "bindingAttribute": [],
+        "declaration": "string employeeCode"
+      },
+      {
+        "binding": "query",
+        "bindingAttribute": [
+          "[FromQuery]"
+        ],
+        "declaration": "string? leaveTypeCode = null"
+      },
+      {
+        "binding": "query",
+        "bindingAttribute": [
+          "[FromQuery]"
+        ],
+        "declaration": "DateTime? cycleStart = null"
+      },
+      {
+        "binding": "query",
+        "bindingAttribute": [
+          "[FromQuery]"
+        ],
+        "declaration": "int page = 1"
+      },
+      {
+        "binding": "query",
+        "bindingAttribute": [
+          "[FromQuery]"
+        ],
+        "declaration": "int size = 50"
+      }
+    ],
+    "response": "ApiResponse<LeaveMovementPageDto>",
+    "file": "src/ThinkOnErp.API/Controllers/Hr/LeavesController.cs",
+    "line": 166
+  },
+  {
+    "controller": "LeavesController",
+    "method": "POST",
+    "path": "/api/hr/leaves/balances/grant",
+    "action": "GrantOrAdjustBalance",
+    "purpose": "منح أو تصحيح رصيد إجازة",
+    "screen": "hr-leaves",
+    "feature": "edit",
+    "selfService": false,
+    "adminOnly": false,
+    "consumerIntent": "ويب HR / تكامل ERP مخول",
+    "requiredChange": "إبقاء المسار؛ اكتمال دورة الأعمال والصلاحيات والتكامل حسب HR_ROADMAP_AR.md",
+    "returnType": "Task<ActionResult<ApiResponse<LeaveBalanceDto>>>",
+    "declaredResponses": [
+      {
+        "type": "ApiResponse<LeaveBalanceDto>",
+        "status": "Status200OK"
+      },
+      {
+        "type": null,
+        "status": "Status400BadRequest"
+      }
+    ],
+    "parameters": [
+      {
+        "binding": "body",
+        "bindingAttribute": [
+          "[FromBody]"
+        ],
+        "declaration": "GrantLeaveBalanceDto dto"
+      }
+    ],
+    "response": "ApiResponse<LeaveBalanceDto>",
+    "file": "src/ThinkOnErp.API/Controllers/Hr/LeavesController.cs",
+    "line": 178
+  },
+  {
+    "controller": "LeavesController",
+    "method": "POST",
+    "path": "/api/hr/leaves/balances/accrue-monthly",
+    "action": "RunMonthlyAccrual",
+    "purpose": "تنفيذ استحقاق شهري يدوي",
+    "screen": "hr-leaves",
+    "feature": "edit",
+    "selfService": false,
+    "adminOnly": false,
+    "consumerIntent": "ويب HR / تكامل ERP مخول",
+    "requiredChange": "إبقاء المسار؛ اكتمال دورة الأعمال والصلاحيات والتكامل حسب HR_ROADMAP_AR.md",
+    "returnType": "Task<ActionResult<ApiResponse<LeaveAccrualResultDto>>>",
+    "declaredResponses": [
+      {
+        "type": "ApiResponse<LeaveAccrualResultDto>",
+        "status": "Status200OK"
+      },
+      {
+        "type": null,
+        "status": "Status400BadRequest"
+      }
+    ],
+    "parameters": [
+      {
+        "binding": "body",
+        "bindingAttribute": [
+          "[FromBody]"
+        ],
+        "declaration": "MonthlyLeaveAccrualDto dto"
+      }
+    ],
+    "response": "ApiResponse<LeaveAccrualResultDto>",
+    "file": "src/ThinkOnErp.API/Controllers/Hr/LeavesController.cs",
+    "line": 191
+  },
+  {
+    "controller": "LeavesController",
+    "method": "POST",
+    "path": "/api/hr/leaves/balances/yearly-grant",
+    "action": "RunYearlyAllocation",
+    "purpose": "تنفيذ توزيع سنوي",
+    "screen": "hr-leaves",
+    "feature": "edit",
+    "selfService": false,
+    "adminOnly": false,
+    "consumerIntent": "ويب HR / تكامل ERP مخول",
+    "requiredChange": "إبقاء المسار؛ اكتمال دورة الأعمال والصلاحيات والتكامل حسب HR_ROADMAP_AR.md",
+    "returnType": "Task<ActionResult<ApiResponse<LeaveAccrualResultDto>>>",
+    "declaredResponses": [
+      {
+        "type": "ApiResponse<LeaveAccrualResultDto>",
+        "status": "Status200OK"
+      },
+      {
+        "type": null,
+        "status": "Status400BadRequest"
+      }
+    ],
+    "parameters": [
+      {
+        "binding": "body",
+        "bindingAttribute": [
+          "[FromBody]"
+        ],
+        "declaration": "YearlyLeaveAllocationDto dto"
+      }
+    ],
+    "response": "ApiResponse<LeaveAccrualResultDto>",
+    "file": "src/ThinkOnErp.API/Controllers/Hr/LeavesController.cs",
+    "line": 204
+  },
+  {
+    "controller": "LeavesController",
+    "method": "POST",
+    "path": "/api/hr/leaves/balances/year-end-rollover",
+    "action": "RunYearEndRollover",
+    "purpose": "ترحيل الرصيد بين سنتين",
+    "screen": "hr-leaves",
+    "feature": "post",
+    "selfService": false,
+    "adminOnly": false,
+    "consumerIntent": "ويب HR / تكامل ERP مخول",
+    "requiredChange": "إبقاء المسار؛ اكتمال دورة الأعمال والصلاحيات والتكامل حسب HR_ROADMAP_AR.md",
+    "returnType": "Task<ActionResult<ApiResponse<LeaveRolloverResultDto>>>",
+    "declaredResponses": [
+      {
+        "type": "ApiResponse<LeaveRolloverResultDto>",
+        "status": "Status200OK"
+      },
+      {
+        "type": null,
+        "status": "Status400BadRequest"
+      }
+    ],
+    "parameters": [
+      {
+        "binding": "body",
+        "bindingAttribute": [
+          "[FromBody]"
+        ],
+        "declaration": "YearEndRolloverDto dto"
+      }
+    ],
+    "response": "ApiResponse<LeaveRolloverResultDto>",
+    "file": "src/ThinkOnErp.API/Controllers/Hr/LeavesController.cs",
+    "line": 217
+  },
+  {
+    "controller": "LeavesController",
+    "method": "POST",
+    "path": "/api/hr/leaves/balances/year-end-close/draft",
+    "action": "CreateYearEndCloseDraft",
+    "purpose": "إنشاء مسودة إقفال دورة الإجازة",
+    "screen": "hr-leaves",
+    "feature": "edit",
+    "selfService": false,
+    "adminOnly": false,
+    "consumerIntent": "ويب HR / تكامل ERP مخول",
+    "requiredChange": "إبقاء المسار؛ اكتمال دورة الأعمال والصلاحيات والتكامل حسب HR_ROADMAP_AR.md",
+    "returnType": "Task<ActionResult<ApiResponse<LeaveYearCloseDto>>>",
+    "declaredResponses": [
+      {
+        "type": "ApiResponse<LeaveYearCloseDto>",
+        "status": "Status200OK"
+      }
+    ],
+    "parameters": [
+      {
+        "binding": "body",
+        "bindingAttribute": [
+          "[FromBody]"
+        ],
+        "declaration": "YearEndRolloverDto dto"
+      }
+    ],
+    "response": "ApiResponse<LeaveYearCloseDto>",
+    "file": "src/ThinkOnErp.API/Controllers/Hr/LeavesController.cs",
+    "line": 229
+  },
+  {
+    "controller": "LeavesController",
+    "method": "GET",
+    "path": "/api/hr/leaves/balances/year-end-close/{id:long}",
+    "action": "GetYearEndClose",
+    "purpose": "تفاصيل إقفال دورة الإجازة",
+    "screen": "hr-leaves",
+    "feature": "view",
+    "selfService": false,
+    "adminOnly": false,
+    "consumerIntent": "ويب HR / تكامل ERP مخول",
+    "requiredChange": "إبقاء المسار؛ اكتمال دورة الأعمال والصلاحيات والتكامل حسب HR_ROADMAP_AR.md",
+    "returnType": "Task<ActionResult<ApiResponse<LeaveYearCloseDto>>>",
+    "declaredResponses": [
+      {
+        "type": "ApiResponse<LeaveYearCloseDto>",
+        "status": "Status200OK"
+      }
+    ],
+    "parameters": [
+      {
+        "binding": "route/body inferred",
+        "bindingAttribute": [],
+        "declaration": "long id"
+      }
+    ],
+    "response": "ApiResponse<LeaveYearCloseDto>",
+    "file": "src/ThinkOnErp.API/Controllers/Hr/LeavesController.cs",
+    "line": 241
+  },
+  {
+    "controller": "LeavesController",
+    "method": "POST",
+    "path": "/api/hr/leaves/balances/year-end-close/{id:long}/post",
+    "action": "PostYearEndClose",
+    "purpose": "اعتماد إقفال دورة الإجازة",
+    "screen": "hr-leaves",
+    "feature": "post",
+    "selfService": false,
+    "adminOnly": false,
+    "consumerIntent": "ويب HR / تكامل ERP مخول",
+    "requiredChange": "إبقاء المسار؛ اكتمال دورة الأعمال والصلاحيات والتكامل حسب HR_ROADMAP_AR.md",
+    "returnType": "Task<ActionResult<ApiResponse<LeaveYearCloseDto>>>",
+    "declaredResponses": [
+      {
+        "type": "ApiResponse<LeaveYearCloseDto>",
+        "status": "Status200OK"
+      }
+    ],
+    "parameters": [
+      {
+        "binding": "route/body inferred",
+        "bindingAttribute": [],
+        "declaration": "long id"
+      }
+    ],
+    "response": "ApiResponse<LeaveYearCloseDto>",
+    "file": "src/ThinkOnErp.API/Controllers/Hr/LeavesController.cs",
+    "line": 250
+  },
+  {
+    "controller": "LeavesController",
+    "method": "POST",
+    "path": "/api/hr/leaves/balances/year-end-close/{id:long}/unpost",
+    "action": "UnpostYearEndClose",
+    "purpose": "عكس إقفال دورة الإجازة",
+    "screen": "hr-leaves",
+    "feature": "reverse",
+    "selfService": false,
+    "adminOnly": false,
+    "consumerIntent": "ويب HR / تكامل ERP مخول",
+    "requiredChange": "إبقاء المسار؛ اكتمال دورة الأعمال والصلاحيات والتكامل حسب HR_ROADMAP_AR.md",
+    "returnType": "Task<ActionResult<ApiResponse<LeaveYearCloseDto>>>",
+    "declaredResponses": [
+      {
+        "type": "ApiResponse<LeaveYearCloseDto>",
+        "status": "Status200OK"
+      }
+    ],
+    "parameters": [
+      {
+        "binding": "route/body inferred",
+        "bindingAttribute": [],
+        "declaration": "long id"
+      }
+    ],
+    "response": "ApiResponse<LeaveYearCloseDto>",
+    "file": "src/ThinkOnErp.API/Controllers/Hr/LeavesController.cs",
+    "line": 260
+  },
+  {
+    "controller": "LeavesController",
+    "method": "GET",
+    "path": "/api/hr/leaves/policies",
+    "action": "GetLeavePolicies",
+    "purpose": "سياسات الإجازات",
+    "screen": "hr-leaves",
+    "feature": "view",
+    "selfService": false,
+    "adminOnly": false,
+    "consumerIntent": "ويب HR / تكامل ERP مخول",
+    "requiredChange": "إبقاء المسار؛ اكتمال دورة الأعمال والصلاحيات والتكامل حسب HR_ROADMAP_AR.md",
+    "returnType": "Task<ActionResult<ApiResponse<IReadOnlyList<LeavePolicyDetailsDto>>>>",
+    "declaredResponses": [
+      {
+        "type": "ApiResponse<IReadOnlyList<LeavePolicyDetailsDto>>",
+        "status": "Status200OK"
+      }
+    ],
+    "parameters": [],
+    "response": "ApiResponse<IReadOnlyList<LeavePolicyDetailsDto>>",
+    "file": "src/ThinkOnErp.API/Controllers/Hr/LeavesController.cs",
+    "line": 270
+  },
+  {
+    "controller": "LeavesController",
+    "method": "GET",
+    "path": "/api/hr/leaves/settings",
+    "action": "GetLeaveSettings",
+    "purpose": "قراءة إعدادات الإجازات",
+    "screen": "hr-leaves",
+    "feature": "view",
+    "selfService": false,
+    "adminOnly": false,
+    "consumerIntent": "ويب HR / تكامل ERP مخول",
+    "requiredChange": "إبقاء المسار؛ اكتمال دورة الأعمال والصلاحيات والتكامل حسب HR_ROADMAP_AR.md",
+    "returnType": "Task<ActionResult<ApiResponse<HrLeaveSettingsDto>>>",
+    "declaredResponses": [
+      {
+        "type": "ApiResponse<HrLeaveSettingsDto>",
+        "status": "Status200OK"
+      }
+    ],
+    "parameters": [],
+    "response": "ApiResponse<HrLeaveSettingsDto>",
+    "file": "src/ThinkOnErp.API/Controllers/Hr/LeavesController.cs",
+    "line": 280
+  },
+  {
+    "controller": "LeavesController",
+    "method": "PUT",
+    "path": "/api/hr/leaves/settings",
+    "action": "UpdateLeaveSettings",
+    "purpose": "تحديث إعدادات الإجازات",
+    "screen": "hr-leaves",
+    "feature": "configure",
+    "selfService": false,
+    "adminOnly": false,
+    "consumerIntent": "ويب HR / تكامل ERP مخول",
+    "requiredChange": "إبقاء المسار؛ اكتمال دورة الأعمال والصلاحيات والتكامل حسب HR_ROADMAP_AR.md",
+    "returnType": "Task<ActionResult<ApiResponse<HrLeaveSettingsDto>>>",
+    "declaredResponses": [
+      {
+        "type": "ApiResponse<HrLeaveSettingsDto>",
+        "status": "Status200OK"
+      },
+      {
+        "type": null,
+        "status": "Status400BadRequest"
+      }
+    ],
+    "parameters": [
+      {
+        "binding": "body",
+        "bindingAttribute": [
+          "[FromBody]"
+        ],
+        "declaration": "UpdateHrLeaveSettingsDto dto"
+      }
+    ],
+    "response": "ApiResponse<HrLeaveSettingsDto>",
+    "file": "src/ThinkOnErp.API/Controllers/Hr/LeavesController.cs",
+    "line": 290
+  },
+  {
+    "controller": "LeavesController",
+    "method": "POST",
+    "path": "/api/hr/leaves/policies",
+    "action": "CreateOrUpdateLeavePolicy",
+    "purpose": "حفظ سياسة الإجازة حسب النوع",
+    "screen": "hr-leaves",
+    "feature": "create",
+    "selfService": false,
+    "adminOnly": false,
+    "consumerIntent": "ويب HR / تكامل ERP مخول",
+    "requiredChange": "إبقاء المسار؛ اكتمال دورة الأعمال والصلاحيات والتكامل حسب HR_ROADMAP_AR.md",
+    "returnType": "Task<ActionResult<ApiResponse<LeavePolicyDetailsDto>>>",
+    "declaredResponses": [
+      {
+        "type": "ApiResponse<LeavePolicyDetailsDto>",
+        "status": "Status200OK"
+      },
+      {
+        "type": null,
+        "status": "Status400BadRequest"
+      }
+    ],
+    "parameters": [
+      {
+        "binding": "body",
+        "bindingAttribute": [
+          "[FromBody]"
+        ],
+        "declaration": "CreateLeavePolicyDto dto"
+      }
+    ],
+    "response": "ApiResponse<LeavePolicyDetailsDto>",
+    "file": "src/ThinkOnErp.API/Controllers/Hr/LeavesController.cs",
+    "line": 303
+  },
+  {
+    "controller": "LoansController",
+    "method": "POST",
+    "path": "/api/hr/loans",
+    "action": "CreateLoan",
+    "purpose": "طلب قرض وإنشاء أقساطه",
+    "screen": "hr-loans",
+    "feature": "create",
+    "selfService": true,
+    "adminOnly": false,
+    "consumerIntent": "موبايل / ويب HR ضمن النطاق",
+    "requiredChange": "إبقاء المسار؛ اكتمال دورة الأعمال والصلاحيات والتكامل حسب HR_ROADMAP_AR.md",
+    "returnType": "Task<ActionResult<ApiResponse<EmployeeLoan>>>",
+    "declaredResponses": [
+      {
+        "type": "ApiResponse<EmployeeLoan>",
+        "status": "Status200OK"
+      }
+    ],
+    "parameters": [
+      {
+        "binding": "body",
+        "bindingAttribute": [
+          "[FromBody]"
+        ],
+        "declaration": "CreateLoanApplicationDto dto"
+      }
+    ],
+    "response": "ApiResponse<EmployeeLoan>",
+    "file": "src/ThinkOnErp.API/Controllers/Hr/LoansController.cs",
+    "line": 42
+  },
+  {
+    "controller": "LoansController",
+    "method": "POST",
+    "path": "/api/hr/loans/{id:long}/approve",
+    "action": "ApproveLoan",
+    "purpose": "اعتماد طلب القرض في HR دون تفعيل أو صرف",
+    "screen": "hr-loans",
+    "feature": "approve",
+    "selfService": false,
+    "adminOnly": false,
+    "consumerIntent": "ويب HR / تكامل ERP مخول",
+    "requiredChange": "INT-01/08: APPROVED لموافقة HR فقط، دون تفعيل/صرف؛ PENDING فقط وإعادة نفس الاعتماد بلا تغيير المنفذ؛ التمويل المؤكد والتفعيل ضمن INT-08، وLegacy يحتاج INT-13",
+    "returnType": "Task<ActionResult<ApiResponse<EmployeeLoan>>>",
+    "declaredResponses": [
+      {
+        "type": "ApiResponse<EmployeeLoan>",
+        "status": "Status200OK"
+      }
+    ],
+    "parameters": [
+      {
+        "binding": "route/body inferred",
+        "bindingAttribute": [],
+        "declaration": "long id"
+      }
+    ],
+    "response": "ApiResponse<EmployeeLoan>",
+    "file": "src/ThinkOnErp.API/Controllers/Hr/LoansController.cs",
+    "line": 54
+  },
+  {
+    "controller": "LoansController",
+    "method": "POST",
+    "path": "/api/hr/loans/{id:long}/funding-request",
+    "action": "SubmitLoanFunding",
+    "purpose": "تمويل Legacy موقوف؛ استخدم إيصال مستند Accounting",
+    "screen": "hr-loans",
+    "feature": "approve",
+    "selfService": false,
+    "adminOnly": false,
+    "consumerIntent": "ويب HR / تكامل ERP مخول",
+    "requiredChange": "INT-01/08: المسار المباشر موقوف409؛ التمويل لا يثبت إلا بإيصال Accounting مرتبط بالتسليم",
+    "returnType": "Task<IActionResult>",
+    "declaredResponses": [],
+    "parameters": [
+      {
+        "binding": "route/body inferred",
+        "bindingAttribute": [],
+        "declaration": "long id"
+      }
+    ],
+    "response": "Task<IActionResult>",
+    "file": "src/ThinkOnErp.API/Controllers/Hr/LoansController.cs",
+    "line": 65
+  },
+  {
+    "controller": "LoansController",
+    "method": "GET",
+    "path": "/api/hr/loans",
+    "action": "GetLoans",
+    "purpose": "قائمة القروض",
+    "screen": "hr-loans",
+    "feature": "view",
+    "selfService": true,
+    "adminOnly": false,
+    "consumerIntent": "موبايل / ويب HR ضمن النطاق",
+    "requiredChange": "إبقاء المسار؛ اكتمال دورة الأعمال والصلاحيات والتكامل حسب HR_ROADMAP_AR.md",
+    "returnType": "Task<ActionResult<ApiResponse<IReadOnlyList<EmployeeLoan>>>>",
+    "declaredResponses": [
+      {
+        "type": "ApiResponse<IReadOnlyList<EmployeeLoan>>",
+        "status": "Status200OK"
+      }
+    ],
+    "parameters": [
+      {
+        "binding": "query",
+        "bindingAttribute": [
+          "[FromQuery]"
+        ],
+        "declaration": "string? employeeCode"
+      },
+      {
+        "binding": "query",
+        "bindingAttribute": [
+          "[FromQuery]"
+        ],
+        "declaration": "string? status"
+      }
+    ],
+    "response": "ApiResponse<IReadOnlyList<EmployeeLoan>>",
+    "file": "src/ThinkOnErp.API/Controllers/Hr/LoansController.cs",
+    "line": 71
+  },
+  {
+    "controller": "LoansController",
+    "method": "POST",
+    "path": "/api/hr/loans/advances",
+    "action": "CreateAdvance",
+    "purpose": "طلب سلفة",
+    "screen": "hr-loans",
+    "feature": "create",
+    "selfService": true,
+    "adminOnly": false,
+    "consumerIntent": "موبايل / ويب HR ضمن النطاق",
+    "requiredChange": "إبقاء المسار؛ اكتمال دورة الأعمال والصلاحيات والتكامل حسب HR_ROADMAP_AR.md",
+    "returnType": "Task<ActionResult<ApiResponse<EmployeeAdvance>>>",
+    "declaredResponses": [
+      {
+        "type": "ApiResponse<EmployeeAdvance>",
+        "status": "Status200OK"
+      }
+    ],
+    "parameters": [
+      {
+        "binding": "body",
+        "bindingAttribute": [
+          "[FromBody]"
+        ],
+        "declaration": "CreateAdvanceRequestDto dto"
+      }
+    ],
+    "response": "ApiResponse<EmployeeAdvance>",
+    "file": "src/ThinkOnErp.API/Controllers/Hr/LoansController.cs",
+    "line": 83
+  },
+  {
+    "controller": "LoansController",
+    "method": "POST",
+    "path": "/api/hr/loans/advances/{id:long}/approve",
+    "action": "ApproveAdvance",
+    "purpose": "اعتماد طلب السلفة في HR دون صرف",
+    "screen": "hr-loans",
+    "feature": "approve",
+    "selfService": false,
+    "adminOnly": false,
+    "consumerIntent": "ويب HR / تكامل ERP مخول",
+    "requiredChange": "INT-01/08: APPROVED لموافقة HR فقط، دون تفعيل/صرف؛ PENDING فقط وإعادة نفس الاعتماد بلا تغيير المنفذ؛ التمويل المؤكد والتفعيل ضمن INT-08، وLegacy يحتاج INT-13",
+    "returnType": "Task<ActionResult<ApiResponse<EmployeeAdvance>>>",
+    "declaredResponses": [
+      {
+        "type": "ApiResponse<EmployeeAdvance>",
+        "status": "Status200OK"
+      }
+    ],
+    "parameters": [
+      {
+        "binding": "route/body inferred",
+        "bindingAttribute": [],
+        "declaration": "long id"
+      }
+    ],
+    "response": "ApiResponse<EmployeeAdvance>",
+    "file": "src/ThinkOnErp.API/Controllers/Hr/LoansController.cs",
+    "line": 95
+  },
+  {
+    "controller": "LoansController",
+    "method": "POST",
+    "path": "/api/hr/loans/advances/{id:long}/funding-request",
+    "action": "SubmitAdvanceFunding",
+    "purpose": "تمويل Legacy موقوف؛ استخدم إيصال مستند Accounting",
+    "screen": "hr-loans",
+    "feature": "approve",
+    "selfService": false,
+    "adminOnly": false,
+    "consumerIntent": "ويب HR / تكامل ERP مخول",
+    "requiredChange": "INT-01/08: المسار المباشر موقوف409؛ التمويل لا يثبت إلا بإيصال Accounting مرتبط بالتسليم",
+    "returnType": "Task<IActionResult>",
+    "declaredResponses": [],
+    "parameters": [
+      {
+        "binding": "route/body inferred",
+        "bindingAttribute": [],
+        "declaration": "long id"
+      }
+    ],
+    "response": "Task<IActionResult>",
+    "file": "src/ThinkOnErp.API/Controllers/Hr/LoansController.cs",
+    "line": 106
+  },
+  {
+    "controller": "LoansController",
+    "method": "GET",
+    "path": "/api/hr/loans/advances",
+    "action": "GetAdvances",
+    "purpose": "قائمة السلف",
+    "screen": "hr-loans",
+    "feature": "view",
+    "selfService": true,
+    "adminOnly": false,
+    "consumerIntent": "موبايل / ويب HR ضمن النطاق",
+    "requiredChange": "إبقاء المسار؛ اكتمال دورة الأعمال والصلاحيات والتكامل حسب HR_ROADMAP_AR.md",
+    "returnType": "Task<ActionResult<ApiResponse<IReadOnlyList<EmployeeAdvance>>>>",
+    "declaredResponses": [
+      {
+        "type": "ApiResponse<IReadOnlyList<EmployeeAdvance>>",
+        "status": "Status200OK"
+      }
+    ],
+    "parameters": [
+      {
+        "binding": "query",
+        "bindingAttribute": [
+          "[FromQuery]"
+        ],
+        "declaration": "string? employeeCode"
+      },
+      {
+        "binding": "query",
+        "bindingAttribute": [
+          "[FromQuery]"
+        ],
+        "declaration": "string? targetPayPeriod"
+      }
+    ],
+    "response": "ApiResponse<IReadOnlyList<EmployeeAdvance>>",
+    "file": "src/ThinkOnErp.API/Controllers/Hr/LoansController.cs",
+    "line": 112
+  },
+  {
+    "controller": "OrganizationController",
+    "method": "GET",
+    "path": "/api/hr/organization/departments",
+    "action": "Departments",
+    "purpose": "قراءة الإدارات الفعالة المتاحة",
+    "screen": "hr-employees",
+    "feature": "view",
+    "selfService": false,
+    "adminOnly": false,
+    "consumerIntent": "ويب HR / تكامل ERP مخول",
+    "requiredChange": "كتالوج محمي ودورات الهيكل وIf-Match؛ مدير الإدارة وصفحات SET-02 والتزامن وOracle HTTP ما زالت مفتوحة",
+    "returnType": "Task<ActionResult<ApiResponse<IReadOnlyList<HrDepartment>>>>",
+    "declaredResponses": [],
+    "parameters": [],
+    "response": "Task<ActionResult<ApiResponse<IReadOnlyList<HrDepartment>>>>",
+    "file": "src/ThinkOnErp.API/Controllers/Hr/OrganizationController.cs",
+    "line": 14
+  },
+  {
+    "controller": "OrganizationController",
+    "method": "GET",
+    "path": "/api/hr/organization/positions",
+    "action": "Positions",
+    "purpose": "قراءة المسميات الفعالة التابعة للإدارات المتاحة",
+    "screen": "hr-employees",
+    "feature": "view",
+    "selfService": false,
+    "adminOnly": false,
+    "consumerIntent": "ويب HR / تكامل ERP مخول",
+    "requiredChange": "كتالوج محمي ودورات الهيكل وIf-Match؛ مدير الإدارة وصفحات SET-02 والتزامن وOracle HTTP ما زالت مفتوحة",
+    "returnType": "Task<ActionResult<ApiResponse<IReadOnlyList<HrPosition>>>>",
+    "declaredResponses": [],
+    "parameters": [
+      {
+        "binding": "query",
+        "bindingAttribute": [
+          "[FromQuery]"
+        ],
+        "declaration": "string? departmentCode"
+      }
+    ],
+    "response": "Task<ActionResult<ApiResponse<IReadOnlyList<HrPosition>>>>",
+    "file": "src/ThinkOnErp.API/Controllers/Hr/OrganizationController.cs",
+    "line": 17
+  },
+  {
+    "controller": "OrganizationController",
+    "method": "GET",
+    "path": "/api/hr/organization/departments/{code}",
+    "action": "Department",
+    "purpose": "قراءة إدارة ونسخة التعديل بما فيها المعطلة",
+    "screen": "hr-employees",
+    "feature": "view",
+    "selfService": false,
+    "adminOnly": false,
+    "consumerIntent": "ويب HR / تكامل ERP مخول",
+    "requiredChange": "كتالوج محمي ودورات الهيكل وIf-Match؛ مدير الإدارة وصفحات SET-02 والتزامن وOracle HTTP ما زالت مفتوحة",
+    "returnType": "Task<ActionResult<ApiResponse<HrDepartment>>>",
+    "declaredResponses": [],
+    "parameters": [
+      {
+        "binding": "route/body inferred",
+        "bindingAttribute": [],
+        "declaration": "string code"
+      }
+    ],
+    "response": "Task<ActionResult<ApiResponse<HrDepartment>>>",
+    "file": "src/ThinkOnErp.API/Controllers/Hr/OrganizationController.cs",
+    "line": 21
+  },
+  {
+    "controller": "OrganizationController",
+    "method": "GET",
+    "path": "/api/hr/organization/positions/{code}",
+    "action": "Position",
+    "purpose": "قراءة مسمى ونسخة التعديل بما فيه المعطل",
+    "screen": "hr-employees",
+    "feature": "view",
+    "selfService": false,
+    "adminOnly": false,
+    "consumerIntent": "ويب HR / تكامل ERP مخول",
+    "requiredChange": "كتالوج محمي ودورات الهيكل وIf-Match؛ مدير الإدارة وصفحات SET-02 والتزامن وOracle HTTP ما زالت مفتوحة",
+    "returnType": "Task<ActionResult<ApiResponse<HrPosition>>>",
+    "declaredResponses": [],
+    "parameters": [
+      {
+        "binding": "route/body inferred",
+        "bindingAttribute": [],
+        "declaration": "string code"
+      }
+    ],
+    "response": "Task<ActionResult<ApiResponse<HrPosition>>>",
+    "file": "src/ThinkOnErp.API/Controllers/Hr/OrganizationController.cs",
+    "line": 28
+  },
+  {
+    "controller": "OrganizationController",
+    "method": "POST",
+    "path": "/api/hr/organization/departments/{code}",
+    "action": "CreateDepartment",
+    "purpose": "إنشاء إدارة في الكتالوج الحالي",
+    "screen": "hr-employees",
+    "feature": "configure",
+    "selfService": false,
+    "adminOnly": false,
+    "consumerIntent": "ويب HR / تكامل ERP مخول",
+    "requiredChange": "كتالوج محمي ودورات الهيكل وIf-Match؛ مدير الإدارة وصفحات SET-02 والتزامن وOracle HTTP ما زالت مفتوحة",
+    "returnType": "Task<ActionResult<ApiResponse<HrDepartment>>>",
+    "declaredResponses": [],
+    "parameters": [
+      {
+        "binding": "route/body inferred",
+        "bindingAttribute": [],
+        "declaration": "string code"
+      },
+      {
+        "binding": "body",
+        "bindingAttribute": [
+          "[FromBody]"
+        ],
+        "declaration": "DepartmentWrite value"
+      }
+    ],
+    "response": "Task<ActionResult<ApiResponse<HrDepartment>>>",
+    "file": "src/ThinkOnErp.API/Controllers/Hr/OrganizationController.cs",
+    "line": 35
+  },
+  {
+    "controller": "OrganizationController",
+    "method": "POST",
+    "path": "/api/hr/organization/positions/{code}",
+    "action": "CreatePosition",
+    "purpose": "إنشاء مسمى في الكتالوج الحالي",
+    "screen": "hr-employees",
+    "feature": "configure",
+    "selfService": false,
+    "adminOnly": false,
+    "consumerIntent": "ويب HR / تكامل ERP مخول",
+    "requiredChange": "كتالوج محمي ودورات الهيكل وIf-Match؛ مدير الإدارة وصفحات SET-02 والتزامن وOracle HTTP ما زالت مفتوحة",
+    "returnType": "Task<ActionResult<ApiResponse<HrPosition>>>",
+    "declaredResponses": [],
+    "parameters": [
+      {
+        "binding": "route/body inferred",
+        "bindingAttribute": [],
+        "declaration": "string code"
+      },
+      {
+        "binding": "body",
+        "bindingAttribute": [
+          "[FromBody]"
+        ],
+        "declaration": "PositionWrite value"
+      }
+    ],
+    "response": "Task<ActionResult<ApiResponse<HrPosition>>>",
+    "file": "src/ThinkOnErp.API/Controllers/Hr/OrganizationController.cs",
+    "line": 42
+  },
+  {
+    "controller": "OrganizationController",
+    "method": "PUT",
+    "path": "/api/hr/organization/departments/{code}",
+    "action": "UpdateDepartment",
+    "purpose": "تعديل أو تعطيل إدارة مع If-Match وحماية التوابع",
+    "screen": "hr-employees",
+    "feature": "configure",
+    "selfService": false,
+    "adminOnly": false,
+    "consumerIntent": "ويب HR / تكامل ERP مخول",
+    "requiredChange": "كتالوج محمي ودورات الهيكل وIf-Match؛ مدير الإدارة وصفحات SET-02 والتزامن وOracle HTTP ما زالت مفتوحة",
+    "returnType": "Task<ActionResult<ApiResponse<HrDepartment>>>",
+    "declaredResponses": [],
+    "parameters": [
+      {
+        "binding": "route/body inferred",
+        "bindingAttribute": [],
+        "declaration": "string code"
+      },
+      {
+        "binding": "body",
+        "bindingAttribute": [
+          "[FromBody]"
+        ],
+        "declaration": "DepartmentWrite value"
+      },
+      {
+        "binding": "header",
+        "bindingAttribute": [
+          "[FromHeader(Name = \"If-Match\")]"
+        ],
+        "declaration": "string version"
+      }
+    ],
+    "response": "Task<ActionResult<ApiResponse<HrDepartment>>>",
+    "file": "src/ThinkOnErp.API/Controllers/Hr/OrganizationController.cs",
+    "line": 49
+  },
+  {
+    "controller": "OrganizationController",
+    "method": "PUT",
+    "path": "/api/hr/organization/positions/{code}",
+    "action": "UpdatePosition",
+    "purpose": "تعديل أو تعطيل مسمى مع If-Match وحماية التوابع",
+    "screen": "hr-employees",
+    "feature": "configure",
+    "selfService": false,
+    "adminOnly": false,
+    "consumerIntent": "ويب HR / تكامل ERP مخول",
+    "requiredChange": "كتالوج محمي ودورات الهيكل وIf-Match؛ مدير الإدارة وصفحات SET-02 والتزامن وOracle HTTP ما زالت مفتوحة",
+    "returnType": "Task<ActionResult<ApiResponse<HrPosition>>>",
+    "declaredResponses": [],
+    "parameters": [
+      {
+        "binding": "route/body inferred",
+        "bindingAttribute": [],
+        "declaration": "string code"
+      },
+      {
+        "binding": "body",
+        "bindingAttribute": [
+          "[FromBody]"
+        ],
+        "declaration": "PositionWrite value"
+      },
+      {
+        "binding": "header",
+        "bindingAttribute": [
+          "[FromHeader(Name = \"If-Match\")]"
+        ],
+        "declaration": "string version"
+      }
+    ],
+    "response": "Task<ActionResult<ApiResponse<HrPosition>>>",
+    "file": "src/ThinkOnErp.API/Controllers/Hr/OrganizationController.cs",
+    "line": 60
+  },
+  {
+    "controller": "PayrollAdjustmentsController",
+    "method": "POST",
+    "path": "/api/hr/adjustments",
+    "action": "CreateAdjustment",
+    "purpose": "إنشاء تعديل راتب PENDING",
+    "screen": "hr-payroll-adjustments",
+    "feature": "create",
+    "selfService": false,
+    "adminOnly": false,
+    "consumerIntent": "ويب HR / تكامل ERP مخول",
+    "requiredChange": "الجديد PENDING؛ approve وpost يعتمدان إلى APPROVED، unpost يعيده PENDING مع حماية المستهلك/المسير",
+    "returnType": "Task<ActionResult<ApiResponse<PayrollAdjustment>>>",
+    "declaredResponses": [
+      {
+        "type": "ApiResponse<PayrollAdjustment>",
+        "status": "Status200OK"
+      }
+    ],
+    "parameters": [
+      {
+        "binding": "body",
+        "bindingAttribute": [
+          "[FromBody]"
+        ],
+        "declaration": "CreatePayrollAdjustmentDto dto"
+      }
+    ],
+    "response": "ApiResponse<PayrollAdjustment>",
+    "file": "src/ThinkOnErp.API/Controllers/Hr/PayrollAdjustmentsController.cs",
+    "line": 39
+  },
+  {
+    "controller": "PayrollAdjustmentsController",
+    "method": "POST",
+    "path": "/api/hr/adjustments/{id:long}/approve",
+    "action": "ApproveAdjustment",
+    "purpose": "اعتماد تعديل",
+    "screen": "hr-payroll-adjustments",
+    "feature": "approve",
+    "selfService": false,
+    "adminOnly": false,
+    "consumerIntent": "ويب HR / تكامل ERP مخول",
+    "requiredChange": "الجديد PENDING؛ approve وpost يعتمدان إلى APPROVED، unpost يعيده PENDING مع حماية المستهلك/المسير",
+    "returnType": "Task<ActionResult<ApiResponse<PayrollAdjustment>>>",
+    "declaredResponses": [
+      {
+        "type": "ApiResponse<PayrollAdjustment>",
+        "status": "Status200OK"
+      }
+    ],
+    "parameters": [
+      {
+        "binding": "route/body inferred",
+        "bindingAttribute": [],
+        "declaration": "long id"
+      }
+    ],
+    "response": "ApiResponse<PayrollAdjustment>",
+    "file": "src/ThinkOnErp.API/Controllers/Hr/PayrollAdjustmentsController.cs",
+    "line": 51
+  },
+  {
+    "controller": "PayrollAdjustmentsController",
+    "method": "POST",
+    "path": "/api/hr/adjustments/{id:long}/reject",
+    "action": "RejectAdjustment",
+    "purpose": "رفض تعديل",
+    "screen": "hr-payroll-adjustments",
+    "feature": "reject",
+    "selfService": false,
+    "adminOnly": false,
+    "consumerIntent": "ويب HR / تكامل ERP مخول",
+    "requiredChange": "الجديد PENDING؛ approve وpost يعتمدان إلى APPROVED، unpost يعيده PENDING مع حماية المستهلك/المسير",
+    "returnType": "Task<ActionResult<ApiResponse<PayrollAdjustment>>>",
+    "declaredResponses": [
+      {
+        "type": "ApiResponse<PayrollAdjustment>",
+        "status": "Status200OK"
+      }
+    ],
+    "parameters": [
+      {
+        "binding": "route/body inferred",
+        "bindingAttribute": [],
+        "declaration": "long id"
+      }
+    ],
+    "response": "ApiResponse<PayrollAdjustment>",
+    "file": "src/ThinkOnErp.API/Controllers/Hr/PayrollAdjustmentsController.cs",
+    "line": 63
+  },
+  {
+    "controller": "PayrollAdjustmentsController",
+    "method": "POST",
+    "path": "/api/hr/adjustments/{id:long}/post",
+    "action": "PostAdjustment",
+    "purpose": "اعتماد/Post تعديل PENDING إلى مدخل الراتب",
+    "screen": "hr-payroll-adjustments",
+    "feature": "post",
+    "selfService": false,
+    "adminOnly": false,
+    "consumerIntent": "ويب HR / تكامل ERP مخول",
+    "requiredChange": "الجديد PENDING؛ approve وpost يعتمدان إلى APPROVED، unpost يعيده PENDING مع حماية المستهلك/المسير",
+    "returnType": "Task<ActionResult<ApiResponse<PayrollAdjustment>>>",
+    "declaredResponses": [],
+    "parameters": [
+      {
+        "binding": "route/body inferred",
+        "bindingAttribute": [],
+        "declaration": "long id"
+      }
+    ],
+    "response": "Task<ActionResult<ApiResponse<PayrollAdjustment>>>",
+    "file": "src/ThinkOnErp.API/Controllers/Hr/PayrollAdjustmentsController.cs",
+    "line": 74
+  },
+  {
+    "controller": "PayrollAdjustmentsController",
+    "method": "POST",
+    "path": "/api/hr/adjustments/{id:long}/unpost",
+    "action": "UnpostAdjustment",
+    "purpose": "عكس ترحيل تعديل مع فحص التوابع",
+    "screen": "hr-payroll-adjustments",
+    "feature": "reverse",
+    "selfService": false,
+    "adminOnly": false,
+    "consumerIntent": "ويب HR / تكامل ERP مخول",
+    "requiredChange": "الجديد PENDING؛ approve وpost يعتمدان إلى APPROVED، unpost يعيده PENDING مع حماية المستهلك/المسير",
+    "returnType": "Task<ActionResult<ApiResponse<PayrollAdjustment>>>",
+    "declaredResponses": [],
+    "parameters": [
+      {
+        "binding": "route/body inferred",
+        "bindingAttribute": [],
+        "declaration": "long id"
+      }
+    ],
+    "response": "Task<ActionResult<ApiResponse<PayrollAdjustment>>>",
+    "file": "src/ThinkOnErp.API/Controllers/Hr/PayrollAdjustmentsController.cs",
+    "line": 82
+  },
+  {
+    "controller": "PayrollAdjustmentsController",
+    "method": "GET",
+    "path": "/api/hr/adjustments",
+    "action": "GetAdjustments",
+    "purpose": "قائمة التعديلات",
+    "screen": "hr-payroll-adjustments",
+    "feature": "view",
+    "selfService": false,
+    "adminOnly": false,
+    "consumerIntent": "ويب HR / تكامل ERP مخول",
+    "requiredChange": "الجديد PENDING؛ approve وpost يعتمدان إلى APPROVED، unpost يعيده PENDING مع حماية المستهلك/المسير",
+    "returnType": "Task<ActionResult<ApiResponse<IReadOnlyList<PayrollAdjustmentDto>>>>",
+    "declaredResponses": [
+      {
+        "type": "ApiResponse<IReadOnlyList<PayrollAdjustmentDto>>",
+        "status": "Status200OK"
+      }
+    ],
+    "parameters": [
+      {
+        "binding": "query",
+        "bindingAttribute": [
+          "[FromQuery]"
+        ],
+        "declaration": "long companyId"
+      },
+      {
+        "binding": "query",
+        "bindingAttribute": [
+          "[FromQuery]"
+        ],
+        "declaration": "string? employeeCode"
+      },
+      {
+        "binding": "query",
+        "bindingAttribute": [
+          "[FromQuery]"
+        ],
+        "declaration": "string? payPeriod"
+      },
+      {
+        "binding": "query",
+        "bindingAttribute": [
+          "[FromQuery]"
+        ],
+        "declaration": "string? status"
+      }
+    ],
+    "response": "ApiResponse<IReadOnlyList<PayrollAdjustmentDto>>",
+    "file": "src/ThinkOnErp.API/Controllers/Hr/PayrollAdjustmentsController.cs",
+    "line": 91
+  },
+  {
+    "controller": "PayrollAdjustmentsController",
+    "method": "GET",
+    "path": "/api/hr/adjustments/{id:long}",
+    "action": "GetAdjustmentById",
+    "purpose": "تفاصيل تعديل",
+    "screen": "hr-payroll-adjustments",
+    "feature": "view",
+    "selfService": false,
+    "adminOnly": false,
+    "consumerIntent": "ويب HR / تكامل ERP مخول",
+    "requiredChange": "الجديد PENDING؛ approve وpost يعتمدان إلى APPROVED، unpost يعيده PENDING مع حماية المستهلك/المسير",
+    "returnType": "Task<ActionResult<ApiResponse<PayrollAdjustment>>>",
+    "declaredResponses": [
+      {
+        "type": "ApiResponse<PayrollAdjustment>",
+        "status": "Status200OK"
+      }
+    ],
+    "parameters": [
+      {
+        "binding": "route/body inferred",
+        "bindingAttribute": [],
+        "declaration": "long id"
+      }
+    ],
+    "response": "ApiResponse<PayrollAdjustment>",
+    "file": "src/ThinkOnErp.API/Controllers/Hr/PayrollAdjustmentsController.cs",
+    "line": 105
+  },
+  {
+    "controller": "PayrollAdjustmentsController",
+    "method": "DELETE",
+    "path": "/api/hr/adjustments/{id:long}",
+    "action": "DeleteAdjustment",
+    "purpose": "حذف تعديل",
+    "screen": "hr-payroll-adjustments",
+    "feature": "delete",
+    "selfService": false,
+    "adminOnly": false,
+    "consumerIntent": "ويب HR / تكامل ERP مخول",
+    "requiredChange": "الجديد PENDING؛ approve وpost يعتمدان إلى APPROVED، unpost يعيده PENDING مع حماية المستهلك/المسير",
+    "returnType": "Task<ActionResult<ApiResponse<bool>>>",
+    "declaredResponses": [
+      {
+        "type": "ApiResponse<bool>",
+        "status": "Status200OK"
+      }
+    ],
+    "parameters": [
+      {
+        "binding": "route/body inferred",
+        "bindingAttribute": [],
+        "declaration": "long id"
+      }
+    ],
+    "response": "ApiResponse<bool>",
+    "file": "src/ThinkOnErp.API/Controllers/Hr/PayrollAdjustmentsController.cs",
+    "line": 117
+  },
+  {
+    "controller": "PayrollController",
+    "method": "POST",
+    "path": "/api/hr/payroll/calculate",
+    "action": "CalculatePayroll",
+    "purpose": "حساب مسير راتب جديد لفرع",
+    "screen": "hr-payroll",
+    "feature": "edit",
+    "selfService": false,
+    "adminOnly": false,
+    "consumerIntent": "ويب HR / تكامل ERP مخول",
+    "requiredChange": "إبقاء المسار؛ اكتمال دورة الأعمال والصلاحيات والتكامل حسب HR_ROADMAP_AR.md",
+    "returnType": "Task<ActionResult<ApiResponse<PayrollCalculationResultDto>>>",
+    "declaredResponses": [
+      {
+        "type": "ApiResponse<PayrollCalculationResultDto>",
+        "status": "Status200OK"
+      }
+    ],
+    "parameters": [
+      {
+        "binding": "body",
+        "bindingAttribute": [
+          "[FromBody]"
+        ],
+        "declaration": "CreatePayrollRunDto dto"
+      }
+    ],
+    "response": "ApiResponse<PayrollCalculationResultDto>",
+    "file": "src/ThinkOnErp.API/Controllers/Hr/PayrollController.cs",
+    "line": 43
+  },
+  {
+    "controller": "PayrollController",
+    "method": "POST",
+    "path": "/api/hr/payroll/{id:long}/approve",
+    "action": "ApprovePayroll",
+    "purpose": "اعتماد HR لنسخة المسير دون تسوية مالية",
+    "screen": "hr-payroll",
+    "feature": "approve",
+    "selfService": false,
+    "adminOnly": false,
+    "consumerIntent": "ويب HR / تكامل ERP مخول",
+    "requiredChange": "INT-01: اعتماد HR ولقطة فقط دون سداد قرض/سلفة أو قيد/دفع؛ الحجز والإيصالات وتسوية Accounting ضمن INT-09/10",
+    "returnType": "Task<ActionResult<ApiResponse<PayrollRun>>>",
+    "declaredResponses": [
+      {
+        "type": "ApiResponse<PayrollRun>",
+        "status": "Status200OK"
+      }
+    ],
+    "parameters": [
+      {
+        "binding": "route/body inferred",
+        "bindingAttribute": [],
+        "declaration": "long id"
+      }
+    ],
+    "response": "ApiResponse<PayrollRun>",
+    "file": "src/ThinkOnErp.API/Controllers/Hr/PayrollController.cs",
+    "line": 55
+  },
+  {
+    "controller": "PayrollController",
+    "method": "POST",
+    "path": "/api/hr/payroll/{id:long}/cancel",
+    "action": "CancelPayroll",
+    "purpose": "إلغاء مسير محسوب غير معتمد",
+    "screen": "hr-payroll",
+    "feature": "reverse",
+    "selfService": false,
+    "adminOnly": false,
+    "consumerIntent": "ويب HR / تكامل ERP مخول",
+    "requiredChange": "إضافة إلغاء المحسوب؛ عكس الاعتماد المالي مهمة مستقلة",
+    "returnType": "Task<ActionResult<ApiResponse<PayrollCalculationResultDto>>>",
+    "declaredResponses": [
+      {
+        "type": "ApiResponse<PayrollCalculationResultDto>",
+        "status": "Status200OK"
+      }
+    ],
+    "parameters": [
+      {
+        "binding": "route/body inferred",
+        "bindingAttribute": [],
+        "declaration": "long id"
+      },
+      {
+        "binding": "body",
+        "bindingAttribute": [
+          "[FromBody]"
+        ],
+        "declaration": "CancelPayrollRunDto dto"
+      }
+    ],
+    "response": "ApiResponse<PayrollCalculationResultDto>",
+    "file": "src/ThinkOnErp.API/Controllers/Hr/PayrollController.cs",
+    "line": 67
+  },
+  {
+    "controller": "PayrollController",
+    "method": "POST",
+    "path": "/api/hr/payroll/{id:long}/post-to-gl",
+    "action": "PostToGl",
+    "purpose": "مسار ترحيل HR قديم موقوف409",
+    "screen": "hr-payroll",
+    "feature": "post",
+    "selfService": false,
+    "adminOnly": false,
+    "consumerIntent": "ويب HR / تكامل ERP مخول",
+    "requiredChange": "INT-01: واجهة قديمة متوقفة409/HR_ACCOUNTING_HANDOFF_REQUIRED بلا استدعاء مالي؛ Accounting يملك القيد والعكس والدفع عبر مستند مقبول INT-02..14؛ مسار التسليم الجديد لم يُنفذ بعد",
+    "returnType": "Task<ActionResult<ApiResponse<PostGlVoucherResultDto>>>",
+    "declaredResponses": [
+      {
+        "type": "ApiResponse<PostGlVoucherResultDto>",
+        "status": "Status409Conflict"
+      }
+    ],
+    "parameters": [
+      {
+        "binding": "route/body inferred",
+        "bindingAttribute": [],
+        "declaration": "long id"
+      }
+    ],
+    "response": "ApiResponse<PostGlVoucherResultDto>",
+    "file": "src/ThinkOnErp.API/Controllers/Hr/PayrollController.cs",
+    "line": 77
+  },
+  {
+    "controller": "PayrollController",
+    "method": "POST",
+    "path": "/api/hr/payroll/{id:long}/reverse-gl",
+    "action": "ReverseGl",
+    "purpose": "مسار عكس HR قديم موقوف409",
+    "screen": "hr-payroll",
+    "feature": "reverse",
+    "selfService": false,
+    "adminOnly": false,
+    "consumerIntent": "ويب HR / تكامل ERP مخول",
+    "requiredChange": "INT-01: واجهة قديمة متوقفة409/HR_ACCOUNTING_HANDOFF_REQUIRED بلا استدعاء مالي؛ Accounting يملك القيد والعكس والدفع عبر مستند مقبول INT-02..14؛ مسار التسليم الجديد لم يُنفذ بعد",
+    "returnType": "Task<ActionResult<ApiResponse<PayrollGlReversalResultDto>>>",
+    "declaredResponses": [
+      {
+        "type": "ApiResponse<PayrollGlReversalResultDto>",
+        "status": "Status409Conflict"
+      }
+    ],
+    "parameters": [
+      {
+        "binding": "route/body inferred",
+        "bindingAttribute": [],
+        "declaration": "long id"
+      },
+      {
+        "binding": "body",
+        "bindingAttribute": [
+          "[FromBody]"
+        ],
+        "declaration": "ReversePayrollGlDto dto"
+      }
+    ],
+    "response": "ApiResponse<PayrollGlReversalResultDto>",
+    "file": "src/ThinkOnErp.API/Controllers/Hr/PayrollController.cs",
+    "line": 87
+  },
+  {
+    "controller": "PayrollController",
+    "method": "GET",
+    "path": "/api/hr/payroll/{id:long}",
+    "action": "GetPayrollRun",
+    "purpose": "نتيجة مسير بالمعرف",
+    "screen": "hr-payroll",
+    "feature": "view",
+    "selfService": false,
+    "adminOnly": false,
+    "consumerIntent": "ويب HR / تكامل ERP مخول",
+    "requiredChange": "إبقاء المسار؛ اكتمال دورة الأعمال والصلاحيات والتكامل حسب HR_ROADMAP_AR.md",
+    "returnType": "Task<ActionResult<ApiResponse<PayrollCalculationResultDto>>>",
+    "declaredResponses": [
+      {
+        "type": "ApiResponse<PayrollCalculationResultDto>",
+        "status": "Status200OK"
+      }
+    ],
+    "parameters": [
+      {
+        "binding": "route/body inferred",
+        "bindingAttribute": [],
+        "declaration": "long id"
+      }
+    ],
+    "response": "ApiResponse<PayrollCalculationResultDto>",
+    "file": "src/ThinkOnErp.API/Controllers/Hr/PayrollController.cs",
+    "line": 98
+  },
+  {
+    "controller": "PayrollController",
+    "method": "GET",
+    "path": "/api/hr/payroll/{id:long}/handoff",
+    "action": "GetPayrollHandoffStatus",
+    "purpose": "حالة مستند التسليم المرتبط بالمسير",
+    "screen": "hr-payroll",
+    "feature": "view",
+    "selfService": false,
+    "adminOnly": false,
+    "consumerIntent": "ويب HR للمتابعة والسحب قبل القبول",
+    "requiredChange": "INT-04/05: الحالة محدودة؛ السحب مسبب قبل القبول فقط، والقبول وما بعده بملكية Accounting",
+    "returnType": "Task<ActionResult<ApiResponse<PayrollHandoffStatusDto>>>",
+    "declaredResponses": [
+      {
+        "type": "ApiResponse<PayrollHandoffStatusDto>",
+        "status": "Status200OK"
+      },
+      {
+        "type": "ApiResponse<PayrollHandoffStatusDto>",
+        "status": "Status404NotFound"
+      }
+    ],
+    "parameters": [
+      {
+        "binding": "route/body inferred",
+        "bindingAttribute": [],
+        "declaration": "long id"
+      }
+    ],
+    "response": "ApiResponse<PayrollHandoffStatusDto>",
+    "file": "src/ThinkOnErp.API/Controllers/Hr/PayrollController.cs",
+    "line": 111
+  },
+  {
+    "controller": "PayrollController",
+    "method": "POST",
+    "path": "/api/hr/payroll/{id:long}/handoff/withdraw",
+    "action": "WithdrawPayrollHandoff",
+    "purpose": "سحب مستند التسليم قبل قبول Accounting",
+    "screen": "hr-payroll",
+    "feature": "reverse",
+    "selfService": false,
+    "adminOnly": false,
+    "consumerIntent": "ويب HR للمتابعة والسحب قبل القبول",
+    "requiredChange": "INT-04/05: الحالة محدودة؛ السحب مسبب قبل القبول فقط، والقبول وما بعده بملكية Accounting",
+    "returnType": "Task<ActionResult<ApiResponse<PayrollHandoffStatusDto>>>",
+    "declaredResponses": [
+      {
+        "type": "ApiResponse<PayrollHandoffStatusDto>",
+        "status": "Status200OK"
+      },
+      {
+        "type": "ApiResponse<PayrollHandoffStatusDto>",
+        "status": "Status404NotFound"
+      }
+    ],
+    "parameters": [
+      {
+        "binding": "route/body inferred",
+        "bindingAttribute": [],
+        "declaration": "long id"
+      },
+      {
+        "binding": "body",
+        "bindingAttribute": [
+          "[FromBody]"
+        ],
+        "declaration": "WithdrawHandoffRequest request"
+      }
+    ],
+    "response": "ApiResponse<PayrollHandoffStatusDto>",
+    "file": "src/ThinkOnErp.API/Controllers/Hr/PayrollController.cs",
+    "line": 125
+  },
+  {
+    "controller": "PayrollController",
+    "method": "GET",
+    "path": "/api/hr/payroll/{id:long}/export-bank",
+    "action": "ExportBankFile",
+    "purpose": "مسار ملف دفع HR قديم موقوف409",
+    "screen": "hr-payroll",
+    "feature": "export",
+    "selfService": false,
+    "adminOnly": false,
+    "consumerIntent": "ويب HR / تكامل ERP مخول",
+    "requiredChange": "INT-01: واجهة قديمة متوقفة409/HR_ACCOUNTING_HANDOFF_REQUIRED بلا استدعاء مالي؛ Accounting يملك القيد والعكس والدفع عبر مستند مقبول INT-02..14؛ مسار التسليم الجديد لم يُنفذ بعد",
+    "returnType": "Task<IActionResult>",
+    "declaredResponses": [
+      {
+        "type": "ApiResponse<object>",
+        "status": "Status409Conflict"
+      }
+    ],
+    "parameters": [
+      {
+        "binding": "route/body inferred",
+        "bindingAttribute": [],
+        "declaration": "long id"
+      },
+      {
+        "binding": "query",
+        "bindingAttribute": [
+          "[FromQuery]"
+        ],
+        "declaration": "string? format"
+      }
+    ],
+    "response": "ApiResponse<object>",
+    "file": "src/ThinkOnErp.API/Controllers/Hr/PayrollController.cs",
+    "line": 139
+  },
+  {
+    "controller": "PayrollController",
+    "method": "GET",
+    "path": "/api/hr/payroll/{id:long}/export-bank/preview",
+    "action": "PreviewBankExport",
+    "purpose": "مسار معاينة ملف دفع HR قديم موقوف409",
+    "screen": "hr-payroll",
+    "feature": "export",
+    "selfService": false,
+    "adminOnly": false,
+    "consumerIntent": "ويب HR / تكامل ERP مخول",
+    "requiredChange": "INT-01: واجهة قديمة متوقفة409/HR_ACCOUNTING_HANDOFF_REQUIRED بلا استدعاء مالي؛ Accounting يملك القيد والعكس والدفع عبر مستند مقبول INT-02..14؛ مسار التسليم الجديد لم يُنفذ بعد",
+    "returnType": "Task<ActionResult<ApiResponse<BankPayrollExportResultDto>>>",
+    "declaredResponses": [
+      {
+        "type": "ApiResponse<BankPayrollExportResultDto>",
+        "status": "Status409Conflict"
+      }
+    ],
+    "parameters": [
+      {
+        "binding": "route/body inferred",
+        "bindingAttribute": [],
+        "declaration": "long id"
+      },
+      {
+        "binding": "query",
+        "bindingAttribute": [
+          "[FromQuery]"
+        ],
+        "declaration": "string? format"
+      }
+    ],
+    "response": "ApiResponse<BankPayrollExportResultDto>",
+    "file": "src/ThinkOnErp.API/Controllers/Hr/PayrollController.cs",
+    "line": 150
+  },
+  {
+    "controller": "PayrollController",
+    "method": "GET",
+    "path": "/api/hr/payroll/run-lines/{lineId:long}/explanation",
+    "action": "GetCalculationExplanation",
+    "purpose": "شرح احتساب بند الموظف",
+    "screen": "hr-payroll",
+    "feature": "view",
+    "selfService": false,
+    "adminOnly": false,
+    "consumerIntent": "ويب HR / تكامل ERP مخول",
+    "requiredChange": "إبقاء المسار؛ اكتمال دورة الأعمال والصلاحيات والتكامل حسب HR_ROADMAP_AR.md",
+    "returnType": "Task<ActionResult<ApiResponse<PayrollExplanationDto>>>",
+    "declaredResponses": [
+      {
+        "type": "ApiResponse<PayrollExplanationDto>",
+        "status": "Status200OK"
+      }
+    ],
+    "parameters": [
+      {
+        "binding": "route/body inferred",
+        "bindingAttribute": [],
+        "declaration": "long lineId"
+      }
+    ],
+    "response": "ApiResponse<PayrollExplanationDto>",
+    "file": "src/ThinkOnErp.API/Controllers/Hr/PayrollController.cs",
+    "line": 165
+  },
+  {
+    "controller": "PayrollController",
+    "method": "GET",
+    "path": "/api/hr/payroll/periods",
+    "action": "GetPeriods",
+    "purpose": "قائمة فترات الرواتب",
+    "screen": "hr-payroll",
+    "feature": "view",
+    "selfService": false,
+    "adminOnly": false,
+    "consumerIntent": "ويب HR / تكامل ERP مخول",
+    "requiredChange": "إبقاء المسار؛ اكتمال دورة الأعمال والصلاحيات والتكامل حسب HR_ROADMAP_AR.md",
+    "returnType": "Task<ActionResult<ApiResponse<IReadOnlyList<PayrollPeriod>>>>",
+    "declaredResponses": [
+      {
+        "type": "ApiResponse<IReadOnlyList<PayrollPeriod>>",
+        "status": "Status200OK"
+      }
+    ],
+    "parameters": [
+      {
+        "binding": "query",
+        "bindingAttribute": [
+          "[FromQuery]"
+        ],
+        "declaration": "long companyId"
+      },
+      {
+        "binding": "query",
+        "bindingAttribute": [
+          "[FromQuery]"
+        ],
+        "declaration": "int? year"
+      }
+    ],
+    "response": "ApiResponse<IReadOnlyList<PayrollPeriod>>",
+    "file": "src/ThinkOnErp.API/Controllers/Hr/PayrollController.cs",
+    "line": 177
+  },
+  {
+    "controller": "PayrollController",
+    "method": "POST",
+    "path": "/api/hr/payroll/periods",
+    "action": "CreatePeriod",
+    "purpose": "إنشاء فترة رواتب",
+    "screen": "hr-payroll",
+    "feature": "create",
+    "selfService": false,
+    "adminOnly": false,
+    "consumerIntent": "ويب HR / تكامل ERP مخول",
+    "requiredChange": "إبقاء المسار؛ اكتمال دورة الأعمال والصلاحيات والتكامل حسب HR_ROADMAP_AR.md",
+    "returnType": "Task<ActionResult<ApiResponse<PayrollPeriod>>>",
+    "declaredResponses": [
+      {
+        "type": "ApiResponse<PayrollPeriod>",
+        "status": "Status200OK"
+      },
+      {
+        "type": "ApiResponse<PayrollPeriod>",
+        "status": "Status400BadRequest"
+      }
+    ],
+    "parameters": [
+      {
+        "binding": "body",
+        "bindingAttribute": [
+          "[FromBody]"
+        ],
+        "declaration": "PayrollPeriod period"
+      }
+    ],
+    "response": "ApiResponse<PayrollPeriod>",
+    "file": "src/ThinkOnErp.API/Controllers/Hr/PayrollController.cs",
+    "line": 190
+  },
+  {
+    "controller": "PayrollPoliciesController",
+    "method": "GET",
+    "path": "/api/hr/payroll-policies/proration",
+    "action": "GetProrationPolicies",
+    "purpose": "سياسات تجزئة الراتب",
+    "screen": "hr-payroll-policies",
+    "feature": "view",
+    "selfService": false,
+    "adminOnly": false,
+    "consumerIntent": "ويب HR / تكامل ERP مخول",
+    "requiredChange": "إبقاء المسار؛ اكتمال دورة الأعمال والصلاحيات والتكامل حسب HR_ROADMAP_AR.md",
+    "returnType": "Task<ActionResult<ApiResponse<IReadOnlyList<ProrationPolicy>>>>",
+    "declaredResponses": [
+      {
+        "type": "ApiResponse<IReadOnlyList<ProrationPolicy>>",
+        "status": "Status200OK"
+      }
+    ],
+    "parameters": [
+      {
+        "binding": "query",
+        "bindingAttribute": [
+          "[FromQuery]"
+        ],
+        "declaration": "long companyId"
+      }
+    ],
+    "response": "ApiResponse<IReadOnlyList<ProrationPolicy>>",
+    "file": "src/ThinkOnErp.API/Controllers/Hr/PayrollPoliciesController.cs",
+    "line": 40
+  },
+  {
+    "controller": "PayrollPoliciesController",
+    "method": "POST",
+    "path": "/api/hr/payroll-policies/proration",
+    "action": "AddProrationPolicy",
+    "purpose": "إضافة سياسة تجزئة",
+    "screen": "hr-payroll-policies",
+    "feature": "create",
+    "selfService": false,
+    "adminOnly": false,
+    "consumerIntent": "ويب HR / تكامل ERP مخول",
+    "requiredChange": "إبقاء المسار؛ اكتمال دورة الأعمال والصلاحيات والتكامل حسب HR_ROADMAP_AR.md",
+    "returnType": "Task<ActionResult<ApiResponse<ProrationPolicy>>>",
+    "declaredResponses": [
+      {
+        "type": "ApiResponse<ProrationPolicy>",
+        "status": "Status200OK"
+      }
+    ],
+    "parameters": [
+      {
+        "binding": "body",
+        "bindingAttribute": [
+          "[FromBody]"
+        ],
+        "declaration": "ProrationPolicyDto dto"
+      }
+    ],
+    "response": "ApiResponse<ProrationPolicy>",
+    "file": "src/ThinkOnErp.API/Controllers/Hr/PayrollPoliciesController.cs",
+    "line": 51
+  },
+  {
+    "controller": "PayrollPoliciesController",
+    "method": "GET",
+    "path": "/api/hr/payroll-policies/ssc",
+    "action": "GetSSCPolicies",
+    "purpose": "سياسات الضمان",
+    "screen": "hr-payroll-policies",
+    "feature": "view",
+    "selfService": false,
+    "adminOnly": false,
+    "consumerIntent": "ويب HR / تكامل ERP مخول",
+    "requiredChange": "إبقاء المسار؛ اكتمال دورة الأعمال والصلاحيات والتكامل حسب HR_ROADMAP_AR.md",
+    "returnType": "Task<ActionResult<ApiResponse<IReadOnlyList<SSCPolicy>>>>",
+    "declaredResponses": [
+      {
+        "type": "ApiResponse<IReadOnlyList<SSCPolicy>>",
+        "status": "Status200OK"
+      }
+    ],
+    "parameters": [
+      {
+        "binding": "query",
+        "bindingAttribute": [
+          "[FromQuery]"
+        ],
+        "declaration": "long companyId"
+      }
+    ],
+    "response": "ApiResponse<IReadOnlyList<SSCPolicy>>",
+    "file": "src/ThinkOnErp.API/Controllers/Hr/PayrollPoliciesController.cs",
+    "line": 85
+  },
+  {
+    "controller": "PayrollPoliciesController",
+    "method": "POST",
+    "path": "/api/hr/payroll-policies/ssc",
+    "action": "AddSSCPolicy",
+    "purpose": "إضافة سياسة ضمان",
+    "screen": "hr-payroll-policies",
+    "feature": "create",
+    "selfService": false,
+    "adminOnly": false,
+    "consumerIntent": "ويب HR / تكامل ERP مخول",
+    "requiredChange": "إبقاء المسار؛ اكتمال دورة الأعمال والصلاحيات والتكامل حسب HR_ROADMAP_AR.md",
+    "returnType": "Task<ActionResult<ApiResponse<SSCPolicy>>>",
+    "declaredResponses": [
+      {
+        "type": "ApiResponse<SSCPolicy>",
+        "status": "Status200OK"
+      }
+    ],
+    "parameters": [
+      {
+        "binding": "body",
+        "bindingAttribute": [
+          "[FromBody]"
+        ],
+        "declaration": "SSCPolicyDto dto"
+      }
+    ],
+    "response": "ApiResponse<SSCPolicy>",
+    "file": "src/ThinkOnErp.API/Controllers/Hr/PayrollPoliciesController.cs",
+    "line": 96
+  },
+  {
+    "controller": "PayrollPoliciesController",
+    "method": "GET",
+    "path": "/api/hr/payroll-policies/tax",
+    "action": "GetTaxPolicies",
+    "purpose": "سياسات الضريبة",
+    "screen": "hr-payroll-policies",
+    "feature": "view",
+    "selfService": false,
+    "adminOnly": false,
+    "consumerIntent": "ويب HR / تكامل ERP مخول",
+    "requiredChange": "إبقاء المسار؛ اكتمال دورة الأعمال والصلاحيات والتكامل حسب HR_ROADMAP_AR.md",
+    "returnType": "Task<ActionResult<ApiResponse<IReadOnlyList<TaxPolicy>>>>",
+    "declaredResponses": [
+      {
+        "type": "ApiResponse<IReadOnlyList<TaxPolicy>>",
+        "status": "Status200OK"
+      }
+    ],
+    "parameters": [
+      {
+        "binding": "query",
+        "bindingAttribute": [
+          "[FromQuery]"
+        ],
+        "declaration": "long companyId"
+      }
+    ],
+    "response": "ApiResponse<IReadOnlyList<TaxPolicy>>",
+    "file": "src/ThinkOnErp.API/Controllers/Hr/PayrollPoliciesController.cs",
+    "line": 126
+  },
+  {
+    "controller": "PayrollPoliciesController",
+    "method": "POST",
+    "path": "/api/hr/payroll-policies/tax",
+    "action": "AddTaxPolicy",
+    "purpose": "إضافة سياسة ضريبة وشرائحها",
+    "screen": "hr-payroll-policies",
+    "feature": "create",
+    "selfService": false,
+    "adminOnly": false,
+    "consumerIntent": "ويب HR / تكامل ERP مخول",
+    "requiredChange": "إبقاء المسار؛ اكتمال دورة الأعمال والصلاحيات والتكامل حسب HR_ROADMAP_AR.md",
+    "returnType": "Task<ActionResult<ApiResponse<TaxPolicy>>>",
+    "declaredResponses": [
+      {
+        "type": "ApiResponse<TaxPolicy>",
+        "status": "Status200OK"
+      }
+    ],
+    "parameters": [
+      {
+        "binding": "body",
+        "bindingAttribute": [
+          "[FromBody]"
+        ],
+        "declaration": "TaxPolicyDto dto"
+      }
+    ],
+    "response": "ApiResponse<TaxPolicy>",
+    "file": "src/ThinkOnErp.API/Controllers/Hr/PayrollPoliciesController.cs",
+    "line": 137
+  },
+  {
+    "controller": "PayrollPoliciesController",
+    "method": "GET",
+    "path": "/api/hr/payroll-policies/deductions",
+    "action": "GetDeductionPolicies",
+    "purpose": "سياسات الاقتطاع",
+    "screen": "hr-payroll-policies",
+    "feature": "view",
+    "selfService": false,
+    "adminOnly": false,
+    "consumerIntent": "ويب HR / تكامل ERP مخول",
+    "requiredChange": "إبقاء المسار؛ اكتمال دورة الأعمال والصلاحيات والتكامل حسب HR_ROADMAP_AR.md",
+    "returnType": "Task<ActionResult<ApiResponse<IReadOnlyList<DeductionPolicy>>>>",
+    "declaredResponses": [
+      {
+        "type": "ApiResponse<IReadOnlyList<DeductionPolicy>>",
+        "status": "Status200OK"
+      }
+    ],
+    "parameters": [
+      {
+        "binding": "query",
+        "bindingAttribute": [
+          "[FromQuery]"
+        ],
+        "declaration": "long companyId"
+      }
+    ],
+    "response": "ApiResponse<IReadOnlyList<DeductionPolicy>>",
+    "file": "src/ThinkOnErp.API/Controllers/Hr/PayrollPoliciesController.cs",
+    "line": 184
+  },
+  {
+    "controller": "PayrollPoliciesController",
+    "method": "POST",
+    "path": "/api/hr/payroll-policies/deductions",
+    "action": "AddDeductionPolicy",
+    "purpose": "إضافة سياسة اقتطاع",
+    "screen": "hr-payroll-policies",
+    "feature": "create",
+    "selfService": false,
+    "adminOnly": false,
+    "consumerIntent": "ويب HR / تكامل ERP مخول",
+    "requiredChange": "إبقاء المسار؛ اكتمال دورة الأعمال والصلاحيات والتكامل حسب HR_ROADMAP_AR.md",
+    "returnType": "Task<ActionResult<ApiResponse<DeductionPolicy>>>",
+    "declaredResponses": [
+      {
+        "type": "ApiResponse<DeductionPolicy>",
+        "status": "Status200OK"
+      }
+    ],
+    "parameters": [
+      {
+        "binding": "body",
+        "bindingAttribute": [
+          "[FromBody]"
+        ],
+        "declaration": "DeductionPolicyDto dto"
+      }
+    ],
+    "response": "ApiResponse<DeductionPolicy>",
+    "file": "src/ThinkOnErp.API/Controllers/Hr/PayrollPoliciesController.cs",
+    "line": 195
+  },
+  {
+    "controller": "PayrollPostingConfigurationsController",
+    "method": "GET",
+    "path": "/api/hr/payroll-posting/{branchId:long}",
+    "action": "Get",
+    "purpose": "إعداد حسابات الرواتب للفرع",
+    "screen": "hr-payroll-posting",
+    "feature": "view",
+    "selfService": false,
+    "adminOnly": true,
+    "consumerIntent": "ويب HR / تكامل ERP مخول",
+    "requiredChange": "إبقاء المسار؛ اكتمال دورة الأعمال والصلاحيات والتكامل حسب HR_ROADMAP_AR.md",
+    "returnType": "Task<IActionResult>",
+    "declaredResponses": [],
+    "parameters": [
+      {
+        "binding": "route/body inferred",
+        "bindingAttribute": [],
+        "declaration": "long branchId"
+      }
+    ],
+    "response": "Task<IActionResult>",
+    "file": "src/ThinkOnErp.API/Controllers/Hr/PayrollPostingConfigurationsController.cs",
+    "line": 15
+  },
+  {
+    "controller": "PayrollPostingConfigurationsController",
+    "method": "PUT",
+    "path": "/api/hr/payroll-posting/{branchId:long}",
+    "action": "Save",
+    "purpose": "حفظ حسابات الرواتب للفرع",
+    "screen": "hr-payroll-posting",
+    "feature": "configure",
+    "selfService": false,
+    "adminOnly": true,
+    "consumerIntent": "ويب HR / تكامل ERP مخول",
+    "requiredChange": "INT-01: كتابة الإعداد المحاسبي من HR متوقفة409؛ ملكية الإعداد المستهدف Accounting ضمن INT-06/12، والقراءة الحالية Legacy للتدقيق",
+    "returnType": "Task<IActionResult>",
+    "declaredResponses": [
+      {
+        "type": "ApiResponse<object>",
+        "status": "Status409Conflict"
+      }
+    ],
+    "parameters": [
+      {
+        "binding": "route/body inferred",
+        "bindingAttribute": [],
+        "declaration": "long branchId"
+      },
+      {
+        "binding": "route/body inferred",
+        "bindingAttribute": [],
+        "declaration": "PayrollPostingConfiguration configuration"
+      }
+    ],
+    "response": "ApiResponse<object>",
+    "file": "src/ThinkOnErp.API/Controllers/Hr/PayrollPostingConfigurationsController.cs",
+    "line": 20
+  },
+  {
+    "controller": "RawAttendanceController",
+    "method": "POST",
+    "path": "/api/hr/attendance/raw-events",
+    "action": "Ingest",
+    "purpose": "حفظ دليل جهاز موثوق دون معالجة مالية",
+    "screen": "hr-attendance",
+    "feature": "configure",
+    "selfService": false,
+    "adminOnly": false,
+    "consumerIntent": "تكامل أجهزة موثوق / HR",
+    "requiredChange": "API جديد؛ معالجة صريحة دون عامل background أو مصادقة جهاز عامة",
+    "returnType": "Task<ActionResult<ApiResponse<RawAttendanceDto>>>",
+    "declaredResponses": [],
+    "parameters": [
+      {
+        "binding": "body",
+        "bindingAttribute": [
+          "[FromBody]"
+        ],
+        "declaration": "DeviceAttendanceDto dto"
+      }
+    ],
+    "response": "Task<ActionResult<ApiResponse<RawAttendanceDto>>>",
+    "file": "src/ThinkOnErp.API/Controllers/Hr/RawAttendanceController.cs",
+    "line": 22
+  },
+  {
+    "controller": "RawAttendanceController",
+    "method": "GET",
+    "path": "/api/hr/attendance/raw-events/{id:long}",
+    "action": "Get",
+    "purpose": "قراءة دليل خام ضمن نطاق الموظف",
+    "screen": "hr-attendance",
+    "feature": "view",
+    "selfService": true,
+    "adminOnly": false,
+    "consumerIntent": "موبايل / ويب HR",
+    "requiredChange": "API جديد؛ معالجة صريحة دون عامل background أو مصادقة جهاز عامة",
+    "returnType": "Task<ActionResult<ApiResponse<RawAttendanceDto>>>",
+    "declaredResponses": [],
+    "parameters": [
+      {
+        "binding": "route/body inferred",
+        "bindingAttribute": [],
+        "declaration": "long id"
+      },
+      {
+        "binding": "query",
+        "bindingAttribute": [
+          "[FromQuery, BindRequired]"
+        ],
+        "declaration": "string employeeCode"
+      }
+    ],
+    "response": "Task<ActionResult<ApiResponse<RawAttendanceDto>>>",
+    "file": "src/ThinkOnErp.API/Controllers/Hr/RawAttendanceController.cs",
+    "line": 35
+  },
+  {
+    "controller": "RawAttendanceController",
+    "method": "GET",
+    "path": "/api/hr/attendance/raw-events/pending",
+    "action": "Pending",
+    "purpose": "طابور أدلة الحضور المعلقة",
+    "screen": "hr-attendance",
+    "feature": "configure",
+    "selfService": false,
+    "adminOnly": false,
+    "consumerIntent": "ويب HR / معالج مخول صريح",
+    "requiredChange": "API جديد؛ معالجة صريحة دون عامل background أو مصادقة جهاز عامة",
+    "returnType": "Task<ActionResult<ApiResponse<IReadOnlyList<RawAttendanceDto>>>>",
+    "declaredResponses": [],
+    "parameters": [
+      {
+        "binding": "query",
+        "bindingAttribute": [
+          "[FromQuery]"
+        ],
+        "declaration": "int size = 100"
+      }
+    ],
+    "response": "Task<ActionResult<ApiResponse<IReadOnlyList<RawAttendanceDto>>>>",
+    "file": "src/ThinkOnErp.API/Controllers/Hr/RawAttendanceController.cs",
+    "line": 43
+  },
+  {
+    "controller": "RawAttendanceController",
+    "method": "POST",
+    "path": "/api/hr/attendance/raw-events/{id:long}/process",
+    "action": "Process",
+    "purpose": "معالجة دليل خام إلى اليوم المالي",
+    "screen": "hr-attendance",
+    "feature": "configure",
+    "selfService": false,
+    "adminOnly": false,
+    "consumerIntent": "ويب HR / معالج مخول صريح",
+    "requiredChange": "API جديد؛ معالجة صريحة دون عامل background أو مصادقة جهاز عامة",
+    "returnType": "Task<ActionResult<ApiResponse<RawProcessingResult>>>",
+    "declaredResponses": [],
+    "parameters": [
+      {
+        "binding": "route/body inferred",
+        "bindingAttribute": [],
+        "declaration": "long id"
+      }
+    ],
+    "response": "Task<ActionResult<ApiResponse<RawProcessingResult>>>",
+    "file": "src/ThinkOnErp.API/Controllers/Hr/RawAttendanceController.cs",
+    "line": 51
+  },
+  {
+    "controller": "RawAttendanceController",
+    "method": "POST",
+    "path": "/api/hr/attendance/raw-events/process-batch",
+    "action": "Batch",
+    "purpose": "معالجة دفعة أدلة وإظهار فشل كل حدث",
+    "screen": "hr-attendance",
+    "feature": "configure",
+    "selfService": false,
+    "adminOnly": false,
+    "consumerIntent": "ويب HR / معالج مخول صريح",
+    "requiredChange": "API جديد؛ معالجة صريحة دون عامل background أو مصادقة جهاز عامة",
+    "returnType": "Task<ActionResult<ApiResponse<IReadOnlyList<RawProcessingResult>>>>",
+    "declaredResponses": [],
+    "parameters": [
+      {
+        "binding": "body",
+        "bindingAttribute": [
+          "[FromBody]"
+        ],
+        "declaration": "ProcessRawBatchDto dto"
+      }
+    ],
+    "response": "Task<ActionResult<ApiResponse<IReadOnlyList<RawProcessingResult>>>>",
+    "file": "src/ThinkOnErp.API/Controllers/Hr/RawAttendanceController.cs",
+    "line": 55
+  },
+  {
+    "controller": "RawAttendanceController",
+    "method": "POST",
+    "path": "/api/hr/attendance/raw-events/{id:long}/ignore",
+    "action": "Ignore",
+    "purpose": "تجاهل دليل معلق بسبب موثق",
+    "screen": "hr-attendance",
+    "feature": "configure",
+    "selfService": false,
+    "adminOnly": false,
+    "consumerIntent": "ويب HR / معالج مخول صريح",
+    "requiredChange": "API جديد؛ معالجة صريحة دون عامل background أو مصادقة جهاز عامة",
+    "returnType": "Task<ActionResult<ApiResponse<RawAttendanceDto>>>",
+    "declaredResponses": [],
+    "parameters": [
+      {
+        "binding": "route/body inferred",
+        "bindingAttribute": [],
+        "declaration": "long id"
+      },
+      {
+        "binding": "body",
+        "bindingAttribute": [
+          "[FromBody]"
+        ],
+        "declaration": "IgnoreRawAttendanceDto dto"
+      }
+    ],
+    "response": "Task<ActionResult<ApiResponse<RawAttendanceDto>>>",
+    "file": "src/ThinkOnErp.API/Controllers/Hr/RawAttendanceController.cs",
+    "line": 59
+  },
+  {
+    "controller": "SalaryComponentsController",
+    "method": "GET",
+    "path": "/api/hr/salary-components",
+    "action": "GetComponents",
+    "purpose": "قائمة مكونات الرواتب",
+    "screen": "hr-salary-components",
+    "feature": "view",
+    "selfService": false,
+    "adminOnly": false,
+    "consumerIntent": "ويب HR / تكامل ERP مخول",
+    "requiredChange": "إبقاء المسار؛ اكتمال دورة الأعمال والصلاحيات والتكامل حسب HR_ROADMAP_AR.md",
+    "returnType": "Task<ActionResult<ApiResponse<IReadOnlyList<SalaryComponentDto>>>>",
+    "declaredResponses": [
+      {
+        "type": "ApiResponse<IReadOnlyList<SalaryComponentDto>>",
+        "status": "Status200OK"
+      }
+    ],
+    "parameters": [],
+    "response": "ApiResponse<IReadOnlyList<SalaryComponentDto>>",
+    "file": "src/ThinkOnErp.API/Controllers/Hr/SalaryComponentsController.cs",
+    "line": 38
+  },
+  {
+    "controller": "SalaryComponentsController",
+    "method": "POST",
+    "path": "/api/hr/salary-components",
+    "action": "CreateComponent",
+    "purpose": "إنشاء مكون راتب",
+    "screen": "hr-salary-components",
+    "feature": "create",
+    "selfService": false,
+    "adminOnly": false,
+    "consumerIntent": "ويب HR / تكامل ERP مخول",
+    "requiredChange": "إبقاء المسار؛ اكتمال دورة الأعمال والصلاحيات والتكامل حسب HR_ROADMAP_AR.md",
+    "returnType": "Task<ActionResult<ApiResponse<SalaryComponentDto>>>",
+    "declaredResponses": [
+      {
+        "type": "ApiResponse<SalaryComponentDto>",
+        "status": "Status200OK"
+      }
+    ],
+    "parameters": [
+      {
+        "binding": "body",
+        "bindingAttribute": [
+          "[FromBody]"
+        ],
+        "declaration": "CreateSalaryComponentDto dto"
+      }
+    ],
+    "response": "ApiResponse<SalaryComponentDto>",
+    "file": "src/ThinkOnErp.API/Controllers/Hr/SalaryComponentsController.cs",
+    "line": 48
+  },
+  {
+    "controller": "ShiftAssignmentsController",
+    "method": "GET",
+    "path": "/api/hr/employees/{employeeCode}/shift-assignments",
+    "action": "List",
+    "purpose": "قائمة إسنادات الشفت",
+    "screen": "hr-attendance",
+    "feature": "view",
+    "selfService": true,
+    "adminOnly": false,
+    "consumerIntent": "موبايل / ويب HR ضمن النطاق",
+    "requiredChange": "API جديد؛ واجهة الإعداد والإصدارات المؤرخة SET-03/07 مستقلة",
+    "returnType": "Task<ActionResult<ApiResponse<ShiftAssignmentPageDto>>>",
+    "declaredResponses": [],
+    "parameters": [
+      {
+        "binding": "route/body inferred",
+        "bindingAttribute": [],
+        "declaration": "string employeeCode"
+      },
+      {
+        "binding": "query",
+        "bindingAttribute": [
+          "[FromQuery]"
+        ],
+        "declaration": "DateOnly? from = null"
+      },
+      {
+        "binding": "query",
+        "bindingAttribute": [
+          "[FromQuery]"
+        ],
+        "declaration": "DateOnly? to = null"
+      },
+      {
+        "binding": "query",
+        "bindingAttribute": [
+          "[FromQuery]"
+        ],
+        "declaration": "bool activeOnly = false"
+      },
+      {
+        "binding": "query",
+        "bindingAttribute": [
+          "[FromQuery]"
+        ],
+        "declaration": "int page = 1"
+      },
+      {
+        "binding": "query",
+        "bindingAttribute": [
+          "[FromQuery]"
+        ],
+        "declaration": "int size = 50"
+      }
+    ],
+    "response": "Task<ActionResult<ApiResponse<ShiftAssignmentPageDto>>>",
+    "file": "src/ThinkOnErp.API/Controllers/Hr/ShiftAssignmentsController.cs",
+    "line": 17
+  },
+  {
+    "controller": "ShiftAssignmentsController",
+    "method": "GET",
+    "path": "/api/hr/employees/{employeeCode}/shift-assignments/{id:long}",
+    "action": "Get",
+    "purpose": "تفاصيل إسنادات الشفت",
+    "screen": "hr-attendance",
+    "feature": "view",
+    "selfService": true,
+    "adminOnly": false,
+    "consumerIntent": "موبايل / ويب HR ضمن النطاق",
+    "requiredChange": "API جديد؛ واجهة الإعداد والإصدارات المؤرخة SET-03/07 مستقلة",
+    "returnType": "Task<ActionResult<ApiResponse<ShiftAssignmentDto>>>",
+    "declaredResponses": [],
+    "parameters": [
+      {
+        "binding": "route/body inferred",
+        "bindingAttribute": [],
+        "declaration": "string employeeCode"
+      },
+      {
+        "binding": "route/body inferred",
+        "bindingAttribute": [],
+        "declaration": "long id"
+      }
+    ],
+    "response": "Task<ActionResult<ApiResponse<ShiftAssignmentDto>>>",
+    "file": "src/ThinkOnErp.API/Controllers/Hr/ShiftAssignmentsController.cs",
+    "line": 23
+  },
+  {
+    "controller": "ShiftAssignmentsController",
+    "method": "POST",
+    "path": "/api/hr/employees/{employeeCode}/shift-assignments",
+    "action": "Create",
+    "purpose": "إنشاء إسنادات الشفت",
+    "screen": "hr-attendance",
+    "feature": "configure",
+    "selfService": false,
+    "adminOnly": false,
+    "consumerIntent": "ويب HR / تكامل ERP مخول",
+    "requiredChange": "API جديد؛ واجهة الإعداد والإصدارات المؤرخة SET-03/07 مستقلة",
+    "returnType": "Task<ActionResult<ApiResponse<ShiftAssignmentDto>>>",
+    "declaredResponses": [
+      {
+        "type": "ApiResponse<ShiftAssignmentDto>",
+        "status": "Status201Created"
+      },
+      {
+        "type": "ApiResponse<ShiftAssignmentDto>",
+        "status": "Status412PreconditionFailed"
+      }
+    ],
+    "parameters": [
+      {
+        "binding": "route/body inferred",
+        "bindingAttribute": [],
+        "declaration": "string employeeCode"
+      },
+      {
+        "binding": "body",
+        "bindingAttribute": [
+          "[FromBody]"
+        ],
+        "declaration": "WriteShiftAssignmentDto dto"
+      }
+    ],
+    "response": "ApiResponse<ShiftAssignmentDto>",
+    "file": "src/ThinkOnErp.API/Controllers/Hr/ShiftAssignmentsController.cs",
+    "line": 33
+  },
+  {
+    "controller": "ShiftAssignmentsController",
+    "method": "PUT",
+    "path": "/api/hr/employees/{employeeCode}/shift-assignments/{id:long}",
+    "action": "Update",
+    "purpose": "تعديل إسنادات الشفت",
+    "screen": "hr-attendance",
+    "feature": "configure",
+    "selfService": false,
+    "adminOnly": false,
+    "consumerIntent": "ويب HR / تكامل ERP مخول",
+    "requiredChange": "API جديد؛ واجهة الإعداد والإصدارات المؤرخة SET-03/07 مستقلة",
+    "returnType": "Task<ActionResult<ApiResponse<ShiftAssignmentDto>>>",
+    "declaredResponses": [
+      {
+        "type": "ApiResponse<ShiftAssignmentDto>",
+        "status": "Status412PreconditionFailed"
+      }
+    ],
+    "parameters": [
+      {
+        "binding": "route/body inferred",
+        "bindingAttribute": [],
+        "declaration": "string employeeCode"
+      },
+      {
+        "binding": "route/body inferred",
+        "bindingAttribute": [],
+        "declaration": "long id"
+      },
+      {
+        "binding": "body",
+        "bindingAttribute": [
+          "[FromBody]"
+        ],
+        "declaration": "WriteShiftAssignmentDto dto"
+      },
+      {
+        "binding": "header",
+        "bindingAttribute": [
+          "[FromHeader(Name = \"If-Match\")]"
+        ],
+        "declaration": "string version"
+      }
+    ],
+    "response": "ApiResponse<ShiftAssignmentDto>",
+    "file": "src/ThinkOnErp.API/Controllers/Hr/ShiftAssignmentsController.cs",
+    "line": 46
+  },
+  {
+    "controller": "ShiftAssignmentsController",
+    "method": "DELETE",
+    "path": "/api/hr/employees/{employeeCode}/shift-assignments/{id:long}",
+    "action": "Delete",
+    "purpose": "حذف إسنادات الشفت",
+    "screen": "hr-attendance",
+    "feature": "configure",
+    "selfService": false,
+    "adminOnly": false,
+    "consumerIntent": "ويب HR / تكامل ERP مخول",
+    "requiredChange": "API جديد؛ واجهة الإعداد والإصدارات المؤرخة SET-03/07 مستقلة",
+    "returnType": "Task<ActionResult<ApiResponse<bool>>>",
+    "declaredResponses": [
+      {
+        "type": "ApiResponse<bool>",
+        "status": "Status412PreconditionFailed"
+      }
+    ],
+    "parameters": [
+      {
+        "binding": "route/body inferred",
+        "bindingAttribute": [],
+        "declaration": "string employeeCode"
+      },
+      {
+        "binding": "route/body inferred",
+        "bindingAttribute": [],
+        "declaration": "long id"
+      },
+      {
+        "binding": "header",
+        "bindingAttribute": [
+          "[FromHeader(Name = \"If-Match\")]"
+        ],
+        "declaration": "string version"
+      }
+    ],
+    "response": "ApiResponse<bool>",
+    "file": "src/ThinkOnErp.API/Controllers/Hr/ShiftAssignmentsController.cs",
+    "line": 61
+  },
+  {
+    "controller": "ShiftDaysController",
+    "method": "GET",
+    "path": "/api/hr/employees/{employeeCode}/shift-days",
+    "action": "List",
+    "purpose": "قائمة الجدول اليومي",
+    "screen": "hr-attendance",
+    "feature": "view",
+    "selfService": true,
+    "adminOnly": false,
+    "consumerIntent": "موبايل / ويب HR ضمن النطاق",
+    "requiredChange": "API جديد؛ واجهة الإعداد والإصدارات المؤرخة SET-03/07 مستقلة",
+    "returnType": "Task<ActionResult<ApiResponse<ShiftDayPageDto>>>",
+    "declaredResponses": [],
+    "parameters": [
+      {
+        "binding": "route/body inferred",
+        "bindingAttribute": [],
+        "declaration": "string employeeCode"
+      },
+      {
+        "binding": "query",
+        "bindingAttribute": [
+          "[FromQuery]"
+        ],
+        "declaration": "DateOnly? from = null"
+      },
+      {
+        "binding": "query",
+        "bindingAttribute": [
+          "[FromQuery]"
+        ],
+        "declaration": "DateOnly? to = null"
+      },
+      {
+        "binding": "query",
+        "bindingAttribute": [
+          "[FromQuery]"
+        ],
+        "declaration": "bool activeOnly = false"
+      },
+      {
+        "binding": "query",
+        "bindingAttribute": [
+          "[FromQuery]"
+        ],
+        "declaration": "int page = 1"
+      },
+      {
+        "binding": "query",
+        "bindingAttribute": [
+          "[FromQuery]"
+        ],
+        "declaration": "int size = 50"
+      }
+    ],
+    "response": "Task<ActionResult<ApiResponse<ShiftDayPageDto>>>",
+    "file": "src/ThinkOnErp.API/Controllers/Hr/ShiftDaysController.cs",
+    "line": 17
+  },
+  {
+    "controller": "ShiftDaysController",
+    "method": "GET",
+    "path": "/api/hr/employees/{employeeCode}/shift-days/{id:long}",
+    "action": "Get",
+    "purpose": "تفاصيل الجدول اليومي",
+    "screen": "hr-attendance",
+    "feature": "view",
+    "selfService": true,
+    "adminOnly": false,
+    "consumerIntent": "موبايل / ويب HR ضمن النطاق",
+    "requiredChange": "API جديد؛ واجهة الإعداد والإصدارات المؤرخة SET-03/07 مستقلة",
+    "returnType": "Task<ActionResult<ApiResponse<ShiftDayDto>>>",
+    "declaredResponses": [],
+    "parameters": [
+      {
+        "binding": "route/body inferred",
+        "bindingAttribute": [],
+        "declaration": "string employeeCode"
+      },
+      {
+        "binding": "route/body inferred",
+        "bindingAttribute": [],
+        "declaration": "long id"
+      }
+    ],
+    "response": "Task<ActionResult<ApiResponse<ShiftDayDto>>>",
+    "file": "src/ThinkOnErp.API/Controllers/Hr/ShiftDaysController.cs",
+    "line": 23
+  },
+  {
+    "controller": "ShiftDaysController",
+    "method": "POST",
+    "path": "/api/hr/employees/{employeeCode}/shift-days",
+    "action": "Create",
+    "purpose": "إنشاء الجدول اليومي",
+    "screen": "hr-attendance",
+    "feature": "configure",
+    "selfService": false,
+    "adminOnly": false,
+    "consumerIntent": "ويب HR / تكامل ERP مخول",
+    "requiredChange": "API جديد؛ واجهة الإعداد والإصدارات المؤرخة SET-03/07 مستقلة",
+    "returnType": "Task<ActionResult<ApiResponse<ShiftDayDto>>>",
+    "declaredResponses": [
+      {
+        "type": "ApiResponse<ShiftDayDto>",
+        "status": "Status201Created"
+      },
+      {
+        "type": "ApiResponse<ShiftDayDto>",
+        "status": "Status412PreconditionFailed"
+      }
+    ],
+    "parameters": [
+      {
+        "binding": "route/body inferred",
+        "bindingAttribute": [],
+        "declaration": "string employeeCode"
+      },
+      {
+        "binding": "body",
+        "bindingAttribute": [
+          "[FromBody]"
+        ],
+        "declaration": "WriteShiftDayDto dto"
+      }
+    ],
+    "response": "ApiResponse<ShiftDayDto>",
+    "file": "src/ThinkOnErp.API/Controllers/Hr/ShiftDaysController.cs",
+    "line": 33
+  },
+  {
+    "controller": "ShiftDaysController",
+    "method": "PUT",
+    "path": "/api/hr/employees/{employeeCode}/shift-days/{id:long}",
+    "action": "Update",
+    "purpose": "تعديل الجدول اليومي",
+    "screen": "hr-attendance",
+    "feature": "configure",
+    "selfService": false,
+    "adminOnly": false,
+    "consumerIntent": "ويب HR / تكامل ERP مخول",
+    "requiredChange": "API جديد؛ واجهة الإعداد والإصدارات المؤرخة SET-03/07 مستقلة",
+    "returnType": "Task<ActionResult<ApiResponse<ShiftDayDto>>>",
+    "declaredResponses": [
+      {
+        "type": "ApiResponse<ShiftDayDto>",
+        "status": "Status412PreconditionFailed"
+      }
+    ],
+    "parameters": [
+      {
+        "binding": "route/body inferred",
+        "bindingAttribute": [],
+        "declaration": "string employeeCode"
+      },
+      {
+        "binding": "route/body inferred",
+        "bindingAttribute": [],
+        "declaration": "long id"
+      },
+      {
+        "binding": "body",
+        "bindingAttribute": [
+          "[FromBody]"
+        ],
+        "declaration": "WriteShiftDayDto dto"
+      },
+      {
+        "binding": "header",
+        "bindingAttribute": [
+          "[FromHeader(Name = \"If-Match\")]"
+        ],
+        "declaration": "string version"
+      }
+    ],
+    "response": "ApiResponse<ShiftDayDto>",
+    "file": "src/ThinkOnErp.API/Controllers/Hr/ShiftDaysController.cs",
+    "line": 46
+  },
+  {
+    "controller": "ShiftDaysController",
+    "method": "POST",
+    "path": "/api/hr/employees/{employeeCode}/shift-days/generate",
+    "action": "Generate",
+    "purpose": "توليد الجدول اليومي مع حماية اليدوي",
+    "screen": "hr-attendance",
+    "feature": "configure",
+    "selfService": false,
+    "adminOnly": false,
+    "consumerIntent": "ويب HR / تكامل ERP مخول",
+    "requiredChange": "API جديد؛ واجهة الإعداد والإصدارات المؤرخة SET-03/07 مستقلة",
+    "returnType": "Task<ActionResult<ApiResponse<ShiftGenerationResult>>>",
+    "declaredResponses": [],
+    "parameters": [
+      {
+        "binding": "route/body inferred",
+        "bindingAttribute": [],
+        "declaration": "string employeeCode"
+      },
+      {
+        "binding": "body",
+        "bindingAttribute": [
+          "[FromBody]"
+        ],
+        "declaration": "GenerateShiftDaysDto dto"
+      }
+    ],
+    "response": "Task<ActionResult<ApiResponse<ShiftGenerationResult>>>",
+    "file": "src/ThinkOnErp.API/Controllers/Hr/ShiftDaysController.cs",
+    "line": 60
+  },
+  {
+    "controller": "ShiftDaysController",
+    "method": "DELETE",
+    "path": "/api/hr/employees/{employeeCode}/shift-days/{id:long}",
+    "action": "Delete",
+    "purpose": "حذف الجدول اليومي",
+    "screen": "hr-attendance",
+    "feature": "configure",
+    "selfService": false,
+    "adminOnly": false,
+    "consumerIntent": "ويب HR / تكامل ERP مخول",
+    "requiredChange": "API جديد؛ واجهة الإعداد والإصدارات المؤرخة SET-03/07 مستقلة",
+    "returnType": "Task<ActionResult<ApiResponse<bool>>>",
+    "declaredResponses": [
+      {
+        "type": "ApiResponse<bool>",
+        "status": "Status412PreconditionFailed"
+      }
+    ],
+    "parameters": [
+      {
+        "binding": "route/body inferred",
+        "bindingAttribute": [],
+        "declaration": "string employeeCode"
+      },
+      {
+        "binding": "route/body inferred",
+        "bindingAttribute": [],
+        "declaration": "long id"
+      },
+      {
+        "binding": "header",
+        "bindingAttribute": [
+          "[FromHeader(Name = \"If-Match\")]"
+        ],
+        "declaration": "string version"
+      }
+    ],
+    "response": "ApiResponse<bool>",
+    "file": "src/ThinkOnErp.API/Controllers/Hr/ShiftDaysController.cs",
+    "line": 65
+  },
+  {
+    "controller": "ShiftsController",
+    "method": "GET",
+    "path": "/api/hr/shifts",
+    "action": "List",
+    "purpose": "قائمة تعريفات الشفت",
+    "screen": "hr-attendance",
+    "feature": "view",
+    "selfService": false,
+    "adminOnly": false,
+    "consumerIntent": "ويب HR / تكامل ERP مخول",
+    "requiredChange": "API جديد؛ واجهة الإعداد والإصدارات المؤرخة SET-03/07 مستقلة",
+    "returnType": "Task<ActionResult<ApiResponse<ShiftDefinitionPageDto>>>",
+    "declaredResponses": [],
+    "parameters": [
+      {
+        "binding": "query",
+        "bindingAttribute": [
+          "[FromQuery]"
+        ],
+        "declaration": "bool activeOnly = false"
+      },
+      {
+        "binding": "query",
+        "bindingAttribute": [
+          "[FromQuery]"
+        ],
+        "declaration": "string? search = null"
+      },
+      {
+        "binding": "query",
+        "bindingAttribute": [
+          "[FromQuery]"
+        ],
+        "declaration": "int page = 1"
+      },
+      {
+        "binding": "query",
+        "bindingAttribute": [
+          "[FromQuery]"
+        ],
+        "declaration": "int size = 50"
+      }
+    ],
+    "response": "Task<ActionResult<ApiResponse<ShiftDefinitionPageDto>>>",
+    "file": "src/ThinkOnErp.API/Controllers/Hr/ShiftsController.cs",
+    "line": 17
+  },
+  {
+    "controller": "ShiftsController",
+    "method": "GET",
+    "path": "/api/hr/shifts/{code}",
+    "action": "Get",
+    "purpose": "تفاصيل تعريفات الشفت",
+    "screen": "hr-attendance",
+    "feature": "view",
+    "selfService": false,
+    "adminOnly": false,
+    "consumerIntent": "ويب HR / تكامل ERP مخول",
+    "requiredChange": "API جديد؛ واجهة الإعداد والإصدارات المؤرخة SET-03/07 مستقلة",
+    "returnType": "Task<ActionResult<ApiResponse<ShiftDefinitionDto>>>",
+    "declaredResponses": [],
+    "parameters": [
+      {
+        "binding": "route/body inferred",
+        "bindingAttribute": [],
+        "declaration": "string code"
+      }
+    ],
+    "response": "Task<ActionResult<ApiResponse<ShiftDefinitionDto>>>",
+    "file": "src/ThinkOnErp.API/Controllers/Hr/ShiftsController.cs",
+    "line": 22
+  },
+  {
+    "controller": "ShiftsController",
+    "method": "POST",
+    "path": "/api/hr/shifts",
+    "action": "Create",
+    "purpose": "إنشاء تعريفات الشفت",
+    "screen": "hr-attendance",
+    "feature": "configure",
+    "selfService": false,
+    "adminOnly": false,
+    "consumerIntent": "ويب HR / تكامل ERP مخول",
+    "requiredChange": "API جديد؛ واجهة الإعداد والإصدارات المؤرخة SET-03/07 مستقلة",
+    "returnType": "Task<ActionResult<ApiResponse<ShiftDefinitionDto>>>",
+    "declaredResponses": [
+      {
+        "type": "ApiResponse<ShiftDefinitionDto>",
+        "status": "Status201Created"
+      }
+    ],
+    "parameters": [
+      {
+        "binding": "body",
+        "bindingAttribute": [
+          "[FromBody]"
+        ],
+        "declaration": "CreateShiftDefinitionDto dto"
+      }
+    ],
+    "response": "ApiResponse<ShiftDefinitionDto>",
+    "file": "src/ThinkOnErp.API/Controllers/Hr/ShiftsController.cs",
+    "line": 31
+  },
+  {
+    "controller": "ShiftsController",
+    "method": "PUT",
+    "path": "/api/hr/shifts/{code}",
+    "action": "Update",
+    "purpose": "تعديل تعريفات الشفت",
+    "screen": "hr-attendance",
+    "feature": "configure",
+    "selfService": false,
+    "adminOnly": false,
+    "consumerIntent": "ويب HR / تكامل ERP مخول",
+    "requiredChange": "API جديد؛ واجهة الإعداد والإصدارات المؤرخة SET-03/07 مستقلة",
+    "returnType": "Task<ActionResult<ApiResponse<ShiftDefinitionDto>>>",
+    "declaredResponses": [
+      {
+        "type": "ApiResponse<ShiftDefinitionDto>",
+        "status": "Status200OK"
+      },
+      {
+        "type": "ApiResponse<ShiftDefinitionDto>",
+        "status": "Status412PreconditionFailed"
+      }
+    ],
+    "parameters": [
+      {
+        "binding": "route/body inferred",
+        "bindingAttribute": [],
+        "declaration": "string code"
+      },
+      {
+        "binding": "body",
+        "bindingAttribute": [
+          "[FromBody]"
+        ],
+        "declaration": "WriteShiftDefinitionDto dto"
+      },
+      {
+        "binding": "header",
+        "bindingAttribute": [
+          "[FromHeader(Name = \"If-Match\")]"
+        ],
+        "declaration": "string version"
+      }
+    ],
+    "response": "ApiResponse<ShiftDefinitionDto>",
+    "file": "src/ThinkOnErp.API/Controllers/Hr/ShiftsController.cs",
+    "line": 41
+  },
+  {
+    "controller": "ShiftsController",
+    "method": "DELETE",
+    "path": "/api/hr/shifts/{code}",
+    "action": "Delete",
+    "purpose": "حذف تعريفات الشفت",
+    "screen": "hr-attendance",
+    "feature": "configure",
+    "selfService": false,
+    "adminOnly": false,
+    "consumerIntent": "ويب HR / تكامل ERP مخول",
+    "requiredChange": "API جديد؛ واجهة الإعداد والإصدارات المؤرخة SET-03/07 مستقلة",
+    "returnType": "Task<ActionResult<ApiResponse<bool>>>",
+    "declaredResponses": [
+      {
+        "type": "ApiResponse<bool>",
+        "status": "Status200OK"
+      },
+      {
+        "type": "ApiResponse<bool>",
+        "status": "Status412PreconditionFailed"
+      }
+    ],
+    "parameters": [
+      {
+        "binding": "route/body inferred",
+        "bindingAttribute": [],
+        "declaration": "string code"
+      },
+      {
+        "binding": "header",
+        "bindingAttribute": [
+          "[FromHeader(Name = \"If-Match\")]"
+        ],
+        "declaration": "string version"
+      }
+    ],
+    "response": "ApiResponse<bool>",
+    "file": "src/ThinkOnErp.API/Controllers/Hr/ShiftsController.cs",
+    "line": 59
+  },
+  {
+    "controller": "WorkCalendarsController",
+    "method": "POST",
+    "path": "/api/hr/work-calendars",
+    "action": "CreateCalendar",
+    "purpose": "إنشاء تقويم وأيام عمل",
+    "screen": "hr-work-calendars",
+    "feature": "create",
+    "selfService": false,
+    "adminOnly": false,
+    "consumerIntent": "ويب HR / تكامل ERP مخول",
+    "requiredChange": "إبقاء المسار؛ اكتمال دورة الأعمال والصلاحيات والتكامل حسب HR_ROADMAP_AR.md",
+    "returnType": "Task<ActionResult<ApiResponse<WorkCalendar>>>",
+    "declaredResponses": [
+      {
+        "type": "ApiResponse<WorkCalendar>",
+        "status": "Status200OK"
+      }
+    ],
+    "parameters": [
+      {
+        "binding": "body",
+        "bindingAttribute": [
+          "[FromBody]"
+        ],
+        "declaration": "CreateWorkCalendarDto dto"
+      }
+    ],
+    "response": "ApiResponse<WorkCalendar>",
+    "file": "src/ThinkOnErp.API/Controllers/Hr/WorkCalendarsController.cs",
+    "line": 39
+  },
+  {
+    "controller": "WorkCalendarsController",
+    "method": "GET",
+    "path": "/api/hr/work-calendars",
+    "action": "GetCalendars",
+    "purpose": "قائمة التقاويم",
+    "screen": "hr-work-calendars",
+    "feature": "view",
+    "selfService": false,
+    "adminOnly": false,
+    "consumerIntent": "ويب HR / تكامل ERP مخول",
+    "requiredChange": "إبقاء المسار؛ اكتمال دورة الأعمال والصلاحيات والتكامل حسب HR_ROADMAP_AR.md",
+    "returnType": "Task<ActionResult<ApiResponse<IReadOnlyList<WorkCalendar>>>>",
+    "declaredResponses": [
+      {
+        "type": "ApiResponse<IReadOnlyList<WorkCalendar>>",
+        "status": "Status200OK"
+      }
+    ],
+    "parameters": [
+      {
+        "binding": "query",
+        "bindingAttribute": [
+          "[FromQuery]"
+        ],
+        "declaration": "long companyId"
+      }
+    ],
+    "response": "ApiResponse<IReadOnlyList<WorkCalendar>>",
+    "file": "src/ThinkOnErp.API/Controllers/Hr/WorkCalendarsController.cs",
+    "line": 51
+  },
+  {
+    "controller": "WorkCalendarsController",
+    "method": "GET",
+    "path": "/api/hr/work-calendars/{id:long}",
+    "action": "GetCalendarById",
+    "purpose": "تفاصيل تقويم",
+    "screen": "hr-work-calendars",
+    "feature": "view",
+    "selfService": false,
+    "adminOnly": false,
+    "consumerIntent": "ويب HR / تكامل ERP مخول",
+    "requiredChange": "إبقاء المسار؛ اكتمال دورة الأعمال والصلاحيات والتكامل حسب HR_ROADMAP_AR.md",
+    "returnType": "Task<ActionResult<ApiResponse<WorkCalendar>>>",
+    "declaredResponses": [
+      {
+        "type": "ApiResponse<WorkCalendar>",
+        "status": "Status200OK"
+      }
+    ],
+    "parameters": [
+      {
+        "binding": "route/body inferred",
+        "bindingAttribute": [],
+        "declaration": "long id"
+      }
+    ],
+    "response": "ApiResponse<WorkCalendar>",
+    "file": "src/ThinkOnErp.API/Controllers/Hr/WorkCalendarsController.cs",
+    "line": 62
+  },
+  {
+    "controller": "WorkCalendarsController",
+    "method": "POST",
+    "path": "/api/hr/work-calendars/holidays",
+    "action": "CreateHoliday",
+    "purpose": "إضافة عطلة",
+    "screen": "hr-work-calendars",
+    "feature": "create",
+    "selfService": false,
+    "adminOnly": false,
+    "consumerIntent": "ويب HR / تكامل ERP مخول",
+    "requiredChange": "إبقاء المسار؛ اكتمال دورة الأعمال والصلاحيات والتكامل حسب HR_ROADMAP_AR.md",
+    "returnType": "Task<ActionResult<ApiResponse<PublicHoliday>>>",
+    "declaredResponses": [
+      {
+        "type": "ApiResponse<PublicHoliday>",
+        "status": "Status200OK"
+      }
+    ],
+    "parameters": [
+      {
+        "binding": "body",
+        "bindingAttribute": [
+          "[FromBody]"
+        ],
+        "declaration": "CreatePublicHolidayDto dto"
+      }
+    ],
+    "response": "ApiResponse<PublicHoliday>",
+    "file": "src/ThinkOnErp.API/Controllers/Hr/WorkCalendarsController.cs",
+    "line": 74
+  },
+  {
+    "controller": "WorkCalendarsController",
+    "method": "GET",
+    "path": "/api/hr/work-calendars/holidays",
+    "action": "GetHolidays",
+    "purpose": "قائمة العطل",
+    "screen": "hr-work-calendars",
+    "feature": "view",
+    "selfService": false,
+    "adminOnly": false,
+    "consumerIntent": "ويب HR / تكامل ERP مخول",
+    "requiredChange": "إبقاء المسار؛ اكتمال دورة الأعمال والصلاحيات والتكامل حسب HR_ROADMAP_AR.md",
+    "returnType": "Task<ActionResult<ApiResponse<IReadOnlyList<PublicHoliday>>>>",
+    "declaredResponses": [
+      {
+        "type": "ApiResponse<IReadOnlyList<PublicHoliday>>",
+        "status": "Status200OK"
+      }
+    ],
+    "parameters": [
+      {
+        "binding": "query",
+        "bindingAttribute": [
+          "[FromQuery]"
+        ],
+        "declaration": "long companyId"
+      },
+      {
+        "binding": "query",
+        "bindingAttribute": [
+          "[FromQuery]"
+        ],
+        "declaration": "int? year"
+      }
+    ],
+    "response": "ApiResponse<IReadOnlyList<PublicHoliday>>",
+    "file": "src/ThinkOnErp.API/Controllers/Hr/WorkCalendarsController.cs",
+    "line": 86
+  },
+  {
+    "controller": "WorkCalendarsController",
+    "method": "GET",
+    "path": "/api/hr/work-calendars/working-days-count",
+    "action": "CountWorkingDays",
+    "purpose": "حساب عدد أيام العمل",
+    "screen": "hr-work-calendars",
+    "feature": "view",
+    "selfService": false,
+    "adminOnly": false,
+    "consumerIntent": "ويب HR / تكامل ERP مخول",
+    "requiredChange": "إبقاء المسار؛ اكتمال دورة الأعمال والصلاحيات والتكامل حسب HR_ROADMAP_AR.md",
+    "returnType": "Task<ActionResult<ApiResponse<int>>>",
+    "declaredResponses": [
+      {
+        "type": "ApiResponse<int>",
+        "status": "Status200OK"
+      }
+    ],
+    "parameters": [
+      {
+        "binding": "query",
+        "bindingAttribute": [
+          "[FromQuery]"
+        ],
+        "declaration": "long companyId"
+      },
+      {
+        "binding": "query",
+        "bindingAttribute": [
+          "[FromQuery]"
+        ],
+        "declaration": "DateTime startDate"
+      },
+      {
+        "binding": "query",
+        "bindingAttribute": [
+          "[FromQuery]"
+        ],
+        "declaration": "DateTime endDate"
+      }
+    ],
+    "response": "ApiResponse<int>",
+    "file": "src/ThinkOnErp.API/Controllers/Hr/WorkCalendarsController.cs",
+    "line": 98
+  }
+]

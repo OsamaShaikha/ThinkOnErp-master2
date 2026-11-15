@@ -1,0 +1,168 @@
+{
+  "success": true,
+  "statusCode": 200,
+  "message": "تمت العملية بنجاح.",
+  "data": {
+    "code": "sales-by-payment-method",
+    "title": "المبيعات حسب طريقة الدفع",
+    "isLive": false,
+    "header": {
+      "language": "ar",
+      "isRightToLeft": true,
+      "companyName": "debis acc",
+      "branchName": "جميع الفروع المتاحة",
+      "taxNumber": null,
+      "phone": "0796211887",
+      "currency": "JOD",
+      "cashier": "الكل",
+      "payment": "الكل",
+      "preparedBy": "admin",
+      "reportNumber": "RPT-20261028-6cfe0b2c7b4c4",
+      "issuedAtUtc": "2026-10-28T17:57:01.9549307Z",
+      "startDate": "2026-10-01T00:00:00",
+      "endDate": "2026-10-28T00:00:00",
+      "shiftId": null,
+      "tillId": null,
+      "days": [],
+      "payments": [],
+      "totals": {
+        "date": "0001-01-01T00:00:00",
+        "invoices": 0,
+        "sales": 0,
+        "discount": 0,
+        "returns": 0,
+        "net": 0,
+        "tax": 0,
+        "charges": 0,
+        "total": 0
+      },
+      "averageInvoice": 0
+    },
+    "filterNotes": [],
+    "branches": [
+      {
+        "branchId": 1,
+        "branchName": "debis acc",
+        "metrics": [
+          {
+            "label": "صافي التحصيل",
+            "value": "3,660.319",
+            "unit": "JOD"
+          },
+          {
+            "label": "المحصّل",
+            "value": "3,767.574",
+            "unit": "JOD"
+          },
+          {
+            "label": "المسترد",
+            "value": "107.255",
+            "unit": "JOD"
+          },
+          {
+            "label": "الحركات",
+            "value": "163",
+            "unit": ""
+          }
+        ],
+        "tables": [
+          {
+            "title": "طرق الدفع",
+            "columns": [
+              {
+                "label": "الطريقة",
+                "numeric": false,
+                "code": false,
+                "width": 2
+              },
+              {
+                "label": "الحركات",
+                "numeric": true,
+                "code": false,
+                "width": 1
+              },
+              {
+                "label": "المحصّل",
+                "numeric": true,
+                "code": false,
+                "width": 1
+              },
+              {
+                "label": "المسترد",
+                "numeric": true,
+                "code": false,
+                "width": 1
+              },
+              {
+                "label": "الصافي",
+                "numeric": true,
+                "code": false,
+                "width": 1
+              },
+              {
+                "label": "النسبة",
+                "numeric": true,
+                "code": false,
+                "width": 1
+              }
+            ],
+            "rows": [
+              [
+                "نقداً",
+                "125",
+                "2,956.449",
+                "107.255",
+                "2,849.194",
+                "78.47%"
+              ],
+              [
+                "تطبيقات التوصيل",
+                "2",
+                "348.000",
+                "0.000",
+                "348.000",
+                "9.24%"
+              ],
+              [
+                "حساب عميل (آجل / ذمم)",
+                "29",
+                "223.875",
+                "0.000",
+                "223.875",
+                "5.94%"
+              ],
+              [
+                "بطاقة مدى / ائتمان",
+                "3",
+                "222.000",
+                "0.000",
+                "222.000",
+                "5.89%"
+              ],
+              [
+                "ضيافة",
+                "1",
+                "11.500",
+                "0.000",
+                "11.500",
+                "0.31%"
+              ],
+              [
+                "دفع متعدد",
+                "3",
+                "5.750",
+                "0.000",
+                "5.750",
+                "0.15%"
+              ]
+            ]
+          }
+        ],
+        "notes": []
+      }
+    ]
+  },
+  "errors": null,
+  "timestamp": "2026-10-28T17:57:02.6453937Z",
+  "traceId": "45ebe599-fa54-4a71-86eb-5bcd248f2023"
+}

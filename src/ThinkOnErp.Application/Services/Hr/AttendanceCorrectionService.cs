@@ -21,15 +21,26 @@ public sealed class AttendanceCorrectionService : IAttendanceCorrectionService
 {
     private readonly IAttendanceCorrectionRepository _repository;
     private readonly IAttendanceCalculationEngine _engine;
+    private readonly IHrUnitOfWork? _unitOfWork;
+    private readonly IPolicyRepository? _policies;
+    private readonly TimeProvider _clock;
+    private readonly IAttendanceTimeSettingsRepository? _timeSettings;
+    private readonly IEmployeeRepository? _employeeRepository;
 
-    public AttendanceCorrectionService(IAttendanceCorrectionRepository repository, IAttendanceCalculationEngine engine)
+    public AttendanceCorrectionService(IAttendanceCorrectionRepository repository, IAttendanceCalculationEngine engine, IHrUnitOfWork? unitOfWork = null,
+        IPolicyRepository? policies = null, IAttendanceTimeSettingsRepository? timeSettings = null, TimeProvider? clock = null,
+        IEmployeeRepository? employeeRepository = null)
     {
         _repository = repository;
         _engine = engine;
+        _unitOfWork = unitOfWork;
+        _policies = policies; _timeSettings = timeSettings; _clock = clock ?? TimeProvider.System;
+        _employeeRepository = employeeRepository;
     }
 
     public async Task<AttendanceCorrectionRequest> SubmitRequestAsync(AttendanceCorrectionRequestDto dto, string user, CancellationToken cancellationToken = default)
     {
+        ArgumentNullException.ThrowIfNull(dto);
         return await SubmitCorrectionRequestAsync(
             dto.EmployeeCode,
             dto.AttendanceDate,
@@ -50,26 +61,15 @@ public sealed class AttendanceCorrectionService : IAttendanceCorrectionService
         string user,
         CancellationToken cancellationToken = default)
     {
-        var existingDay = await _repository.GetAttendanceDayAsync(employeeCode, attendanceDate, cancellationToken);
-
         var request = new AttendanceCorrectionRequest
         {
-            EmployeeCode = employeeCode,
-            AttendanceDate = attendanceDate.Date,
-            OldCheckIn = existingDay?.FirstCheckIn,
-            OldCheckOut = existingDay?.LastCheckOut,
-            RequestedCheckIn = requestedIn,
-            RequestedCheckOut = requestedOut,
-            Reason = reason,
-            Status = "PENDING",
-            CreationUser = user,
-            CreationDate = DateTime.UtcNow
+            EmployeeCode = employeeCode, AttendanceDate = attendanceDate,
+            RequestedCheckIn = requestedIn, RequestedCheckOut = requestedOut, Reason = reason?.Trim() ?? string.Empty,
+            Status = "PENDING", CreationUser = user, CreationDate = DateTime.UtcNow
         };
-
-        await _repository.AddCorrectionRequestAsync(request, cancellationToken);
-        await _repository.SaveChangesAsync(cancellationToken);
-
-        return request;
+        AttendanceCorrectionRules.ValidateInput(request);
+        EnsurePastPunches(request);
+        return ForRead(await _repository.SubmitCorrectionAsync(request, cancellationToken));
     }
 
     public async Task<AttendanceCorrectionRequest> ProcessRequestAsync(long requestId, ProcessAttendanceCorrectionDto dto, string user, CancellationToken cancellationToken = default)
@@ -88,113 +88,101 @@ public sealed class AttendanceCorrectionService : IAttendanceCorrectionService
         AttendancePolicy? policy = null,
         CancellationToken cancellationToken = default)
     {
+        if (!approved && (string.IsNullOrWhiteSpace(rejectionReason) || rejectionReason.Trim().Length > 1000))
+            throw new ArgumentException("A rejection reason up to 1000 characters is required.");
+        if (!approved) return ForRead(await _repository.RejectCorrectionAsync(requestId, rejectionReason!, approverUser, cancellationToken));
+        if (_unitOfWork == null)
+            return await ProcessCorrectionRequestCoreAsync(requestId, approved, approverUser, rejectionReason, policy, cancellationToken);
+        var request = await _repository.GetCorrectionRequestSnapshotAsync(requestId, cancellationToken)
+            ?? throw new KeyNotFoundException($"Attendance correction request {requestId} not found.");
+        return await _unitOfWork.ExecuteForEmployeeDatesAsync(request.EmployeeCode, request.AttendanceDate.Date, request.AttendanceDate.Date,
+            () => ProcessCorrectionRequestCoreAsync(requestId, approved, approverUser, rejectionReason, policy, cancellationToken, request), cancellationToken);
+    }
+
+    private async Task<AttendanceCorrectionRequest> ProcessCorrectionRequestCoreAsync(
+        long requestId, bool approved, string approverUser, string? rejectionReason,
+        AttendancePolicy? policy, CancellationToken cancellationToken, AttendanceCorrectionRequest? expectedScope = null)
+    {
         var request = await _repository.GetCorrectionRequestByIdAsync(requestId, cancellationToken);
         if (request == null)
         {
             throw new KeyNotFoundException($"Attendance correction request {requestId} not found.");
         }
 
+        if (expectedScope != null && (request.EmployeeCode != expectedScope.EmployeeCode || request.AttendanceDate.Date != expectedScope.AttendanceDate.Date))
+            throw new AttendanceCorrectionStaleException();
+
         if (request.Status != "PENDING")
         {
             throw new InvalidOperationException($"Request {requestId} has already been processed with status {request.Status}.");
         }
 
-        request.Status = approved ? "APPROVED" : "REJECTED";
-        request.ApprovedBy = approverUser;
-        request.ApprovalDate = DateTime.UtcNow;
-        request.RejectionReason = rejectionReason;
-        request.UpdateUser = approverUser;
-        request.UpdateDate = DateTime.UtcNow;
-
         if (approved)
         {
+            var employeeUserName = _employeeRepository == null ? null :
+                await _employeeRepository.GetLinkedUserNameByEmployeeCodeAsync(request.EmployeeCode, cancellationToken);
+            HrApprovalGuard.EnsureNotSelfApproved(approverUser, request.CreationUser, employeeUserName, "attendance correction");
+            EnsurePastPunches(request);
+            await _repository.EnsureEmployeeWorkDateAsync(request.EmployeeCode, request.AttendanceDate, cancellationToken);
             var day = await _repository.GetAttendanceDayAsync(request.EmployeeCode, request.AttendanceDate, cancellationToken);
-            bool isNew = false;
+            if (request.OriginalDayVersion == null) throw new InvalidOperationException("Legacy pending correction needs reviewed resubmission before approval.");
+            if (request.OriginalDayVersion != AttendanceCorrectionRules.Version(day)) throw new AttendanceCorrectionStaleException();
+            if (day != null && day.TimeZoneId == null) throw new InvalidOperationException("Legacy attendance needs a reviewed time/shift snapshot before recalculation.");
+            var first = request.RequestedCheckIn ?? day?.FirstCheckIn;
+            var last = request.RequestedCheckOut ?? day?.LastCheckOut;
+            if (policy == null && _policies != null && _timeSettings != null)
+            {
+                var setting = await _timeSettings.GetForEmployeeAsync(request.EmployeeCode, cancellationToken);
+                policy = await _policies.GetActiveAttendancePolicyAsync(setting.CompanyId, request.AttendanceDate, cancellationToken);
+            }
+            var recalculated = await _engine.ProcessEmployeeDayAttendanceAsync(request.EmployeeCode, request.AttendanceDate,
+                first, last, policy ?? new AttendancePolicy(), cancellationToken: cancellationToken);
             if (day == null)
             {
-                isNew = true;
-                day = new AttendanceDay
-                {
-                    EmployeeCode = request.EmployeeCode,
-                    AttendanceDate = request.AttendanceDate,
-                    FirstCheckIn = request.RequestedCheckIn,
-                    LastCheckOut = request.RequestedCheckOut,
-                    CreationUser = approverUser,
-                    CreationDate = DateTime.UtcNow
-                };
+                recalculated.CreationUser = approverUser; recalculated.CreationDate = DateTime.UtcNow;
+                await _repository.AddAttendanceDayAsync(recalculated, cancellationToken);
             }
             else
             {
-                if (request.RequestedCheckIn.HasValue) day.FirstCheckIn = request.RequestedCheckIn.Value;
-                if (request.RequestedCheckOut.HasValue) day.LastCheckOut = request.RequestedCheckOut.Value;
-                day.UpdateUser = approverUser;
-                day.UpdateDate = DateTime.UtcNow;
-            }
-
-            // Evaluate punch completeness and recalculate metrics
-            if (day.FirstCheckIn.HasValue && day.LastCheckOut.HasValue)
-            {
-                day.HasMissingPunch = false;
-                day.Status = "PRESENT";
-
-                var diff = day.LastCheckOut.Value - day.FirstCheckIn.Value;
-                if (diff.TotalHours < 0) diff = diff.Add(TimeSpan.FromHours(24));
-                day.ActualWorkedHours = Math.Max(0m, Math.Round((decimal)diff.TotalHours, 2));
-
-                // Recalculate late arrival against standard 08:00 start
-                var targetStart = new TimeSpan(8, 0, 0);
-                var actualStart = day.FirstCheckIn.Value.TimeOfDay;
-                var grace = policy?.GracePeriodMinutes ?? 15;
-                if (actualStart > targetStart)
-                {
-                    var lateTotal = (int)(actualStart - targetStart).TotalMinutes;
-                    day.LateArrivalMinutes = lateTotal > grace
-                        ? ((policy?.AutoDeductLateArrival ?? true) ? lateTotal - grace : lateTotal)
-                        : 0;
-                }
-                else
-                {
-                    day.LateArrivalMinutes = 0;
-                }
-
-                // Recalculate early leave against standard 17:00 end
-                var targetEnd = new TimeSpan(17, 0, 0);
-                var actualEnd = day.LastCheckOut.Value.TimeOfDay;
-                var earlyTolerance = policy?.EarlyLeaveToleranceMinutes ?? 10;
-                if (actualEnd < targetEnd)
-                {
-                    var earlyTotal = (int)(targetEnd - actualEnd).TotalMinutes;
-                    day.EarlyLeaveMinutes = earlyTotal > earlyTolerance ? earlyTotal : 0;
-                }
-                else
-                {
-                    day.EarlyLeaveMinutes = 0;
-                }
-            }
-            else
-            {
-                day.HasMissingPunch = true;
-                day.Status = "INCOMPLETE";
-            }
-
-            if (isNew)
-            {
-                await _repository.AddAttendanceDayAsync(day, cancellationToken);
-            }
-            else
-            {
+                ScheduledAttendanceCalculator.CopyMetrics(recalculated, day);
+                day.FirstCheckIn = first; day.LastCheckOut = last;
+                day.UpdateUser = approverUser; day.UpdateDate = DateTime.UtcNow;
                 await _repository.UpdateAttendanceDayAsync(day, cancellationToken);
             }
+            request.AppliedCheckIn = first; request.AppliedCheckOut = last;
         }
+        request.Status = approved ? "APPROVED" : "REJECTED";
+        request.ApprovedBy = approverUser; request.ApprovalDate = DateTime.UtcNow;
+        request.RejectionReason = approved ? null : rejectionReason?.Trim(); request.UpdateUser = approverUser; request.UpdateDate = DateTime.UtcNow;
 
         await _repository.UpdateCorrectionRequestAsync(request, cancellationToken);
         await _repository.SaveChangesAsync(cancellationToken);
 
-        return request;
+        return ForRead(request);
+    }
+
+    private static AttendanceCorrectionRequest ForRead(AttendanceCorrectionRequest r)
+    {
+        static DateTime? Utc(DateTime? value) => value.HasValue ? DateTime.SpecifyKind(value.Value, DateTimeKind.Utc) : null;
+        return new AttendanceCorrectionRequest
+        {
+            Id = r.Id, EmployeeCode = r.EmployeeCode, AttendanceDate = DateTime.SpecifyKind(r.AttendanceDate.Date, DateTimeKind.Unspecified),
+            OldCheckIn = Utc(r.OldCheckIn), OldCheckOut = Utc(r.OldCheckOut), RequestedCheckIn = Utc(r.RequestedCheckIn), RequestedCheckOut = Utc(r.RequestedCheckOut),
+            AppliedCheckIn = Utc(r.AppliedCheckIn), AppliedCheckOut = Utc(r.AppliedCheckOut), OriginalDayVersion = r.OriginalDayVersion,
+            Reason = r.Reason, Status = r.Status, ApprovedBy = r.ApprovedBy, ApprovalDate = Utc(r.ApprovalDate), RejectionReason = r.RejectionReason,
+            CreationUser = r.CreationUser, CreationDate = DateTime.SpecifyKind(r.CreationDate, DateTimeKind.Utc), UpdateUser = r.UpdateUser, UpdateDate = Utc(r.UpdateDate)
+        };
+    }
+
+    private void EnsurePastPunches(AttendanceCorrectionRequest request)
+    {
+        var now = _clock.GetUtcNow().UtcDateTime;
+        if (request.RequestedCheckIn > now || request.RequestedCheckOut > now)
+            throw new ArgumentException("Future punch timestamps cannot be submitted or approved as attendance evidence.");
     }
 
     public async Task<IReadOnlyList<AttendanceCorrectionRequest>> GetRequestsAsync(string? employeeCode, string? status, CancellationToken cancellationToken = default)
     {
-        return await _repository.GetCorrectionRequestsAsync(employeeCode, status, cancellationToken);
+        return (await _repository.GetCorrectionRequestsAsync(employeeCode, status, cancellationToken)).Select(ForRead).ToArray();
     }
 }

@@ -9,14 +9,16 @@ This directory contains Grafana dashboards and monitoring infrastructure for the
   - `performance-metrics.json` - API performance and latency tracking
   - `security-monitoring.json` - Security threats and authentication monitoring
   - `system-health.json` - System resources and health status
+  - `hr-background-queues.json` - HR attendance and Accounting handoff queue outcomes
 
 - **prometheus/**: Prometheus configuration
   - `prometheus.yml` - Prometheus scrape configuration
-  - `alerts/` - Alert rule files (54 rules total)
+  - `alerts/` - Alert rule files (58 rules total)
     - `audit-system-alerts.yml` - Queue depth and processing delays (14 rules)
     - `database-alerts.yml` - Database connection pool and health (10 rules)
     - `audit-failures-alerts.yml` - Audit write failures and system health (13 rules)
     - `security-alerts.yml` - Security threats and authentication (17 rules)
+    - `hr-background-alerts.yml` - Attendance retries/review and Accounting handoff retries/conflicts (4 rules)
 
 - **grafana/**: Grafana provisioning configuration
   - `provisioning/datasources/` - Data source configuration
@@ -38,7 +40,8 @@ docker-compose -f docker-compose.monitoring.yml up -d
 This will start:
 - **Prometheus** on http://localhost:9090
 - **Grafana** on http://localhost:3000
-- **AlertManager** on http://localhost:9093 (optional)
+
+Alertmanager is optional and is not included in this Compose file. Add and configure an Alertmanager service before enabling Prometheus alert routing; port 9093 is only needed then.
 
 ### 2. Access Grafana
 
@@ -55,12 +58,13 @@ Dashboards are automatically provisioned and available in the "ThinkOnErp" folde
 - Performance Metrics Dashboard
 - Security Monitoring Dashboard
 - System Health Dashboard
+- HR Background Queues Dashboard
 
 ## Prerequisites
 
 - Docker and Docker Compose installed
 - ThinkOnErp API running with metrics endpoint enabled at `/metrics`
-- Port 3000 (Grafana), 9090 (Prometheus), and 9093 (AlertManager) available
+- Ports 3000 (Grafana) and 9090 (Prometheus) available; port 9093 is needed only if you add Alertmanager
 
 ## Configuration
 
@@ -76,6 +80,7 @@ Alert rules are organized by category:
 - **Database Alerts** (10 rules): Connection pool, health, query performance
 - **Audit Failures Alerts** (13 rules): Write failures, circuit breaker, data integrity
 - **Security Alerts** (17 rules): Authentication threats, security threats, anomalies
+- **HR Background Alerts** (4 rules): Sustained attendance failures/review volume, outbox retries, and payload conflicts
 
 See [Alert Configuration Guide](ALERT_CONFIGURATION_GUIDE.md) for details.
 
@@ -96,13 +101,14 @@ Alert rules are automatically loaded from the `alerts/` directory. To configure 
 For detailed alert configuration, testing, and response procedures, see:
 - [Alert Configuration Guide](ALERT_CONFIGURATION_GUIDE.md)
 
-**54 alert rules** monitor:
+**58 alert rules** monitor:
 - ✅ Queue depth and processing delays (14 rules) - **CONFIGURED**
 - ✅ Database connection pool exhaustion (10 rules) - **CONFIGURED**
 - ✅ Audit logging failures (13 rules) - **CONFIGURED**
 - ✅ Security threats and anomalies (17 rules) - **CONFIGURED**
+- ✅ HR background processing and Accounting handoff retries/conflicts (4 rules) - **CONFIGURED**
 
-**Alert rules are now enabled in prometheus.yml and ready for production use.**
+**Alert rules are referenced by the Prometheus configuration.** Runtime loading, alert firing, and notification delivery still need verification in the deployed monitoring stack.
 
 ## Dashboard Overview
 

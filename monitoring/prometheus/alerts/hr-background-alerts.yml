@@ -1,0 +1,51 @@
+groups:
+  - name: hr_background_alerts
+    interval: 30s
+    rules:
+      - alert: HrRawAttendanceProcessingErrors
+        expr: sum(rate(thinkonerp_hr_attendance_raw_events_total{outcome="transient_failure"}[5m])) > 0.1
+        for: 10m
+        labels:
+          severity: warning
+          component: hr
+          category: attendance_processing
+        annotations:
+          summary: "HR raw attendance processing is repeatedly failing"
+          description: "Transient raw attendance failures are occurring at {{ $value | humanize }} events per second across the API instances."
+          action: "Check Oracle connectivity, tenant-schema routing, and the HR attendance worker logs. Do not enable automatic processing on additional tenants until the cause is understood."
+
+      - alert: HrRawAttendanceReviewRateHigh
+        expr: sum(rate(thinkonerp_hr_attendance_raw_events_total{outcome="review"}[5m])) > 0.5
+        for: 10m
+        labels:
+          severity: warning
+          component: hr
+          category: attendance_review
+        annotations:
+          summary: "Many raw attendance events require manual review"
+          description: "Events are being isolated for HR review at {{ $value | humanize }} per second."
+          action: "Review the event reasons and source-device quality before changing automatic attendance rules."
+
+      - alert: HrAccountingOutboxRetriesHigh
+        expr: sum(rate(thinkonerp_hr_accounting_outbox_messages_total{outcome="retry"}[5m])) > 0.05
+        for: 10m
+        labels:
+          severity: warning
+          component: hr
+          category: accounting_handoff
+        annotations:
+          summary: "HR Accounting handoff outbox has sustained retries"
+          description: "Outbox relay failures are occurring at {{ $value | humanize }} messages per second."
+          action: "Inspect outbox worker and Accounting inbox logs, verify Oracle availability, and retain the durable retry state while investigating."
+
+      - alert: HrAccountingOutboxPayloadConflict
+        expr: sum(increase(thinkonerp_hr_accounting_outbox_messages_total{outcome="conflict"}[10m])) > 0
+        for: 1m
+        labels:
+          severity: critical
+          component: hr
+          category: accounting_handoff
+        annotations:
+          summary: "HR Accounting handoff payload conflict detected"
+          description: "At least one outbox event key conflicted with a different payload hash in the last 10 minutes."
+          action: "Stop replaying the affected event and reconcile its event key and payload against the durable HR outbox and Accounting inbox records."
