@@ -5,6 +5,7 @@ namespace ThinkOnErp.Domain.Entities.Hr;
 public sealed class AttendancePolicy
 {
     public long Id { get; set; }
+    [System.ComponentModel.DataAnnotations.Schema.NotMapped]
     public long CompanyId { get; set; }
     public string Code { get; set; } = string.Empty;
     public string NameAr { get; set; } = string.Empty;

@@ -108,20 +108,12 @@ public static class DependencyInjection
         services.AddScoped<ThinkOnErp.Application.Services.Settings.ISettingsService, ThinkOnErp.Application.Services.Settings.SettingsService>();
 
         // HR & Dynamic Payroll Engine Services
-        services.AddScoped<ThinkOnErp.Application.Services.Hr.IWorkCalendarService, ThinkOnErp.Application.Services.Hr.WorkCalendarService>();
         services.AddScoped<ThinkOnErp.Application.Services.Hr.IAttendanceCalculationEngine, ThinkOnErp.Application.Services.Hr.AttendanceCalculationEngine>();
         services.AddScoped<ThinkOnErp.Application.Services.Hr.IEffectiveShiftService, ThinkOnErp.Application.Services.Hr.EffectiveShiftService>();
-        services.AddScoped<ThinkOnErp.Application.Services.Hr.IShiftDefinitionService, ThinkOnErp.Application.Services.Hr.ShiftDefinitionService>();
-        services.AddScoped<ThinkOnErp.Application.Services.Hr.IShiftAssignmentService, ThinkOnErp.Application.Services.Hr.ShiftAssignmentService>();
-        services.AddScoped<ThinkOnErp.Application.Services.Hr.IShiftDayService, ThinkOnErp.Application.Services.Hr.ShiftDayService>();
-        services.AddScoped<ThinkOnErp.Application.Services.Hr.IShiftGenerationService, ThinkOnErp.Application.Services.Hr.ShiftGenerationService>();
         services.AddScoped<ThinkOnErp.Application.Services.Hr.IShiftTimingService, ThinkOnErp.Application.Services.Hr.ShiftTimingService>();
         services.AddScoped<ThinkOnErp.Application.Services.Hr.IAttendanceDayClassifier, ThinkOnErp.Application.Services.Hr.AttendanceDayClassifier>();
-        services.AddScoped<ThinkOnErp.Application.Services.Hr.IAttendanceDayStatusService, ThinkOnErp.Application.Services.Hr.AttendanceDayStatusService>();
         services.AddScoped<ThinkOnErp.Application.Services.Hr.IRawAttendanceProcessingService, ThinkOnErp.Application.Services.Hr.RawAttendanceProcessingService>();
-        services.AddScoped<ThinkOnErp.Application.Services.Hr.IAttendanceCorrectionService, ThinkOnErp.Application.Services.Hr.AttendanceCorrectionService>();
         services.AddScoped<ThinkOnErp.Application.Services.Hr.IGeoLocationService, ThinkOnErp.Application.Services.Hr.GeoLocationService>();
-        services.AddScoped<ThinkOnErp.Application.Services.Hr.IHrAttendanceService, ThinkOnErp.Application.Services.Hr.HrAttendanceService>();
         services.AddScoped<ThinkOnErp.Application.Services.Hr.IOvertimeCalculationService, ThinkOnErp.Application.Services.Hr.OvertimeCalculationService>();
         services.AddScoped<ThinkOnErp.Application.Services.Hr.IPayrollProrationService, ThinkOnErp.Application.Services.Hr.PayrollProrationService>();
         services.AddScoped<ThinkOnErp.Application.Services.Hr.ISSCCalculationService, ThinkOnErp.Application.Services.Hr.SSCCalculationService>();
@@ -137,8 +129,8 @@ public static class DependencyInjection
         services.AddScoped(sp => new ThinkOnErp.Application.Features.Hr.Employees.Common.EmployeeFieldGuard(
             sp.GetRequiredService<ThinkOnErp.Application.Services.Hr.EmployeeFieldAccess>()));
         services.AddScoped<ThinkOnErp.Application.Services.Hr.ILeaveService, ThinkOnErp.Application.Services.Hr.LeaveService>();
+        // HR EndOfService: handlers live in Features/Hr/EndOfService (registered by the MediatR assembly scan).
         services.AddScoped<ThinkOnErp.Application.Services.Hr.IEndOfServiceCalculationEngine, ThinkOnErp.Application.Services.Hr.EndOfServiceCalculationEngine>();
-        services.AddScoped<ThinkOnErp.Application.Services.Hr.IEndOfServiceService, ThinkOnErp.Application.Services.Hr.EndOfServiceService>();
         services.AddScoped<ThinkOnErp.Application.Services.Hr.IShortLeaveService, ThinkOnErp.Application.Services.Hr.ShortLeaveService>();
         // Bank export is retained as a tested legacy formatter; INT-07 exposes it from Accounting payment batches.
         services.AddScoped<ThinkOnErp.Application.Services.Hr.IEmployeeExcelService, ThinkOnErp.Application.Services.Hr.EmployeeExcelService>();

@@ -1,3 +1,8 @@
+using System;
+using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
+using ThinkOnErp.Application.Features.Hr.Shifts.Commands.GenerateShiftDays;
 using ThinkOnErp.Domain.Entities.Hr;
 using ThinkOnErp.Domain.Interfaces.Hr;
 
@@ -11,14 +16,15 @@ public interface IShiftGenerationService
     Task<ShiftGenerationResult> GenerateAsync(string employeeCode, GenerateShiftDaysDto dto, string user, CancellationToken ct = default);
 }
 
+[Obsolete("Use MediatR requests in ThinkOnErp.Application.Features.Hr.Shifts. Kept for existing test suites.")]
 public sealed class ShiftGenerationService(IShiftGenerationRepository repository) : IShiftGenerationService
 {
-    public Task<ShiftGenerationResult> GenerateAsync(string employeeCode, GenerateShiftDaysDto dto, string user, CancellationToken ct = default)
+    private readonly GenerateShiftDaysCommandHandler _handler = new(repository);
+
+    public async Task<ShiftGenerationResult> GenerateAsync(string employeeCode, GenerateShiftDaysDto dto, string user, CancellationToken ct = default)
     {
-        if (dto.From == null || dto.To == null || dto.To < dto.From || dto.To.Value.DayNumber - dto.From.Value.DayNumber >= 366)
-            throw new ArgumentException("Generation needs an ordered date range of at most 366 days.");
-        return repository.ExecuteAsync(employeeCode, dto.From.Value.ToDateTime(TimeOnly.MinValue), dto.To.Value.ToDateTime(TimeOnly.MinValue),
-            (days, assignments, definitions) => Plan(employeeCode, dto.From.Value, dto.To.Value, days, assignments, definitions), user, ct);
+        var response = await _handler.Handle(new GenerateShiftDaysCommand(employeeCode, dto, user), ct);
+        return response.Data!;
     }
 
     public static (ShiftGenerationResult Result, IReadOnlyList<EmployeeShiftDay> Writes) Plan(string employeeCode, DateOnly from, DateOnly to,
@@ -30,7 +36,7 @@ public sealed class ShiftGenerationService(IShiftGenerationRepository repository
         for (var number = from.DayNumber; number <= to.DayNumber; number++)
         {
             var date = DateOnly.FromDayNumber(number); existing.TryGetValue(date, out var old);
-            if (old?.Source == "MANUAL") { manual++; continue; } // Also preserve inactive manual reservations.
+            if (old?.Source == "MANUAL") { manual++; continue; }
             if (old != null && old.Source != "GENERATED") throw new InvalidOperationException("Invalid daily shift source.");
             var selection = AssignmentShiftSelection.Resolve(assignments, definitions, date.ToDateTime(TimeOnly.MinValue));
             if (selection.Status == "UNSCHEDULED")

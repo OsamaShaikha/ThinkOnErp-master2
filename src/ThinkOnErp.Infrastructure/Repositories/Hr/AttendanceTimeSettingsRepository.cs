@@ -9,10 +9,11 @@ namespace ThinkOnErp.Infrastructure.Repositories.Hr;
 public sealed class AttendanceTimeSettingsRepository(OracleDbContext db) : IAttendanceTimeSettingsRepository
 {
     private long Company => db.HrScopeCompanyId > 0 ? db.HrScopeCompanyId : throw new InvalidOperationException("A trusted company scope is required.");
-    public Task<AttendanceTimeSettings?> GetCurrentAsync(CancellationToken ct = default)
+    public async Task<AttendanceTimeSettings?> GetCurrentAsync(CancellationToken ct = default)
     {
-        var company = Company;
-        return db.Set<AttendanceTimeSettings>().AsNoTracking().SingleOrDefaultAsync(s => s.CompanyId == company, ct);
+        _ = Company;
+        var setting = await db.Set<AttendanceTimeSettings>().AsNoTracking().SingleOrDefaultAsync(s => s.Id == 1, ct);
+        return setting?.Stamp(Company);
     }
 
     public async Task<AttendanceTimeSettings> InitializeAsync(string timeZoneId, string user, CancellationToken ct = default)
@@ -39,7 +40,7 @@ public sealed class AttendanceTimeSettingsRepository(OracleDbContext db) : IAtte
                 if (owned != null) await owned.CommitAsync(ct);
                 return existing;
             }
-            var setting = new AttendanceTimeSettings { CompanyId = company, TimeZoneId = zone.Id, CreationUser = user, CreationDate = DateTime.UtcNow };
+            var setting = new AttendanceTimeSettings { Id = 1, CompanyId = company, TimeZoneId = zone.Id, CreationUser = user, CreationDate = DateTime.UtcNow };
             db.Add(setting); await db.SaveChangesAsync(ct); await db.Entry(setting).ReloadAsync(ct);
             if (owned != null) await owned.CommitAsync(ct); return setting;
         }
@@ -50,10 +51,9 @@ public sealed class AttendanceTimeSettingsRepository(OracleDbContext db) : IAtte
     {
         var employee = await db.Employees.AsNoTracking().SingleOrDefaultAsync(e => e.EmployeeCode == employeeCode, ct)
             ?? throw new KeyNotFoundException("Employee not found in the current HR scope.");
-        var company = employee.BranchId.HasValue
-            ? await db.SysBranches.Where(b => b.Id == employee.BranchId).Select(b => b.CompanyId).SingleOrDefaultAsync(ct) : (long?)Company;
-        if (company == null || db.HrScopeEnabled && company != Company) throw new InvalidOperationException("Employee company is outside the current HR scope.");
-        return await db.Set<AttendanceTimeSettings>().AsNoTracking().SingleOrDefaultAsync(s => s.CompanyId == company, ct)
+        if (employee.BranchId.HasValue && !await db.SysBranches.AnyAsync(b => b.Id == employee.BranchId.Value && b.CompanyId == Company, ct))
+            throw new InvalidOperationException("Employee company is outside the current HR scope.");
+        return (await db.Set<AttendanceTimeSettings>().AsNoTracking().SingleOrDefaultAsync(s => s.Id == 1, ct))?.Stamp(Company)
             ?? throw new InvalidOperationException("Configure the company's attendance time zone first.");
     }
 }

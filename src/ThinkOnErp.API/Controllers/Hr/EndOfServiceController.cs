@@ -1,16 +1,22 @@
-using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Logging;
 using ThinkOnErp.API.Authorization;
 using ThinkOnErp.API.Swagger;
 using ThinkOnErp.Application.Common;
 using ThinkOnErp.Application.DTOs.Hr;
-using ThinkOnErp.Application.Services.Hr;
+using ThinkOnErp.Application.Features.Hr.EndOfService.Commands.ApproveSettlement;
+using ThinkOnErp.Application.Features.Hr.EndOfService.Commands.CalculateSettlement;
+using ThinkOnErp.Application.Features.Hr.EndOfService.Commands.CancelSettlement;
+using ThinkOnErp.Application.Features.Hr.EndOfService.Commands.CreateEndOfServicePayoutRequest;
+using ThinkOnErp.Application.Features.Hr.EndOfService.Queries.GetEndOfServiceHandoffStatus;
+using ThinkOnErp.Application.Features.Hr.EndOfService.Queries.GetSettlementByEmployeeCode;
+using ThinkOnErp.Application.Features.Hr.EndOfService.Queries.GetSettlementById;
+using ThinkOnErp.Application.Features.Hr.EndOfService.Queries.GetSettlements;
 using ThinkOnErp.Domain.Models;
 
 namespace ThinkOnErp.API.Controllers.Hr;
@@ -20,20 +26,13 @@ namespace ThinkOnErp.API.Controllers.Hr;
 [ApiExplorerSettings(GroupName = ApiCategories.Hr)]
 [TenantScoped]
 [Authorize]
-public sealed class EndOfServiceController : ControllerBase
+public sealed class EndOfServiceController : HrControllerBase
 {
-    private readonly IEndOfServiceService _eosService;
-    private readonly IHrAccountingHandoffService _handoffs;
-    private readonly ILogger<EndOfServiceController> _logger;
+    private readonly IMediator _mediator;
 
-    public EndOfServiceController(
-        IEndOfServiceService eosService,
-        IHrAccountingHandoffService handoffs,
-        ILogger<EndOfServiceController> logger)
+    public EndOfServiceController(IMediator mediator)
     {
-        _eosService = eosService;
-        _handoffs = handoffs;
-        _logger = logger;
+        _mediator = mediator;
     }
 
     [HttpPost("calculate")]
@@ -51,9 +50,9 @@ public sealed class EndOfServiceController : ControllerBase
             tenantValue is not TenantRequestContext tenant)
             return Forbid();
 
-        var user = User.Identity?.Name ?? "SYSTEM";
-        var result = await _eosService.CalculateSettlementAsync(request, user, tenant.CompanyId, cancellationToken);
-        return Ok(ApiResponse<EndOfServiceSettlementDto>.CreateSuccess(result, "End of service settlement calculated successfully in DRAFT status."));
+        return FromResponse(await _mediator.Send(
+            new CalculateSettlementCommand(request, tenant.CompanyId, CurrentUsername),
+            cancellationToken));
     }
 
     [HttpPost("{id:long}/approve")]
@@ -63,11 +62,7 @@ public sealed class EndOfServiceController : ControllerBase
     public async Task<ActionResult<ApiResponse<EndOfServiceSettlementDto>>> ApproveSettlement(
         long id,
         CancellationToken cancellationToken)
-    {
-        var user = User.Identity?.Name ?? "SYSTEM";
-        var result = await _eosService.ApproveSettlementAsync(id, user, cancellationToken);
-        return Ok(ApiResponse<EndOfServiceSettlementDto>.CreateSuccess(result, "End of service settlement approved successfully and employee status updated to TERMINATED."));
-    }
+        => FromResponse(await _mediator.Send(new ApproveSettlementCommand(id, CurrentUsername), cancellationToken));
 
     [HttpPost("{id:long}/cancel")]
     [ProducesResponseType(typeof(ApiResponse<EndOfServiceSettlementDto>), StatusCodes.Status200OK)]
@@ -82,9 +77,7 @@ public sealed class EndOfServiceController : ControllerBase
         if (request == null || string.IsNullOrWhiteSpace(request.Reason))
             return BadRequest(ApiResponse<EndOfServiceSettlementDto>.CreateFailure("A reason is required to cancel an end of service settlement.", statusCode: 400));
 
-        var user = User.Identity?.Name ?? "SYSTEM";
-        var result = await _eosService.CancelSettlementAsync(id, request.Reason, user, cancellationToken);
-        return Ok(ApiResponse<EndOfServiceSettlementDto>.CreateSuccess(result, "End of service settlement cancelled successfully."));
+        return FromResponse(await _mediator.Send(new CancelSettlementCommand(id, request.Reason, CurrentUsername), cancellationToken));
     }
 
     [HttpGet("{id:long}")]
@@ -94,13 +87,7 @@ public sealed class EndOfServiceController : ControllerBase
     public async Task<ActionResult<ApiResponse<EndOfServiceSettlementDto>>> GetById(
         long id,
         CancellationToken cancellationToken)
-    {
-        var result = await _eosService.GetByIdAsync(id, cancellationToken);
-        if (result == null)
-            return NotFound(ApiResponse<EndOfServiceSettlementDto>.CreateFailure("End of service settlement not found.", statusCode: 404));
-
-        return Ok(ApiResponse<EndOfServiceSettlementDto>.CreateSuccess(result, "End of service settlement retrieved successfully."));
-    }
+        => FromResponse(await _mediator.Send(new GetSettlementByIdQuery(id), cancellationToken));
 
     [HttpGet("employee/{employeeCode}")]
     [ProducesResponseType(typeof(ApiResponse<EndOfServiceSettlementDto>), StatusCodes.Status200OK)]
@@ -109,13 +96,7 @@ public sealed class EndOfServiceController : ControllerBase
     public async Task<ActionResult<ApiResponse<EndOfServiceSettlementDto>>> GetByEmployeeCode(
         string employeeCode,
         CancellationToken cancellationToken)
-    {
-        var result = await _eosService.GetByEmployeeCodeAsync(employeeCode, cancellationToken);
-        if (result == null)
-            return NotFound(ApiResponse<EndOfServiceSettlementDto>.CreateFailure($"No active end of service settlement found for employee '{employeeCode}'.", statusCode: 404));
-
-        return Ok(ApiResponse<EndOfServiceSettlementDto>.CreateSuccess(result, "End of service settlement retrieved successfully."));
-    }
+        => FromResponse(await _mediator.Send(new GetSettlementByEmployeeCodeQuery(employeeCode), cancellationToken));
 
     [HttpGet]
     [ProducesResponseType(typeof(ApiResponse<IReadOnlyList<EndOfServiceSettlementDto>>), StatusCodes.Status200OK)]
@@ -125,32 +106,17 @@ public sealed class EndOfServiceController : ControllerBase
         [FromQuery] long? branchId,
         [FromQuery] string? status,
         CancellationToken cancellationToken)
-    {
-        var result = await _eosService.GetListAsync(companyId, branchId, status, cancellationToken);
-        return Ok(ApiResponse<IReadOnlyList<EndOfServiceSettlementDto>>.CreateSuccess(result, "End of service settlements retrieved successfully."));
-    }
+        => FromResponse(await _mediator.Send(new GetSettlementsQuery(companyId, branchId, status), cancellationToken));
 
     [HttpPost("{id:long}/payout-request")]
-    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status200OK)]
-    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ApiResponse<EndOfServicePayoutHandoffDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<EndOfServicePayoutHandoffDto>), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ApiResponse<EndOfServicePayoutHandoffDto>), StatusCodes.Status404NotFound)]
     [HrPermission("hr-end-of-service", "approve")]
-    public async Task<IActionResult> SubmitPayoutRequest(
+    public async Task<ActionResult<ApiResponse<EndOfServicePayoutHandoffDto>>> SubmitPayoutRequest(
         long id,
         CancellationToken cancellationToken)
-    {
-        var user = User.Identity?.Name ?? "SYSTEM";
-        var handoff = await _handoffs.CreateApprovedFundingHandoffAsync("EOS", id, user, cancellationToken);
-        return Ok(ApiResponse<object>.CreateSuccess(new
-        {
-            HandoffId = handoff.Id,
-            HandoffReference = handoff.HandoffReference,
-            DeliveryStatus = handoff.DeliveryStatus,
-            Operation = handoff.Operation,
-            Amount = handoff.Lines.FirstOrDefault()?.Amount ?? 0m,
-            Currency = handoff.Lines.FirstOrDefault()?.CurrencyCode
-        }, "End of service settlement payout handoff created successfully."));
-    }
+        => FromResponse(await _mediator.Send(new CreateEndOfServicePayoutRequestCommand(id, CurrentUsername), cancellationToken));
 
     [HttpGet("{id:long}/handoff-status")]
     [ProducesResponseType(typeof(ApiResponse<EndOfServiceHandoffStatusDto>), StatusCodes.Status200OK)]
@@ -159,12 +125,5 @@ public sealed class EndOfServiceController : ControllerBase
     public async Task<ActionResult<ApiResponse<EndOfServiceHandoffStatusDto>>> GetHandoffStatus(
         long id,
         CancellationToken cancellationToken)
-    {
-        var result = await _eosService.GetHandoffStatusAsync(id, cancellationToken);
-        if (result == null)
-            return NotFound(ApiResponse<EndOfServiceHandoffStatusDto>.CreateFailure("No accounting handoff found for this settlement.", statusCode: StatusCodes.Status404NotFound));
-
-        return Ok(ApiResponse<EndOfServiceHandoffStatusDto>.CreateSuccess(result, "Handoff status retrieved successfully."));
-    }
+        => FromResponse(await _mediator.Send(new GetEndOfServiceHandoffStatusQuery(id), cancellationToken));
 }
-

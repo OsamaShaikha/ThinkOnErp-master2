@@ -9,8 +9,7 @@ public sealed class PayrollCurrencyPrecisionConfiguration : IEntityTypeConfigura
     public void Configure(EntityTypeBuilder<PayrollCurrencyPrecision> builder)
     {
         builder.ToTable("HR_PAYROLL_CURRENCY_PRECISION");
-        builder.HasKey(x => new { x.CompanyId, x.CurrencyCode });
-        builder.Property(x => x.CompanyId).HasColumnName("COMPANY_ID").IsRequired();
+        builder.HasKey(x => x.CurrencyCode);
         builder.Property(x => x.CurrencyCode).HasColumnName("CURRENCY_CODE").HasColumnType("VARCHAR2(10 BYTE)").HasMaxLength(10).IsRequired();
         builder.Property(x => x.DecimalPlaces).HasColumnName("DECIMAL_PLACES").HasColumnType("NUMBER(2)").IsRequired();
         builder.Property(x => x.CreationUser).HasColumnName("CREATION_USER").HasColumnType("VARCHAR2(100 BYTE)").HasMaxLength(100).IsRequired();

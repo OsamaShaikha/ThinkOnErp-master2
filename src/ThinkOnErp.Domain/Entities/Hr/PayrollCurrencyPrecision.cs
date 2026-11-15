@@ -3,6 +3,7 @@ namespace ThinkOnErp.Domain.Entities.Hr;
 /// <summary>Company-specific payroll precision override for one configured currency code.</summary>
 public sealed class PayrollCurrencyPrecision
 {
+    [System.ComponentModel.DataAnnotations.Schema.NotMapped]
     public long CompanyId { get; set; }
     public string CurrencyCode { get; set; } = string.Empty;
     public int DecimalPlaces { get; set; }

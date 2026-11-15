@@ -1,16 +1,23 @@
-using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Logging;
 using ThinkOnErp.API.Authorization;
 using ThinkOnErp.API.Swagger;
 using ThinkOnErp.Application.Common;
 using ThinkOnErp.Application.DTOs.Hr;
-using ThinkOnErp.Application.Services.Hr;
+using ThinkOnErp.Application.Features.Hr.PayrollAdjustments.Commands.ApproveAdjustment;
+using ThinkOnErp.Application.Features.Hr.PayrollAdjustments.Commands.CreateAdjustment;
+using ThinkOnErp.Application.Features.Hr.PayrollAdjustments.Commands.CreateOvertimeAdjustment;
+using ThinkOnErp.Application.Features.Hr.PayrollAdjustments.Commands.DeleteAdjustment;
+using ThinkOnErp.Application.Features.Hr.PayrollAdjustments.Commands.PostAdjustment;
+using ThinkOnErp.Application.Features.Hr.PayrollAdjustments.Commands.RejectAdjustment;
+using ThinkOnErp.Application.Features.Hr.PayrollAdjustments.Commands.UnpostAdjustment;
+using ThinkOnErp.Application.Features.Hr.PayrollAdjustments.Queries.GetAdjustmentById;
+using ThinkOnErp.Application.Features.Hr.PayrollAdjustments.Queries.GetAdjustments;
 using ThinkOnErp.Domain.Entities.Hr;
 
 namespace ThinkOnErp.API.Controllers.Hr;
@@ -20,17 +27,13 @@ namespace ThinkOnErp.API.Controllers.Hr;
 [ApiExplorerSettings(GroupName = ApiCategories.Hr)]
 [TenantScoped]
 [Authorize]
-public sealed class PayrollAdjustmentsController : ControllerBase
+public sealed class PayrollAdjustmentsController : HrControllerBase
 {
-    private readonly IPayrollAdjustmentService _adjustmentService;
-    private readonly ILogger<PayrollAdjustmentsController> _logger;
+    private readonly IMediator _mediator;
 
-    public PayrollAdjustmentsController(
-        IPayrollAdjustmentService adjustmentService,
-        ILogger<PayrollAdjustmentsController> logger)
+    public PayrollAdjustmentsController(IMediator mediator)
     {
-        _adjustmentService = adjustmentService;
-        _logger = logger;
+        _mediator = mediator;
     }
 
     [HttpPost]
@@ -39,11 +42,7 @@ public sealed class PayrollAdjustmentsController : ControllerBase
     public async Task<ActionResult<ApiResponse<PayrollAdjustment>>> CreateAdjustment(
         [FromBody] CreatePayrollAdjustmentDto dto,
         CancellationToken cancellationToken)
-    {
-        var user = User.Identity?.Name ?? "SYSTEM";
-        var result = await _adjustmentService.CreateAdjustmentAsync(dto, user, cancellationToken);
-        return Ok(ApiResponse<PayrollAdjustment>.CreateSuccess(result, "Adjustment created successfully."));
-    }
+        => FromResponse(await _mediator.Send(new CreateAdjustmentCommand(dto, CurrentUsername), cancellationToken));
 
     [HttpPost("overtime")]
     [ProducesResponseType(typeof(ApiResponse<PayrollAdjustment>), StatusCodes.Status200OK)]
@@ -51,10 +50,7 @@ public sealed class PayrollAdjustmentsController : ControllerBase
     public async Task<ActionResult<ApiResponse<PayrollAdjustment>>> CreateOvertimeAdjustment(
         [FromBody] CreateOvertimePayrollAdjustmentDto dto,
         CancellationToken cancellationToken)
-    {
-        var result = await _adjustmentService.CreateOvertimeAdjustmentAsync(dto, User.Identity?.Name ?? "SYSTEM", cancellationToken);
-        return Ok(ApiResponse<PayrollAdjustment>.CreateSuccess(result, "Overtime adjustment submitted for review."));
-    }
+        => FromResponse(await _mediator.Send(new CreateOvertimeAdjustmentCommand(dto, CurrentUsername), cancellationToken));
 
     [HttpPost("{id:long}/approve")]
     [ProducesResponseType(typeof(ApiResponse<PayrollAdjustment>), StatusCodes.Status200OK)]
@@ -63,11 +59,7 @@ public sealed class PayrollAdjustmentsController : ControllerBase
         long id,
         [FromBody] PayrollAdjustmentDecisionDto decision,
         CancellationToken cancellationToken)
-    {
-        var user = User.Identity?.Name ?? "SYSTEM";
-        var result = await _adjustmentService.DecideAdjustmentAsync(id, true, decision.Reason, user, decision.BranchId, cancellationToken);
-        return Ok(ApiResponse<PayrollAdjustment>.CreateSuccess(result, "Adjustment approved successfully."));
-    }
+        => FromResponse(await _mediator.Send(new ApproveAdjustmentCommand(id, decision.Reason, CurrentUsername, decision.BranchId), cancellationToken));
 
     [HttpPost("{id:long}/reject")]
     [ProducesResponseType(typeof(ApiResponse<PayrollAdjustment>), StatusCodes.Status200OK)]
@@ -76,11 +68,7 @@ public sealed class PayrollAdjustmentsController : ControllerBase
         long id,
         [FromBody] PayrollAdjustmentDecisionDto decision,
         CancellationToken cancellationToken)
-    {
-        var user = User.Identity?.Name ?? "SYSTEM";
-        var result = await _adjustmentService.DecideAdjustmentAsync(id, false, decision.Reason, user, decision.BranchId, cancellationToken);
-        return Ok(ApiResponse<PayrollAdjustment>.CreateSuccess(result, "Adjustment rejected successfully."));
-    }
+        => FromResponse(await _mediator.Send(new RejectAdjustmentCommand(id, decision.Reason, CurrentUsername, decision.BranchId), cancellationToken));
 
     [HttpPost("{id:long}/post")]
     [HrPermission("hr-payroll-adjustments", "post")]
@@ -88,10 +76,7 @@ public sealed class PayrollAdjustmentsController : ControllerBase
         long id,
         [FromBody] PayrollAdjustmentDecisionDto decision,
         CancellationToken cancellationToken)
-    {
-        var result = await _adjustmentService.DecideAdjustmentAsync(id, true, decision.Reason, User.Identity?.Name ?? "SYSTEM", decision.BranchId, cancellationToken);
-        return Ok(ApiResponse<PayrollAdjustment>.CreateSuccess(result, "Adjustment posted successfully."));
-    }
+        => FromResponse(await _mediator.Send(new PostAdjustmentCommand(id, decision.Reason, CurrentUsername, decision.BranchId), cancellationToken));
 
     [HttpPost("{id:long}/unpost")]
     [HrPermission("hr-payroll-adjustments", "reverse")]
@@ -100,10 +85,7 @@ public sealed class PayrollAdjustmentsController : ControllerBase
         [FromQuery] long? branchId,
         [FromQuery] string? reason,
         CancellationToken cancellationToken)
-    {
-        var result = await _adjustmentService.UnpostAdjustmentAsync(id, User.Identity?.Name ?? "SYSTEM", branchId, reason, cancellationToken);
-        return Ok(ApiResponse<PayrollAdjustment>.CreateSuccess(result, "Adjustment returned to pending."));
-    }
+        => FromResponse(await _mediator.Send(new UnpostAdjustmentCommand(id, CurrentUsername, branchId, reason), cancellationToken));
 
     [HttpGet]
     [ProducesResponseType(typeof(ApiResponse<IReadOnlyList<PayrollAdjustmentDto>>), StatusCodes.Status200OK)]
@@ -114,10 +96,7 @@ public sealed class PayrollAdjustmentsController : ControllerBase
         [FromQuery] string? payPeriod,
         [FromQuery] string? status,
         CancellationToken cancellationToken)
-    {
-        var result = await _adjustmentService.GetAdjustmentsAsync(companyId, employeeCode, payPeriod, status, cancellationToken);
-        return Ok(ApiResponse<IReadOnlyList<PayrollAdjustmentDto>>.CreateSuccess(result, "Adjustments retrieved successfully."));
-    }
+        => FromResponse(await _mediator.Send(new GetAdjustmentsQuery(companyId, employeeCode, payPeriod, status), cancellationToken));
 
     [HttpGet("{id:long}")]
     [ProducesResponseType(typeof(ApiResponse<PayrollAdjustment>), StatusCodes.Status200OK)]
@@ -125,11 +104,7 @@ public sealed class PayrollAdjustmentsController : ControllerBase
     public async Task<ActionResult<ApiResponse<PayrollAdjustment>>> GetAdjustmentById(
         long id,
         CancellationToken cancellationToken)
-    {
-        var result = await _adjustmentService.GetAdjustmentByIdAsync(id, cancellationToken);
-        if (result == null) return NotFound(ApiResponse<PayrollAdjustment>.CreateFailure("Adjustment not found.", statusCode: StatusCodes.Status404NotFound));
-        return Ok(ApiResponse<PayrollAdjustment>.CreateSuccess(result, "Adjustment retrieved successfully."));
-    }
+        => FromResponse(await _mediator.Send(new GetAdjustmentByIdQuery(id), cancellationToken));
 
     [HttpDelete("{id:long}")]
     [ProducesResponseType(typeof(ApiResponse<bool>), StatusCodes.Status200OK)]
@@ -137,8 +112,5 @@ public sealed class PayrollAdjustmentsController : ControllerBase
     public async Task<ActionResult<ApiResponse<bool>>> DeleteAdjustment(
         long id,
         CancellationToken cancellationToken)
-    {
-        await _adjustmentService.DeleteAdjustmentAsync(id, cancellationToken);
-        return Ok(ApiResponse<bool>.CreateSuccess(true, "Adjustment deleted successfully."));
-    }
+        => FromResponse(await _mediator.Send(new DeleteAdjustmentCommand(id), cancellationToken));
 }

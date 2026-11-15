@@ -12,8 +12,8 @@ public sealed class PayrollPeriodConfiguration : IEntityTypeConfiguration<Payrol
         builder.HasKey(p => p.Id);
         builder.Property(p => p.Id).HasColumnName("ID").ValueGeneratedOnAdd();
 
-        builder.Property(p => p.CompanyId).HasColumnName("COMPANY_ID").IsRequired();
         builder.Property(p => p.PeriodCode).HasColumnName("PERIOD_CODE").HasMaxLength(20).IsRequired();
+        builder.HasIndex(p => p.PeriodCode).IsUnique().HasDatabaseName("UX_HR_PAY_PERIOD_CODE");
         builder.Property(p => p.NameAr).HasColumnName("NAME_AR").HasMaxLength(200).IsRequired();
         builder.Property(p => p.NameEn).HasColumnName("NAME_EN").HasMaxLength(200).IsRequired();
         builder.Property(p => p.FiscalYear).HasColumnName("FISCAL_YEAR").IsRequired();

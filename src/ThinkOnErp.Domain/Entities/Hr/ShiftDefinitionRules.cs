@@ -4,7 +4,8 @@ using System.Security.Cryptography;
 
 namespace ThinkOnErp.Domain.Entities.Hr;
 
-public sealed class ShiftVersionConflictException() : InvalidOperationException("Shift version changed. Read it again before editing.");
+public sealed class ShiftVersionConflictException(string? message = null)
+    : InvalidOperationException(message ?? "Shift version changed. Read it again before editing.");
 
 public static class ShiftDefinitionRules
 {

@@ -4,7 +4,7 @@ internal static class HrAttendanceTimeSchema
 {
     private static readonly HrSchemaColumnExpectation[] Columns =
     [
-        new("HR_ATTENDANCE_TIME_SETTINGS", "COMPANY_ID", "NUMBER", "N", Precision: 19, Scale: 0),
+        new("HR_ATTENDANCE_TIME_SETTINGS", "ID", "NUMBER", "N", Precision: 1, Scale: 0),
         new("HR_ATTENDANCE_TIME_SETTINGS", "TIME_ZONE_ID", "NVARCHAR2", "N", CharacterLength: 100),
         new("HR_ATTENDANCE_TIME_SETTINGS", "CREATION_USER", "NVARCHAR2", "N", CharacterLength: 200),
         new("HR_ATTENDANCE_TIME_SETTINGS", "CREATION_DATE", "TIMESTAMP(7)", "N"),
@@ -19,7 +19,7 @@ internal static class HrAttendanceTimeSchema
     {
         await HrSchemaColumnGuard.ValidateAsync(connection, Columns, allowMissingColumns: true,
             allowMissingTables: new HashSet<string>(["HR_ATTENDANCE_TIME_SETTINGS"], StringComparer.Ordinal));
-        await PreflightCompanyKey(connection);
+        await PreflightSchemaKey(connection);
         await PreflightImmutableTrigger(connection);
         await using var command = connection.CreateCommand();
         command.CommandText = "SELECT COUNT(*) FROM ALL_TABLES WHERE OWNER='DEV_TEMPLATE' AND TABLE_NAME='HR_ATTENDANCE_TIME_SETTINGS'";
@@ -27,7 +27,7 @@ internal static class HrAttendanceTimeSchema
         {
             command.CommandText = """
                 CREATE TABLE DEV_TEMPLATE.HR_ATTENDANCE_TIME_SETTINGS (
-                  COMPANY_ID NUMBER(19) NOT NULL CONSTRAINT PK_HR_ATT_TIME_SETTINGS PRIMARY KEY,
+                  ID NUMBER(1) NOT NULL CONSTRAINT PK_HR_ATT_TIME_SETTINGS PRIMARY KEY,
                   TIME_ZONE_ID NVARCHAR2(100) NOT NULL,
                   CREATION_USER NVARCHAR2(200) NOT NULL,
                   CREATION_DATE TIMESTAMP(7) NOT NULL
@@ -35,7 +35,7 @@ internal static class HrAttendanceTimeSchema
                 """;
             await command.ExecuteNonQueryAsync();
         }
-        await EnsureCompanyKey(connection);
+        await EnsureSchemaKey(connection);
         command.CommandText = """
             CREATE OR REPLACE TRIGGER DEV_TEMPLATE.TRG_HR_TIME_IMMUTABLE
             BEFORE UPDATE OR DELETE ON DEV_TEMPLATE.HR_ATTENDANCE_TIME_SETTINGS
@@ -53,7 +53,7 @@ internal static class HrAttendanceTimeSchema
             await command.ExecuteNonQueryAsync(); report.Add("Added nullable attendance snapshot column: " + column.Item1);
         }
         await HrSchemaColumnGuard.ValidateAsync(connection, Columns, allowMissingColumns: false);
-        report.Add("Attendance time settings table and immutable trigger installed. No company zone selected; existing attendance is unchanged.");
+        report.Add("Tenant schema attendance time settings table and immutable trigger installed. No zone is selected automatically.");
     }
 
     private static async Task PreflightImmutableTrigger(OracleConnection connection)
@@ -80,7 +80,7 @@ internal static class HrAttendanceTimeSchema
             """);
     }
 
-    private static async Task PreflightCompanyKey(OracleConnection connection)
+    private static async Task PreflightSchemaKey(OracleConnection connection)
     {
         async Task<long> Count(string sql)
         {
@@ -115,8 +115,8 @@ internal static class HrAttendanceTimeSchema
             var actual = new List<string>();
             await using (var reader = await columns.ExecuteReaderAsync())
                 while (await reader.ReadAsync()) actual.Add(reader.GetString(0));
-            if (!actual.SequenceEqual(["COMPANY_ID"], StringComparer.Ordinal))
-                throw new InvalidOperationException("DEV_TEMPLATE.HR_ATTENDANCE_TIME_SETTINGS primary key does not match COMPANY_ID; attendance time installer stopped before DDL.");
+            if (!actual.SequenceEqual(["ID"], StringComparer.Ordinal))
+                throw new InvalidOperationException("DEV_TEMPLATE.HR_ATTENDANCE_TIME_SETTINGS requires the schema-scoped ID primary key; apply HR migration 20261115002400 before installing.");
         }
         else
         {
@@ -125,13 +125,13 @@ internal static class HrAttendanceTimeSchema
                 throw new InvalidOperationException("DEV_TEMPLATE.PK_HR_ATT_TIME_SETTINGS is reserved by another constraint or index; attendance time installer stopped before DDL.");
         }
 
-        if (await Count("SELECT COUNT(*) FROM (SELECT COMPANY_ID FROM DEV_TEMPLATE.HR_ATTENDANCE_TIME_SETTINGS GROUP BY COMPANY_ID HAVING COMPANY_ID IS NULL OR COUNT(*)>1)") != 0)
-            throw new InvalidOperationException("HR_ATTENDANCE_TIME_SETTINGS contains null or duplicate COMPANY_ID values; attendance time installer stopped before DDL.");
+        if (await Count("SELECT COUNT(*) FROM DEV_TEMPLATE.HR_ATTENDANCE_TIME_SETTINGS WHERE ID<>1") != 0)
+            throw new InvalidOperationException("HR_ATTENDANCE_TIME_SETTINGS must contain only singleton ID=1; attendance time installer stopped before DDL.");
         if (keyName is not null && (status is not ("ENABLED" or "DISABLED") || validated is not ("VALIDATED" or "NOT VALIDATED")))
             throw new InvalidOperationException("HR_ATTENDANCE_TIME_SETTINGS primary key has unsupported state; attendance time installer stopped before DDL.");
     }
 
-    private static async Task EnsureCompanyKey(OracleConnection connection)
+    private static async Task EnsureSchemaKey(OracleConnection connection)
     {
         async Task<long> Count(string sql)
         {
@@ -142,7 +142,7 @@ internal static class HrAttendanceTimeSchema
         if (await Count("SELECT COUNT(*) FROM ALL_CONSTRAINTS WHERE OWNER='DEV_TEMPLATE' AND TABLE_NAME='HR_ATTENDANCE_TIME_SETTINGS' AND CONSTRAINT_TYPE='P'") == 0)
         {
             await using var add = connection.CreateCommand();
-            add.CommandText = "ALTER TABLE DEV_TEMPLATE.HR_ATTENDANCE_TIME_SETTINGS ADD CONSTRAINT PK_HR_ATT_TIME_SETTINGS PRIMARY KEY (COMPANY_ID)";
+            add.CommandText = "ALTER TABLE DEV_TEMPLATE.HR_ATTENDANCE_TIME_SETTINGS ADD CONSTRAINT PK_HR_ATT_TIME_SETTINGS PRIMARY KEY (ID)";
             await add.ExecuteNonQueryAsync();
         }
         await using var state = connection.CreateCommand();

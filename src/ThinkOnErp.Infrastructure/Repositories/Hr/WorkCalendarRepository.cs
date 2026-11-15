@@ -21,11 +21,10 @@ public sealed class WorkCalendarRepository : IWorkCalendarRepository
 
     public async Task<IReadOnlyList<WorkCalendar>> GetCalendarsAsync(long companyId, CancellationToken cancellationToken = default)
     {
-        return await _context.WorkCalendars
+        return (await _context.WorkCalendars
             .Include(c => c.Days)
-            .Where(c => c.CompanyId == companyId)
             .OrderBy(c => c.Code)
-            .ToListAsync(cancellationToken);
+            .ToListAsync(cancellationToken)).StampAll(companyId);
     }
 
     public async Task<WorkCalendar?> GetCalendarByIdAsync(long id, CancellationToken cancellationToken = default)
@@ -37,12 +36,12 @@ public sealed class WorkCalendarRepository : IWorkCalendarRepository
 
     public async Task<WorkCalendar?> GetActiveCalendarAsync(long companyId, DateTime date, CancellationToken cancellationToken = default)
     {
-        return await _context.WorkCalendars
+        return (await _context.WorkCalendars
             .Include(c => c.Days)
-            .Where(c => c.CompanyId == companyId && c.IsActive && c.EffectiveFrom <= date && (c.EffectiveTo == null || c.EffectiveTo >= date))
+            .Where(c => c.IsActive && c.EffectiveFrom <= date && (c.EffectiveTo == null || c.EffectiveTo >= date))
             .OrderByDescending(c => c.IsDefault)
             .ThenByDescending(c => c.EffectiveFrom)
-            .FirstOrDefaultAsync(cancellationToken);
+            .FirstOrDefaultAsync(cancellationToken))?.Stamp(companyId);
     }
 
     public async Task AddCalendarAsync(WorkCalendar calendar, CancellationToken cancellationToken = default)
@@ -61,21 +60,21 @@ public sealed class WorkCalendarRepository : IWorkCalendarRepository
         var startOfYear = new DateTime(year, 1, 1);
         var endOfYear = new DateTime(year, 12, 31, 23, 59, 59);
 
-        return await _context.PublicHolidays
-            .Where(h => h.CompanyId == companyId && h.IsActive &&
+        return (await _context.PublicHolidays
+            .Where(h => h.IsActive &&
                        ((h.HolidayDate >= startOfYear && h.HolidayDate <= endOfYear) || h.IsRecurring))
             .OrderBy(h => h.HolidayDate)
-            .ToListAsync(cancellationToken);
+            .ToListAsync(cancellationToken)).StampAll(companyId);
     }
 
     public async Task<PublicHoliday?> GetHolidayByDateAsync(long companyId, DateTime date, CancellationToken cancellationToken = default)
     {
         var dateOnly = date.Date;
-        return await _context.PublicHolidays
-            .Where(h => h.CompanyId == companyId && h.IsActive &&
+        return (await _context.PublicHolidays
+            .Where(h => h.IsActive &&
                        (h.HolidayDate.Date == dateOnly ||
                         (h.IsRecurring && h.HolidayDate.Month == dateOnly.Month && h.HolidayDate.Day == dateOnly.Day)))
-            .FirstOrDefaultAsync(cancellationToken);
+            .FirstOrDefaultAsync(cancellationToken))?.Stamp(companyId);
     }
 
     public async Task AddHolidayAsync(PublicHoliday holiday, CancellationToken cancellationToken = default)

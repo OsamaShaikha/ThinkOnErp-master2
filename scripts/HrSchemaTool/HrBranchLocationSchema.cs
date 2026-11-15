@@ -4,7 +4,6 @@ internal static class HrBranchLocationSchema
     private static readonly HrSchemaColumnExpectation[] Columns =
     [
         new("HR_BRANCH_ATTENDANCE_LOCATION", "BRANCH_ID", "NUMBER", "N", Precision: 19, Scale: 0),
-        new("HR_BRANCH_ATTENDANCE_LOCATION", "COMPANY_ID", "NUMBER", "N", Precision: 19, Scale: 0),
         new("HR_BRANCH_ATTENDANCE_LOCATION", "LATITUDE", "NUMBER", "Y", Precision: 10, Scale: 7),
         new("HR_BRANCH_ATTENDANCE_LOCATION", "LONGITUDE", "NUMBER", "Y", Precision: 11, Scale: 7),
         new("HR_BRANCH_ATTENDANCE_LOCATION", "RADIUS_METERS", "NUMBER", "N", Precision: 10, Scale: 2),
@@ -40,7 +39,7 @@ internal static class HrBranchLocationSchema
         }
         command.CommandText = """
             CREATE TABLE DEV_TEMPLATE.HR_BRANCH_ATTENDANCE_LOCATION (
-                BRANCH_ID NUMBER(19) PRIMARY KEY, COMPANY_ID NUMBER(19) NOT NULL,
+                BRANCH_ID NUMBER(19) PRIMARY KEY,
                 LATITUDE NUMBER(10,7) NULL, LONGITUDE NUMBER(11,7) NULL,
                 RADIUS_METERS NUMBER(10,2) NOT NULL, ENFORCE_GEOFENCE NUMBER(1) NOT NULL,
                 CREATION_USER NVARCHAR2(200) NOT NULL, CREATION_DATE TIMESTAMP(7) NOT NULL,

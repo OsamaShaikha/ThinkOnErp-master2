@@ -2,14 +2,33 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using ThinkOnErp.API.Authorization;
 using ThinkOnErp.API.Swagger;
 using ThinkOnErp.Application.Common;
 using ThinkOnErp.Application.DTOs.Hr;
+using ThinkOnErp.Application.Features.Hr.Payroll.Commands.ApprovePayroll;
+using ThinkOnErp.Application.Features.Hr.Payroll.Commands.CalculatePayroll;
+using ThinkOnErp.Application.Features.Hr.Payroll.Commands.CancelPayroll;
+using ThinkOnErp.Application.Features.Hr.Payroll.Commands.ClosePeriod;
+using ThinkOnErp.Application.Features.Hr.Payroll.Commands.CorrectPayroll;
+using ThinkOnErp.Application.Features.Hr.Payroll.Commands.CreatePeriod;
+using ThinkOnErp.Application.Features.Hr.Payroll.Commands.ReopenPeriod;
+using ThinkOnErp.Application.Features.Hr.Payroll.Commands.WithdrawPayrollHandoff;
+using ThinkOnErp.Application.Features.Hr.Payroll.Queries.ComparePayrollRun;
+using ThinkOnErp.Application.Features.Hr.Payroll.Queries.GetCalculationExplanation;
+using ThinkOnErp.Application.Features.Hr.Payroll.Queries.GetEmployeePayslip;
+using ThinkOnErp.Application.Features.Hr.Payroll.Queries.GetMyPayslips;
+using ThinkOnErp.Application.Features.Hr.Payroll.Queries.GetPayrollHandoffPaymentStatus;
+using ThinkOnErp.Application.Features.Hr.Payroll.Queries.GetPayrollHandoffStatus;
+using ThinkOnErp.Application.Features.Hr.Payroll.Queries.GetPayrollRunById;
+using ThinkOnErp.Application.Features.Hr.Payroll.Queries.GetPayrollRuns;
+using ThinkOnErp.Application.Features.Hr.Payroll.Queries.GetPeriods;
 using ThinkOnErp.Application.Services.Hr;
 using ThinkOnErp.Domain.Entities.Hr;
 using ThinkOnErp.Domain.Models;
@@ -21,21 +40,27 @@ namespace ThinkOnErp.API.Controllers.Hr;
 [ApiExplorerSettings(GroupName = ApiCategories.Hr)]
 [TenantScoped]
 [Authorize]
-public sealed class PayrollController : ControllerBase
+public sealed class PayrollController : HrControllerBase
 {
-    public sealed record WithdrawHandoffRequest(string Reason);
-    public sealed record PayrollCorrectionRequest(string Reason);
-    private readonly IPayrollService _payrollService;
-    private readonly IPayrollExplanationService _explanationService;
-    private readonly ILogger<PayrollController> _logger;
+    private readonly IMediator? _mediator;
+    private readonly IPayrollService? _payrollService;
+    private readonly IPayrollExplanationService? _explanationService;
+    private readonly ILogger<PayrollController>? _logger;
 
+    [ActivatorUtilitiesConstructor]
+    public PayrollController(IMediator mediator)
+    {
+        _mediator = mediator ?? throw new ArgumentNullException(nameof(mediator));
+    }
+
+    [Obsolete("Transitional constructor for existing test suites. Production uses the IMediator constructor.")]
     public PayrollController(
         IPayrollService payrollService,
         IPayrollExplanationService explanationService,
         ILogger<PayrollController> logger)
     {
-        _payrollService = payrollService;
-        _explanationService = explanationService;
+        _payrollService = payrollService ?? throw new ArgumentNullException(nameof(payrollService));
+        _explanationService = explanationService ?? throw new ArgumentNullException(nameof(explanationService));
         _logger = logger;
     }
 
@@ -46,8 +71,11 @@ public sealed class PayrollController : ControllerBase
         [FromBody] CreatePayrollRunDto dto,
         CancellationToken cancellationToken)
     {
-        var user = User.Identity?.Name ?? "SYSTEM";
-        var result = await _payrollService.CreateAndCalculatePayrollRunAsync(dto, user, cancellationToken);
+        if (_mediator != null)
+            return FromResponse(await _mediator.Send(new CalculatePayrollCommand(dto, CurrentUsername), cancellationToken));
+
+        var user = CurrentUsername;
+        var result = await _payrollService!.CreateAndCalculatePayrollRunAsync(dto, user, cancellationToken);
         return Ok(ApiResponse<PayrollCalculationResultDto>.CreateSuccess(result, "Payroll run calculated successfully."));
     }
 
@@ -58,8 +86,11 @@ public sealed class PayrollController : ControllerBase
         long id,
         CancellationToken cancellationToken)
     {
-        var user = User.Identity?.Name ?? "SYSTEM";
-        var result = await _payrollService.ApprovePayrollRunAsync(id, user, cancellationToken);
+        if (_mediator != null)
+            return FromResponse(await _mediator.Send(new ApprovePayrollCommand(id, CurrentUsername), cancellationToken));
+
+        var user = CurrentUsername;
+        var result = await _payrollService!.ApprovePayrollRunAsync(id, user, cancellationToken);
         return Ok(ApiResponse<PayrollRun>.CreateSuccess(result, "Payroll run approved successfully."));
     }
 
@@ -69,7 +100,10 @@ public sealed class PayrollController : ControllerBase
     public async Task<ActionResult<ApiResponse<PayrollCalculationResultDto>>> CorrectPayroll(
         long id, [FromBody] PayrollCorrectionRequest request, CancellationToken cancellationToken)
     {
-        var result = await _payrollService.CreatePayrollCorrectionAsync(id, request.Reason, User.Identity?.Name ?? "SYSTEM", cancellationToken);
+        if (_mediator != null)
+            return FromResponse(await _mediator.Send(new CorrectPayrollCommand(id, request.Reason, CurrentUsername), cancellationToken));
+
+        var result = await _payrollService!.CreatePayrollCorrectionAsync(id, request.Reason, CurrentUsername, cancellationToken);
         return Ok(ApiResponse<PayrollCalculationResultDto>.CreateSuccess(result, "A new payroll correction version was calculated; the prior run remains unchanged."));
     }
 
@@ -79,7 +113,10 @@ public sealed class PayrollController : ControllerBase
     public async Task<ActionResult<ApiResponse<PayrollCalculationResultDto>>> CancelPayroll(
         long id, [FromBody] CancelPayrollRunDto dto, CancellationToken cancellationToken)
     {
-        var result = await _payrollService.CancelPayrollRunAsync(id, dto, User.Identity?.Name ?? "SYSTEM", cancellationToken);
+        if (_mediator != null)
+            return FromResponse(await _mediator.Send(new CancelPayrollCommand(id, dto, CurrentUsername), cancellationToken));
+
+        var result = await _payrollService!.CancelPayrollRunAsync(id, dto, CurrentUsername, cancellationToken);
         return Ok(ApiResponse<PayrollCalculationResultDto>.CreateSuccess(result, "Payroll calculation cancelled; its history is retained."));
     }
 
@@ -111,15 +148,18 @@ public sealed class PayrollController : ControllerBase
         long id,
         CancellationToken cancellationToken)
     {
-        var result = await _payrollService.GetPayrollRunByIdAsync(id, cancellationToken);
+        if (_mediator != null)
+            return FromResponse(await _mediator.Send(new GetPayrollRunByIdQuery(id), cancellationToken));
+
+        var result = await _payrollService!.GetPayrollRunByIdAsync(id, cancellationToken);
         if (result == null) return NotFound(ApiResponse<PayrollCalculationResultDto>.CreateFailure("Payroll run not found.", statusCode: StatusCodes.Status404NotFound));
         return Ok(ApiResponse<PayrollCalculationResultDto>.CreateSuccess(result, "Payroll run retrieved successfully."));
     }
 
     [HttpGet]
-    [ProducesResponseType(typeof(ApiResponse<ThinkOnErp.Application.Common.PagedResultDto<PayrollRunListItemDto>>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<PagedResultDto<PayrollRunListItemDto>>), StatusCodes.Status200OK)]
     [HrPermission("hr-payroll", "view")]
-    public async Task<ActionResult<ApiResponse<ThinkOnErp.Application.Common.PagedResultDto<PayrollRunListItemDto>>>> GetPayrollRuns(
+    public async Task<ActionResult<ApiResponse<PagedResultDto<PayrollRunListItemDto>>>> GetPayrollRuns(
         [FromQuery] string? period,
         [FromQuery] long? branchId,
         [FromQuery] string? status,
@@ -127,36 +167,43 @@ public sealed class PayrollController : ControllerBase
         [FromQuery] int pageSize = 20,
         CancellationToken cancellationToken = default)
     {
+        if (_mediator != null)
+            return FromResponse(await _mediator.Send(new GetPayrollRunsQuery(ResolveTenantCompanyId(), period, branchId, status, pageIndex, pageSize), cancellationToken));
+
         if (pageIndex is < 1 or > 1_000_000 || pageSize is < 1 or > 100 || branchId is <= 0)
-            return BadRequest(ApiResponse<ThinkOnErp.Application.Common.PagedResultDto<PayrollRunListItemDto>>.CreateFailure(
+            return BadRequest(ApiResponse<PagedResultDto<PayrollRunListItemDto>>.CreateFailure(
                 "Page, page size or branch filter is invalid.", statusCode: StatusCodes.Status400BadRequest));
 
-        var result = await _payrollService.GetPayrollRunsAsync(
+        var result = await _payrollService!.GetPayrollRunsAsync(
             ResolveTenantCompanyId(), period, branchId, status, pageIndex, pageSize, cancellationToken);
-        return Ok(ApiResponse<ThinkOnErp.Application.Common.PagedResultDto<PayrollRunListItemDto>>.CreateSuccess(
+        return Ok(ApiResponse<PagedResultDto<PayrollRunListItemDto>>.CreateSuccess(
             result, "Payroll runs retrieved successfully."));
     }
 
     [HttpGet("me/payslips")]
     [HrPermission("hr-payroll", "view", selfService: true)]
-    [ProducesResponseType(typeof(ApiResponse<ThinkOnErp.Application.Common.PagedResultDto<PayslipSummaryDto>>), StatusCodes.Status200OK)]
-    public async Task<ActionResult<ApiResponse<ThinkOnErp.Application.Common.PagedResultDto<PayslipSummaryDto>>>> GetMyPayslips(
+    [ProducesResponseType(typeof(ApiResponse<PagedResultDto<PayslipSummaryDto>>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<ApiResponse<PagedResultDto<PayslipSummaryDto>>>> GetMyPayslips(
         [FromQuery] int pageIndex = 1,
         [FromQuery] int pageSize = 20,
         CancellationToken cancellationToken = default)
     {
-        if (!long.TryParse(User.FindFirst("userId")?.Value, out var userId) || userId <= 0)
+        if (!TryGetCurrentUserId(out var userId))
             return Unauthorized();
+
+        if (_mediator != null)
+            return FromResponse(await _mediator.Send(new GetMyPayslipsQuery(ResolveTenantCompanyId(), userId, pageIndex, pageSize), cancellationToken));
+
         if (pageIndex is < 1 or > 1_000_000 || pageSize is < 1 or > 100)
-            return BadRequest(ApiResponse<ThinkOnErp.Application.Common.PagedResultDto<PayslipSummaryDto>>.CreateFailure(
+            return BadRequest(ApiResponse<PagedResultDto<PayslipSummaryDto>>.CreateFailure(
                 "Page or page size is invalid.", statusCode: StatusCodes.Status400BadRequest));
 
-        var result = await _payrollService.GetMyPayslipsAsync(
+        var result = await _payrollService!.GetMyPayslipsAsync(
             ResolveTenantCompanyId(), userId, pageIndex, pageSize, cancellationToken);
         if (result == null)
-            return NotFound(ApiResponse<ThinkOnErp.Application.Common.PagedResultDto<PayslipSummaryDto>>.CreateFailure(
+            return NotFound(ApiResponse<PagedResultDto<PayslipSummaryDto>>.CreateFailure(
                 "No employee is linked to this account.", statusCode: StatusCodes.Status404NotFound));
-        return Ok(ApiResponse<ThinkOnErp.Application.Common.PagedResultDto<PayslipSummaryDto>>.CreateSuccess(
+        return Ok(ApiResponse<PagedResultDto<PayslipSummaryDto>>.CreateSuccess(
             result, "Payslips retrieved successfully."));
     }
 
@@ -166,7 +213,10 @@ public sealed class PayrollController : ControllerBase
     public async Task<ActionResult<ApiResponse<PayslipSummaryDto>>> GetEmployeePayslip(
         long id, string employeeCode, CancellationToken cancellationToken)
     {
-        var result = await _payrollService.GetEmployeePayslipAsync(
+        if (_mediator != null)
+            return FromResponse(await _mediator.Send(new GetEmployeePayslipQuery(ResolveTenantCompanyId(), id, employeeCode), cancellationToken));
+
+        var result = await _payrollService!.GetEmployeePayslipAsync(
             ResolveTenantCompanyId(), id, employeeCode, cancellationToken);
         if (result == null)
             return NotFound(ApiResponse<PayslipSummaryDto>.CreateFailure(
@@ -182,7 +232,10 @@ public sealed class PayrollController : ControllerBase
         long id,
         CancellationToken cancellationToken)
     {
-        var status = await _payrollService.GetPayrollHandoffStatusAsync(id, cancellationToken);
+        if (_mediator != null)
+            return FromResponse(await _mediator.Send(new GetPayrollHandoffStatusQuery(id), cancellationToken));
+
+        var status = await _payrollService!.GetPayrollHandoffStatusAsync(id, cancellationToken);
         if (status == null)
             return NotFound(ApiResponse<PayrollHandoffStatusDto>.CreateFailure("Payroll handoff not found.", statusCode: StatusCodes.Status404NotFound));
         return Ok(ApiResponse<PayrollHandoffStatusDto>.CreateSuccess(status, "Payroll handoff status retrieved successfully."));
@@ -196,7 +249,10 @@ public sealed class PayrollController : ControllerBase
         long id,
         CancellationToken cancellationToken)
     {
-        var status = await _payrollService.GetPayrollHandoffPaymentStatusAsync(id, cancellationToken);
+        if (_mediator != null)
+            return FromResponse(await _mediator.Send(new GetPayrollHandoffPaymentStatusQuery(id), cancellationToken));
+
+        var status = await _payrollService!.GetPayrollHandoffPaymentStatusAsync(id, cancellationToken);
         if (status == null)
             return NotFound(ApiResponse<PayrollHandoffPaymentStatusDto>.CreateFailure("Payroll handoff payment status not found.", statusCode: StatusCodes.Status404NotFound));
         return Ok(ApiResponse<PayrollHandoffPaymentStatusDto>.CreateSuccess(status, "Payroll payment status retrieved successfully."));
@@ -211,7 +267,10 @@ public sealed class PayrollController : ControllerBase
         [FromBody] WithdrawHandoffRequest request,
         CancellationToken cancellationToken)
     {
-        var result = await _payrollService.WithdrawPayrollHandoffAsync(id, request.Reason, User.Identity?.Name ?? "SYSTEM", cancellationToken);
+        if (_mediator != null)
+            return FromResponse(await _mediator.Send(new WithdrawPayrollHandoffCommand(id, request.Reason, CurrentUsername), cancellationToken));
+
+        var result = await _payrollService!.WithdrawPayrollHandoffAsync(id, request.Reason, CurrentUsername, cancellationToken);
         if (result == null)
             return NotFound(ApiResponse<PayrollHandoffStatusDto>.CreateFailure("Payroll handoff not found.", statusCode: StatusCodes.Status404NotFound));
         return Ok(ApiResponse<PayrollHandoffStatusDto>.CreateSuccess(result, "Payroll handoff withdrawn before Accounting acceptance."));
@@ -250,7 +309,10 @@ public sealed class PayrollController : ControllerBase
         long lineId,
         CancellationToken cancellationToken)
     {
-        var result = await _explanationService.GetExplanationAsync(lineId, cancellationToken);
+        if (_mediator != null)
+            return FromResponse(await _mediator.Send(new GetCalculationExplanationQuery(lineId), cancellationToken));
+
+        var result = await _explanationService!.GetExplanationAsync(lineId, cancellationToken);
         if (result == null) return NotFound(ApiResponse<PayrollExplanationDto>.CreateFailure("Calculation explanation snapshot not found.", statusCode: StatusCodes.Status404NotFound));
         return Ok(ApiResponse<PayrollExplanationDto>.CreateSuccess(result, "Calculation explanation retrieved successfully."));
     }
@@ -263,7 +325,10 @@ public sealed class PayrollController : ControllerBase
         [FromQuery] int? year,
         CancellationToken cancellationToken)
     {
-        var result = await _payrollService.GetPeriodsAsync(companyId, year, cancellationToken);
+        if (_mediator != null)
+            return FromResponse(await _mediator.Send(new GetPeriodsQuery(companyId, year), cancellationToken));
+
+        var result = await _payrollService!.GetPeriodsAsync(companyId, year, cancellationToken);
         return Ok(ApiResponse<IReadOnlyList<PayrollPeriod>>.CreateSuccess(result, "Payroll periods retrieved successfully."));
     }
 
@@ -277,6 +342,9 @@ public sealed class PayrollController : ControllerBase
     {
         if (request == null)
             return BadRequest(ApiResponse<PayrollPeriod>.CreateFailure("Request body cannot be null", statusCode: 400));
+
+        if (_mediator != null)
+            return FromResponse(await _mediator.Send(new CreatePeriodCommand(ResolveTenantCompanyId(), request, CurrentUsername), cancellationToken));
 
         var payrollType = request.PayrollType.Trim().ToUpperInvariant();
         if (request.FiscalYear < 1 || request.Month is < 1 or > 12 || request.StartDate.Date > request.EndDate.Date ||
@@ -296,10 +364,10 @@ public sealed class PayrollController : ControllerBase
             PayDate = request.PayDate.Date,
             PayrollType = payrollType,
             Status = "OPEN",
-            CreationUser = User.Identity?.Name ?? "SYSTEM",
+            CreationUser = CurrentUsername,
             CreationDate = DateTime.UtcNow
         };
-        var result = await _payrollService.CreatePeriodAsync(period, cancellationToken);
+        var result = await _payrollService!.CreatePeriodAsync(period, cancellationToken);
         return Ok(ApiResponse<PayrollPeriod>.CreateSuccess(result, "Payroll period created successfully."));
     }
 
@@ -325,8 +393,11 @@ public sealed class PayrollController : ControllerBase
         if (request == null || string.IsNullOrWhiteSpace(request.Reason))
             return BadRequest(ApiResponse<PayrollPeriod>.CreateFailure("A reason is required to close a payroll period.", statusCode: 400));
 
-        var user = User.Identity?.Name ?? "SYSTEM";
-        var result = await _payrollService.ClosePeriodAsync(request.CompanyId, periodCode, request.Reason, user, cancellationToken);
+        if (_mediator != null)
+            return FromResponse(await _mediator.Send(new ClosePeriodCommand(request.CompanyId, periodCode, request.Reason, CurrentUsername), cancellationToken));
+
+        var user = CurrentUsername;
+        var result = await _payrollService!.ClosePeriodAsync(request.CompanyId, periodCode, request.Reason, user, cancellationToken);
         return Ok(ApiResponse<PayrollPeriod>.CreateSuccess(result, $"Payroll period '{periodCode}' closed successfully."));
     }
 
@@ -343,8 +414,11 @@ public sealed class PayrollController : ControllerBase
         if (request == null || string.IsNullOrWhiteSpace(request.Reason))
             return BadRequest(ApiResponse<PayrollPeriod>.CreateFailure("A reason is required to reopen a payroll period.", statusCode: 400));
 
-        var user = User.Identity?.Name ?? "SYSTEM";
-        var result = await _payrollService.ReopenPeriodAsync(request.CompanyId, periodCode, request.Reason, user, cancellationToken);
+        if (_mediator != null)
+            return FromResponse(await _mediator.Send(new ReopenPeriodCommand(request.CompanyId, periodCode, request.Reason, CurrentUsername), cancellationToken));
+
+        var user = CurrentUsername;
+        var result = await _payrollService!.ReopenPeriodAsync(request.CompanyId, periodCode, request.Reason, user, cancellationToken);
         return Ok(ApiResponse<PayrollPeriod>.CreateSuccess(result, $"Payroll period '{periodCode}' reopened successfully."));
     }
 
@@ -357,7 +431,10 @@ public sealed class PayrollController : ControllerBase
         [FromQuery] long? baselineRunId,
         CancellationToken cancellationToken)
     {
-        var result = await _payrollService.ComparePayrollRunAsync(id, baselineRunId, cancellationToken);
+        if (_mediator != null)
+            return FromResponse(await _mediator.Send(new ComparePayrollRunQuery(id, baselineRunId), cancellationToken));
+
+        var result = await _payrollService!.ComparePayrollRunAsync(id, baselineRunId, cancellationToken);
         return Ok(ApiResponse<PayrollRunComparisonDto>.CreateSuccess(result, "Payroll comparison generated successfully."));
     }
 }

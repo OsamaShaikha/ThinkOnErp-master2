@@ -4,6 +4,12 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using ThinkOnErp.Application.DTOs.Hr;
+using ThinkOnErp.Application.Features.Hr.WorkCalendars.Commands.CreatePublicHoliday;
+using ThinkOnErp.Application.Features.Hr.WorkCalendars.Commands.CreateWorkCalendar;
+using ThinkOnErp.Application.Features.Hr.WorkCalendars.Queries.CountWorkingDays;
+using ThinkOnErp.Application.Features.Hr.WorkCalendars.Queries.GetPublicHolidays;
+using ThinkOnErp.Application.Features.Hr.WorkCalendars.Queries.GetWorkCalendarById;
+using ThinkOnErp.Application.Features.Hr.WorkCalendars.Queries.GetWorkCalendars;
 using ThinkOnErp.Domain.Entities.Hr;
 using ThinkOnErp.Domain.Interfaces.Hr;
 
@@ -21,62 +27,32 @@ public interface IWorkCalendarService
     Task<int> CountWorkingDaysAsync(long companyId, DateTime fromDate, DateTime toDate, CancellationToken cancellationToken = default);
 }
 
+[Obsolete("Use MediatR requests in ThinkOnErp.Application.Features.Hr.WorkCalendars. Kept for existing test suites.")]
 public sealed class WorkCalendarService : IWorkCalendarService
 {
     private readonly IWorkCalendarRepository _repository;
+    private readonly CreateWorkCalendarCommandHandler _createCalendarHandler;
+    private readonly CreatePublicHolidayCommandHandler _createHolidayHandler;
+    private readonly GetWorkCalendarsQueryHandler _getCalendarsHandler;
+    private readonly GetWorkCalendarByIdQueryHandler _getCalendarByIdHandler;
+    private readonly GetPublicHolidaysQueryHandler _getHolidaysHandler;
+    private readonly CountWorkingDaysQueryHandler _countWorkingDaysHandler;
 
     public WorkCalendarService(IWorkCalendarRepository repository)
     {
         _repository = repository;
+        _createCalendarHandler = new(repository);
+        _createHolidayHandler = new(repository);
+        _getCalendarsHandler = new(repository);
+        _getCalendarByIdHandler = new(repository);
+        _getHolidaysHandler = new(repository);
+        _countWorkingDaysHandler = new(repository);
     }
 
     public async Task<WorkCalendar> CreateWorkCalendarAsync(CreateWorkCalendarDto dto, string user, CancellationToken cancellationToken = default)
     {
-        var calendar = new WorkCalendar
-        {
-            CompanyId = dto.CompanyId,
-            Code = dto.Code,
-            NameAr = dto.NameAr,
-            NameEn = dto.NameEn,
-            EffectiveFrom = dto.EffectiveFrom,
-            EffectiveTo = dto.EffectiveTo,
-            IsDefault = dto.IsDefault,
-            IsActive = true,
-            CreationUser = user,
-            CreationDate = DateTime.UtcNow
-        };
-
-        if (dto.Days != null && dto.Days.Count > 0)
-        {
-            foreach (var d in dto.Days)
-            {
-                calendar.Days.Add(new WorkCalendarDay
-                {
-                    DayOfWeek = d.DayOfWeek,
-                    IsWorkingDay = d.IsWorkingDay,
-                    StandardWorkingHours = d.StandardWorkingHours,
-                    DefaultShiftCode = d.DefaultShiftCode
-                });
-            }
-        }
-        else
-        {
-            // Default Sunday (0) to Thursday (4) working, Friday (5) & Saturday (6) off
-            for (int i = 0; i < 7; i++)
-            {
-                bool isWork = (i >= 0 && i <= 4);
-                calendar.Days.Add(new WorkCalendarDay
-                {
-                    DayOfWeek = i,
-                    IsWorkingDay = isWork,
-                    StandardWorkingHours = isWork ? 8.0m : 0.0m
-                });
-            }
-        }
-
-        await _repository.AddCalendarAsync(calendar, cancellationToken);
-        await _repository.SaveChangesAsync(cancellationToken);
-        return calendar;
+        var response = await _createCalendarHandler.Handle(new CreateWorkCalendarCommand(dto, user), cancellationToken);
+        return response.Data!;
     }
 
     public async Task<WorkCalendar> CreateCalendarWithDaysAsync(
@@ -89,83 +65,49 @@ public sealed class WorkCalendarService : IWorkCalendarService
         decimal standardHours = 8.0m,
         CancellationToken cancellationToken = default)
     {
-        var calendar = new WorkCalendar
-        {
-            CompanyId = companyId,
-            Code = code,
-            NameAr = nameAr,
-            NameEn = nameEn,
-            EffectiveFrom = fromDate,
-            IsDefault = true,
-            IsActive = true,
-            CreationUser = "SYSTEM",
-            CreationDate = DateTime.UtcNow
-        };
-
+        var days = new List<WorkCalendarDayDto>();
         for (int i = 0; i < 7; i++)
         {
             bool isWorking = workingDaysOfWeek.Contains(i);
-            calendar.Days.Add(new WorkCalendarDay
-            {
-                DayOfWeek = i,
-                IsWorkingDay = isWorking,
-                StandardWorkingHours = isWorking ? standardHours : 0.0m
-            });
+            days.Add(new WorkCalendarDayDto(i, isWorking, isWorking ? standardHours : 0.0m, null));
         }
 
-        await _repository.AddCalendarAsync(calendar, cancellationToken);
-        await _repository.SaveChangesAsync(cancellationToken);
-        return calendar;
+        var dto = new CreateWorkCalendarDto(companyId, code, nameAr, nameEn, fromDate, null, true, days);
+        return await CreateWorkCalendarAsync(dto, "SYSTEM", cancellationToken);
     }
 
     public async Task<IReadOnlyList<WorkCalendar>> GetCalendarsAsync(long companyId, CancellationToken cancellationToken = default)
     {
-        return await _repository.GetCalendarsAsync(companyId, cancellationToken);
+        var response = await _getCalendarsHandler.Handle(new GetWorkCalendarsQuery(companyId), cancellationToken);
+        return response.Data!;
     }
 
     public async Task<WorkCalendar?> GetCalendarByIdAsync(long id, CancellationToken cancellationToken = default)
     {
-        return await _repository.GetCalendarByIdAsync(id, cancellationToken);
+        var response = await _getCalendarByIdHandler.Handle(new GetWorkCalendarByIdQuery(id), cancellationToken);
+        return response.Data;
     }
 
     public async Task<PublicHoliday> CreateHolidayAsync(CreatePublicHolidayDto dto, string user, CancellationToken cancellationToken = default)
     {
-        var holiday = new PublicHoliday
-        {
-            CompanyId = dto.CompanyId,
-            BranchId = dto.BranchId,
-            NameAr = dto.NameAr,
-            NameEn = dto.NameEn,
-            HolidayDate = dto.HolidayDate.Date,
-            IsPaid = dto.IsPaid,
-            IsRecurring = dto.IsRecurring,
-            Description = dto.Description,
-            CreationUser = user,
-            CreationDate = DateTime.UtcNow
-        };
-
-        await _repository.AddHolidayAsync(holiday, cancellationToken);
-        await _repository.SaveChangesAsync(cancellationToken);
-        return holiday;
+        var response = await _createHolidayHandler.Handle(new CreatePublicHolidayCommand(dto, user), cancellationToken);
+        return response.Data!;
     }
 
     public async Task<IReadOnlyList<PublicHoliday>> GetHolidaysAsync(long companyId, int? year, CancellationToken cancellationToken = default)
     {
-        int targetYear = year ?? DateTime.UtcNow.Year;
-        return await _repository.GetHolidaysAsync(companyId, targetYear, cancellationToken);
+        var response = await _getHolidaysHandler.Handle(new GetPublicHolidaysQuery(companyId, year), cancellationToken);
+        return response.Data!;
     }
 
     public async Task<bool> IsWorkingDayAsync(long companyId, DateTime date, CancellationToken cancellationToken = default)
     {
-        // 1. Check if public holiday
         var holiday = await _repository.GetHolidayByDateAsync(companyId, date, cancellationToken);
         if (holiday != null) return false;
 
-        // 2. Check active calendar day
         var calendar = await _repository.GetActiveCalendarAsync(companyId, date, cancellationToken);
         if (calendar == null)
         {
-            // Default weekend: Friday (5) & Saturday (6)
             var dow = (int)date.DayOfWeek;
             return (dow != 5 && dow != 6);
         }
@@ -176,14 +118,7 @@ public sealed class WorkCalendarService : IWorkCalendarService
 
     public async Task<int> CountWorkingDaysAsync(long companyId, DateTime fromDate, DateTime toDate, CancellationToken cancellationToken = default)
     {
-        int workingDays = 0;
-        for (var d = fromDate.Date; d <= toDate.Date; d = d.AddDays(1))
-        {
-            if (await IsWorkingDayAsync(companyId, d, cancellationToken))
-            {
-                workingDays++;
-            }
-        }
-        return workingDays;
+        var response = await _countWorkingDaysHandler.Handle(new CountWorkingDaysQuery(companyId, fromDate, toDate), cancellationToken);
+        return response.Data;
     }
 }

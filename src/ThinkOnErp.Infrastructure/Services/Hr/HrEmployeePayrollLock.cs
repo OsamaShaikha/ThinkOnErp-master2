@@ -24,9 +24,9 @@ internal static class HrEmployeePayrollLock
         {
             await using var command = db.Database.GetDbConnection().CreateCommand();
             command.Transaction = transaction.GetDbTransaction();
-            command.CommandText = "SELECT STATUS,START_DATE,END_DATE FROM HR_PAYROLL_PERIOD WHERE COMPANY_ID=:companyId AND TRUNC(START_DATE)<=:endDate AND TRUNC(END_DATE)>=:startDate ORDER BY ID FOR UPDATE";
+            command.CommandText = "SELECT STATUS,START_DATE,END_DATE FROM HR_PAYROLL_PERIOD WHERE TRUNC(START_DATE)<=:endDate AND TRUNC(END_DATE)>=:startDate ORDER BY ID FOR UPDATE";
             void Add(string name, object value) { var p = command.CreateParameter(); p.ParameterName = name; p.Value = value; command.Parameters.Add(p); }
-            Add("companyId", companyId.Value); Add("endDate", ranges.Max(r => r.End)); Add("startDate", ranges.Min(r => r.Start));
+            Add("endDate", ranges.Max(r => r.End)); Add("startDate", ranges.Min(r => r.Start));
             await using var reader = await command.ExecuteReaderAsync(ct);
             while (await reader.ReadAsync(ct))
                 if (reader.GetString(0).Equals("CLOSED", StringComparison.OrdinalIgnoreCase) &&
@@ -47,7 +47,7 @@ internal static class HrEmployeePayrollLock
             await entry.ReloadAsync(ct);
         if (ranges.Count == 0) return;
         var from = ranges.Min(r => r.Start); var to = ranges.Max(r => r.End);
-        var periods = await db.PayrollPeriods.AsNoTracking().Where(p => p.CompanyId == companyId && p.StartDate.Date <= to && p.EndDate.Date >= from)
+        var periods = await db.PayrollPeriods.AsNoTracking().Where(p => p.StartDate.Date <= to && p.EndDate.Date >= from)
             .Select(p => new { p.PeriodCode, p.StartDate, p.EndDate }).ToListAsync(ct);
         var codes = periods.Where(p => ranges.Any(r => ShiftAssignmentRules.Overlap(r, new(p.StartDate.Date, p.EndDate.Date)))).Select(p => p.PeriodCode).Distinct().ToArray();
         foreach (var chunk in codes.Chunk(500))

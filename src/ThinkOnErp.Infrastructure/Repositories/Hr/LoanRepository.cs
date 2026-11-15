@@ -54,7 +54,7 @@ public sealed class LoanRepository : ILoanRepository
                 : $"Currency '{normalizedCurrency}' is ambiguous in the ERP currency catalog.");
 
         var configuredDecimals = await _context.PayrollCurrencyPrecisions.AsNoTracking()
-            .Where(p => p.CompanyId == companyId && p.CurrencyCode == normalizedCurrency)
+            .Where(p => p.CurrencyCode == normalizedCurrency)
             .Select(p => (int?)p.DecimalPlaces)
             .SingleOrDefaultAsync(cancellationToken);
 

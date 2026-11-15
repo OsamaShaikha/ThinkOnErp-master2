@@ -1,3 +1,6 @@
+using System;
+using System.Threading;
+using System.Threading.Tasks;
 using ThinkOnErp.Domain.Entities.Hr;
 using ThinkOnErp.Domain.Interfaces.Hr;
 
@@ -9,6 +12,7 @@ public interface IAttendanceDayStatusService
     Task<AttendanceDayClassificationDto> SaveAsync(string employeeCode, DateOnly workDate, string user, CancellationToken ct = default);
 }
 
+[Obsolete("Use the MediatR requests in ThinkOnErp.Application.Features.Hr.Attendance.")]
 public sealed class AttendanceDayStatusService(IShiftTimingService timing, IAttendanceDayClassifier classifier,
     IAttendanceCorrectionRepository attendance, IAttendanceTimeSettingsRepository settings, IPolicyRepository policies, IHrUnitOfWork unitOfWork) : IAttendanceDayStatusService
 {

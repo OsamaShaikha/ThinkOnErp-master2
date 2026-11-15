@@ -310,14 +310,8 @@ public class OracleDbContext : DbContext
         foreach (var entity in modelBuilder.Model.GetEntityTypes().Where(e => e.ClrType != typeof(Employee) &&
             e.GetTableName()?.StartsWith("HR_") == true).ToList())
         {
-            if (entity.FindProperty("EmployeeCode") != null && entity.FindProperty("CompanyId") != null)
-                typeof(OracleDbContext).GetMethod(nameof(SetCompanyEmployeeScope), System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)!
-                    .MakeGenericMethod(entity.ClrType).Invoke(this, new object[] { modelBuilder });
-            else if (entity.FindProperty("EmployeeCode") != null)
+            if (entity.FindProperty("EmployeeCode") != null)
                 typeof(OracleDbContext).GetMethod(nameof(SetEmployeeScope), System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)!
-                    .MakeGenericMethod(entity.ClrType).Invoke(this, new object[] { modelBuilder });
-            else if (entity.FindProperty("CompanyId") != null)
-                typeof(OracleDbContext).GetMethod(nameof(SetCompanyScope), System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)!
                     .MakeGenericMethod(entity.ClrType).Invoke(this, new object[] { modelBuilder });
         }
         modelBuilder.Entity<PayrollRun>().HasQueryFilter(r => !HrScopeEnabled ||
@@ -332,12 +326,12 @@ public class OracleDbContext : DbContext
              (HrScopeAllBranches || HrScopeBranchIds.Contains(d.BranchId.Value)))));
         modelBuilder.Entity<HrPosition>().HasQueryFilter(p => !HrScopeEnabled || Set<HrDepartment>().Any(d => d.DepartmentCode == p.DepartmentCode));
         modelBuilder.Entity<BranchAttendanceLocation>().HasQueryFilter(r => !HrScopeEnabled ||
-            (r.CompanyId == HrScopeCompanyId && (HrScopeAllBranches || HrScopeBranchIds.Contains(r.BranchId))));
+            (HrScopeAllBranches || HrScopeBranchIds.Contains(r.BranchId)));
         modelBuilder.Entity<EmployeeDependent>().HasQueryFilter(r => !HrScopeEnabled || Employees.Any(e => e.EmployeeCode == r.EmployeeCode));
         modelBuilder.Entity<PayrollRunLineComponent>().HasQueryFilter(r => !HrScopeEnabled ||
             PayrollRunLines.Any(l => l.Id == r.PayrollLineId));
         modelBuilder.Entity<HrAccountingHandoff>().HasQueryFilter(r => !HrScopeEnabled ||
-            (r.CompanyId == HrScopeCompanyId && (HrScopeAllBranches || (r.BranchId.HasValue && HrScopeBranchIds.Contains(r.BranchId.Value)))));
+            (HrScopeAllBranches || (r.BranchId.HasValue && HrScopeBranchIds.Contains(r.BranchId.Value))));
         modelBuilder.Entity<HrAccountingHandoffLine>().HasQueryFilter(r => !HrScopeEnabled ||
             HrAccountingHandoffs.Any(h => h.Id == r.HandoffId));
         modelBuilder.Entity<HrAccountingHandoffTransition>().HasQueryFilter(r => !HrScopeEnabled ||
@@ -371,13 +365,5 @@ public class OracleDbContext : DbContext
     private void SetEmployeeScope<TEntity>(ModelBuilder builder) where TEntity : class =>
         builder.Entity<TEntity>().HasQueryFilter(row => !HrScopeEnabled ||
             Employees.Any(e => e.EmployeeCode == EF.Property<string>(row, "EmployeeCode")));
-
-    private void SetCompanyScope<TEntity>(ModelBuilder builder) where TEntity : class =>
-        builder.Entity<TEntity>().HasQueryFilter(row => !HrScopeEnabled || EF.Property<long>(row, "CompanyId") == HrScopeCompanyId);
-
-    private void SetCompanyEmployeeScope<TEntity>(ModelBuilder builder) where TEntity : class =>
-        builder.Entity<TEntity>().HasQueryFilter(row => !HrScopeEnabled ||
-            (EF.Property<long>(row, "CompanyId") == HrScopeCompanyId &&
-             Employees.Any(e => e.EmployeeCode == EF.Property<string>(row, "EmployeeCode"))));
 
 }

@@ -23,29 +23,29 @@ public sealed class PayrollInputSnapshotService(OracleDbContext db) : IPayrollIn
         var payload = new
         {
             version = 3,
-            period = new { period.CompanyId, period.PeriodCode, period.StartDate, period.EndDate, period.Status },
+            period = new { CompanyId = db.HrScopeCompanyId, period.PeriodCode, period.StartDate, period.EndDate, period.Status },
             employees = await employees.OrderBy(e => e.EmployeeCode).ToListAsync(cancellationToken),
             dependents = await db.EmployeeDependents.AsNoTracking().Where(d => codes.Contains(d.EmployeeCode)).OrderBy(d => d.Id).ToListAsync(cancellationToken),
-            prorationPolicies = await db.ProrationPolicies.AsNoTracking().Where(p => p.CompanyId == period.CompanyId).OrderBy(p => p.Id).ToListAsync(cancellationToken),
-            sscPolicies = await db.SSCPolicies.AsNoTracking().Where(p => p.CompanyId == period.CompanyId).OrderBy(p => p.Id).ToListAsync(cancellationToken),
-            deductionPolicies = await db.DeductionPolicies.AsNoTracking().Where(p => p.CompanyId == period.CompanyId).OrderBy(p => p.Id).ToListAsync(cancellationToken),
-            taxPolicies = await db.TaxPolicies.AsNoTracking().Where(p => p.CompanyId == period.CompanyId).OrderBy(p => p.Id).ToListAsync(cancellationToken),
-            taxBrackets = await db.TaxBrackets.AsNoTracking().Where(b => db.TaxPolicies.Where(p => p.CompanyId == period.CompanyId).Select(p => p.Id).Contains(b.TaxPolicyId)).OrderBy(b => b.Id).ToListAsync(cancellationToken),
+            prorationPolicies = await db.ProrationPolicies.AsNoTracking().OrderBy(p => p.Id).ToListAsync(cancellationToken),
+            sscPolicies = await db.SSCPolicies.AsNoTracking().OrderBy(p => p.Id).ToListAsync(cancellationToken),
+            deductionPolicies = await db.DeductionPolicies.AsNoTracking().OrderBy(p => p.Id).ToListAsync(cancellationToken),
+            taxPolicies = await db.TaxPolicies.AsNoTracking().OrderBy(p => p.Id).ToListAsync(cancellationToken),
+            taxBrackets = await db.TaxBrackets.AsNoTracking().OrderBy(b => b.Id).ToListAsync(cancellationToken),
             overtimeRules = await db.OvertimeRules.AsNoTracking()
-                .Where(r => r.CompanyId == period.CompanyId && r.EffectiveFrom <= period.EndDate &&
+                .Where(r => r.EffectiveFrom <= period.EndDate &&
                     (!r.EffectiveTo.HasValue || r.EffectiveTo.Value >= period.StartDate))
                 .OrderBy(r => r.Id).ToListAsync(cancellationToken),
             currencyPrecision = await db.PayrollCurrencyPrecisions.AsNoTracking()
-                .Where(p => p.CompanyId == period.CompanyId).OrderBy(p => p.CurrencyCode).ToListAsync(cancellationToken),
+                .OrderBy(p => p.CurrencyCode).ToListAsync(cancellationToken),
             branchRoundingRules = await db.SysBranches.AsNoTracking()
-                .Where(b => b.CompanyId == period.CompanyId && (!branchId.HasValue || b.Id == branchId.Value))
+                .Where(b => b.CompanyId == db.HrScopeCompanyId && (!branchId.HasValue || b.Id == branchId.Value))
                 .OrderBy(b => b.Id).Select(b => new { b.Id, b.RoundingRules }).ToListAsync(cancellationToken),
             workCalendars = await db.WorkCalendars.AsNoTracking().Include(c => c.Days)
-                .Where(c => c.CompanyId == period.CompanyId && c.EffectiveFrom <= period.EndDate &&
+                .Where(c => c.EffectiveFrom <= period.EndDate &&
                     (!c.EffectiveTo.HasValue || c.EffectiveTo.Value >= period.StartDate))
                 .OrderBy(c => c.Id).ToListAsync(cancellationToken),
             holidays = await db.PublicHolidays.AsNoTracking()
-                .Where(h => h.CompanyId == period.CompanyId &&
+                .Where(h =>
                     ((h.HolidayDate >= period.StartDate.Date && h.HolidayDate < period.EndDate.Date.AddDays(1)) || h.IsRecurring))
                 .OrderBy(h => h.Id).ToListAsync(cancellationToken),
             salaries = await structures.OrderBy(s => s.Id).ToListAsync(cancellationToken),
@@ -65,13 +65,13 @@ public sealed class PayrollInputSnapshotService(OracleDbContext db) : IPayrollIn
             advances = await db.EmployeeAdvances.AsNoTracking()
                 .Where(a => codes.Contains(a.EmployeeCode) && a.TargetPayPeriod == period.PeriodCode)
                 .OrderBy(a => a.Id).ToListAsync(cancellationToken),
-            adjustments = await PayrollCalculationAdjustmentQuery.ForPeriod(db, period.CompanyId, period.PeriodCode)
+            adjustments = await PayrollCalculationAdjustmentQuery.ForPeriod(db, db.HrScopeCompanyId, period.PeriodCode)
                 .Where(a => codes.Contains(a.EmployeeCode))
                 .AsNoTracking().OrderBy(a => a.Id)
                 .Select(a => new
                 {
                     a.Id,
-                    a.CompanyId,
+                    CompanyId = db.HrScopeCompanyId,
                     a.EmployeeCode,
                     a.PayPeriod,
                     a.ComponentCode,

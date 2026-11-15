@@ -29,6 +29,7 @@ public static class EndOfServiceSettlementStatus
 public sealed class EndOfServiceSettlement
 {
     public long Id { get; set; }
+    [System.ComponentModel.DataAnnotations.Schema.NotMapped]
     public long CompanyId { get; set; }
     public long? BranchId { get; set; }
     public string EmployeeCode { get; set; } = string.Empty;
@@ -104,6 +105,7 @@ public sealed class EndOfServiceSettlementLine
 public sealed class EndOfServicePolicy
 {
     public long Id { get; set; }
+    [System.ComponentModel.DataAnnotations.Schema.NotMapped]
     public long CompanyId { get; set; }
     public DateTime? EffectiveFrom { get; set; }
     public DateTime? EffectiveTo { get; set; }

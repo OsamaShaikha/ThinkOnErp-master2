@@ -1,0 +1,642 @@
+using System;
+using System.ComponentModel.DataAnnotations;
+using System.Collections.Generic;
+
+namespace ThinkOnErp.Application.DTOs.Hr;
+
+public sealed record EmployeeTeamMemberDto(string EmployeeCode, string NameLocal, string NameEn, string? DepartmentCode,
+    string? PositionCode, long? BranchId, string EmploymentStatus, bool IsActive);
+
+public record OvertimeRuleDto(
+    long CompanyId,
+    string Code,
+    string NameAr,
+    string NameEn,
+    DateTime EffectiveFrom,
+    DateTime? EffectiveTo,
+    string DayType,
+    decimal Multiplier,
+    int MinimumMinutes,
+    int MaximumMinutes,
+    string HourlyDivisorFormula,
+    bool RequiresApproval
+);
+
+public record ProrationPolicyDto(
+    long CompanyId,
+    string Code,
+    string NameAr,
+    string NameEn,
+    DateTime EffectiveFrom,
+    DateTime? EffectiveTo,
+    string Method,
+    bool IsDefault,
+    string SalarySegmentAllocation = "UNCONFIGURED"
+);
+
+public record DeductionPolicyDto(
+    long CompanyId,
+    string Code,
+    string NameAr,
+    string NameEn,
+    DateTime EffectiveFrom,
+    DateTime? EffectiveTo,
+    decimal MaxDeductionPercentage,
+    decimal MinNetPayGuarantee,
+    bool AutoCapAndCarryForward,
+    bool AllowNegativeNetPay,
+    bool IsDefault
+);
+
+public record TaxPolicyDto(
+    long CompanyId,
+    string Code,
+    string NameAr,
+    string NameEn,
+    DateTime EffectiveFrom,
+    DateTime? EffectiveTo,
+    decimal PersonalExemptionSelf,
+    decimal PersonalExemptionDependent,
+    decimal NationalContribThreshold,
+    decimal NationalContribRate,
+    bool IsSscTaxDeductible,
+    string CalculationFrequency,
+    List<TaxBracketDto> Brackets,
+    int? MaxExemptedDependents = null
+);
+
+public record TaxBracketDto(
+    int BracketOrder,
+    decimal LowerLimit,
+    decimal? UpperLimit,
+    decimal RatePercent,
+    string? Description
+);
+
+public record SSCPolicyDto(
+    long CompanyId,
+    string Code,
+    string NameAr,
+    string NameEn,
+    DateTime EffectiveFrom,
+    DateTime? EffectiveTo,
+    decimal EmployeeContribRate,
+    decimal EmployerContribRate,
+    decimal HighRiskSurchargeRate,
+    decimal MonthlyCeilingCap,
+    decimal MinimumWageFloor
+);
+
+// Payroll Run & Calculation DTOs
+public record CreatePayrollRunDto(
+    long CompanyId,
+    string PayPeriod,
+    long? BranchId
+);
+
+public record CancelPayrollRunDto(string Reason);
+public record ReversePayrollGlDto(
+    [property: global::System.Text.Json.Serialization.JsonRequired] DateTime ReversalDate,
+    [property: global::System.Text.Json.Serialization.JsonRequired] string Reason);
+public record PayrollGlReversalResultDto(long PayrollRunId, string Status, long? JournalVoucherId);
+
+public record PayrollCalculationResultDto(
+    long PayrollRunId,
+    string PayPeriod,
+    int EmployeeCount,
+    decimal TotalGross,
+    decimal TotalNet,
+    decimal TotalEmployeeSsc,
+    decimal TotalEmployerSsc,
+    decimal TotalIncomeTax,
+    decimal TotalNationalContrib,
+    decimal TotalOtherDeductions,
+    List<PayslipSummaryDto> Payslips
+)
+{
+    public string Status { get; init; } = string.Empty;
+    public string? CancelledBy { get; init; }
+    public DateTime? CancellationDate { get; init; }
+    public string? CancellationReason { get; init; }
+    public long? CorrectionOfRunId { get; init; }
+    public long? CorrectionRootRunId { get; init; }
+    public int CorrectionVersion { get; init; }
+    public string? CorrectionReason { get; init; }
+}
+
+public record PayslipSummaryDto(
+    long RunLineId,
+    string EmployeeCode,
+    string EmployeeName,
+    decimal BasicSalary,
+    decimal GrossSalary,
+    decimal TotalEarnings,
+    decimal SscEmployeeContrib,
+    decimal IncomeTaxWithheld,
+    decimal OtherDeductions,
+    decimal TotalDeductions,
+    decimal NetPay,
+    string PaymentMethod
+);
+
+public record PayrollRunListItemDto(
+    long PayrollRunId,
+    string PayPeriod,
+    long? BranchId,
+    string Status,
+    DateTime RunDate,
+    int EmployeeCount,
+    decimal TotalGross,
+    decimal TotalNet,
+    int CorrectionVersion);
+
+public record ClosePayrollPeriodRequest(long CompanyId, string Reason);
+public record ReopenPayrollPeriodRequest(long CompanyId, string Reason);
+
+public record PayrollRunComparisonDto(
+    long CurrentRunId,
+    string CurrentPayPeriod,
+    long? CurrentBranchId,
+    int CurrentCorrectionVersion,
+    string CurrentStatus,
+    long? BaselineRunId,
+    string? BaselinePayPeriod,
+    int? BaselineCorrectionVersion,
+    string? BaselineStatus,
+    PayrollComparisonSummaryDto Summary,
+    List<PayrollEmployeeVarianceDto> EmployeeVariances
+);
+
+public record PayrollComparisonSummaryDto(
+    int CurrentEmployeeCount,
+    int BaselineEmployeeCount,
+    int AddedEmployeesCount,
+    int RemovedEmployeesCount,
+    int RetainedEmployeesCount,
+    decimal CurrentGrossSalary,
+    decimal BaselineGrossSalary,
+    decimal GrossSalaryVariance,
+    decimal CurrentNetPay,
+    decimal BaselineNetPay,
+    decimal NetPayVariance,
+    decimal CurrentBasicSalary,
+    decimal BaselineBasicSalary,
+    decimal BasicSalaryVariance,
+    decimal CurrentTotalEarnings,
+    decimal BaselineTotalEarnings,
+    decimal TotalEarningsVariance,
+    decimal CurrentTotalDeductions,
+    decimal BaselineTotalDeductions,
+    decimal TotalDeductionsVariance,
+    decimal CurrentSscEmployee,
+    decimal BaselineSscEmployee,
+    decimal SscEmployeeVariance,
+    decimal CurrentTaxWithheld,
+    decimal BaselineTaxWithheld,
+    decimal TaxWithheldVariance
+);
+
+public record PayrollEmployeeVarianceDto(
+    string EmployeeCode,
+    string EmployeeName,
+    string ChangeType, // "NEW", "REMOVED", "INCREASED", "DECREASED", "UNCHANGED"
+    decimal PreviousGross,
+    decimal CurrentGross,
+    decimal GrossVariance,
+    decimal PreviousNetPay,
+    decimal CurrentNetPay,
+    decimal NetPayVariance,
+    decimal PreviousBasic,
+    decimal CurrentBasic,
+    string PrimaryReason
+);
+
+
+public record PayrollExplanationDto(
+    long RunLineId,
+    string EmployeeCode,
+    string EmployeeName,
+    string PayPeriod,
+    decimal BaseSalary,
+    decimal ProrationFactor,
+    string ProrationMethod,
+    decimal ProratedBase,
+    decimal OvertimeHours,
+    decimal OvertimeEarnings,
+    decimal GrossPay,
+    decimal SscEligibleSalary,
+    decimal SscEmployeeShare,
+    decimal SscEmployerShare,
+    decimal TaxableGross,
+    decimal TaxExemptions,
+    decimal IncomeTax,
+    decimal NationalSolidarityContrib,
+    decimal ScheduledLoanDeduction,
+    decimal ActualLoanDeduction,
+    decimal CarriedForwardDeduction,
+    decimal NetPay,
+    string DetailsJson
+);
+
+public record PostGlVoucherResultDto(
+    long PayrollRunId,
+    long JournalVoucherId,
+    decimal TotalDebit,
+    decimal TotalCredit,
+    bool IsBalanced,
+    DateTime PostedAt
+);
+
+public record PayrollValidationResultDto(
+    bool IsValid,
+    List<string> Errors,
+    List<string> Warnings
+);
+
+// Employee Management DTOs
+public record LinkEmployeeUserDto(long? UserId);
+public record EmployeeUserLinkDto(string EmployeeCode, long? UserId);
+
+public record CreateEmployeeDto(
+    string EmployeeCode,
+    string NameLocal,
+    string NameEn,
+    string NationalId,
+    string Nationality,
+    string? PassportNumber,
+    DateTime DateOfBirth,
+    string Gender,
+    string MaritalStatus,
+    string? Email,
+    string? Phone,
+    DateTime HireDate,
+    DateTime? ProbationEndDate,
+    string EmploymentType,
+    string EmploymentStatus,
+    string? DepartmentCode,
+    string? PositionCode,
+    long? BranchId,
+    string? ManagerEmployeeCode,
+    string? SscNumber,
+    int TaxExemptionCount,
+    bool IsHighRiskRole,
+    string? BankName,
+    string? BankAccountNumber,
+    string? BankIban,
+    DateTime? TerminationDate = null,
+    string? TerminationReason = null,
+    string? CitizenshipCountryCode = null
+);
+
+public record UpdateEmployeeDto(
+    string NameLocal,
+    string NameEn,
+    string NationalId,
+    string Nationality,
+    string? PassportNumber,
+    DateTime DateOfBirth,
+    string Gender,
+    string MaritalStatus,
+    string? Email,
+    string? Phone,
+    DateTime HireDate,
+    DateTime? ProbationEndDate,
+    DateTime? TerminationDate,
+    string? TerminationReason,
+    string EmploymentType,
+    string EmploymentStatus,
+    string? DepartmentCode,
+    string? PositionCode,
+    long? BranchId,
+    string? ManagerEmployeeCode,
+    string? SscNumber,
+    int TaxExemptionCount,
+    bool IsHighRiskRole,
+    string? BankName,
+    string? BankAccountNumber,
+    string? BankIban,
+    bool IsActive,
+    string? CitizenshipCountryCode = null
+);
+
+public record EmployeeSummaryDto(
+    string EmployeeCode,
+    string NameLocal,
+    string NameEn,
+    string? NationalId,
+    string? DepartmentCode,
+    string? PositionCode,
+    string EmploymentStatus,
+    decimal? BasicSalary,
+    string? Phone,
+    string? Email,
+    long? UserId = null,
+    long? BranchId = null, EmployeeFieldVisibilityDto? FieldVisibility = null
+);
+
+public record EmployeeDetailsDto(
+    string EmployeeCode,
+    string NameLocal,
+    string NameEn,
+    string? NationalId,
+    string? Nationality,
+    string? PassportNumber,
+    DateTime? DateOfBirth,
+    string? Gender,
+    string? MaritalStatus,
+    string? Email,
+    string? Phone,
+    DateTime HireDate,
+    DateTime? ProbationEndDate,
+    DateTime? TerminationDate,
+    string? TerminationReason,
+    string EmploymentType,
+    string EmploymentStatus,
+    string? DepartmentCode,
+    string? PositionCode,
+    long? BranchId,
+    string? ManagerEmployeeCode,
+    string? SscNumber,
+    int? TaxExemptionCount,
+    bool? IsHighRiskRole,
+    string? BankName,
+    string? BankAccountNumber,
+    string? BankIban,
+    bool IsActive,
+    List<DependentDto> Dependents,
+    SalaryStructureDetailsDto? ActiveSalaryStructure,
+    long? UserId = null,
+    EmployeeFieldVisibilityDto? FieldVisibility = null
+)
+{
+    public string? CitizenshipCountryCode { get; init; }
+}
+
+public record CreateDependentDto(
+    string NameLocal,
+    string NameEn,
+    string Relationship,
+    DateTime DateOfBirth,
+    string Gender,
+    string? NationalId,
+    bool IsTaxExemptionClaimed,
+    bool IsMedicalCovered
+);
+
+public record DependentDto(
+    long Id,
+    string EmployeeCode,
+    string NameLocal,
+    string NameEn,
+    string Relationship,
+    DateTime DateOfBirth,
+    string Gender,
+    string? NationalId,
+    bool IsTaxExemptionClaimed,
+    bool IsMedicalCovered,
+    bool IsActive
+);
+
+// Salary Structure & Components DTOs
+public record AssignSalaryStructureDto(
+    DateTime EffectiveFrom,
+    DateTime? EffectiveTo,
+    decimal BasicSalary,
+    string CurrencyCode,
+    string PaymentMethod,
+    List<SalaryStructureLineDto>? Lines
+);
+
+public record SalaryStructureLineDto(
+    string ComponentCode,
+    decimal? Amount,
+    decimal? Percent
+);
+
+public record SalaryStructureDetailsDto(
+    long Id,
+    string EmployeeCode,
+    DateTime EffectiveFrom,
+    DateTime? EffectiveTo,
+    decimal BasicSalary,
+    string CurrencyCode,
+    string PaymentMethod,
+    bool IsActive,
+    List<SalaryStructureLineDetailDto> Lines
+);
+
+public record SalaryStructureLineDetailDto(
+    long Id,
+    string ComponentCode,
+    string ComponentNameLocal,
+    string ComponentNameEn,
+    string ComponentType,
+    decimal Amount,
+    decimal? Percent,
+    bool IsActive
+);
+
+public record CreateSalaryComponentDto(
+    string ComponentCode,
+    string NameLocal,
+    string NameEn,
+    string ComponentType, // BASIC, ALLOWANCE, DEDUCTION, EMPLOYER_CONTRIB
+    string CalculationType, // FIXED, PERCENTAGE, FORMULA
+    decimal? DefaultAmount,
+    decimal? DefaultPercent,
+    bool IsTaxable,
+    bool IsSscApplicable,
+    string? GlAccountCode
+);
+
+public record SalaryComponentDto(
+    string ComponentCode,
+    string NameLocal,
+    string NameEn,
+    string ComponentType,
+    string CalculationType,
+    decimal? DefaultAmount,
+    decimal? DefaultPercent,
+    bool IsTaxable,
+    bool IsSscApplicable,
+    string? GlAccountCode,
+    bool IsActive
+);
+
+public sealed record CreatePayrollPeriodDto(
+    [global::System.ComponentModel.DataAnnotations.Required]
+    [global::System.ComponentModel.DataAnnotations.StringLength(20, MinimumLength = 1)]
+    string PeriodCode,
+    [global::System.ComponentModel.DataAnnotations.Required]
+    [global::System.ComponentModel.DataAnnotations.StringLength(200, MinimumLength = 1)]
+    string NameAr,
+    [global::System.ComponentModel.DataAnnotations.Required]
+    [global::System.ComponentModel.DataAnnotations.StringLength(200, MinimumLength = 1)]
+    string NameEn,
+    int FiscalYear,
+    int Month,
+    DateTime StartDate,
+    DateTime EndDate,
+    DateTime PayDate,
+    [global::System.ComponentModel.DataAnnotations.Required]
+    [global::System.ComponentModel.DataAnnotations.StringLength(50, MinimumLength = 1)]
+    string PayrollType
+);
+
+// Bank Export DTOs
+public record BankPayrollExportRecordDto(
+    int SequenceNo,
+    string EmployeeCode,
+    string NationalId,
+    string FullName,
+    string BankCode,
+    string Iban,
+    string Currency,
+    decimal NetAmount,
+    string Remarks
+);
+
+public record BankPayrollExportResultDto(
+    long PayrollRunId,
+    string PayPeriod,
+    string Format,
+    int TotalRecords,
+    decimal TotalAmount,
+    byte[] FileBytes,
+    string FileName,
+    string ContentType
+);
+
+// Employee Excel Import/Export DTOs
+public sealed class EmployeeImportResultDto
+{
+    public DateTime? PreviewGeneratedAtUtc { get; set; }
+    public List<EmployeeImportPreviewDto> PreviewRows { get; set; } = new();
+    public int TotalRows { get; set; }
+    public int SuccessCount { get; set; }
+    public int FailureCount { get; set; }
+    public int InsertedCount { get; set; }
+    public int UpdatedCount { get; set; }
+    public bool IsValid => FailureCount == 0;
+    public List<EmployeeImportErrorDto> Errors { get; set; } = new();
+    public List<string> Warnings { get; set; } = new();
+}
+
+public sealed record EmployeeImportErrorDto(
+    int RowNumber,
+    string? Column,
+    string Code,
+    string Message
+);
+
+public sealed record EmployeeImportPreviewDto(int RowNumber,string EmployeeCode,string Action,bool RequiresUpdateExisting,
+    string SalaryChange,DateTime? SalaryEffectiveFrom,DateTime AffectedFrom,
+    IReadOnlyList<ThinkOnErp.Domain.Entities.Hr.EmployeeImportPeriodImpact> AffectedPeriods,
+    bool HasUnmappedApprovedPayroll,IReadOnlyList<string> BlockingReasons,string? CurrencyCode=null,string? PaymentMethod=null);
+
+public sealed class EmployeeImportRowDto
+{
+    [global::System.Text.Json.Serialization.JsonIgnore]
+    public IReadOnlySet<string>? PresentColumns { get; set; }
+    [global::System.Text.Json.Serialization.JsonIgnore]
+    public IReadOnlySet<string>? SuppliedFields { get; set; }
+    public int RowNumber { get; set; }
+    public string EmployeeCode { get; set; } = string.Empty;
+    public string NameLocal { get; set; } = string.Empty;
+    public string NameEn { get; set; } = string.Empty;
+    public string NationalId { get; set; } = string.Empty;
+    public string Nationality { get; set; } = string.Empty;
+    public string? CitizenshipCountryCode { get; set; }
+    public string? PassportNumber { get; set; }
+    public DateTime? DateOfBirth { get; set; }
+    public string Gender { get; set; } = "M";
+    public string MaritalStatus { get; set; } = "SINGLE";
+    public string? Email { get; set; }
+    public string? Phone { get; set; }
+    public DateTime? HireDate { get; set; }
+    public DateTime? ProbationEndDate { get; set; }
+    public DateTime? TerminationDate { get; set; }
+    public string? TerminationReason { get; set; }
+    public string EmploymentType { get; set; } = "FULL_TIME";
+    public string EmploymentStatus { get; set; } = "ACTIVE";
+    public string? DepartmentCode { get; set; }
+    public string? PositionCode { get; set; }
+    public long? BranchId { get; set; }
+    public string? ManagerEmployeeCode { get; set; }
+    public string? SscNumber { get; set; }
+    public int TaxExemptionCount { get; set; }
+    public bool IsHighRiskRole { get; set; }
+    public string? BankName { get; set; }
+    public string? BankAccountNumber { get; set; }
+    public string? BankIban { get; set; }
+    public string? CurrencyCode { get; set; }
+    public string? PaymentMethod { get; set; }
+    public decimal? BasicSalary { get; set; }
+    public DateTime? SalaryEffectiveFrom { get; set; }
+    public bool IsActive { get; set; } = true;
+}
+
+public sealed class EmployeeExportRowDto
+{
+    public string EmployeeCode { get; set; } = string.Empty;
+    public string NameLocal { get; set; } = string.Empty;
+    public string NameEn { get; set; } = string.Empty;
+    public string NationalId { get; set; } = string.Empty;
+    public string Nationality { get; set; } = string.Empty;
+    public string? CitizenshipCountryCode { get; set; }
+    public string? PassportNumber { get; set; }
+    public DateTime DateOfBirth { get; set; }
+    public string Gender { get; set; } = "M";
+    public string MaritalStatus { get; set; } = "SINGLE";
+    public string? Email { get; set; }
+    public string? Phone { get; set; }
+    public DateTime HireDate { get; set; }
+    public DateTime? ProbationEndDate { get; set; }
+    public DateTime? TerminationDate { get; set; }
+    public string? TerminationReason { get; set; }
+    public string EmploymentType { get; set; } = "FULL_TIME";
+    public string EmploymentStatus { get; set; } = "ACTIVE";
+    public string? DepartmentCode { get; set; }
+    public string? PositionCode { get; set; }
+    public long? BranchId { get; set; }
+    public string? ManagerEmployeeCode { get; set; }
+    public string? SscNumber { get; set; }
+    public int TaxExemptionCount { get; set; }
+    public bool IsHighRiskRole { get; set; }
+    public string? BankName { get; set; }
+    public string? BankAccountNumber { get; set; }
+    public string? BankIban { get; set; }
+    public string? CurrencyCode { get; set; }
+    public string? PaymentMethod { get; set; }
+    public decimal? BasicSalary { get; set; }
+    public DateTime? SalaryEffectiveFrom { get; set; }
+    public bool IsActive { get; set; } = true;
+}
+
+public sealed record EmployeeFieldVisibilityDto(bool Identity,bool Bank,bool Salary,bool EditIdentity,bool EditBank,bool EditSalary);
+
+[global::System.Text.Json.Serialization.JsonUnmappedMemberHandling(global::System.Text.Json.Serialization.JsonUnmappedMemberHandling.Disallow)]
+public sealed record UpdateEmployeeWorkDto(string NameLocal,string NameEn,DateTime HireDate,DateTime? ProbationEndDate,
+    DateTime? TerminationDate,string? TerminationReason,string EmploymentType,string EmploymentStatus,string? DepartmentCode,
+    string? PositionCode,long? BranchId,string? ManagerEmployeeCode,[property: global::System.Text.Json.Serialization.JsonRequired] bool IsActive);
+
+[global::System.Text.Json.Serialization.JsonUnmappedMemberHandling(global::System.Text.Json.Serialization.JsonUnmappedMemberHandling.Disallow)]
+public sealed record UpdateEmployeeBankDto(
+    [property: global::System.Text.Json.Serialization.JsonRequired] string? BankName,
+    [property: global::System.Text.Json.Serialization.JsonRequired] string? BankAccountNumber,
+    [property: global::System.Text.Json.Serialization.JsonRequired] string? BankIban);
+
+[global::System.Text.Json.Serialization.JsonUnmappedMemberHandling(global::System.Text.Json.Serialization.JsonUnmappedMemberHandling.Disallow)]
+public sealed record UpdateEmployeeIdentityDto(
+    [property: global::System.Text.Json.Serialization.JsonRequired] string NationalId,
+    [property: global::System.Text.Json.Serialization.JsonRequired] string Nationality,
+    [property: global::System.Text.Json.Serialization.JsonRequired] string? PassportNumber,
+    [property: global::System.Text.Json.Serialization.JsonRequired] DateTime DateOfBirth,
+    [property: global::System.Text.Json.Serialization.JsonRequired] string Gender,
+    [property: global::System.Text.Json.Serialization.JsonRequired] string MaritalStatus,
+    [property: global::System.Text.Json.Serialization.JsonRequired] string? Email,
+    [property: global::System.Text.Json.Serialization.JsonRequired] string? Phone,
+    [property: global::System.Text.Json.Serialization.JsonRequired] string? SscNumber,
+    [property: global::System.Text.Json.Serialization.JsonRequired] int TaxExemptionCount,
+    [property: global::System.Text.Json.Serialization.JsonRequired] bool IsHighRiskRole,
+    string? CitizenshipCountryCode = null);

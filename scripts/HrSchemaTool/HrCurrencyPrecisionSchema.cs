@@ -4,7 +4,6 @@ internal static class HrCurrencyPrecisionSchema
 {
     private static readonly HrSchemaColumnExpectation[] Columns =
     [
-        new("HR_PAYROLL_CURRENCY_PRECISION", "COMPANY_ID", "NUMBER", "N", Precision: 19, Scale: 0),
         new("HR_PAYROLL_CURRENCY_PRECISION", "CURRENCY_CODE", "VARCHAR2", "N", CharacterLength: 10, DataLength: 10, CharacterSemantics: "B", ExactCharacterLength: true),
         new("HR_PAYROLL_CURRENCY_PRECISION", "DECIMAL_PLACES", "NUMBER", "N", Precision: 2, Scale: 0),
         new("HR_PAYROLL_CURRENCY_PRECISION", "CREATION_USER", "VARCHAR2", "N", CharacterLength: 100, DataLength: 100, CharacterSemantics: "B", ExactCharacterLength: true),
@@ -26,30 +25,29 @@ internal static class HrCurrencyPrecisionSchema
             await Execute(connection, """
                 CREATE TABLE DEV_TEMPLATE.HR_PAYROLL_CURRENCY_PRECISION
                 (
-                    COMPANY_ID NUMBER(19) NOT NULL,
                     CURRENCY_CODE VARCHAR2(10 BYTE) NOT NULL,
                     DECIMAL_PLACES NUMBER(2) NOT NULL,
                     CREATION_USER VARCHAR2(100 BYTE) NOT NULL,
                     CREATION_DATE TIMESTAMP(7) NOT NULL,
                     UPDATE_USER VARCHAR2(100 BYTE) NULL,
                     UPDATE_DATE TIMESTAMP(7) NULL,
-                    CONSTRAINT PK_HR_PAY_CURRENCY_PRECISION PRIMARY KEY (COMPANY_ID, CURRENCY_CODE),
+                    CONSTRAINT PK_HR_PAY_CURRENCY_PRECISION PRIMARY KEY (CURRENCY_CODE),
                     CONSTRAINT CK_HR_PAY_CURRENCY_DECIMALS CHECK (DECIMAL_PLACES BETWEEN 0 AND 4)
                 )
                 """);
-            report.Add($"CREATED DEV_TEMPLATE.{tableName}; company-scoped precision overrides are empty by default");
+            report.Add($"CREATED DEV_TEMPLATE.{tableName}; precision overrides are schema-scoped and empty by default");
         }
 
         await HrSchemaColumnGuard.ValidateAsync(connection, Columns, allowMissingColumns: false);
 
         var columns = await ScalarLong(connection,
-            $"SELECT COUNT(*) FROM ALL_TAB_COLUMNS WHERE OWNER='DEV_TEMPLATE' AND TABLE_NAME='{tableName}' AND ((COLUMN_NAME='COMPANY_ID' AND DATA_TYPE='NUMBER' AND DATA_PRECISION=19) OR (COLUMN_NAME='CURRENCY_CODE' AND DATA_TYPE='VARCHAR2' AND DATA_LENGTH=10) OR (COLUMN_NAME='DECIMAL_PLACES' AND DATA_TYPE='NUMBER' AND DATA_PRECISION=2 AND DATA_SCALE=0) OR (COLUMN_NAME='CREATION_USER' AND DATA_TYPE='VARCHAR2' AND DATA_LENGTH=100) OR COLUMN_NAME IN ('CREATION_DATE','UPDATE_USER','UPDATE_DATE'))");
-        if (columns != 7)
-            throw new InvalidOperationException($"DEV_TEMPLATE.{tableName} does not match the expected seven-column company-scoped model; review before continuing.");
+            $"SELECT COUNT(*) FROM ALL_TAB_COLUMNS WHERE OWNER='DEV_TEMPLATE' AND TABLE_NAME='{tableName}' AND ((COLUMN_NAME='CURRENCY_CODE' AND DATA_TYPE='VARCHAR2' AND DATA_LENGTH=10) OR (COLUMN_NAME='DECIMAL_PLACES' AND DATA_TYPE='NUMBER' AND DATA_PRECISION=2 AND DATA_SCALE=0) OR (COLUMN_NAME='CREATION_USER' AND DATA_TYPE='VARCHAR2' AND DATA_LENGTH=100) OR COLUMN_NAME IN ('CREATION_DATE','UPDATE_USER','UPDATE_DATE'))");
+        if (columns != 6)
+            throw new InvalidOperationException($"DEV_TEMPLATE.{tableName} does not match the expected six-column schema-scoped model; review before continuing.");
 
         await VerifyConstraints(connection);
 
-        report.Add($"VERIFIED DEV_TEMPLATE.{tableName}: seven mapped columns, composite company/currency primary key, decimals 0..4");
+        report.Add($"VERIFIED DEV_TEMPLATE.{tableName}: six mapped columns, schema-scoped currency primary key, decimals 0..4");
     }
 
     private static async Task<long> ScalarLong(OracleConnection connection, string sql)
@@ -84,7 +82,7 @@ internal static class HrCurrencyPrecisionSchema
               AND c.CONSTRAINT_NAME='PK_HR_PAY_CURRENCY_PRECISION' AND c.CONSTRAINT_TYPE='P'
               AND c.STATUS='ENABLED' AND c.VALIDATED='VALIDATED'
               AND (SELECT LISTAGG(cc.COLUMN_NAME,',') WITHIN GROUP (ORDER BY cc.POSITION)
-                   FROM ALL_CONS_COLUMNS cc WHERE cc.OWNER=c.OWNER AND cc.CONSTRAINT_NAME=c.CONSTRAINT_NAME)='COMPANY_ID,CURRENCY_CODE'
+                    FROM ALL_CONS_COLUMNS cc WHERE cc.OWNER=c.OWNER AND cc.CONSTRAINT_NAME=c.CONSTRAINT_NAME)='CURRENCY_CODE'
             """);
         var check = await ScalarLong(connection, """
             SELECT COUNT(*) FROM ALL_CONSTRAINTS c

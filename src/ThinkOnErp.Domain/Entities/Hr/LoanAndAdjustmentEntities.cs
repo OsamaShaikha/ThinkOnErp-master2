@@ -73,6 +73,7 @@ public sealed class EmployeeAdvance
 public sealed class PayrollAdjustment
 {
     public long Id { get; set; }
+    [System.ComponentModel.DataAnnotations.Schema.NotMapped]
     public long CompanyId { get; set; }
     public string EmployeeCode { get; set; } = string.Empty;
     public string PayPeriod { get; set; } = string.Empty; // e.g. "2026-09"

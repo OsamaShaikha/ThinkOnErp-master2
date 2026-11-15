@@ -35,8 +35,7 @@ public sealed class HrUnitOfWork(OracleDbContext db) : IHrUnitOfWork
                 await using (var command = db.Database.GetDbConnection().CreateCommand())
                 {
                     command.Transaction = db.Database.CurrentTransaction!.GetDbTransaction();
-                    command.CommandText = "SELECT ID FROM HR_PAYROLL_PERIOD WHERE COMPANY_ID=:companyId ORDER BY ID FOR UPDATE";
-                    var parameter = command.CreateParameter(); parameter.ParameterName = "companyId"; parameter.Value = companyId.Value; command.Parameters.Add(parameter);
+                    command.CommandText = "SELECT ID FROM HR_PAYROLL_PERIOD ORDER BY ID FOR UPDATE";
                     await using var reader = await command.ExecuteReaderAsync(cancellationToken);
                     while (await reader.ReadAsync(cancellationToken)) { }
                 }
@@ -126,14 +125,14 @@ public sealed class HrUnitOfWork(OracleDbContext db) : IHrUnitOfWork
 
             // Lock the union of affected periods once, before locking individual employees.
             foreach (var company in scopes.GroupBy(s => s.CompanyId).OrderBy(g => g.Key))
-                await Lock("SELECT ID FROM HR_PAYROLL_PERIOD WHERE COMPANY_ID = :companyId AND END_DATE >= :fromDate ORDER BY ID FOR UPDATE",
-                    ("companyId", company.Key), ("fromDate", company.Min(s => s.From)));
+                await Lock("SELECT ID FROM HR_PAYROLL_PERIOD WHERE END_DATE >= :fromDate ORDER BY ID FOR UPDATE",
+                    ("fromDate", company.Min(s => s.From)));
             foreach (var code in scopes.Where(s => s.Existing).Select(s => s.Code).Distinct().OrderBy(c => c, StringComparer.Ordinal))
                 await Lock("SELECT 1 FROM HR_EMPLOYEE WHERE EMPLOYEE_CODE = :employeeCode FOR UPDATE", ("employeeCode", code));
 
             foreach (var scope in scopes)
             {
-                var periods = db.PayrollPeriods.Where(p => p.CompanyId == scope.CompanyId && p.EndDate >= scope.From);
+                var periods = db.PayrollPeriods.Where(p => p.EndDate >= scope.From);
                 if (await periods.AnyAsync(p => p.Status == "CLOSED", cancellationToken))
                     throw new InvalidOperationException($"Employee '{scope.Code}' input overlaps a closed payroll period.");
                 var codes = periods.Select(p => p.PeriodCode);
@@ -148,7 +147,7 @@ public sealed class HrUnitOfWork(OracleDbContext db) : IHrUnitOfWork
                 if (await db.PayrollRuns.IgnoreQueryFilters().AnyAsync(r => (scope.BranchId.HasValue && r.BranchId == scope.BranchId ||
                     scope.Existing && r.Lines.Any(l => l.EmployeeCode == scope.Code)) &&
                     (r.Status == "APPROVED" || r.Status == "POSTED_TO_GL" || r.Status == "PAID") &&
-                    !db.PayrollPeriods.IgnoreQueryFilters().Any(p => p.CompanyId == scope.CompanyId && p.PeriodCode == r.PayPeriod), cancellationToken))
+                    !db.PayrollPeriods.IgnoreQueryFilters().Any(p => p.PeriodCode == r.PayPeriod), cancellationToken))
                     throw new InvalidOperationException("Legacy approved payroll has no period mapping; review it before changing employee inputs.");
 
             var result = await action();
@@ -240,8 +239,7 @@ public sealed class HrUnitOfWork(OracleDbContext db) : IHrUnitOfWork
             await using (var command = db.Database.GetDbConnection().CreateCommand())
             {
                 command.Transaction = transaction.GetDbTransaction();
-                command.CommandText = "SELECT ID FROM HR_PAYROLL_PERIOD WHERE COMPANY_ID=:companyId AND END_DATE>=:startDate AND START_DATE<=:endDate ORDER BY ID FOR UPDATE";
-                var companyParameter = command.CreateParameter(); companyParameter.ParameterName = "companyId"; companyParameter.Value = companyId; command.Parameters.Add(companyParameter);
+                command.CommandText = "SELECT ID FROM HR_PAYROLL_PERIOD WHERE END_DATE>=:startDate AND START_DATE<=:endDate ORDER BY ID FOR UPDATE";
                 var startParameter = command.CreateParameter(); startParameter.ParameterName = "startDate"; startParameter.Value = startDate.Date; command.Parameters.Add(startParameter);
                 var endParameter = command.CreateParameter(); endParameter.ParameterName = "endDate"; endParameter.Value = endDate.Date; command.Parameters.Add(endParameter);
                 await using var reader = await command.ExecuteReaderAsync(cancellationToken);
@@ -249,7 +247,7 @@ public sealed class HrUnitOfWork(OracleDbContext db) : IHrUnitOfWork
             }
 
             var periodCodes = await db.PayrollPeriods.IgnoreQueryFilters()
-                .Where(p => p.CompanyId == companyId && p.EndDate >= startDate.Date && p.StartDate <= endDate.Date)
+                .Where(p => p.EndDate >= startDate.Date && p.StartDate <= endDate.Date)
                 .Select(p => p.PeriodCode).ToArrayAsync(cancellationToken);
             var companyBranches = await db.SysBranches.IgnoreQueryFilters()
                 .Where(b => b.CompanyId == companyId).Select(b => b.Id).ToArrayAsync(cancellationToken);
@@ -296,11 +294,7 @@ public sealed class HrUnitOfWork(OracleDbContext db) : IHrUnitOfWork
         {
             await using var command = db.Database.GetDbConnection().CreateCommand();
             command.Transaction = transaction.GetDbTransaction();
-            command.CommandText = "SELECT ID FROM HR_PAYROLL_PERIOD WHERE COMPANY_ID = :companyId AND PERIOD_CODE = :periodCode ORDER BY ID FOR UPDATE";
-            var companyParameter = command.CreateParameter();
-            companyParameter.ParameterName = "companyId";
-            companyParameter.Value = companyId;
-            command.Parameters.Add(companyParameter);
+            command.CommandText = "SELECT ID FROM HR_PAYROLL_PERIOD WHERE PERIOD_CODE = :periodCode ORDER BY ID FOR UPDATE";
             var periodParameter = command.CreateParameter();
             periodParameter.ParameterName = "periodCode";
             periodParameter.Value = periodCode;
@@ -342,8 +336,7 @@ public sealed class HrUnitOfWork(OracleDbContext db) : IHrUnitOfWork
             await using var command = db.Database.GetDbConnection().CreateCommand();
             command.Transaction = transaction.GetDbTransaction();
             var parameters = codes.Select((_, index) => $":period{index}").ToArray();
-            command.CommandText = $"SELECT PERIOD_CODE FROM HR_PAYROLL_PERIOD WHERE COMPANY_ID=:companyId AND PERIOD_CODE IN ({string.Join(",", parameters)}) ORDER BY PERIOD_CODE FOR UPDATE";
-            var company = command.CreateParameter(); company.ParameterName = "companyId"; company.Value = companyId; command.Parameters.Add(company);
+            command.CommandText = $"SELECT PERIOD_CODE FROM HR_PAYROLL_PERIOD WHERE PERIOD_CODE IN ({string.Join(",", parameters)}) ORDER BY PERIOD_CODE FOR UPDATE";
             for (var index = 0; index < codes.Length; index++)
             {
                 var period = command.CreateParameter(); period.ParameterName = $"period{index}"; period.Value = codes[index]; command.Parameters.Add(period);

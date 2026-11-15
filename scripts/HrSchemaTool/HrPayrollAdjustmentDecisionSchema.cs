@@ -18,8 +18,6 @@ internal static class HrPayrollAdjustmentDecisionSchema
     public static async Task Install(OracleConnection connection, List<string> report)
     {
         await HrSchemaColumnGuard.ValidateAsync(connection, Expectations, allowMissingColumns: true);
-        await HrSchemaColumnGuard.ValidateAsync(connection,
-            [new("HR_PAYROLL_ADJUSTMENT", "COMPANY_ID", "NUMBER", "N", Precision: 19, Scale: 0)], allowMissingColumns: false);
         await using var command = connection.CreateCommand();
         command.CommandText = "SELECT COUNT(*) FROM ALL_TABLES WHERE OWNER='DEV_TEMPLATE' AND TABLE_NAME='HR_PAYROLL_ADJUSTMENT'";
         if (Convert.ToInt32(await command.ExecuteScalarAsync()) == 0)
@@ -76,9 +74,9 @@ internal static class HrPayrollAdjustmentDecisionSchema
         command.CommandText = "SELECT COUNT(*) FROM ALL_INDEXES WHERE OWNER='DEV_TEMPLATE' AND INDEX_NAME='UX_HR_ADJ_SOURCE'";
         if (Convert.ToInt32(await command.ExecuteScalarAsync()) == 0)
         {
-            command.CommandText = "CREATE UNIQUE INDEX DEV_TEMPLATE.UX_HR_ADJ_SOURCE ON DEV_TEMPLATE.HR_PAYROLL_ADJUSTMENT (COMPANY_ID,SOURCE_TYPE,SOURCE_ID)";
+            command.CommandText = "CREATE UNIQUE INDEX DEV_TEMPLATE.UX_HR_ADJ_SOURCE ON DEV_TEMPLATE.HR_PAYROLL_ADJUSTMENT (SOURCE_TYPE,SOURCE_ID)";
             await command.ExecuteNonQueryAsync();
-            report.Add("Added unique source link for company-scoped adjustment idempotency.");
+            report.Add("Added unique source link for schema-scoped adjustment idempotency.");
         }
         else
         {
@@ -86,7 +84,7 @@ internal static class HrPayrollAdjustmentDecisionSchema
             if (!string.Equals(Convert.ToString(await command.ExecuteScalarAsync()), "UNIQUE", StringComparison.OrdinalIgnoreCase))
                 throw new InvalidOperationException("Existing DEV_TEMPLATE.UX_HR_ADJ_SOURCE is not a unique index on HR_PAYROLL_ADJUSTMENT.");
             command.CommandText = "SELECT LISTAGG(COLUMN_NAME,',') WITHIN GROUP (ORDER BY COLUMN_POSITION) FROM ALL_IND_COLUMNS WHERE INDEX_OWNER='DEV_TEMPLATE' AND INDEX_NAME='UX_HR_ADJ_SOURCE'";
-            if (!string.Equals(Convert.ToString(await command.ExecuteScalarAsync()), "COMPANY_ID,SOURCE_TYPE,SOURCE_ID", StringComparison.OrdinalIgnoreCase))
+            if (!string.Equals(Convert.ToString(await command.ExecuteScalarAsync()), "SOURCE_TYPE,SOURCE_ID", StringComparison.OrdinalIgnoreCase))
                 throw new InvalidOperationException("Existing DEV_TEMPLATE.UX_HR_ADJ_SOURCE has an incompatible column definition.");
         }
         await VerifySourceIndex(connection);
@@ -108,7 +106,7 @@ internal static class HrPayrollAdjustmentDecisionSchema
                     throw new InvalidOperationException("UX_HR_ADJ_SOURCE has ambiguous metadata; payroll adjustment repair stopped before DDL.");
                 await reader.DisposeAsync();
                 if (table != "HR_PAYROLL_ADJUSTMENT" || uniqueness != "UNIQUE" || status != "VALID" ||
-                    await ReadSourceIndexColumns(connection) != "COMPANY_ID,SOURCE_TYPE,SOURCE_ID")
+                    await ReadSourceIndexColumns(connection) != "SOURCE_TYPE,SOURCE_ID")
                     throw new InvalidOperationException("UX_HR_ADJ_SOURCE is reserved by another object or has an incompatible definition; payroll adjustment repair stopped before DDL.");
             }
         }
@@ -118,7 +116,7 @@ internal static class HrPayrollAdjustmentDecisionSchema
         if (Convert.ToInt32(await columns.ExecuteScalarAsync()) == 2)
         {
             await using var duplicates = connection.CreateCommand();
-            duplicates.CommandText = "SELECT COUNT(*) FROM (SELECT COMPANY_ID,SOURCE_TYPE,SOURCE_ID FROM DEV_TEMPLATE.HR_PAYROLL_ADJUSTMENT WHERE SOURCE_TYPE IS NOT NULL AND SOURCE_ID IS NOT NULL GROUP BY COMPANY_ID,SOURCE_TYPE,SOURCE_ID HAVING COUNT(*)>1)";
+              duplicates.CommandText = "SELECT COUNT(*) FROM (SELECT SOURCE_TYPE,SOURCE_ID FROM DEV_TEMPLATE.HR_PAYROLL_ADJUSTMENT WHERE SOURCE_TYPE IS NOT NULL OR SOURCE_ID IS NOT NULL GROUP BY SOURCE_TYPE,SOURCE_ID HAVING COUNT(*)>1)";
             if (Convert.ToInt64(await duplicates.ExecuteScalarAsync()) != 0)
                 throw new InvalidOperationException("Duplicate payroll adjustment source links exist; review them before DDL.");
         }
@@ -129,7 +127,7 @@ internal static class HrPayrollAdjustmentDecisionSchema
         await using var command = connection.CreateCommand();
         command.CommandText = "SELECT COUNT(*) FROM ALL_INDEXES WHERE OWNER='DEV_TEMPLATE' AND INDEX_NAME='UX_HR_ADJ_SOURCE' AND TABLE_NAME='HR_PAYROLL_ADJUSTMENT' AND UNIQUENESS='UNIQUE' AND STATUS='VALID'";
         if (Convert.ToInt64(await command.ExecuteScalarAsync()) != 1 ||
-            await ReadSourceIndexColumns(connection) != "COMPANY_ID,SOURCE_TYPE,SOURCE_ID")
+            await ReadSourceIndexColumns(connection) != "SOURCE_TYPE,SOURCE_ID")
             throw new InvalidOperationException("UX_HR_ADJ_SOURCE is missing or does not match its expected valid unique definition.");
     }
 

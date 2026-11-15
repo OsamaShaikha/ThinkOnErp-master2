@@ -4,6 +4,7 @@ namespace ThinkOnErp.Domain.Entities.Hr;
 public sealed class BranchAttendanceLocation
 {
     public long BranchId { get; set; }
+    [System.ComponentModel.DataAnnotations.Schema.NotMapped]
     public long CompanyId { get; set; }
     public decimal? Latitude { get; set; }
     public decimal? Longitude { get; set; }
@@ -34,7 +35,7 @@ public static class BranchAttendanceLocationRules
             return x?.ToString("G29", CultureInfo.InvariantCulture) ?? "NULL";
         }
 
-        return LeaveMovementKey.Hash(string.Join("|", value.CompanyId, value.BranchId, Number(value.Latitude), Number(value.Longitude), Number(value.RadiusMeters),
+        return LeaveMovementKey.Hash(string.Join("|", value.BranchId, Number(value.Latitude), Number(value.Longitude), Number(value.RadiusMeters),
             value.EnforceGeofence, value.CreationUser, value.CreationDate.Ticks, value.UpdateUser, value.UpdateDate?.Ticks));
     }
 }

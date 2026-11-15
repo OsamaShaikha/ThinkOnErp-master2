@@ -33,6 +33,7 @@ public static class ShortLeaveCompensationTypes
 public sealed class ShortLeavePolicy
 {
     public long Id { get; set; }
+    [System.ComponentModel.DataAnnotations.Schema.NotMapped]
     public long CompanyId { get; set; }
     public int MonthlyPaidMinutesQuota { get; set; } = 120; // 2 hours default
     public int MaxMinutesPerRequest { get; set; } = 120;
@@ -51,6 +52,7 @@ public sealed class ShortLeavePolicy
 public sealed class ShortLeaveRequest
 {
     public long Id { get; set; }
+    [System.ComponentModel.DataAnnotations.Schema.NotMapped]
     public long CompanyId { get; set; }
     public long? BranchId { get; set; }
     public string EmployeeCode { get; set; } = string.Empty;

@@ -1,4 +1,13 @@
+using System;
+using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
 using ThinkOnErp.Application.DTOs.Hr;
+using ThinkOnErp.Application.Features.Hr.Shifts.Commands.CreateShiftAssignment;
+using ThinkOnErp.Application.Features.Hr.Shifts.Commands.DeleteShiftAssignment;
+using ThinkOnErp.Application.Features.Hr.Shifts.Commands.UpdateShiftAssignment;
+using ThinkOnErp.Application.Features.Hr.Shifts.Queries.GetShiftAssignmentById;
+using ThinkOnErp.Application.Features.Hr.Shifts.Queries.GetShiftAssignments;
 using ThinkOnErp.Domain.Entities.Hr;
 using ThinkOnErp.Domain.Interfaces.Hr;
 
@@ -13,58 +22,49 @@ public interface IShiftAssignmentService
     Task DeleteAsync(string employeeCode, long id, string ifMatch, CancellationToken ct = default);
 }
 
+[Obsolete("Use MediatR requests in ThinkOnErp.Application.Features.Hr.Shifts. Kept for existing test suites.")]
 public sealed class ShiftAssignmentService(IShiftAssignmentRepository repository) : IShiftAssignmentService
 {
+    private readonly GetShiftAssignmentsQueryHandler _listHandler = new(repository);
+    private readonly GetShiftAssignmentByIdQueryHandler _getHandler = new(repository);
+    private readonly CreateShiftAssignmentCommandHandler _createHandler = new(repository);
+    private readonly UpdateShiftAssignmentCommandHandler _updateHandler = new(repository);
+    private readonly DeleteShiftAssignmentCommandHandler _deleteHandler = new(repository);
+
     public async Task<ShiftAssignmentPageDto> ListAsync(string employeeCode, DateOnly? from, DateOnly? to, bool activeOnly, int page, int size, CancellationToken ct = default)
     {
-        if (page < 1 || page > 1000000 || size < 1 || size > 100 || from.HasValue && to.HasValue && from > to) throw new ArgumentException("Invalid assignment date range or page.");
-        await repository.EnsureEmployeeAsync(employeeCode, ct);
-        var result = await repository.ListAsync(employeeCode, from?.ToDateTime(TimeOnly.MinValue), to?.ToDateTime(TimeOnly.MinValue), activeOnly, page, size, ct);
-        var definitions = await repository.DefinitionsAsync(result.Items.Select(a => a.ShiftCode).Distinct().ToArray(), ct);
-        return new(result.Items.Select(a => Map(a, definitions.GetValueOrDefault(a.ShiftCode))).ToList(), result.Total, page, size);
+        var response = await _listHandler.Handle(new GetShiftAssignmentsQuery(employeeCode, from, to, activeOnly, page, size), ct);
+        return response.Data!;
     }
 
     public async Task<ShiftAssignmentDto> GetAsync(string employeeCode, long id, CancellationToken ct = default)
     {
-        await repository.EnsureEmployeeAsync(employeeCode, ct);
-        var assignment = await repository.GetAsync(employeeCode, id, ct) ?? throw new KeyNotFoundException("Shift assignment not found.");
-        var definitions = await repository.DefinitionsAsync(new[] { assignment.ShiftCode }, ct);
-        return Map(assignment, definitions.GetValueOrDefault(assignment.ShiftCode));
+        var response = await _getHandler.Handle(new GetShiftAssignmentByIdQuery(employeeCode, id), ct);
+        if (!response.Success || response.Data == null)
+            throw new KeyNotFoundException("Shift assignment not found.");
+        return response.Data;
     }
 
     public async Task<ShiftAssignmentDto> CreateAsync(string employeeCode, WriteShiftAssignmentDto dto, string user, CancellationToken ct = default)
     {
-        var proposed = Build(employeeCode, dto);
-        proposed.CreationUser = user; proposed.CreationDate = DateTime.UtcNow;
-        var result = await repository.CreateAsync(proposed, ShiftAssignmentRules.ParseVersion(dto.ShiftVersion), ct);
-        return await GetAsync(employeeCode, result.Id, ct);
+        var response = await _createHandler.Handle(new CreateShiftAssignmentCommand(employeeCode, dto, user), ct);
+        if (!response.Success)
+            throw new ShiftVersionConflictException(response.Message ?? "Shift version changed.");
+        return response.Data!;
     }
 
     public async Task<ShiftAssignmentDto> UpdateAsync(string employeeCode, long id, WriteShiftAssignmentDto dto, string ifMatch, string user, CancellationToken ct = default)
     {
-        await repository.UpdateAsync(employeeCode, id, Build(employeeCode, dto), ShiftAssignmentRules.ParseVersion(ifMatch), ShiftAssignmentRules.ParseVersion(dto.ShiftVersion), user, ct);
-        return await GetAsync(employeeCode, id, ct);
+        var response = await _updateHandler.Handle(new UpdateShiftAssignmentCommand(employeeCode, id, dto, ifMatch, user), ct);
+        if (!response.Success)
+            throw new ShiftAssignmentVersionConflictException(response.Message ?? "Shift assignment version changed.");
+        return response.Data!;
     }
 
-    public Task DeleteAsync(string employeeCode, long id, string ifMatch, CancellationToken ct = default)
-        => repository.DeleteAsync(employeeCode, id, ShiftAssignmentRules.ParseVersion(ifMatch), ct);
-
-    private static EmployeeShiftAssignment Build(string employeeCode, WriteShiftAssignmentDto dto)
+    public async Task DeleteAsync(string employeeCode, long id, string ifMatch, CancellationToken ct = default)
     {
-        ArgumentNullException.ThrowIfNull(dto);
-        var kind = dto.AssignmentKind?.Trim().ToUpperInvariant();
-        if (kind is not ("BASE" or "TEMPORARY")) throw new ArgumentException("AssignmentKind must explicitly be BASE or TEMPORARY.");
-        if (!dto.EffectiveFrom.HasValue || !dto.IsActive.HasValue || string.IsNullOrWhiteSpace(dto.ShiftCode) || dto.ShiftCode.Trim().Length > 50)
-            throw new ArgumentException("Shift code, start date and active state are required.");
-        if (kind == "TEMPORARY" && !dto.EffectiveTo.HasValue || dto.EffectiveTo.HasValue && dto.EffectiveTo.Value < dto.EffectiveFrom.Value)
-            throw new ArgumentException("Temporary assignments need an end date and dates must be ordered.");
-        return new EmployeeShiftAssignment { EmployeeCode = employeeCode, ShiftCode = dto.ShiftCode.Trim(), AssignmentKind = kind,
-            EffectiveFrom = dto.EffectiveFrom.Value.ToDateTime(TimeOnly.MinValue), EffectiveTo = dto.EffectiveTo?.ToDateTime(TimeOnly.MinValue), IsActive = dto.IsActive.Value };
+        var response = await _deleteHandler.Handle(new DeleteShiftAssignmentCommand(employeeCode, id, ifMatch), ct);
+        if (!response.Success)
+            throw new ShiftAssignmentVersionConflictException(response.Message ?? "Shift assignment version changed.");
     }
-
-    private static ShiftAssignmentDto Map(EmployeeShiftAssignment a, ShiftSchedule? shift)
-        => new(a.Id, a.EmployeeCode, a.ShiftCode, a.AssignmentKind, ShiftAssignmentRules.Kind(a), a.AssignmentKind == null,
-            DateOnly.FromDateTime(a.EffectiveFrom), a.EffectiveTo.HasValue ? DateOnly.FromDateTime(a.EffectiveTo.Value) : null, a.IsActive,
-            ShiftAssignmentRules.Version(a), shift == null ? null : ShiftDefinitionRules.Version(shift), shift?.IsActive,
-            DateTime.SpecifyKind(a.CreationDate, DateTimeKind.Utc), a.UpdateDate.HasValue ? DateTime.SpecifyKind(a.UpdateDate.Value, DateTimeKind.Utc) : null);
 }

@@ -22,7 +22,12 @@ public abstract class HrControllerBase : ControllerBase
     /// <summary>Maps a handler's <see cref="ApiResponse{T}"/> to the matching HTTP result.</summary>
     protected ActionResult<ApiResponse<T>> FromResponse<T>(ApiResponse<T> response)
     {
-        if (response.Success) return Ok(response);
+        if (response.Success)
+        {
+            return response.StatusCode == StatusCodes.Status202Accepted
+                ? StatusCode(StatusCodes.Status202Accepted, response)
+                : Ok(response);
+        }
 
         return response.StatusCode switch
         {

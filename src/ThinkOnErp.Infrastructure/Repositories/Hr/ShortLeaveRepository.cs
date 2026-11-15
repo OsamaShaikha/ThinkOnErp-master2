@@ -21,9 +21,9 @@ public sealed class ShortLeaveRepository : IShortLeaveRepository
 
     public async Task<ShortLeaveRequest?> GetByIdAsync(long id, CancellationToken cancellationToken = default)
     {
-        return await _context.ShortLeaveRequests
+        return (await _context.ShortLeaveRequests
             .Include(r => r.Employee)
-            .FirstOrDefaultAsync(r => r.Id == id, cancellationToken);
+            .FirstOrDefaultAsync(r => r.Id == id, cancellationToken))?.Stamp(_context.HrScopeCompanyId);
     }
 
     public async Task<IReadOnlyList<ShortLeaveRequest>> GetByEmployeeAsync(string employeeCode, DateTime? fromDate = null, DateTime? toDate = null, CancellationToken cancellationToken = default)
@@ -35,15 +35,15 @@ public sealed class ShortLeaveRepository : IShortLeaveRepository
         if (toDate.HasValue)
             query = query.Where(r => r.PermissionDate <= toDate.Value.Date);
 
-        return await query.OrderByDescending(r => r.PermissionDate).ToListAsync(cancellationToken);
+        return (await query.OrderByDescending(r => r.PermissionDate).ToListAsync(cancellationToken)).StampAll(_context.HrScopeCompanyId);
     }
 
     public async Task<IReadOnlyList<ShortLeaveRequest>> GetApprovedForDateAsync(string employeeCode, DateTime date, CancellationToken cancellationToken = default)
     {
         var d = date.Date;
-        return await _context.ShortLeaveRequests
+        return (await _context.ShortLeaveRequests
             .Where(r => r.EmployeeCode == employeeCode && r.PermissionDate == d && r.Status == ShortLeaveStatus.Approved)
-            .ToListAsync(cancellationToken);
+            .ToListAsync(cancellationToken)).StampAll(_context.HrScopeCompanyId);
     }
 
     public async Task<int> GetMonthlyApprovedMinutesAsync(string employeeCode, int year, int month, CancellationToken cancellationToken = default)
@@ -61,7 +61,7 @@ public sealed class ShortLeaveRepository : IShortLeaveRepository
 
     public async Task<IReadOnlyList<ShortLeaveRequest>> GetRequestsAsync(long companyId, long? branchId = null, string? status = null, DateTime? date = null, CancellationToken cancellationToken = default)
     {
-        var query = _context.ShortLeaveRequests.Where(r => r.CompanyId == companyId);
+        var query = _context.ShortLeaveRequests.AsQueryable();
 
         if (branchId.HasValue)
             query = query.Where(r => r.BranchId == branchId.Value);
@@ -75,11 +75,11 @@ public sealed class ShortLeaveRepository : IShortLeaveRepository
             query = query.Where(r => r.PermissionDate == targetDate);
         }
 
-        return await query
+        return (await query
             .Include(r => r.Employee)
             .OrderByDescending(r => r.PermissionDate)
             .ThenByDescending(r => r.Id)
-            .ToListAsync(cancellationToken);
+            .ToListAsync(cancellationToken)).StampAll(companyId);
     }
 
     public async Task<bool> HasOverlappingRequestAsync(string employeeCode, DateTime date, TimeSpan startTime, TimeSpan endTime, long? excludeId = null, CancellationToken cancellationToken = default)
@@ -109,8 +109,8 @@ public sealed class ShortLeaveRepository : IShortLeaveRepository
 
     public async Task<ShortLeavePolicy?> GetActivePolicyAsync(long companyId, CancellationToken cancellationToken = default)
     {
-        return await _context.ShortLeavePolicies
-            .FirstOrDefaultAsync(p => p.CompanyId == companyId && p.IsActive, cancellationToken);
+        return (await _context.ShortLeavePolicies
+            .FirstOrDefaultAsync(p => p.IsActive, cancellationToken))?.Stamp(companyId);
     }
 
     public async Task SavePolicyAsync(ShortLeavePolicy policy, CancellationToken cancellationToken = default)

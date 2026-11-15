@@ -233,7 +233,7 @@ public sealed class HrAccountingHandoffService(OracleDbContext db, IGlVoucherRep
                     if (!string.IsNullOrWhiteSpace(period)) affectedPeriods.Add(period.Trim());
             }
         }
-        return new PostingReceiptLockPlan(handoff.CompanyId, requiredPeriod, affectedPeriods.OrderBy(x => x, StringComparer.Ordinal).ToArray());
+        return new PostingReceiptLockPlan(db.HrScopeCompanyId, requiredPeriod, affectedPeriods.OrderBy(x => x, StringComparer.Ordinal).ToArray());
     }
 
     public async Task<long> ReverseJournalVoucherAsync(long handoffId, DateTime reversalDate, string reason, string user, CancellationToken cancellationToken = default)
@@ -778,7 +778,7 @@ public sealed class HrAccountingHandoffService(OracleDbContext db, IGlVoucherRep
             throw new InvalidOperationException("Funding currency must match one unique ERP currency code.");
         var sourceKey = sourceId.ToString();
         var priorHandoffs = await db.HrAccountingHandoffs.Include(h => h.Lines)
-            .Where(h => h.CompanyId == companyId && h.SourceType == sourceType && h.SourceId == sourceKey && h.Operation == "FUND")
+            .Where(h => h.SourceType == sourceType && h.SourceId == sourceKey && h.Operation == "FUND")
             .OrderByDescending(h => h.SourceVersion).ToListAsync(cancellationToken);
         var latest = priorHandoffs.FirstOrDefault();
         if (latest != null && latest.DeliveryStatus != "REVERSED")
@@ -818,7 +818,7 @@ public sealed class HrAccountingHandoffService(OracleDbContext db, IGlVoucherRep
             foreach (var outboxMessage in handoff.OutboxMessages) db.Entry(outboxMessage).State = EntityState.Detached;
 
             var concurrent = await db.HrAccountingHandoffs.AsNoTracking().Include(h => h.Lines)
-                .SingleOrDefaultAsync(h => h.CompanyId == companyId && h.SourceType == sourceType &&
+                .SingleOrDefaultAsync(h => h.SourceType == sourceType &&
                     h.SourceId == sourceKey && h.SourceVersion == sourceVersion && h.Operation == "FUND", cancellationToken);
             if (concurrent == null) throw;
             if (!string.Equals(concurrent.PayloadHash, hash, StringComparison.Ordinal))
@@ -1157,7 +1157,7 @@ public sealed class HrAccountingHandoffService(OracleDbContext db, IGlVoucherRep
         {
             var latest = h.Transitions.OrderByDescending(t => t.OccurredAtUtc).FirstOrDefault();
             return new ThinkOnErp.Application.DTOs.Hr.AccountingHandoffInboxDto(
-                h.Id, h.CompanyId, h.BranchId, h.SourceType, h.SourceId, h.SourceVersion, h.Operation,
+                h.Id, db.HrScopeCompanyId, h.BranchId, h.SourceType, h.SourceId, h.SourceVersion, h.Operation,
                 h.HandoffReference, h.PayloadHash, h.DeliveryStatus, h.PayPeriod, h.SourceApprovedAtUtc, h.CreatedAtUtc, h.CreatedBy,
                 latest?.Reason, latest?.OccurredAtUtc,
                 h.Lines.Select(l => new ThinkOnErp.Application.DTOs.Hr.AccountingHandoffLineDto(
@@ -1271,7 +1271,7 @@ public sealed class HrAccountingHandoffService(OracleDbContext db, IGlVoucherRep
         var withdrawalHash = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes($"{handoff.PayloadHash}|WITHDRAWN|{user}|{reason}")));
         handoff.OutboxMessages.Add(new HrAccountingOutboxMessage
         {
-            EventKey = $"{handoff.CompanyId}:PAYROLL:{handoff.SourceId}:{handoff.SourceVersion}:WITHDRAW",
+            EventKey = $"{db.HrScopeCompanyId}:PAYROLL:{handoff.SourceId}:{handoff.SourceVersion}:WITHDRAW",
             EventType = "PAYROLL_WITHDRAW", PayloadHash = withdrawalHash, Status = "PENDING", CreatedAtUtc = DateTime.UtcNow
         });
         await db.SaveChangesAsync(cancellationToken);
@@ -1363,7 +1363,7 @@ public sealed class HrAccountingHandoffService(OracleDbContext db, IGlVoucherRep
             throw new InvalidOperationException("Payroll run with negative gross salary cannot be handed to Accounting.");
 
         var existing = await db.HrAccountingHandoffs.Include(h => h.Lines).Include(h => h.Transitions)
-            .SingleOrDefaultAsync(h => h.CompanyId == companyId && h.SourceType == "PAYROLL" &&
+            .SingleOrDefaultAsync(h => h.SourceType == "PAYROLL" &&
                 h.SourceId == run.Id.ToString() && h.SourceVersion == run.CorrectionVersion && h.Operation == "SUBMIT", cancellationToken);
         if (existing != null) return existing;
 
@@ -1457,7 +1457,7 @@ public sealed class HrAccountingHandoffService(OracleDbContext db, IGlVoucherRep
             foreach (var transition in handoff.Transitions) db.Entry(transition).State = EntityState.Detached;
             foreach (var outboxMessage in handoff.OutboxMessages) db.Entry(outboxMessage).State = EntityState.Detached;
             var raced = await db.HrAccountingHandoffs.AsNoTracking().Include(h => h.Lines).SingleOrDefaultAsync(h =>
-                h.CompanyId == companyId && h.SourceType == "PAYROLL" && h.SourceId == run.Id.ToString() &&
+                h.SourceType == "PAYROLL" && h.SourceId == run.Id.ToString() &&
                 h.SourceVersion == run.CorrectionVersion && h.Operation == "SUBMIT", cancellationToken);
             if (raced == null) throw;
             if (!string.Equals(raced.PayloadHash, hash, StringComparison.Ordinal))

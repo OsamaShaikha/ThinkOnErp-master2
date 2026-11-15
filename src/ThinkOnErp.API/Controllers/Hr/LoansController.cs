@@ -1,16 +1,27 @@
-using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Logging;
 using ThinkOnErp.API.Authorization;
 using ThinkOnErp.API.Swagger;
 using ThinkOnErp.Application.Common;
 using ThinkOnErp.Application.DTOs.Hr;
-using ThinkOnErp.Application.Services.Hr;
+using ThinkOnErp.Application.Features.Hr.Loans.Commands.ApproveAdvance;
+using ThinkOnErp.Application.Features.Hr.Loans.Commands.ApproveLoan;
+using ThinkOnErp.Application.Features.Hr.Loans.Commands.CancelAdvance;
+using ThinkOnErp.Application.Features.Hr.Loans.Commands.CancelLoan;
+using ThinkOnErp.Application.Features.Hr.Loans.Commands.CreateAdvanceRequest;
+using ThinkOnErp.Application.Features.Hr.Loans.Commands.CreateLoanApplication;
+using ThinkOnErp.Application.Features.Hr.Loans.Commands.SettleAdvanceEarly;
+using ThinkOnErp.Application.Features.Hr.Loans.Commands.SettleLoanEarly;
+using ThinkOnErp.Application.Features.Hr.Loans.Commands.SkipInstallment;
+using ThinkOnErp.Application.Features.Hr.Loans.Commands.SubmitAdvanceFunding;
+using ThinkOnErp.Application.Features.Hr.Loans.Commands.SubmitLoanFunding;
+using ThinkOnErp.Application.Features.Hr.Loans.Queries.GetAdvances;
+using ThinkOnErp.Application.Features.Hr.Loans.Queries.GetLoans;
 using ThinkOnErp.Domain.Entities.Hr;
 
 namespace ThinkOnErp.API.Controllers.Hr;
@@ -20,20 +31,13 @@ namespace ThinkOnErp.API.Controllers.Hr;
 [ApiExplorerSettings(GroupName = ApiCategories.Hr)]
 [TenantScoped]
 [Authorize]
-public sealed class LoansController : ControllerBase
+public sealed class LoansController : HrControllerBase
 {
-    private readonly ILoanDeductionService _loanService;
-    private readonly ILogger<LoansController> _logger;
-    private readonly IHrAccountingHandoffService _handoffs;
+    private readonly IMediator _mediator;
 
-    public LoansController(
-        ILoanDeductionService loanService,
-        IHrAccountingHandoffService handoffs,
-        ILogger<LoansController> logger)
+    public LoansController(IMediator mediator)
     {
-        _loanService = loanService;
-        _handoffs = handoffs;
-        _logger = logger;
+        _mediator = mediator;
     }
 
     [HttpPost]
@@ -42,11 +46,7 @@ public sealed class LoansController : ControllerBase
     public async Task<ActionResult<ApiResponse<EmployeeLoan>>> CreateLoan(
         [FromBody] CreateLoanApplicationDto dto,
         CancellationToken cancellationToken)
-    {
-        var user = User.Identity?.Name ?? "SYSTEM";
-        var result = await _loanService.CreateLoanApplicationAsync(dto, user, cancellationToken);
-        return Ok(ApiResponse<EmployeeLoan>.CreateSuccess(result, "Loan application created successfully."));
-    }
+        => FromResponse(await _mediator.Send(new CreateLoanApplicationCommand(dto, CurrentUsername), cancellationToken));
 
     [HttpPost("{id:long}/approve")]
     [ProducesResponseType(typeof(ApiResponse<EmployeeLoan>), StatusCodes.Status200OK)]
@@ -54,16 +54,12 @@ public sealed class LoansController : ControllerBase
     public async Task<ActionResult<ApiResponse<EmployeeLoan>>> ApproveLoan(
         long id,
         CancellationToken cancellationToken)
-    {
-        var user = User.Identity?.Name ?? "SYSTEM";
-        var result = await _loanService.ApproveLoanAsync(id, user, cancellationToken);
-        return Ok(ApiResponse<EmployeeLoan>.CreateSuccess(result, "Loan request approved by HR; Accounting disbursement confirmation is still required."));
-    }
+        => FromResponse(await _mediator.Send(new ApproveLoanCommand(id, CurrentUsername), cancellationToken));
 
     [HttpPost("{id:long}/funding-request")]
     [HrPermission("hr-loans", "approve")]
-    public async Task<IActionResult> SubmitLoanFunding(long id, CancellationToken cancellationToken) =>
-        Ok(ApiResponse<object>.CreateSuccess(await _handoffs.CreateApprovedFundingHandoffAsync("LOAN", id, User.Identity?.Name ?? "SYSTEM", cancellationToken)));
+    public async Task<ActionResult<ApiResponse<object>>> SubmitLoanFunding(long id, CancellationToken cancellationToken)
+        => FromResponse(await _mediator.Send(new SubmitLoanFundingCommand(id, CurrentUsername), cancellationToken));
 
     [HttpGet]
     [ProducesResponseType(typeof(ApiResponse<IReadOnlyList<EmployeeLoan>>), StatusCodes.Status200OK)]
@@ -72,10 +68,7 @@ public sealed class LoansController : ControllerBase
         [FromQuery] string? employeeCode,
         [FromQuery] string? status,
         CancellationToken cancellationToken)
-    {
-        var result = await _loanService.GetLoansAsync(employeeCode, status, cancellationToken);
-        return Ok(ApiResponse<IReadOnlyList<EmployeeLoan>>.CreateSuccess(result, "Loans retrieved successfully."));
-    }
+        => FromResponse(await _mediator.Send(new GetLoansQuery(employeeCode, status), cancellationToken));
 
     [HttpPost("advances")]
     [ProducesResponseType(typeof(ApiResponse<EmployeeAdvance>), StatusCodes.Status200OK)]
@@ -83,11 +76,7 @@ public sealed class LoansController : ControllerBase
     public async Task<ActionResult<ApiResponse<EmployeeAdvance>>> CreateAdvance(
         [FromBody] CreateAdvanceRequestDto dto,
         CancellationToken cancellationToken)
-    {
-        var user = User.Identity?.Name ?? "SYSTEM";
-        var result = await _loanService.CreateAdvanceRequestAsync(dto, user, cancellationToken);
-        return Ok(ApiResponse<EmployeeAdvance>.CreateSuccess(result, "Advance request created successfully."));
-    }
+        => FromResponse(await _mediator.Send(new CreateAdvanceRequestCommand(dto, CurrentUsername), cancellationToken));
 
     [HttpPost("advances/{id:long}/approve")]
     [ProducesResponseType(typeof(ApiResponse<EmployeeAdvance>), StatusCodes.Status200OK)]
@@ -95,16 +84,12 @@ public sealed class LoansController : ControllerBase
     public async Task<ActionResult<ApiResponse<EmployeeAdvance>>> ApproveAdvance(
         long id,
         CancellationToken cancellationToken)
-    {
-        var user = User.Identity?.Name ?? "SYSTEM";
-        var result = await _loanService.ApproveAdvanceAsync(id, user, cancellationToken);
-        return Ok(ApiResponse<EmployeeAdvance>.CreateSuccess(result, "Advance request approved by HR; Accounting disbursement confirmation is still required."));
-    }
+        => FromResponse(await _mediator.Send(new ApproveAdvanceCommand(id, CurrentUsername), cancellationToken));
 
     [HttpPost("advances/{id:long}/funding-request")]
     [HrPermission("hr-loans", "approve")]
-    public async Task<IActionResult> SubmitAdvanceFunding(long id, CancellationToken cancellationToken) =>
-        Ok(ApiResponse<object>.CreateSuccess(await _handoffs.CreateApprovedFundingHandoffAsync("ADVANCE", id, User.Identity?.Name ?? "SYSTEM", cancellationToken)));
+    public async Task<ActionResult<ApiResponse<object>>> SubmitAdvanceFunding(long id, CancellationToken cancellationToken)
+        => FromResponse(await _mediator.Send(new SubmitAdvanceFundingCommand(id, CurrentUsername), cancellationToken));
 
     [HttpGet("advances")]
     [ProducesResponseType(typeof(ApiResponse<IReadOnlyList<EmployeeAdvance>>), StatusCodes.Status200OK)]
@@ -113,10 +98,7 @@ public sealed class LoansController : ControllerBase
         [FromQuery] string? employeeCode,
         [FromQuery] string? targetPayPeriod,
         CancellationToken cancellationToken)
-    {
-        var result = await _loanService.GetAdvancesAsync(employeeCode, targetPayPeriod, cancellationToken);
-        return Ok(ApiResponse<IReadOnlyList<EmployeeAdvance>>.CreateSuccess(result, "Advances retrieved successfully."));
-    }
+        => FromResponse(await _mediator.Send(new GetAdvancesQuery(employeeCode, targetPayPeriod), cancellationToken));
 
     [HttpPost("schedules/{scheduleId:long}/skip")]
     [ProducesResponseType(typeof(ApiResponse<LoanRepaymentSchedule>), StatusCodes.Status200OK)]
@@ -125,11 +107,7 @@ public sealed class LoansController : ControllerBase
         long scheduleId,
         [FromBody] SkipLoanInstallmentDto dto,
         CancellationToken cancellationToken)
-    {
-        var user = User.Identity?.Name ?? "SYSTEM";
-        var result = await _loanService.SkipInstallmentAsync(scheduleId, dto.Reason, user, cancellationToken);
-        return Ok(ApiResponse<LoanRepaymentSchedule>.CreateSuccess(result, "Loan installment skipped and deferred successfully."));
-    }
+        => FromResponse(await _mediator.Send(new SkipInstallmentCommand(scheduleId, dto.Reason, CurrentUsername), cancellationToken));
 
     [HttpPost("{id:long}/cancel")]
     [ProducesResponseType(typeof(ApiResponse<EmployeeLoan>), StatusCodes.Status200OK)]
@@ -138,11 +116,7 @@ public sealed class LoansController : ControllerBase
         long id,
         [FromBody] CancelLoanDto dto,
         CancellationToken cancellationToken)
-    {
-        var user = User.Identity?.Name ?? "SYSTEM";
-        var result = await _loanService.CancelLoanAsync(id, dto.Reason, user, cancellationToken);
-        return Ok(ApiResponse<EmployeeLoan>.CreateSuccess(result, "Loan cancelled successfully."));
-    }
+        => FromResponse(await _mediator.Send(new CancelLoanCommand(id, dto.Reason, CurrentUsername), cancellationToken));
 
     [HttpPost("advances/{id:long}/cancel")]
     [ProducesResponseType(typeof(ApiResponse<EmployeeAdvance>), StatusCodes.Status200OK)]
@@ -151,11 +125,7 @@ public sealed class LoansController : ControllerBase
         long id,
         [FromBody] CancelAdvanceDto dto,
         CancellationToken cancellationToken)
-    {
-        var user = User.Identity?.Name ?? "SYSTEM";
-        var result = await _loanService.CancelAdvanceAsync(id, dto.Reason, user, cancellationToken);
-        return Ok(ApiResponse<EmployeeAdvance>.CreateSuccess(result, "Advance cancelled successfully."));
-    }
+        => FromResponse(await _mediator.Send(new CancelAdvanceCommand(id, dto.Reason, CurrentUsername), cancellationToken));
 
     [HttpPost("{id:long}/settle-early")]
     [ProducesResponseType(typeof(ApiResponse<EmployeeLoan>), StatusCodes.Status200OK)]
@@ -164,11 +134,7 @@ public sealed class LoansController : ControllerBase
         long id,
         [FromBody] SettleLoanEarlyDto dto,
         CancellationToken cancellationToken)
-    {
-        var user = User.Identity?.Name ?? "SYSTEM";
-        var result = await _loanService.SettleLoanEarlyAsync(id, dto, user, cancellationToken);
-        return Ok(ApiResponse<EmployeeLoan>.CreateSuccess(result, "Loan settled early successfully."));
-    }
+        => FromResponse(await _mediator.Send(new SettleLoanEarlyCommand(id, dto, CurrentUsername), cancellationToken));
 
     [HttpPost("advances/{id:long}/settle-early")]
     [ProducesResponseType(typeof(ApiResponse<EmployeeAdvance>), StatusCodes.Status200OK)]
@@ -177,9 +143,5 @@ public sealed class LoansController : ControllerBase
         long id,
         [FromBody] SettleAdvanceEarlyDto dto,
         CancellationToken cancellationToken)
-    {
-        var user = User.Identity?.Name ?? "SYSTEM";
-        var result = await _loanService.SettleAdvanceEarlyAsync(id, dto, user, cancellationToken);
-        return Ok(ApiResponse<EmployeeAdvance>.CreateSuccess(result, "Advance settled early successfully."));
-    }
+        => FromResponse(await _mediator.Send(new SettleAdvanceEarlyCommand(id, dto, CurrentUsername), cancellationToken));
 }

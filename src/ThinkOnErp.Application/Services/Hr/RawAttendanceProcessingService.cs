@@ -1,3 +1,8 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using ThinkOnErp.Domain.Entities.Hr;
 using ThinkOnErp.Domain.Interfaces.Hr;
 
@@ -5,7 +10,9 @@ namespace ThinkOnErp.Application.Services.Hr;
 
 public record RawAttendanceDto(long Id, string EmployeeCode, DateTimeOffset PunchTimeUtc, string PunchType, string? DeviceId, string Source,
     string? ExternalReference, string? EventId, bool IsProcessed, DateOnly? WorkDate, long? AttendanceDayId, string? Outcome, string? Reason, string? ProcessedBy, DateTimeOffset? ProcessedAtUtc, string? LastAttemptedBy, DateTimeOffset? LastAttemptedAtUtc);
+
 public record RawProcessingResult(long Id, bool Applied, bool AlreadyTerminal, DateOnly? WorkDate, long? AttendanceDayId, string? Outcome, bool NeedsReview, string? Message);
+
 public interface IRawAttendanceProcessingService
 {
     Task<RawAttendanceDto> GetAsync(long id, CancellationToken ct = default);
@@ -14,6 +21,7 @@ public interface IRawAttendanceProcessingService
     Task<RawAttendanceDto> IgnoreAsync(long id, string reason, string user, CancellationToken ct = default);
 }
 
+[Obsolete("Use the MediatR requests in ThinkOnErp.Application.Features.Hr.Attendance.")]
 public sealed class RawAttendanceProcessingService(IAttendanceCorrectionRepository repository, IShiftTimingService timing,
     IAttendanceTimeSettingsRepository settings, IPolicyRepository policies, IAttendanceDayClassifier classifier) : IRawAttendanceProcessingService
 {
@@ -140,6 +148,7 @@ public sealed class RawAttendanceProcessingService(IAttendanceCorrectionReposito
     private static RawProcessingResult Terminal(RawAttendance raw) => new(raw.Id, raw.ProcessingOutcome == "APPLIED", true,
         raw.ResolvedWorkDate.HasValue ? DateOnly.FromDateTime(raw.ResolvedWorkDate.Value) : null, raw.AttendanceDayId, raw.ProcessingOutcome,
         raw.ProcessingOutcome == null, raw.ProcessingOutcome == null ? "Legacy processed evidence has no outcome/link audit; review it." : "Evidence already has a terminal outcome.");
+
     public static RawAttendanceDto Map(RawAttendance raw) => new(raw.Id, raw.EmployeeCode, new(DateTime.SpecifyKind(raw.PunchTime, DateTimeKind.Utc)), raw.PunchType,
         raw.DeviceId, raw.Source, raw.ExternalReference, raw.EventId, raw.IsProcessed, raw.ResolvedWorkDate.HasValue ? DateOnly.FromDateTime(raw.ResolvedWorkDate.Value) : null,
         raw.AttendanceDayId, raw.ProcessingOutcome, raw.ProcessingReason, raw.ProcessedBy,

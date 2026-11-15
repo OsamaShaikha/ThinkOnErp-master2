@@ -2,7 +2,8 @@ using System.Text.Json;
 
 namespace ThinkOnErp.Domain.Entities.Hr;
 
-public sealed class ShiftDayVersionConflictException() : InvalidOperationException("Daily roster version changed. Read it again before editing.");
+public sealed class ShiftDayVersionConflictException(string? message = null)
+    : InvalidOperationException(message ?? "Daily roster version changed. Read it again before editing.");
 
 public static class ShiftDayRules
 {

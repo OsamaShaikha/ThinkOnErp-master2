@@ -99,7 +99,7 @@ public sealed partial class HrAttendanceHttpTests : IAsyncLifetime
                 new SysScreenFeature { ScreenId = 51, FeatureId = 63 }, new SysBranchSystem { Id = 70, BranchId = 7, SystemId = 50 });
             await db.SaveChangesAsync();
         }
-        var builder = WebApplication.CreateBuilder(new WebApplicationOptions { EnvironmentName = "Development" });
+        var builder = WebApplication.CreateBuilder(new WebApplicationOptions { EnvironmentName = "Production" });
         builder.Logging.ClearProviders();
         builder.WebHost.ConfigureKestrel(o => o.Listen(IPAddress.Loopback, 0));
         builder.Services.AddHttpContextAccessor();

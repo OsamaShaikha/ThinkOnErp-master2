@@ -27,7 +27,7 @@ public sealed class PolicyRepository : IPolicyRepository
     public async Task<IReadOnlyDictionary<string, int>> GetConfiguredPayrollCurrencyDecimalsAsync(long companyId, CancellationToken cancellationToken = default)
     {
         var rows = await _context.PayrollCurrencyPrecisions.AsNoTracking()
-            .Where(x => x.CompanyId == companyId).ToListAsync(cancellationToken);
+            .ToListAsync(cancellationToken);
         var result = new Dictionary<string, int>(StringComparer.Ordinal);
         foreach (var group in rows.GroupBy(x => SalaryPaymentMetadata.Normalize(x.CurrencyCode), StringComparer.Ordinal))
         {
@@ -40,13 +40,13 @@ public sealed class PolicyRepository : IPolicyRepository
     }
 
     public async Task<IReadOnlyList<PayrollCurrencyPrecision>> GetPayrollCurrencyPrecisionsAsync(long companyId, CancellationToken cancellationToken = default) =>
-        await _context.PayrollCurrencyPrecisions.AsNoTracking().Where(x => x.CompanyId == companyId)
-            .OrderBy(x => x.CurrencyCode).ToListAsync(cancellationToken);
+        (await _context.PayrollCurrencyPrecisions.AsNoTracking()
+            .OrderBy(x => x.CurrencyCode).ToListAsync(cancellationToken)).StampAll(companyId);
 
     public async Task SavePayrollCurrencyPrecisionAsync(PayrollCurrencyPrecision precision, CancellationToken cancellationToken = default)
     {
         var current = await _context.PayrollCurrencyPrecisions.SingleOrDefaultAsync(
-            x => x.CompanyId == precision.CompanyId && x.CurrencyCode == precision.CurrencyCode, cancellationToken);
+            x => x.CurrencyCode == precision.CurrencyCode, cancellationToken);
         if (current is null)
         {
             precision.UpdateUser = null;
@@ -55,6 +55,7 @@ public sealed class PolicyRepository : IPolicyRepository
             return;
         }
 
+        current.CompanyId = precision.CompanyId;
         current.DecimalPlaces = precision.DecimalPlaces;
         current.UpdateUser = precision.UpdateUser;
         current.UpdateDate = precision.UpdateDate;
@@ -63,7 +64,7 @@ public sealed class PolicyRepository : IPolicyRepository
     public async Task<bool> DeletePayrollCurrencyPrecisionAsync(long companyId, string currencyCode, CancellationToken cancellationToken = default)
     {
         var current = await _context.PayrollCurrencyPrecisions.SingleOrDefaultAsync(
-            x => x.CompanyId == companyId && x.CurrencyCode == currencyCode, cancellationToken);
+            x => x.CurrencyCode == currencyCode, cancellationToken);
         if (current is null) return false;
         _context.PayrollCurrencyPrecisions.Remove(current);
         return true;
@@ -71,20 +72,19 @@ public sealed class PolicyRepository : IPolicyRepository
 
     public async Task<TaxPolicy?> GetActiveTaxPolicyAsync(long companyId, DateTime effectiveDate, CancellationToken cancellationToken = default)
     {
-        return await _context.TaxPolicies
+        return (await _context.TaxPolicies
             .Include(t => t.Brackets)
-            .Where(t => t.CompanyId == companyId && t.IsActive && t.EffectiveFrom <= effectiveDate && (t.EffectiveTo == null || t.EffectiveTo >= effectiveDate))
+            .Where(t => t.IsActive && t.EffectiveFrom <= effectiveDate && (t.EffectiveTo == null || t.EffectiveTo >= effectiveDate))
             .OrderByDescending(t => t.EffectiveFrom)
-            .FirstOrDefaultAsync(cancellationToken);
+            .FirstOrDefaultAsync(cancellationToken))?.Stamp(companyId);
     }
 
     public async Task<IReadOnlyList<TaxPolicy>> GetTaxPoliciesAsync(long companyId, CancellationToken cancellationToken = default)
     {
-        return await _context.TaxPolicies
+        return (await _context.TaxPolicies
             .Include(t => t.Brackets)
-            .Where(t => t.CompanyId == companyId)
             .OrderByDescending(t => t.EffectiveFrom)
-            .ToListAsync(cancellationToken);
+            .ToListAsync(cancellationToken)).StampAll(companyId);
     }
 
     public async Task AddTaxPolicyAsync(TaxPolicy policy, CancellationToken cancellationToken = default)
@@ -94,18 +94,17 @@ public sealed class PolicyRepository : IPolicyRepository
 
     public async Task<SSCPolicy?> GetActiveSSCPolicyAsync(long companyId, DateTime effectiveDate, CancellationToken cancellationToken = default)
     {
-        return await _context.SSCPolicies
-            .Where(s => s.CompanyId == companyId && s.IsActive && s.EffectiveFrom <= effectiveDate && (s.EffectiveTo == null || s.EffectiveTo >= effectiveDate))
+        return (await _context.SSCPolicies
+            .Where(s => s.IsActive && s.EffectiveFrom <= effectiveDate && (s.EffectiveTo == null || s.EffectiveTo >= effectiveDate))
             .OrderByDescending(s => s.EffectiveFrom)
-            .FirstOrDefaultAsync(cancellationToken);
+            .FirstOrDefaultAsync(cancellationToken))?.Stamp(companyId);
     }
 
     public async Task<IReadOnlyList<SSCPolicy>> GetSSCPoliciesAsync(long companyId, CancellationToken cancellationToken = default)
     {
-        return await _context.SSCPolicies
-            .Where(s => s.CompanyId == companyId)
+        return (await _context.SSCPolicies
             .OrderByDescending(s => s.EffectiveFrom)
-            .ToListAsync(cancellationToken);
+            .ToListAsync(cancellationToken)).StampAll(companyId);
     }
 
     public async Task AddSSCPolicyAsync(SSCPolicy policy, CancellationToken cancellationToken = default)
@@ -115,19 +114,18 @@ public sealed class PolicyRepository : IPolicyRepository
 
     public async Task<ProrationPolicy?> GetActiveProrationPolicyAsync(long companyId, DateTime effectiveDate, CancellationToken cancellationToken = default)
     {
-        return await _context.ProrationPolicies
-            .Where(p => p.CompanyId == companyId && p.IsActive && p.EffectiveFrom <= effectiveDate && (p.EffectiveTo == null || p.EffectiveTo >= effectiveDate))
+        return (await _context.ProrationPolicies
+            .Where(p => p.IsActive && p.EffectiveFrom <= effectiveDate && (p.EffectiveTo == null || p.EffectiveTo >= effectiveDate))
             .OrderByDescending(p => p.IsDefault)
             .ThenByDescending(p => p.EffectiveFrom)
-            .FirstOrDefaultAsync(cancellationToken);
+            .FirstOrDefaultAsync(cancellationToken))?.Stamp(companyId);
     }
 
     public async Task<IReadOnlyList<ProrationPolicy>> GetProrationPoliciesAsync(long companyId, CancellationToken cancellationToken = default)
     {
-        return await _context.ProrationPolicies
-            .Where(p => p.CompanyId == companyId)
+        return (await _context.ProrationPolicies
             .OrderByDescending(p => p.EffectiveFrom)
-            .ToListAsync(cancellationToken);
+            .ToListAsync(cancellationToken)).StampAll(companyId);
     }
 
     public async Task AddProrationPolicyAsync(ProrationPolicy policy, CancellationToken cancellationToken = default)
@@ -137,19 +135,18 @@ public sealed class PolicyRepository : IPolicyRepository
 
     public async Task<DeductionPolicy?> GetActiveDeductionPolicyAsync(long companyId, DateTime effectiveDate, CancellationToken cancellationToken = default)
     {
-        return await _context.DeductionPolicies
-            .Where(d => d.CompanyId == companyId && d.IsActive && d.EffectiveFrom <= effectiveDate && (d.EffectiveTo == null || d.EffectiveTo >= effectiveDate))
+        return (await _context.DeductionPolicies
+            .Where(d => d.IsActive && d.EffectiveFrom <= effectiveDate && (d.EffectiveTo == null || d.EffectiveTo >= effectiveDate))
             .OrderByDescending(d => d.IsDefault)
             .ThenByDescending(d => d.EffectiveFrom)
-            .FirstOrDefaultAsync(cancellationToken);
+            .FirstOrDefaultAsync(cancellationToken))?.Stamp(companyId);
     }
 
     public async Task<IReadOnlyList<DeductionPolicy>> GetDeductionPoliciesAsync(long companyId, CancellationToken cancellationToken = default)
     {
-        return await _context.DeductionPolicies
-            .Where(d => d.CompanyId == companyId)
+        return (await _context.DeductionPolicies
             .OrderByDescending(d => d.EffectiveFrom)
-            .ToListAsync(cancellationToken);
+            .ToListAsync(cancellationToken)).StampAll(companyId);
     }
 
     public async Task AddDeductionPolicyAsync(DeductionPolicy policy, CancellationToken cancellationToken = default)
@@ -159,11 +156,11 @@ public sealed class PolicyRepository : IPolicyRepository
 
     public async Task<IReadOnlyList<OvertimeRule>> GetActiveOvertimeRulesAsync(long companyId, DateTime effectiveDate, CancellationToken cancellationToken = default)
     {
-        return await _context.OvertimeRules
-            .Where(r => r.CompanyId == companyId && r.IsActive && r.EffectiveFrom <= effectiveDate && (r.EffectiveTo == null || r.EffectiveTo >= effectiveDate))
+        return (await _context.OvertimeRules
+            .Where(r => r.IsActive && r.EffectiveFrom <= effectiveDate && (r.EffectiveTo == null || r.EffectiveTo >= effectiveDate))
             .OrderByDescending(r => r.EffectiveFrom)
             .ThenBy(r => r.Id)
-            .ToListAsync(cancellationToken);
+            .ToListAsync(cancellationToken)).StampAll(companyId);
     }
 
     public async Task AddOvertimeRuleAsync(OvertimeRule rule, CancellationToken cancellationToken = default)
@@ -173,19 +170,18 @@ public sealed class PolicyRepository : IPolicyRepository
 
     public async Task<AttendancePolicy?> GetActiveAttendancePolicyAsync(long companyId, DateTime effectiveDate, CancellationToken cancellationToken = default)
     {
-        return await _context.AttendancePolicies
-            .Where(p => p.CompanyId == companyId && (p.IsActive || p.EffectiveTo.HasValue) && p.EffectiveFrom <= effectiveDate && (p.EffectiveTo == null || p.EffectiveTo >= effectiveDate))
+        return (await _context.AttendancePolicies
+            .Where(p => (p.IsActive || p.EffectiveTo.HasValue) && p.EffectiveFrom <= effectiveDate && (p.EffectiveTo == null || p.EffectiveTo >= effectiveDate))
             .OrderByDescending(p => p.IsDefault)
             .ThenByDescending(p => p.EffectiveFrom)
-            .FirstOrDefaultAsync(cancellationToken);
+            .FirstOrDefaultAsync(cancellationToken))?.Stamp(companyId);
     }
 
     public async Task<IReadOnlyList<AttendancePolicy>> GetAttendancePoliciesAsync(long companyId, CancellationToken cancellationToken = default)
     {
-        return await _context.AttendancePolicies
-            .Where(p => p.CompanyId == companyId)
+        return (await _context.AttendancePolicies
             .OrderByDescending(p => p.EffectiveFrom)
-            .ToListAsync(cancellationToken);
+            .ToListAsync(cancellationToken)).StampAll(companyId);
     }
 
     public async Task AddAttendancePolicyAsync(AttendancePolicy policy, CancellationToken cancellationToken = default)
