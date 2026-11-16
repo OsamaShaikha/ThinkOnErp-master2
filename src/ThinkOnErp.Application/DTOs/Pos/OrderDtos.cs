@@ -101,6 +101,7 @@ public class CreatePosOrderLineDto
 
 public class CreatePosOrderLineModifierDto
 {
+    public long? ModifierOptionId { get; set; }
     public long ModifierItemId { get; set; }
     public string ModifierName { get; set; } = string.Empty;
     public decimal Quantity { get; set; } = 1;
@@ -231,6 +232,7 @@ public class PosOrderLineSummaryDto
 public class PosOrderLineModifierDto
 {
     public long Id { get; set; }
+    public long? ModifierOptionId { get; set; }
     public long ModifierItemId { get; set; }
     public string ModifierName { get; set; } = string.Empty;
     public decimal Quantity { get; set; }

@@ -178,4 +178,20 @@ public class InvModifiersController : ControllerBase
         var result = await _modifierService.RemoveGroupFromItemAsync(itemId, groupId, ct);
         return result.Success ? Ok(result) : NotFound(result);
     }
+
+    /// <summary>
+    /// Retrieves a consumption report of stock used by modifier options per item over a date range, filtered by branch.
+    /// </summary>
+    [HttpGet("consumption-report")]
+    [ProducesResponseType(typeof(ApiResponse<List<ModifierConsumptionReportItemDto>>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<ApiResponse<List<ModifierConsumptionReportItemDto>>>> GetConsumptionReport(
+        [FromQuery] long branchId,
+        [FromQuery] DateTime fromDate,
+        [FromQuery] DateTime toDate,
+        [FromQuery] long? itemId,
+        CancellationToken ct)
+    {
+        var result = await _modifierService.GetConsumptionReportAsync(branchId, fromDate, toDate, itemId, ct);
+        return Ok(result);
+    }
 }

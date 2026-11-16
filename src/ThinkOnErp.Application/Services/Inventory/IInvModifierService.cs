@@ -20,4 +20,6 @@ public interface IInvModifierService
     Task<ApiResponse<ItemModifierGroupsDto>> GetGroupsByItemIdAsync(long itemId, CancellationToken ct = default);
     Task<ApiResponse<bool>> AssignGroupsToItemAsync(long itemId, List<long> groupIds, CancellationToken ct = default);
     Task<ApiResponse<bool>> RemoveGroupFromItemAsync(long itemId, long groupId, CancellationToken ct = default);
+
+    Task<ApiResponse<List<ModifierConsumptionReportItemDto>>> GetConsumptionReportAsync(long branchId, DateTime fromDate, DateTime toDate, long? itemId = null, CancellationToken ct = default);
 }

@@ -171,6 +171,30 @@ public class PosReservationsController : ControllerBase
     }
 
     /// <summary>
+    /// Updates a reservation by assigning/linking a POS order (OrderNumber and/or OrderId).
+    /// </summary>
+    [HttpPut("{reservationId:long}/order")]
+    [ProducesResponseType(typeof(ApiResponse<ReservationSummaryDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<ReservationSummaryDto>), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ApiResponse<ReservationSummaryDto>), StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<ApiResponse<ReservationSummaryDto>>> AssignOrderToReservation(
+        long reservationId,
+        [FromBody(EmptyBodyBehavior = Microsoft.AspNetCore.Mvc.ModelBinding.EmptyBodyBehavior.Allow)] AssignReservationOrderDto? dto,
+        [FromQuery] long? orderId,
+        [FromQuery] string? orderNumber,
+        [FromQuery] PosReservationStatus? status,
+        CancellationToken ct)
+    {
+        dto ??= new AssignReservationOrderDto();
+        if (!dto.OrderId.HasValue && orderId.HasValue) dto.OrderId = orderId;
+        if (string.IsNullOrWhiteSpace(dto.OrderNumber) && !string.IsNullOrWhiteSpace(orderNumber)) dto.OrderNumber = orderNumber;
+        if (!dto.Status.HasValue && status.HasValue) dto.Status = status;
+
+        var result = await _reservationService.AssignOrderToReservationAsync(reservationId, dto, ct);
+        return result.Success ? Ok(result) : StatusCode(result.StatusCode, result);
+    }
+
+    /// <summary>
     /// Deletes a reservation.
     /// </summary>
     [HttpDelete("{id:long}")]

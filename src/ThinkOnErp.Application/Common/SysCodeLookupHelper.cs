@@ -147,6 +147,13 @@ public static class SysCodeLookupHelper
                 new() { Code = 2, Value = "Exclusive", NameAr = "غير شامل الضريبة", NameEn = "Tax Exclusive", Name = isEnglish ? "Tax Exclusive" : "غير شامل الضريبة", IsActive = 1 },
                 new() { Code = 3, Value = "ZeroRated", NameAr = "ضريبة صفرية", NameEn = "Zero Rated", Name = isEnglish ? "Zero Rated" : "ضريبة صفرية", IsActive = 1 },
             },
+            SysCodeKeys.ModifierOptionTypes.Mgr => new List<SysCodeLookupDto>
+            {
+                new() { Code = 1, Value = "ADD", NameAr = "إضافة (خصم من المخزون)", NameEn = "Add (Deduct Stock)", Name = isEnglish ? "Add (Deduct Stock)" : "إضافة (خصم من المخزون)", IsActive = 1 },
+                new() { Code = 2, Value = "REMOVE", NameAr = "استبعاد (عدم خصم من الوصفة)", NameEn = "Remove (Skip from BOM)", Name = isEnglish ? "Remove (Skip from BOM)" : "استبعاد (عدم خصم من الوصفة)", IsActive = 1 },
+                new() { Code = 3, Value = "SUBSTITUTE", NameAr = "استبدال (استبدال مكون بالوصفة)", NameEn = "Substitute (Replace BOM item)", Name = isEnglish ? "Substitute (Replace BOM item)" : "استبدال (استبدال مكون بالوصفة)", IsActive = 1 },
+                new() { Code = 4, Value = "NONE", NameAr = "بدون أثر مخزني (ملاحظة تحضير)", NameEn = "None (No Stock Effect)", Name = isEnglish ? "None (No Stock Effect)" : "بدون أثر مخزني (ملاحظة تحضير)", IsActive = 1 },
+            },
             _ => new List<SysCodeLookupDto>()
         };
     }

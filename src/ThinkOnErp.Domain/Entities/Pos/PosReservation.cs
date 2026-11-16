@@ -32,6 +32,10 @@ public class PosReservation
 
     public PosReservationStatus Status { get; set; } = PosReservationStatus.Booked;
 
+    // Associated POS Order
+    public long? OrderId { get; set; }
+    public string? OrderNumber { get; set; }
+
     // Deposit & financial commitment
     public decimal DepositAmount { get; set; }
     public bool IsDepositPaid { get; set; }
@@ -45,4 +49,6 @@ public class PosReservation
     public SysBranch? Branch { get; set; }
     public Customer? Customer { get; set; }
     public PosTable? Table { get; set; }
+    public PosOrderHeader? Order { get; set; }
+    public List<PosReservationServiceItem> Services { get; set; } = new();
 }

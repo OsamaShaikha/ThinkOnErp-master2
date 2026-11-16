@@ -61,7 +61,8 @@ public class InventoryLookupsController : ControllerBase
             ["itemTypes"] = await GetLookupsByMgrAsync(SysCodeKeys.ItemTypes.Mgr, lang),
             ["taxTypes"] = await GetLookupsByMgrAsync(SysCodeKeys.TaxTypes.Mgr, lang),
             ["warehouseTypes"] = await GetLookupsByMgrAsync(SysCodeKeys.WarehouseTypes.Mgr, lang),
-            ["zoneTypes"] = await GetLookupsByMgrAsync(SysCodeKeys.ZoneTypes.Mgr, lang)
+            ["zoneTypes"] = await GetLookupsByMgrAsync(SysCodeKeys.ZoneTypes.Mgr, lang),
+            ["modifierOptionTypes"] = await GetLookupsByMgrAsync(SysCodeKeys.ModifierOptionTypes.Mgr, lang)
         };
 
         return Ok(ApiResponse<Dictionary<string, List<SysCodeLookupDto>>>.CreateSuccess(result, "Inventory lookups retrieved successfully", 200));
@@ -177,5 +178,16 @@ public class InventoryLookupsController : ControllerBase
     {
         var list = await GetLookupsByMgrAsync(SysCodeKeys.ZoneTypes.Mgr, lang);
         return Ok(ApiResponse<List<SysCodeLookupDto>>.CreateSuccess(list, "Zone types retrieved successfully", 200));
+    }
+
+    /// <summary>
+    /// استرجاع أنواع تأثير خيارات الإضافات على المخزون (Modifier Option Types: ADD=1, REMOVE=2, SUBSTITUTE=3, NONE=4)
+    /// </summary>
+    [HttpGet("modifier-option-types")]
+    [ProducesResponseType(typeof(ApiResponse<List<SysCodeLookupDto>>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<ApiResponse<List<SysCodeLookupDto>>>> GetModifierOptionTypes([FromQuery] int? lang = null)
+    {
+        var list = await GetLookupsByMgrAsync(SysCodeKeys.ModifierOptionTypes.Mgr, lang);
+        return Ok(ApiResponse<List<SysCodeLookupDto>>.CreateSuccess(list, "Modifier option types retrieved successfully", 200));
     }
 }

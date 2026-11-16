@@ -25,6 +25,7 @@ public class PosReservationRepository : IPosReservationRepository
         return await _context.PosReservations
             .Include(r => r.Table)
             .Include(r => r.Customer)
+            .Include(r => r.Services)
             .FirstOrDefaultAsync(r => r.Id == id, ct);
     }
 
@@ -34,6 +35,7 @@ public class PosReservationRepository : IPosReservationRepository
             .AsNoTracking()
             .Include(r => r.Table)
             .Include(r => r.Customer)
+            .Include(r => r.Services)
             .Where(r => r.RecurrenceGroupId == recurrenceGroupId)
             .OrderBy(r => r.ReservationDate)
             .ThenBy(r => r.StartTime)
@@ -47,6 +49,7 @@ public class PosReservationRepository : IPosReservationRepository
             .AsNoTracking()
             .Include(r => r.Table)
             .Include(r => r.Customer)
+            .Include(r => r.Services)
             .Where(r => r.BranchId == branchId && r.ReservationDate.Date == targetDate)
             .OrderBy(r => r.StartTime)
             .ToListAsync(ct);
@@ -67,6 +70,7 @@ public class PosReservationRepository : IPosReservationRepository
             .AsNoTracking()
             .Include(r => r.Table)
             .Include(r => r.Customer)
+            .Include(r => r.Services)
             .Where(r => r.BranchId == branchId);
 
         if (customerId.HasValue)
@@ -110,6 +114,22 @@ public class PosReservationRepository : IPosReservationRepository
     {
         _context.PosReservations.Remove(reservation);
         return Task.CompletedTask;
+    }
+
+    public async Task<PosOrderHeader?> GetOrderByIdAsync(long orderId, CancellationToken ct = default)
+    {
+        return await _context.PosOrderHeaders
+            .AsNoTracking()
+            .FirstOrDefaultAsync(o => o.Id == orderId, ct);
+    }
+
+    public async Task<PosOrderHeader?> GetOrderByNumberAsync(long branchId, string orderNumber, CancellationToken ct = default)
+    {
+        if (string.IsNullOrWhiteSpace(orderNumber)) return null;
+        var trimmed = orderNumber.Trim();
+        return await _context.PosOrderHeaders
+            .AsNoTracking()
+            .FirstOrDefaultAsync(o => o.BranchId == branchId && o.OrderNumber == trimmed, ct);
     }
 
     public async Task SaveChangesAsync(CancellationToken ct = default)

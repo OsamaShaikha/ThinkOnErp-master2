@@ -24,6 +24,9 @@ public class InvModifierRepository : IInvModifierRepository, IPosModifierReposit
         var query = _context.InvModifierGroups
             .AsNoTracking()
             .Include(g => g.Options.OrderBy(o => o.SortOrder))
+                .ThenInclude(o => o.RelatedItem)
+            .Include(g => g.Options.OrderBy(o => o.SortOrder))
+                .ThenInclude(o => o.ReplacesItem)
             .Include(g => g.ItemLinks)
             .Where(g => g.BranchId == branchId);
 
@@ -39,6 +42,9 @@ public class InvModifierRepository : IInvModifierRepository, IPosModifierReposit
     {
         return await _context.InvModifierGroups
             .Include(g => g.Options.OrderBy(o => o.SortOrder))
+                .ThenInclude(o => o.RelatedItem)
+            .Include(g => g.Options.OrderBy(o => o.SortOrder))
+                .ThenInclude(o => o.ReplacesItem)
             .Include(g => g.ItemLinks)
                 .ThenInclude(l => l.Item)
             .FirstOrDefaultAsync(g => g.Id == id, ct);
@@ -74,7 +80,21 @@ public class InvModifierRepository : IInvModifierRepository, IPosModifierReposit
         return await _context.InvModifierOptions
             .Include(o => o.ModifierGroup)
             .Include(o => o.RelatedItem)
+            .Include(o => o.ReplacesItem)
             .FirstOrDefaultAsync(o => o.Id == id, ct);
+    }
+
+    public async Task<IReadOnlyList<InvModifierOption>> GetOptionsByIdsAsync(IEnumerable<long> ids, CancellationToken ct = default)
+    {
+        var idList = ids.Distinct().ToList();
+        if (!idList.Any()) return new List<InvModifierOption>();
+
+        return await _context.InvModifierOptions
+            .Include(o => o.ModifierGroup)
+            .Include(o => o.RelatedItem)
+            .Include(o => o.ReplacesItem)
+            .Where(o => idList.Contains(o.Id))
+            .ToListAsync(ct);
     }
 
     public async Task AddOptionAsync(InvModifierOption option, CancellationToken ct = default)

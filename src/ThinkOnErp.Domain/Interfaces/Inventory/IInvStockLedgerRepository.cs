@@ -26,5 +26,6 @@ public interface IInvStockLedgerRepository
         long? warehouseId = null,
         DateTime? fromDate = null,
         CancellationToken cancellationToken = default);
+    Task<bool> HasMovementForDocAsync(string sourceDocId, string sourceDocType, CancellationToken cancellationToken = default);
     Task SaveChangesAsync(CancellationToken cancellationToken = default);
 }

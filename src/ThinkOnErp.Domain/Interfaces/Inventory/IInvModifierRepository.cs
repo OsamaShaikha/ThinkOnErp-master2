@@ -15,6 +15,7 @@ public interface IInvModifierRepository
     Task DeleteGroupAsync(InvModifierGroup group, CancellationToken ct = default);
 
     Task<InvModifierOption?> GetOptionByIdAsync(long id, CancellationToken ct = default);
+    Task<IReadOnlyList<InvModifierOption>> GetOptionsByIdsAsync(IEnumerable<long> ids, CancellationToken ct = default);
     Task AddOptionAsync(InvModifierOption option, CancellationToken ct = default);
     Task UpdateOptionAsync(InvModifierOption option, CancellationToken ct = default);
     Task DeleteOptionAsync(InvModifierOption option, CancellationToken ct = default);

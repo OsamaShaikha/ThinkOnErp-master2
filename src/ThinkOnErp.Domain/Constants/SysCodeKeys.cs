@@ -338,4 +338,13 @@ public static class SysCodeKeys
         public const int Exclusive = 2;
         public const int ZeroRated = 3;
     }
+
+    public static class ModifierOptionTypes
+    {
+        public const int Mgr = 42;
+        public const int Add = 1;
+        public const int Remove = 2;
+        public const int Substitute = 3;
+        public const int None = 4;
+    }
 }

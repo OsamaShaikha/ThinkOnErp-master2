@@ -41,6 +41,7 @@ public interface IPosReservationService
     Task<ApiResponse<RecurringReservationResultDto>> CreateRecurringReservationAsync(CreateRecurringReservationDto dto, string username, CancellationToken ct = default);
     Task<ApiResponse<bool>> CancelRecurringSeriesAsync(string recurrenceGroupId, string username, CancellationToken ct = default);
     Task<ApiResponse<ReservationSummaryDto>> UpdateReservationAsync(long id, UpdateReservationDto dto, string username, CancellationToken ct = default);
+    Task<ApiResponse<ReservationSummaryDto>> AssignOrderToReservationAsync(long reservationId, AssignReservationOrderDto dto, CancellationToken ct = default);
     Task<ApiResponse<bool>> UpdateReservationStatusAsync(long reservationId, PosReservationStatus status, CancellationToken ct = default);
     Task<ApiResponse<bool>> DeleteReservationAsync(long id, CancellationToken ct = default);
 }
@@ -65,6 +66,14 @@ public class PosReservationService : IPosReservationService
         if (dto.BranchId <= 0)
             return ApiResponse<ReservationSummaryDto>.CreateFailure("Valid BranchId is required", null, 400);
 
+        List<PosReservationServiceItem> serviceEntities = new();
+        if (dto.Services != null && dto.Services.Count > 0)
+        {
+            var prep = PrepareReservationServices(dto.StartTime, dto.Services);
+            dto.EndTime = prep.EndTime;
+            serviceEntities = prep.Entities;
+        }
+
         if (dto.EndTime <= dto.StartTime)
             return ApiResponse<ReservationSummaryDto>.CreateFailure("وقت نهاية الحجز يجب أن يكون أكبر من وقت البداية (EndTime must be greater than StartTime)", null, 400);
 
@@ -75,7 +84,9 @@ public class PosReservationService : IPosReservationService
         if (isExternal)
         {
             dto.TableId = null; // External/home services do not occupy internal tables
-            if (!dto.StaffEmployeeId.HasValue || dto.StaffEmployeeId.Value <= 0)
+            var hasAnyStaff = (dto.StaffEmployeeId.HasValue && dto.StaffEmployeeId.Value > 0) ||
+                              (dto.Services != null && dto.Services.Any(s => (s.PrimaryStaffIds != null && s.PrimaryStaffIds.Count > 0) || (s.AssistantStaffIds != null && s.AssistantStaffIds.Count > 0)));
+            if (!hasAnyStaff)
             {
                 return ApiResponse<ReservationSummaryDto>.CreateFailure("يجب تحديد الموظف / مقدم الخدمة للخدمات الخارجية والمنزلية (StaffEmployeeId is required for external / home services)", null, 400);
             }
@@ -90,6 +101,19 @@ public class PosReservationService : IPosReservationService
             foreach (var id in dto.AdditionalStaffIds.Where(x => x > 0))
                 requestedStaff.Add(id);
         }
+        if (dto.Services != null)
+        {
+            foreach (var s in dto.Services)
+            {
+                foreach (var id in GetStaffIdsForService(s))
+                    requestedStaff.Add(id);
+            }
+        }
+
+        if ((!dto.StaffEmployeeId.HasValue || dto.StaffEmployeeId.Value <= 0) && requestedStaff.Count > 0)
+        {
+            dto.StaffEmployeeId = requestedStaff.First();
+        }
 
         // Conflict / Overlap Detection
         var dayReservations = await _reservationRepository.GetReservationsForDayAsync(dto.BranchId, dto.ReservationDate, ct);
@@ -98,38 +122,19 @@ public class PosReservationService : IPosReservationService
             r.Status == PosReservationStatus.Confirmed ||
             r.Status == PosReservationStatus.Seated).ToList();
 
-        var conflict = activeReservations.FirstOrDefault(r =>
+        var conflictMessage = CheckReservationConflict(
+            dto.StartTime,
+            dto.EndTime,
+            dto.TableId,
+            dto.ResourceType,
+            dto.ResourceIdentifier,
+            dto.Services,
+            requestedStaff,
+            activeReservations);
+
+        if (!string.IsNullOrWhiteSpace(conflictMessage))
         {
-            var isTimeOverlapping = dto.StartTime < r.EndTime && dto.EndTime > r.StartTime;
-            if (!isTimeOverlapping) return false;
-
-            if (dto.TableId.HasValue && r.TableId.HasValue && dto.TableId.Value == r.TableId.Value)
-                return true;
-
-            if (!string.IsNullOrWhiteSpace(dto.ResourceIdentifier) && !string.IsNullOrWhiteSpace(r.ResourceIdentifier) &&
-                string.Equals(dto.ResourceIdentifier.Trim(), r.ResourceIdentifier.Trim(), StringComparison.OrdinalIgnoreCase) &&
-                string.Equals(dto.ResourceType?.Trim(), r.ResourceType?.Trim(), StringComparison.OrdinalIgnoreCase))
-                return true;
-
-            var activeStaff = GetAllStaffIdsInReservation(r);
-            if (requestedStaff.Overlaps(activeStaff))
-                return true;
-
-            return false;
-        });
-
-        if (conflict != null)
-        {
-            var activeStaff = GetAllStaffIdsInReservation(conflict);
-            var overlappingStaff = requestedStaff.Intersect(activeStaff).FirstOrDefault();
-
-            var conflictResource = overlappingStaff > 0
-                ? $"الموظف (كود: {overlappingStaff})"
-                : (dto.TableId.HasValue && conflict.TableId == dto.TableId.Value ? "الطاولة" : "المورد");
-
-            return ApiResponse<ReservationSummaryDto>.CreateFailure(
-                $"الوقت المحدد يتعارض مع حجز قائم لـ {conflictResource} (رقم الحجز: {conflict.ReservationNumber} للعميل: {conflict.CustomerName} من {conflict.StartTime:hh\\:mm} إلى {conflict.EndTime:hh\\:mm})",
-                null, 400);
+            return ApiResponse<ReservationSummaryDto>.CreateFailure(conflictMessage, null, 400);
         }
 
         var today = DateTime.UtcNow.ToString("yyyyMMdd");
@@ -140,6 +145,8 @@ public class PosReservationService : IPosReservationService
             BranchId = dto.BranchId,
             ReservationNumber = resNumber,
             CustomerId = dto.CustomerId,
+            OrderId = dto.OrderId,
+            OrderNumber = dto.OrderNumber?.Trim(),
             CustomerName = dto.CustomerName.Trim(),
             CustomerPhone = dto.CustomerPhone.Trim(),
             CustomerEmail = dto.CustomerEmail?.Trim(),
@@ -157,7 +164,8 @@ public class PosReservationService : IPosReservationService
             IsDepositPaid = dto.IsDepositPaid,
             SpecialRequests = dto.SpecialRequests,
             CreationUser = username,
-            CreationDate = DateTime.UtcNow
+            CreationDate = DateTime.UtcNow,
+            Services = serviceEntities
         };
 
         await _reservationRepository.AddReservationAsync(reservation, ct);
@@ -210,6 +218,14 @@ public class PosReservationService : IPosReservationService
         if (reservation == null)
             return ApiResponse<ReservationSummaryDto>.CreateFailure("Reservation not found", null, 404);
 
+        List<PosReservationServiceItem> updateServiceEntities = new();
+        if (dto.Services != null && dto.Services.Count > 0)
+        {
+            var prep = PrepareReservationServices(dto.StartTime, dto.Services);
+            dto.EndTime = prep.EndTime;
+            updateServiceEntities = prep.Entities;
+        }
+
         if (dto.EndTime <= dto.StartTime)
             return ApiResponse<ReservationSummaryDto>.CreateFailure("وقت نهاية الحجز يجب أن يكون أكبر من وقت البداية (EndTime must be greater than StartTime)", null, 400);
 
@@ -220,7 +236,9 @@ public class PosReservationService : IPosReservationService
         if (isExternal)
         {
             dto.TableId = null;
-            if (!dto.StaffEmployeeId.HasValue || dto.StaffEmployeeId.Value <= 0)
+            var hasAnyStaff = (dto.StaffEmployeeId.HasValue && dto.StaffEmployeeId.Value > 0) ||
+                              (dto.Services != null && dto.Services.Any(s => (s.PrimaryStaffIds != null && s.PrimaryStaffIds.Count > 0) || (s.AssistantStaffIds != null && s.AssistantStaffIds.Count > 0)));
+            if (!hasAnyStaff)
             {
                 return ApiResponse<ReservationSummaryDto>.CreateFailure("يجب تحديد الموظف / مقدم الخدمة للخدمات الخارجية والمنزلية (StaffEmployeeId is required for external / home services)", null, 400);
             }
@@ -235,6 +253,19 @@ public class PosReservationService : IPosReservationService
             foreach (var sid in dto.AdditionalStaffIds.Where(x => x > 0))
                 requestedStaff.Add(sid);
         }
+        if (dto.Services != null)
+        {
+            foreach (var s in dto.Services)
+            {
+                foreach (var sid in GetStaffIdsForService(s))
+                    requestedStaff.Add(sid);
+            }
+        }
+
+        if ((!dto.StaffEmployeeId.HasValue || dto.StaffEmployeeId.Value <= 0) && requestedStaff.Count > 0)
+        {
+            dto.StaffEmployeeId = requestedStaff.First();
+        }
 
         // Conflict check excluding current reservation
         var dayReservations = await _reservationRepository.GetReservationsForDayAsync(reservation.BranchId, dto.ReservationDate, ct);
@@ -244,40 +275,28 @@ public class PosReservationService : IPosReservationService
              r.Status == PosReservationStatus.Confirmed ||
              r.Status == PosReservationStatus.Seated)).ToList();
 
-        var conflict = activeReservations.FirstOrDefault(r =>
+        var conflictMessage = CheckReservationConflict(
+            dto.StartTime,
+            dto.EndTime,
+            dto.TableId,
+            dto.ResourceType,
+            dto.ResourceIdentifier,
+            dto.Services,
+            requestedStaff,
+            activeReservations,
+            excludeReservationId: id);
+
+        if (!string.IsNullOrWhiteSpace(conflictMessage))
         {
-            var isTimeOverlapping = dto.StartTime < r.EndTime && dto.EndTime > r.StartTime;
-            if (!isTimeOverlapping) return false;
-
-            if (dto.TableId.HasValue && r.TableId.HasValue && dto.TableId.Value == r.TableId.Value)
-                return true;
-
-            if (!string.IsNullOrWhiteSpace(dto.ResourceIdentifier) && !string.IsNullOrWhiteSpace(r.ResourceIdentifier) &&
-                string.Equals(dto.ResourceIdentifier.Trim(), r.ResourceIdentifier.Trim(), StringComparison.OrdinalIgnoreCase) &&
-                string.Equals(dto.ResourceType?.Trim(), r.ResourceType?.Trim(), StringComparison.OrdinalIgnoreCase))
-                return true;
-
-            var activeStaff = GetAllStaffIdsInReservation(r);
-            if (requestedStaff.Overlaps(activeStaff))
-                return true;
-
-            return false;
-        });
-
-        if (conflict != null)
-        {
-            var activeStaff = GetAllStaffIdsInReservation(conflict);
-            var overlappingStaff = requestedStaff.Intersect(activeStaff).FirstOrDefault();
-
-            var conflictResource = overlappingStaff > 0
-                ? $"الموظف (كود: {overlappingStaff})"
-                : (dto.TableId.HasValue && conflict.TableId == dto.TableId.Value ? "الطاولة" : "المورد");
-
-            return ApiResponse<ReservationSummaryDto>.CreateFailure(
-                $"الوقت المحدد يتعارض مع حجز قائم لـ {conflictResource} (رقم الحجز: {conflict.ReservationNumber} للعميل: {conflict.CustomerName} من {conflict.StartTime:hh\\:mm} إلى {conflict.EndTime:hh\\:mm})",
-                null, 400);
+            return ApiResponse<ReservationSummaryDto>.CreateFailure(conflictMessage, null, 400);
         }
 
+        if (dto.CustomerId.HasValue)
+            reservation.CustomerId = dto.CustomerId.Value > 0 ? dto.CustomerId : null;
+        if (dto.OrderId.HasValue)
+            reservation.OrderId = dto.OrderId.Value > 0 ? dto.OrderId : null;
+        if (dto.OrderNumber != null)
+            reservation.OrderNumber = string.IsNullOrWhiteSpace(dto.OrderNumber) ? null : dto.OrderNumber.Trim();
         if (!string.IsNullOrWhiteSpace(dto.CustomerName))
             reservation.CustomerName = dto.CustomerName.Trim();
         if (!string.IsNullOrWhiteSpace(dto.CustomerPhone))
@@ -297,10 +316,73 @@ public class PosReservationService : IPosReservationService
         reservation.IsDepositPaid = dto.IsDepositPaid;
         reservation.SpecialRequests = dto.SpecialRequests;
 
+        if (dto.Services != null)
+        {
+            reservation.Services = updateServiceEntities;
+        }
+
         await _reservationRepository.UpdateReservationAsync(reservation, ct);
         await _reservationRepository.SaveChangesAsync(ct);
 
         return ApiResponse<ReservationSummaryDto>.CreateSuccess(MapToSummary(reservation), "Reservation updated successfully");
+    }
+
+    public async Task<ApiResponse<ReservationSummaryDto>> AssignOrderToReservationAsync(
+        long reservationId,
+        AssignReservationOrderDto dto,
+        CancellationToken ct = default)
+    {
+        if (dto == null)
+            return ApiResponse<ReservationSummaryDto>.CreateFailure("Request body cannot be null", null, 400);
+
+        var reservation = await _reservationRepository.GetByIdAsync(reservationId, ct);
+        if (reservation == null)
+            return ApiResponse<ReservationSummaryDto>.CreateFailure("Reservation not found", null, 404);
+
+        if (!dto.OrderId.HasValue && string.IsNullOrWhiteSpace(dto.OrderNumber))
+        {
+            return ApiResponse<ReservationSummaryDto>.CreateFailure("يجب إرسال إما رقم الطلب (OrderNumber) أو معرّف الطلب (OrderId)", null, 400);
+        }
+
+        if (dto.OrderId.HasValue && dto.OrderId.Value > 0)
+        {
+            reservation.OrderId = dto.OrderId.Value;
+            var order = await _reservationRepository.GetOrderByIdAsync(dto.OrderId.Value, ct);
+            if (order != null)
+            {
+                reservation.OrderNumber = order.OrderNumber;
+            }
+            else if (!string.IsNullOrWhiteSpace(dto.OrderNumber))
+            {
+                reservation.OrderNumber = dto.OrderNumber.Trim();
+            }
+        }
+        else if (!string.IsNullOrWhiteSpace(dto.OrderNumber))
+        {
+            var trimmedNumber = dto.OrderNumber.Trim();
+            reservation.OrderNumber = trimmedNumber;
+            var order = await _reservationRepository.GetOrderByNumberAsync(reservation.BranchId, trimmedNumber, ct);
+            if (order != null)
+            {
+                reservation.OrderId = order.Id;
+            }
+        }
+
+        if (dto.Status.HasValue)
+        {
+            reservation.Status = dto.Status.Value;
+        }
+        else if (reservation.Status == PosReservationStatus.Booked || reservation.Status == PosReservationStatus.Confirmed)
+        {
+            reservation.Status = PosReservationStatus.Seated;
+        }
+
+        await _reservationRepository.UpdateReservationAsync(reservation, ct);
+        await _reservationRepository.SaveChangesAsync(ct);
+
+        return ApiResponse<ReservationSummaryDto>.CreateSuccess(
+            MapToSummary(reservation),
+            $"تم ربط الطلب {reservation.OrderNumber} بنجاح بالحجز رقم {reservation.ReservationNumber}");
     }
 
     public async Task<ApiResponse<bool>> UpdateReservationStatusAsync(long reservationId, PosReservationStatus status, CancellationToken ct = default)
@@ -464,6 +546,12 @@ public class PosReservationService : IPosReservationService
         if (dto.BranchId <= 0)
             return ApiResponse<RecurringReservationResultDto>.CreateFailure("Valid BranchId is required", null, 400);
 
+        if (dto.Services != null && dto.Services.Count > 0)
+        {
+            var prep = PrepareReservationServices(dto.StartTime, dto.Services);
+            dto.EndTime = prep.EndTime;
+        }
+
         if (dto.EndTime <= dto.StartTime)
             return ApiResponse<RecurringReservationResultDto>.CreateFailure("EndTime must be greater than StartTime", null, 400);
 
@@ -477,7 +565,9 @@ public class PosReservationService : IPosReservationService
         if (isExternal)
         {
             dto.TableId = null;
-            if (!dto.StaffEmployeeId.HasValue || dto.StaffEmployeeId.Value <= 0)
+            var hasAnyStaff = (dto.StaffEmployeeId.HasValue && dto.StaffEmployeeId.Value > 0) ||
+                              (dto.Services != null && dto.Services.Any(s => (s.PrimaryStaffIds != null && s.PrimaryStaffIds.Count > 0) || (s.AssistantStaffIds != null && s.AssistantStaffIds.Count > 0)));
+            if (!hasAnyStaff)
             {
                 return ApiResponse<RecurringReservationResultDto>.CreateFailure("StaffEmployeeId is required for external / home services", null, 400);
             }
@@ -493,6 +583,19 @@ public class PosReservationService : IPosReservationService
         {
             foreach (var id in dto.AdditionalStaffIds.Where(x => x > 0))
                 requestedStaff.Add(id);
+        }
+        if (dto.Services != null)
+        {
+            foreach (var s in dto.Services)
+            {
+                foreach (var id in GetStaffIdsForService(s))
+                    requestedStaff.Add(id);
+            }
+        }
+
+        if ((!dto.StaffEmployeeId.HasValue || dto.StaffEmployeeId.Value <= 0) && requestedStaff.Count > 0)
+        {
+            dto.StaffEmployeeId = requestedStaff.First();
         }
 
         // Determine starting date aligned with DayOfWeek if provided
@@ -529,34 +632,31 @@ public class PosReservationService : IPosReservationService
                 r.Status == PosReservationStatus.Confirmed ||
                 r.Status == PosReservationStatus.Seated).ToList();
 
-            var conflict = activeReservations.FirstOrDefault(r =>
+            var conflictMessage = CheckReservationConflict(
+                dto.StartTime,
+                dto.EndTime,
+                dto.TableId,
+                dto.ResourceType,
+                dto.ResourceIdentifier,
+                dto.Services,
+                requestedStaff,
+                activeReservations);
+
+            if (!string.IsNullOrWhiteSpace(conflictMessage))
             {
-                var isTimeOverlapping = dto.StartTime < r.EndTime && dto.EndTime > r.StartTime;
-                if (!isTimeOverlapping) return false;
-
-                if (dto.TableId.HasValue && r.TableId.HasValue && dto.TableId.Value == r.TableId.Value)
-                    return true;
-
-                if (!string.IsNullOrWhiteSpace(dto.ResourceIdentifier) && !string.IsNullOrWhiteSpace(r.ResourceIdentifier) &&
-                    string.Equals(dto.ResourceIdentifier.Trim(), r.ResourceIdentifier.Trim(), StringComparison.OrdinalIgnoreCase) &&
-                    string.Equals(dto.ResourceType?.Trim(), r.ResourceType?.Trim(), StringComparison.OrdinalIgnoreCase))
-                    return true;
-
-                var activeStaff = GetAllStaffIdsInReservation(r);
-                if (requestedStaff.Overlaps(activeStaff))
-                    return true;
-
-                return false;
-            });
-
-            if (conflict != null)
-            {
-                skippedReasons.Add($"تاريخ {dateToBook:yyyy-MM-dd}: يتعارض مع حجز قائم ({conflict.ReservationNumber} - {conflict.CustomerName})");
+                skippedReasons.Add($"تاريخ {dateToBook:yyyy-MM-dd}: {conflictMessage}");
                 continue;
             }
 
             var dateStr = dateToBook.ToString("yyyyMMdd");
             var resNumber = $"RES-{dto.BranchId}-{dateStr}-{Guid.NewGuid().ToString("N")[..4].ToUpperInvariant()}";
+
+            List<PosReservationServiceItem> occServices = new();
+            if (dto.Services != null && dto.Services.Count > 0)
+            {
+                var prep = PrepareReservationServices(dto.StartTime, dto.Services);
+                occServices = prep.Entities;
+            }
 
             var reservation = new PosReservation
             {
@@ -582,7 +682,8 @@ public class PosReservationService : IPosReservationService
                 RecurrenceGroupId = recurrenceGroupId,
                 IsRecurring = true,
                 CreationUser = username,
-                CreationDate = DateTime.UtcNow
+                CreationDate = DateTime.UtcNow,
+                Services = occServices
             };
 
             await _reservationRepository.AddReservationAsync(reservation, ct);
@@ -644,6 +745,9 @@ public class PosReservationService : IPosReservationService
         {
             Id = r.Id,
             ReservationNumber = r.ReservationNumber,
+            CustomerId = r.CustomerId,
+            OrderId = r.OrderId,
+            OrderNumber = r.OrderNumber,
             CustomerName = r.CustomerName,
             CustomerPhone = r.CustomerPhone,
             CustomerEmail = r.CustomerEmail,
@@ -662,8 +766,214 @@ public class PosReservationService : IPosReservationService
             IsDepositPaid = r.IsDepositPaid,
             SpecialRequests = r.SpecialRequests,
             RecurrenceGroupId = r.RecurrenceGroupId,
-            IsRecurring = r.IsRecurring
+            IsRecurring = r.IsRecurring,
+            Services = r.Services?.OrderBy(s => s.SortOrder).Select(s => new ReservationServiceItemDto
+            {
+                Id = s.Id,
+                ServiceItemId = s.ServiceItemId,
+                ServiceName = s.ServiceName,
+                DurationMinutes = s.DurationMinutes,
+                DelayMinutes = s.DelayMinutes,
+                StartTime = s.StartTime,
+                EndTime = s.EndTime,
+                PrimaryStaffIds = ParseStaffIds(s.PrimaryStaffIds),
+                AssistantStaffIds = ParseStaffIds(s.AssistantStaffIds),
+                Price = s.Price,
+                Notes = s.Notes,
+                SortOrder = s.SortOrder
+            }).ToList() ?? new List<ReservationServiceItemDto>()
         };
+    }
+
+    private static (TimeSpan EndTime, List<PosReservationServiceItem> Entities) PrepareReservationServices(
+        TimeSpan baseStartTime,
+        List<ReservationServiceItemDto>? serviceDtos)
+    {
+        if (serviceDtos == null || serviceDtos.Count == 0)
+            return (baseStartTime, new List<PosReservationServiceItem>());
+
+        var list = new List<PosReservationServiceItem>();
+        var currentTime = baseStartTime;
+
+        for (int i = 0; i < serviceDtos.Count; i++)
+        {
+            var s = serviceDtos[i];
+            var duration = s.DurationMinutes > 0 ? s.DurationMinutes : 30;
+            var delay = s.DelayMinutes >= 0 ? s.DelayMinutes : 0;
+
+            var sStart = s.StartTime ?? currentTime;
+            var sEnd = s.EndTime ?? (sStart + TimeSpan.FromMinutes(duration));
+            if (sEnd <= sStart)
+            {
+                sEnd = sStart + TimeSpan.FromMinutes(duration);
+            }
+
+            s.StartTime = sStart;
+            s.EndTime = sEnd;
+            s.DurationMinutes = duration;
+            s.DelayMinutes = delay;
+
+            var entity = new PosReservationServiceItem
+            {
+                ServiceItemId = s.ServiceItemId,
+                ServiceName = !string.IsNullOrWhiteSpace(s.ServiceName) ? s.ServiceName.Trim() : $"Service #{i + 1}",
+                DurationMinutes = duration,
+                DelayMinutes = delay,
+                StartTime = sStart,
+                EndTime = sEnd,
+                PrimaryStaffIds = FormatStaffIds(s.PrimaryStaffIds),
+                AssistantStaffIds = FormatStaffIds(s.AssistantStaffIds),
+                Price = s.Price,
+                Notes = s.Notes?.Trim(),
+                SortOrder = s.SortOrder > 0 ? s.SortOrder : (i + 1)
+            };
+
+            list.Add(entity);
+            currentTime = sEnd + TimeSpan.FromMinutes(delay);
+        }
+
+        var overallEndTime = list.Count > 0 ? list.Last().EndTime : baseStartTime;
+        return (overallEndTime, list);
+    }
+
+    private static HashSet<long> GetStaffIdsForService(ReservationServiceItemDto service)
+    {
+        var set = new HashSet<long>();
+        if (service.PrimaryStaffIds != null)
+        {
+            foreach (var id in service.PrimaryStaffIds.Where(x => x > 0))
+                set.Add(id);
+        }
+
+        if (service.AssistantStaffIds != null)
+        {
+            foreach (var id in service.AssistantStaffIds.Where(x => x > 0))
+                set.Add(id);
+        }
+
+        return set;
+    }
+
+    private static HashSet<long> GetStaffIdsForService(PosReservationServiceItem service)
+    {
+        var set = new HashSet<long>();
+        foreach (var id in ParseStaffIds(service.PrimaryStaffIds))
+            set.Add(id);
+
+        foreach (var id in ParseStaffIds(service.AssistantStaffIds))
+            set.Add(id);
+
+        return set;
+    }
+
+    private static string? CheckReservationConflict(
+        TimeSpan reqStartTime,
+        TimeSpan reqEndTime,
+        long? tableId,
+        string? resourceType,
+        string? resourceIdentifier,
+        List<ReservationServiceItemDto>? services,
+        HashSet<long> requestedStaff,
+        List<PosReservation> activeReservations,
+        long? excludeReservationId = null)
+    {
+        foreach (var r in activeReservations)
+        {
+            if (excludeReservationId.HasValue && r.Id == excludeReservationId.Value)
+                continue;
+
+            // 1. Table conflict
+            if (tableId.HasValue && r.TableId.HasValue && tableId.Value == r.TableId.Value)
+            {
+                if (reqStartTime < r.EndTime && reqEndTime > r.StartTime)
+                {
+                    return $"الوقت المحدد يتعارض مع حجز قائم للطاولة (رقم الحجز: {r.ReservationNumber} للعميل: {r.CustomerName} من {r.StartTime:hh\\:mm} إلى {r.EndTime:hh\\:mm})";
+                }
+            }
+
+            // 2. Resource Identifier conflict
+            if (!string.IsNullOrWhiteSpace(resourceIdentifier) && !string.IsNullOrWhiteSpace(r.ResourceIdentifier) &&
+                string.Equals(resourceIdentifier.Trim(), r.ResourceIdentifier.Trim(), StringComparison.OrdinalIgnoreCase) &&
+                string.Equals(resourceType?.Trim(), r.ResourceType?.Trim(), StringComparison.OrdinalIgnoreCase))
+            {
+                if (reqStartTime < r.EndTime && reqEndTime > r.StartTime)
+                {
+                    return $"الوقت المحدد يتعارض مع حجز قائم للمورد {resourceIdentifier} (رقم الحجز: {r.ReservationNumber} للعميل: {r.CustomerName} من {r.StartTime:hh\\:mm} إلى {r.EndTime:hh\\:mm})";
+                }
+            }
+
+            // 3. Staff Conflicts
+            if (services != null && services.Count > 0)
+            {
+                foreach (var s in services)
+                {
+                    var sStaff = GetStaffIdsForService(s);
+                    if (sStaff.Count == 0) continue;
+                    var sStart = s.StartTime ?? reqStartTime;
+                    var sEnd = s.EndTime ?? reqEndTime;
+
+                    if (r.Services != null && r.Services.Count > 0)
+                    {
+                        foreach (var rs in r.Services)
+                        {
+                            if (sStart < rs.EndTime && sEnd > rs.StartTime)
+                            {
+                                var rsStaff = GetStaffIdsForService(rs);
+                                var overlap = sStaff.Intersect(rsStaff).FirstOrDefault();
+                                if (overlap > 0)
+                                {
+                                    return $"الموظف (كود: {overlap}) مشغول في خدمة \"{rs.ServiceName}\" من {rs.StartTime:hh\\:mm} إلى {rs.EndTime:hh\\:mm} في حجز ({r.ReservationNumber} - {r.CustomerName}) ولا يمكن حجز خدمة \"{s.ServiceName}\" له في نفس التوقيت ({sStart:hh\\:mm} - {sEnd:hh\\:mm})";
+                                }
+                            }
+                        }
+                    }
+                    else
+                    {
+                        if (sStart < r.EndTime && sEnd > r.StartTime)
+                        {
+                            var rStaff = GetAllStaffIdsInReservation(r);
+                            var overlap = sStaff.Intersect(rStaff).FirstOrDefault();
+                            if (overlap > 0)
+                            {
+                                return $"الموظف (كود: {overlap}) لديه حجز قائم ({r.ReservationNumber} - {r.CustomerName}) من {r.StartTime:hh\\:mm} إلى {r.EndTime:hh\\:mm}";
+                            }
+                        }
+                    }
+                }
+            }
+            else if (requestedStaff.Count > 0)
+            {
+                if (reqStartTime < r.EndTime && reqEndTime > r.StartTime)
+                {
+                    if (r.Services != null && r.Services.Count > 0)
+                    {
+                        foreach (var rs in r.Services)
+                        {
+                            if (reqStartTime < rs.EndTime && reqEndTime > rs.StartTime)
+                            {
+                                var rsStaff = GetStaffIdsForService(rs);
+                                var overlap = requestedStaff.Intersect(rsStaff).FirstOrDefault();
+                                if (overlap > 0)
+                                {
+                                    return $"الموظف (كود: {overlap}) مشغول في خدمة \"{rs.ServiceName}\" من {rs.StartTime:hh\\:mm} إلى {rs.EndTime:hh\\:mm} في حجز ({r.ReservationNumber} - {r.CustomerName})";
+                                }
+                            }
+                        }
+                    }
+                    else
+                    {
+                        var rStaff = GetAllStaffIdsInReservation(r);
+                        var overlap = requestedStaff.Intersect(rStaff).FirstOrDefault();
+                        if (overlap > 0)
+                        {
+                            return $"الموظف (كود: {overlap}) لديه حجز قائم ({r.ReservationNumber} - {r.CustomerName}) من {r.StartTime:hh\\:mm} إلى {r.EndTime:hh\\:mm}";
+                        }
+                    }
+                }
+            }
+        }
+
+        return null;
     }
 
     private static List<long> ParseStaffIds(string? commaSeparated)
@@ -691,6 +1001,18 @@ public class PosReservationService : IPosReservationService
 
         foreach (var id in ParseStaffIds(res.AdditionalStaffIds))
             set.Add(id);
+
+        if (res.Services != null)
+        {
+            foreach (var s in res.Services)
+            {
+                foreach (var id in ParseStaffIds(s.PrimaryStaffIds))
+                    set.Add(id);
+
+                foreach (var id in ParseStaffIds(s.AssistantStaffIds))
+                    set.Add(id);
+            }
+        }
 
         return set;
     }

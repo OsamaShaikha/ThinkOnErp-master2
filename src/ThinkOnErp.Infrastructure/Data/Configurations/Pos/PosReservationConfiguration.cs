@@ -34,6 +34,8 @@ public sealed class PosReservationConfiguration : IEntityTypeConfiguration<PosRe
         builder.Property(r => r.IsRecurring).HasColumnName("IS_RECURRING").HasColumnType("NUMBER(1)").HasDefaultValue(false);
 
         builder.Property(r => r.Status).HasColumnName("STATUS").HasConversion<int>().IsRequired();
+        builder.Property(r => r.OrderId).HasColumnName("ORDER_ID");
+        builder.Property(r => r.OrderNumber).HasColumnName("ORDER_NUMBER").HasMaxLength(50);
 
         builder.Property(r => r.DepositAmount).HasColumnName("DEPOSIT_AMOUNT").HasColumnType("NUMBER(18,4)").HasDefaultValue(0m);
         builder.Property(r => r.IsDepositPaid).HasColumnName("IS_DEPOSIT_PAID").HasColumnType("NUMBER(1)").HasDefaultValue(false);
@@ -47,5 +49,7 @@ public sealed class PosReservationConfiguration : IEntityTypeConfiguration<PosRe
         builder.HasOne(r => r.Branch).WithMany().HasForeignKey(r => r.BranchId).OnDelete(DeleteBehavior.Restrict);
         builder.HasOne(r => r.Customer).WithMany().HasForeignKey(r => r.CustomerId).OnDelete(DeleteBehavior.Restrict);
         builder.HasOne(r => r.Table).WithMany().HasForeignKey(r => r.TableId).OnDelete(DeleteBehavior.SetNull);
+        builder.HasOne(r => r.Order).WithMany().HasForeignKey(r => r.OrderId).OnDelete(DeleteBehavior.SetNull);
+        builder.HasMany(r => r.Services).WithOne(s => s.Reservation).HasForeignKey(s => s.ReservationId).OnDelete(DeleteBehavior.Cascade);
     }
 }

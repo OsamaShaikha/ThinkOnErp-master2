@@ -48,5 +48,7 @@ public interface IPosReservationRepository
     Task AddReservationAsync(PosReservation reservation, CancellationToken ct = default);
     Task UpdateReservationAsync(PosReservation reservation, CancellationToken ct = default);
     Task DeleteReservationAsync(PosReservation reservation, CancellationToken ct = default);
+    Task<PosOrderHeader?> GetOrderByIdAsync(long orderId, CancellationToken ct = default);
+    Task<PosOrderHeader?> GetOrderByNumberAsync(long branchId, string orderNumber, CancellationToken ct = default);
     Task SaveChangesAsync(CancellationToken ct = default);
 }

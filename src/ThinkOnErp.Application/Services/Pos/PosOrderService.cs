@@ -10,6 +10,8 @@ using ThinkOnErp.Application.DTOs.Inventory.StockMovements;
 using ThinkOnErp.Application.Services.Inventory;
 using ThinkOnErp.Application.Services.Validation;
 using ThinkOnErp.Domain.Constants;
+using ThinkOnErp.Domain.Entities.Inventory;
+using ThinkOnErp.Domain.Entities.Inventory.Enums;
 using ThinkOnErp.Domain.Entities.Pos;
 using ThinkOnErp.Domain.Entities.Pos.Enums;
 using ThinkOnErp.Domain.Interfaces;
@@ -46,6 +48,9 @@ public class PosOrderService : IPosOrderService
     private readonly IPosBranchSettingRepository? _branchSettingRepository;
     private readonly IUserRepository? _userRepository;
     private readonly IEmployeeRepository? _employeeRepository;
+    private readonly IInvBomRepository? _bomRepository;
+    private readonly IInvItemRepository? _itemRepository;
+    private readonly IInvStockLedgerRepository? _stockLedgerRepository;
     private Dictionary<long, string>? _cachedUserNames;
 
     public PosOrderService(
@@ -68,7 +73,10 @@ public class PosOrderService : IPosOrderService
         IArSubledgerRepository? arSubledgerRepository = null,
         IPosBranchSettingRepository? branchSettingRepository = null,
         IUserRepository? userRepository = null,
-        IEmployeeRepository? employeeRepository = null)
+        IEmployeeRepository? employeeRepository = null,
+        IInvBomRepository? bomRepository = null,
+        IInvItemRepository? itemRepository = null,
+        IInvStockLedgerRepository? stockLedgerRepository = null)
     {
         _orderRepository = orderRepository;
         _shiftRepository = shiftRepository;
@@ -90,6 +98,9 @@ public class PosOrderService : IPosOrderService
         _branchSettingRepository = branchSettingRepository;
         _userRepository = userRepository;
         _employeeRepository = employeeRepository;
+        _bomRepository = bomRepository;
+        _itemRepository = itemRepository;
+        _stockLedgerRepository = stockLedgerRepository;
     }
 
     private async Task<Dictionary<long, string>> ResolveUserNamesAsync(CancellationToken ct = default)
@@ -174,10 +185,12 @@ public class PosOrderService : IPosOrderService
             var itemGroups = await _modifierRepository.GetGroupsByItemIdAsync(reqLine.ItemId, ct);
             foreach (var grp in itemGroups.Where(g => g.IsActive))
             {
+                var optionIds = grp.Options.Where(o => o.IsActive).Select(o => o.Id).ToHashSet();
                 var optionNames = grp.Options.Where(o => o.IsActive).Select(o => o.OptionNameLocal).ToHashSet(StringComparer.OrdinalIgnoreCase);
                 var optionItemIds = grp.Options.Where(o => o.IsActive && o.RelatedItemId.HasValue).Select(o => o.RelatedItemId!.Value).ToHashSet();
 
                 var selectedCount = reqLine.Modifiers.Count(m =>
+                    (m.ModifierOptionId.HasValue && optionIds.Contains(m.ModifierOptionId.Value)) ||
                     optionNames.Contains(m.ModifierName) ||
                     (m.ModifierItemId > 0 && optionItemIds.Contains(m.ModifierItemId)));
 
@@ -360,13 +373,28 @@ public class PosOrderService : IPosOrderService
                 SpecialInstructions = reqLine.SpecialInstructions
             };
 
+            var lineOptionIds = reqLine.Modifiers.Where(m => m.ModifierOptionId.HasValue).Select(m => m.ModifierOptionId!.Value).Distinct().ToList();
+            var lineOptionsMap = lineOptionIds.Any()
+                ? (await _modifierRepository.GetOptionsByIdsAsync(lineOptionIds, ct)).ToDictionary(o => o.Id)
+                : new Dictionary<long, InvModifierOption>();
+
             foreach (var mod in reqLine.Modifiers)
             {
+                InvModifierOption? opt = null;
+                if (mod.ModifierOptionId.HasValue && lineOptionsMap.TryGetValue(mod.ModifierOptionId.Value, out var foundOpt))
+                {
+                    opt = foundOpt;
+                }
+
+                var modItemId = (mod.ModifierItemId > 0) ? (long?)mod.ModifierItemId : opt?.RelatedItemId;
+                var modName = !string.IsNullOrWhiteSpace(mod.ModifierName) ? mod.ModifierName : (opt?.OptionNameLocal ?? string.Empty);
+
                 orderLine.Modifiers.Add(new PosOrderLineModifier
                 {
-                    ModifierItemId = mod.ModifierItemId,
-                    ModifierName = mod.ModifierName,
-                    Quantity = mod.Quantity,
+                    ModifierOptionId = mod.ModifierOptionId,
+                    ModifierItemId = modItemId,
+                    ModifierName = modName,
+                    Quantity = mod.Quantity > 0 ? mod.Quantity : 1,
                     UnitPrice = mod.UnitPrice,
                     ExtraPrice = mod.ExtraPrice
                 });
@@ -965,6 +993,7 @@ public class PosOrderService : IPosOrderService
                 {
                     refundLine.Modifiers.Add(new PosOrderLineModifier
                     {
+                        ModifierOptionId = origMod.ModifierOptionId,
                         ModifierItemId = origMod.ModifierItemId,
                         ModifierName = origMod.ModifierName,
                         Quantity = origMod.Quantity * ratio,
@@ -1413,6 +1442,11 @@ public class PosOrderService : IPosOrderService
                 }
             }
             order.IsActive = false;
+            await ReverseOrderStockIfRealtimeAsync(order, ct, "VOID");
+        }
+        else if (newStatus == PosOrderStatus.Completed)
+        {
+            await DeductOrderStockIfRealtimeAsync(order, ct);
         }
 
         order.Status = newStatus;
@@ -1597,7 +1631,8 @@ public class PosOrderService : IPosOrderService
                     Modifiers = l.Modifiers.Select(m => new PosOrderLineModifierDto
                     {
                         Id = m.Id,
-                        ModifierItemId = m.ModifierItemId,
+                        ModifierOptionId = m.ModifierOptionId,
+                        ModifierItemId = m.ModifierItemId ?? 0,
                         ModifierName = m.ModifierName,
                         Quantity = m.Quantity,
                         UnitPrice = m.UnitPrice,
@@ -1636,6 +1671,13 @@ public class PosOrderService : IPosOrderService
                 return;
             }
 
+            var docId = order.InvoiceNumber ?? order.OrderNumber;
+            if (_stockLedgerRepository != null && await _stockLedgerRepository.HasMovementForDocAsync(docId, "POS_INVOICE", ct))
+            {
+                _logger.LogInformation("Stock already deducted for Order {OrderNumber} ({DocId})", order.OrderNumber, docId);
+                return;
+            }
+
             var warehouseId = await ResolvePosWarehouseIdAsync(order.BranchId, ct);
             if (warehouseId <= 0)
             {
@@ -1643,27 +1685,36 @@ public class PosOrderService : IPosOrderService
                 return;
             }
 
-            foreach (var line in order.Lines.Where(l => !l.IsVoided && l.Quantity > 0))
+            var itemsToDeduct = await ResolveOrderStockItemsToDeductAsync(order.Lines, warehouseId, ct);
+            var costedItems = new List<(long ItemId, decimal Quantity, decimal UnitCost, decimal TotalCost)>();
+
+            foreach (var item in itemsToDeduct)
             {
                 var moveReq = new StockMovementRequestDto
                 {
-                    ItemId = line.ItemId,
-                    WarehouseId = warehouseId,
-                    Quantity = line.Quantity,
-                    UomCode = line.UomId > 0 ? line.UomId : 1,
+                    ItemId = item.ItemId,
+                    WarehouseId = item.WarehouseId,
+                    Quantity = item.Quantity,
                     TransactionType = SysCodeKeys.StockTransactionTypes.PosSales, // 1004
-                    SourceDocId = order.InvoiceNumber ?? order.OrderNumber,
+                    SourceDocId = docId,
                     SourceDocType = "POS_INVOICE",
                     SourceModule = "POS",
                     Notes = $"POS Real-time deduction for Order #{order.OrderNumber}"
                 };
 
                 var postResult = await _stockLedgerService.PostMovementAsync(moveReq, ct);
-                if (!postResult.Success)
+                if (postResult.Success && postResult.Data != null)
                 {
-                    _logger.LogWarning("POS real-time stock deduction warning for Item {ItemId}: {Message}", line.ItemId, postResult.Message);
+                    costedItems.Add((item.ItemId, item.Quantity, postResult.Data.UnitCost, postResult.Data.TotalCost));
+                }
+                else
+                {
+                    _logger.LogWarning("POS real-time stock deduction warning for Item {ItemId}: {Message}", item.ItemId, postResult.Message);
                 }
             }
+
+            // Post GL Voucher for COGS & Inventory Control Accounts
+            await PostInventoryCogsVoucherAsync(order, costedItems, isReversal: false, docType: "POS_INVOICE", ct);
         }
         catch (Exception ex)
         {
@@ -1687,34 +1738,443 @@ public class PosOrderService : IPosOrderService
                 return;
             }
 
+            var docId = refundOrder.InvoiceNumber ?? refundOrder.OrderNumber;
+            if (_stockLedgerRepository != null && await _stockLedgerRepository.HasMovementForDocAsync(docId, "POS_REFUND", ct))
+            {
+                _logger.LogInformation("Stock already restocked for Refund Order {OrderNumber} ({DocId})", refundOrder.OrderNumber, docId);
+                return;
+            }
+
             var warehouseId = await ResolvePosWarehouseIdAsync(originalOrder.BranchId, ct);
             if (warehouseId <= 0) return;
 
-            foreach (var line in refundOrder.Lines.Where(l => !l.IsVoided && Math.Abs(l.Quantity) > 0))
+            var itemsToRestock = await ResolveOrderStockItemsToDeductAsync(refundOrder.Lines, warehouseId, ct);
+            var costedItems = new List<(long ItemId, decimal Quantity, decimal UnitCost, decimal TotalCost)>();
+
+            foreach (var item in itemsToRestock)
             {
                 var moveReq = new StockMovementRequestDto
                 {
-                    ItemId = line.ItemId,
-                    WarehouseId = warehouseId,
-                    Quantity = Math.Abs(line.Quantity),
-                    UomCode = line.UomId > 0 ? line.UomId : 1,
+                    ItemId = item.ItemId,
+                    WarehouseId = item.WarehouseId,
+                    Quantity = item.Quantity,
                     TransactionType = SysCodeKeys.StockTransactionTypes.SalesReturnRestock, // 1501
-                    SourceDocId = refundOrder.InvoiceNumber ?? refundOrder.OrderNumber,
+                    SourceDocId = docId,
                     SourceDocType = "POS_REFUND",
                     SourceModule = "POS",
                     Notes = $"POS Real-time restock for Refund #{refundOrder.OrderNumber}"
                 };
 
                 var postResult = await _stockLedgerService.PostMovementAsync(moveReq, ct);
-                if (!postResult.Success)
+                if (postResult.Success && postResult.Data != null)
                 {
-                    _logger.LogWarning("POS real-time stock restock warning for Item {ItemId}: {Message}", line.ItemId, postResult.Message);
+                    costedItems.Add((item.ItemId, item.Quantity, postResult.Data.UnitCost, postResult.Data.TotalCost));
+                }
+                else
+                {
+                    _logger.LogWarning("POS real-time stock restock warning for Item {ItemId}: {Message}", item.ItemId, postResult.Message);
                 }
             }
+
+            // Reverse GL Voucher: Debit Inventory, Credit COGS
+            await PostInventoryCogsVoucherAsync(refundOrder, costedItems, isReversal: true, docType: "POS_REFUND", ct);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to perform POS real-time restock for Refund {RefundOrderId}", refundOrder.Id);
+        }
+    }
+
+    private async Task ReverseOrderStockIfRealtimeAsync(PosOrderHeader order, CancellationToken ct, string reason = "VOID")
+    {
+        try
+        {
+            var setting = await _settingRepo.GetByCodeAsync(SysSettingKeys.PosStockDeductionMode);
+            var mode = SysCodeKeys.PosStockDeductionModes.RealTime;
+            if (setting != null && int.TryParse(setting.SettingValue, out var configuredMode))
+            {
+                mode = configuredMode;
+            }
+
+            if (mode != SysCodeKeys.PosStockDeductionModes.RealTime)
+            {
+                return;
+            }
+
+            var docId = order.InvoiceNumber ?? order.OrderNumber;
+            if (_stockLedgerRepository != null)
+            {
+                var wasDeducted = await _stockLedgerRepository.HasMovementForDocAsync(docId, "POS_INVOICE", ct);
+                if (!wasDeducted)
+                {
+                    _logger.LogInformation("No stock was deducted for Order {OrderNumber}, skipping void reversal", order.OrderNumber);
+                    return;
+                }
+
+                var alreadyReversed = await _stockLedgerRepository.HasMovementForDocAsync(docId, "POS_VOID", ct);
+                if (alreadyReversed)
+                {
+                    _logger.LogInformation("Stock already reversed for Voided Order {OrderNumber}", order.OrderNumber);
+                    return;
+                }
+            }
+
+            var warehouseId = await ResolvePosWarehouseIdAsync(order.BranchId, ct);
+            if (warehouseId <= 0) return;
+
+            var itemsToRestock = await ResolveOrderStockItemsToDeductAsync(order.Lines, warehouseId, ct);
+            var costedItems = new List<(long ItemId, decimal Quantity, decimal UnitCost, decimal TotalCost)>();
+
+            foreach (var item in itemsToRestock)
+            {
+                var moveReq = new StockMovementRequestDto
+                {
+                    ItemId = item.ItemId,
+                    WarehouseId = item.WarehouseId,
+                    Quantity = item.Quantity,
+                    TransactionType = SysCodeKeys.StockTransactionTypes.SalesReturnRestock, // 1501
+                    SourceDocId = docId,
+                    SourceDocType = "POS_VOID",
+                    SourceModule = "POS",
+                    Notes = $"POS Real-time stock reversal for Voided Order #{order.OrderNumber}"
+                };
+
+                var postResult = await _stockLedgerService.PostMovementAsync(moveReq, ct);
+                if (postResult.Success && postResult.Data != null)
+                {
+                    costedItems.Add((item.ItemId, item.Quantity, postResult.Data.UnitCost, postResult.Data.TotalCost));
+                }
+                else
+                {
+                    _logger.LogWarning("POS void stock restock warning for Item {ItemId}: {Message}", item.ItemId, postResult.Message);
+                }
+            }
+
+            // Reverse GL Voucher: Debit Inventory, Credit COGS
+            await PostInventoryCogsVoucherAsync(order, costedItems, isReversal: true, docType: "POS_VOID", ct);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to perform POS real-time stock reversal for Order {OrderId}", order.Id);
+        }
+    }
+
+    private async Task<List<(long ItemId, decimal Quantity, long WarehouseId)>> ResolveOrderStockItemsToDeductAsync(
+        IEnumerable<PosOrderLine> lines,
+        long defaultWarehouseId,
+        CancellationToken ct)
+    {
+        var activeLines = lines.Where(l => !l.IsVoided && Math.Abs(l.Quantity) > 0).ToList();
+        if (!activeLines.Any()) return new List<(long ItemId, decimal Quantity, long WarehouseId)>();
+
+        var missingOptionIds = activeLines
+            .SelectMany(l => l.Modifiers)
+            .Where(m => m.ModifierOption == null && m.ModifierOptionId.HasValue)
+            .Select(m => m.ModifierOptionId!.Value)
+            .Distinct()
+            .ToList();
+
+        var loadedOptionsMap = missingOptionIds.Any()
+            ? (await _modifierRepository.GetOptionsByIdsAsync(missingOptionIds, ct)).ToDictionary(o => o.Id)
+            : new Dictionary<long, InvModifierOption>();
+
+        var collectedLeafItems = new List<(long ItemId, decimal Quantity, long WarehouseId, string Notes)>();
+
+        foreach (var line in activeLines)
+        {
+            var lineQty = Math.Abs(line.Quantity);
+
+            var removedItemIds = new HashSet<long>();
+            var substitutions = new Dictionary<long, (InvModifierOption Option, decimal ModQty)>();
+            var additions = new List<(InvModifierOption Option, decimal ModQty)>();
+
+            foreach (var mod in line.Modifiers)
+            {
+                InvModifierOption? opt = mod.ModifierOption;
+                if (opt == null && mod.ModifierOptionId.HasValue && loadedOptionsMap.TryGetValue(mod.ModifierOptionId.Value, out var foundOpt))
+                {
+                    opt = foundOpt;
+                }
+
+                if (opt == null)
+                {
+                    if (mod.ModifierItemId.HasValue && mod.ModifierItemId.Value > 0)
+                    {
+                        additions.Add((new InvModifierOption
+                        {
+                            RelatedItemId = mod.ModifierItemId.Value,
+                            RelatedItemQty = 1,
+                            UomFactor = 1,
+                            OptionType = OptionType.ADD,
+                            OptionNameLocal = mod.ModifierName
+                        }, mod.Quantity > 0 ? mod.Quantity : 1m));
+                    }
+                    continue;
+                }
+
+                var modQty = mod.Quantity > 0 ? mod.Quantity : 1m;
+
+                switch (opt.OptionType)
+                {
+                    case OptionType.REMOVE:
+                        var removeTarget = opt.ReplacesItemId ?? opt.RelatedItemId;
+                        if (removeTarget.HasValue)
+                        {
+                            removedItemIds.Add(removeTarget.Value);
+                        }
+                        break;
+
+                    case OptionType.SUBSTITUTE:
+                        if (opt.ReplacesItemId.HasValue && opt.RelatedItemId.HasValue)
+                        {
+                            substitutions[opt.ReplacesItemId.Value] = (opt, modQty);
+                        }
+                        break;
+
+                    case OptionType.ADD:
+                        if (opt.RelatedItemId.HasValue)
+                        {
+                            additions.Add((opt, modQty));
+                        }
+                        break;
+
+                    case OptionType.NONE:
+                    default:
+                        break;
+                }
+            }
+
+            InvBomHeader? parentBom = null;
+            if (_bomRepository != null)
+            {
+                try
+                {
+                    parentBom = await _bomRepository.GetDefaultByParentItemIdAsync(line.ItemId, ct);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "Failed to retrieve BOM for parent item {ItemId}", line.ItemId);
+                }
+            }
+
+            if (parentBom != null && parentBom.Lines != null && parentBom.Lines.Any())
+            {
+                var outputQty = parentBom.OutputQty > 0 ? parentBom.OutputQty : 1m;
+
+                foreach (var bomLine in parentBom.Lines)
+                {
+                    if (removedItemIds.Contains(bomLine.ComponentItemId))
+                    {
+                        continue;
+                    }
+
+                    if (substitutions.ContainsKey(bomLine.ComponentItemId))
+                    {
+                        continue;
+                    }
+
+                    var compQty = lineQty * bomLine.Quantity * (bomLine.UomFactor > 0 ? bomLine.UomFactor : 1m) / outputQty;
+                    await BreakDownAndCollectStockItemsAsync(bomLine.ComponentItemId, compQty, defaultWarehouseId, collectedLeafItems, new HashSet<long>(), ct);
+                }
+
+                foreach (var kvp in substitutions)
+                {
+                    var sub = kvp.Value;
+                    var subQty = lineQty * sub.ModQty * (sub.Option.RelatedItemQty > 0 ? sub.Option.RelatedItemQty : 1m) * (sub.Option.UomFactor > 0 ? sub.Option.UomFactor : 1m);
+                    if (subQty <= 0) subQty = lineQty;
+                    await BreakDownAndCollectStockItemsAsync(sub.Option.RelatedItemId!.Value, subQty, defaultWarehouseId, collectedLeafItems, new HashSet<long>(), ct);
+                }
+
+                foreach (var add in additions)
+                {
+                    var addQty = lineQty * add.ModQty * (add.Option.RelatedItemQty > 0 ? add.Option.RelatedItemQty : 1m) * (add.Option.UomFactor > 0 ? add.Option.UomFactor : 1m);
+                    await BreakDownAndCollectStockItemsAsync(add.Option.RelatedItemId!.Value, addQty, defaultWarehouseId, collectedLeafItems, new HashSet<long>(), ct);
+                }
+            }
+            else
+            {
+                if (substitutions.TryGetValue(line.ItemId, out var subParent))
+                {
+                    var subQty = lineQty * subParent.ModQty * (subParent.Option.RelatedItemQty > 0 ? subParent.Option.RelatedItemQty : 1m) * (subParent.Option.UomFactor > 0 ? subParent.Option.UomFactor : 1m);
+                    if (subQty <= 0) subQty = lineQty;
+                    await BreakDownAndCollectStockItemsAsync(subParent.Option.RelatedItemId!.Value, subQty, defaultWarehouseId, collectedLeafItems, new HashSet<long>(), ct);
+                }
+                else if (removedItemIds.Contains(line.ItemId))
+                {
+                    // Skipped
+                }
+                else
+                {
+                    await BreakDownAndCollectStockItemsAsync(line.ItemId, lineQty, defaultWarehouseId, collectedLeafItems, new HashSet<long>(), ct);
+                }
+
+                foreach (var add in additions)
+                {
+                    var addQty = lineQty * add.ModQty * (add.Option.RelatedItemQty > 0 ? add.Option.RelatedItemQty : 1m) * (add.Option.UomFactor > 0 ? add.Option.UomFactor : 1m);
+                    await BreakDownAndCollectStockItemsAsync(add.Option.RelatedItemId!.Value, addQty, defaultWarehouseId, collectedLeafItems, new HashSet<long>(), ct);
+                }
+            }
+        }
+
+        return collectedLeafItems
+            .GroupBy(c => (c.ItemId, c.WarehouseId))
+            .Select(g => (g.Key.ItemId, g.Sum(x => x.Quantity), g.Key.WarehouseId))
+            .Where(x => x.Item2 > 0)
+            .ToList();
+    }
+
+    private async Task BreakDownAndCollectStockItemsAsync(
+        long itemId,
+        decimal qty,
+        long warehouseId,
+        List<(long ItemId, decimal Quantity, long WarehouseId, string Notes)> collected,
+        HashSet<long> visited,
+        CancellationToken ct)
+    {
+        if (qty <= 0) return;
+
+        if (!visited.Add(itemId))
+        {
+            collected.Add((itemId, qty, warehouseId, "Circular BOM"));
+            return;
+        }
+
+        InvBomHeader? bom = null;
+        if (_bomRepository != null)
+        {
+            try
+            {
+                bom = await _bomRepository.GetDefaultByParentItemIdAsync(itemId, ct);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Failed to retrieve default BOM for Item {ItemId}", itemId);
+            }
+        }
+
+        if (bom != null && bom.Lines != null && bom.Lines.Any())
+        {
+            var outputQty = bom.OutputQty > 0 ? bom.OutputQty : 1m;
+            foreach (var bomLine in bom.Lines)
+            {
+                var compQty = qty * bomLine.Quantity * (bomLine.UomFactor > 0 ? bomLine.UomFactor : 1m) / outputQty;
+                await BreakDownAndCollectStockItemsAsync(bomLine.ComponentItemId, compQty, warehouseId, collected, visited, ct);
+            }
+        }
+        else
+        {
+            collected.Add((itemId, qty, warehouseId, string.Empty));
+        }
+
+        visited.Remove(itemId);
+    }
+
+    private async Task PostInventoryCogsVoucherAsync(
+        PosOrderHeader order,
+        List<(long ItemId, decimal Quantity, decimal UnitCost, decimal TotalCost)> costedItems,
+        bool isReversal,
+        string docType,
+        CancellationToken ct)
+    {
+        if (_voucherService == null || _fiscalPeriodRepository == null || !costedItems.Any(i => i.TotalCost > 0))
+        {
+            return;
+        }
+
+        try
+        {
+            var period = await _fiscalPeriodRepository.GetPeriodByDateOnlyAsync(DateTime.UtcNow, ct);
+            var fiscalYearId = period?.FiscalYearId ?? 1;
+
+            var details = new List<CreateGlVoucherDetailDto>();
+
+            foreach (var itemCost in costedItems.Where(i => i.TotalCost > 0))
+            {
+                InvItem? item = null;
+                if (_itemRepository != null)
+                {
+                    item = await _itemRepository.GetByIdAsync(itemCost.ItemId, ct);
+                }
+
+                var cogsAccount = !string.IsNullOrWhiteSpace(item?.GlCogsAccount) ? item.GlCogsAccount : "511101";
+                var invAccount = !string.IsNullOrWhiteSpace(item?.GlControlAccount) ? item.GlControlAccount : "113101";
+                var itemName = item?.ItemNameLocal ?? $"Item #{itemCost.ItemId}";
+
+                if (!isReversal)
+                {
+                    details.Add(new CreateGlVoucherDetailDto
+                    {
+                        AccountCode = cogsAccount,
+                        Debit = itemCost.TotalCost,
+                        Credit = 0,
+                        Description = $"تكلفة مبيعات صنف {itemName} - طلب #{order.OrderNumber}",
+                        CurrencyId = 1,
+                        ExchangeRate = 1.0m,
+                        BranchId = order.BranchId
+                    });
+
+                    details.Add(new CreateGlVoucherDetailDto
+                    {
+                        AccountCode = invAccount,
+                        Debit = 0,
+                        Credit = itemCost.TotalCost,
+                        Description = $"صرف مخزون صنف {itemName} - طلب #{order.OrderNumber}",
+                        CurrencyId = 1,
+                        ExchangeRate = 1.0m,
+                        BranchId = order.BranchId
+                    });
+                }
+                else
+                {
+                    var actionName = docType == "POS_VOID" ? "إلغاء طلب" : "مرتجع مبيعات";
+                    details.Add(new CreateGlVoucherDetailDto
+                    {
+                        AccountCode = invAccount,
+                        Debit = itemCost.TotalCost,
+                        Credit = 0,
+                        Description = $"إرجاع مخزون صنف {itemName} - {actionName} #{order.OrderNumber}",
+                        CurrencyId = 1,
+                        ExchangeRate = 1.0m,
+                        BranchId = order.BranchId
+                    });
+
+                    details.Add(new CreateGlVoucherDetailDto
+                    {
+                        AccountCode = cogsAccount,
+                        Debit = 0,
+                        Credit = itemCost.TotalCost,
+                        Description = $"عكس تكلفة صنف {itemName} - {actionName} #{order.OrderNumber}",
+                        CurrencyId = 1,
+                        ExchangeRate = 1.0m,
+                        BranchId = order.BranchId
+                    });
+                }
+            }
+
+            if (!details.Any()) return;
+
+            var voucherDesc = !isReversal
+                ? $"إثبات تكلفة البضاعة المباعة (POS) - طلب #{order.OrderNumber} ({order.InvoiceNumber})"
+                : $"عكس تكلفة البضاعة المباعة (POS) - {docType} #{order.OrderNumber} ({order.InvoiceNumber})";
+
+            var voucherDto = new CreateGlVoucherDto
+            {
+                BranchId = order.BranchId,
+                FiscalYearId = fiscalYearId,
+                VoucherType = 101, // قيد يومية عام
+                VoucherDate = DateTime.UtcNow,
+                Description = voucherDesc,
+                Details = details
+            };
+
+            var voucher = await _voucherService.CreateVoucherAsync(voucherDto, "SYSTEM", ct);
+            await _voucherService.PostVoucherAsync(voucher.Id, "SYSTEM", ct);
+            _logger.LogInformation("Posted GL Voucher #{VoucherNo} for POS Inventory COGS ({DocType}), Order #{OrderNumber}",
+                voucher.VoucherNo, docType, order.OrderNumber);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Failed to post GL voucher for POS Inventory COGS on Order #{OrderId}", order.Id);
         }
     }
 
@@ -1780,10 +2240,12 @@ public class PosOrderService : IPosOrderService
             var itemGroups = await _modifierRepository.GetGroupsByItemIdAsync(reqLine.ItemId, ct);
             foreach (var grp in itemGroups.Where(g => g.IsActive))
             {
+                var optionIds = grp.Options.Where(o => o.IsActive).Select(o => o.Id).ToHashSet();
                 var optionNames = grp.Options.Where(o => o.IsActive).Select(o => o.OptionNameLocal).ToHashSet(StringComparer.OrdinalIgnoreCase);
                 var optionItemIds = grp.Options.Where(o => o.IsActive && o.RelatedItemId.HasValue).Select(o => o.RelatedItemId!.Value).ToHashSet();
 
                 var selectedCount = reqLine.Modifiers.Count(m =>
+                    (m.ModifierOptionId.HasValue && optionIds.Contains(m.ModifierOptionId.Value)) ||
                     optionNames.Contains(m.ModifierName) ||
                     (m.ModifierItemId > 0 && optionItemIds.Contains(m.ModifierItemId)));
 
@@ -1896,13 +2358,28 @@ public class PosOrderService : IPosOrderService
                 SpecialInstructions = reqLine.SpecialInstructions
             };
 
+            var lineOptionIds = reqLine.Modifiers.Where(m => m.ModifierOptionId.HasValue).Select(m => m.ModifierOptionId!.Value).Distinct().ToList();
+            var lineOptionsMap = lineOptionIds.Any()
+                ? (await _modifierRepository.GetOptionsByIdsAsync(lineOptionIds, ct)).ToDictionary(o => o.Id)
+                : new Dictionary<long, InvModifierOption>();
+
             foreach (var mod in reqLine.Modifiers)
             {
+                InvModifierOption? opt = null;
+                if (mod.ModifierOptionId.HasValue && lineOptionsMap.TryGetValue(mod.ModifierOptionId.Value, out var foundOpt))
+                {
+                    opt = foundOpt;
+                }
+
+                var modItemId = (mod.ModifierItemId > 0) ? (long?)mod.ModifierItemId : opt?.RelatedItemId;
+                var modName = !string.IsNullOrWhiteSpace(mod.ModifierName) ? mod.ModifierName : (opt?.OptionNameLocal ?? string.Empty);
+
                 orderLine.Modifiers.Add(new PosOrderLineModifier
                 {
-                    ModifierItemId = mod.ModifierItemId,
-                    ModifierName = mod.ModifierName,
-                    Quantity = mod.Quantity,
+                    ModifierOptionId = mod.ModifierOptionId,
+                    ModifierItemId = modItemId,
+                    ModifierName = modName,
+                    Quantity = mod.Quantity > 0 ? mod.Quantity : 1,
                     UnitPrice = mod.UnitPrice,
                     ExtraPrice = mod.ExtraPrice
                 });
@@ -2152,7 +2629,8 @@ public class PosOrderService : IPosOrderService
             {
                 childLineDto.Modifiers.Add(new CreatePosOrderLineModifierDto
                 {
-                    ModifierItemId = mod.ModifierItemId,
+                    ModifierOptionId = mod.ModifierOptionId,
+                    ModifierItemId = mod.ModifierItemId ?? 0,
                     ModifierName = mod.ModifierName,
                     Quantity = mod.Quantity,
                     UnitPrice = mod.UnitPrice,
@@ -2233,13 +2711,28 @@ public class PosOrderService : IPosOrderService
                 SpecialInstructions = reqLine.SpecialInstructions
             };
 
+            var lineOptionIds = reqLine.Modifiers.Where(m => m.ModifierOptionId.HasValue).Select(m => m.ModifierOptionId!.Value).Distinct().ToList();
+            var lineOptionsMap = lineOptionIds.Any()
+                ? (await _modifierRepository.GetOptionsByIdsAsync(lineOptionIds, ct)).ToDictionary(o => o.Id)
+                : new Dictionary<long, InvModifierOption>();
+
             foreach (var mod in reqLine.Modifiers)
             {
+                InvModifierOption? opt = null;
+                if (mod.ModifierOptionId.HasValue && lineOptionsMap.TryGetValue(mod.ModifierOptionId.Value, out var foundOpt))
+                {
+                    opt = foundOpt;
+                }
+
+                var modItemId = (mod.ModifierItemId > 0) ? (long?)mod.ModifierItemId : opt?.RelatedItemId;
+                var modName = !string.IsNullOrWhiteSpace(mod.ModifierName) ? mod.ModifierName : (opt?.OptionNameLocal ?? string.Empty);
+
                 orderLine.Modifiers.Add(new PosOrderLineModifier
                 {
-                    ModifierItemId = mod.ModifierItemId,
-                    ModifierName = mod.ModifierName,
-                    Quantity = mod.Quantity,
+                    ModifierOptionId = mod.ModifierOptionId,
+                    ModifierItemId = modItemId,
+                    ModifierName = modName,
+                    Quantity = mod.Quantity > 0 ? mod.Quantity : 1,
                     UnitPrice = mod.UnitPrice,
                     ExtraPrice = mod.ExtraPrice
                 });
@@ -2539,6 +3032,7 @@ public class PosOrderService : IPosOrderService
             {
                 returnOrderLine.Modifiers.Add(new PosOrderLineModifier
                 {
+                    ModifierOptionId = origMod.ModifierOptionId,
                     ModifierItemId = origMod.ModifierItemId,
                     ModifierName = origMod.ModifierName,
                     Quantity = origMod.Quantity * ratio,
@@ -2649,13 +3143,28 @@ public class PosOrderService : IPosOrderService
                 SpecialInstructions = reqLine.SpecialInstructions
             };
 
+            var lineOptionIds = reqLine.Modifiers.Where(m => m.ModifierOptionId.HasValue).Select(m => m.ModifierOptionId!.Value).Distinct().ToList();
+            var lineOptionsMap = lineOptionIds.Any()
+                ? (await _modifierRepository.GetOptionsByIdsAsync(lineOptionIds, ct)).ToDictionary(o => o.Id)
+                : new Dictionary<long, InvModifierOption>();
+
             foreach (var mod in reqLine.Modifiers)
             {
+                InvModifierOption? opt = null;
+                if (mod.ModifierOptionId.HasValue && lineOptionsMap.TryGetValue(mod.ModifierOptionId.Value, out var foundOpt))
+                {
+                    opt = foundOpt;
+                }
+
+                var modItemId = (mod.ModifierItemId > 0) ? (long?)mod.ModifierItemId : opt?.RelatedItemId;
+                var modName = !string.IsNullOrWhiteSpace(mod.ModifierName) ? mod.ModifierName : (opt?.OptionNameLocal ?? string.Empty);
+
                 orderLine.Modifiers.Add(new PosOrderLineModifier
                 {
-                    ModifierItemId = mod.ModifierItemId,
-                    ModifierName = mod.ModifierName,
-                    Quantity = mod.Quantity,
+                    ModifierOptionId = mod.ModifierOptionId,
+                    ModifierItemId = modItemId,
+                    ModifierName = modName,
+                    Quantity = mod.Quantity > 0 ? mod.Quantity : 1,
                     UnitPrice = mod.UnitPrice,
                     ExtraPrice = mod.ExtraPrice
                 });

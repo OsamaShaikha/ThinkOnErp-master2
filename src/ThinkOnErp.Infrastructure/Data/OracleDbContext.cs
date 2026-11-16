@@ -209,6 +209,7 @@ public class OracleDbContext : DbContext
     public DbSet<PosFloor> PosFloors => Set<PosFloor>();
     public DbSet<PosTable> PosTables => Set<PosTable>();
     public DbSet<PosReservation> PosReservations => Set<PosReservation>();
+    public DbSet<PosReservationServiceItem> PosReservationServices => Set<PosReservationServiceItem>();
     public DbSet<PosBatchPrep> PosBatchPreps => Set<PosBatchPrep>();
     public DbSet<PosBatchPrepLine> PosBatchPrepLines => Set<PosBatchPrepLine>();
     public DbSet<PosZReport> PosZReports => Set<PosZReport>();

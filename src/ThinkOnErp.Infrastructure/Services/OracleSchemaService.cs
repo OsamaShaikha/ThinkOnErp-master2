@@ -502,7 +502,7 @@ public class OracleSchemaService : IOracleSchemaService
             var tableParameters = expectedTables.Select((_, index) => $":table{index}").ToArray();
             command.CommandText = @"
                 SELECT TABLE_NAME, COLUMN_NAME, DATA_TYPE, NVL(DATA_LENGTH, 0), NVL(CHAR_LENGTH, 0), NVL(CHAR_USED, '-'), NULLABLE, NVL(VIRTUAL_COLUMN, 'NO')
-                FROM ALL_TAB_COLUMNS
+                FROM ALL_TAB_COLS
                 WHERE OWNER = :owner
                   AND TABLE_NAME IN (" + string.Join(", ", tableParameters) + ")";
             command.Parameters.Add(new OracleParameter("owner", _devSchemaName));

@@ -199,10 +199,35 @@ public class UnmergeTableDto
 
 // =================== RESERVATIONS ===================
 
+public class ReservationServiceItemDto
+{
+    public long Id { get; set; }
+    public long ServiceItemId { get; set; }
+    public string ServiceName { get; set; } = string.Empty;
+    public int DurationMinutes { get; set; } = 30;
+    public int DelayMinutes { get; set; } = 0;
+    public TimeSpan? StartTime { get; set; }
+    public TimeSpan? EndTime { get; set; }
+    public List<long> PrimaryStaffIds { get; set; } = new();
+    public List<long> AssistantStaffIds { get; set; } = new();
+    public decimal Price { get; set; }
+    public string? Notes { get; set; }
+    public int SortOrder { get; set; }
+}
+
+public class AssignReservationOrderDto
+{
+    public long? OrderId { get; set; }
+    public string? OrderNumber { get; set; }
+    public PosReservationStatus? Status { get; set; }
+}
+
 public class CreateReservationDto
 {
     public long BranchId { get; set; }
     public long? CustomerId { get; set; }
+    public long? OrderId { get; set; }
+    public string? OrderNumber { get; set; }
     public string CustomerName { get; set; } = string.Empty;
     public string CustomerPhone { get; set; } = string.Empty;
     public string? CustomerEmail { get; set; }
@@ -218,10 +243,14 @@ public class CreateReservationDto
     public decimal DepositAmount { get; set; }
     public bool IsDepositPaid { get; set; }
     public string? SpecialRequests { get; set; }
+    public List<ReservationServiceItemDto>? Services { get; set; }
 }
 
 public class UpdateReservationDto
 {
+    public long? CustomerId { get; set; }
+    public long? OrderId { get; set; }
+    public string? OrderNumber { get; set; }
     public string CustomerName { get; set; } = string.Empty;
     public string CustomerPhone { get; set; } = string.Empty;
     public string? CustomerEmail { get; set; }
@@ -238,12 +267,16 @@ public class UpdateReservationDto
     public decimal DepositAmount { get; set; }
     public bool IsDepositPaid { get; set; }
     public string? SpecialRequests { get; set; }
+    public List<ReservationServiceItemDto>? Services { get; set; }
 }
 
 public class ReservationSummaryDto
 {
     public long Id { get; set; }
     public string ReservationNumber { get; set; } = string.Empty;
+    public long? CustomerId { get; set; }
+    public long? OrderId { get; set; }
+    public string? OrderNumber { get; set; }
     public string CustomerName { get; set; } = string.Empty;
     public string CustomerPhone { get; set; } = string.Empty;
     public string? CustomerEmail { get; set; }
@@ -263,6 +296,7 @@ public class ReservationSummaryDto
     public string? SpecialRequests { get; set; }
     public string? RecurrenceGroupId { get; set; }
     public bool IsRecurring { get; set; }
+    public List<ReservationServiceItemDto> Services { get; set; } = new();
 }
 
 public class CreateRecurringReservationDto
@@ -302,6 +336,7 @@ public class CreateRecurringReservationDto
     /// عدد مرات التكرار (مثلاً 4 أسابيع، 12 أسبوعاً، بحد أقصى 52)
     /// </summary>
     public int Occurrences { get; set; } = 4;
+    public List<ReservationServiceItemDto>? Services { get; set; }
 }
 
 public class RecurringReservationResultDto

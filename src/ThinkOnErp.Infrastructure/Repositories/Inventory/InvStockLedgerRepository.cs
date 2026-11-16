@@ -117,6 +117,13 @@ public sealed class InvStockLedgerRepository : IInvStockLedgerRepository
             .ToListAsync(cancellationToken);
     }
 
+    public async Task<bool> HasMovementForDocAsync(string sourceDocId, string sourceDocType, CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(sourceDocId)) return false;
+        return await _context.InvStockLedgerEntries
+            .AnyAsync(e => e.SourceDocId == sourceDocId && e.SourceDocType == sourceDocType, cancellationToken);
+    }
+
     public async Task SaveChangesAsync(CancellationToken cancellationToken = default)
     {
         await _context.SaveChangesAsync(cancellationToken);

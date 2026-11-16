@@ -9,6 +9,8 @@ using ThinkOnErp.Domain.Entities.Inventory;
 using ThinkOnErp.Domain.Entities.Inventory.Enums;
 using ThinkOnErp.Domain.Interfaces;
 using ThinkOnErp.Domain.Interfaces.Inventory;
+using ThinkOnErp.Domain.Interfaces.Pos;
+using ThinkOnErp.Domain.Entities.Pos.Enums;
 
 namespace ThinkOnErp.Application.Services.Inventory;
 
@@ -17,15 +19,21 @@ public class InvModifierService : IInvModifierService
     private readonly IInvModifierRepository _modifierRepository;
     private readonly IInvItemRepository _itemRepository;
     private readonly IBranchRepository _branchRepository;
+    private readonly IInvBomRepository _bomRepository;
+    private readonly IPosOrderRepository? _posOrderRepository;
 
     public InvModifierService(
         IInvModifierRepository modifierRepository,
         IInvItemRepository itemRepository,
-        IBranchRepository branchRepository)
+        IBranchRepository branchRepository,
+        IInvBomRepository bomRepository,
+        IPosOrderRepository? posOrderRepository = null)
     {
         _modifierRepository = modifierRepository;
         _itemRepository = itemRepository;
         _branchRepository = branchRepository;
+        _bomRepository = bomRepository;
+        _posOrderRepository = posOrderRepository;
     }
 
     public async Task<ApiResponse<IReadOnlyList<InvModifierGroupDto>>> GetGroupsByBranchAsync(long branchId, bool? isActive = null, CancellationToken ct = default)
@@ -88,15 +96,9 @@ public class InvModifierService : IInvModifierService
         {
             foreach (var opt in dto.Options)
             {
-                if (opt == null || string.IsNullOrWhiteSpace(opt.OptionNameLocal))
-                    return ApiResponse<InvModifierGroupDto>.CreateFailure("OptionNameLocal is required for all options", null, 400);
-
-                if (opt.RelatedItemId.HasValue && opt.RelatedItemId.Value > 0)
-                {
-                    var relatedItem = await _itemRepository.GetByIdAsync(opt.RelatedItemId.Value, ct);
-                    if (relatedItem == null)
-                        return ApiResponse<InvModifierGroupDto>.CreateFailure($"Related item {opt.RelatedItemId.Value} not found", null, 404);
-                }
+                var (validOpt, optError) = await this.ValidateOptionAsync(dto.BranchId, opt, ct);
+                if (!validOpt)
+                    return ApiResponse<InvModifierGroupDto>.CreateFailure(optError!, null, 400);
 
                 group.Options.Add(new InvModifierOption
                 {
@@ -104,6 +106,11 @@ public class InvModifierService : IInvModifierService
                     OptionNameEn = opt.OptionNameEn?.Trim(),
                     PriceAdjustment = opt.PriceAdjustment,
                     RelatedItemId = opt.RelatedItemId,
+                    RelatedItemQty = opt.RelatedItemQty > 0 ? opt.RelatedItemQty : 1m,
+                    RelatedUomCode = opt.RelatedUomCode?.Trim(),
+                    UomFactor = opt.UomFactor > 0 ? opt.UomFactor : 1m,
+                    OptionType = opt.OptionType,
+                    ReplacesItemId = opt.ReplacesItemId,
                     IsDefault = opt.IsDefault,
                     SortOrder = opt.SortOrder,
                     IsActive = opt.IsActive
@@ -197,15 +204,9 @@ public class InvModifierService : IInvModifierService
         if (group == null)
             return ApiResponse<InvModifierOptionDto>.CreateFailure("Modifier group not found", null, 404);
 
-        if (string.IsNullOrWhiteSpace(dto.OptionNameLocal))
-            return ApiResponse<InvModifierOptionDto>.CreateFailure("OptionNameLocal is required", null, 400);
-
-        if (dto.RelatedItemId.HasValue && dto.RelatedItemId.Value > 0)
-        {
-            var relatedItem = await _itemRepository.GetByIdAsync(dto.RelatedItemId.Value, ct);
-            if (relatedItem == null)
-                return ApiResponse<InvModifierOptionDto>.CreateFailure($"Related item {dto.RelatedItemId.Value} not found", null, 404);
-        }
+        var (validOpt, optError) = await ValidateOptionAsync(group.BranchId, dto, ct);
+        if (!validOpt)
+            return ApiResponse<InvModifierOptionDto>.CreateFailure(optError!, null, 400);
 
         InvModifierOption? option = null;
         if (dto.Id.HasValue && dto.Id.Value > 0)
@@ -218,6 +219,11 @@ public class InvModifierService : IInvModifierService
             option.OptionNameEn = dto.OptionNameEn?.Trim();
             option.PriceAdjustment = dto.PriceAdjustment;
             option.RelatedItemId = dto.RelatedItemId;
+            option.RelatedItemQty = dto.RelatedItemQty > 0 ? dto.RelatedItemQty : 1m;
+            option.RelatedUomCode = dto.RelatedUomCode?.Trim();
+            option.UomFactor = dto.UomFactor > 0 ? dto.UomFactor : 1m;
+            option.OptionType = dto.OptionType;
+            option.ReplacesItemId = dto.ReplacesItemId;
             option.IsDefault = dto.IsDefault;
             option.SortOrder = dto.SortOrder;
             option.IsActive = dto.IsActive;
@@ -233,6 +239,11 @@ public class InvModifierService : IInvModifierService
                 OptionNameEn = dto.OptionNameEn?.Trim(),
                 PriceAdjustment = dto.PriceAdjustment,
                 RelatedItemId = dto.RelatedItemId,
+                RelatedItemQty = dto.RelatedItemQty > 0 ? dto.RelatedItemQty : 1m,
+                RelatedUomCode = dto.RelatedUomCode?.Trim(),
+                UomFactor = dto.UomFactor > 0 ? dto.UomFactor : 1m,
+                OptionType = dto.OptionType,
+                ReplacesItemId = dto.ReplacesItemId,
                 IsDefault = dto.IsDefault,
                 SortOrder = dto.SortOrder,
                 IsActive = dto.IsActive
@@ -357,6 +368,180 @@ public class InvModifierService : IInvModifierService
         return (true, null);
     }
 
+    private async Task<(bool IsValid, string? ErrorMessage)> ValidateOptionAsync(long branchId, UpsertInvModifierOptionDto opt, CancellationToken ct)
+    {
+        if (opt == null || string.IsNullOrWhiteSpace(opt.OptionNameLocal))
+            return (false, "OptionNameLocal is required for all options");
+
+        if (opt.RelatedItemQty < 0)
+            return (false, "RelatedItemQty cannot be negative");
+
+        if (opt.UomFactor <= 0)
+            opt.UomFactor = 1m;
+
+        if (opt.RelatedItemId.HasValue && opt.RelatedItemId.Value > 0)
+        {
+            var relatedItem = await _itemRepository.GetByIdAsync(opt.RelatedItemId.Value, ct);
+            if (relatedItem == null)
+                return (false, $"Related item {opt.RelatedItemId.Value} not found");
+
+            if (!relatedItem.IsActive)
+                return (false, $"Related item '{relatedItem.ItemNameLocal}' is inactive");
+
+            if (relatedItem.BranchId != branchId)
+                return (false, $"Related item '{relatedItem.ItemNameLocal}' belongs to branch {relatedItem.BranchId}, but this modifier group is for branch {branchId}");
+
+            bool isStock = relatedItem.ItemType == ItemType.Stock || relatedItem.ItemType == ItemType.Assembly || relatedItem.ItemType == ItemType.Kit;
+            if (!isStock)
+            {
+                var bom = await _bomRepository.GetDefaultByParentItemIdAsync(relatedItem.Id, ct);
+                if (bom == null)
+                {
+                    return (false, $"Related item '{relatedItem.ItemNameLocal}' must be a stock item or have an active Bill of Materials (BOM)");
+                }
+            }
+        }
+
+        if (opt.OptionType == OptionType.SUBSTITUTE)
+        {
+            if (!opt.ReplacesItemId.HasValue || opt.ReplacesItemId.Value <= 0)
+                return (false, "ReplacesItemId is required when OptionType is SUBSTITUTE");
+
+            var replacesItem = await _itemRepository.GetByIdAsync(opt.ReplacesItemId.Value, ct);
+            if (replacesItem == null)
+                return (false, $"Replaces item {opt.ReplacesItemId.Value} not found");
+
+            if (!replacesItem.IsActive)
+                return (false, $"Replaces item '{replacesItem.ItemNameLocal}' is inactive");
+
+            if (replacesItem.BranchId != branchId)
+                return (false, $"Replaces item '{replacesItem.ItemNameLocal}' belongs to branch {replacesItem.BranchId}, but this modifier group is for branch {branchId}");
+        }
+
+        return (true, null);
+    }
+
+    public async Task<ApiResponse<List<ModifierConsumptionReportItemDto>>> GetConsumptionReportAsync(
+        long branchId,
+        DateTime fromDate,
+        DateTime toDate,
+        long? itemId = null,
+        CancellationToken ct = default)
+    {
+        if (_posOrderRepository == null)
+        {
+            return ApiResponse<List<ModifierConsumptionReportItemDto>>.CreateSuccess(new List<ModifierConsumptionReportItemDto>());
+        }
+
+        var (orders, _) = await _posOrderRepository.GetOrdersPagedAsync(
+            branchId,
+            fromDate: fromDate,
+            toDate: toDate,
+            pageIndex: 1,
+            pageSize: 50000,
+            ct: ct);
+
+        var validOrders = orders.Where(o => (o.Status == PosOrderStatus.Completed || o.IsPaid) && o.Status != PosOrderStatus.Voided).ToList();
+
+        var lineModifiers = validOrders
+            .SelectMany(o => o.Lines.Where(l => !l.IsVoided && l.Quantity > 0))
+            .SelectMany(l => l.Modifiers.Select(m => new { Line = l, Modifier = m }))
+            .ToList();
+
+        if (!lineModifiers.Any())
+        {
+            return ApiResponse<List<ModifierConsumptionReportItemDto>>.CreateSuccess(new List<ModifierConsumptionReportItemDto>());
+        }
+
+        var optionIds = lineModifiers
+            .Where(x => x.Modifier.ModifierOptionId.HasValue)
+            .Select(x => x.Modifier.ModifierOptionId!.Value)
+            .Distinct()
+            .ToList();
+
+        var optionsMap = optionIds.Any()
+            ? (await _modifierRepository.GetOptionsByIdsAsync(optionIds, ct)).ToDictionary(o => o.Id)
+            : new Dictionary<long, InvModifierOption>();
+
+        var consumptionBuckets = new Dictionary<(long ItemId, long? OptionId), decimal>();
+
+        foreach (var entry in lineModifiers)
+        {
+            var line = entry.Line;
+            var mod = entry.Modifier;
+
+            InvModifierOption? opt = null;
+            if (mod.ModifierOptionId.HasValue && optionsMap.TryGetValue(mod.ModifierOptionId.Value, out var foundOpt))
+            {
+                opt = foundOpt;
+            }
+
+            long? consumedItemId = opt?.RelatedItemId ?? (mod.ModifierItemId > 0 ? mod.ModifierItemId : null);
+            if (!consumedItemId.HasValue) continue;
+
+            if (itemId.HasValue && consumedItemId.Value != itemId.Value) continue;
+
+            if (opt != null && opt.OptionType != OptionType.ADD && opt.OptionType != OptionType.SUBSTITUTE)
+            {
+                continue;
+            }
+
+            var relQty = opt?.RelatedItemQty > 0 ? opt.RelatedItemQty : 1m;
+            var factor = opt?.UomFactor > 0 ? opt.UomFactor : 1m;
+            var modQty = mod.Quantity > 0 ? mod.Quantity : 1m;
+
+            var totalQty = line.Quantity * modQty * relQty * factor;
+
+            var key = (consumedItemId.Value, mod.ModifierOptionId);
+            if (consumptionBuckets.ContainsKey(key))
+            {
+                consumptionBuckets[key] += totalQty;
+            }
+            else
+            {
+                consumptionBuckets[key] = totalQty;
+            }
+        }
+
+        var results = new List<ModifierConsumptionReportItemDto>();
+
+        foreach (var kvp in consumptionBuckets)
+        {
+            var (cItemId, cOptionId) = kvp.Key;
+            var totalQty = kvp.Value;
+
+            var item = await _itemRepository.GetByIdAsync(cItemId, ct);
+            if (item == null) continue;
+
+            InvModifierOption? opt = null;
+            if (cOptionId.HasValue && optionsMap.TryGetValue(cOptionId.Value, out var foundOpt))
+            {
+                opt = foundOpt;
+            }
+
+            var unitCost = item.StandardCost;
+            var totalCost = totalQty * unitCost;
+
+            results.Add(new ModifierConsumptionReportItemDto
+            {
+                ItemId = item.Id,
+                ItemCode = item.ItemCode,
+                ItemNameLocal = item.ItemNameLocal,
+                ItemNameEn = item.ItemNameEn,
+                UomCode = opt?.RelatedUomCode ?? item.UomBase.ToString(),
+                TotalQuantityConsumed = totalQty,
+                UnitCost = unitCost,
+                TotalCost = totalCost,
+                ModifierOptionId = cOptionId,
+                ModifierOptionName = opt?.OptionNameLocal,
+                BranchId = branchId
+            });
+        }
+
+        return ApiResponse<List<ModifierConsumptionReportItemDto>>.CreateSuccess(
+            results.OrderBy(r => r.ItemCode).ThenBy(r => r.ModifierOptionName).ToList());
+    }
+
     private static InvModifierGroupDto MapToGroupDto(InvModifierGroup g)
     {
         return new InvModifierGroupDto
@@ -388,6 +573,12 @@ public class InvModifierService : IInvModifierService
             PriceAdjustment = o.PriceAdjustment,
             RelatedItemId = o.RelatedItemId,
             RelatedItemName = o.RelatedItem?.ItemNameLocal,
+            RelatedItemQty = o.RelatedItemQty,
+            RelatedUomCode = o.RelatedUomCode,
+            UomFactor = o.UomFactor,
+            OptionType = o.OptionType,
+            ReplacesItemId = o.ReplacesItemId,
+            ReplacesItemName = o.ReplacesItem?.ItemNameLocal,
             IsDefault = o.IsDefault,
             SortOrder = o.SortOrder,
             IsActive = o.IsActive

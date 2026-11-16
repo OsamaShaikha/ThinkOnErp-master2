@@ -1,4 +1,5 @@
 using System;
+using ThinkOnErp.Domain.Entities.Inventory;
 
 namespace ThinkOnErp.Domain.Entities.Pos;
 
@@ -6,7 +7,8 @@ public class PosOrderLineModifier
 {
     public long Id { get; set; }
     public long OrderLineId { get; set; }
-    public long ModifierItemId { get; set; }
+    public long? ModifierOptionId { get; set; }
+    public long? ModifierItemId { get; set; }
     public string ModifierName { get; set; } = string.Empty;
     public decimal Quantity { get; set; } = 1;
     public decimal UnitPrice { get; set; }
@@ -14,4 +16,5 @@ public class PosOrderLineModifier
 
     // Navigation
     public PosOrderLine? OrderLine { get; set; }
+    public InvModifierOption? ModifierOption { get; set; }
 }

@@ -31,6 +31,12 @@ public class InvModifierOptionDto
     public decimal PriceAdjustment { get; set; }
     public long? RelatedItemId { get; set; }
     public string? RelatedItemName { get; set; }
+    public decimal RelatedItemQty { get; set; } = 1;
+    public string? RelatedUomCode { get; set; }
+    public decimal UomFactor { get; set; } = 1;
+    public OptionType OptionType { get; set; } = OptionType.ADD;
+    public long? ReplacesItemId { get; set; }
+    public string? ReplacesItemName { get; set; }
     public bool IsDefault { get; set; }
     public int SortOrder { get; set; }
     public bool IsActive { get; set; }
@@ -81,6 +87,11 @@ public class UpsertInvModifierOptionDto
     public string? OptionNameEn { get; set; }
     public decimal PriceAdjustment { get; set; }
     public long? RelatedItemId { get; set; }
+    public decimal RelatedItemQty { get; set; } = 1;
+    public string? RelatedUomCode { get; set; }
+    public decimal UomFactor { get; set; } = 1;
+    public OptionType OptionType { get; set; } = OptionType.ADD;
+    public long? ReplacesItemId { get; set; }
     public bool IsDefault { get; set; }
     public int SortOrder { get; set; }
     public bool IsActive { get; set; } = true;
@@ -96,4 +107,19 @@ public class ItemModifierGroupsDto
     public long ItemId { get; set; }
     public string ItemName { get; set; } = string.Empty;
     public List<InvModifierGroupDto> ModifierGroups { get; set; } = new();
+}
+
+public class ModifierConsumptionReportItemDto
+{
+    public long ItemId { get; set; }
+    public string ItemCode { get; set; } = string.Empty;
+    public string ItemNameLocal { get; set; } = string.Empty;
+    public string? ItemNameEn { get; set; }
+    public string? UomCode { get; set; }
+    public decimal TotalQuantityConsumed { get; set; }
+    public decimal UnitCost { get; set; }
+    public decimal TotalCost { get; set; }
+    public long? ModifierOptionId { get; set; }
+    public string? ModifierOptionName { get; set; }
+    public long BranchId { get; set; }
 }
