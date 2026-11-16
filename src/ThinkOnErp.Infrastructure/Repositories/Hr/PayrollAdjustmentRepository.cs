@@ -21,10 +21,9 @@ public sealed class PayrollAdjustmentRepository : IPayrollAdjustmentRepository
 
     public async Task<IReadOnlyList<PayrollAdjustment>> GetAdjustmentsAsync(long companyId, string? employeeCode, string? payPeriod, string? status, CancellationToken cancellationToken = default)
     {
-        var query = _context.PayrollAdjustments
+        IQueryable<PayrollAdjustment> query = _context.PayrollAdjustments
             .Include(a => a.Employee)
-            .Include(a => a.Component)
-            .Where(a => a.CompanyId == companyId);
+            .Include(a => a.Component);
 
         if (!string.IsNullOrEmpty(employeeCode))
             query = query.Where(a => a.EmployeeCode == employeeCode);
@@ -35,27 +34,31 @@ public sealed class PayrollAdjustmentRepository : IPayrollAdjustmentRepository
         if (!string.IsNullOrEmpty(status))
             query = query.Where(a => a.Status == status);
 
-        return await query.OrderByDescending(a => a.CreationDate).ToListAsync(cancellationToken);
+        return (await query.OrderByDescending(a => a.CreationDate).ToListAsync(cancellationToken)).StampAll(companyId);
     }
 
     public async Task<PayrollAdjustment?> GetAdjustmentByIdAsync(long id, CancellationToken cancellationToken = default)
     {
-        return await _context.PayrollAdjustments
+        var adjustment = await _context.PayrollAdjustments
             .AsNoTracking()
             .Include(a => a.Employee)
             .Include(a => a.Component)
             .FirstOrDefaultAsync(a => a.Id == id, cancellationToken);
+        return adjustment?.Stamp(_context.HrScopeCompanyId);
     }
 
     public Task<PayrollAdjustment?> GetAdjustmentBySourceAsync(long companyId, string sourceType, string sourceId, CancellationToken cancellationToken = default)
-        => _context.PayrollAdjustments.AsNoTracking()
-            .FirstOrDefaultAsync(a => a.CompanyId == companyId && a.SourceType == sourceType && a.SourceId == sourceId, cancellationToken);
+        => GetAdjustmentBySourceCoreAsync(companyId, sourceType, sourceId, cancellationToken);
+
+    private async Task<PayrollAdjustment?> GetAdjustmentBySourceCoreAsync(long companyId, string sourceType, string sourceId, CancellationToken cancellationToken)
+        => (await _context.PayrollAdjustments.AsNoTracking()
+            .FirstOrDefaultAsync(a => a.SourceType == sourceType && a.SourceId == sourceId, cancellationToken))?.Stamp(companyId);
 
     public async Task<IReadOnlyList<PayrollAdjustment>> GetPayrollCalculationAdjustmentsAsync(long companyId, string payPeriod, CancellationToken cancellationToken = default)
     {
-        return await PayrollCalculationAdjustmentQuery.ForPeriod(_context, companyId, payPeriod)
+        return (await PayrollCalculationAdjustmentQuery.ForPeriod(_context, companyId, payPeriod)
             .Include(a => a.Component)
-            .ToListAsync(cancellationToken);
+            .ToListAsync(cancellationToken)).StampAll(companyId);
     }
 
     public async Task AddAdjustmentAsync(PayrollAdjustment adjustment, CancellationToken cancellationToken = default)

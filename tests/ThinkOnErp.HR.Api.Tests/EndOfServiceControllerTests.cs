@@ -3,14 +3,20 @@ using System.Collections.Generic;
 using System.Security.Claims;
 using System.Threading;
 using System.Threading.Tasks;
+using MediatR;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using ThinkOnErp.API.Controllers.Hr;
 using ThinkOnErp.Application.Common;
 using ThinkOnErp.Application.DTOs.Hr;
-using ThinkOnErp.Application.Services.Hr;
+using ThinkOnErp.Application.Features.Hr.EndOfService.Commands.ApproveSettlement;
+using ThinkOnErp.Application.Features.Hr.EndOfService.Commands.CalculateSettlement;
+using ThinkOnErp.Application.Features.Hr.EndOfService.Commands.CancelSettlement;
+using ThinkOnErp.Application.Features.Hr.EndOfService.Queries.GetEndOfServiceHandoffStatus;
+using ThinkOnErp.Application.Features.Hr.EndOfService.Queries.GetSettlementByEmployeeCode;
+using ThinkOnErp.Application.Features.Hr.EndOfService.Queries.GetSettlementById;
+using ThinkOnErp.Application.Features.Hr.EndOfService.Queries.GetSettlements;
 using ThinkOnErp.Domain.Models;
 using Xunit;
 
@@ -32,17 +38,19 @@ public sealed class EndOfServiceControllerTests
     {
         var request = new CreateEndOfServiceRequest(
             "EMP-2", "TERMINATION", new DateTime(2026, 11, 1));
-        var service = new Mock<IEndOfServiceService>();
-        service.Setup(s => s.CalculateSettlementAsync(
-                request, "HR_USER", 2L, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(MakeDto());
-        var controller = BuildController(service.Object, companyId: 2, userName: "HR_USER");
+        var mediator = new Mock<IMediator>();
+        mediator.Setup(m => m.Send(
+                It.Is<CalculateSettlementCommand>(c => c.Request == request && c.Username == "HR_USER" && c.CompanyId == 2L),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(ApiResponse<EndOfServiceSettlementDto>.CreateSuccess(MakeDto()));
+        var controller = BuildController(mediator.Object, companyId: 2, userName: "HR_USER");
 
         var result = await controller.CalculateSettlement(request, CancellationToken.None);
 
         Assert.IsType<OkObjectResult>(result.Result);
-        service.Verify(s => s.CalculateSettlementAsync(
-            request, "HR_USER", 2L, It.IsAny<CancellationToken>()), Times.Once);
+        mediator.Verify(m => m.Send(
+            It.Is<CalculateSettlementCommand>(c => c.Request == request && c.Username == "HR_USER" && c.CompanyId == 2L),
+            It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
@@ -50,11 +58,8 @@ public sealed class EndOfServiceControllerTests
     {
         var request = new CreateEndOfServiceRequest(
             "EMP-2", "TERMINATION", new DateTime(2026, 11, 1));
-        var service = new Mock<IEndOfServiceService>();
-        var controller = new EndOfServiceController(
-            service.Object,
-            Mock.Of<IHrAccountingHandoffService>(),
-            NullLogger<EndOfServiceController>.Instance)
+        var mediator = new Mock<IMediator>(MockBehavior.Strict);
+        var controller = new EndOfServiceController(mediator.Object)
         {
             ControllerContext = new ControllerContext { HttpContext = new DefaultHttpContext() }
         };
@@ -62,81 +67,92 @@ public sealed class EndOfServiceControllerTests
         var result = await controller.CalculateSettlement(request, CancellationToken.None);
 
         Assert.IsType<ForbidResult>(result.Result);
-        service.Verify(s => s.CalculateSettlementAsync(
-            It.IsAny<CreateEndOfServiceRequest>(), It.IsAny<string>(), It.IsAny<long>(),
-            It.IsAny<CancellationToken>()), Times.Never);
+        mediator.VerifyNoOtherCalls();
     }
 
     [Fact]
     public async Task CalculateSettlement_UsesSystemWhenUserIdentityNameIsNull()
     {
         var request = new CreateEndOfServiceRequest("EMP-9", "TERMINATION", new DateTime(2026, 12, 1));
-        var service = new Mock<IEndOfServiceService>();
-        service.Setup(s => s.CalculateSettlementAsync(request, "SYSTEM", 5L, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(MakeDto());
+        var mediator = new Mock<IMediator>();
+        mediator.Setup(m => m.Send(
+                It.Is<CalculateSettlementCommand>(c => c.Request == request && c.Username == "SYSTEM" && c.CompanyId == 5L),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(ApiResponse<EndOfServiceSettlementDto>.CreateSuccess(MakeDto()));
         var http = new DefaultHttpContext
         {
             User = new ClaimsPrincipal(new ClaimsIdentity()) // no name claim → "SYSTEM"
         };
         http.Items[TenantRequestContext.HttpContextItemKey] = new TenantRequestContext(5, "T5", "S5");
-        var controller = new EndOfServiceController(
-            service.Object, Mock.Of<IHrAccountingHandoffService>(),
-            NullLogger<EndOfServiceController>.Instance)
+        var controller = new EndOfServiceController(mediator.Object)
         { ControllerContext = new ControllerContext { HttpContext = http } };
 
         await controller.CalculateSettlement(request, CancellationToken.None);
 
-        service.Verify(s => s.CalculateSettlementAsync(request, "SYSTEM", 5L, It.IsAny<CancellationToken>()), Times.Once);
+        mediator.Verify(m => m.Send(
+            It.Is<CalculateSettlementCommand>(c => c.Request == request && c.Username == "SYSTEM" && c.CompanyId == 5L),
+            It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
     public async Task ApproveSettlement_ForwardsIdAndActorToService()
     {
-        var service = new Mock<IEndOfServiceService>();
-        service.Setup(s => s.ApproveSettlementAsync(77, "APPROVER", It.IsAny<CancellationToken>()))
-            .ReturnsAsync(MakeDto(status: "APPROVED"));
-        var controller = BuildController(service.Object, companyId: 2, userName: "APPROVER");
+        var mediator = new Mock<IMediator>();
+        mediator.Setup(m => m.Send(
+                It.Is<ApproveSettlementCommand>(c => c.SettlementId == 77 && c.Username == "APPROVER"),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(ApiResponse<EndOfServiceSettlementDto>.CreateSuccess(MakeDto(status: "APPROVED")));
+        var controller = BuildController(mediator.Object, companyId: 2, userName: "APPROVER");
 
         var result = await controller.ApproveSettlement(77, CancellationToken.None);
 
         Assert.IsType<OkObjectResult>(result.Result);
-        service.Verify(s => s.ApproveSettlementAsync(77, "APPROVER", It.IsAny<CancellationToken>()), Times.Once);
+        mediator.Verify(m => m.Send(
+            It.Is<ApproveSettlementCommand>(c => c.SettlementId == 77 && c.Username == "APPROVER"),
+            It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
     public async Task CancelSettlement_ForwardsReasonAndUser()
     {
-        var service = new Mock<IEndOfServiceService>();
-        service.Setup(s => s.CancelSettlementAsync(77, "Data entry error", "MANAGER", It.IsAny<CancellationToken>()))
-            .ReturnsAsync(MakeDto(status: "CANCELLED"));
-        var controller = BuildController(service.Object, companyId: 2, userName: "MANAGER");
+        var mediator = new Mock<IMediator>();
+        mediator.Setup(m => m.Send(
+                It.Is<CancelSettlementCommand>(c => c.SettlementId == 77 && c.Reason == "Data entry error" && c.Username == "MANAGER"),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(ApiResponse<EndOfServiceSettlementDto>.CreateSuccess(MakeDto(status: "CANCELLED")));
+        var controller = BuildController(mediator.Object, companyId: 2, userName: "MANAGER");
         var cancelRequest = new CancelEndOfServiceRequest("Data entry error");
 
         var result = await controller.CancelSettlement(77, cancelRequest, CancellationToken.None);
 
         Assert.IsType<OkObjectResult>(result.Result);
-        service.Verify(s => s.CancelSettlementAsync(77, "Data entry error", "MANAGER", It.IsAny<CancellationToken>()), Times.Once);
+        mediator.Verify(m => m.Send(
+            It.Is<CancelSettlementCommand>(c => c.SettlementId == 77 && c.Reason == "Data entry error" && c.Username == "MANAGER"),
+            It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
     public async Task CancelSettlement_ReturnsBadRequestWhenReasonIsWhitespace()
     {
-        var service = new Mock<IEndOfServiceService>(MockBehavior.Strict);
-        var controller = BuildController(service.Object, companyId: 2, userName: "MANAGER");
+        var mediator = new Mock<IMediator>(MockBehavior.Strict);
+        var controller = BuildController(mediator.Object, companyId: 2, userName: "MANAGER");
         var cancelRequest = new CancelEndOfServiceRequest("   ");
 
         var result = await controller.CancelSettlement(77, cancelRequest, CancellationToken.None);
 
         Assert.IsType<BadRequestObjectResult>(result.Result);
-        service.VerifyNoOtherCalls();
+        mediator.VerifyNoOtherCalls();
     }
 
     [Fact]
     public async Task GetById_ReturnsOkWhenFound()
     {
-        var service = new Mock<IEndOfServiceService>();
-        service.Setup(s => s.GetByIdAsync(55, It.IsAny<CancellationToken>())).ReturnsAsync(MakeDto(55));
-        var controller = BuildController(service.Object);
+        var mediator = new Mock<IMediator>();
+        mediator.Setup(m => m.Send(
+                It.Is<GetSettlementByIdQuery>(q => q.SettlementId == 55),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(ApiResponse<EndOfServiceSettlementDto>.CreateSuccess(MakeDto(55)));
+        var controller = BuildController(mediator.Object);
 
         var result = await controller.GetById(55, CancellationToken.None);
 
@@ -146,10 +162,12 @@ public sealed class EndOfServiceControllerTests
     [Fact]
     public async Task GetById_ReturnsNotFoundWhenMissing()
     {
-        var service = new Mock<IEndOfServiceService>();
-        service.Setup(s => s.GetByIdAsync(99, It.IsAny<CancellationToken>()))
-            .ReturnsAsync((EndOfServiceSettlementDto)null!);
-        var controller = BuildController(service.Object);
+        var mediator = new Mock<IMediator>();
+        mediator.Setup(m => m.Send(
+                It.Is<GetSettlementByIdQuery>(q => q.SettlementId == 99),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(ApiResponse<EndOfServiceSettlementDto>.CreateFailure("End of service settlement not found.", statusCode: 404));
+        var controller = BuildController(mediator.Object);
 
         var result = await controller.GetById(99, CancellationToken.None);
 
@@ -159,10 +177,12 @@ public sealed class EndOfServiceControllerTests
     [Fact]
     public async Task GetByEmployeeCode_ReturnsOkWhenFound()
     {
-        var service = new Mock<IEndOfServiceService>();
-        service.Setup(s => s.GetByEmployeeCodeAsync("EMP-10", It.IsAny<CancellationToken>()))
-            .ReturnsAsync(MakeDto());
-        var controller = BuildController(service.Object);
+        var mediator = new Mock<IMediator>();
+        mediator.Setup(m => m.Send(
+                It.Is<GetSettlementByEmployeeCodeQuery>(q => q.EmployeeCode == "EMP-10"),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(ApiResponse<EndOfServiceSettlementDto>.CreateSuccess(MakeDto()));
+        var controller = BuildController(mediator.Object);
 
         var result = await controller.GetByEmployeeCode("EMP-10", CancellationToken.None);
 
@@ -172,10 +192,12 @@ public sealed class EndOfServiceControllerTests
     [Fact]
     public async Task GetByEmployeeCode_ReturnsNotFoundWhenNoSettlement()
     {
-        var service = new Mock<IEndOfServiceService>();
-        service.Setup(s => s.GetByEmployeeCodeAsync("GHOST", It.IsAny<CancellationToken>()))
-            .ReturnsAsync((EndOfServiceSettlementDto)null!);
-        var controller = BuildController(service.Object);
+        var mediator = new Mock<IMediator>();
+        mediator.Setup(m => m.Send(
+                It.Is<GetSettlementByEmployeeCodeQuery>(q => q.EmployeeCode == "GHOST"),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(ApiResponse<EndOfServiceSettlementDto>.CreateFailure("No active end of service settlement found for employee 'GHOST'.", statusCode: 404));
+        var controller = BuildController(mediator.Object);
 
         var result = await controller.GetByEmployeeCode("GHOST", CancellationToken.None);
 
@@ -186,10 +208,12 @@ public sealed class EndOfServiceControllerTests
     public async Task GetList_ReturnsOkWithResultsList()
     {
         var dtos = new List<EndOfServiceSettlementDto> { MakeDto(1), MakeDto(2) };
-        var service = new Mock<IEndOfServiceService>();
-        service.Setup(s => s.GetListAsync(2L, null, null, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(dtos);
-        var controller = BuildController(service.Object);
+        var mediator = new Mock<IMediator>();
+        mediator.Setup(m => m.Send(
+                It.Is<GetSettlementsQuery>(q => q.CompanyId == 2L && q.BranchId == null && q.Status == null),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(ApiResponse<IReadOnlyList<EndOfServiceSettlementDto>>.CreateSuccess(dtos));
+        var controller = BuildController(mediator.Object);
 
         var result = await controller.GetList(2L, null, null, CancellationToken.None);
 
@@ -201,10 +225,12 @@ public sealed class EndOfServiceControllerTests
     [Fact]
     public async Task GetHandoffStatus_ReturnsNotFoundWhenMissing()
     {
-        var service = new Mock<IEndOfServiceService>();
-        service.Setup(s => s.GetHandoffStatusAsync(99, It.IsAny<CancellationToken>()))
-            .ReturnsAsync((EndOfServiceHandoffStatusDto)null!);
-        var controller = BuildController(service.Object);
+        var mediator = new Mock<IMediator>();
+        mediator.Setup(m => m.Send(
+                It.Is<GetEndOfServiceHandoffStatusQuery>(q => q.SettlementId == 99),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(ApiResponse<EndOfServiceHandoffStatusDto>.CreateFailure("No accounting handoff found for this settlement.", statusCode: StatusCodes.Status404NotFound));
+        var controller = BuildController(mediator.Object);
 
         var result = await controller.GetHandoffStatus(99, CancellationToken.None);
 
@@ -212,7 +238,7 @@ public sealed class EndOfServiceControllerTests
     }
 
     private static EndOfServiceController BuildController(
-        IEndOfServiceService service,
+        IMediator mediator,
         long companyId = 2,
         string userName = "SYSTEM")
     {
@@ -223,10 +249,7 @@ public sealed class EndOfServiceControllerTests
         };
         http.Items[TenantRequestContext.HttpContextItemKey] =
             new TenantRequestContext(companyId, $"T{companyId}", $"S{companyId}");
-        return new EndOfServiceController(
-            service,
-            Mock.Of<IHrAccountingHandoffService>(),
-            NullLogger<EndOfServiceController>.Instance)
+        return new EndOfServiceController(mediator)
         { ControllerContext = new ControllerContext { HttpContext = http } };
     }
 }

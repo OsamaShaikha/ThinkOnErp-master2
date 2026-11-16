@@ -1,71 +1,91 @@
+using System.Threading;
+using System.Threading.Tasks;
+using MediatR;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using ThinkOnErp.API.Authorization;
 using ThinkOnErp.API.Swagger;
 using ThinkOnErp.Application.Common;
 using ThinkOnErp.Application.DTOs.Hr;
-using ThinkOnErp.Application.Services.Hr;
-using ThinkOnErp.Domain.Entities.Hr;
+using ThinkOnErp.Application.Features.Hr.Shifts.Commands.CreateShiftDefinition;
+using ThinkOnErp.Application.Features.Hr.Shifts.Commands.DeleteShiftDefinition;
+using ThinkOnErp.Application.Features.Hr.Shifts.Commands.UpdateShiftDefinition;
+using ThinkOnErp.Application.Features.Hr.Shifts.Queries.GetShiftDefinitionByCode;
+using ThinkOnErp.Application.Features.Hr.Shifts.Queries.GetShiftDefinitions;
 
 namespace ThinkOnErp.API.Controllers.Hr;
 
 [ApiController, Route("api/hr/shifts"), Authorize, TenantScoped]
 [ApiExplorerSettings(GroupName = ApiCategories.Hr)]
-public sealed class ShiftsController(IShiftDefinitionService service) : ControllerBase
+public sealed class ShiftsController : HrControllerBase
 {
+    private readonly IMediator _mediator;
+
+    public ShiftsController(IMediator mediator)
+    {
+        _mediator = mediator;
+    }
+
     [HttpGet, HrPermission("hr-attendance", "view")]
-    public async Task<ActionResult<ApiResponse<ShiftDefinitionPageDto>>> List([FromQuery] bool activeOnly = false,
-        [FromQuery] string? search = null, [FromQuery] int page = 1, [FromQuery] int size = 50, CancellationToken ct = default)
-        => Ok(ApiResponse<ShiftDefinitionPageDto>.CreateSuccess(await service.ListAsync(activeOnly, search, page, size, ct)));
+    [ProducesResponseType(typeof(ApiResponse<ShiftDefinitionPageDto>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<ApiResponse<ShiftDefinitionPageDto>>> List(
+        [FromQuery] bool activeOnly = false,
+        [FromQuery] string? search = null,
+        [FromQuery] int page = 1,
+        [FromQuery] int size = 50,
+        CancellationToken ct = default)
+        => FromResponse(await _mediator.Send(new GetShiftDefinitionsQuery(activeOnly, search, page, size), ct));
 
     [HttpGet("{code}"), HrPermission("hr-attendance", "view")]
+    [ProducesResponseType(typeof(ApiResponse<ShiftDefinitionDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<ShiftDefinitionDto>), StatusCodes.Status404NotFound)]
     public async Task<ActionResult<ApiResponse<ShiftDefinitionDto>>> Get(string code, CancellationToken ct)
     {
-        var result = await service.GetAsync(code, ct);
-        Response.Headers.ETag = '"' + result.Version + '"';
-        return Ok(ApiResponse<ShiftDefinitionDto>.CreateSuccess(result));
+        var response = await _mediator.Send(new GetShiftDefinitionByCodeQuery(code), ct);
+        if (response.Success && response.Data != null)
+            Response.Headers.ETag = '"' + response.Data.Version + '"';
+        return FromResponse(response);
     }
 
     [HttpPost, HrPermission("hr-attendance", "configure")]
     [ProducesResponseType(typeof(ApiResponse<ShiftDefinitionDto>), StatusCodes.Status201Created)]
-    public async Task<ActionResult<ApiResponse<ShiftDefinitionDto>>> Create([FromBody] CreateShiftDefinitionDto dto, CancellationToken ct)
+    [ProducesResponseType(typeof(ApiResponse<ShiftDefinitionDto>), StatusCodes.Status400BadRequest)]
+    public async Task<ActionResult<ApiResponse<ShiftDefinitionDto>>> Create(
+        [FromBody] CreateShiftDefinitionDto dto,
+        CancellationToken ct)
     {
-        var result = await service.CreateAsync(dto, User.Identity?.Name ?? "SYSTEM", ct);
-        Response.Headers.ETag = '"' + result.Version + '"';
-        return CreatedAtAction(nameof(Get), new { code = result.ShiftCode }, ApiResponse<ShiftDefinitionDto>.CreateSuccess(result));
+        var response = await _mediator.Send(new CreateShiftDefinitionCommand(dto, CurrentUsername), ct);
+        if (response.Success && response.Data != null)
+        {
+            Response.Headers.ETag = '"' + response.Data.Version + '"';
+            return CreatedAtAction(nameof(Get), new { code = response.Data.ShiftCode }, response);
+        }
+        return FromResponse(response);
     }
 
     [HttpPut("{code}"), HrPermission("hr-attendance", "configure")]
     [ProducesResponseType(typeof(ApiResponse<ShiftDefinitionDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<ShiftDefinitionDto>), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ApiResponse<ShiftDefinitionDto>), StatusCodes.Status412PreconditionFailed)]
-    public async Task<ActionResult<ApiResponse<ShiftDefinitionDto>>> Update(string code, [FromBody] WriteShiftDefinitionDto dto,
-        [FromHeader(Name = "If-Match")] string version, CancellationToken ct)
+    public async Task<ActionResult<ApiResponse<ShiftDefinitionDto>>> Update(
+        string code,
+        [FromBody] WriteShiftDefinitionDto dto,
+        [FromHeader(Name = "If-Match")] string version,
+        CancellationToken ct)
     {
-        try
-        {
-        var result = await service.UpdateAsync(code, dto, version, User.Identity?.Name ?? "SYSTEM", ct);
-        Response.Headers.ETag = '"' + result.Version + '"';
-        return Ok(ApiResponse<ShiftDefinitionDto>.CreateSuccess(result));
-        }
-        catch (ShiftVersionConflictException ex)
-        {
-            return StatusCode(412, ApiResponse<ShiftDefinitionDto>.CreateFailure(ex.Message, statusCode: 412));
-        }
+        var response = await _mediator.Send(new UpdateShiftDefinitionCommand(code, dto, version, CurrentUsername), ct);
+        if (response.Success && response.Data != null)
+            Response.Headers.ETag = '"' + response.Data.Version + '"';
+        return FromResponse(response);
     }
 
     [HttpDelete("{code}"), HrPermission("hr-attendance", "configure")]
     [ProducesResponseType(typeof(ApiResponse<bool>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiResponse<bool>), StatusCodes.Status412PreconditionFailed)]
-    public async Task<ActionResult<ApiResponse<bool>>> Delete(string code, [FromHeader(Name = "If-Match")] string version, CancellationToken ct)
-    {
-        try
-        {
-        await service.DeleteAsync(code, version, ct);
-        return Ok(ApiResponse<bool>.CreateSuccess(true));
-        }
-        catch (ShiftVersionConflictException ex)
-        {
-            return StatusCode(412, ApiResponse<bool>.CreateFailure(ex.Message, statusCode: 412));
-        }
-    }
+    public async Task<ActionResult<ApiResponse<bool>>> Delete(
+        string code,
+        [FromHeader(Name = "If-Match")] string version,
+        CancellationToken ct)
+        => FromResponse(await _mediator.Send(new DeleteShiftDefinitionCommand(code, version), ct));
 }

@@ -49,25 +49,25 @@ public sealed class PayrollPeriodRepository : IPayrollPeriodRepository
 
     public async Task<PayrollPeriod?> GetPeriodForRunAsync(PayrollRun run, CancellationToken cancellationToken = default)
     {
-        var companyId = await _context.SysBranches.Where(b => b.Id == run.BranchId).Select(b => (long?)b.CompanyId).SingleOrDefaultAsync(cancellationToken);
-        return companyId.HasValue ? await GetPeriodByCodeAsync(companyId.Value, run.PayPeriod, cancellationToken) : null;
+        return await GetPeriodByCodeAsync(_context.HrScopeCompanyId, run.PayPeriod, cancellationToken);
     }
 
     public async Task<IReadOnlyList<PayrollPeriod>> GetPeriodsAsync(long companyId, int? fiscalYear = null, CancellationToken cancellationToken = default)
     {
-        var query = _context.PayrollPeriods
-            .Where(p => p.CompanyId == companyId);
+        var query = _context.PayrollPeriods.AsQueryable();
 
         if (fiscalYear.HasValue)
             query = query.Where(p => p.FiscalYear == fiscalYear.Value);
 
-        return await query.OrderByDescending(p => p.StartDate).ToListAsync(cancellationToken);
+        var periods = await query.OrderByDescending(p => p.StartDate).ToListAsync(cancellationToken);
+        return periods.StampAll(companyId);
     }
 
     public async Task<PayrollPeriod?> GetPeriodByCodeAsync(long companyId, string periodCode, CancellationToken cancellationToken = default)
     {
-        return await _context.PayrollPeriods
-            .FirstOrDefaultAsync(p => p.CompanyId == companyId && p.PeriodCode == periodCode, cancellationToken);
+        var period = await _context.PayrollPeriods
+            .FirstOrDefaultAsync(p => p.PeriodCode == periodCode, cancellationToken);
+        return period?.Stamp(companyId);
     }
 
     public async Task AddPeriodAsync(PayrollPeriod period, CancellationToken cancellationToken = default)
@@ -83,15 +83,10 @@ public sealed class PayrollPeriodRepository : IPayrollPeriodRepository
 
     public async Task<IReadOnlyList<PayrollRun>> GetRunsByPeriodAsync(long companyId, string payPeriod, CancellationToken cancellationToken = default)
     {
-        var branchIds = await _context.SysBranches.Where(b => b.CompanyId == companyId).Select(b => b.Id).ToListAsync(cancellationToken);
         var query = _context.PayrollRuns
             .Include(r => r.Lines)
                 .ThenInclude(l => l.Components)
             .Where(r => r.PayPeriod == payPeriod);
-        if (branchIds.Count > 0)
-        {
-            query = query.Where(r => !r.BranchId.HasValue || branchIds.Contains(r.BranchId.Value));
-        }
         return await query.ToListAsync(cancellationToken);
     }
 
@@ -99,13 +94,7 @@ public sealed class PayrollPeriodRepository : IPayrollPeriodRepository
         long companyId, string? payPeriod, long? branchId, string? status, int pageIndex, int pageSize,
         CancellationToken cancellationToken = default)
     {
-        var query = from run in _context.PayrollRuns
-                    join period in _context.PayrollPeriods
-                        on new { CompanyId = companyId, PeriodCode = run.PayPeriod }
-                        equals new { period.CompanyId, period.PeriodCode }
-                    where !run.BranchId.HasValue || _context.SysBranches.Any(branch =>
-                        branch.Id == run.BranchId.Value && branch.CompanyId == companyId)
-                    select run;
+        var query = _context.PayrollRuns.AsQueryable();
 
         if (!string.IsNullOrWhiteSpace(payPeriod))
             query = query.Where(run => run.PayPeriod == payPeriod);
@@ -131,9 +120,6 @@ public sealed class PayrollPeriodRepository : IPayrollPeriodRepository
     {
         var query = from line in _context.PayrollRunLines
                     join run in _context.PayrollRuns on line.PayrollRunId equals run.Id
-                    join period in _context.PayrollPeriods
-                        on new { CompanyId = companyId, PeriodCode = run.PayPeriod }
-                        equals new { period.CompanyId, period.PeriodCode }
                     where line.EmployeeCode == employeeCode &&
                           (run.Status == "APPROVED" || run.Status == "POSTED_TO_GL" || run.Status == "PAID")
                     select line;
@@ -154,9 +140,6 @@ public sealed class PayrollPeriodRepository : IPayrollPeriodRepository
         long companyId, long payrollRunId, string employeeCode, CancellationToken cancellationToken = default)
         => (from line in _context.PayrollRunLines
             join run in _context.PayrollRuns on line.PayrollRunId equals run.Id
-            join period in _context.PayrollPeriods
-                on new { CompanyId = companyId, PeriodCode = run.PayPeriod }
-                equals new { period.CompanyId, period.PeriodCode }
             where line.PayrollRunId == payrollRunId && line.EmployeeCode == employeeCode &&
                   (run.Status == "APPROVED" || run.Status == "POSTED_TO_GL" || run.Status == "PAID")
             select line)
@@ -168,13 +151,13 @@ public sealed class PayrollPeriodRepository : IPayrollPeriodRepository
     public async Task<bool> HasPendingAdjustmentsForPeriodAsync(long companyId, string payPeriod, CancellationToken cancellationToken = default)
     {
         return await _context.PayrollAdjustments
-            .AnyAsync(a => a.CompanyId == companyId && a.PayPeriod == payPeriod && a.Status == "PENDING", cancellationToken);
+            .AnyAsync(a => a.PayPeriod == payPeriod && a.Status == "PENDING", cancellationToken);
     }
 
     public async Task<bool> HasSubsequentClosedPeriodsAsync(long companyId, int fiscalYear, int month, CancellationToken cancellationToken = default)
     {
         return await _context.PayrollPeriods
-            .AnyAsync(p => p.CompanyId == companyId && p.Status == "CLOSED" &&
+            .AnyAsync(p => p.Status == "CLOSED" &&
                 (p.FiscalYear > fiscalYear || (p.FiscalYear == fiscalYear && p.Month > month)), cancellationToken);
     }
 

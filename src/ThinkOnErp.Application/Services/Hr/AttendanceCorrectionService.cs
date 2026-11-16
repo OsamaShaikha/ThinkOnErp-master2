@@ -1,8 +1,10 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using ThinkOnErp.Application.DTOs.Hr;
+using ThinkOnErp.Application.Features.Hr.Attendance.Common;
 using ThinkOnErp.Domain.Entities.Hr;
 using ThinkOnErp.Domain.Interfaces.Hr;
 
@@ -17,6 +19,7 @@ public interface IAttendanceCorrectionService
     Task<IReadOnlyList<AttendanceCorrectionRequest>> GetRequestsAsync(string? employeeCode, string? status, CancellationToken cancellationToken = default);
 }
 
+[Obsolete("Use the MediatR requests in ThinkOnErp.Application.Features.Hr.Attendance.")]
 public sealed class AttendanceCorrectionService : IAttendanceCorrectionService
 {
     private readonly IAttendanceCorrectionRepository _repository;
@@ -34,7 +37,9 @@ public sealed class AttendanceCorrectionService : IAttendanceCorrectionService
         _repository = repository;
         _engine = engine;
         _unitOfWork = unitOfWork;
-        _policies = policies; _timeSettings = timeSettings; _clock = clock ?? TimeProvider.System;
+        _policies = policies;
+        _timeSettings = timeSettings;
+        _clock = clock ?? TimeProvider.System;
         _employeeRepository = employeeRepository;
     }
 
@@ -63,13 +68,18 @@ public sealed class AttendanceCorrectionService : IAttendanceCorrectionService
     {
         var request = new AttendanceCorrectionRequest
         {
-            EmployeeCode = employeeCode, AttendanceDate = attendanceDate,
-            RequestedCheckIn = requestedIn, RequestedCheckOut = requestedOut, Reason = reason?.Trim() ?? string.Empty,
-            Status = "PENDING", CreationUser = user, CreationDate = DateTime.UtcNow
+            EmployeeCode = employeeCode,
+            AttendanceDate = attendanceDate,
+            RequestedCheckIn = requestedIn,
+            RequestedCheckOut = requestedOut,
+            Reason = reason?.Trim() ?? string.Empty,
+            Status = "PENDING",
+            CreationUser = user,
+            CreationDate = DateTime.UtcNow
         };
         AttendanceCorrectionRules.ValidateInput(request);
         EnsurePastPunches(request);
-        return ForRead(await _repository.SubmitCorrectionAsync(request, cancellationToken));
+        return AttendanceCommon.ForRead(await _repository.SubmitCorrectionAsync(request, cancellationToken));
     }
 
     public async Task<AttendanceCorrectionRequest> ProcessRequestAsync(long requestId, ProcessAttendanceCorrectionDto dto, string user, CancellationToken cancellationToken = default)
@@ -90,7 +100,7 @@ public sealed class AttendanceCorrectionService : IAttendanceCorrectionService
     {
         if (!approved && (string.IsNullOrWhiteSpace(rejectionReason) || rejectionReason.Trim().Length > 1000))
             throw new ArgumentException("A rejection reason up to 1000 characters is required.");
-        if (!approved) return ForRead(await _repository.RejectCorrectionAsync(requestId, rejectionReason!, approverUser, cancellationToken));
+        if (!approved) return AttendanceCommon.ForRead(await _repository.RejectCorrectionAsync(requestId, rejectionReason!, approverUser, cancellationToken));
         if (_unitOfWork == null)
             return await ProcessCorrectionRequestCoreAsync(requestId, approved, approverUser, rejectionReason, policy, cancellationToken);
         var request = await _repository.GetCorrectionRequestSnapshotAsync(requestId, cancellationToken)
@@ -158,20 +168,7 @@ public sealed class AttendanceCorrectionService : IAttendanceCorrectionService
         await _repository.UpdateCorrectionRequestAsync(request, cancellationToken);
         await _repository.SaveChangesAsync(cancellationToken);
 
-        return ForRead(request);
-    }
-
-    private static AttendanceCorrectionRequest ForRead(AttendanceCorrectionRequest r)
-    {
-        static DateTime? Utc(DateTime? value) => value.HasValue ? DateTime.SpecifyKind(value.Value, DateTimeKind.Utc) : null;
-        return new AttendanceCorrectionRequest
-        {
-            Id = r.Id, EmployeeCode = r.EmployeeCode, AttendanceDate = DateTime.SpecifyKind(r.AttendanceDate.Date, DateTimeKind.Unspecified),
-            OldCheckIn = Utc(r.OldCheckIn), OldCheckOut = Utc(r.OldCheckOut), RequestedCheckIn = Utc(r.RequestedCheckIn), RequestedCheckOut = Utc(r.RequestedCheckOut),
-            AppliedCheckIn = Utc(r.AppliedCheckIn), AppliedCheckOut = Utc(r.AppliedCheckOut), OriginalDayVersion = r.OriginalDayVersion,
-            Reason = r.Reason, Status = r.Status, ApprovedBy = r.ApprovedBy, ApprovalDate = Utc(r.ApprovalDate), RejectionReason = r.RejectionReason,
-            CreationUser = r.CreationUser, CreationDate = DateTime.SpecifyKind(r.CreationDate, DateTimeKind.Utc), UpdateUser = r.UpdateUser, UpdateDate = Utc(r.UpdateDate)
-        };
+        return AttendanceCommon.ForRead(request);
     }
 
     private void EnsurePastPunches(AttendanceCorrectionRequest request)
@@ -183,6 +180,6 @@ public sealed class AttendanceCorrectionService : IAttendanceCorrectionService
 
     public async Task<IReadOnlyList<AttendanceCorrectionRequest>> GetRequestsAsync(string? employeeCode, string? status, CancellationToken cancellationToken = default)
     {
-        return (await _repository.GetCorrectionRequestsAsync(employeeCode, status, cancellationToken)).Select(ForRead).ToArray();
+        return (await _repository.GetCorrectionRequestsAsync(employeeCode, status, cancellationToken)).Select(AttendanceCommon.ForRead).ToArray();
     }
 }

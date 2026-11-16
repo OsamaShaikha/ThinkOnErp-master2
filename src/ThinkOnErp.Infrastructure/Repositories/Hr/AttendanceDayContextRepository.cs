@@ -45,7 +45,7 @@ public sealed class AttendanceDayContextRepository(OracleDbContext db, IShiftTim
         var company = employee.BranchId.HasValue ? await db.SysBranches.Where(b => b.Id == employee.BranchId).Select(b => b.CompanyId).SingleOrDefaultAsync(ct) : (long?)db.HrScopeCompanyId;
         if (!company.HasValue || company <= 0 || db.HrScopeEnabled && company != db.HrScopeCompanyId) throw new InvalidOperationException("Employee company is outside the current HR scope.");
         var date = workDate.Date;
-        var holiday = await db.PublicHolidays.AsNoTracking().AnyAsync(h => h.CompanyId == company && h.IsActive &&
+        var holiday = await db.PublicHolidays.AsNoTracking().AnyAsync(h => h.IsActive &&
             (!h.BranchId.HasValue || h.BranchId == employee.BranchId) &&
             (h.HolidayDate.Date == date || h.IsRecurring && h.HolidayDate.Month == date.Month && h.HolidayDate.Day == date.Day), ct);
         var leaves = await db.LeaveRequests.AsNoTracking().Where(l => l.EmployeeCode == employeeCode && l.Status == "APPROVED" && l.StartDate.Date <= date && l.EndDate.Date >= date).ToListAsync(ct);

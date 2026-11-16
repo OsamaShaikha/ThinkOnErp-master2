@@ -12,7 +12,6 @@ public sealed class WorkCalendarConfiguration : IEntityTypeConfiguration<WorkCal
         builder.HasKey(c => c.Id);
         builder.Property(c => c.Id).HasColumnName("ID").ValueGeneratedOnAdd();
 
-        builder.Property(c => c.CompanyId).HasColumnName("COMPANY_ID").IsRequired();
         builder.Property(c => c.Code).HasColumnName("CODE").HasMaxLength(50).IsRequired();
         builder.Property(c => c.NameAr).HasColumnName("NAME_AR").HasMaxLength(200).IsRequired();
         builder.Property(c => c.NameEn).HasColumnName("NAME_EN").HasMaxLength(200).IsRequired();
@@ -57,7 +56,6 @@ public sealed class PublicHolidayConfiguration : IEntityTypeConfiguration<Public
         builder.HasKey(h => h.Id);
         builder.Property(h => h.Id).HasColumnName("ID").ValueGeneratedOnAdd();
 
-        builder.Property(h => h.CompanyId).HasColumnName("COMPANY_ID").IsRequired();
         builder.Property(h => h.BranchId).HasColumnName("BRANCH_ID");
         builder.Property(h => h.NameAr).HasColumnName("NAME_AR").HasMaxLength(200).IsRequired();
         builder.Property(h => h.NameEn).HasColumnName("NAME_EN").HasMaxLength(200).IsRequired();

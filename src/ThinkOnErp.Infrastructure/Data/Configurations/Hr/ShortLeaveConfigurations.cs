@@ -12,7 +12,6 @@ public sealed class ShortLeavePolicyConfiguration : IEntityTypeConfiguration<Sho
 
         builder.HasKey(p => p.Id);
         builder.Property(p => p.Id).HasColumnName("ID").ValueGeneratedOnAdd();
-        builder.Property(p => p.CompanyId).HasColumnName("COMPANY_ID").IsRequired();
         builder.Property(p => p.MonthlyPaidMinutesQuota).HasColumnName("MONTHLY_PAID_MINUTES_QUOTA").IsRequired();
         builder.Property(p => p.MaxMinutesPerRequest).HasColumnName("MAX_MINUTES_PER_REQUEST").IsRequired();
         builder.Property(p => p.AllowMiddayExit).HasColumnName("ALLOW_MIDDAY_EXIT").IsRequired();
@@ -26,7 +25,6 @@ public sealed class ShortLeavePolicyConfiguration : IEntityTypeConfiguration<Sho
         builder.Property(p => p.UpdateUser).HasColumnName("UPDATE_USER").HasMaxLength(100);
         builder.Property(p => p.UpdateDate).HasColumnName("UPDATE_DATE");
 
-        builder.HasIndex(p => p.CompanyId).HasDatabaseName("IX_HR_SHORT_LEAVE_POLICY_COMP");
     }
 }
 
@@ -38,7 +36,6 @@ public sealed class ShortLeaveRequestConfiguration : IEntityTypeConfiguration<Sh
 
         builder.HasKey(r => r.Id);
         builder.Property(r => r.Id).HasColumnName("ID").ValueGeneratedOnAdd();
-        builder.Property(r => r.CompanyId).HasColumnName("COMPANY_ID").IsRequired();
         builder.Property(r => r.BranchId).HasColumnName("BRANCH_ID");
         builder.Property(r => r.EmployeeCode).HasColumnName("EMPLOYEE_CODE").HasMaxLength(50).IsRequired();
 
@@ -77,7 +74,7 @@ public sealed class ShortLeaveRequestConfiguration : IEntityTypeConfiguration<Sh
             .HasConstraintName("FK_HR_SHORT_LEAVE_EMPLOYEE");
 
         builder.HasIndex(r => new { r.EmployeeCode, r.PermissionDate }).HasDatabaseName("IX_HR_SHORT_LEAVE_EMP_DATE");
-        builder.HasIndex(r => new { r.CompanyId, r.Status }).HasDatabaseName("IX_HR_SHORT_LEAVE_COMP_STAT");
+        builder.HasIndex(r => r.Status).HasDatabaseName("IX_HR_SHORT_LEAVE_STATUS");
     }
 }
 

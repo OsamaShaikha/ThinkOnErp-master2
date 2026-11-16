@@ -25,10 +25,10 @@ public sealed partial class EmployeeRepository
         // root branch is now hidden. Return only blocking facts, never run data.
         var approved=_context.PayrollRuns.IgnoreQueryFilters().AsNoTracking().Where(r=>(r.Status=="APPROVED" || r.Status=="POSTED_TO_GL" || r.Status=="PAID") &&
             (existing!=null && r.Lines.Any(l=>l.EmployeeCode==employeeCode) || r.BranchId.HasValue && ids.Contains(r.BranchId.Value)));
-        var periods=await _context.PayrollPeriods.AsNoTracking().Where(p=>p.CompanyId==_context.HrScopeCompanyId && p.EndDate>=from.Date)
+        var periods=await _context.PayrollPeriods.AsNoTracking().Where(p=>p.EndDate>=from.Date)
             .OrderBy(p=>p.StartDate).ThenBy(p=>p.PeriodCode)
             .Select(p=>new EmployeeImportPeriodImpact(p.PeriodCode,p.StartDate,p.EndDate,p.Status,approved.Any(r=>r.PayPeriod==p.PeriodCode))).ToListAsync(cancellationToken);
-        var unmapped=await approved.AnyAsync(r=>!_context.PayrollPeriods.Any(p=>p.CompanyId==_context.HrScopeCompanyId && p.PeriodCode==r.PayPeriod),cancellationToken);
+        var unmapped=await approved.AnyAsync(r=>!_context.PayrollPeriods.Any(p=>p.PeriodCode==r.PayPeriod),cancellationToken);
         return new(periods,unmapped);
     }
 }

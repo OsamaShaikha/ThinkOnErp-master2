@@ -17,7 +17,7 @@ public sealed class AttendanceBranchRepository(OracleDbContext db) : IAttendance
     public async Task<SysBranch?> GetAsync(long id, CancellationToken ct = default)
     {
         var branch = await Allowed().SingleOrDefaultAsync(b => b.Id == id, ct);
-        if (branch != null) Apply(branch, await db.Set<BranchAttendanceLocation>().AsNoTracking().SingleOrDefaultAsync(l => l.BranchId == id && l.CompanyId == db.HrScopeCompanyId, ct));
+        if (branch != null) Apply(branch, (await db.Set<BranchAttendanceLocation>().AsNoTracking().SingleOrDefaultAsync(l => l.BranchId == id, ct))?.Stamp(db.HrScopeCompanyId));
         return branch;
     }
     private static void Apply(SysBranch branch, BranchAttendanceLocation? location)
@@ -28,7 +28,7 @@ public sealed class AttendanceBranchRepository(OracleDbContext db) : IAttendance
     public async Task<BranchAttendanceLocation?> GetLocationAsync(long branchId, CancellationToken ct = default)
     {
         if (!await Allowed().AnyAsync(b => b.Id == branchId && b.IsActive, ct)) throw new KeyNotFoundException("Branch not found in current HR scope.");
-        return await db.Set<BranchAttendanceLocation>().AsNoTracking().SingleOrDefaultAsync(l => l.BranchId == branchId && l.CompanyId == db.HrScopeCompanyId, ct);
+        return (await db.Set<BranchAttendanceLocation>().AsNoTracking().SingleOrDefaultAsync(l => l.BranchId == branchId, ct))?.Stamp(db.HrScopeCompanyId);
     }
     public async Task<BranchAttendanceLocation> SaveLocationAsync(BranchAttendanceLocation value, string? expectedVersion, string user, CancellationToken ct = default)
     {
@@ -56,10 +56,10 @@ public sealed class AttendanceBranchRepository(OracleDbContext db) : IAttendance
             }
             else
             {
-                if (current.CompanyId != db.HrScopeCompanyId) throw new UnauthorizedAccessException("Location belongs to another company.");
                 current.Latitude = value.Latitude; current.Longitude = value.Longitude; current.RadiusMeters = value.RadiusMeters; current.EnforceGeofence = value.EnforceGeofence;
                 current.UpdateUser = user; current.UpdateDate = DateTime.UtcNow;
             }
+            current.Stamp(db.HrScopeCompanyId);
             await db.SaveChangesAsync(ct); if (owned != null) await owned.CommitAsync(ct); return current;
         }
         catch { if (owned != null) { await owned.RollbackAsync(ct); db.ChangeTracker.Clear(); } throw; }
@@ -69,8 +69,9 @@ public sealed class AttendanceBranchRepository(OracleDbContext db) : IAttendance
         if (companyId.HasValue && companyId != db.HrScopeCompanyId) throw new UnauthorizedAccessException("Requested company is outside the current HR scope.");
         var branches = await Allowed().Where(b => b.IsActive).OrderBy(b => b.Id).ToListAsync(ct);
         var ids = branches.Select(b => b.Id).ToArray();
-        var locations = await db.Set<BranchAttendanceLocation>().AsNoTracking().Where(l => l.CompanyId == db.HrScopeCompanyId && ids.Contains(l.BranchId)).ToDictionaryAsync(l => l.BranchId, ct);
+        var locations = await db.Set<BranchAttendanceLocation>().AsNoTracking().Where(l => ids.Contains(l.BranchId)).ToDictionaryAsync(l => l.BranchId, ct);
         foreach (var branch in branches) Apply(branch, locations.GetValueOrDefault(branch.Id));
+        foreach (var location in locations.Values) location.Stamp(db.HrScopeCompanyId);
         return branches;
     }
 }

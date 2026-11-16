@@ -12,7 +12,6 @@ public sealed class OvertimeRuleConfiguration : IEntityTypeConfiguration<Overtim
         builder.HasKey(r => r.Id);
         builder.Property(r => r.Id).HasColumnName("ID").ValueGeneratedOnAdd();
 
-        builder.Property(r => r.CompanyId).HasColumnName("COMPANY_ID").IsRequired();
         builder.Property(r => r.Code).HasColumnName("CODE").HasMaxLength(50).IsRequired();
         builder.Property(r => r.NameAr).HasColumnName("NAME_AR").HasMaxLength(200).IsRequired();
         builder.Property(r => r.NameEn).HasColumnName("NAME_EN").HasMaxLength(200).IsRequired();
@@ -41,7 +40,6 @@ public sealed class ProrationPolicyConfiguration : IEntityTypeConfiguration<Pror
         builder.HasKey(p => p.Id);
         builder.Property(p => p.Id).HasColumnName("ID").ValueGeneratedOnAdd();
 
-        builder.Property(p => p.CompanyId).HasColumnName("COMPANY_ID").IsRequired();
         builder.Property(p => p.Code).HasColumnName("CODE").HasMaxLength(50).IsRequired();
         builder.Property(p => p.NameAr).HasColumnName("NAME_AR").HasMaxLength(200).IsRequired();
         builder.Property(p => p.NameEn).HasColumnName("NAME_EN").HasMaxLength(200).IsRequired();
@@ -67,7 +65,6 @@ public sealed class DeductionPolicyConfiguration : IEntityTypeConfiguration<Dedu
         builder.HasKey(p => p.Id);
         builder.Property(p => p.Id).HasColumnName("ID").ValueGeneratedOnAdd();
 
-        builder.Property(p => p.CompanyId).HasColumnName("COMPANY_ID").IsRequired();
         builder.Property(p => p.Code).HasColumnName("CODE").HasMaxLength(50).IsRequired();
         builder.Property(p => p.NameAr).HasColumnName("NAME_AR").HasMaxLength(200).IsRequired();
         builder.Property(p => p.NameEn).HasColumnName("NAME_EN").HasMaxLength(200).IsRequired();
@@ -95,7 +92,6 @@ public sealed class TaxPolicyConfiguration : IEntityTypeConfiguration<TaxPolicy>
         builder.HasKey(t => t.Id);
         builder.Property(t => t.Id).HasColumnName("ID").ValueGeneratedOnAdd();
 
-        builder.Property(t => t.CompanyId).HasColumnName("COMPANY_ID").IsRequired();
         builder.Property(t => t.Code).HasColumnName("CODE").HasMaxLength(50).IsRequired();
         builder.Property(t => t.NameAr).HasColumnName("NAME_AR").HasMaxLength(200).IsRequired();
         builder.Property(t => t.NameEn).HasColumnName("NAME_EN").HasMaxLength(200).IsRequired();
@@ -146,7 +142,6 @@ public sealed class SSCPolicyConfiguration : IEntityTypeConfiguration<SSCPolicy>
         builder.HasKey(s => s.Id);
         builder.Property(s => s.Id).HasColumnName("ID").ValueGeneratedOnAdd();
 
-        builder.Property(s => s.CompanyId).HasColumnName("COMPANY_ID").IsRequired();
         builder.Property(s => s.Code).HasColumnName("CODE").HasMaxLength(50).IsRequired();
         builder.Property(s => s.NameAr).HasColumnName("NAME_AR").HasMaxLength(200).IsRequired();
         builder.Property(s => s.NameEn).HasColumnName("NAME_EN").HasMaxLength(200).IsRequired();

@@ -12,7 +12,6 @@ public sealed class AttendancePolicyConfiguration : IEntityTypeConfiguration<Att
         builder.HasKey(p => p.Id);
         builder.Property(p => p.Id).HasColumnName("ID").ValueGeneratedOnAdd();
 
-        builder.Property(p => p.CompanyId).HasColumnName("COMPANY_ID").IsRequired();
         builder.Property(p => p.Code).HasColumnName("CODE").HasMaxLength(50).IsRequired();
         builder.Property(p => p.NameAr).HasColumnName("NAME_AR").HasMaxLength(200).IsRequired();
         builder.Property(p => p.NameEn).HasColumnName("NAME_EN").HasMaxLength(200).IsRequired();

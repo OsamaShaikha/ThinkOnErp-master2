@@ -8,6 +8,7 @@ namespace ThinkOnErp.Domain.Entities.Hr;
 public sealed class HrAccountingHandoff
 {
     public long Id { get; set; }
+    [System.ComponentModel.DataAnnotations.Schema.NotMapped]
     public long CompanyId { get; set; }
     public long? BranchId { get; set; }
     public string SourceType { get; set; } = string.Empty; // PAYROLL, LOAN, ADVANCE
@@ -155,6 +156,7 @@ public sealed class AccountingLoanFundingReceipt
 public sealed class PayrollPeriod
 {
     public long Id { get; set; }
+    [System.ComponentModel.DataAnnotations.Schema.NotMapped]
     public long CompanyId { get; set; }
     public string PeriodCode { get; set; } = string.Empty; // e.g. "2026-09"
     public string NameAr { get; set; } = string.Empty;

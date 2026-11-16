@@ -12,7 +12,6 @@ public sealed class EndOfServiceSettlementConfiguration : IEntityTypeConfigurati
         builder.HasKey(s => s.Id);
         builder.Property(s => s.Id).HasColumnName("ID").ValueGeneratedOnAdd();
 
-        builder.Property(s => s.CompanyId).HasColumnName("COMPANY_ID").IsRequired();
         builder.Property(s => s.BranchId).HasColumnName("BRANCH_ID");
         builder.Property(s => s.EmployeeCode).HasColumnName("EMPLOYEE_CODE").HasMaxLength(100).IsRequired();
 
@@ -71,7 +70,7 @@ public sealed class EndOfServiceSettlementConfiguration : IEntityTypeConfigurati
             .OnDelete(DeleteBehavior.Restrict)
             .HasConstraintName("FK_HR_EOS_EMPLOYEE");
 
-        builder.HasIndex(s => new { s.CompanyId, s.EmployeeCode, s.Status }).HasDatabaseName("IX_HR_EOS_EMP_STATUS");
+        builder.HasIndex(s => new { s.EmployeeCode, s.Status }).HasDatabaseName("IX_HR_EOS_EMP_STATUS");
     }
 }
 
@@ -101,7 +100,6 @@ public sealed class EndOfServicePolicyConfiguration : IEntityTypeConfiguration<E
         builder.HasKey(p => p.Id);
         builder.Property(p => p.Id).HasColumnName("ID").ValueGeneratedOnAdd();
 
-        builder.Property(p => p.CompanyId).HasColumnName("COMPANY_ID").IsRequired();
         builder.Property(p => p.EffectiveFrom).HasColumnName("EFFECTIVE_FROM");
         builder.Property(p => p.EffectiveTo).HasColumnName("EFFECTIVE_TO");
         builder.Property(p => p.PolicyName).HasColumnName("POLICY_NAME").HasMaxLength(200).IsRequired();
@@ -124,7 +122,7 @@ public sealed class EndOfServicePolicyConfiguration : IEntityTypeConfiguration<E
         builder.Property(p => p.UpdateUser).HasColumnName("UPDATE_USER").HasMaxLength(200);
         builder.Property(p => p.UpdateDate).HasColumnName("UPDATE_DATE");
 
-        builder.HasIndex(p => new { p.CompanyId, p.IsActive }).HasDatabaseName("IX_HR_EOS_POL_COMP");
+        builder.HasIndex(p => p.IsActive).HasDatabaseName("IX_HR_EOS_POL_ACTIVE");
     }
 }
 

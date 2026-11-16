@@ -97,3 +97,67 @@ public record AttendanceMonthSummaryDto(
     int TotalLateMinutes,
     decimal TotalWorkedHours,
     decimal TotalOvertimeHours);
+
+public record RawPunchInputDto(
+    string EmployeeCode,
+    DateTime PunchTime,
+    string PunchType,
+    string? DeviceId,
+    string? Source
+);
+
+public record AttendanceCorrectionRequestDto(
+    string EmployeeCode,
+    DateTime AttendanceDate,
+    DateTime? RequestedCheckIn,
+    DateTime? RequestedCheckOut,
+    string Reason
+);
+
+public record ProcessAttendanceCorrectionDto(
+    bool Approved,
+    string? RejectionReason
+);
+
+public record DailyAttendanceSummaryDto(
+    string EmployeeCode,
+    string EmployeeName,
+    DateTime Date,
+    decimal ScheduledHours,
+    decimal ActualWorkedHours,
+    int LateArrivalMinutes,
+    int EarlyLeaveMinutes,
+    decimal OvertimeHours,
+    string Status,
+    bool HasMissingPunch
+);
+
+public record AttendancePolicyDto(
+    long CompanyId,
+    string Code,
+    string NameAr,
+    string NameEn,
+    DateTime EffectiveFrom,
+    DateTime? EffectiveTo,
+    int GracePeriodMinutes,
+    int EarlyLeaveToleranceMinutes,
+    int MinMinutesForOvertime,
+    bool AutoDeductLateArrival,
+    string MissingPunchHandling,
+    bool IsDefault
+);
+
+public sealed record CreateAttendancePolicyDto(
+    string Code, string NameAr, string NameEn, DateTime EffectiveFrom, DateTime? EffectiveTo,
+    int GracePeriodMinutes, int EarlyLeaveToleranceMinutes, int MinMinutesForOvertime,
+    bool AutoDeductLateArrival, string MissingPunchHandling, bool AllowMultipleSessions,
+    bool IsDefault, bool EnforceGeofence, int DefaultAllowedRadiusMeters,
+    string GeofenceViolationAction, bool AllowAnyBranchPunch);
+
+public record InitializeAttendanceTimeDto(string TimeZoneId);
+
+public record DeviceAttendanceDto(string EmployeeCode, string OccurredAt, string PunchType, string DeviceId, string EventId, string Source = "BIOMETRIC");
+
+public record ProcessRawBatchDto(int Size = 100);
+
+public record IgnoreRawAttendanceDto(string Reason);

@@ -122,10 +122,9 @@ public sealed class EndOfServiceRepository : IEndOfServiceRepository, IEndOfServ
 
     public async Task<IReadOnlyList<EndOfServiceSettlement>> GetListAsync(long companyId, long? branchId = null, string? status = null, CancellationToken cancellationToken = default)
     {
-        var query = _context.EndOfServiceSettlements
+        IQueryable<EndOfServiceSettlement> query = _context.EndOfServiceSettlements
             .Include(s => s.Lines)
-            .Include(s => s.Employee)
-            .Where(s => s.CompanyId == companyId);
+            .Include(s => s.Employee);
 
         if (branchId.HasValue)
             query = query.Where(s => s.BranchId == branchId.Value);
@@ -133,26 +132,26 @@ public sealed class EndOfServiceRepository : IEndOfServiceRepository, IEndOfServ
         if (!string.IsNullOrWhiteSpace(status))
             query = query.Where(s => s.Status == status);
 
-        return await query.OrderByDescending(s => s.Id).ToListAsync(cancellationToken);
+        return (await query.OrderByDescending(s => s.Id).ToListAsync(cancellationToken)).StampAll(companyId);
     }
 
     public async Task<EndOfServicePolicy?> GetActivePolicyAsync(long companyId, DateTime effectiveDate, CancellationToken cancellationToken = default)
     {
-        return await _context.EndOfServicePolicies
-            .Where(p => p.CompanyId == companyId && (p.IsActive || p.EffectiveTo.HasValue) &&
+        return (await _context.EndOfServicePolicies
+            .Where(p => (p.IsActive || p.EffectiveTo.HasValue) &&
                 (!p.EffectiveFrom.HasValue || p.EffectiveFrom.Value <= effectiveDate) &&
                 (!p.EffectiveTo.HasValue || p.EffectiveTo.Value >= effectiveDate))
             .OrderByDescending(p => p.EffectiveFrom)
             .ThenByDescending(p => p.Id)
-            .FirstOrDefaultAsync(cancellationToken);
+            .FirstOrDefaultAsync(cancellationToken))?.Stamp(companyId);
     }
 
     public Task<EndOfServicePolicy?> GetActivePolicyAsync(long companyId, CancellationToken cancellationToken = default)
         => GetActivePolicyAsync(companyId, DateTime.UtcNow, cancellationToken);
 
     public async Task<IReadOnlyList<EndOfServicePolicy>> GetPoliciesAsync(long companyId, CancellationToken cancellationToken = default)
-        => await _context.EndOfServicePolicies.Where(p => p.CompanyId == companyId)
-            .OrderByDescending(p => p.EffectiveFrom).ThenByDescending(p => p.Id).ToListAsync(cancellationToken);
+        => (await _context.EndOfServicePolicies
+            .OrderByDescending(p => p.EffectiveFrom).ThenByDescending(p => p.Id).ToListAsync(cancellationToken)).StampAll(companyId);
 
     public async Task AddPolicyAsync(EndOfServicePolicy policy, CancellationToken cancellationToken = default)
         => await _context.EndOfServicePolicies.AddAsync(policy, cancellationToken);

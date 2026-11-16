@@ -12,7 +12,6 @@ public sealed class HrAccountingHandoffConfiguration : IEntityTypeConfiguration<
         b.ToTable("HR_ACCOUNTING_HANDOFF");
         b.HasKey(x => x.Id);
         b.Property(x => x.Id).HasColumnName("ID").ValueGeneratedOnAdd();
-        b.Property(x => x.CompanyId).HasColumnName("COMPANY_ID").IsRequired();
         b.Property(x => x.BranchId).HasColumnName("BRANCH_ID");
         b.Property(x => x.SourceType).HasColumnName("SOURCE_TYPE").HasMaxLength(20).IsRequired();
         b.Property(x => x.SourceId).HasColumnName("SOURCE_ID").HasMaxLength(100).IsRequired();
@@ -25,8 +24,8 @@ public sealed class HrAccountingHandoffConfiguration : IEntityTypeConfiguration<
         b.Property(x => x.DeliveryStatus).HasColumnName("DELIVERY_STATUS").HasMaxLength(20).IsRequired().IsConcurrencyToken();
         b.Property(x => x.CreatedAtUtc).HasColumnName("CREATED_AT_UTC").IsRequired();
         b.Property(x => x.CreatedBy).HasColumnName("CREATED_BY").HasMaxLength(200).IsRequired();
-        b.HasIndex(x => new { x.CompanyId, x.SourceType, x.SourceId, x.SourceVersion, x.Operation }).IsUnique().HasDatabaseName("UX_HR_HANDOFF_SOURCE");
-        b.HasIndex(x => new { x.CompanyId, x.HandoffReference }).IsUnique().HasDatabaseName("UX_HR_HANDOFF_REF");
+        b.HasIndex(x => new { x.SourceType, x.SourceId, x.SourceVersion, x.Operation }).IsUnique().HasDatabaseName("UX_HR_HANDOFF_SOURCE");
+        b.HasIndex(x => x.HandoffReference).IsUnique().HasDatabaseName("UX_HR_HANDOFF_REF");
         b.HasMany(x => x.Lines).WithOne(x => x.Handoff).HasForeignKey(x => x.HandoffId).OnDelete(DeleteBehavior.Restrict).HasConstraintName("FK_HR_HANDOFF_LINE");
         b.HasMany(x => x.Transitions).WithOne(x => x.Handoff).HasForeignKey(x => x.HandoffId).OnDelete(DeleteBehavior.Restrict).HasConstraintName("FK_HR_HANDOFF_TRANS");
     }

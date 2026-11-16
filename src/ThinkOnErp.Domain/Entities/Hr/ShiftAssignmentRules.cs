@@ -4,7 +4,8 @@ namespace ThinkOnErp.Domain.Entities.Hr;
 
 public readonly record struct HrDateRange(DateTime Start, DateTime End);
 
-public sealed class ShiftAssignmentVersionConflictException() : InvalidOperationException("Shift assignment version changed. Read it again before editing.");
+public sealed class ShiftAssignmentVersionConflictException(string? message = null)
+    : InvalidOperationException(message ?? "Shift assignment version changed. Read it again before editing.");
 
 public static class ShiftAssignmentRules
 {

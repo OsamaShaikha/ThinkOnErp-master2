@@ -6,6 +6,7 @@ namespace ThinkOnErp.Domain.Entities.Hr;
 public sealed class OvertimeRule
 {
     public long Id { get; set; }
+    [System.ComponentModel.DataAnnotations.Schema.NotMapped]
     public long CompanyId { get; set; }
     public string Code { get; set; } = string.Empty;
     public string NameAr { get; set; } = string.Empty;
@@ -29,6 +30,7 @@ public sealed class OvertimeRule
 public sealed class ProrationPolicy
 {
     public long Id { get; set; }
+    [System.ComponentModel.DataAnnotations.Schema.NotMapped]
     public long CompanyId { get; set; }
     public string Code { get; set; } = string.Empty;
     public string NameAr { get; set; } = string.Empty;
@@ -49,6 +51,7 @@ public sealed class ProrationPolicy
 public sealed class DeductionPolicy
 {
     public long Id { get; set; }
+    [System.ComponentModel.DataAnnotations.Schema.NotMapped]
     public long CompanyId { get; set; }
     public string Code { get; set; } = string.Empty;
     public string NameAr { get; set; } = string.Empty;
@@ -71,6 +74,7 @@ public sealed class DeductionPolicy
 public sealed class TaxPolicy
 {
     public long Id { get; set; }
+    [System.ComponentModel.DataAnnotations.Schema.NotMapped]
     public long CompanyId { get; set; }
     public string Code { get; set; } = string.Empty;
     public string NameAr { get; set; } = string.Empty;
@@ -111,6 +115,7 @@ public sealed class TaxBracket
 public sealed class SSCPolicy
 {
     public long Id { get; set; }
+    [System.ComponentModel.DataAnnotations.Schema.NotMapped]
     public long CompanyId { get; set; }
     public string Code { get; set; } = string.Empty;
     public string NameAr { get; set; } = string.Empty;

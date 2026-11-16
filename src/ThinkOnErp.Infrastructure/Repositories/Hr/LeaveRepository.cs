@@ -455,7 +455,9 @@ public sealed partial class LeaveRepository : ILeaveRepository
         => await _context.LeaveYearCloses.AsNoTracking().Include(c => c.Lines).FirstOrDefaultAsync(c => c.Id == id, cancellationToken);
 
     public async Task<PayrollPeriod?> GetPayrollPeriodForLeaveCashoutAsync(string payPeriod, CancellationToken cancellationToken = default)
-        => await _context.PayrollPeriods.AsNoTracking().SingleOrDefaultAsync(p => p.PeriodCode == payPeriod, cancellationToken);
+        => await _context.PayrollPeriods.AsNoTracking().SingleOrDefaultAsync(
+            p => p.PeriodCode == payPeriod,
+            cancellationToken);
 
     public async Task<LeaveCashoutSettlement?> GetLeaveCashoutSettlementAsync(long id, CancellationToken cancellationToken = default)
         => await _context.LeaveCashoutSettlements.AsNoTracking().Include(s => s.Lines).FirstOrDefaultAsync(s => s.Id == id, cancellationToken);
@@ -539,7 +541,7 @@ public sealed partial class LeaveRepository : ILeaveRepository
             {
                 var adjustment = new PayrollAdjustment
                 {
-                    CompanyId = period.CompanyId,
+                    CompanyId = _context.HrScopeCompanyId,
                     EmployeeCode = line.EmployeeCode,
                     PayPeriod = settlement.PayPeriod,
                     ComponentCode = settlement.PayComponentCode,
@@ -627,18 +629,22 @@ public sealed partial class LeaveRepository : ILeaveRepository
             var settlement = await _context.LeaveCashoutSettlements.Include(s => s.Lines)
                 .ThenInclude(line => line.PayrollAdjustment).SingleOrDefaultAsync(s => s.Id == id, cancellationToken);
             if (settlement == null) { await transaction.RollbackAsync(cancellationToken); return null; }
+            if (!_context.HrScopeEnabled || _context.HrScopeCompanyId <= 0)
+                throw new InvalidOperationException("A company HR scope is required before transitioning a leave cashout settlement.");
             await using (var command = connection.CreateCommand())
             {
                 command.Transaction = transaction.GetDbTransaction();
                 command.CommandText = "SELECT ID FROM HR_PAYROLL_PERIOD WHERE PERIOD_CODE=:periodCode ORDER BY ID FOR UPDATE";
-                var parameter = command.CreateParameter(); parameter.ParameterName = "periodCode"; parameter.Value = settlement.PayPeriod;
-                command.Parameters.Add(parameter);
+                var periodParameter = command.CreateParameter(); periodParameter.ParameterName = "periodCode"; periodParameter.Value = settlement.PayPeriod;
+                command.Parameters.Add(periodParameter);
                 var found = false;
                 await using var reader = await command.ExecuteReaderAsync(cancellationToken);
                 while (await reader.ReadAsync(cancellationToken)) found = true;
                 if (!found) throw new InvalidOperationException("The payroll period must exist before a cashout transition.");
             }
-            var period = await _context.PayrollPeriods.SingleOrDefaultAsync(p => p.PeriodCode == settlement.PayPeriod, cancellationToken)
+            var period = await _context.PayrollPeriods.SingleOrDefaultAsync(
+                p => p.PeriodCode == settlement.PayPeriod,
+                cancellationToken)
                 ?? throw new InvalidOperationException("The payroll period is missing from the current company scope.");
             string? closeStatus;
             await using (var command = connection.CreateCommand())

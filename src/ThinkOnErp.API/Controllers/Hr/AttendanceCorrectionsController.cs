@@ -2,15 +2,17 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Logging;
 using ThinkOnErp.API.Authorization;
 using ThinkOnErp.API.Swagger;
 using ThinkOnErp.Application.Common;
 using ThinkOnErp.Application.DTOs.Hr;
-using ThinkOnErp.Application.Services.Hr;
+using ThinkOnErp.Application.Features.Hr.Attendance.Commands.ProcessAttendanceCorrection;
+using ThinkOnErp.Application.Features.Hr.Attendance.Commands.SubmitAttendanceCorrection;
+using ThinkOnErp.Application.Features.Hr.Attendance.Queries.GetAttendanceCorrections;
 using ThinkOnErp.Domain.Entities.Hr;
 
 namespace ThinkOnErp.API.Controllers.Hr;
@@ -20,17 +22,13 @@ namespace ThinkOnErp.API.Controllers.Hr;
 [ApiExplorerSettings(GroupName = ApiCategories.Hr)]
 [TenantScoped]
 [Authorize]
-public sealed class AttendanceCorrectionsController : ControllerBase
+public sealed class AttendanceCorrectionsController : HrControllerBase
 {
-    private readonly IAttendanceCorrectionService _correctionService;
-    private readonly ILogger<AttendanceCorrectionsController> _logger;
+    private readonly IMediator _mediator;
 
-    public AttendanceCorrectionsController(
-        IAttendanceCorrectionService correctionService,
-        ILogger<AttendanceCorrectionsController> logger)
+    public AttendanceCorrectionsController(IMediator mediator)
     {
-        _correctionService = correctionService;
-        _logger = logger;
+        _mediator = mediator ?? throw new ArgumentNullException(nameof(mediator));
     }
 
     [HttpPost]
@@ -39,11 +37,7 @@ public sealed class AttendanceCorrectionsController : ControllerBase
     public async Task<ActionResult<ApiResponse<AttendanceCorrectionRequest>>> SubmitCorrection(
         [FromBody] AttendanceCorrectionRequestDto dto,
         CancellationToken cancellationToken)
-    {
-        var user = User.Identity?.Name ?? "SYSTEM";
-        var result = await _correctionService.SubmitRequestAsync(dto, user, cancellationToken);
-        return Ok(ApiResponse<AttendanceCorrectionRequest>.CreateSuccess(result, "Correction request submitted successfully."));
-    }
+        => FromResponse(await _mediator.Send(new SubmitAttendanceCorrectionCommand(dto, CurrentUsername), cancellationToken));
 
     [HttpPost("{id:long}/process")]
     [ProducesResponseType(typeof(ApiResponse<AttendanceCorrectionRequest>), StatusCodes.Status409Conflict)]
@@ -53,13 +47,7 @@ public sealed class AttendanceCorrectionsController : ControllerBase
         long id,
         [FromBody] ProcessAttendanceCorrectionDto dto,
         CancellationToken cancellationToken)
-    {
-        var user = User.Identity?.Name ?? "SYSTEM";
-        AttendanceCorrectionRequest result;
-        try { result = await _correctionService.ProcessRequestAsync(id, dto, user, cancellationToken); }
-        catch (AttendanceCorrectionStaleException ex) { return Conflict(ApiResponse<AttendanceCorrectionRequest>.CreateFailure(ex.Message, statusCode: 409)); }
-        return Ok(ApiResponse<AttendanceCorrectionRequest>.CreateSuccess(result, "Correction request processed successfully."));
-    }
+        => FromResponse(await _mediator.Send(new ProcessAttendanceCorrectionCommand(id, dto, CurrentUsername), cancellationToken));
 
     [HttpGet]
     [ProducesResponseType(typeof(ApiResponse<IReadOnlyList<AttendanceCorrectionRequest>>), StatusCodes.Status200OK)]
@@ -68,8 +56,5 @@ public sealed class AttendanceCorrectionsController : ControllerBase
         [FromQuery] string? employeeCode,
         [FromQuery] string? status,
         CancellationToken cancellationToken)
-    {
-        var result = await _correctionService.GetRequestsAsync(employeeCode, status, cancellationToken);
-        return Ok(ApiResponse<IReadOnlyList<AttendanceCorrectionRequest>>.CreateSuccess(result, "Correction requests retrieved."));
-    }
+        => FromResponse(await _mediator.Send(new GetAttendanceCorrectionsQuery(employeeCode, status), cancellationToken));
 }

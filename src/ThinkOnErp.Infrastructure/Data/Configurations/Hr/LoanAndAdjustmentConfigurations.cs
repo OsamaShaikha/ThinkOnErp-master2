@@ -105,7 +105,6 @@ public sealed class PayrollAdjustmentConfiguration : IEntityTypeConfiguration<Pa
         builder.HasKey(a => a.Id);
         builder.Property(a => a.Id).HasColumnName("ID").ValueGeneratedOnAdd();
 
-        builder.Property(a => a.CompanyId).HasColumnName("COMPANY_ID").IsRequired();
         builder.Property(a => a.EmployeeCode).HasColumnName("EMPLOYEE_CODE").HasMaxLength(100).IsRequired();
         builder.Property(a => a.PayPeriod).HasColumnName("PAY_PERIOD").HasMaxLength(40).IsRequired();
         builder.Property(a => a.ComponentCode).HasColumnName("COMPONENT_CODE").HasMaxLength(100).IsRequired();
@@ -124,7 +123,7 @@ public sealed class PayrollAdjustmentConfiguration : IEntityTypeConfiguration<Pa
         builder.Property(a => a.Status).HasColumnName("STATUS").HasMaxLength(20).IsRequired().IsConcurrencyToken();
         builder.Property(a => a.PayrollRunLineId).HasColumnName("PAYROLL_RUN_LINE_ID").IsConcurrencyToken();
 
-        builder.HasIndex(a => new { a.CompanyId, a.SourceType, a.SourceId })
+        builder.HasIndex(a => new { a.SourceType, a.SourceId })
             .IsUnique()
             .HasDatabaseName("UX_HR_ADJ_SOURCE");
 

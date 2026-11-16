@@ -15,8 +15,7 @@ internal static class PayrollCalculationAdjustmentQuery
         long companyId,
         string payPeriod)
     {
-        var approved = db.PayrollAdjustments.Where(a => a.CompanyId == companyId &&
-            a.PayPeriod == payPeriod && a.Status == "APPROVED");
+        var approved = db.PayrollAdjustments.Where(a => a.PayPeriod == payPeriod && a.Status == "APPROVED");
 
         var correctionCashouts =
             from adjustment in db.PayrollAdjustments
@@ -24,7 +23,7 @@ internal static class PayrollCalculationAdjustmentQuery
             join settlement in db.LeaveCashoutSettlements on cashoutLine.SettlementId equals settlement.Id
             join payrollLine in db.PayrollRunLines on adjustment.PayrollRunLineId equals (long?)payrollLine.Id
             join payrollRun in db.PayrollRuns on payrollLine.PayrollRunId equals payrollRun.Id
-            where adjustment.CompanyId == companyId && adjustment.PayPeriod == payPeriod &&
+            where adjustment.PayPeriod == payPeriod &&
                 adjustment.Status == "PROCESSED" && settlement.Status == "POSTED" &&
                 payrollRun.Status == "SUPERSEDED"
             select adjustment;

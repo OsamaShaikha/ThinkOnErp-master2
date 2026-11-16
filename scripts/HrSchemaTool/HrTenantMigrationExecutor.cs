@@ -5,9 +5,9 @@ using Oracle.ManagedDataAccess.Client;
 
 internal static class HrTenantMigrationExecutor
 {
-    private const string BackupFolderName = "20261114220934";
-    private const string ScriptName = "hr-tenant-migrations-37-offline.sql";
-    private const int ExpectedMigrationCount = 37;
+    private const string ScriptName = "hr-tenant-migrations-41-offline.sql";
+    private const int ExpectedMigrationCount = 41;
+    private const int ExpectedBlockCount = 127;
 
     private sealed record BackupManifest(string Schema, DateTime CapturedUtc, string Dump, string Log, long Bytes, string SHA256, string ExportState);
 
@@ -17,7 +17,12 @@ internal static class HrTenantMigrationExecutor
         if (session.Count != 1 || session[0][1] != "DEV_TEMPLATE")
             throw new InvalidOperationException("Tenant migration application requires CURRENT_SCHEMA=DEV_TEMPLATE.");
 
-        var backupDirectory = Path.Combine(root, "artifacts", "hr-audit", "backups", BackupFolderName);
+        var backupRoot = Path.Combine(root, "artifacts", "hr-audit", "backups");
+        var backupDirectory = Directory.GetDirectories(backupRoot)
+            .Where(path => Regex.IsMatch(Path.GetFileName(path), @"^\d{14}$"))
+            .OrderByDescending(Path.GetFileName, StringComparer.Ordinal)
+            .FirstOrDefault()
+            ?? throw new InvalidOperationException("A fresh DEV_TEMPLATE backup is required before migration DDL.");
         var manifestPath = Path.Combine(backupDirectory, "manifest.json");
         var manifest = JsonSerializer.Deserialize<BackupManifest>(await File.ReadAllTextAsync(manifestPath))
             ?? throw new InvalidOperationException("The approved DEV_TEMPLATE backup manifest is invalid.");
@@ -45,7 +50,7 @@ internal static class HrTenantMigrationExecutor
             .Select(path => (Path: path, Match: Regex.Match(File.ReadAllText(path), "\\[Migration\\(\"([^\"]+)\"\\)\\]")))
             .Where(item => item.Match.Success)
             .Select(item => item.Match.Groups[1].Value)
-            .Where(id => id.Length >= 14 && string.CompareOrdinal(id[..14], "20261113183000") >= 0 && string.CompareOrdinal(id[..14], "20261115002000") <= 0)
+            .Where(id => id.Length >= 14 && string.CompareOrdinal(id[..14], "20261113183000") >= 0 && string.CompareOrdinal(id[..14], "20261115002400") <= 0)
             .Distinct(StringComparer.Ordinal).Order(StringComparer.Ordinal).ToArray();
         if (targetIds.Length != ExpectedMigrationCount || !targetIds.SequenceEqual(sourceMigrations, StringComparer.Ordinal))
             throw new InvalidOperationException($"Migration SQL/source mismatch: SQL={targetIds.Length}, source={sourceMigrations.Length}; refusing DDL.");
@@ -55,7 +60,7 @@ internal static class HrTenantMigrationExecutor
         var blocks = Regex.Split(script, "(?m)^\\s*/\\s*$")
             .Select(block => Regex.Replace(block, "(?m)^\\s*--.*(?:\\r?\\n|$)", string.Empty).Trim())
             .Where(block => block.Length > 0).ToArray();
-        if (blocks.Length != 119 || blocks.Any(block => !Regex.IsMatch(block, "^(DECLARE|BEGIN)\\b", RegexOptions.IgnoreCase)))
+        if (blocks.Length != ExpectedBlockCount || blocks.Any(block => !Regex.IsMatch(block, "^(DECLARE|BEGIN)\\b", RegexOptions.IgnoreCase)))
             throw new InvalidOperationException($"Unexpected EF SQL block layout ({blocks.Length}); refusing DDL.");
 
         var centralColumns = await Query(connection, "SELECT COLUMN_NAME,DATA_TYPE,CHAR_LENGTH,NULLABLE FROM ALL_TAB_COLUMNS WHERE OWNER='THINKON_ERP' AND TABLE_NAME='__EFMigrationsHistory' ORDER BY COLUMN_ID");
